@@ -19,29 +19,51 @@ export function useKycGuard() {
 
   useEffect(() => {
     if (!user) return;
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    // 1. Initial query – always runs
     supabase
       .from('profiles')
       .select('kyc_status')
       .eq('user_id', user.id)
       .single()
-      .then(({ data }) => {
-        setKycStatus(data?.kyc_status || 'unverified');
+      .then(({ data, error }) => {
+        if (error) {
+          setKycStatus('unverified');
+        } else {
+          setKycStatus(data?.kyc_status || 'unverified');
+        }
         setKycLoading(false);
       });
 
-    const channel = supabase
-      .channel('kyc-guard')
-      .on('postgres_changes', {
+    // 2. Realtime – wrapped in try/catch so failures don't break the dashboard
+    try {
+      channel = supabase.channel(`realtime:kyc-guard-${user.id}`);
+
+      // Register ALL listeners BEFORE calling subscribe
+      channel.on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
         table: 'profiles',
         filter: `user_id=eq.${user.id}`,
       }, (payload: any) => {
         if (payload.new?.kyc_status) setKycStatus(payload.new.kyc_status);
-      })
-      .subscribe();
+      });
 
-    return () => { supabase.removeChannel(channel); };
+      // Subscribe AFTER all .on() calls
+      channel.subscribe((status, err) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.warn('KYC guard realtime channel error, falling back to initial query only', err);
+        }
+      });
+    } catch (err) {
+      console.warn('Failed to set up KYC realtime channel, continuing without realtime', err);
+    }
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const isVerified = kycStatus === 'verified';
