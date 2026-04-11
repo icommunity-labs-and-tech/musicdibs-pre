@@ -96,6 +96,9 @@ export function DashboardSidebar() {
 
   useEffect(() => {
     if (!user) return;
+
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
     supabase
       .from('profiles')
       .select('kyc_status, subscription_plan')
@@ -106,17 +109,31 @@ export function DashboardSidebar() {
         setSubscriptionPlan(data?.subscription_plan || 'Free');
       });
 
-    const channel = supabase
-      .channel('sidebar-kyc')
-      .on('postgres_changes', {
-        event: 'UPDATE', schema: 'public', table: 'profiles',
+    try {
+      channel = supabase.channel(`sidebar-kyc-${user.id}`);
+
+      channel.on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
         filter: `user_id=eq.${user.id}`,
       }, (payload: any) => {
         if (payload.new?.kyc_status) setKycStatus(payload.new.kyc_status);
         if (payload.new?.subscription_plan) setSubscriptionPlan(payload.new.subscription_plan);
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      });
+
+      channel.subscribe((status, err) => {
+        if (status === 'CHANNEL_ERROR') {
+          console.warn('Sidebar realtime channel error, continuing without realtime', err);
+        }
+      });
+    } catch (err) {
+      console.warn('Failed to set up sidebar realtime channel', err);
+    }
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const isActive = (path: string) =>
