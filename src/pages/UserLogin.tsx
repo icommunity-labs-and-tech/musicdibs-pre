@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { lovable } from '@/integrations/lovable/index';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,9 +36,12 @@ export default function UserLogin() {
   const handleGoogleSignIn = async () => {
     setError('');
     setGoogleLoading(true);
-    const result = await lovable.auth.signInWithOAuth('google', { redirect_uri: window.location.origin });
-    if (result?.error) {
-      setError(result.error.message || t('userLogin.errorGoogle'));
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (error) {
+      setError(error.message || t('userLogin.errorGoogle'));
       setGoogleLoading(false);
     }
   };
@@ -46,9 +49,12 @@ export default function UserLogin() {
   const handleAppleSignIn = async () => {
     setError('');
     setAppleLoading(true);
-    const result = await lovable.auth.signInWithOAuth('apple', { redirect_uri: window.location.origin });
-    if (result?.error) {
-      setError(result.error.message || t('userLogin.errorApple'));
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: { redirectTo: `${window.location.origin}/dashboard` },
+    });
+    if (error) {
+      setError(error.message || t('userLogin.errorApple'));
       setAppleLoading(false);
     }
   };
