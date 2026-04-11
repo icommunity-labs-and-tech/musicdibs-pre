@@ -28,12 +28,12 @@ export function useKycGuard() {
       .select('kyc_status')
       .eq('user_id', user.id)
       .single()
-      .then(({ data }) => {
-        setKycStatus(data?.kyc_status || 'unverified');
-        setKycLoading(false);
-      })
-      .catch(() => {
-        setKycStatus('unverified');
+      .then(({ data, error }) => {
+        if (error) {
+          setKycStatus('unverified');
+        } else {
+          setKycStatus(data?.kyc_status || 'unverified');
+        }
         setKycLoading(false);
       });
 
