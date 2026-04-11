@@ -96,10 +96,6 @@ export default function UserLogin() {
         {googleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
         {t('userLogin.continueGoogle')}
       </Button>
-      <Button type="button" variant="outline" className="w-full gap-2" disabled={appleLoading} onClick={handleAppleSignIn}>
-        {appleLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <AppleIcon />}
-        {t('userLogin.continueApple')}
-      </Button>
     </>
   );
 
