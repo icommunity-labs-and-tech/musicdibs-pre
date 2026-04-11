@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, Check, X } from 'lucide-react';
 
 export default function UserLogin() {
   const { t, i18n } = useTranslation();
@@ -32,6 +32,17 @@ export default function UserLogin() {
   const [showRegPw, setShowRegPw] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+
+  const pwRules = useMemo(() => [
+    { key: 'min', test: (p: string) => p.length >= 8, label: { es: '8 caracteres mínimo', en: 'At least 8 characters', 'pt-BR': 'Mínimo 8 caracteres' } },
+    { key: 'upper', test: (p: string) => /[A-Z]/.test(p), label: { es: 'Una mayúscula', en: 'One uppercase letter', 'pt-BR': 'Uma maiúscula' } },
+    { key: 'number', test: (p: string) => /[0-9]/.test(p), label: { es: 'Un número', en: 'One number', 'pt-BR': 'Um número' } },
+    { key: 'special', test: (p: string) => /[^A-Za-z0-9]/.test(p), label: { es: 'Un carácter especial', en: 'One special character', 'pt-BR': 'Um caractere especial' } },
+  ] as const, []);
+
+  const allPwValid = regPassword.length > 0 && pwRules.every(r => r.test(regPassword));
+  const lang = (i18n.resolvedLanguage || 'es') as 'es' | 'en' | 'pt-BR';
 
   const handleGoogleSignIn = async () => {
     setError('');
@@ -58,10 +69,11 @@ export default function UserLogin() {
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!allPwValid) return;
     setError(''); setSuccess(''); setLoading(true);
     const form = new FormData(e.currentTarget);
-    const lang = i18n.resolvedLanguage || 'es';
-    const { error } = await signUp(form.get('email') as string, form.get('password') as string, { language: lang });
+    const signUpLang = i18n.resolvedLanguage || 'es';
+    const { error } = await signUp(form.get('email') as string, form.get('password') as string, { language: signUpLang });
     setLoading(false);
     if (error) setError(error.message); else setSuccess(t('userLogin.checkEmailConfirm'));
   };
@@ -157,15 +169,28 @@ export default function UserLogin() {
                 <div className="space-y-2">
                   <Label htmlFor="reg-password">{t('userLogin.password')}</Label>
                   <div className="relative">
-                    <Input id="reg-password" name="password" type={showRegPw ? 'text' : 'password'} required minLength={6} placeholder={t('userLogin.minChars')} className="pr-10" />
+                    <Input id="reg-password" name="password" type={showRegPw ? 'text' : 'password'} required minLength={8} placeholder={t('userLogin.minChars')} className="pr-10" value={regPassword} onChange={(e) => setRegPassword(e.target.value)} />
                     <button type="button" onClick={() => setShowRegPw(!showRegPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" aria-label={showRegPw ? t('userLogin.hidePassword') : t('userLogin.showPassword')}>
                       {showRegPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  {regPassword.length > 0 && (
+                    <ul className="space-y-1 mt-1.5">
+                      {pwRules.map(r => {
+                        const pass = r.test(regPassword);
+                        return (
+                          <li key={r.key} className={`flex items-center gap-1.5 text-xs ${pass ? 'text-green-600' : 'text-muted-foreground'}`}>
+                            {pass ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                            {r.label[lang] || r.label.es}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                 </div>
                 {error && <div className="flex items-center gap-2 text-sm text-destructive"><AlertCircle className="h-4 w-4" /> {error}</div>}
                 {success && <div className="flex items-center gap-2 text-sm text-green-600"><CheckCircle2 className="h-4 w-4" /> {success}</div>}
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full" disabled={loading || !allPwValid}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('userLogin.createAccount')}
                 </Button>
                 <OAuthButtons />
