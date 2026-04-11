@@ -174,19 +174,36 @@ export default function UserLogin() {
                       {showRegPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  {regPassword.length > 0 && (
-                    <ul className="space-y-1 mt-1.5">
-                      {pwRules.map(r => {
-                        const pass = r.test(regPassword);
-                        return (
-                          <li key={r.key} className={`flex items-center gap-1.5 text-xs ${pass ? 'text-green-600' : 'text-muted-foreground'}`}>
-                            {pass ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                            {r.label[lang] || r.label.es}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  )}
+                  {regPassword.length > 0 && (() => {
+                    const passed = pwRules.filter(r => r.test(regPassword)).length;
+                    const pct = (passed / pwRules.length) * 100;
+                    const strengthColor = pct <= 25 ? 'bg-destructive' : pct <= 50 ? 'bg-orange-500' : pct <= 75 ? 'bg-yellow-500' : 'bg-green-500';
+                    const strengthLabel = { es: ['Muy débil', 'Débil', 'Aceptable', 'Fuerte'], en: ['Very weak', 'Weak', 'Fair', 'Strong'], 'pt-BR': ['Muito fraca', 'Fraca', 'Razoável', 'Forte'] };
+                    const idx = Math.min(passed, pwRules.length) - 1;
+                    return (
+                      <div className="space-y-1.5 mt-1.5">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div className={`h-full rounded-full transition-all duration-300 ${strengthColor}`} style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className={`text-xs font-medium ${strengthColor.replace('bg-', 'text-')}`}>
+                            {idx >= 0 ? (strengthLabel[lang] || strengthLabel.es)[idx] : ''}
+                          </span>
+                        </div>
+                        <ul className="space-y-1">
+                          {pwRules.map(r => {
+                            const pass = r.test(regPassword);
+                            return (
+                              <li key={r.key} className={`flex items-center gap-1.5 text-xs ${pass ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                {pass ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                                {r.label[lang] || r.label.es}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    );
+                  })()}
                 </div>
                 {error && <div className="flex items-center gap-2 text-sm text-destructive"><AlertCircle className="h-4 w-4" /> {error}</div>}
                 {success && <div className="flex items-center gap-2 text-sm text-green-600"><CheckCircle2 className="h-4 w-4" /> {success}</div>}
