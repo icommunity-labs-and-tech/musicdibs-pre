@@ -1,11 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-const FAL_API_KEY = Deno.env.get('FAL_API_KEY');
-const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -17,9 +12,13 @@ serve(async (req) => {
   }
 
   try {
+    const FAL_API_KEY = Deno.env.get('FAL_API_KEY');
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
     const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Auth
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -39,14 +38,8 @@ serve(async (req) => {
     }
 
     const {
-      artist_name,
-      track_title,
-      format,
-      visual_style,
-      image_description,
-      base_photo_base64,
-      copy_tone,
-      cta,
+      artist_name, track_title, format, visual_style,
+      image_description, base_photo_base64, copy_tone, cta,
     } = await req.json();
 
     if (!artist_name || !track_title || !format || !image_description) {
@@ -56,7 +49,6 @@ serve(async (req) => {
       );
     }
 
-    // Check credits
     const creditsNeeded = 1;
     const { data: profile } = await supabaseAdmin
       .from('profiles')
@@ -75,7 +67,6 @@ serve(async (req) => {
       );
     }
 
-    // Deduct credits upfront
     await supabaseAdmin.rpc('decrement_credits', {
       _user_id: user.id,
       _amount: creditsNeeded,
@@ -89,27 +80,17 @@ serve(async (req) => {
     });
 
     try {
-      // Generate image
       const imagePrompt = buildImagePrompt(artist_name, track_title, visual_style, image_description, format);
-      const imageUrl = await generateImage(imagePrompt, base_photo_base64, format);
-
-      // Generate copy + hashtags
+      const imageUrl = await generateImage(imagePrompt, base_photo_base64, format, FAL_API_KEY);
       const { copy, hashtags } = await generateCopyAndHashtags(
-        artist_name, track_title, copy_tone, cta, format
+        artist_name, track_title, copy_tone, cta, format, ANTHROPIC_API_KEY
       );
 
       return new Response(
-        JSON.stringify({
-          success: true,
-          image_url: imageUrl,
-          copy,
-          hashtags,
-          credits_used: creditsNeeded,
-        }),
+        JSON.stringify({ success: true, image_url: imageUrl, copy, hashtags, credits_used: creditsNeeded }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } catch (genError) {
-      // Refund credits on failure
       console.error('Generation failed, refunding credits:', genError);
       await supabaseAdmin
         .from('profiles')
@@ -136,11 +117,8 @@ serve(async (req) => {
 });
 
 function buildImagePrompt(
-  artistName: string,
-  trackTitle: string,
-  visualStyle: string,
-  description: string,
-  format: string
+  artistName: string, trackTitle: string, visualStyle: string,
+  description: string, format: string
 ): string {
   const styleDescriptions: Record<string, string> = {
     minimalist: 'minimalist design, clean and simple, lots of negative space',
@@ -150,7 +128,6 @@ function buildImagePrompt(
     retro: 'retro aesthetic, vintage vibes, nostalgic, film grain',
     neon: 'neon lights, cyberpunk aesthetic, futuristic glow, dark background',
   };
-
   const formatDesc: Record<string, string> = {
     feed: 'square format 1:1 Instagram feed post',
     story: 'vertical format 9:16 Instagram story',
@@ -161,32 +138,24 @@ function buildImagePrompt(
   prompt += `${styleDescriptions[visualStyle] || visualStyle}. `;
   prompt += `${description}. `;
   prompt += `Artist: "${artistName}", Track: "${trackTitle}". `;
-  prompt += `High quality, visually striking, optimized for Instagram engagement, no watermarks, professional photography or illustration quality.`;
-
+  prompt += `High quality, visually striking, optimized for Instagram engagement, no watermarks, professional quality.`;
   return prompt;
 }
 
 async function generateImage(
-  prompt: string,
-  basePhotoBase64: string | null,
-  format: string
+  prompt: string, basePhotoBase64: string | null, format: string, falApiKey: string | undefined
 ): Promise<string> {
-  const imageSize = format === 'feed' ? 'square_hd' : { width: 720, height: 1280 };
+  if (!falApiKey) throw new Error('FAL_API_KEY not configured');
 
+  const imageSize = format === 'feed' ? 'square_hd' : { width: 720, height: 1280 };
   const falRequest: Record<string, unknown> = {
-    prompt,
-    image_size: imageSize,
-    num_inference_steps: 28,
-    guidance_scale: 3.5,
-    num_images: 1,
-    enable_safety_checker: true,
+    prompt, image_size: imageSize, num_inference_steps: 28,
+    guidance_scale: 3.5, num_images: 1, enable_safety_checker: true,
   };
 
   let endpoint: string;
-
   if (basePhotoBase64) {
-    const dataUrl = `data:image/jpeg;base64,${basePhotoBase64}`;
-    falRequest.image_url = dataUrl;
+    falRequest.image_url = `data:image/jpeg;base64,${basePhotoBase64}`;
     falRequest.strength = 0.55;
     endpoint = 'https://fal.run/fal-ai/flux/dev/image-to-image';
   } else {
@@ -195,10 +164,7 @@ async function generateImage(
 
   const falResponse = await fetch(endpoint, {
     method: 'POST',
-    headers: {
-      Authorization: `Key ${FAL_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { Authorization: `Key ${falApiKey}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(falRequest),
   });
 
@@ -213,12 +179,16 @@ async function generateImage(
 }
 
 async function generateCopyAndHashtags(
-  artistName: string,
-  trackTitle: string,
-  tone: string,
-  cta: string,
-  format: string
+  artistName: string, trackTitle: string, tone: string,
+  cta: string, format: string, anthropicKey: string | undefined
 ): Promise<{ copy: string; hashtags: string[] }> {
+  const fallback = {
+    copy: `🎵 ${artistName} — "${trackTitle}" 🔥\n\n🎧 Listen now`,
+    hashtags: ['newmusic', 'music', artistName.replace(/\s/g, '').toLowerCase(), 'spotify', 'applemusic'],
+  };
+
+  if (!anthropicKey) return fallback;
+
   const toneDescriptions: Record<string, string> = {
     exciting: 'exciting and energetic, use fire/rocket emojis',
     mysterious: 'mysterious and intriguing, use moon/star emojis',
@@ -227,7 +197,6 @@ async function generateCopyAndHashtags(
     casual: 'casual and friendly, use chill emojis',
     professional: 'professional and polished, use minimal emojis',
   };
-
   const ctaTexts: Record<string, string> = {
     listen_now: '🎧 Escúchala ahora / Listen now',
     out_now: '🔥 Ya disponible / Out now',
@@ -236,10 +205,9 @@ async function generateCopyAndHashtags(
     link_in_bio: '🔗 Link en bio / Link in bio',
   };
 
-  const formatContext =
-    format === 'story'
-      ? 'This is for an Instagram story — keep it very brief, 1-2 lines max.'
-      : 'This is for an Instagram feed post — 2-3 lines with good engagement hooks.';
+  const formatContext = format === 'story'
+    ? 'This is for an Instagram story — keep it very brief, 1-2 lines max.'
+    : 'This is for an Instagram feed post — 2-3 lines with good engagement hooks.';
 
   const promptText = `Generate Instagram post copy and hashtags for promoting a song.
 
@@ -257,41 +225,34 @@ Return ONLY a JSON object with this exact structure, no extra text:
 
 Make the copy compelling and authentic. Include the artist name and track title naturally.`;
 
-  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: promptText }],
-    }),
-  });
+  try {
+    const aiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': anthropicKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: promptText }],
+      }),
+    });
 
-  if (!aiResponse.ok) {
-    const errText = await aiResponse.text();
-    console.error('AI gateway error:', errText);
-    throw new Error('AI gateway error');
+    if (!aiResponse.ok) {
+      console.error('Claude API error:', await aiResponse.text());
+      return fallback;
+    }
+
+    const aiData = await aiResponse.json();
+    const responseText = aiData.content?.[0]?.text || '';
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return fallback;
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    return { copy: parsed.copy || '', hashtags: parsed.hashtags || [] };
+  } catch {
+    return fallback;
   }
-
-  const aiData = await aiResponse.json();
-  const responseText = aiData.choices?.[0]?.message?.content || '';
-
-  const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) {
-    console.error('Failed to parse AI response:', responseText);
-    // Return fallback
-    return {
-      copy: `🎵 ${artistName} — "${trackTitle}" 🔥\n\n${ctaTexts[cta] || '🎧 Listen now'}`,
-      hashtags: ['newmusic', 'music', artistName.replace(/\s/g, '').toLowerCase(), 'spotify', 'applemusic'],
-    };
-  }
-
-  const parsed = JSON.parse(jsonMatch[0]);
-  return {
-    copy: parsed.copy || '',
-    hashtags: parsed.hashtags || [],
-  };
 }

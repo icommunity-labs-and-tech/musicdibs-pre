@@ -13,7 +13,6 @@ serve(async (req) => {
   }
 
   try {
-    // JWT auth
     const authHeader = req.headers.get("Authorization")
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }),
@@ -33,25 +32,15 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } })
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")
+    if (!ANTHROPIC_API_KEY) {
+      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
     }
 
     const {
-      description,
-      genre,
-      mood,
-      style,
-      language,
-      rhymeScheme,
-      structure,
-      artistRefs,
-      pov,
-      theme,
-      regenerateSection,
-      existingLyrics,
+      description, genre, mood, style, language, rhymeScheme,
+      structure, artistRefs, pov, theme, regenerateSection, existingLyrics,
     } = await req.json()
 
     const systemPrompt = `Eres un compositor profesional de letras musicales con 20 años de experiencia.
@@ -106,62 +95,41 @@ No añadas explicaciones, comentarios ni introducciones.`
         `Devuelve la letra COMPLETA con la sección regenerada.`
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
       }),
     })
 
     if (!response.ok) {
       const errText = await response.text()
-      console.error("[LYRICS] AI gateway error:", response.status, errText)
-
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Demasiadas solicitudes, espera un momento." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } })
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos de IA agotados. Recarga en Ajustes > Workspace > Uso." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } })
-      }
-
+      console.error("[LYRICS] Claude API error:", response.status, errText)
       return new Response(JSON.stringify({ error: "Error al generar letra" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
     }
 
     const data = await response.json()
-    const lyrics = data.choices?.[0]?.message?.content || ""
+    const lyrics = data.content?.[0]?.text || ""
 
     console.log(`[LYRICS] Generated for user ${user.id}, ${lyrics.length} chars`)
 
-    // Guardar en BBDD
     try {
       const supabaseAdmin = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       )
       await supabaseAdmin.from("lyrics_generations").insert({
-        user_id:      user.id,
-        description,
-        theme,
-        genre,
-        mood,
-        style,
-        language,
-        rhyme_scheme: rhymeScheme,
-        structure,
-        artist_refs:  artistRefs,
-        pov,
-        lyrics,
+        user_id: user.id, description, theme, genre, mood, style, language,
+        rhyme_scheme: rhymeScheme, structure, artist_refs: artistRefs, pov, lyrics,
       })
     } catch (e) {
       console.error("[LYRICS] Error saving to DB:", e)
@@ -171,7 +139,6 @@ No añadas explicaciones, comentarios ni introducciones.`
       JSON.stringify({ lyrics }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
-
   } catch (e) {
     console.error("[LYRICS] Error:", e)
     return new Response(
