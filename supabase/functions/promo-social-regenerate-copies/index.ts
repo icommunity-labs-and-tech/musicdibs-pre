@@ -39,8 +39,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
+    const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
+    if (!ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ error: 'Missing API key' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -105,7 +105,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch work + AI generation + lyrics + default artist profile metadata
     const [workRes, genRes, lyricsRes, profileRes] = await Promise.all([
       supabase.from('works').select('title, author, description, type, checker_url')
         .eq('id', promo.work_id).eq('user_id', user.id).single(),
@@ -117,7 +116,6 @@ serve(async (req) => {
         .eq('user_id', user.id).eq('is_default', true).limit(1).maybeSingle(),
     ]);
 
-    // If work not found in works table, try ai_generations
     let work = workRes.data;
     if (!work) {
       const aiGenDirect = await supabase.from('ai_generations').select('prompt, genre, mood')
@@ -139,7 +137,6 @@ serve(async (req) => {
       });
     }
 
-    // If work has no author, use default artist profile name
     if (!work.author && profileRes.data?.name) {
       work.author = profileRes.data.name;
     }
@@ -152,7 +149,6 @@ serve(async (req) => {
       work.title && l.description?.toLowerCase().includes(work.title.toLowerCase())
     ) || lyricsRes.data?.[0] || null;
 
-    // Build enriched prompt with tone and language
     const tones: Record<string, string> = {
       urban: 'urbano, callejero, con flow y actitud. Usa jerga urbana moderna, referencias al trap/reggaeton/hip-hop',
       romantic: 'romántico, emotivo, sensual. Evoca sentimientos profundos, usa metáforas de amor y conexión',
@@ -165,9 +161,8 @@ serve(async (req) => {
     const lang = language || 'español';
 
     const lines = [
-      `Eres un copywriter de élite especializado en marketing musical viral. Genera copies COMPLETAMENTE NUEVOS y con un enfoque DIFERENTE al anterior.`,
-      '',
-      `## Datos de la obra`,
+      `Genera copies COMPLETAMENTE NUEVOS y con un enfoque DIFERENTE al anterior.`,
+      '', `## Datos de la obra`,
       `- Título: "${work.title}"`,
       `- Artista: "${work.author || 'Artista'}"`,
       `- Tipo: ${work.type || 'obra musical'}`,
@@ -176,16 +171,11 @@ serve(async (req) => {
     if (aiGen?.mood) lines.push(`- Mood/vibra: ${aiGen.mood}`);
     if (work.description) lines.push(`- Descripción: ${work.description}`);
     if (aiGen?.prompt) lines.push(`- Concepto artístico: ${aiGen.prompt.slice(0, 200)}`);
-
-    if (lyrics?.lyrics) {
-      lines.push(`- Letra de la canción (extracto): "${lyrics.lyrics.slice(0, 500)}"`);
-    }
+    if (lyrics?.lyrics) lines.push(`- Letra de la canción (extracto): "${lyrics.lyrics.slice(0, 500)}"`);
     if (lyrics?.theme) lines.push(`- Temática lírica: ${lyrics.theme}`);
-
     if (work.checker_url) lines.push(`- Enlace de verificación blockchain: ${work.checker_url}`);
 
-    lines.push('');
-    lines.push(`## Instrucciones de estilo`);
+    lines.push('', `## Instrucciones de estilo`);
     lines.push(`- TONO: ${toneDesc}. Adapta el lenguaje y las referencias culturales a este estilo musical.`);
     lines.push(`- Copies IMPACTANTES, emocionales, que generen urgencia por escuchar`);
     lines.push(`- Lenguaje auténtico, no corporativo ni genérico`);
@@ -193,16 +183,14 @@ serve(async (req) => {
     lines.push(`- Usa "registrada con blockchain" (NO "certificada en blockchain")`);
     lines.push(`- Hashtags relevantes al género y tendencias actuales`);
     lines.push(`- Cada copy con personalidad propia`);
-    lines.push('');
-    lines.push(`## Formato de respuesta`);
+    lines.push('', `## Formato de respuesta`);
     lines.push(`Responde SOLO con este JSON exacto, sin markdown, sin explicaciones:`);
     lines.push(`{
   "ig_feed": "Copy para Instagram Feed: máx 200 chars, 2-3 emojis estratégicos, 4-6 hashtags relevantes al género. Genera hype y curiosidad.",
   "ig_story": "Copy para Instagram Story: máx 100 chars, directo, impactante, urgente. 1-2 emojis.",
   "tiktok": "Copy para TikTok: máx 200 chars, tono joven, viral, conversacional. 4-6 hashtags trending."
 }`);
-    lines.push('');
-    lines.push(`IMPORTANTE: Genera los copies en ${lang}. Tono: ${toneDesc}, apasionado, generador de hype.`);
+    lines.push('', `IMPORTANTE: Genera los copies en ${lang}. Tono: ${toneDesc}, apasionado, generador de hype.`);
 
     // Mark as regenerating
     await supabase.from('social_promotions').update({
@@ -216,21 +204,18 @@ serve(async (req) => {
     // Background: regenerate copies
     (async () => {
       try {
-        const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
             'Content-Type': 'application/json',
+            'x-api-key': ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
           },
           body: JSON.stringify({
-            model: 'google/gemini-2.5-pro',
-            messages: [
-              {
-                role: 'system',
-                content: `Eres un copywriter de élite del mundo de la música urbana, pop y electrónica. Creas textos que generan HYPE real en redes sociales. Responde SOLO con JSON válido, sin markdown, sin backticks, sin explicaciones.`,
-              },
-              { role: 'user', content: lines.join('\n') },
-            ],
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 1024,
+            system: `Eres un copywriter de élite del mundo de la música urbana, pop y electrónica. Creas textos que generan HYPE real en redes sociales. Responde SOLO con JSON válido, sin markdown, sin backticks, sin explicaciones.`,
+            messages: [{ role: 'user', content: lines.join('\n') }],
           }),
         });
 
@@ -242,7 +227,7 @@ serve(async (req) => {
 
         if (res.ok) {
           const data = await res.json();
-          const text = data.choices?.[0]?.message?.content?.trim();
+          const text = data.content?.[0]?.text?.trim();
           if (text) {
             try {
               const cleaned = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();

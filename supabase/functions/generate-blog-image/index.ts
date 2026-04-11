@@ -12,68 +12,57 @@ serve(async (req) => {
   try {
     const { title, excerpt, style } = await req.json();
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
+    if (!FAL_API_KEY) throw new Error("FAL_API_KEY is not configured");
 
     const styleHint = style || "modern, clean, professional";
-    const prompt = `Create a blog header image for a music industry article. Title: "${title}". ${excerpt ? `About: ${excerpt}.` : ""} Style: ${styleHint}. The image should be visually striking, suitable for a music distribution platform blog. No text in the image. High quality, editorial photography or illustration style.`;
+    const prompt = `Professional blog header image for a music industry article. Title: "${title}". ${excerpt ? `About: ${excerpt}.` : ""} Style: ${styleHint}. Visually striking, suitable for a music distribution platform blog. No text in the image. High quality, editorial photography or illustration style.`;
 
-    console.log("Generating image with prompt:", prompt);
+    console.log("Generating image with fal.ai, prompt:", prompt.slice(0, 120));
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const falResponse = await fetch("https://fal.run/fal-ai/flux-pro/v1.1", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Key ${FAL_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-image",
-        messages: [{ role: "user", content: prompt }],
-        modalities: ["image", "text"],
+        prompt,
+        image_size: "landscape_16_9",
+        num_images: 1,
+        enable_safety_checker: true,
       }),
     });
 
-    if (!response.ok) {
-      const status = response.status;
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "Límite de solicitudes excedido." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("AI image error:", status, t);
-      throw new Error(`AI image error: ${status}`);
+    if (!falResponse.ok) {
+      const errText = await falResponse.text();
+      console.error("fal.ai error:", falResponse.status, errText);
+      throw new Error(`fal.ai error: ${falResponse.status}`);
     }
 
-    const data = await response.json();
-    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    const falData = await falResponse.json();
+    const generatedUrl = falData.images?.[0]?.url;
 
-    if (!imageUrl) throw new Error("No image generated");
+    if (!generatedUrl) throw new Error("No image generated");
 
     // Upload to Supabase Storage
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseClient = createClient(supabaseUrl, supabaseKey);
 
-    // Ensure bucket exists
     const { error: bucketError } = await supabaseClient.storage.getBucket("blog-images");
     if (bucketError) {
       await supabaseClient.storage.createBucket("blog-images", { public: true });
     }
 
-    // Decode base64 and upload
-    const base64Data = imageUrl.replace(/^data:image\/\w+;base64,/, "");
-    const binaryData = Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0));
+    // Download and upload
+    const imgRes = await fetch(generatedUrl);
+    const imgBlob = await imgRes.blob();
     const fileName = `ai-${Date.now()}.png`;
 
     const { error: uploadError } = await supabaseClient.storage
       .from("blog-images")
-      .upload(fileName, binaryData, { contentType: "image/png", upsert: true });
+      .upload(fileName, imgBlob, { contentType: "image/png", upsert: true });
 
     if (uploadError) throw new Error(`Upload error: ${uploadError.message}`);
 

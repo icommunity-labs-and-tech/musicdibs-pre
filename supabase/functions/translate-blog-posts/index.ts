@@ -5,6 +5,27 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+async function translateWithClaude(systemPrompt: string, userPrompt: string, apiKey: string): Promise<string> {
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 4096,
+      temperature: 0.3,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userPrompt }],
+    }),
+  });
+
+  const data = await response.json();
+  return data.content?.[0]?.text?.trim() || "";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -13,12 +34,14 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY")!;
+    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY")!;
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const body = await req.json();
     const { postId, sourceLanguage, targetLanguages: requestedLangs } = body;
+
+    const systemPrompt = "You are a professional translator specializing in music industry content. Return only valid JSON. Preserve all HTML tags in the content field.";
 
     // Single post translation mode
     if (postId) {
@@ -39,7 +62,6 @@ Deno.serve(async (req) => {
       for (const lang of targets) {
         const langName = lang === "es" ? "Spanish" : lang === "en" ? "English" : "Brazilian Portuguese";
 
-        // Translate title, excerpt, and content
         const prompt = `Translate the following blog article to ${langName}. Return ONLY a valid JSON object with these keys:
 - "title": translated title
 - "excerpt": translated excerpt  
@@ -53,26 +75,7 @@ Excerpt: ${post.excerpt || ""}
 
 Content: ${post.content || ""}`;
 
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${lovableApiKey}`,
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [
-              { role: "system", content: "You are a professional translator specializing in music industry content. Return only valid JSON. Preserve all HTML tags in the content field." },
-              { role: "user", content: prompt },
-            ],
-            temperature: 0.3,
-          }),
-        });
-
-        const aiData = await aiResponse.json();
-        let rawContent = aiData.choices?.[0]?.message?.content?.trim() || "";
-        
-        // Strip markdown code blocks
+        let rawContent = await translateWithClaude(systemPrompt, prompt, anthropicApiKey);
         rawContent = rawContent.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
 
         let translatedData: { title: string; excerpt: string; content: string };
@@ -85,7 +88,6 @@ Content: ${post.content || ""}`;
           continue;
         }
 
-        // Clean content field
         if (translatedData.content) {
           translatedData.content = translatedData.content
             .replace(/^```(?:html)?\s*\n?/i, "")
@@ -93,14 +95,9 @@ Content: ${post.content || ""}`;
             .trim();
         }
 
-        // Build slug for target language (append language suffix)
-        const baseSlug = post.slug
-          .replace(/-es$/, "")
-          .replace(/-en$/, "")
-          .replace(/-pt$/, "");
+        const baseSlug = post.slug.replace(/-es$/, "").replace(/-en$/, "").replace(/-pt$/, "");
         const translatedSlug = `${baseSlug}-${lang}`;
 
-        // Check if translation already exists
         const { data: existing } = await supabase
           .from("blog_posts")
           .select("id")
@@ -125,27 +122,16 @@ Content: ${post.content || ""}`;
 
         if (existing) {
           const { error: updateError } = await supabase
-            .from("blog_posts")
-            .update(payload)
-            .eq("id", existing.id);
-          
-          if (updateError) {
-            results.push({ language: lang, success: false, error: updateError.message });
-          } else {
-            results.push({ language: lang, success: true, action: "updated", id: existing.id });
-          }
+            .from("blog_posts").update(payload).eq("id", existing.id);
+          results.push(updateError
+            ? { language: lang, success: false, error: updateError.message }
+            : { language: lang, success: true, action: "updated", id: existing.id });
         } else {
           const { data: inserted, error: insertError } = await supabase
-            .from("blog_posts")
-            .insert(payload)
-            .select("id")
-            .single();
-
-          if (insertError) {
-            results.push({ language: lang, success: false, error: insertError.message });
-          } else {
-            results.push({ language: lang, success: true, action: "created", id: inserted.id });
-          }
+            .from("blog_posts").insert(payload).select("id").single();
+          results.push(insertError
+            ? { language: lang, success: false, error: insertError.message }
+            : { language: lang, success: true, action: "created", id: inserted.id });
         }
       }
 
@@ -192,24 +178,11 @@ Title: ${post.title}
 Excerpt: ${post.excerpt || ""}
 Content: ${post.content || ""}`;
 
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${lovableApiKey}`,
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
-            messages: [
-              { role: "system", content: "You are a professional translator. Return only valid JSON. Preserve HTML tags." },
-              { role: "user", content: prompt },
-            ],
-            temperature: 0.3,
-          }),
-        });
-
-        const aiData = await aiResponse.json();
-        let rawContent = aiData.choices?.[0]?.message?.content?.trim() || "";
+        let rawContent = await translateWithClaude(
+          "You are a professional translator. Return only valid JSON. Preserve HTML tags.",
+          prompt,
+          anthropicApiKey
+        );
         rawContent = rawContent.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
 
         let translatedData: { title: string; excerpt: string; content?: string };

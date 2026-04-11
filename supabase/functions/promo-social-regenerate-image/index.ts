@@ -39,9 +39,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: 'Missing API key' }), {
+    const FAL_API_KEY = Deno.env.get('FAL_API_KEY');
+    if (!FAL_API_KEY) {
+      return new Response(JSON.stringify({ error: 'Missing FAL_API_KEY' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -105,7 +105,6 @@ serve(async (req) => {
       });
     }
 
-    // Fetch work + AI generation + default artist profile metadata
     const [workRes, genRes, profileRes] = await Promise.all([
       supabase.from('works').select('title, author, description, type')
         .eq('id', promo.work_id).eq('user_id', user.id).single(),
@@ -117,7 +116,6 @@ serve(async (req) => {
 
     let work = workRes.data;
     if (!work) {
-      // Try ai_generations if not found in works
       const aiGenDirect = await supabase.from('ai_generations').select('prompt, genre, mood')
         .eq('id', promo.work_id).eq('user_id', user.id).single();
       if (aiGenDirect.data) {
@@ -136,7 +134,6 @@ serve(async (req) => {
       });
     }
 
-    // Use default artist profile name if work has no author
     if (!work.author && profileRes.data?.name) {
       work.author = profileRes.data.name;
     }
@@ -145,22 +142,15 @@ serve(async (req) => {
       work.title && g.prompt?.toLowerCase().includes(work.title.toLowerCase())
     ) || null;
 
-    // Build enriched prompt
     const parts = [
-      `Generate a promotional image for the song "${work.title}" by ${work.author || 'artist'}.`,
+      `Promotional image for the song "${work.title}" by ${work.author || 'artist'}.`,
     ];
     if (aiGen?.genre) parts.push(`Genre: ${aiGen.genre}.`);
     if (aiGen?.mood) parts.push(`Mood: ${aiGen.mood}.`);
     if (work.type) parts.push(`Type: ${work.type}.`);
     if (work.description) parts.push(`Context: ${work.description.slice(0, 100)}.`);
     if (aiGen?.prompt) parts.push(`Original AI concept: ${aiGen.prompt.slice(0, 120)}.`);
-    parts.push('Create a striking square 1080x1080 promotional artwork with a dark purple and violet gradient background, gold accents, and modern minimalist design. Include the song title as text overlay. High quality, professional. Unique variation.');
-
-    const IMAGE_MODELS = [
-      'google/gemini-3.1-flash-image-preview',
-      'google/gemini-3-pro-image-preview',
-      'google/gemini-2.5-flash-image',
-    ];
+    parts.push('Striking square 1080x1080 promotional artwork with a dark purple and violet gradient background, gold accents, and modern minimalist design. High quality, professional. Unique variation.');
 
     // Mark as regenerating
     await supabase.from('social_promotions').update({
@@ -171,44 +161,40 @@ serve(async (req) => {
 
     const responseData = { promo_id, status: 'generating', regeneration_count: promo.regeneration_count + 1 };
 
-    // Background: regenerate image with model fallback
+    // Background: regenerate image via fal.ai
     (async () => {
       try {
         let imageUrl = '';
         const prompt = parts.join(' ');
 
-        for (const model of IMAGE_MODELS) {
-          console.log(`[PROMO-REGEN-IMG] Trying model: ${model}`);
-          try {
-            const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model,
-                messages: [{ role: 'user', content: prompt }],
-                modalities: ['image', 'text'],
-              }),
-            });
+        const falRes = await fetch('https://fal.run/fal-ai/flux-pro/v1.1', {
+          method: 'POST',
+          headers: {
+            Authorization: `Key ${FAL_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt,
+            image_size: 'square_hd',
+            num_images: 1,
+            enable_safety_checker: true,
+          }),
+        });
 
-            if (!res.ok) {
-              console.error(`[PROMO-REGEN-IMG] Model ${model} error ${res.status}:`, await res.text());
-              continue;
-            }
+        if (falRes.ok) {
+          const falData = await falRes.json();
+          const generatedUrl = falData.images?.[0]?.url;
 
-            const data = await res.json();
-            const base64Image = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-            if (base64Image?.startsWith('data:image')) {
-              const base64Data = base64Image.split(',')[1];
-              const imgBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+          if (generatedUrl) {
+            // Download and upload to storage
+            const imgRes = await fetch(generatedUrl);
+            if (imgRes.ok) {
+              const imgBlob = await imgRes.blob();
               const fileName = `${promo_id}_${Date.now()}.png`;
 
               const { error: uploadError } = await supabase.storage
                 .from('social-promo-images')
-                .upload(fileName, imgBuffer, { contentType: 'image/png', upsert: true });
+                .upload(fileName, imgBlob, { contentType: 'image/png', upsert: true });
 
               if (!uploadError) {
                 const { data: urlData } = supabase.storage
@@ -216,14 +202,11 @@ serve(async (req) => {
                   .getPublicUrl(fileName);
                 imageUrl = urlData.publicUrl;
               }
-              console.log(`[PROMO-REGEN-IMG] Image generated with ${model}`);
-              break;
-            } else {
-              console.warn(`[PROMO-REGEN-IMG] Model ${model} returned no image`);
             }
-          } catch (modelErr: any) {
-            console.error(`[PROMO-REGEN-IMG] Model ${model} exception:`, modelErr.message);
+            console.log(`[PROMO-REGEN-IMG] Image generated via fal.ai`);
           }
+        } else {
+          console.error(`[PROMO-REGEN-IMG] fal.ai error ${falRes.status}:`, await falRes.text());
         }
 
         await supabase.from('social_promotions').update({
