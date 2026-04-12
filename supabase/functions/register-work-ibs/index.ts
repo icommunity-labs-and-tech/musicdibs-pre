@@ -104,9 +104,9 @@ serve(async (req) => {
       }
     }
 
-    if (work.status !== "processing") {
+    if (work.status !== "draft" && work.status !== "processing") {
       return new Response(
-        JSON.stringify({ error: "Work is not in processing state", status: work.status }),
+        JSON.stringify({ error: "Work is not in draft/processing state", status: work.status }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
