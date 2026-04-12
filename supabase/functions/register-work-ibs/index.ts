@@ -376,6 +376,7 @@ async function handleInlineUpload(
   ibsPayloadChecksum: string,
   ibsPayloadAlgorithm: string,
   corsHeaders: Record<string, string>,
+  creditCost: number = 0,
 ) {
   const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
 
