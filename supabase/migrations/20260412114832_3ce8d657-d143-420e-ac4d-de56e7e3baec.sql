@@ -1,0 +1,1 @@
+ALTER TABLE public.works ADD COLUMN IF NOT EXISTS file_hash_sha512_b64 TEXT;

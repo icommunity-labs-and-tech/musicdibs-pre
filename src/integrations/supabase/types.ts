@@ -2271,6 +2271,7 @@ export type Database = {
           distributed_at: string | null
           distribution_clicks: number | null
           file_hash: string | null
+          file_hash_sha512_b64: string | null
           file_path: string | null
           ibs_evidence_id: string | null
           ibs_payload_algorithm: string | null
@@ -2295,6 +2296,7 @@ export type Database = {
           distributed_at?: string | null
           distribution_clicks?: number | null
           file_hash?: string | null
+          file_hash_sha512_b64?: string | null
           file_path?: string | null
           ibs_evidence_id?: string | null
           ibs_payload_algorithm?: string | null
@@ -2319,6 +2321,7 @@ export type Database = {
           distributed_at?: string | null
           distribution_clicks?: number | null
           file_hash?: string | null
+          file_hash_sha512_b64?: string | null
           file_path?: string | null
           ibs_evidence_id?: string | null
           ibs_payload_algorithm?: string | null
