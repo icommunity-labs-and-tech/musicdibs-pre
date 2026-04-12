@@ -74,7 +74,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verify the work belongs to the user and is in 'processing' state
+    // Verify the work belongs to the user and is in draft state
     const { data: work, error: workError } = await supabaseAdmin
       .from("works")
       .select("id, user_id, title, description, status, file_path, file_hash, file_hash_sha512_b64")
@@ -110,6 +110,44 @@ serve(async (req) => {
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // ── Deduct credit NOW (before any iBS call) ──
+    // Read cost from feature_costs table
+    let creditCost = 1;
+    const { data: costRow } = await supabaseAdmin
+      .from("feature_costs")
+      .select("credit_cost")
+      .eq("feature_key", "register_work")
+      .maybeSingle();
+    if (costRow) creditCost = costRow.credit_cost;
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("available_credits")
+      .eq("user_id", userId)
+      .single();
+
+    if (!profile || profile.available_credits < creditCost) {
+      return new Response(
+        JSON.stringify({ error: "Créditos insuficientes", available: profile?.available_credits || 0, required: creditCost }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    await supabaseAdmin
+      .from("profiles")
+      .update({ available_credits: profile.available_credits - creditCost, updated_at: new Date().toISOString() })
+      .eq("user_id", userId);
+
+    await supabaseAdmin.from("credit_transactions").insert({
+      user_id: userId,
+      amount: -creditCost,
+      type: "usage",
+      description: `Registro: ${work.title}`,
+    });
+
+    let creditDeducted = true;
+    console.log(`[IBS] Credit deducted for work ${workId}: ${creditCost} credit(s)`);
 
     // Get a signed URL for the file (avoid downloading into memory)
     const { data: signedUrlData, error: signedUrlError } = await supabaseAdmin.storage
