@@ -50,7 +50,7 @@ export function PricingPopup({ open, onOpenChange }: { open: boolean; onOpenChan
       .eq('is_active', true)
       .order('display_order')
       .then(({ data }) => {
-        setRows((data as OperationRow[]) ?? []);
+        setRows((data as unknown as OperationRow[]) ?? []);
         setLoading(false);
       });
   }, [open]);
