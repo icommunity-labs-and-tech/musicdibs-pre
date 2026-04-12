@@ -397,7 +397,7 @@ serve(async (req) => {
 
       // All providers failed — refund
       await refundCredits('All video providers failed');
-      return jsonResponse({ error: 'All video generation providers are currently unavailable. Please try again later.' }, 503);
+      return jsonResponse({ error: 'provider_unavailable' }, 200);
     }
 
     throw new Error(`Unknown action: ${action}`);
