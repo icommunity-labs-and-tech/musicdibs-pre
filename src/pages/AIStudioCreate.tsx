@@ -1583,6 +1583,29 @@ const AIStudioCreate = () => {
                                   </TooltipTrigger>
                                   <TooltipContent><p>{result.isFavorite ? t('aiCreate.removeFav') : t('aiCreate.addFav')}</p></TooltipContent>
                                 </Tooltip>
+                                {/* Save as Virtual Artist button — only for vocal generations */}
+                                {result.voiceProfileId && (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        disabled={savedArtistGenerationIds.has(result.id)}
+                                        onClick={() => openSaveArtistModal(result)}
+                                        className={savedArtistGenerationIds.has(result.id) ? 'text-emerald-500' : ''}
+                                      >
+                                        {savedArtistGenerationIds.has(result.id) ? (
+                                          <User className="w-4 h-4" />
+                                        ) : (
+                                          <User className="w-4 h-4" />
+                                        )}
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>{savedArtistGenerationIds.has(result.id) ? 'Ya guardado como Artista Virtual' : 'Guardar como Artista Virtual'}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                )
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" onClick={() => downloadAudio(result)}>
@@ -1627,77 +1650,61 @@ const AIStudioCreate = () => {
         </div>
       </main>
 
-      {/* ── Save as Virtual Artist Prompt Modal ── */}
-      <Dialog open={showSaveArtistPrompt} onOpenChange={setShowSaveArtistPrompt}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              ¿Te gusta esta voz y este estilo?
-            </DialogTitle>
-            <DialogDescription>
-              Guarda esta configuración como un Artista Virtual para crear más canciones con el mismo estilo automáticamente.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              onClick={() => { setShowSaveArtistPrompt(false); setShowSaveArtistForm(true); }}
-              className="gap-2 flex-1"
-            >
-              <Save className="h-4 w-4" />
-              Guardar como artista virtual
-            </Button>
-            <Button variant="outline" onClick={() => setShowSaveArtistPrompt(false)} className="flex-1">
-              No guardar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* ── Save Virtual Artist Form Modal ── */}
       <Dialog open={showSaveArtistForm} onOpenChange={setShowSaveArtistForm}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Nuevo artista virtual</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Guardar como Artista Virtual
+            </DialogTitle>
             <DialogDescription>
-              Voz seleccionada: {lastGeneratedVoiceName}
+              Guarda esta configuración de voz y estilo para crear más canciones similares automáticamente.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
+            {/* Preview */}
+            <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Voz:</span>
+                <span className="font-medium">{saveArtistVoiceName}</span>
+              </div>
+              {saveArtistPrompt && (
+                <div className="flex items-start gap-2">
+                  <span className="text-muted-foreground shrink-0">Estilo:</span>
+                  <span className="text-xs line-clamp-2">{saveArtistPrompt}</span>
+                </div>
+              )}
+            </div>
             <div className="space-y-1.5">
-              <Label htmlFor="save-artist-name">Nombre del artista *</Label>
+              <Label htmlFor="save-artist-name">Nombre del artista virtual *</Label>
               <Input
                 id="save-artist-name"
-                placeholder="Ej: Luna Nova"
+                placeholder="Ej: Mi voz trap, Estilo romántico, Voz energética..."
                 value={saveArtistName}
                 onChange={(e) => setSaveArtistName(e.target.value)}
                 maxLength={50}
+                autoFocus
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="save-artist-style">Estilo (opcional)</Label>
-              <Input
-                id="save-artist-style"
-                placeholder="Ej: Pop"
-                value={saveArtistStyle}
-                onChange={(e) => setSaveArtistStyle(e.target.value)}
-                maxLength={100}
-              />
+              {saveArtistName.trim().length > 0 && saveArtistName.trim().length < 3 && (
+                <p className="text-xs text-destructive">Mínimo 3 caracteres</p>
+              )}
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setShowSaveArtistForm(false)} disabled={isSavingArtist}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveVirtualArtist} disabled={!saveArtistName.trim() || isSavingArtist} className="gap-2">
+            <Button onClick={handleSaveVirtualArtist} disabled={saveArtistName.trim().length < 3 || isSavingArtist} className="gap-2">
               {isSavingArtist ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Guardando...</>
               ) : (
-                <><Save className="h-4 w-4" /> Guardar artista</>
+                <><Save className="h-4 w-4" /> Guardar artista virtual</>
               )}
             </Button>
           </DialogFooter>
         </DialogContent>
+      </Dialog>
       </Dialog>
 
       
