@@ -74,7 +74,7 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Verify the work belongs to the user and is in 'processing' state
+    // Verify the work belongs to the user and is in draft state
     const { data: work, error: workError } = await supabaseAdmin
       .from("works")
       .select("id, user_id, title, description, status, file_path, file_hash, file_hash_sha512_b64")
@@ -110,6 +110,44 @@ serve(async (req) => {
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // ── Deduct credit NOW (before any iBS call) ──
+    // Read cost from feature_costs table
+    let creditCost = 1;
+    const { data: costRow } = await supabaseAdmin
+      .from("feature_costs")
+      .select("credit_cost")
+      .eq("feature_key", "register_work")
+      .maybeSingle();
+    if (costRow) creditCost = costRow.credit_cost;
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("available_credits")
+      .eq("user_id", userId)
+      .single();
+
+    if (!profile || profile.available_credits < creditCost) {
+      return new Response(
+        JSON.stringify({ error: "Créditos insuficientes", available: profile?.available_credits || 0, required: creditCost }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    await supabaseAdmin
+      .from("profiles")
+      .update({ available_credits: profile.available_credits - creditCost, updated_at: new Date().toISOString() })
+      .eq("user_id", userId);
+
+    await supabaseAdmin.from("credit_transactions").insert({
+      user_id: userId,
+      amount: -creditCost,
+      type: "usage",
+      description: `Registro: ${work.title}`,
+    });
+
+    let creditDeducted = true;
+    console.log(`[IBS] Credit deducted for work ${workId}: ${creditCost} credit(s)`);
 
     // Get a signed URL for the file (avoid downloading into memory)
     const { data: signedUrlData, error: signedUrlError } = await supabaseAdmin.storage
@@ -204,10 +242,10 @@ serve(async (req) => {
       // Fallback: try inline upload for small files only (< 5MB)
       if (fileSizeMB <= 5 && allFilePaths.length === 1) {
         console.log(`[IBS] Trying inline fallback for small file`);
-        return await handleInlineUpload(supabaseAdmin, work, signedUrlData.signedUrl, signatureId, ibsHeaders, workId, userId, fileHash, ibsPayloadChecksum, ibsPayloadAlgorithm, corsHeaders);
+        return await handleInlineUpload(supabaseAdmin, work, signedUrlData.signedUrl, signatureId, ibsHeaders, workId, userId, fileHash, ibsPayloadChecksum, ibsPayloadAlgorithm, corsHeaders, creditCost);
       }
 
-      await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `iBS upload error ${uploadRes.status}: ${errBody}`);
+      await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `iBS upload error ${uploadRes.status}: ${errBody}`, creditCost);
       return new Response(
         JSON.stringify({ success: false, error: `iBS upload session failed: ${errBody}`, workId, status: "failed", refunded: true }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -249,7 +287,7 @@ serve(async (req) => {
       if (!putRes.ok) {
         const errBody = await putRes.text();
         console.error(`[IBS] Presigned upload failed for file ${i} [${putRes.status}]:`, errBody);
-        await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `File upload failed: ${putRes.status}`);
+        await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `File upload failed: ${putRes.status}`, creditCost);
         return new Response(
           JSON.stringify({ success: false, error: "File upload to storage failed", workId, status: "failed", refunded: true }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -269,7 +307,7 @@ serve(async (req) => {
     if (!completeRes.ok) {
       const errBody = await completeRes.text();
       console.error(`[IBS] Upload confirmation failed [${completeRes.status}]:`, errBody);
-      await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `Upload confirmation failed: ${completeRes.status}`);
+      await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `Upload confirmation failed: ${completeRes.status}`, creditCost);
       return new Response(
         JSON.stringify({ success: false, error: "Upload confirmation failed", workId, status: "failed", refunded: true }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -338,6 +376,7 @@ async function handleInlineUpload(
   ibsPayloadChecksum: string,
   ibsPayloadAlgorithm: string,
   corsHeaders: Record<string, string>,
+  creditCost: number = 0,
 ) {
   const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
 
@@ -361,7 +400,7 @@ async function handleInlineUpload(
   if (!ibsRes.ok) {
     const errBody = await ibsRes.text();
     console.error(`[IBS] Inline fallback failed [${ibsRes.status}]:`, errBody);
-    await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `iBS inline error ${ibsRes.status}: ${errBody}`);
+    await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `iBS inline error ${ibsRes.status}: ${errBody}`, creditCost);
     return new Response(
       JSON.stringify({ success: false, error: `iBS registration failed: ${errBody}`, workId, status: "failed", refunded: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -396,42 +435,47 @@ async function handleInlineUpload(
 }
 
 /**
- * Handles iBS failure: marks work as failed and refunds credit.
+ * Handles iBS failure: marks work as failed and refunds credit only if actually deducted.
  */
 async function handleIbsFailure(
   supabaseAdmin: ReturnType<typeof createClient>,
   workId: string,
   userId: string,
   workTitle: string,
-  reason: string
+  reason: string,
+  creditCost: number = 0
 ) {
   await supabaseAdmin
     .from("works")
     .update({ status: "failed", updated_at: new Date().toISOString() })
     .eq("id", workId);
 
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("available_credits")
-    .eq("user_id", userId)
-    .single();
-
-  if (profile) {
-    await supabaseAdmin
+  if (creditCost > 0) {
+    const { data: profile } = await supabaseAdmin
       .from("profiles")
-      .update({
-        available_credits: profile.available_credits + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
+      .select("available_credits")
+      .eq("user_id", userId)
+      .single();
 
-    await supabaseAdmin.from("credit_transactions").insert({
-      user_id: userId,
-      amount: 1,
-      type: "refund",
-      description: `Reembolso por fallo iBS: ${workTitle} — ${reason}`,
-    });
+    if (profile) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({
+          available_credits: profile.available_credits + creditCost,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+
+      await supabaseAdmin.from("credit_transactions").insert({
+        user_id: userId,
+        amount: creditCost,
+        type: "refund",
+        description: `Reembolso por fallo iBS: ${workTitle} — ${reason}`,
+      });
+
+      console.log(`[IBS] FAILURE — Work ${workId} marked as failed, ${creditCost} credit(s) refunded. Reason: ${reason}`);
+    }
+  } else {
+    console.log(`[IBS] FAILURE — Work ${workId} marked as failed, no credits to refund. Reason: ${reason}`);
   }
-
-  console.log(`[IBS] FAILURE — Work ${workId} marked as failed, credit refunded. Reason: ${reason}`);
 }
