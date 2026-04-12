@@ -143,11 +143,11 @@ export default function ManagerRegisterWork() {
       // Always use manager's user_id for RLS compliance; the managed_works table tracks the artist relationship
       const workUserId = user.id;
 
-      // Spend credits
+      // Validate credits — actual deduction happens inside register-work-ibs edge function
       const { data: spendResult, error: spendError } = await supabase.functions.invoke('spend-credits', {
         body: { feature: 'register_work', description: `Registro manager: ${title}` },
       });
-      if (spendError) throw new Error(spendError.message || 'Error al descontar créditos');
+      if (spendError) throw new Error(spendError.message || 'Error al validar créditos');
       if (spendResult?.error) throw new Error(spendResult.error);
 
       // Compute SHA-256 hash of primary file
