@@ -525,8 +525,6 @@ const AIStudioCreate = () => {
       setIsSavingArtist(false);
     }
   };
-    }
-  };
 
   // ── Select virtual artist ──
   const handleSelectArtist = (artist: any) => {
