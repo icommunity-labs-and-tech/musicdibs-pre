@@ -290,7 +290,7 @@ const AIStudioCreate = () => {
       toast({ title: t('aiShared.error'), description: 'Escribe al menos 10 caracteres describiendo tu canción', variant: "destructive" });
       return;
     }
-    if (!selectedVoice) {
+    if (mode === 'song' && !selectedVoice) {
       toast({ title: t('aiShared.error'), description: 'Selecciona una voz para tu canción', variant: "destructive" });
       return;
     }
@@ -1127,9 +1127,10 @@ const AIStudioCreate = () => {
                           <Wand2 className="w-4 h-4 mr-2" />
                           {t('aiCreate.generateBtn')} {mode === 'song' ? 'canción' : 'instrumental'} con IA
                         </Button>
-                        {mode === 'song' && !selectedVoice && prompt.trim().length >= 10 && (
+{mode === 'song' && !selectedVoice && prompt.trim().length >= 10 && (
                           <p className="text-xs text-destructive text-center mt-1">Selecciona una voz para continuar</p>
                         )}
+                        {mode !== 'song' && selectedVoice && null}
                         <PricingLink className="mt-1 block text-center" />
                         </>
                       )}
