@@ -94,11 +94,15 @@ Deno.serve(async (req) => {
       })
     }
 
+    // siteUrl viene como https://kmwehyixenybegwhqljx.supabase.co/auth/v1
+    // — ya incluye /auth/v1, así que no lo añadimos
     const siteUrl = body.email_data.site_url || `https://${ROOT_DOMAIN}`
-    const confirmationUrl = body.email_data.redirect_to
-      ? `${siteUrl}/auth/v1/verify?token=${body.email_data.token_hash}&type=${emailType}&redirect_to=${encodeURIComponent(body.email_data.redirect_to)}`
-      : `${siteUrl}/auth/v1/verify?token=${body.email_data.token_hash}&type=${emailType}`
-
+    const baseUrl = siteUrl.includes('/auth/v1')
+      ? siteUrl.replace('/auth/v1', '')
+      : siteUrl
+    const appRedirect = `https://${ROOT_DOMAIN}/reset-password`
+    const confirmationUrl = `${baseUrl}/auth/v1/verify?token=${body.email_data.token_hash}&type=${emailType}&redirect_to=${encodeURIComponent(appRedirect)}`
+    
     const templateProps = {
       siteName: SITE_NAME,
       siteUrl,
