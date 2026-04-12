@@ -332,17 +332,11 @@ const AIStudioCreate = () => {
           toast({ title: 'Demasiadas generaciones', description: data.message, variant: 'destructive' });
           return;
         }
-        if (data?.error === 'insufficient_credits') {
-          throw { message: data.message || 'Créditos del proveedor insuficientes', details: data.details };
-        }
         if (data?.error) throw { message: data.error, details: data.details };
         throw { message: error.message || 'Error al generar audio' };
       }
 
       if (data?.error) {
-        if (data.error === 'insufficient_credits') {
-          throw { message: data.message || 'Créditos del proveedor insuficientes', details: data.details };
-        }
         throw { message: data.error, details: data.details };
       }
 
