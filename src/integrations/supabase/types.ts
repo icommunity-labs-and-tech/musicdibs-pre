@@ -55,6 +55,7 @@ export type Database = {
           mood: string | null
           prompt: string
           user_id: string
+          voice_profile_id: string | null
         }
         Insert: {
           audio_url: string
@@ -66,6 +67,7 @@ export type Database = {
           mood?: string | null
           prompt: string
           user_id: string
+          voice_profile_id?: string | null
         }
         Update: {
           audio_url?: string
@@ -77,6 +79,7 @@ export type Database = {
           mood?: string | null
           prompt?: string
           user_id?: string
+          voice_profile_id?: string | null
         }
         Relationships: []
       }
@@ -2009,6 +2012,7 @@ export type Database = {
       user_artist_profiles: {
         Row: {
           created_at: string
+          created_from_generation_id: string | null
           default_duration: number | null
           genre: string | null
           id: string
@@ -2024,6 +2028,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_from_generation_id?: string | null
           default_duration?: number | null
           genre?: string | null
           id?: string
@@ -2039,6 +2044,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_from_generation_id?: string | null
           default_duration?: number | null
           genre?: string | null
           id?: string

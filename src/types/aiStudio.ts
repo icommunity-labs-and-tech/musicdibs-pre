@@ -17,6 +17,7 @@ export interface GenerationResult {
   isFavorite?: boolean;
   parentId?: string; // For variations
   variationType?: VariationType;
+  voiceProfileId?: string;
 }
 
 export type VariationType = 'similar' | 'mood_change' | 'extend' | 'inpaint';
