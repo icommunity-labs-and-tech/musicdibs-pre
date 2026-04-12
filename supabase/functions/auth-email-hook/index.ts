@@ -66,7 +66,9 @@ Deno.serve(async (req) => {
       body = wh.verify(payload, headers) as AuthHookPayload
     } catch (err) {
       console.error('[AUTH-EMAIL-HOOK] Verification failed:', String(err))
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      console.error('[AUTH-EMAIL-HOOK] Secret length:', hookSecret.length)
+      console.error('[AUTH-EMAIL-HOOK] Headers received:', JSON.stringify(Object.keys(headers)))
+      return new Response(JSON.stringify({ error: 'Unauthorized', detail: String(err) }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
