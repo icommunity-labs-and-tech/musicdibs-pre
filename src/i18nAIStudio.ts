@@ -489,7 +489,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
   en: {
     aiCreate: {
       backToStudio: 'Back to AI MusicDibs Studio',
-      title: 'AI MusicDibs Studio',
+      title: 'Create your music',
       subtitle: 'Create music and get inspired with AI',
       tabMusic: 'Create Music',
       tabLyrics: 'Lyrics Composer',
@@ -969,7 +969,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
   'pt-BR': {
     aiCreate: {
       backToStudio: 'Voltar ao AI MusicDibs Studio',
-      title: 'AI MusicDibs Studio',
+      title: 'Crie sua música',
       subtitle: 'Crie música e inspire-se com IA',
       tabMusic: 'Criar Música',
       tabLyrics: 'Compositor de Letras',
