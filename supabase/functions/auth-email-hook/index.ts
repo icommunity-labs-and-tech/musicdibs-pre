@@ -100,7 +100,16 @@ Deno.serve(async (req) => {
     const baseUrl = siteUrl.includes('/auth/v1')
       ? siteUrl.replace('/auth/v1', '')
       : siteUrl
-    const appRedirect = `https://${ROOT_DOMAIN}/reset-password`
+    
+    const redirectByType: Record<string, string> = {
+      recovery: `https://${ROOT_DOMAIN}/reset-password`,
+      signup: `https://${ROOT_DOMAIN}/dashboard`,
+      magiclink: `https://${ROOT_DOMAIN}/dashboard`,
+      invite: `https://${ROOT_DOMAIN}/dashboard`,
+      email_change: `https://${ROOT_DOMAIN}/dashboard`,
+      reauthentication: `https://${ROOT_DOMAIN}/dashboard`,
+    }
+    const appRedirect = redirectByType[emailType] ?? `https://${ROOT_DOMAIN}/dashboard`
     const confirmationUrl = `${baseUrl}/auth/v1/verify?token=${body.email_data.token_hash}&type=${emailType}&redirect_to=${encodeURIComponent(appRedirect)}`
     
     const templateProps = {
