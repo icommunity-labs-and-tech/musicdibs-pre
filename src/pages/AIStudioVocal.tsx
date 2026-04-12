@@ -245,8 +245,7 @@ export default function AIStudioVocal() {
         { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
           body: JSON.stringify({ lyrics, voice_id: selectedClone.elevenlabs_voice_id, voice_name: selectedClone.name }) });
       const data = await res.json();
-      if (!res.ok) {
-        const data = await res.json();
+      if (!res.ok || data?.error) {
         if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: tv('insufficientCreditsDesc'), variant: 'destructive' });
         else { const friendly = parseAiError(data); toast({ title: friendly.title, description: friendly.description, variant: 'destructive' }); }
         return;
