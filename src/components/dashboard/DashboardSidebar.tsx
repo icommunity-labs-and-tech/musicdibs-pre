@@ -74,6 +74,7 @@ export function DashboardSidebar() {
     { title: 'Costes Features', url: '/dashboard/admin/feature-costs', icon: Settings2 },
     { title: 'Rentabilidad APIs', url: '/dashboard/admin/api-costs', icon: BarChart3 },
     { title: '📊 Métricas Producto', url: '/dashboard/admin/product-metrics', icon: BarChart3 },
+    { title: 'Bajas usuarios', url: '/dashboard/admin/churn', icon: UserX },
   ], [i18n.resolvedLanguage, t]);
 
   // Determine which group is active based on current route
