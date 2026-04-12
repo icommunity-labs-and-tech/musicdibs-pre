@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { DeleteAccountModal } from '@/components/dashboard/DeleteAccountModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -63,6 +64,7 @@ export default function ProfilePage() {
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [kycLoading, setKycLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     if (user?.user_metadata) {
@@ -414,7 +416,26 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+      {/* Delete Account */}
+      <Card className="border-destructive/30 lg:col-span-2">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-4 w-4" /> {t('dashboard.profile.deleteAccount', { defaultValue: 'Eliminar cuenta' })}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {t('dashboard.profile.deleteAccountDesc', { defaultValue: 'Al eliminar tu cuenta, se borrarán permanentemente todos tus datos personales, generaciones de IA y assets. Las obras registradas en blockchain permanecerán válidas.' })}
+          </p>
+          <Button variant="destructive" size="sm" onClick={() => setShowDeleteModal(true)}>
+            {t('dashboard.profile.deleteAccountButton', { defaultValue: 'Solicitar eliminación de cuenta' })}
+          </Button>
+        </CardContent>
+      </Card>
+
       </div>
+
+      <DeleteAccountModal open={showDeleteModal} onOpenChange={setShowDeleteModal} />
     </div>
   );
 }
