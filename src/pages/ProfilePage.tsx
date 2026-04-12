@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { DeleteAccountModal } from '@/components/dashboard/DeleteAccountModal';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -63,6 +64,7 @@ export default function ProfilePage() {
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [kycLoading, setKycLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     if (user?.user_metadata) {
