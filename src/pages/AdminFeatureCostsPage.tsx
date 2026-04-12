@@ -50,7 +50,7 @@ export default function AdminFeatureCostsPage() {
       toast.error('Error cargando precios');
       return;
     }
-    setRows((data as OperationRow[]) || []);
+    setRows((data as unknown as OperationRow[]) || []);
     setLoading(false);
   };
 
@@ -74,12 +74,10 @@ export default function AdminFeatureCostsPage() {
     const { error } = await supabase
       .from('operation_pricing')
       .update({
-        operation_name: (changes.operation_name ?? row.operation_name),
+        operation_label: (changes.operation_name ?? row.operation_name),
         credits_cost: (changes.credits_cost ?? row.credits_cost),
-        category: (changes.category ?? row.category),
-        operation_icon: (changes.operation_icon ?? row.operation_icon),
         description: (changes.description ?? row.description),
-      })
+      } as any)
       .eq('operation_key', row.operation_key);
 
     if (error) {

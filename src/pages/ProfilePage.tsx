@@ -75,9 +75,9 @@ export default function ProfilePage() {
       .finally(() => setKycLoading(false));
     // Load language from profile
     if (user?.id) {
-      supabase.from('profiles').select('language').eq('user_id', user.id).single()
+      supabase.from('profiles').select('language' as any).eq('user_id', user.id).single()
         .then(({ data }) => {
-          if (data?.language) setUserLang(data.language);
+          if ((data as any)?.language) setUserLang((data as any).language);
         });
     }
   }, [user]);
@@ -307,7 +307,7 @@ export default function ProfilePage() {
               setUserLang(val);
               setLangSaving(true);
               i18n.changeLanguage(val);
-              await supabase.from('profiles').update({ language: val }).eq('user_id', user!.id);
+              await supabase.from('profiles').update({ language: val } as any).eq('user_id', user!.id);
               setLangSaving(false);
             }}
           >

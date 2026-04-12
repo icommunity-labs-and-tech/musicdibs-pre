@@ -1201,36 +1201,54 @@ export type Database = {
       }
       operation_pricing: {
         Row: {
+          category: string
           created_at: string | null
           credits_cost: number
           description: string | null
+          display_order: number
+          euro_cost: number | null
           id: string
           is_active: boolean | null
+          is_annual_only: boolean | null
           is_free: boolean | null
+          operation_icon: string | null
           operation_key: string
           operation_label: string
+          operation_name: string
           updated_at: string | null
         }
         Insert: {
+          category?: string
           created_at?: string | null
           credits_cost?: number
           description?: string | null
+          display_order?: number
+          euro_cost?: number | null
           id?: string
           is_active?: boolean | null
+          is_annual_only?: boolean | null
           is_free?: boolean | null
+          operation_icon?: string | null
           operation_key: string
           operation_label: string
+          operation_name?: string
           updated_at?: string | null
         }
         Update: {
+          category?: string
           created_at?: string | null
           credits_cost?: number
           description?: string | null
+          display_order?: number
+          euro_cost?: number | null
           id?: string
           is_active?: boolean | null
+          is_annual_only?: boolean | null
           is_free?: boolean | null
+          operation_icon?: string | null
           operation_key?: string
           operation_label?: string
+          operation_name?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -1639,6 +1657,7 @@ export type Database = {
           is_blocked: boolean | null
           is_managed_artist: boolean | null
           kyc_status: string
+          language: string | null
           last_active_at: string | null
           library_status: string | null
           library_status_since: string | null
@@ -1659,6 +1678,7 @@ export type Database = {
           is_blocked?: boolean | null
           is_managed_artist?: boolean | null
           kyc_status?: string
+          language?: string | null
           last_active_at?: string | null
           library_status?: string | null
           library_status_since?: string | null
@@ -1679,6 +1699,7 @@ export type Database = {
           is_blocked?: boolean | null
           is_managed_artist?: boolean | null
           kyc_status?: string
+          language?: string | null
           last_active_at?: string | null
           library_status?: string | null
           library_status_since?: string | null
