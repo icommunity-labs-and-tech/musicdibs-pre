@@ -107,11 +107,11 @@ export async function registerWork(data: WorkRegistration): Promise<{
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // Spend credits via secure edge function BEFORE uploading
+  // Credit validation — actual deduction happens inside register-work-ibs edge function
   const { data: spendResult, error: spendError } = await supabase.functions.invoke('spend-credits', {
     body: { feature: 'register_work', description: `Registro: ${data.title}` },
   });
-  if (spendError) throw new Error(spendError.message || 'Error al descontar créditos');
+  if (spendError) throw new Error(spendError.message || 'Error al validar créditos');
   if (spendResult?.error) throw new Error(spendResult.error);
 
   // Gather all files (primary + additional)

@@ -400,7 +400,7 @@ async function handleInlineUpload(
   if (!ibsRes.ok) {
     const errBody = await ibsRes.text();
     console.error(`[IBS] Inline fallback failed [${ibsRes.status}]:`, errBody);
-    await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `iBS inline error ${ibsRes.status}: ${errBody}`);
+    await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `iBS inline error ${ibsRes.status}: ${errBody}`, creditCost);
     return new Response(
       JSON.stringify({ success: false, error: `iBS registration failed: ${errBody}`, workId, status: "failed", refunded: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
