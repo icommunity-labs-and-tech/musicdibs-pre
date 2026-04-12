@@ -242,7 +242,7 @@ serve(async (req) => {
       // Fallback: try inline upload for small files only (< 5MB)
       if (fileSizeMB <= 5 && allFilePaths.length === 1) {
         console.log(`[IBS] Trying inline fallback for small file`);
-        return await handleInlineUpload(supabaseAdmin, work, signedUrlData.signedUrl, signatureId, ibsHeaders, workId, userId, fileHash, ibsPayloadChecksum, ibsPayloadAlgorithm, corsHeaders);
+        return await handleInlineUpload(supabaseAdmin, work, signedUrlData.signedUrl, signatureId, ibsHeaders, workId, userId, fileHash, ibsPayloadChecksum, ibsPayloadAlgorithm, corsHeaders, creditCost);
       }
 
       await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `iBS upload error ${uploadRes.status}: ${errBody}`);
