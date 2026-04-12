@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { parseAiError } from '@/lib/aiErrorHandler';
 import { FileDropzone } from '@/components/FileDropzone';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -227,8 +228,9 @@ export default function AIStudioVocal() {
         body: { description: lyricsDesc, genre: lyricsGenre, mood: lyricsMood, style: lyricsStyle, language: lyricsLanguage, structure: lyricsStructure, rhymeScheme: lyricsRhyme, pov: lyricsPov, artistRefs: lyricsArtistRefs }
       });
       if (error) throw error;
+      if (data?.error) { const friendly = parseAiError(data); toast({ title: friendly.title, description: friendly.description, variant: 'destructive' }); return; }
       if (data?.lyrics) { setLyrics(data.lyrics); toast({ title: tv('lyricsGenerated'), description: tv('lyricsGeneratedDesc') }); }
-    } catch { toast({ title: s('aiShared.error'), variant: 'destructive' }); }
+    } catch { toast({ title: s('aiShared.error'), description: 'Inténtalo de nuevo más tarde.', variant: 'destructive' }); }
     finally { setIsGeneratingLyrics(false); }
   };
 
@@ -244,8 +246,9 @@ export default function AIStudioVocal() {
           body: JSON.stringify({ lyrics, voice_id: selectedClone.elevenlabs_voice_id, voice_name: selectedClone.name }) });
       const data = await res.json();
       if (!res.ok) {
+        const data = await res.json();
         if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: tv('insufficientCreditsDesc'), variant: 'destructive' });
-        else toast({ title: s('aiShared.error'), description: data.error, variant: 'destructive' });
+        else { const friendly = parseAiError(data); toast({ title: friendly.title, description: friendly.description, variant: 'destructive' }); }
         return;
       }
       setAudioUrl(data.audioUrl);
