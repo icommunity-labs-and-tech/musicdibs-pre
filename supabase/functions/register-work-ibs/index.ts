@@ -160,16 +160,27 @@ serve(async (req) => {
     const filesMetadata = [];
     for (const fp of allFilePaths) {
       const name = (fp.split("/").pop() || "file").replace(/^\d+_/, "");
-      // Get size via HEAD request on signed URL
       const { data: fpUrl } = await supabaseAdmin.storage.from("works-files").createSignedUrl(fp, 600);
       let fSize = fileSize; // default to primary file size
       let fType = contentType;
+      const resolvedUrl = fpUrl?.signedUrl || signedUrlData.signedUrl;
       if (fp !== work.file_path && fpUrl?.signedUrl) {
         const h = await fetch(fpUrl.signedUrl, { method: "HEAD" });
         fSize = parseInt(h.headers.get("content-length") || "0", 10);
         fType = h.headers.get("content-type") || "application/octet-stream";
       }
-      filesMetadata.push({ name, content_type: fType, size: fSize, _signedUrl: fpUrl?.signedUrl || signedUrlData.signedUrl });
+      // If HEAD didn't return a valid size, fetch the file to measure it
+      if (!fSize || fSize <= 0) {
+        console.warn(`[IBS] HEAD returned no content-length for "${fp}", fetching to measure size`);
+        const probe = await fetch(resolvedUrl);
+        const probeBytes = await probe.arrayBuffer();
+        fSize = probeBytes.byteLength;
+        if (!fSize || fSize <= 0) {
+          console.error(`[IBS] File "${fp}" has zero size, skipping`);
+          continue;
+        }
+      }
+      filesMetadata.push({ name, content_type: fType, size: fSize, _signedUrl: resolvedUrl });
     }
 
     // Step 1: Create upload session with iBS
