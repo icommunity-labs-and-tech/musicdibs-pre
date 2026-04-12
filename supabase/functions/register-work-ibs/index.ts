@@ -287,7 +287,7 @@ serve(async (req) => {
       if (!putRes.ok) {
         const errBody = await putRes.text();
         console.error(`[IBS] Presigned upload failed for file ${i} [${putRes.status}]:`, errBody);
-        await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `File upload failed: ${putRes.status}`);
+        await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `File upload failed: ${putRes.status}`, creditCost);
         return new Response(
           JSON.stringify({ success: false, error: "File upload to storage failed", workId, status: "failed", refunded: true }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -307,7 +307,7 @@ serve(async (req) => {
     if (!completeRes.ok) {
       const errBody = await completeRes.text();
       console.error(`[IBS] Upload confirmation failed [${completeRes.status}]:`, errBody);
-      await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `Upload confirmation failed: ${completeRes.status}`);
+      await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `Upload confirmation failed: ${completeRes.status}`, creditCost);
       return new Response(
         JSON.stringify({ success: false, error: "Upload confirmation failed", workId, status: "failed", refunded: true }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
