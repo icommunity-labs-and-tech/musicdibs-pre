@@ -129,7 +129,8 @@ export default function ProfilePage() {
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPwMsg(null);
-    if (newPw.length < 6) {
+    const pwValid = newPw.length >= 8 && /[A-Z]/.test(newPw) && /[0-9]/.test(newPw) && /[^A-Za-z0-9]/.test(newPw);
+    if (!pwValid) {
       setPwMsg({ type: 'error', text: t('dashboard.profile.pwMinLength') });
       return;
     }
@@ -364,7 +365,7 @@ export default function ProfilePage() {
                     value={newPw}
                     onChange={e => setNewPw(e.target.value)}
                     required
-                    minLength={6}
+                    minLength={8}
                     className="h-9 text-sm pr-9"
                     placeholder={t('dashboard.profile.newPasswordPlaceholder')}
                   />
@@ -384,7 +385,7 @@ export default function ProfilePage() {
                   value={confirmPw}
                   onChange={e => setConfirmPw(e.target.value)}
                   required
-                  minLength={6}
+                  minLength={8}
                   className="h-9 text-sm"
                   placeholder={t('dashboard.profile.confirmPasswordPlaceholder')}
                 />
