@@ -79,7 +79,6 @@ export default function AdminFeatureCostsPage() {
         description: (changes.description ?? row.description),
       } as any)
       .eq('operation_key', row.operation_key);
-      .eq('operation_key', row.operation_key);
 
     if (error) {
       toast.error(`Error: ${error.message}`);
