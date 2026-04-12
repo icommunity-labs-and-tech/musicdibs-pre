@@ -64,13 +64,14 @@ serve(async (req) => {
 
     if (!ttsRes.ok) {
       const err = await ttsRes.text();
-      console.error('[VOCAL-TRACK] ElevenLabs error:', err);
+      console.error('[VOCAL-TRACK] ElevenLabs error:', ttsRes.status, err);
       const { data: p } = await supabase.from('profiles').select('available_credits').eq('user_id', user.id).single();
       if (p) {
         await supabase.from('profiles').update({ available_credits: p.available_credits + CREDITS_COST }).eq('user_id', user.id);
         await supabase.from('credit_transactions').insert({ user_id: user.id, amount: CREDITS_COST, type: 'refund', description: 'Reembolso: fallo vocal' });
       }
-      return new Response(JSON.stringify({ error: 'TTS failed', details: err }), { status: ttsRes.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const errorCode = (ttsRes.status === 429) ? 'provider_rate_limit' : 'provider_unavailable';
+      return new Response(JSON.stringify({ error: errorCode }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const audioBuffer = new Uint8Array(await ttsRes.arrayBuffer());

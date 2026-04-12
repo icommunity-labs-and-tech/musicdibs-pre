@@ -113,8 +113,9 @@ No añadas explicaciones, comentarios ni introducciones.`
     if (!response.ok) {
       const errText = await response.text()
       console.error("[LYRICS] Claude API error:", response.status, errText)
-      return new Response(JSON.stringify({ error: "Error al generar letra" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      const errorCode = (response.status === 429) ? 'provider_rate_limit' : 'provider_unavailable'
+      return new Response(JSON.stringify({ error: errorCode }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } })
     }
 
     const data = await response.json()
