@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { workCertifiedEmail } from "../_shared/transactional-email.ts";
+import { validateIbsWebhookAuth } from "../_shared/ibs-webhook-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,8 +22,8 @@ const toCheckerNetworkSlug = (network?: string) => {
  *   - evidence.certified
  *   - evidence.signed_pdf.certified
  *
- * Auth: iBS sends the webhook secret as ?secret=<value> in the URL
- *       and the Supabase anon key as Authorization: Bearer <anon_key>
+ * Auth: iBS can send the webhook secret either as ?secret=<value>
+ *       or as Authorization: Bearer <secret>
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -30,22 +31,11 @@ serve(async (req) => {
   }
 
   try {
-    // Validate webhook secret from query parameter
-    const webhookSecret = Deno.env.get("IBS_WEBHOOK_SECRET");
-    const url = new URL(req.url);
-    const secretParam = url.searchParams.get("secret");
-    if (webhookSecret) {
-      const expectedPrefix = webhookSecret.substring(0, 4);
-      const receivedPrefix = secretParam ? secretParam.substring(0, 4) : "(none)";
-      console.log(`[IBS-WEBHOOK-EVIDENCE] Secret check — expected starts: "${expectedPrefix}…", received starts: "${receivedPrefix}…", match: ${secretParam === webhookSecret}`);
-      if (secretParam !== webhookSecret) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    } else {
-      console.warn("[IBS-WEBHOOK-EVIDENCE] IBS_WEBHOOK_SECRET not configured, skipping validation");
+    if (!validateIbsWebhookAuth(req, "IBS-WEBHOOK-EVIDENCE")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const body = await req.json();
