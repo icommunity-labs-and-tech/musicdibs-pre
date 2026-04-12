@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { kycFailedEmail } from "../_shared/transactional-email.ts";
+import { validateIbsWebhookAuth } from "../_shared/ibs-webhook-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,21 +47,11 @@ serve(async (req) => {
   }
 
   try {
-    const webhookSecret = Deno.env.get("IBS_WEBHOOK_SECRET");
-    const url = new URL(req.url);
-    const secretParam = url.searchParams.get("secret");
-    if (webhookSecret) {
-      const expectedPrefix = webhookSecret.substring(0, 4);
-      const receivedPrefix = secretParam ? secretParam.substring(0, 4) : "(none)";
-      console.log(`[IBS-WEBHOOK-SIG-KO] Secret check — expected starts: "${expectedPrefix}…", received starts: "${receivedPrefix}…", match: ${secretParam === webhookSecret}`);
-      if (secretParam !== webhookSecret) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    } else {
-      console.warn("[IBS-WEBHOOK-SIG-KO] IBS_WEBHOOK_SECRET not configured, skipping validation");
+    if (!validateIbsWebhookAuth(req, "IBS-WEBHOOK-SIG-KO")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const body = await req.json();
