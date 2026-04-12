@@ -122,8 +122,8 @@ Deno.serve(async (req) => {
   }
 
   const token = authHeader.slice('Bearer '.length).trim()
-  const claims = parseJwtClaims(token)
-  if (claims?.role !== 'service_role') {
+  const cronSecret = Deno.env.get('CRON_SECRET') ?? 'W4-WCTgtYjeNi1cHFYWvQ37wTaLHYw9oWXE9ifmmJ1E'
+  if (token !== cronSecret) {
     return new Response(
       JSON.stringify({ error: 'Forbidden' }),
       { status: 403, headers: { 'Content-Type': 'application/json' } }
