@@ -26,20 +26,29 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `Eres un experto en producción musical y descripción de canciones para APIs de generación de música como ElevenLabs Music API. Tu trabajo es mejorar descripciones de canciones haciéndolas más específicas y detalladas.`;
+    const systemPrompt = `You are an expert in music production and song description for music generation APIs like ElevenLabs Music API. Your job is to improve song descriptions making them more specific and detailed.
 
-    const userPrompt = `Mejora esta descripción de canción para ElevenLabs Music API. Hazla más específica añadiendo:
-- Instrumentación detallada (guitarra, piano, batería, bajo, sintetizadores, etc)
-- Tipo de voz (femenina/masculina, tono, edad aproximada)
-- Ritmo y tempo (lento, medio, rápido, uptempo, downtempo)
-- Mood/atmósfera (alegre, melancólico, energético, relajado, etc)
-- Estructura musical si es relevante
+CRITICAL RULE: You MUST respond in the EXACT SAME LANGUAGE as the user's input text.
+- If the user wrote in Spanish -> respond in Spanish
+- If the user wrote in English -> respond in English
+- If the user wrote in French -> respond in French
+- If the user wrote in any other language -> respond in that same language
+NEVER translate the response to a different language than the input.`;
 
-Mantén el género y estilo original. No inventes información que no esté implícita. Devuelve SOLO la descripción mejorada, sin explicaciones.
+    const userPrompt = `Improve this song description for ElevenLabs Music API. Make it more specific by adding:
+- Detailed instrumentation (guitar, piano, drums, bass, synthesizers, etc)
+- Voice type (female/male, tone, approximate age)
+- Rhythm and tempo (slow, medium, fast, uptempo, downtempo)
+- Mood/atmosphere (cheerful, melancholic, energetic, relaxed, etc)
+- Musical structure if relevant
+
+Keep the original genre and style. Do not invent information that is not implied. Return ONLY the improved description, no explanations.
+
+IMPORTANT: Respond in the EXACT SAME LANGUAGE as the original text below.
 
 Original: ${text}
 
-Mejorada:`;
+Improved:`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
