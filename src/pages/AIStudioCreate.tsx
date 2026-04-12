@@ -275,6 +275,7 @@ const AIStudioCreate = () => {
         mood: item.mood || undefined,
         createdAt: new Date(item.created_at),
         isFavorite: item.is_favorite || false,
+        voiceProfileId: (item as any).voice_profile_id || undefined,
       })));
     } catch (error) {
       console.error('Error loading history:', error);
@@ -355,7 +356,8 @@ const AIStudioCreate = () => {
             prompt: prompt.trim(),
             duration: data.duration,
             audio_url: audioUrl,
-          })
+            voice_profile_id: mode === 'song' ? selectedVoice : null,
+          } as any)
           .select()
           .single();
 
@@ -367,21 +369,14 @@ const AIStudioCreate = () => {
           prompt: prompt.trim(),
           duration: data.duration,
           createdAt: new Date(savedGen.created_at),
-          isFavorite: false
+          isFavorite: false,
+          voiceProfileId: mode === 'song' ? selectedVoice : undefined,
         };
         setResults(prev => [newResult, ...prev]);
         setLastResult(newResult);
         toast({ title: t('aiCreate.musicGenerated'), description: t('aiCreate.songReady') });
         track('generation_completed', { feature: 'create_music' });
         sessionStorage.setItem('md_last_generation', Date.now().toString());
-
-        // Show save as virtual artist prompt
-        if (selectedVoice && !selectedArtistId) {
-          const vp = voiceProfiles.find(v => v.id === selectedVoice);
-          setLastGeneratedVoiceId(selectedVoice);
-          setLastGeneratedVoiceName(vp?.label || '');
-          setShowSaveArtistPrompt(true);
-        }
       }
     } catch (error: any) {
       console.error('Generation error:', error);
@@ -477,8 +472,27 @@ const AIStudioCreate = () => {
   };
 
   // ── Save as Virtual Artist ──
+  const openSaveArtistModal = (result: GenerationResult) => {
+    if (!result.voiceProfileId) return;
+    const vp = voiceProfiles.find(v => v.id === result.voiceProfileId);
+    setSaveArtistVoiceId(result.voiceProfileId);
+    setSaveArtistVoiceName(vp?.label || '');
+    setSaveArtistGenerationId(result.id);
+    setSaveArtistPrompt(result.prompt);
+    setSaveArtistName('');
+    setSaveArtistStyle('');
+    setShowSaveArtistForm(true);
+  };
+
   const handleSaveVirtualArtist = async () => {
-    if (!saveArtistName.trim() || !lastGeneratedVoiceId || !user) return;
+    if (!saveArtistName.trim() || !saveArtistVoiceId || !user) return;
+
+    // Check limit
+    if (virtualArtistsCount >= 10) {
+      toast({ title: 'Límite alcanzado', description: 'Máximo 10 artistas virtuales. Elimina uno para crear otro.', variant: 'destructive' });
+      return;
+    }
+
     setIsSavingArtist(true);
     try {
       const { data: newArtist, error } = await supabase
@@ -486,28 +500,31 @@ const AIStudioCreate = () => {
         .insert({
           user_id: user.id,
           name: saveArtistName.trim(),
-          voice_profile_id: lastGeneratedVoiceId,
+          voice_profile_id: saveArtistVoiceId,
           voice_type: 'preset',
           genre: null,
           mood: null,
           default_duration: duration,
-          style_notes: saveArtistStyle.trim() || null,
+          style_notes: saveArtistPrompt ? `Estilo original: ${saveArtistPrompt.slice(0, 200)}` : (saveArtistStyle.trim() || null),
           is_default: false,
-        })
+          created_from_generation_id: saveArtistGenerationId || null,
+        } as any)
         .select('*, voice_profiles(label, emoji, sample_url)')
         .single();
       if (error) throw error;
       setVirtualArtists(prev => [newArtist, ...prev]);
       setVirtualArtistsCount(prev => prev + 1);
-      toast({ title: `Artista "${saveArtistName.trim()}" guardado` });
+      setSavedArtistGenerationIds(prev => new Set(prev).add(saveArtistGenerationId));
+      toast({ title: `Artista virtual "${saveArtistName.trim()}" guardado ✅` });
       setShowSaveArtistForm(false);
-      setShowSaveArtistPrompt(false);
       setSaveArtistName('');
       setSaveArtistStyle('');
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
     } finally {
       setIsSavingArtist(false);
+    }
+  };
     }
   };
 
