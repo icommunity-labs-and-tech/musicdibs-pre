@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { parseAiError } from "@/lib/aiErrorHandler";
 import { FileDropzone } from '@/components/FileDropzone';
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -225,7 +226,8 @@ const AIStudioEdit = () => {
     } catch (err: any) {
       stopProgress();
       setIsProcessing(false);
-      setProcessError(err.message || tr('errorGeneric'));
+      const friendly = parseAiError(err);
+      setProcessError(friendly.description);
     }
   };
 

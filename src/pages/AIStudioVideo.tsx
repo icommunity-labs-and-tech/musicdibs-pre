@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { parseAiError } from "@/lib/aiErrorHandler";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -487,7 +488,8 @@ const AIStudioVideo = () => {
       toast({ title: t('aiVideo.genStarted'), description: t('aiVideo.genStartedDesc') });
     } catch (err: any) {
       console.error('Generate error:', err);
-      setError(err.message || t('aiVideo.genFailed'));
+      const friendly = parseAiError(err);
+      setError(friendly.description);
     } finally {
       setIsGenerating(false);
     }
