@@ -150,26 +150,19 @@ export default function MediaLibraryPage() {
 
       // Voice clones samples
       const { data: clones } = await supabase
-        .from("voice_clones")
-        .select("id, name, sample_storage_path, created_at, status")
+        .from("voice_clones" as any)
+        .select("id, name, sample_url, created_at, status")
         .eq("user_id", user.id)
         .eq("status", "active")
         .order("created_at", { ascending: false });
 
       if (clones) {
-        for (const c of clones) {
-          let url: string | null = null;
-          if (c.sample_storage_path) {
-            const { data: signedData } = await supabase.storage
-              .from("voice-clone-samples")
-              .createSignedUrl(c.sample_storage_path, 3600);
-            url = signedData?.signedUrl || null;
-          }
+        for (const c of clones as any[]) {
           allAssets.push({
             id: c.id,
             type: "vocal",
             title: c.name || "Voz clonada",
-            url,
+            url: c.sample_url || null,
             createdAt: c.created_at,
           });
         }
