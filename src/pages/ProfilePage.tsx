@@ -414,7 +414,26 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+      {/* Delete Account */}
+      <Card className="border-destructive/30 lg:col-span-2">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-4 w-4" /> {t('dashboard.profile.deleteAccount', { defaultValue: 'Eliminar cuenta' })}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {t('dashboard.profile.deleteAccountDesc', { defaultValue: 'Al eliminar tu cuenta, se borrarán permanentemente todos tus datos personales, generaciones de IA y assets. Las obras registradas en blockchain permanecerán válidas.' })}
+          </p>
+          <Button variant="destructive" size="sm" onClick={() => setShowDeleteModal(true)}>
+            {t('dashboard.profile.deleteAccountButton', { defaultValue: 'Solicitar eliminación de cuenta' })}
+          </Button>
+        </CardContent>
+      </Card>
+
       </div>
+
+      <DeleteAccountModal open={showDeleteModal} onOpenChange={setShowDeleteModal} />
     </div>
   );
 }

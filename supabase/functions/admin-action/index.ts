@@ -2112,6 +2112,129 @@ serve(async (req) => {
       return json({ error: "Unknown dataset" }, 400);
     }
 
+    // ── GET CHURN DATA ──────────────────────────────────────
+    if (action === "get_churn_data") {
+      const { data: surveys } = await admin
+        .from("cancellation_surveys")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      const emailsMap = await getAllEmailsMap();
+
+      const enriched = (surveys || []).map((s: any) => ({
+        ...s,
+        email: emailsMap[s.user_id] || null,
+      }));
+
+      // Metrics
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const thisMonthSurveys = (surveys || []).filter(
+        (s: any) => s.created_at >= monthStart && s.is_account_deletion
+      );
+
+      const reasonCounts: Record<string, number> = {};
+      const planCounts: Record<string, number> = {};
+      for (const s of thisMonthSurveys) {
+        reasonCounts[s.reason] = (reasonCounts[s.reason] || 0) + 1;
+        const plan = s.plan_type || "Free";
+        planCounts[plan] = (planCounts[plan] || 0) + 1;
+      }
+
+      const topReason = Object.entries(reasonCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+      const topPlan = Object.entries(planCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+
+      return json({
+        surveys: enriched,
+        metrics: {
+          this_month: thisMonthSurveys.length,
+          top_reason: topReason,
+          top_plan: topPlan,
+        },
+      });
+    }
+
+    // ── FORCE DELETE USER ────────────────────────────────────
+    if (action === "force_delete_user") {
+      const { user_id } = payload;
+      if (!user_id) return json({ error: "user_id required" }, 400);
+
+      const { data: targetAuth } = await admin.auth.admin.getUserById(user_id);
+      const targetEmail = targetAuth?.user?.email || "";
+
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("subscription_plan, available_credits")
+        .eq("user_id", user_id)
+        .single();
+
+      // Import the deletion logic inline (same steps as delete-account)
+      const errors: string[] = [];
+
+      // Cancel Stripe
+      try {
+        if (profile?.stripe_customer_id) {
+          const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+          if (stripeKey) {
+            const stripe = new Stripe(stripeKey, { apiVersion: "2025-03-31.basil" });
+            const subs = await stripe.subscriptions.list({ customer: (profile as any).stripe_customer_id, status: "active" });
+            for (const sub of subs.data) {
+              await stripe.subscriptions.update(sub.id, { cancel_at_period_end: true });
+            }
+          }
+        }
+      } catch (e) { errors.push(`stripe: ${e}`); }
+
+      // Anonymize blockchain works
+      try {
+        await admin.from("works").update({ user_id: null, author: "Usuario eliminado", updated_at: new Date().toISOString() }).eq("user_id", user_id).not("blockchain_hash", "is", null);
+      } catch (e) { errors.push(`anon_works: ${e}`); }
+
+      // Anonymize orders/evidences
+      try { await admin.from("orders").update({ user_id: null }).eq("user_id", user_id); } catch (e) { errors.push(`anon_orders: ${e}`); }
+      try { await admin.from("purchase_evidences").update({ user_id: null }).eq("user_id", user_id); } catch (e) { errors.push(`anon_pe: ${e}`); }
+      try { await admin.from("purchase_usage_evidences").update({ user_id: null }).eq("user_id", user_id); } catch (e) { errors.push(`anon_pue: ${e}`); }
+
+      // Delete tables
+      const tables = [
+        "voice_clones", "ai_generations", "lyrics_generations", "generation_jobs",
+        "social_promotions", "premium_social_promotions", "press_releases",
+        "video_generations", "auphonic_productions", "user_artist_profiles",
+        "user_attribution", "audiomack_connections", "audiomack_metrics",
+        "product_events", "notification_log", "ai_rate_limits", "promotion_requests",
+        "managed_works", "managed_artists", "ibs_signatures", "library_deletion_queue",
+        "user_roles", "cancellation_tracking", "credit_transactions",
+      ];
+      for (const t of tables) {
+        try { await admin.from(t).delete().eq("user_id", user_id); } catch (e) { errors.push(`del_${t}: ${e}`); }
+      }
+
+      try { await admin.from("ibs_sync_queue").delete().eq("user_id", user_id).neq("status", "resolved"); } catch (e) { errors.push(`del_ibs_sync: ${e}`); }
+      try { await admin.from("works").delete().eq("user_id", user_id).is("blockchain_hash", null); } catch (e) { errors.push(`del_works: ${e}`); }
+
+      // Mark surveys as deleted
+      try {
+        await admin.from("cancellation_surveys").update({ account_deleted_at: new Date().toISOString() }).eq("user_id", user_id);
+      } catch (e) { errors.push(`mark_surveys: ${e}`); }
+
+      // Delete profile
+      try { await admin.from("profiles").delete().eq("user_id", user_id); } catch (e) { errors.push(`del_profile: ${e}`); }
+
+      // Audit
+      await audit({
+        action: "force_delete_user",
+        target_user_id: user_id,
+        target_email: targetEmail,
+        details: { plan: profile?.subscription_plan, errors: errors.length > 0 ? errors : undefined },
+      });
+
+      // Delete auth user
+      try { await admin.auth.admin.deleteUser(user_id); } catch (e) { errors.push(`del_auth: ${e}`); }
+
+      return json({ success: true, errors });
+    }
+
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
     console.error("[ADMIN-ACTION] Error:", e);
