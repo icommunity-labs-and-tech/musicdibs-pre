@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { parseAiError } from "@/lib/aiErrorHandler";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
@@ -374,9 +375,10 @@ const AIStudioCreate = () => {
       }
     } catch (error: any) {
       console.error('Generation error:', error);
+      const friendly = parseAiError(error);
       setGenerationError({
-        message: error.message || "No se pudo generar la música",
-        details: error.details || "Intenta ajustar tu descripción o la duración."
+        message: friendly.title,
+        details: friendly.description,
       });
       track('generation_failed', { feature: 'create_music', metadata: { error: error.message } });
     } finally {
