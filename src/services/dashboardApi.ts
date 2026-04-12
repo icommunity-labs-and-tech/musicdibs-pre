@@ -146,7 +146,7 @@ export async function registerWork(data: WorkRegistration): Promise<{
     filePaths.push(filePath);
   }
 
-  // Insert work record with pre-computed hash (primary file path)
+  // Insert work record as 'draft' — only moves to 'processing' after iBS accepts it
   const { data: work, error } = await supabase.from('works').insert({
     user_id: user.id,
     title: data.title,
@@ -156,19 +156,24 @@ export async function registerWork(data: WorkRegistration): Promise<{
     file_path: filePaths[0],
     file_hash: fileHash,
     file_hash_sha512_b64: fileHashSha512B64,
-    status: 'processing',
+    status: 'draft',
   }).select().single();
 
   if (error) throw error;
 
-  // Call real iBS registration
+  // Call real iBS registration — the edge function sets status to 'processing' on success
   const { data: ibsResult, error: ibsError } = await supabase.functions.invoke('register-work-ibs', {
     body: { workId: work.id, signatureId: data.signatureId, additionalFilePaths: filePaths.slice(1) },
   });
 
   if (ibsError) {
     console.error('[registerWork] IBS call error:', ibsError);
-    return { registrationId: work.id, status: 'processing', ibsError: ibsError.message };
+    return { registrationId: work.id, status: 'failed', ibsError: ibsError.message };
+  }
+
+  // If the edge function itself reported failure
+  if (ibsResult?.success === false) {
+    return { registrationId: work.id, status: 'failed', ibsError: ibsResult.error };
   }
 
   return {
@@ -176,7 +181,6 @@ export async function registerWork(data: WorkRegistration): Promise<{
     status: ibsResult?.status || 'processing',
     certificateUrl: ibsResult?.certificateUrl,
     blockchainHash: ibsResult?.blockchainHash,
-    ibsError: ibsResult?.success === false ? ibsResult.error : undefined,
     evidenceId: ibsResult?.evidenceId,
   };
 }

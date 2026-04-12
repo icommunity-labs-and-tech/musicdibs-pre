@@ -104,9 +104,9 @@ serve(async (req) => {
       }
     }
 
-    if (work.status !== "processing") {
+    if (work.status !== "draft" && work.status !== "processing") {
       return new Response(
-        JSON.stringify({ error: "Work is not in processing state", status: work.status }),
+        JSON.stringify({ error: "Work is not in draft/processing state", status: work.status }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -269,10 +269,11 @@ serve(async (req) => {
     evidenceId = completeResult.id;
     evidenceLink = completeResult.link;
 
-    // Update work with iBS evidence info and checksums
+    // iBS accepted — now set status to 'processing' and store evidence info
     await supabaseAdmin
       .from("works")
       .update({
+        status: "processing",
         ibs_evidence_id: evidenceId,
         ibs_signature_id: signatureId,
         file_hash: fileHash,
@@ -359,6 +360,7 @@ async function handleInlineUpload(
   const ibsResult = await ibsRes.json();
 
   await supabaseAdmin.from("works").update({
+    status: "processing",
     ibs_evidence_id: ibsResult.id,
     ibs_signature_id: signatureId,
     file_hash: fileHash,
