@@ -236,7 +236,7 @@ export default function AdminUsersPage() {
                         disabled={u.user_id === user?.id}
                         onClick={() => setDeleteModal({ open: true, userId: u.user_id, email: u.email })}
                       >
-                        {(u.roles || []).includes('manager') ? 'Quitar manager' : 'Dar manager'}
+                        Forzar eliminación de cuenta
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
