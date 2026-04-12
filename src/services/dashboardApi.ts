@@ -117,12 +117,22 @@ export async function registerWork(data: WorkRegistration): Promise<{
   // Gather all files (primary + additional)
   const allFiles = data.files && data.files.length > 0 ? data.files : [data.file];
 
-  // Compute SHA-256 hash of the primary file before upload
+  // Compute SHA-256 and SHA-512 hashes of the primary file before upload
   const fileBuffer = await allFiles[0].arrayBuffer();
   const hashBuffer = await crypto.subtle.digest('SHA-256', fileBuffer);
   const fileHash = Array.from(new Uint8Array(hashBuffer))
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
+
+  const sha512Buffer = await crypto.subtle.digest('SHA-512', fileBuffer);
+  const sha512Bytes = new Uint8Array(sha512Buffer);
+  let sha512Binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < sha512Bytes.length; i += chunkSize) {
+    sha512Binary += String.fromCharCode(...sha512Bytes.subarray(i, i + chunkSize));
+  }
+  const fileHashSha512B64 = btoa(sha512Binary);
+
   console.log('[registerWork] Pre-upload file hash:', fileHash);
 
   // Upload all files to storage
@@ -145,6 +155,7 @@ export async function registerWork(data: WorkRegistration): Promise<{
     description: data.description,
     file_path: filePaths[0],
     file_hash: fileHash,
+    file_hash_sha512_b64: fileHashSha512B64,
     status: 'processing',
   }).select().single();
 
