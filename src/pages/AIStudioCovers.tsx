@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { parseAiError } from "@/lib/aiErrorHandler"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -124,8 +125,9 @@ const AIStudioCovers = () => {
       toast.success(t('aiCovers.coverGenerated'))
       track('cover_generated', { feature: 'cover' })
     } catch (err: any) {
-      setGenError(err.message || t('aiShared.error'))
-      toast.error(err.message || t('aiShared.error'))
+      const friendly = parseAiError(err)
+      setGenError(friendly.description)
+      toast.error(friendly.title, { description: friendly.description })
     }
 
     setIsGenerating(false)
