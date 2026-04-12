@@ -1605,7 +1605,7 @@ const AIStudioCreate = () => {
                                       <p>{savedArtistGenerationIds.has(result.id) ? 'Ya guardado como Artista Virtual' : 'Guardar como Artista Virtual'}</p>
                                     </TooltipContent>
                                   </Tooltip>
-                                )
+                                )}
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button variant="ghost" size="icon" onClick={() => downloadAudio(result)}>
@@ -1704,7 +1704,6 @@ const AIStudioCreate = () => {
             </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
       </Dialog>
 
       
