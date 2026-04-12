@@ -49,7 +49,7 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     pendingRegistrations: pendingRegistrations || 0,
     availableCredits: profile.available_credits,
     kycStatus: profile.kyc_status as 'verified' | 'pending' | 'unverified',
-    subscriptionPlan: profile.subscription_plan,
+    subscriptionPlan: profile.subscription_plan || 'Free',
     canRegisterWorks: profile.kyc_status === 'verified',
   };
 }
