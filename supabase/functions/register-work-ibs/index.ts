@@ -269,10 +269,11 @@ serve(async (req) => {
     evidenceId = completeResult.id;
     evidenceLink = completeResult.link;
 
-    // Update work with iBS evidence info and checksums
+    // iBS accepted — now set status to 'processing' and store evidence info
     await supabaseAdmin
       .from("works")
       .update({
+        status: "processing",
         ibs_evidence_id: evidenceId,
         ibs_signature_id: signatureId,
         file_hash: fileHash,
