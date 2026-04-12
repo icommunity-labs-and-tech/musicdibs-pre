@@ -198,18 +198,25 @@ serve(async (req) => {
       const errText = await response.text();
       console.error(`[GENERATE-AUDIO] ElevenLabs error: ${response.status} - ${errText}`);
 
-      if (response.status === 401 || response.status === 403) {
-        await refundCredits('Créditos ElevenLabs insuficientes');
+      await refundCredits(`Error ElevenLabs: ${response.status}`);
+
+      // Map provider errors to a standardized code for user-friendly frontend handling
+      if (response.status === 401 || response.status === 402 || response.status === 403) {
         return new Response(
-          JSON.stringify({ error: 'insufficient_credits', message: 'Créditos de ElevenLabs insuficientes', details: errText }),
+          JSON.stringify({ error: 'provider_unavailable' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'provider_rate_limit' }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
 
-      await refundCredits(`Error ElevenLabs: ${response.status}`);
       return new Response(
-        JSON.stringify({ error: `Generation failed: ${response.status}`, details: errText }),
-        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'provider_unavailable' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
