@@ -170,13 +170,15 @@ const AIStudioCreate = () => {
   const [selectedArtistId, setSelectedArtistId] = useState<string>('');
 
   // ── Save as Virtual Artist modal state ──
-  const [showSaveArtistPrompt, setShowSaveArtistPrompt] = useState(false);
   const [showSaveArtistForm, setShowSaveArtistForm] = useState(false);
   const [saveArtistName, setSaveArtistName] = useState('');
   const [saveArtistStyle, setSaveArtistStyle] = useState('');
   const [isSavingArtist, setIsSavingArtist] = useState(false);
-  const [lastGeneratedVoiceId, setLastGeneratedVoiceId] = useState<string>('');
-  const [lastGeneratedVoiceName, setLastGeneratedVoiceName] = useState<string>('');
+  const [saveArtistVoiceId, setSaveArtistVoiceId] = useState('');
+  const [saveArtistVoiceName, setSaveArtistVoiceName] = useState('');
+  const [saveArtistGenerationId, setSaveArtistGenerationId] = useState('');
+  const [saveArtistPrompt, setSaveArtistPrompt] = useState('');
+  const [savedArtistGenerationIds, setSavedArtistGenerationIds] = useState<Set<string>>(new Set());
 
 
 
@@ -246,6 +248,10 @@ const AIStudioCreate = () => {
           if (!error && data) {
             setVirtualArtists(data);
             setVirtualArtistsCount(data.length);
+            // Track which generations already created virtual artists
+            const genIds = new Set<string>();
+            data.forEach((a: any) => { if (a.created_from_generation_id) genIds.add(a.created_from_generation_id); });
+            setSavedArtistGenerationIds(genIds);
           }
         });
     }
