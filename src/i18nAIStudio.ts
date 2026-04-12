@@ -3,7 +3,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
   es: {
     aiCreate: {
       backToStudio: 'Volver a AI MusicDibs Studio',
-      title: 'AI MusicDibs Studio',
+      title: 'Crea tu música',
       subtitle: 'Crea música e inspírate con IA',
       tabMusic: 'Crear Música',
       tabLyrics: 'Compositor de Letras',
