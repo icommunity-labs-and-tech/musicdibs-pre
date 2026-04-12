@@ -360,6 +360,7 @@ async function handleInlineUpload(
   const ibsResult = await ibsRes.json();
 
   await supabaseAdmin.from("works").update({
+    status: "processing",
     ibs_evidence_id: ibsResult.id,
     ibs_signature_id: signatureId,
     file_hash: fileHash,
