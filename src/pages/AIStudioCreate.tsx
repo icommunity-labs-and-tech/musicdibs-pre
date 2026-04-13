@@ -380,6 +380,10 @@ const AIStudioCreate = () => {
       if (data?.audio) {
         const audioUrl = `data:${data.format};base64,${data.audio}`;
 
+        const selectedVoiceProfile = mode === 'song' ? voiceProfiles.find(v => v.id === selectedVoice) : null;
+        const voiceIdForGen = mode === 'song' ? selectedVoice : null;
+        const voiceNameForGen = selectedVoiceProfile?.label || null;
+
         const { data: savedGen, error: saveError } = await supabase
           .from('ai_generations')
           .insert({
@@ -387,7 +391,9 @@ const AIStudioCreate = () => {
             prompt: prompt.trim(),
             duration: data.duration,
             audio_url: audioUrl,
-            voice_profile_id: mode === 'song' ? selectedVoice : null,
+            voice_profile_id: voiceIdForGen,
+            voice_id: voiceIdForGen,
+            voice_name: voiceNameForGen,
           } as any)
           .select()
           .single();
@@ -401,13 +407,26 @@ const AIStudioCreate = () => {
           duration: data.duration,
           createdAt: new Date(savedGen.created_at),
           isFavorite: false,
-          voiceProfileId: mode === 'song' ? selectedVoice : undefined,
+          voiceProfileId: voiceIdForGen || undefined,
+          voiceId: voiceIdForGen || undefined,
+          voiceName: voiceNameForGen || undefined,
         };
+
+        // Track voice mapping for virtual artist feature
+        if (voiceIdForGen) {
+          generationVoiceMapRef.current.set(savedGen.id, { voiceId: voiceIdForGen, voiceName: voiceNameForGen || '' });
+        }
+
         setResults(prev => [newResult, ...prev]);
         setLastResult(newResult);
         toast({ title: t('aiCreate.musicGenerated'), description: t('aiCreate.songReady') });
         track('generation_completed', { feature: 'create_music' });
         sessionStorage.setItem('md_last_generation', Date.now().toString());
+
+        // Onboarding tip: show once on first vocal generation if no virtual artists
+        if (mode === 'song' && !localStorage.getItem('virtual_artist_tip_shown') && virtualArtistsCount === 0) {
+          setTimeout(() => setShowOnboardingTip(true), 800);
+        }
       }
     } catch (error: any) {
       console.error('Generation error:', error);
