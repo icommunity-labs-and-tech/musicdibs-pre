@@ -52,9 +52,9 @@ serve(async (req) => {
       referenceStrength, referenceMode,
     } = await req.json()
 
-    if (!artistName || !trackTitle) {
+    if (!trackTitle && !description) {
       return new Response(
-        JSON.stringify({ error: "artistName and trackTitle are required" }),
+        JSON.stringify({ error: "trackTitle or description is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
     }
@@ -134,28 +134,8 @@ serve(async (req) => {
       const errorStatus = genErr?.status || 500
       const errorDetail = genErr?.detail || genErr?.message || "Unknown error"
 
-      // Refund credits that were pre-charged via spend-credits
-      try {
-        await supabaseAdmin.from("profiles").update({
-          available_credits: profile.available_credits,
-          updated_at: new Date().toISOString(),
-        }).eq("user_id", user.id)
-        // Remove the spend-credits transaction
-        const { data: lastTx } = await supabaseAdmin
-          .from("credit_transactions")
-          .select("id")
-          .eq("user_id", user.id)
-          .eq("type", "usage")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .single()
-        if (lastTx) {
-          await supabaseAdmin.from("credit_transactions").delete().eq("id", lastTx.id)
-        }
-        console.log(`[COVER] Credits refunded for ${user.id} after generation failure`)
-      } catch (refundErr) {
-        console.error("[COVER] Refund failed:", refundErr)
-      }
+      // No credits were deducted yet (deduction happens after success), so no refund needed
+      console.log(`[COVER] Generation failed for ${user.id}, no credits charged`)
 
       return new Response(
         JSON.stringify({
