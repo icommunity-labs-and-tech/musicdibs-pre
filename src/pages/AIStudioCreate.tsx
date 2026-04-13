@@ -194,8 +194,8 @@ const AIStudioCreate = () => {
   const [saveArtistGenerationId, setSaveArtistGenerationId] = useState('');
   const [saveArtistPrompt, setSaveArtistPrompt] = useState('');
   const [savedArtistGenerationIds, setSavedArtistGenerationIds] = useState<Set<string>>(new Set());
-
-
+  const [showOnboardingTip, setShowOnboardingTip] = useState(false);
+  const generationVoiceMapRef = useRef<Map<string, { voiceId: string; voiceName: string }>>(new Map());
 
   // ── Derived values ──
   const selectedGenre: string | null = null;
@@ -311,6 +311,8 @@ const AIStudioCreate = () => {
         createdAt: new Date(item.created_at),
         isFavorite: item.is_favorite || false,
         voiceProfileId: (item as any).voice_profile_id || undefined,
+        voiceId: (item as any).voice_id || undefined,
+        voiceName: (item as any).voice_name || undefined,
       })));
     } catch (error) {
       console.error('Error loading history:', error);
