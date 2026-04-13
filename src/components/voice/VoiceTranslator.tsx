@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Upload, Download, Info, Sparkles } from 'lucide-react';
+import { Loader2, Upload, Download, Info, Sparkles, ShoppingCart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
+import { useCredits } from '@/hooks/useCredits';
+import { FEATURE_COSTS } from '@/lib/featureCosts';
 
 interface VoiceTranslatorProps {
   clones: any[];
@@ -52,6 +55,8 @@ export const VoiceTranslator = ({ clones }: VoiceTranslatorProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { credits, hasEnough } = useCredits();
   const vc = (key: string, opts?: Record<string, unknown>) =>
     t(`dashboard.voiceCloning.translator.${key}`, opts);
 
@@ -61,18 +66,7 @@ export const VoiceTranslator = ({ clones }: VoiceTranslatorProps) => {
   const [audioDuration, setAudioDuration] = useState<number | null>(null);
   const [translating, setTranslating] = useState(false);
   const [translatedUrl, setTranslatedUrl] = useState<string | null>(null);
-  const [userCredits, setUserCredits] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from('profiles')
-      .select('available_credits')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => setUserCredits(data?.available_credits || 0));
-  }, [user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,15 +93,16 @@ export const VoiceTranslator = ({ clones }: VoiceTranslatorProps) => {
     };
   };
 
-  const creditsNeeded = audioDuration ? Math.ceil(audioDuration / 60) * 2 : 0;
+  const creditsNeeded = audioDuration ? Math.ceil(audioDuration / 60) * (FEATURE_COSTS.voice_translation_per_min || 2) : 0;
+  const canAfford = hasEnough(creditsNeeded || FEATURE_COSTS.voice_translation_per_min);
 
   const handleTranslate = async () => {
     if (!audioFile || !selectedVoice || !targetLang || !user) return;
 
-    if (userCredits < creditsNeeded) {
+    if (!hasEnough(creditsNeeded)) {
       toast({
         title: vc('insufficientCredits'),
-        description: vc('insufficientCreditsDesc', { needed: creditsNeeded, current: userCredits }),
+        description: vc('insufficientCreditsDesc', { needed: creditsNeeded, current: credits ?? 0 }),
         variant: 'destructive',
       });
       return;
@@ -145,7 +140,6 @@ export const VoiceTranslator = ({ clones }: VoiceTranslatorProps) => {
         .createSignedUrl(data.audio_path, 3600);
 
       setTranslatedUrl(urlData?.signedUrl || null);
-      setUserCredits(prev => prev - creditsNeeded);
 
       const langName = SUPPORTED_LANGUAGES.find(l => l.code === targetLang)?.name || targetLang;
       toast({
@@ -221,17 +215,28 @@ export const VoiceTranslator = ({ clones }: VoiceTranslatorProps) => {
       </Alert>
 
       {/* Translate Button */}
-      <Button
-        onClick={handleTranslate}
-        disabled={!audioFile || !selectedVoice || !targetLang || translating}
-        className="w-full gap-2"
-      >
-        {translating ? (
-          <><Loader2 className="h-4 w-4 animate-spin" /> {vc('translatingBtn')}</>
-        ) : (
-          <><Sparkles className="h-4 w-4" /> {vc('translateBtn')}</>
-        )}
-      </Button>
+      {!canAfford ? (
+        <Button
+          onClick={() => navigate('/dashboard/credits')}
+          variant="outline"
+          className="w-full gap-2 border-amber-500/30 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20"
+        >
+          <ShoppingCart className="h-4 w-4" />
+          Comprar créditos
+        </Button>
+      ) : (
+        <Button
+          onClick={handleTranslate}
+          disabled={!audioFile || !selectedVoice || !targetLang || translating}
+          className="w-full gap-2"
+        >
+          {translating ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> {vc('translatingBtn')}</>
+          ) : (
+            <><Sparkles className="h-4 w-4" /> {vc('translateBtn')}</>
+          )}
+        </Button>
+      )}
       <PricingLink className="block text-center mt-1" />
 
       {/* Download Translated */}

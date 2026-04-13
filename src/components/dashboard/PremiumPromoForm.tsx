@@ -379,20 +379,26 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
           </div>
 
           {/* Submit */}
-          <div className="flex items-center justify-between pt-2 border-t border-border/30">
-            <PricingLink />
-            <Button
-              onClick={handleSubmit}
-              disabled={submitting || noCredits || !artistName.trim() || !songTitle.trim() || !lyrics.trim() || !mediaFile}
-              className="gap-2"
-            >
-              {submitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Crown className="h-4 w-4" />
-              )}
-              {t('dashboard.premium.submit')}
-            </Button>
+          <div className="space-y-3 pt-2 border-t border-border/30">
+            {noCredits ? (
+              <NoCreditsAlert message={t('dashboard.premium.submit', { defaultValue: 'Enviar promoción' }) + ` (${PREMIUM_COST} créditos)`} />
+            ) : (
+              <div className="flex items-center justify-between">
+                <PricingLink />
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitting || !artistName.trim() || !songTitle.trim() || !lyrics.trim() || !mediaFile}
+                  className="gap-2"
+                >
+                  {submitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Crown className="h-4 w-4" />
+                  )}
+                  {t('dashboard.premium.submit')}
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
