@@ -16,6 +16,7 @@ import { FEATURE_COSTS } from '@/lib/featureCosts';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { parseAiError } from '@/lib/aiErrorHandler';
 import {
   Wand2, Loader2, Download, RefreshCw, ImageIcon, Sparkles,
 } from 'lucide-react';
