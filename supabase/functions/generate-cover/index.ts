@@ -107,20 +107,62 @@ serve(async (req) => {
       })
       if (!res.ok) {
         const errText = await res.text()
-        console.error("[COVER] fal.ai error:", errText)
-        throw new Error(`fal.ai error: ${res.status}`)
+        console.error("[COVER] fal.ai error:", res.status, errText)
+
+        // Parse fal.ai error for specific codes
+        let errorCode = "provider_unavailable"
+        let errorDetail = errText
+        try { errorDetail = JSON.parse(errText)?.detail || errText } catch {}
+
+        if (res.status === 429 || errText.includes("rate") || errText.includes("too many")) {
+          errorCode = "provider_rate_limit"
+        } else if (res.status === 402 || errText.includes("billing") || errText.includes("payment")) {
+          errorCode = "provider_unavailable"
+        } else if (res.status === 422 || errText.includes("safety") || errText.includes("nsfw") || errText.includes("content_policy")) {
+          errorCode = "content_filtered"
+        }
+
+        throw { code: errorCode, status: res.status, detail: errorDetail }
       }
       const data = await res.json()
       const url = data.images?.[0]?.url
-      if (!url) throw new Error("No image generated")
+      if (!url) throw { code: "provider_unavailable", status: 500, detail: "No image generated" }
       imageUrl = url
-    } catch (genErr) {
+    } catch (genErr: any) {
       console.error("[COVER] Generation error:", genErr)
+      const errorCode = genErr?.code || "provider_unavailable"
+      const errorStatus = genErr?.status || 500
+      const errorDetail = genErr?.detail || genErr?.message || "Unknown error"
+
+      // Refund credits that were pre-charged via spend-credits
+      try {
+        await supabaseAdmin.from("profiles").update({
+          available_credits: profile.available_credits,
+          updated_at: new Date().toISOString(),
+        }).eq("user_id", user.id)
+        // Remove the spend-credits transaction
+        const { data: lastTx } = await supabaseAdmin
+          .from("credit_transactions")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("type", "usage")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single()
+        if (lastTx) {
+          await supabaseAdmin.from("credit_transactions").delete().eq("id", lastTx.id)
+        }
+        console.log(`[COVER] Credits refunded for ${user.id} after generation failure`)
+      } catch (refundErr) {
+        console.error("[COVER] Refund failed:", refundErr)
+      }
+
       return new Response(
         JSON.stringify({
-          error: "SERVICE_UNAVAILABLE",
+          error: errorCode,
           fallback: true,
-          message: "El servicio de generación de imágenes no está disponible temporalmente. Inténtalo de nuevo en unos minutos.",
+          fal_status: errorStatus,
+          details: typeof errorDetail === 'string' ? errorDetail.slice(0, 300) : JSON.stringify(errorDetail).slice(0, 300),
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
