@@ -1,35 +1,20 @@
 /**
- * Maps AI provider error responses to user-friendly messages.
+ * Maps AI provider error responses to user-friendly, i18n-aware messages.
  * Used across all AI Studio pages for consistent error handling.
  */
 
-const FRIENDLY_MESSAGES: Record<string, { title: string; description: string }> = {
-  provider_unavailable: {
-    title: 'Servicio no disponible',
-    description: 'El servicio de IA no está disponible en este momento. Por favor, inténtalo de nuevo más tarde.',
-  },
-  rate_limit_exceeded: {
-    title: 'Demasiadas solicitudes',
-    description: 'Has realizado muchas solicitudes en poco tiempo. Espera unos segundos e inténtalo de nuevo.',
-  },
-  insufficient_credits: {
-    title: 'Créditos insuficientes',
-    description: 'No tienes suficientes créditos para esta operación. Recarga tus créditos para continuar.',
-  },
-  provider_rate_limit: {
-    title: 'Servicio temporalmente saturado',
-    description: 'El servicio está procesando muchas solicitudes. Inténtalo de nuevo en unos minutos.',
-  },
-  content_filtered: {
-    title: 'Contenido no permitido',
-    description: 'El contenido ha sido filtrado por las políticas de seguridad. Intenta modificar tu descripción.',
-  },
+type TFunc = (key: string) => string;
+
+const ERROR_KEYS: Record<string, { titleKey: string; descKey: string }> = {
+  provider_unavailable: { titleKey: 'aiShared.errProviderUnavailableTitle', descKey: 'aiShared.errProviderUnavailableDesc' },
+  rate_limit_exceeded: { titleKey: 'aiShared.errRateLimitTitle', descKey: 'aiShared.errRateLimitDesc' },
+  insufficient_credits: { titleKey: 'aiShared.errInsufficientCreditsTitle', descKey: 'aiShared.errInsufficientCreditsDesc' },
+  provider_rate_limit: { titleKey: 'aiShared.errProviderRateLimitTitle', descKey: 'aiShared.errProviderRateLimitDesc' },
+  content_filtered: { titleKey: 'aiShared.errContentFilteredTitle', descKey: 'aiShared.errContentFilteredDesc' },
 };
 
-const DEFAULT_ERROR = {
-  title: 'Error al procesar tu solicitud',
-  description: 'Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde.',
-};
+const TIMEOUT_KEYS = { titleKey: 'aiShared.errTimeoutTitle', descKey: 'aiShared.errTimeoutDesc' };
+const DEFAULT_KEYS = { titleKey: 'aiShared.errDefaultTitle', descKey: 'aiShared.errDefaultDesc' };
 
 export interface AiErrorResult {
   title: string;
@@ -37,42 +22,47 @@ export interface AiErrorResult {
 }
 
 /**
- * Parses an error from an AI edge function call and returns a friendly message.
+ * Parses an error from an AI edge function call and returns a friendly, translated message.
+ * @param error - The caught error object
+ * @param t - i18next translation function (from useTranslation)
+ * @param data - Optional response data from the edge function
  */
-export function parseAiError(error: any, data?: any): AiErrorResult {
+export function parseAiError(error: any, t?: TFunc, data?: any): AiErrorResult {
+  const resolve = (keys: { titleKey: string; descKey: string }) =>
+    t
+      ? { title: t(keys.titleKey), description: t(keys.descKey) }
+      : { title: keys.titleKey, description: keys.descKey };
+
   const errorCode = data?.error || error?.error || error?.message || '';
 
   // Check known error codes first
   if (typeof errorCode === 'string') {
-    const match = FRIENDLY_MESSAGES[errorCode];
-    if (match) return match;
+    const match = ERROR_KEYS[errorCode];
+    if (match) return resolve(match);
   }
 
   // Check for provider-specific patterns in error messages or details
   const errorText = JSON.stringify({ error: errorCode, details: data?.details || error?.details || '' }).toLowerCase();
 
   if (errorText.includes('payment_required') || errorText.includes('paid_plan_required') || errorText.includes('billing')) {
-    return FRIENDLY_MESSAGES.provider_unavailable;
+    return resolve(ERROR_KEYS.provider_unavailable);
   }
 
   if (errorText.includes('rate_limit') || errorText.includes('too many requests') || errorText.includes('429')) {
-    return FRIENDLY_MESSAGES.provider_rate_limit;
+    return resolve(ERROR_KEYS.provider_rate_limit);
   }
 
   if (errorText.includes('content_policy') || errorText.includes('safety') || errorText.includes('nsfw')) {
-    return FRIENDLY_MESSAGES.content_filtered;
+    return resolve(ERROR_KEYS.content_filtered);
   }
 
   if (errorText.includes('unauthorized') || errorText.includes('forbidden') || errorText.includes('401') || errorText.includes('403')) {
-    return FRIENDLY_MESSAGES.provider_unavailable;
+    return resolve(ERROR_KEYS.provider_unavailable);
   }
 
   if (errorText.includes('timeout') || errorText.includes('503') || errorText.includes('502') || errorText.includes('504')) {
-    return {
-      title: 'Servicio temporalmente no disponible',
-      description: 'El servicio está experimentando problemas. Por favor, inténtalo de nuevo en unos minutos.',
-    };
+    return resolve(TIMEOUT_KEYS);
   }
 
-  return DEFAULT_ERROR;
+  return resolve(DEFAULT_KEYS);
 }
