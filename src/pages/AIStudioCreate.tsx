@@ -523,11 +523,23 @@ const AIStudioCreate = () => {
   };
 
   // ── Save as Virtual Artist ──
+  // ── Instrumental detection regex ──
+  const INSTRUMENTAL_PROMPT_REGEX = /\b(instrumental|karaoke|sin voz|sin voces|base instrumental)\b/i;
+
+  const canSaveAsVirtualArtist = (result: GenerationResult) => {
+    if (result.voiceId || result.voiceProfileId || generationVoiceMapRef.current.has(result.id)) return true;
+    return !INSTRUMENTAL_PROMPT_REGEX.test(result.prompt);
+  };
+
   const openSaveArtistModal = (result: GenerationResult) => {
-    if (!result.voiceProfileId) return;
-    const vp = voiceProfiles.find(v => v.id === result.voiceProfileId);
-    setSaveArtistVoiceId(result.voiceProfileId);
-    setSaveArtistVoiceName(vp?.label || '');
+    // Get voice info from result, or from in-memory map
+    const voiceMap = generationVoiceMapRef.current.get(result.id);
+    const voiceId = result.voiceId || result.voiceProfileId || voiceMap?.voiceId || '';
+    const vp = voiceProfiles.find(v => v.id === voiceId);
+    const voiceName = result.voiceName || voiceMap?.voiceName || vp?.label || '';
+
+    setSaveArtistVoiceId(voiceId);
+    setSaveArtistVoiceName(voiceName);
     setSaveArtistGenerationId(result.id);
     setSaveArtistPrompt(result.prompt);
     setSaveArtistName('');
