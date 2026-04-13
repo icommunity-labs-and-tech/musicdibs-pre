@@ -226,7 +226,7 @@ const AIStudioEdit = () => {
     } catch (err: any) {
       stopProgress();
       setIsProcessing(false);
-      const friendly = parseAiError(err);
+      const friendly = parseAiError(err, t);
       setProcessError(friendly.description);
     }
   };

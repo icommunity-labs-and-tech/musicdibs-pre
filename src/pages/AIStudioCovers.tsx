@@ -125,7 +125,7 @@ const AIStudioCovers = () => {
       toast.success(t('aiCovers.coverGenerated'))
       track('cover_generated', { feature: 'cover' })
     } catch (err: any) {
-      const friendly = parseAiError(err)
+      const friendly = parseAiError(err, t)
       setGenError(friendly.description)
       toast.error(friendly.title, { description: friendly.description })
     }

@@ -375,7 +375,7 @@ const AIStudioCreate = () => {
       }
     } catch (error: any) {
       console.error('Generation error:', error);
-      const friendly = parseAiError(error);
+      const friendly = parseAiError(error, t);
       setGenerationError({
         message: friendly.title,
         details: friendly.description,
