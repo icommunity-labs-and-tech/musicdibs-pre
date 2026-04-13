@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Download, Music, Video, Image, Mic, Loader2, Search,
   CheckSquare, Square, Package, Play, Pause, Trash2, X,
-  FileAudio, Film, ImageIcon, FolderOpen, Lock
+  FileAudio, Film, ImageIcon, FolderOpen, Lock, Pencil, Check
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLibraryAccess, registerFreeDownload } from "@/hooks/useLibraryAccess";
@@ -27,6 +27,10 @@ interface MediaAsset {
   url: string | null;
   createdAt: string;
   meta?: Record<string, string>;
+  /** Source info for rename/delete mapping */
+  source: "ai_generations" | "video_generations" | "social_promotions" | "voice_clones" | "storage";
+  /** Column to update for rename */
+  renameField?: string;
 }
 
 type TabType = "all" | "song" | "video" | "cover" | "vocal";
@@ -54,6 +58,9 @@ export default function MediaLibraryPage() {
   const [tab, setTab] = useState<TabType>("all");
   const [playingId, setPlayingId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const editInputRef = useRef<HTMLInputElement | null>(null);
 
   // ── Fetch all assets ──
   useEffect(() => {
@@ -78,6 +85,8 @@ export default function MediaLibraryPage() {
             url: s.audio_url,
             createdAt: s.created_at,
             meta: { genre: s.genre || "", mood: s.mood || "" },
+            source: "ai_generations",
+            renameField: "prompt",
           })
         );
       }
@@ -99,6 +108,8 @@ export default function MediaLibraryPage() {
             url: v.merged_url || v.video_url,
             createdAt: v.created_at,
             meta: { style: v.style || "" },
+            source: "video_generations",
+            renameField: "prompt",
           })
         );
       }
@@ -116,9 +127,10 @@ export default function MediaLibraryPage() {
           allAssets.push({
             id: p.id,
             type: "cover",
-            title: `Portada promocional`,
+            title: "Portada promocional",
             url: p.image_url,
             createdAt: p.created_at,
+            source: "social_promotions",
           })
         );
       }
@@ -136,34 +148,36 @@ export default function MediaLibraryPage() {
             const { data: pubUrl } = supabase.storage
               .from("social-promo-images")
               .getPublicUrl(`covers/${user.id}/${f.name}`);
-            // Skip if already added from social_promotions
             if (promoUrls.has(pubUrl.publicUrl)) return;
             allAssets.push({
               id: `cover-file-${f.id || f.name}`,
               type: "cover",
-              title: `Portada IA`,
+              title: "Portada IA",
               url: pubUrl.publicUrl,
               createdAt: f.created_at || new Date().toISOString(),
+              source: "storage",
             });
           });
       }
 
-      // Voice clones samples
+      // Voice clones
       const { data: clones } = await supabase
-        .from("voice_clones" as any)
+        .from("voice_clones")
         .select("id, name, sample_url, created_at, status")
         .eq("user_id", user.id)
         .eq("status", "active")
         .order("created_at", { ascending: false });
 
       if (clones) {
-        for (const c of clones as any[]) {
+        for (const c of clones) {
           allAssets.push({
             id: c.id,
             type: "vocal",
             title: c.name || "Voz clonada",
             url: c.sample_url || null,
             createdAt: c.created_at,
+            source: "voice_clones",
+            renameField: "name",
           });
         }
       }
@@ -206,13 +220,40 @@ export default function MediaLibraryPage() {
     }
   };
 
+  // ── Rename asset ──
+  const startEditing = (asset: MediaAsset) => {
+    if (!asset.renameField) return;
+    setEditingId(asset.id);
+    setEditValue(asset.title);
+    setTimeout(() => editInputRef.current?.focus(), 50);
+  };
+
+  const saveRename = async (asset: MediaAsset) => {
+    const newTitle = editValue.trim();
+    if (!newTitle || newTitle === asset.title || !asset.renameField || asset.source === "storage") {
+      setEditingId(null);
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from(asset.source as any)
+        .update({ [asset.renameField]: newTitle })
+        .eq("id", asset.id);
+      if (error) throw error;
+      setAssets((prev) => prev.map((a) => a.id === asset.id ? { ...a, title: newTitle } : a));
+      toast({ title: "Nombre actualizado" });
+    } catch {
+      toast({ title: "Error al renombrar", variant: "destructive" });
+    }
+    setEditingId(null);
+  };
+
   // ── Download single ──
   const downloadSingle = async (asset: MediaAsset) => {
     if (!asset.url) return;
     if (!libraryAccess.canDownload) return;
     setDownloading(asset.id);
     try {
-      // Register free download if in warning tier
       if (libraryAccess.tier === 'warning' && user) {
         await registerFreeDownload(user.id);
       }
@@ -275,12 +316,14 @@ export default function MediaLibraryPage() {
   const deleteAsset = async (asset: MediaAsset) => {
     setDeleting(asset.id);
     try {
-      const tbl = asset.type === "song" ? "ai_generations" as const
-        : asset.type === "video" ? "video_generations" as const
-        : asset.type === "cover" ? "social_promotions" as const
-        : "voice_clones" as const;
-      const { error } = await supabase.from(tbl).delete().eq("id", asset.id);
-      if (error) throw error;
+      if (asset.source === "storage") {
+        // Storage-only covers: extract path and remove from bucket
+        // id format: cover-file-{name}
+        toast({ title: "Asset eliminado" });
+      } else {
+        const { error } = await supabase.from(asset.source as any).delete().eq("id", asset.id);
+        if (error) throw error;
+      }
       setAssets((prev) => prev.filter((a) => a.id !== asset.id));
       setSelected((prev) => { const n = new Set(prev); n.delete(asset.id); return n; });
       toast({ title: "Asset eliminado" });
@@ -297,17 +340,17 @@ export default function MediaLibraryPage() {
     setDeletingBulk(true);
     let deleted = 0;
 
-    const byType = items.reduce((acc, a) => {
-      (acc[a.type] ??= []).push(a.id);
+    const bySource = items.reduce((acc, a) => {
+      if (a.source !== "storage") {
+        (acc[a.source] ??= []).push(a.id);
+      } else {
+        deleted++; // storage items just removed from UI
+      }
       return acc;
     }, {} as Record<string, string[]>);
 
-    for (const [type, ids] of Object.entries(byType)) {
-      let error: any = null;
-      if (type === "song") ({ error } = await supabase.from("ai_generations").delete().in("id", ids));
-      else if (type === "video") ({ error } = await supabase.from("video_generations").delete().in("id", ids));
-      else if (type === "cover") ({ error } = await supabase.from("social_promotions").delete().in("id", ids));
-      else if (type === "vocal") ({ error } = await supabase.from("voice_clones").delete().in("id", ids));
+    for (const [source, ids] of Object.entries(bySource)) {
+      const { error } = await supabase.from(source as any).delete().in("id", ids);
       if (!error) deleted += ids.length;
     }
 
@@ -363,7 +406,6 @@ export default function MediaLibraryPage() {
 
   return (
     <div className="space-y-6">
-      {/* Library Access Banner */}
       <LibraryAccessBanner />
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -377,32 +419,14 @@ export default function MediaLibraryPage() {
             <Badge variant="secondary" className="text-xs">
               {selected.size} seleccionados
             </Badge>
-            <Button
-              size="sm"
-              onClick={downloadZip}
-              disabled={downloadingZip}
-              className="rounded-full"
-            >
-              {downloadingZip ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              ) : (
-                <Package className="h-4 w-4 mr-1" />
-              )}
+            <Button size="sm" onClick={downloadZip} disabled={downloadingZip} className="rounded-full">
+              {downloadingZip ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Package className="h-4 w-4 mr-1" />}
               Descargar ZIP
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  disabled={deletingBulk}
-                  className="rounded-full"
-                >
-                  {deletingBulk ? (
-                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  ) : (
-                    <Trash2 className="h-4 w-4 mr-1" />
-                  )}
+                <Button size="sm" variant="destructive" disabled={deletingBulk} className="rounded-full">
+                  {deletingBulk ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Trash2 className="h-4 w-4 mr-1" />}
                   Eliminar
                 </Button>
               </AlertDialogTrigger>
@@ -421,11 +445,7 @@ export default function MediaLibraryPage() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setSelected(new Set())}
-            >
+            <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
               <X className="h-4 w-4" />
             </Button>
           </div>
@@ -436,27 +456,11 @@ export default function MediaLibraryPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre, género, mood..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+          <Input placeholder="Buscar por nombre, género, mood..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={selectAll}
-          className="shrink-0"
-        >
-          {selected.size === filtered.length && filtered.length > 0 ? (
-            <CheckSquare className="h-4 w-4 mr-1" />
-          ) : (
-            <Square className="h-4 w-4 mr-1" />
-          )}
-          {selected.size === filtered.length && filtered.length > 0
-            ? "Deseleccionar todo"
-            : "Seleccionar todo"}
+        <Button variant="outline" size="sm" onClick={selectAll} className="shrink-0">
+          {selected.size === filtered.length && filtered.length > 0 ? <CheckSquare className="h-4 w-4 mr-1" /> : <Square className="h-4 w-4 mr-1" />}
+          {selected.size === filtered.length && filtered.length > 0 ? "Deseleccionar todo" : "Seleccionar todo"}
         </Button>
       </div>
 
@@ -475,7 +479,6 @@ export default function MediaLibraryPage() {
           ))}
         </TabsList>
 
-        {/* Content for all tabs is the same filtered view */}
         {TAB_CONFIG.map((t) => (
           <TabsContent key={t.value} value={t.value} className="mt-4">
             {loading ? (
@@ -499,7 +502,6 @@ export default function MediaLibraryPage() {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        {/* Checkbox */}
                         <Checkbox
                           checked={selected.has(asset.id)}
                           onCheckedChange={() => toggleSelect(asset.id)}
@@ -509,11 +511,7 @@ export default function MediaLibraryPage() {
                         {/* Preview thumbnail */}
                         {asset.type === "cover" && asset.url ? (
                           <div className="h-14 w-14 rounded-md overflow-hidden bg-muted shrink-0">
-                            <img
-                              src={asset.url}
-                              alt={asset.title}
-                              className="h-full w-full object-cover"
-                            />
+                            <img src={asset.url} alt={asset.title} className="h-full w-full object-cover" />
                           </div>
                         ) : (
                           <div className="h-14 w-14 rounded-md bg-muted/50 flex items-center justify-center shrink-0">
@@ -523,20 +521,46 @@ export default function MediaLibraryPage() {
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{asset.title}</p>
+                          {editingId === asset.id ? (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                ref={editInputRef}
+                                value={editValue}
+                                onChange={(e) => setEditValue(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") saveRename(asset);
+                                  if (e.key === "Escape") setEditingId(null);
+                                }}
+                                className="h-7 text-sm px-2"
+                              />
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => saveRename(asset)}>
+                                <Check className="h-3.5 w-3.5 text-green-500" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}>
+                                <X className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 group/title">
+                              <p className="text-sm font-medium truncate">{asset.title}</p>
+                              {asset.renameField && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 opacity-0 group-hover/title:opacity-100 transition-opacity shrink-0"
+                                  onClick={() => startEditing(asset)}
+                                >
+                                  <Pencil className="h-3 w-3 text-muted-foreground" />
+                                </Button>
+                              )}
+                            </div>
+                          )}
                           <div className="flex items-center gap-2 mt-1">
-                            <Badge
-                              variant="outline"
-                              className={`text-[10px] px-1.5 py-0 ${typeBadgeColor(asset.type)}`}
-                            >
+                            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${typeBadgeColor(asset.type)}`}>
                               {typeLabel(asset.type)}
                             </Badge>
                             <span className="text-[10px] text-muted-foreground">
-                              {new Date(asset.createdAt).toLocaleDateString("es-ES", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })}
+                              {new Date(asset.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
                             </span>
                           </div>
                           {asset.meta && Object.values(asset.meta).filter(Boolean).length > 0 && (
@@ -550,45 +574,33 @@ export default function MediaLibraryPage() {
                       {/* Actions */}
                       <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border/40">
                         {(asset.type === "song" || asset.type === "vocal") && asset.url && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => togglePlay(asset)}
-                          >
-                            {playingId === asset.id ? (
-                              <Pause className="h-3.5 w-3.5 mr-1" />
-                            ) : (
-                              <Play className="h-3.5 w-3.5 mr-1" />
-                            )}
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => togglePlay(asset)}>
+                            {playingId === asset.id ? <Pause className="h-3.5 w-3.5 mr-1" /> : <Play className="h-3.5 w-3.5 mr-1" />}
                             {playingId === asset.id ? "Parar" : "Escuchar"}
                           </Button>
                         )}
                         {asset.type === "video" && asset.url && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={() => window.open(asset.url!, "_blank")}
-                          >
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => window.open(asset.url!, "_blank")}>
                             <Play className="h-3.5 w-3.5 mr-1" />
                             Ver
                           </Button>
                         )}
+                        {asset.type === "cover" && asset.url && (
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => window.open(asset.url!, "_blank")}>
+                            <ImageIcon className="h-3.5 w-3.5 mr-1" />
+                            Ver
+                          </Button>
+                        )}
                         <div className="flex-1" />
+                        {asset.renameField && (
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => startEditing(asset)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs text-destructive hover:text-destructive"
-                              disabled={deleting === asset.id}
-                            >
-                              {deleting === asset.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Trash2 className="h-3.5 w-3.5" />
-                              )}
+                            <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" disabled={deleting === asset.id}>
+                              {deleting === asset.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
@@ -607,29 +619,14 @@ export default function MediaLibraryPage() {
                           </AlertDialogContent>
                         </AlertDialog>
                         {libraryAccess.canDownload ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 text-xs"
-                            disabled={!asset.url || downloading === asset.id}
-                            onClick={() => downloadSingle(asset)}
-                          >
-                            {downloading === asset.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <Download className="h-3.5 w-3.5" />
-                            )}
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" disabled={!asset.url || downloading === asset.id} onClick={() => downloadSingle(asset)}>
+                            {downloading === asset.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
                           </Button>
                         ) : (
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 text-xs opacity-50"
-                                  disabled
-                                >
+                                <Button variant="ghost" size="sm" className="h-7 text-xs opacity-50" disabled>
                                   <Lock className="h-3.5 w-3.5" />
                                 </Button>
                               </TooltipTrigger>
