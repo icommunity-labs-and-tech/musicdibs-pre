@@ -134,13 +134,6 @@ export const CoversSection = () => {
     setImageUrl(null);
 
     try {
-      const { data: spend, error: spendErr } = await supabase.functions.invoke('spend-credits', {
-        body: {
-          feature: 'generate_cover',
-          description: `Portada: ${trackTitle || description}`.slice(0, 80),
-        },
-      });
-      if (spendErr || spend?.error) throw new Error(spend?.message || t('aiShared.error'));
 
       let artistPhotoBase64: string | null = null;
       if (coverMode === 'artist' && artistPhoto) {
