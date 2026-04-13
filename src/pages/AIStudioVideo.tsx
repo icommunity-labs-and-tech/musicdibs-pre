@@ -488,7 +488,7 @@ const AIStudioVideo = () => {
       toast({ title: t('aiVideo.genStarted'), description: t('aiVideo.genStartedDesc') });
     } catch (err: any) {
       console.error('Generate error:', err);
-      const friendly = parseAiError(err);
+      const friendly = parseAiError(err, t);
       setError(friendly.description);
     } finally {
       setIsGenerating(false);

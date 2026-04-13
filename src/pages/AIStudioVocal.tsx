@@ -228,7 +228,7 @@ export default function AIStudioVocal() {
         body: { description: lyricsDesc, genre: lyricsGenre, mood: lyricsMood, style: lyricsStyle, language: lyricsLanguage, structure: lyricsStructure, rhymeScheme: lyricsRhyme, pov: lyricsPov, artistRefs: lyricsArtistRefs }
       });
       if (error) throw error;
-      if (data?.error) { const friendly = parseAiError(data); toast({ title: friendly.title, description: friendly.description, variant: 'destructive' }); return; }
+      if (data?.error) { const friendly = parseAiError(data, t); toast({ title: friendly.title, description: friendly.description, variant: 'destructive' }); return; }
       if (data?.lyrics) { setLyrics(data.lyrics); toast({ title: tv('lyricsGenerated'), description: tv('lyricsGeneratedDesc') }); }
     } catch { toast({ title: s('aiShared.error'), description: 'Inténtalo de nuevo más tarde.', variant: 'destructive' }); }
     finally { setIsGeneratingLyrics(false); }
