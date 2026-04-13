@@ -1663,8 +1663,8 @@ const AIStudioCreate = () => {
                                   </TooltipTrigger>
                                   <TooltipContent><p>{result.isFavorite ? t('aiCreate.removeFav') : t('aiCreate.addFav')}</p></TooltipContent>
                                 </Tooltip>
-                                {/* Save as Virtual Artist button — only for vocal generations */}
-                                {result.voiceProfileId && (
+                                {/* Save as Virtual Artist button — vocal & non-instrumental */}
+                                {canSaveAsVirtualArtist(result) && (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button
@@ -1675,14 +1675,14 @@ const AIStudioCreate = () => {
                                         className={savedArtistGenerationIds.has(result.id) ? 'text-emerald-500' : ''}
                                       >
                                         {savedArtistGenerationIds.has(result.id) ? (
-                                          <User className="w-4 h-4" />
+                                          <CheckCircle2 className="w-4 h-4" />
                                         ) : (
                                           <User className="w-4 h-4" />
                                         )}
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>{savedArtistGenerationIds.has(result.id) ? 'Ya guardado como Artista Virtual' : 'Guardar como Artista Virtual'}</p>
+                                      <p>{savedArtistGenerationIds.has(result.id) ? t('aiCreate.saveArtistAlready') : t('aiCreate.saveArtistTooltip')}</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 )}
