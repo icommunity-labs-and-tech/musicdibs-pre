@@ -247,7 +247,7 @@ export default function AIStudioVocal() {
       const data = await res.json();
       if (!res.ok || data?.error) {
         if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: tv('insufficientCreditsDesc'), variant: 'destructive' });
-        else { const friendly = parseAiError(data); toast({ title: friendly.title, description: friendly.description, variant: 'destructive' }); }
+        else { const friendly = parseAiError(data, t); toast({ title: friendly.title, description: friendly.description, variant: 'destructive' }); }
         return;
       }
       setAudioUrl(data.audioUrl);
