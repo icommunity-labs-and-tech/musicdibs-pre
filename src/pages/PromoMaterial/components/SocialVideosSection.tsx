@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -14,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Download, Info, AlertCircle, Film, Clock, Instagram } from 'lucide-react';
+import { Loader2, Download, Info, AlertCircle, Film, Clock, Instagram, Coins } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 const VIDEO_COST = FEATURE_COSTS.social_video;
@@ -30,9 +31,10 @@ export const SocialVideosSection = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
-  const { credits, hasEnough } = useCredits();
+  const { credits, hasEnough, isLoading } = useCredits();
   const { track } = useProductTracking();
   const tr = (key: string, opts?: any) => t(`promoMaterial.videos.${key}`, opts) as string;
+  const insufficientCredits = !isLoading && !hasEnough(VIDEO_COST);
 
   const [format, setFormat] = useState<VideoFormat>('story');
   const [description, setDescription] = useState('');
@@ -82,6 +84,11 @@ export const SocialVideosSection = () => {
 
   const handleGenerate = async () => {
     if (!description.trim() || !user) return;
+
+    if (insufficientCredits) {
+      window.location.href = '/dashboard/credits';
+      return;
+    }
 
     if (!hasEnough(VIDEO_COST)) {
       toast({
@@ -245,24 +252,33 @@ export const SocialVideosSection = () => {
         </Alert>
 
         {/* Generate button */}
-        <Button
-          onClick={handleGenerate}
-          disabled={generating || !description.trim() || !hasEnough(VIDEO_COST)}
-          className="w-full"
-          size="lg"
-        >
-          {generating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              {tr('generatingBtn')}
-            </>
-          ) : (
-            <>
-              <Film className="w-4 h-4 mr-2" />
-              {tr('generateBtn', { cost: VIDEO_COST })}
-            </>
-          )}
-        </Button>
+        {insufficientCredits ? (
+          <Button asChild className="w-full" size="lg">
+            <Link to="/dashboard/credits">
+              <Coins className="w-4 h-4 mr-2" />
+              {t('dashboard.noCredits.buyCredits')}
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            onClick={handleGenerate}
+            disabled={generating || isLoading || !description.trim()}
+            className="w-full"
+            size="lg"
+          >
+            {generating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                {tr('generatingBtn')}
+              </>
+            ) : (
+              <>
+                <Film className="w-4 h-4 mr-2" />
+                {tr('generateBtn', { cost: VIDEO_COST })}
+              </>
+            )}
+          </Button>
+        )}
 
         {/* Progress indicator */}
         {generating && progressStatus && (

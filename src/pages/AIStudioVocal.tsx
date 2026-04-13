@@ -32,6 +32,8 @@ import { VoiceTranslator } from '@/components/voice/VoiceTranslator';
 import { VoiceToolsTour } from '@/components/ai-studio/VoiceToolsTour';
 import { HelpCircle } from 'lucide-react';
 import { useProductTracking } from '@/hooks/useProductTracking';
+import { useCredits } from '@/hooks/useCredits';
+import { FEATURE_COSTS } from '@/lib/featureCosts';
 
 const THEMES = ["Amor", "Desamor", "Superación", "Fiesta", "Calle", "Familia", "Libertad", "Nostalgia", "Éxito", "Identidad"];
 const MUSIC_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Reggaeton', 'Flamenco', 'Electrónica', 'Jazz', 'Clásica', 'R&B', 'Latin'];
@@ -56,6 +58,7 @@ const POVS = ["Primera persona", "Segunda persona", "Tercera persona"];
 export default function AIStudioVocal() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const { hasEnough, isLoading: creditsLoading } = useCredits();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
 
@@ -63,6 +66,8 @@ export default function AIStudioVocal() {
   const vc = (key: string, opts?: any): string => String(t(`dashboard.voiceCloning.${key}`, opts));
   const tv = (key: string, opts?: any): string => String(t(`aiVocal.${key}`, opts));
   const { track } = useProductTracking();
+  const vocalTrackCost = FEATURE_COSTS.generate_vocal_track ?? 1;
+  const insufficientVocalCredits = !creditsLoading && !hasEnough(vocalTrackCost);
 
   useEffect(() => {
     track('ai_studio_entered', { feature: 'vocal' });
@@ -238,6 +243,10 @@ export default function AIStudioVocal() {
     if (!lyrics.trim()) { toast({ title: tv('errorWriteLyrics'), variant: 'destructive' }); return; }
     const selectedClone = voiceClones.find((c: any) => c.id === selectedCloneId);
     if (!selectedClone) { toast({ title: tv('errorSelectVoice'), description: tv('errorSelectVoiceDesc'), variant: 'destructive' }); return; }
+    if (insufficientVocalCredits) {
+      window.location.href = '/dashboard/credits';
+      return;
+    }
     setIsGenerating(true); setAudioUrl('');
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -551,9 +560,15 @@ export default function AIStudioVocal() {
                     <p className="text-xs text-muted-foreground">{tv('charsCount', { count: lyrics.length })}</p>
                   </CardContent>
                 </Card>
-                <Button className="w-full" size="lg" onClick={handleGenerate} disabled={isGenerating || !lyrics.trim() || !selectedCloneId}>
-                  {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{tv('generatingVocal')}</> : <><Mic className="w-4 h-4 mr-2" />{tv('generateVocalBtn')}</>}
-                </Button>
+                {insufficientVocalCredits ? (
+                  <Button className="w-full" size="lg" onClick={() => { window.location.href = '/dashboard/credits'; }}>
+                    {t('dashboard.noCredits.buyCredits')}
+                  </Button>
+                ) : (
+                  <Button className="w-full" size="lg" onClick={handleGenerate} disabled={creditsLoading || isGenerating || !lyrics.trim() || !selectedCloneId}>
+                    {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{tv('generatingVocal')}</> : <><Mic className="w-4 h-4 mr-2" />{tv('generateVocalBtn')}</>}
+                  </Button>
+                )}
               </div>
 
               {/* Right column */}

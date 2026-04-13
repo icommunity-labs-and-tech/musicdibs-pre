@@ -13,7 +13,6 @@ import { Navbar } from "@/components/Navbar"
 import { FileDropzone } from "@/components/FileDropzone"
 import { useAuth } from "@/hooks/useAuth"
 import { useCredits } from "@/hooks/useCredits"
-import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert"
 import { FEATURE_COSTS } from "@/lib/featureCosts"
 import { PricingLink } from "@/components/dashboard/PricingPopup"
 import { supabase } from "@/integrations/supabase/client"
@@ -21,7 +20,7 @@ import { toast } from "sonner"
 import { useProductTracking } from "@/hooks/useProductTracking"
 import {
   ArrowLeft, Loader2, Download,
-  RefreshCw, ImageIcon, Sparkles,
+  RefreshCw, ImageIcon, Sparkles, Coins,
 } from "lucide-react"
 
 type CoverMode = "none" | "artist"
@@ -43,8 +42,9 @@ const fileToBase64 = (file: File): Promise<string> =>
 const AIStudioCovers = () => {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const { hasEnough } = useCredits()
+  const { hasEnough, isLoading } = useCredits()
   const { track } = useProductTracking()
+  const insufficientCredits = !isLoading && !hasEnough(FEATURE_COSTS.generate_cover)
 
 
   useEffect(() => {
@@ -82,9 +82,14 @@ const AIStudioCovers = () => {
     }
   }
 
-  const canGenerate = artistName.trim() && trackTitle.trim() && hasEnough(FEATURE_COSTS.generate_cover)
+  const canGenerate = artistName.trim() && trackTitle.trim() && !insufficientCredits
 
   const handleGenerate = async () => {
+    if (insufficientCredits) {
+      window.location.href = '/dashboard/credits'
+      return
+    }
+
     if (!artistName.trim() || !trackTitle.trim()) {
       toast.error("Introduce el nombre del artista y el título")
       return
@@ -118,8 +123,34 @@ const AIStudioCovers = () => {
         },
       })
 
-      if (data?.fallback) throw new Error(data.message || "Servicio no disponible temporalmente.")
-      if (error || data?.error) throw new Error(data?.error || error?.message)
+      if (error) {
+        let edgeErrorData: Record<string, unknown> | null = null
+
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'context' in error &&
+          error.context instanceof Response
+        ) {
+          try {
+            edgeErrorData = await error.context.clone().json()
+          } catch {
+            edgeErrorData = null
+          }
+        }
+
+        if (edgeErrorData?.error) {
+          const friendly = parseAiError(edgeErrorData, t, edgeErrorData)
+          throw new Error(friendly.description)
+        }
+
+        throw error
+      }
+
+      if (data?.fallback || data?.error) {
+        const friendly = parseAiError(data, t, data)
+        throw new Error(friendly.description)
+      }
 
       setImageUrl(data.imageUrl)
       toast.success(t('aiCovers.coverGenerated'))
@@ -294,10 +325,14 @@ const AIStudioCovers = () => {
 
                 {genError && <p className="text-xs text-destructive">{genError}</p>}
 
-                {!hasEnough(FEATURE_COSTS.generate_cover) ? (
-                  <NoCreditsAlert message="Generar portada (1 crédito)" />
+                {insufficientCredits ? (
+                  <Button asChild className="w-full gap-2" size="lg">
+                    <Link to="/dashboard/credits">
+                      <Coins className="h-4 w-4" />Comprar créditos
+                    </Link>
+                  </Button>
                 ) : (
-                  <Button className="w-full gap-2" size="lg" onClick={handleGenerate} disabled={isGenerating || !canGenerate}>
+                  <Button className="w-full gap-2" size="lg" onClick={handleGenerate} disabled={isLoading || isGenerating || !canGenerate}>
                     {isGenerating ? (
                       <><Loader2 className="h-4 w-4 animate-spin" />Generando tu portada con IA...</>
                     ) : (
@@ -344,9 +379,17 @@ const AIStudioCovers = () => {
                   <Button className="flex-1 gap-2" onClick={handleDownload}>
                     <Download className="h-4 w-4" />Descargar portada
                   </Button>
-                  <Button variant="outline" className="gap-2" onClick={handleReset}>
-                    <RefreshCw className="h-4 w-4" />Generar otra (1 crédito)
-                  </Button>
+                  {insufficientCredits ? (
+                    <Button asChild variant="outline" className="gap-2">
+                      <Link to="/dashboard/credits">
+                        <Coins className="h-4 w-4" />Comprar créditos
+                      </Link>
+                    </Button>
+                  ) : (
+                    <Button variant="outline" className="gap-2" onClick={handleReset}>
+                      <RefreshCw className="h-4 w-4" />Generar otra (1 crédito)
+                    </Button>
+                  )}
                 </div>
               </div>
             ) : (

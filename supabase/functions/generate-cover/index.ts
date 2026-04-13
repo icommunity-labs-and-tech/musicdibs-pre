@@ -14,6 +14,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  let supabaseAdmin: ReturnType<typeof createClient> | null = null
+  let chargedUserId: string | null = null
+  let chargedTrackTitle = "Sin título"
+  let creditsCharged = false
+  let refundIssued = false
+
   try {
     const authHeader = req.headers.get("Authorization")
     if (!authHeader?.startsWith("Bearer ")) {
@@ -34,7 +40,7 @@ serve(async (req) => {
       })
     }
 
-    const supabaseAdmin = createClient(
+    supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     )
@@ -58,6 +64,9 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
     }
+
+    chargedUserId = user.id
+    chargedTrackTitle = trackTitle || "Sin título"
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -206,7 +215,7 @@ serve(async (req) => {
     }
 
     // Deduct credits
-    await supabaseAdmin
+    const { data: deductedRows, error: deductError } = await supabaseAdmin
       .from("profiles")
       .update({
         available_credits: profile.available_credits - CREDITS_COST,
@@ -214,13 +223,41 @@ serve(async (req) => {
       })
       .eq("user_id", user.id)
       .eq("available_credits", profile.available_credits)
+      .select("user_id")
 
-    await supabaseAdmin.from("credit_transactions").insert({
+    if (deductError) {
+      throw deductError
+    }
+
+    if (!deductedRows?.length) {
+      const { data: latestProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("available_credits")
+        .eq("user_id", user.id)
+        .single()
+
+      return new Response(
+        JSON.stringify({
+          error: "insufficient_credits",
+          available: latestProfile?.available_credits ?? 0,
+          required: CREDITS_COST,
+        }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+
+    creditsCharged = true
+
+    const { error: txError } = await supabaseAdmin.from("credit_transactions").insert({
       user_id: user.id,
       amount: -CREDITS_COST,
       type: "usage",
       description: `Portada IA: ${trackTitle || "Sin título"}`.slice(0, 200),
     })
+
+    if (txError) {
+      throw txError
+    }
 
     console.log(`[COVER] Success for ${user.id}, ${CREDITS_COST} credit charged`)
 
@@ -229,6 +266,38 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
   } catch (e) {
+    if (supabaseAdmin && chargedUserId && creditsCharged && !refundIssued) {
+      refundIssued = true
+      try {
+        const { data: latestProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("available_credits")
+          .eq("user_id", chargedUserId)
+          .single()
+
+        if (latestProfile) {
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              available_credits: latestProfile.available_credits + CREDITS_COST,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", chargedUserId)
+
+          await supabaseAdmin.from("credit_transactions").insert({
+            user_id: chargedUserId,
+            amount: CREDITS_COST,
+            type: "refund",
+            description: `Reembolso portada IA: ${chargedTrackTitle}`.slice(0, 200),
+          })
+
+          console.log(`[COVER] Refund applied for ${chargedUserId}`)
+        }
+      } catch (refundError) {
+        console.error("[COVER] Refund error:", refundError)
+      }
+    }
+
     console.error("[COVER] Unexpected error:", e)
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Internal error" }),
