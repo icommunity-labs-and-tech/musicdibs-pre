@@ -6,21 +6,67 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SAMPLE_PROMPTS: Record<string, string> = {
-  'female-pop':     'bright female pop vocals, melodic, clear tone, upbeat pop song, 30 seconds',
-  'female-rb':      'warm female R&B soul vocals, expressive, soulful, smooth R&B, 30 seconds',
-  'female-latin':   'female urban latin vocals, reggaeton style, powerful, latin urban, 30 seconds',
-  'female-ballad':  'soft emotional female vocals, ballad style, intimate, tender melody, 30 seconds',
-  'female-rock':    'powerful female rock vocals, edgy, intense, rock song, 30 seconds',
-  'male-pop':       'smooth male pop vocals, modern, polished, contemporary pop, 30 seconds',
-  'male-trap':      'deep male trap vocals, urban hip-hop style, melodic rap, trap beat, 30 seconds',
-  'male-latin':     'male latin urban vocals, reggaeton and trap latino style, 30 seconds',
-  'male-rock':      'powerful male rock vocals, gritty, energetic, rock anthem, 30 seconds',
-  'male-ballad':    'deep emotional male vocals, crooner ballad style, romantic, 30 seconds',
-  'male-flamenco':  'male flamenco vocals, spanish style, deep and passionate, 30 seconds',
-  'child-young':    'young fresh vocals, youthful pop style, energetic, upbeat, 30 seconds',
-  'choir':          'choir vocals, harmonic, multiple voices, epic choral, 30 seconds',
-  'vintage-crooner':'old crooner male vocalist, vintage 1950s style, charming, nostalgic, 30 seconds',
+/**
+ * Map each voice profile to an ElevenLabs TTS voice + sample text.
+ * Uses the TTS API (available on all plans) instead of the Music API (paid-only).
+ */
+const VOICE_CONFIG: Record<string, { voiceId: string; text: string }> = {
+  'female-pop': {
+    voiceId: 'EXAVITQu4vr4xnSDxMaL', // Sarah
+    text: 'La la la, siento la música en mi corazón. Every beat makes me feel alive, every note takes me higher and higher. This is the sound of pop.',
+  },
+  'female-rb': {
+    voiceId: 'FGY2WhTYpPnrIDTdsKH5', // Laura
+    text: 'Oh baby, feel the groove tonight. Let the rhythm take control of your soul. Smooth and soulful, that\'s how we roll, R&B all night long.',
+  },
+  'female-latin': {
+    voiceId: 'FGY2WhTYpPnrIDTdsKH5', // Laura
+    text: 'Dale, muévete al ritmo del reggaetón. Siente la fuerza, siente el poder. La música latina corre por mis venas, puro fuego.',
+  },
+  'female-ballad': {
+    voiceId: 'pFZP5JQG7iQjIQuC4Bku', // Lily
+    text: 'Cuando cierro los ojos, te veo a ti. Each whisper of the wind reminds me of your gentle touch. A tender melody, just for you.',
+  },
+  'female-rock': {
+    voiceId: 'Xb7hH8MSUJpSbSDYk0k2', // Alice
+    text: 'Turn it up! Feel the power of rock and roll. We are unstoppable, we are the fire. Raise your voice and let the world hear you scream!',
+  },
+  'male-pop': {
+    voiceId: 'TX3LPaxmHKxFdv7VOQHJ', // Liam
+    text: 'Every day is a new beginning, a new chance to shine. Pop music runs through my veins. Let\'s make this moment last forever.',
+  },
+  'male-trap': {
+    voiceId: 'bIHbv24MWmeRgasZH58o', // Will
+    text: 'Yeah, trap life, we ride through the night. The bass hits hard, the beat don\'t stop. From the streets to the top, we never quit.',
+  },
+  'male-latin': {
+    voiceId: 'onwK4e9ZLuTAKqWW03F9', // Daniel
+    text: 'Yo soy del barrio, soy latino hasta la médula. Reggaetón y trap, eso es lo que suena. Prende la calle, que la noche es nuestra.',
+  },
+  'male-rock': {
+    voiceId: 'nPczCjzI2devNBz1zQrb', // Brian
+    text: 'Rock and roll will never die! Feel the guitar ripping through the air. We are the anthem, we are the storm. Let\'s rock this world!',
+  },
+  'male-ballad': {
+    voiceId: 'CwhRBWXzGAHq8TQ4Fs17', // Roger
+    text: 'In the silence of the night, I think of you. My heart sings a melody only you can hear. A love so deep, so true, forever yours.',
+  },
+  'male-flamenco': {
+    voiceId: 'onwK4e9ZLuTAKqWW03F9', // Daniel
+    text: 'Olé, siento el duende en mi alma. El compás del flamenco me lleva, me arrastra. Con pasión y con fuerza, así canto yo, desde lo más hondo.',
+  },
+  'child-young': {
+    voiceId: 'Xb7hH8MSUJpSbSDYk0k2', // Alice (youthful)
+    text: 'Hey, let\'s have fun today! The sun is shining and the music is playing. Young and free, that\'s what we are. Let\'s dance and sing together!',
+  },
+  'choir': {
+    voiceId: 'JBFqnCBsd6RMkjVDRZzb', // George
+    text: 'Together we rise, together we sing. Our voices unite in harmony and power. A chorus of hope, a choir of dreams. Let the world hear our song.',
+  },
+  'vintage-crooner': {
+    voiceId: 'pqHfZKP75CvOlQylNhV4', // Bill
+    text: 'Come fly with me, let\'s fly away. In the golden age of music, every note was magic. Smooth, charming, and timeless. That\'s the crooner way.',
+  },
 };
 
 serve(async (req) => {
@@ -33,7 +79,7 @@ serve(async (req) => {
 
     if (!ELEVENLABS_API_KEY) {
       return new Response(JSON.stringify({ error: 'Missing ELEVENLABS_API_KEY' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -49,7 +95,7 @@ serve(async (req) => {
     if (profilesError) throw profilesError;
     if (!profiles?.length) {
       return new Response(JSON.stringify({ message: 'No profiles to generate', generated: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -57,25 +103,41 @@ serve(async (req) => {
 
     for (const profile of profiles) {
       try {
-        const prompt = SAMPLE_PROMPTS[profile.id] || `${profile.prompt_tag}, 30 seconds`;
+        const config = VOICE_CONFIG[profile.id];
+        if (!config) {
+          results.push({ id: profile.id, status: 'skipped', error: 'No TTS config for this profile' });
+          continue;
+        }
 
-        const elRes = await fetch('https://api.elevenlabs.io/v1/music', {
-          method: 'POST',
-          headers: {
-            'xi-api-key': ELEVENLABS_API_KEY,
-            'Content-Type': 'application/json',
+        // Use ElevenLabs TTS API (available on all plans)
+        const ttsRes = await fetch(
+          `https://api.elevenlabs.io/v1/text-to-speech/${config.voiceId}?output_format=mp3_44100_128`,
+          {
+            method: 'POST',
+            headers: {
+              'xi-api-key': ELEVENLABS_API_KEY,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              text: config.text,
+              model_id: 'eleven_multilingual_v2',
+              voice_settings: {
+                stability: 0.4,
+                similarity_boost: 0.75,
+                style: 0.6,
+                use_speaker_boost: true,
+              },
+            }),
           },
-          body: JSON.stringify({ prompt, duration_seconds: 30 }),
-        });
+        );
 
-        if (!elRes.ok) {
-          const err = await elRes.text();
+        if (!ttsRes.ok) {
+          const err = await ttsRes.text();
           results.push({ id: profile.id, status: 'error', error: err });
           continue;
         }
 
-        // ElevenLabs Music API returns raw binary audio
-        const audioBuffer = new Uint8Array(await elRes.arrayBuffer());
+        const audioBuffer = new Uint8Array(await ttsRes.arrayBuffer());
 
         const fileName = `${profile.id}.mp3`;
         const { error: uploadError } = await supabase.storage
@@ -95,22 +157,23 @@ serve(async (req) => {
         }).eq('id', profile.id);
 
         results.push({ id: profile.id, status: 'ok', url: urlData.publicUrl });
-        await new Promise(r => setTimeout(r, 1000));
 
+        // Rate limit: wait 1s between TTS calls
+        await new Promise((r) => setTimeout(r, 1000));
       } catch (err: any) {
         results.push({ id: profile.id, status: 'error', error: err.message });
       }
     }
 
     return new Response(JSON.stringify({
-      generated: results.filter(r => r.status === 'ok').length,
-      errors: results.filter(r => r.status === 'error').length,
+      generated: results.filter((r) => r.status === 'ok').length,
+      errors: results.filter((r) => r.status === 'error').length,
+      skipped: results.filter((r) => r.status === 'skipped').length,
       results,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
   } catch (error: any) {
     return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
