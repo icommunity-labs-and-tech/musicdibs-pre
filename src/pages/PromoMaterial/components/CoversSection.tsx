@@ -158,15 +158,28 @@ export const CoversSection = () => {
           resolution,
         },
       });
-      if (data?.fallback) throw new Error(data.message || "Servicio no disponible temporalmente. Tus créditos han sido reembolsados.");
+      if (data?.fallback) {
+        // Credits were refunded server-side, refresh balance
+        const { title, description: desc } = parseAiError(
+          { error: data.error },
+          t,
+          data,
+        );
+        throw { userTitle: title, userDesc: desc };
+      }
       if (error || data?.error) throw new Error(data?.error || error?.message);
 
       setImageUrl(data.imageUrl);
       toast.success(t('aiCovers.coverGenerated'));
       track('cover_generated', { feature: 'cover' });
     } catch (err: any) {
-      setGenError(err.message || t('aiShared.error'));
-      toast.error(err.message || t('aiShared.error'));
+      const msg = err.userTitle
+        ? `${err.userTitle}: ${err.userDesc}`
+        : err.message || t('aiShared.error');
+      setGenError(msg);
+      toast.error(err.userTitle || t('aiShared.error'), {
+        description: err.userDesc || err.message,
+      });
     }
     setIsGenerating(false);
   };
