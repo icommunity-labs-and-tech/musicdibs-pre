@@ -52,9 +52,9 @@ serve(async (req) => {
       referenceStrength, referenceMode,
     } = await req.json()
 
-    if (!artistName || !trackTitle) {
+    if (!trackTitle && !description) {
       return new Response(
-        JSON.stringify({ error: "artistName and trackTitle are required" }),
+        JSON.stringify({ error: "trackTitle or description is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
     }
