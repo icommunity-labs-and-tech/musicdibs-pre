@@ -75,6 +75,20 @@ interface LyricsGeneration {
   created_at: string;
 }
 
+interface VoiceProfileOption {
+  id: string;
+  label: string;
+  description: string;
+  prompt_tag: string;
+  emoji: string;
+  sample_url: string | null;
+}
+
+const getVoiceSampleStoragePath = (voiceId: string, sampleUrl: string | null) => {
+  const storedPath = sampleUrl?.split('/voice-samples/')[1]?.split('?')[0];
+  return storedPath || `${voiceId}.mp3`;
+};
+
 // ── Audio Wave Animation Component ──
 const AudioWaveAnimation = () => (
   <div className="flex items-end justify-center gap-1 h-16">
@@ -160,7 +174,7 @@ const AIStudioCreate = () => {
 
   // ── Voice selector state ──
   const [selectedVoice, setSelectedVoice] = useState<string>('');
-  const [voiceProfiles, setVoiceProfiles] = useState<any[]>([]);
+  const [voiceProfiles, setVoiceProfiles] = useState<VoiceProfileOption[]>([]);
   const [playingVoice, setPlayingVoice] = useState<string>('');
   const [audioRef] = useState<Record<string, HTMLAudioElement>>({});
 
@@ -226,18 +240,38 @@ const AIStudioCreate = () => {
     } else {
       setIsLoading(false);
     }
-    // Load voice profiles
-    supabase
-      .from('voice_profiles')
-      .select('*')
-      .eq('active', true)
-      .order('sort_order')
-      .then(({ data }) => {
-        setVoiceProfiles(data || []);
-        if (data && data.length > 0 && !selectedVoice) {
-          setSelectedVoice(data[0].id);
+    const loadVoiceProfiles = async () => {
+      const { data, error } = await supabase
+        .from('voice_profiles')
+        .select('*')
+        .eq('active', true)
+        .order('sort_order');
+
+      if (error) {
+        console.error('Error loading voice profiles:', error);
+        return;
+      }
+
+      const signedProfiles = await Promise.all((data || []).map(async (profile) => {
+        if (!profile.sample_url) return profile;
+
+        const { data: signedData, error: signedError } = await supabase.storage
+          .from('voice-samples')
+          .createSignedUrl(getVoiceSampleStoragePath(profile.id, profile.sample_url), 3600);
+
+        if (signedError) {
+          console.error(`Error signing sample for voice ${profile.id}:`, signedError);
+          return { ...profile, sample_url: null };
         }
-      });
+
+        return { ...profile, sample_url: signedData?.signedUrl || null };
+      }));
+
+      setVoiceProfiles(signedProfiles);
+      setSelectedVoice((current) => current || signedProfiles[0]?.id || '');
+    };
+
+    void loadVoiceProfiles();
 
     // Load virtual artists
     if (user) {
@@ -593,9 +627,25 @@ const AIStudioCreate = () => {
 
     const audio = new Audio(sampleUrl);
     audioRef[voiceId] = audio;
-    audio.play();
     setPlayingVoice(voiceId);
+    audio.onerror = () => {
+      setPlayingVoice('');
+      toast({
+        title: t('aiShared.error'),
+        description: 'No se pudo cargar la muestra de voz',
+        variant: 'destructive',
+      });
+    };
     audio.onended = () => setPlayingVoice('');
+    void audio.play().catch((error) => {
+      console.error('Error playing voice sample:', error);
+      setPlayingVoice('');
+      toast({
+        title: t('aiShared.error'),
+        description: 'No se pudo reproducir la muestra de voz',
+        variant: 'destructive',
+      });
+    });
   };
 
   // ── Improve prompt with AI ──
