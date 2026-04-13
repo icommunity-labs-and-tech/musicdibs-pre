@@ -2058,7 +2058,15 @@ export type Database = {
           voice_profile_id?: string | null
           voice_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_artist_profiles_voice_profile_id_fkey"
+            columns: ["voice_profile_id"]
+            isOneToOne: false
+            referencedRelation: "voice_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_attribution: {
         Row: {
