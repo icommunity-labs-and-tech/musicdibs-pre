@@ -14,7 +14,7 @@ export function NoCreditsAlert({ message }: NoCreditsAlertProps) {
     <div className="flex flex-col items-center gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center">
       <AlertCircle className="h-8 w-8 text-destructive" />
       <p className="text-sm font-medium text-destructive">{message || t('dashboard.noCredits.message')}</p>
-      <Button asChild variant="default" size="sm">
+      <Button asChild variant="default" size="sm" className="w-full sm:w-auto">
         <Link to="/dashboard/credits">
           <Coins className="h-4 w-4 mr-1.5" />
           {t('dashboard.noCredits.buyCredits')}

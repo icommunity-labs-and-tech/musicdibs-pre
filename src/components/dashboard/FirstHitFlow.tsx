@@ -111,7 +111,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const navigate  = useNavigate()
-  const { hasEnough } = useCredits()
+  const { hasEnough, isLoading: creditsLoading } = useCredits()
   const creatorRoleLabels = useCreatorRoleLabels()
   const workTypeLabels = useWorkTypeLabels()
 
@@ -176,12 +176,19 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
     setIsImproving(false);
   };
 
+  const audioGenerationCost = genMode === 'song' ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio
+  const noCreditsForGeneration = !creditsLoading && !hasEnough(audioGenerationCost)
+
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast.error(t('dashboard.firstHit.describeError'))
       return
     }
-    if (!hasEnough(genMode === 'song' ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio)) {
+    if (noCreditsForGeneration) {
+      navigate('/dashboard/credits')
+      return
+    }
+    if (!hasEnough(audioGenerationCost)) {
       toast.error(t('dashboard.firstHit.noCreditsAudio'))
       return
     }
@@ -698,16 +705,25 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
 
               {/* Botones */}
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                <Button
-                  className="flex-1 gap-2 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700"
-                  onClick={handleGenerate}
-                  disabled={generating || !prompt.trim() || prompt.trim().length < 10 || (genMode === 'song' && !selectedVoice)}
-                >
-                  {generating
-                    ? <><Loader2 className="h-4 w-4 animate-spin" />{t('dashboard.firstHit.generating')}</>
-                    : <><Sparkles className="h-4 w-4" />{t('dashboard.firstHit.generateAI')}</>
-                  }
-                </Button>
+                {noCreditsForGeneration ? (
+                  <Button
+                    className="flex-1 gap-2"
+                    onClick={() => navigate('/dashboard/credits')}
+                  >
+                    {t('dashboard.noCredits.buyCredits')}
+                  </Button>
+                ) : (
+                  <Button
+                    className="flex-1 gap-2 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700"
+                    onClick={handleGenerate}
+                    disabled={creditsLoading || generating || !prompt.trim() || prompt.trim().length < 10 || (genMode === 'song' && !selectedVoice)}
+                  >
+                    {generating
+                      ? <><Loader2 className="h-4 w-4 animate-spin" />{t('dashboard.firstHit.generating')}</>
+                      : <><Sparkles className="h-4 w-4" />{t('dashboard.firstHit.generateAI')}</>
+                    }
+                  </Button>
+                )}
                 <Button
                   variant="outline" className="flex-1 gap-2"
                   onClick={handleStep1Next}

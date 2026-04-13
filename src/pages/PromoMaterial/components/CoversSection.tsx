@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { FileDropzone } from '@/components/FileDropzone';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,14 +12,13 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCredits } from '@/hooks/useCredits';
 import { useProductTracking } from '@/hooks/useProductTracking';
-import { NoCreditsAlert } from '@/components/dashboard/NoCreditsAlert';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { parseAiError } from '@/lib/aiErrorHandler';
 import {
-  Wand2, Loader2, Download, RefreshCw, ImageIcon, Sparkles,
+  Wand2, Loader2, Download, RefreshCw, ImageIcon, Sparkles, Coins,
 } from 'lucide-react';
 
 const STYLE_KEYS = [
@@ -52,8 +52,10 @@ const fileToBase64 = (file: File): Promise<string> => {
 export const CoversSection = () => {
   const { t } = useTranslation();
   const tr = (key: string) => t(`promoMaterial.covers.${key}`);
-  const { hasEnough } = useCredits();
+  const { hasEnough, isLoading } = useCredits();
   const { track } = useProductTracking();
+  const coverCost = FEATURE_COSTS.generate_cover;
+  const insufficientCredits = !isLoading && !hasEnough(coverCost);
 
   const [artistName, setArtistName] = useState('');
   const [trackTitle, setTrackTitle] = useState('');
@@ -116,11 +118,16 @@ export const CoversSection = () => {
   };
 
   const handleGenerate = async () => {
+    if (insufficientCredits) {
+      window.location.href = '/dashboard/credits';
+      return;
+    }
+
     if (!trackTitle.trim() && !description.trim()) {
       toast.error(t('aiCovers.errorMinInput'));
       return;
     }
-    if (!hasEnough(FEATURE_COSTS.generate_cover)) {
+    if (!hasEnough(coverCost)) {
       toast.error(t('aiShared.noCredits'));
       return;
     }
@@ -151,16 +158,34 @@ export const CoversSection = () => {
           resolution,
         },
       });
-      if (data?.fallback) {
-        // Credits were refunded server-side, refresh balance
-        const { title, description: desc } = parseAiError(
-          { error: data.error },
-          t,
-          data,
-        );
+      if (error) {
+        let edgeErrorData: Record<string, unknown> | null = null;
+
+        if (
+          typeof error === 'object' &&
+          error !== null &&
+          'context' in error &&
+          error.context instanceof Response
+        ) {
+          try {
+            edgeErrorData = await error.context.clone().json();
+          } catch {
+            edgeErrorData = null;
+          }
+        }
+
+        if (edgeErrorData?.error) {
+          const { title, description: desc } = parseAiError(edgeErrorData, t, edgeErrorData);
+          throw { userTitle: title, userDesc: desc };
+        }
+
+        throw error;
+      }
+
+      if (data?.fallback || data?.error) {
+        const { title, description: desc } = parseAiError(data, t, data);
         throw { userTitle: title, userDesc: desc };
       }
-      if (error || data?.error) throw new Error(data?.error || error?.message);
 
       setImageUrl(data.imageUrl);
       toast.success(t('aiCovers.coverGenerated'));
@@ -355,14 +380,19 @@ export const CoversSection = () => {
 
               {genError && <p className="text-xs text-destructive">{genError}</p>}
 
-              {!hasEnough(FEATURE_COSTS.generate_cover) ? (
-                <NoCreditsAlert message={t('aiCovers.generateBtn')} />
+              {insufficientCredits ? (
+                <Button asChild className="w-full gap-2" size="lg">
+                  <Link to="/dashboard/credits">
+                    <Coins className="h-4 w-4" />
+                    {t('dashboard.noCredits.buyCredits')}
+                  </Link>
+                </Button>
               ) : (
                 <Button
                   className="w-full gap-2"
                   size="lg"
                   onClick={handleGenerate}
-                  disabled={isGenerating || (!trackTitle.trim() && !description.trim())}
+                  disabled={isLoading || isGenerating || (!trackTitle.trim() && !description.trim())}
                 >
                   {isGenerating ? (
                     <><Loader2 className="h-4 w-4 animate-spin" />{t('aiCovers.generatingCover')}</>
@@ -407,10 +437,19 @@ export const CoversSection = () => {
                   <Download className="h-4 w-4" />
                   {t('aiCovers.downloadCover')}
                 </Button>
-                <Button variant="outline" className="gap-2" onClick={handleGenerate} disabled={isGenerating}>
-                  <RefreshCw className="h-4 w-4" />
-                  {t('aiCovers.regenerate')}
-                </Button>
+                {insufficientCredits ? (
+                  <Button asChild variant="outline" className="gap-2">
+                    <Link to="/dashboard/credits">
+                      <Coins className="h-4 w-4" />
+                      {t('dashboard.noCredits.buyCredits')}
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button variant="outline" className="gap-2" onClick={handleGenerate} disabled={isLoading || isGenerating}>
+                    <RefreshCw className="h-4 w-4" />
+                    {t('aiCovers.regenerate')}
+                  </Button>
+                )}
               </div>
               <p className="text-xs text-muted-foreground text-center">{t('aiCovers.hiRes')}</p>
             </div>
