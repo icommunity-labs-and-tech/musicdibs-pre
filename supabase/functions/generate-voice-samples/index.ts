@@ -10,62 +10,76 @@ const corsHeaders = {
  * Map each voice profile to an ElevenLabs TTS voice + sample text.
  * Uses the TTS API (available on all plans) instead of the Music API (paid-only).
  */
-const VOICE_CONFIG: Record<string, { voiceId: string; text: string }> = {
+const VOICE_CONFIG: Record<string, { voiceId: string; text: string; style: number }> = {
   'female-pop': {
-    voiceId: 'EXAVITQu4vr4xnSDxMaL', // Sarah
-    text: 'La la la, siento la música en mi corazón. Every beat makes me feel alive, every note takes me higher and higher. This is the sound of pop.',
+    voiceId: 'EXAVITQu4vr4xnSDxMaL',
+    style: 0.8,
+    text: 'Na na na na na, oh oh, I feel the beat inside my heart tonight... La la la la la, dancing under neon lights, you make me feel so alive, oh yeah yeah yeah... Na na na...',
   },
   'female-rb': {
-    voiceId: 'FGY2WhTYpPnrIDTdsKH5', // Laura
-    text: 'Oh baby, feel the groove tonight. Let the rhythm take control of your soul. Smooth and soulful, that\'s how we roll, R&B all night long.',
+    voiceId: 'FGY2WhTYpPnrIDTdsKH5',
+    style: 0.85,
+    text: 'Ooh baby, ooh yeah... Feel the groove, feel the vibe tonight, oh oh oh... Smooth like velvet, sweet like honey, ooh... You got me feeling some kind of way, mmm yeah...',
   },
   'female-latin': {
-    voiceId: 'FGY2WhTYpPnrIDTdsKH5', // Laura
-    text: 'Dale, muévete al ritmo del reggaetón. Siente la fuerza, siente el poder. La música latina corre por mis venas, puro fuego.',
+    voiceId: 'FGY2WhTYpPnrIDTdsKH5',
+    style: 0.85,
+    text: 'Dale, dale, muévete así, oh oh oh... Siente el fuego, siente el poder, la la la... El reggaetón corre por mis venas, pa pa pa, puro ritmo latino, yeah yeah...',
   },
   'female-ballad': {
-    voiceId: 'pFZP5JQG7iQjIQuC4Bku', // Lily
-    text: 'Cuando cierro los ojos, te veo a ti. Each whisper of the wind reminds me of your gentle touch. A tender melody, just for you.',
+    voiceId: 'pFZP5JQG7iQjIQuC4Bku',
+    style: 0.7,
+    text: 'Ooh... Cuando cierro los ojos te veo a ti... mmm... Each whisper of the wind, oh, reminds me of your touch... La la la, a melody, just for you, ooh ooh...',
   },
   'female-rock': {
-    voiceId: 'Xb7hH8MSUJpSbSDYk0k2', // Alice
-    text: 'Turn it up! Feel the power of rock and roll. We are unstoppable, we are the fire. Raise your voice and let the world hear you scream!',
+    voiceId: 'Xb7hH8MSUJpSbSDYk0k2',
+    style: 0.9,
+    text: 'Yeah yeah yeah! Turn it up, turn it loud! Oh oh oh, we are the fire, we are the storm! Na na na na, rock and roll will never die, oh yeah!',
   },
   'male-pop': {
-    voiceId: 'TX3LPaxmHKxFdv7VOQHJ', // Liam
-    text: 'Every day is a new beginning, a new chance to shine. Pop music runs through my veins. Let\'s make this moment last forever.',
+    voiceId: 'TX3LPaxmHKxFdv7VOQHJ',
+    style: 0.8,
+    text: 'Oh oh oh, every day is a new beginning, yeah yeah... La la la la, shining bright like a star tonight... Na na na, let\'s make this moment last forever, oh oh...',
   },
   'male-trap': {
-    voiceId: 'bIHbv24MWmeRgasZH58o', // Will
-    text: 'Yeah, trap life, we ride through the night. The bass hits hard, the beat don\'t stop. From the streets to the top, we never quit.',
+    voiceId: 'bIHbv24MWmeRgasZH58o',
+    style: 0.9,
+    text: 'Yeah yeah, skrrt, riding through the night, oh... The bass hits hard, boom boom, we don\'t stop, nah nah... From the block to the top, yeah yeah, let\'s go...',
   },
   'male-latin': {
-    voiceId: 'onwK4e9ZLuTAKqWW03F9', // Daniel
-    text: 'Yo soy del barrio, soy latino hasta la médula. Reggaetón y trap, eso es lo que suena. Prende la calle, que la noche es nuestra.',
+    voiceId: 'onwK4e9ZLuTAKqWW03F9',
+    style: 0.85,
+    text: 'Eh eh, yo soy del barrio, oye... Pa pa pa, reggaetón y trap, eso es lo que suena, dale... Oh oh oh, prende la calle que la noche es nuestra, yeah yeah...',
   },
   'male-rock': {
-    voiceId: 'nPczCjzI2devNBz1zQrb', // Brian
-    text: 'Rock and roll will never die! Feel the guitar ripping through the air. We are the anthem, we are the storm. Let\'s rock this world!',
+    voiceId: 'nPczCjzI2devNBz1zQrb',
+    style: 0.9,
+    text: 'Oh oh oh yeah! Rock and roll will never die! Na na na na na, feel the power, feel the fire! Yeah yeah, we are the anthem, oh oh, let\'s rock this world!',
   },
   'male-ballad': {
-    voiceId: 'CwhRBWXzGAHq8TQ4Fs17', // Roger
-    text: 'In the silence of the night, I think of you. My heart sings a melody only you can hear. A love so deep, so true, forever yours.',
+    voiceId: 'CwhRBWXzGAHq8TQ4Fs17',
+    style: 0.7,
+    text: 'Ooh... In the silence of the night, I think of you... mmm... My heart sings a melody, la la la, only you can hear... Ooh, forever yours, forever true...',
   },
   'male-flamenco': {
-    voiceId: 'onwK4e9ZLuTAKqWW03F9', // Daniel
-    text: 'Olé, siento el duende en mi alma. El compás del flamenco me lleva, me arrastra. Con pasión y con fuerza, así canto yo, desde lo más hondo.',
+    voiceId: 'onwK4e9ZLuTAKqWW03F9',
+    style: 0.95,
+    text: 'Ay ay ay, siento el duende en mi alma, olé... Ay, el compás me lleva, me arrastra, ay ay... Con pasión y con fuerza, así canto yo, ay, desde lo más hondo...',
   },
   'child-young': {
-    voiceId: 'Xb7hH8MSUJpSbSDYk0k2', // Alice (youthful)
-    text: 'Hey, let\'s have fun today! The sun is shining and the music is playing. Young and free, that\'s what we are. Let\'s dance and sing together!',
+    voiceId: 'Xb7hH8MSUJpSbSDYk0k2',
+    style: 0.75,
+    text: 'La la la, hey hey, let\'s have fun today! Oh oh oh, the sun is shining bright! Na na na na na, young and free, let\'s sing and dance together, yeah!',
   },
   'choir': {
-    voiceId: 'JBFqnCBsd6RMkjVDRZzb', // George
-    text: 'Together we rise, together we sing. Our voices unite in harmony and power. A chorus of hope, a choir of dreams. Let the world hear our song.',
+    voiceId: 'JBFqnCBsd6RMkjVDRZzb',
+    style: 0.8,
+    text: 'Oh oh oh, together we rise, together we sing... La la la la la, voices unite in harmony... Ooh, a chorus of hope, a choir of dreams, oh oh oh...',
   },
   'vintage-crooner': {
-    voiceId: 'pqHfZKP75CvOlQylNhV4', // Bill
-    text: 'Come fly with me, let\'s fly away. In the golden age of music, every note was magic. Smooth, charming, and timeless. That\'s the crooner way.',
+    voiceId: 'pqHfZKP75CvOlQylNhV4',
+    style: 0.75,
+    text: 'Doo doo doo, come fly with me, oh yeah... La da da da da, every note is magic, mmm... Smooth and charming, ba da ba, that\'s the crooner way, oh...',
   },
 };
 
@@ -122,9 +136,9 @@ serve(async (req) => {
               text: config.text,
               model_id: 'eleven_multilingual_v2',
               voice_settings: {
-                stability: 0.4,
-                similarity_boost: 0.75,
-                style: 0.6,
+                stability: 0.3,
+                similarity_boost: 0.8,
+                style: config.style,
                 use_speaker_boost: true,
               },
             }),
