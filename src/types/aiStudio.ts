@@ -18,6 +18,8 @@ export interface GenerationResult {
   parentId?: string; // For variations
   variationType?: VariationType;
   voiceProfileId?: string;
+  voiceId?: string;
+  voiceName?: string;
 }
 
 export type VariationType = 'similar' | 'mood_change' | 'extend' | 'inpaint';

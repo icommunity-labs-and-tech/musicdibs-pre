@@ -194,8 +194,8 @@ const AIStudioCreate = () => {
   const [saveArtistGenerationId, setSaveArtistGenerationId] = useState('');
   const [saveArtistPrompt, setSaveArtistPrompt] = useState('');
   const [savedArtistGenerationIds, setSavedArtistGenerationIds] = useState<Set<string>>(new Set());
-
-
+  const [showOnboardingTip, setShowOnboardingTip] = useState(false);
+  const generationVoiceMapRef = useRef<Map<string, { voiceId: string; voiceName: string }>>(new Map());
 
   // ── Derived values ──
   const selectedGenre: string | null = null;
@@ -311,6 +311,8 @@ const AIStudioCreate = () => {
         createdAt: new Date(item.created_at),
         isFavorite: item.is_favorite || false,
         voiceProfileId: (item as any).voice_profile_id || undefined,
+        voiceId: (item as any).voice_id || undefined,
+        voiceName: (item as any).voice_name || undefined,
       })));
     } catch (error) {
       console.error('Error loading history:', error);
@@ -378,6 +380,10 @@ const AIStudioCreate = () => {
       if (data?.audio) {
         const audioUrl = `data:${data.format};base64,${data.audio}`;
 
+        const selectedVoiceProfile = mode === 'song' ? voiceProfiles.find(v => v.id === selectedVoice) : null;
+        const voiceIdForGen = mode === 'song' ? selectedVoice : null;
+        const voiceNameForGen = selectedVoiceProfile?.label || null;
+
         const { data: savedGen, error: saveError } = await supabase
           .from('ai_generations')
           .insert({
@@ -385,7 +391,9 @@ const AIStudioCreate = () => {
             prompt: prompt.trim(),
             duration: data.duration,
             audio_url: audioUrl,
-            voice_profile_id: mode === 'song' ? selectedVoice : null,
+            voice_profile_id: voiceIdForGen,
+            voice_id: voiceIdForGen,
+            voice_name: voiceNameForGen,
           } as any)
           .select()
           .single();
@@ -399,13 +407,26 @@ const AIStudioCreate = () => {
           duration: data.duration,
           createdAt: new Date(savedGen.created_at),
           isFavorite: false,
-          voiceProfileId: mode === 'song' ? selectedVoice : undefined,
+          voiceProfileId: voiceIdForGen || undefined,
+          voiceId: voiceIdForGen || undefined,
+          voiceName: voiceNameForGen || undefined,
         };
+
+        // Track voice mapping for virtual artist feature
+        if (voiceIdForGen) {
+          generationVoiceMapRef.current.set(savedGen.id, { voiceId: voiceIdForGen, voiceName: voiceNameForGen || '' });
+        }
+
         setResults(prev => [newResult, ...prev]);
         setLastResult(newResult);
         toast({ title: t('aiCreate.musicGenerated'), description: t('aiCreate.songReady') });
         track('generation_completed', { feature: 'create_music' });
         sessionStorage.setItem('md_last_generation', Date.now().toString());
+
+        // Onboarding tip: show once on first vocal generation if no virtual artists
+        if (mode === 'song' && !localStorage.getItem('virtual_artist_tip_shown') && virtualArtistsCount === 0) {
+          setTimeout(() => setShowOnboardingTip(true), 800);
+        }
       }
     } catch (error: any) {
       console.error('Generation error:', error);
@@ -502,11 +523,23 @@ const AIStudioCreate = () => {
   };
 
   // ── Save as Virtual Artist ──
+  // ── Instrumental detection regex ──
+  const INSTRUMENTAL_PROMPT_REGEX = /\b(instrumental|karaoke|sin voz|sin voces|base instrumental)\b/i;
+
+  const canSaveAsVirtualArtist = (result: GenerationResult) => {
+    if (result.voiceId || result.voiceProfileId || generationVoiceMapRef.current.has(result.id)) return true;
+    return !INSTRUMENTAL_PROMPT_REGEX.test(result.prompt);
+  };
+
   const openSaveArtistModal = (result: GenerationResult) => {
-    if (!result.voiceProfileId) return;
-    const vp = voiceProfiles.find(v => v.id === result.voiceProfileId);
-    setSaveArtistVoiceId(result.voiceProfileId);
-    setSaveArtistVoiceName(vp?.label || '');
+    // Get voice info from result, or from in-memory map
+    const voiceMap = generationVoiceMapRef.current.get(result.id);
+    const voiceId = result.voiceId || result.voiceProfileId || voiceMap?.voiceId || '';
+    const vp = voiceProfiles.find(v => v.id === voiceId);
+    const voiceName = result.voiceName || voiceMap?.voiceName || vp?.label || '';
+
+    setSaveArtistVoiceId(voiceId);
+    setSaveArtistVoiceName(voiceName);
     setSaveArtistGenerationId(result.id);
     setSaveArtistPrompt(result.prompt);
     setSaveArtistName('');
@@ -1630,8 +1663,8 @@ const AIStudioCreate = () => {
                                   </TooltipTrigger>
                                   <TooltipContent><p>{result.isFavorite ? t('aiCreate.removeFav') : t('aiCreate.addFav')}</p></TooltipContent>
                                 </Tooltip>
-                                {/* Save as Virtual Artist button — only for vocal generations */}
-                                {result.voiceProfileId && (
+                                {/* Save as Virtual Artist button — vocal & non-instrumental */}
+                                {canSaveAsVirtualArtist(result) && (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button
@@ -1642,14 +1675,14 @@ const AIStudioCreate = () => {
                                         className={savedArtistGenerationIds.has(result.id) ? 'text-emerald-500' : ''}
                                       >
                                         {savedArtistGenerationIds.has(result.id) ? (
-                                          <User className="w-4 h-4" />
+                                          <CheckCircle2 className="w-4 h-4" />
                                         ) : (
                                           <User className="w-4 h-4" />
                                         )}
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>{savedArtistGenerationIds.has(result.id) ? 'Ya guardado como Artista Virtual' : 'Guardar como Artista Virtual'}</p>
+                                      <p>{savedArtistGenerationIds.has(result.id) ? t('aiCreate.saveArtistAlready') : t('aiCreate.saveArtistTooltip')}</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 )}
@@ -1703,56 +1736,132 @@ const AIStudioCreate = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              Guardar como Artista Virtual
+              {t('aiCreate.saveArtistTitle')}
             </DialogTitle>
             <DialogDescription>
-              Guarda esta configuración de voz y estilo para crear más canciones similares automáticamente.
+              {t('aiCreate.saveArtistDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {/* Preview */}
             <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">Voz:</span>
-                <span className="font-medium">{saveArtistVoiceName}</span>
-              </div>
+              {saveArtistVoiceId ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">{t('aiCreate.saveArtistVoice')}</span>
+                  <span className="font-medium">{saveArtistVoiceName}</span>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">{t('aiCreate.saveArtistVoice')}</Label>
+                  <Select value={saveArtistVoiceId} onValueChange={(val) => {
+                    setSaveArtistVoiceId(val);
+                    const vp = voiceProfiles.find(v => v.id === val);
+                    setSaveArtistVoiceName(vp?.label || '');
+                  }}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder={t('aiCreate.saveArtistVoiceOptional')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {voiceProfiles.map(v => (
+                        <SelectItem key={v.id} value={v.id}>{v.emoji} {v.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               {saveArtistPrompt && (
                 <div className="flex items-start gap-2">
-                  <span className="text-muted-foreground shrink-0">Estilo:</span>
+                  <span className="text-muted-foreground shrink-0">{t('aiCreate.saveArtistStyleLabel')}:</span>
                   <span className="text-xs line-clamp-2">{saveArtistPrompt}</span>
                 </div>
               )}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="save-artist-name">Nombre del artista virtual *</Label>
+              <Label htmlFor="save-artist-name">{t('aiCreate.saveArtistNameLabel')}</Label>
               <Input
                 id="save-artist-name"
-                placeholder="Ej: Mi voz trap, Estilo romántico, Voz energética..."
+                placeholder={t('aiCreate.saveArtistNamePlaceholder')}
                 value={saveArtistName}
                 onChange={(e) => setSaveArtistName(e.target.value)}
                 maxLength={50}
                 autoFocus
               />
               {saveArtistName.trim().length > 0 && saveArtistName.trim().length < 3 && (
-                <p className="text-xs text-destructive">Mínimo 3 caracteres</p>
+                <p className="text-xs text-destructive">{t('aiCreate.saveArtistNameMin')}</p>
               )}
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setShowSaveArtistForm(false)} disabled={isSavingArtist}>
-              Cancelar
+              {t('aiCreate.saveArtistCancel')}
             </Button>
-            <Button onClick={handleSaveVirtualArtist} disabled={saveArtistName.trim().length < 3 || isSavingArtist} className="gap-2">
+            <Button onClick={handleSaveVirtualArtist} disabled={saveArtistName.trim().length < 3 || !saveArtistVoiceId || isSavingArtist} className="gap-2">
               {isSavingArtist ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Guardando...</>
+                <><Loader2 className="h-4 w-4 animate-spin" /> {t('aiCreate.saveArtistSaving')}</>
               ) : (
-                <><Save className="h-4 w-4" /> Guardar artista virtual</>
+                <><Save className="h-4 w-4" /> {t('aiCreate.saveArtistBtn')}</>
               )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
+      {/* ── Onboarding Tip Modal — first vocal generation ── */}
+      <Dialog open={showOnboardingTip} onOpenChange={(open) => {
+        if (!open) {
+          localStorage.setItem('virtual_artist_tip_shown', 'true');
+          setShowOnboardingTip(false);
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl">{t('aiCreate.onboardingTipTitle')}</DialogTitle>
+            <DialogDescription className="text-sm leading-relaxed">
+              {t('aiCreate.onboardingTipMsg')}
+            </DialogDescription>
+          </DialogHeader>
+          {/* Visual mockup */}
+          <div className="rounded-lg border bg-muted/30 p-3 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Play className="w-4 h-4 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{t('aiCreate.onboardingTipMockTitle')}</p>
+              <div className="flex items-center gap-1 mt-1">
+                <span className="text-[10px] text-muted-foreground">0:30</span>
+                <div className="flex-1 h-1 bg-muted rounded-full">
+                  <div className="w-1/3 h-full bg-primary rounded-full" />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-0.5">
+              <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+              <Heart className="w-4 h-4 text-muted-foreground" />
+              <div className="relative">
+                <User className="w-4 h-4 text-primary animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-ping" />
+              </div>
+              <Download className="w-4 h-4 text-muted-foreground" />
+              <Trash2 className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => {
+              localStorage.setItem('virtual_artist_tip_shown', 'true');
+              setShowOnboardingTip(false);
+              navigate('/dashboard/artist-profiles');
+            }}>
+              {t('aiCreate.onboardingTipViewArtists')}
+            </Button>
+            <Button onClick={() => {
+              localStorage.setItem('virtual_artist_tip_shown', 'true');
+              setShowOnboardingTip(false);
+            }}>
+              {t('aiCreate.onboardingTipGotIt')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       
     </div>
   );
