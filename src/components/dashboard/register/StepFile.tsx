@@ -215,6 +215,15 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
         <Button variant="outline" onClick={onBack}>{t('wizard.back')}</Button>
         <Button variant="hero" onClick={onNext} disabled={!hasFile}>{t('wizard.continue')}</Button>
       </div>
+
+      <LibraryAudioPicker
+        open={libraryOpen}
+        onOpenChange={setLibraryOpen}
+        onSelect={(url, title) => {
+          onUpdate({ aiAudioUrl: url, file: null, files: [], title: data.title || title });
+          setErrors([]);
+        }}
+      />
     </div>
   );
 }
