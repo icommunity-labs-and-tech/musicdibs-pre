@@ -160,23 +160,38 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
           )}
         </div>
       ) : (
-        <div
-          className={cn(
-            'flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-10 cursor-pointer transition-colors',
-            dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/30'
-          )}
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Upload className="h-6 w-6 text-primary" />
+        <div className="space-y-3">
+          <div
+            className={cn(
+              'flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-10 cursor-pointer transition-colors',
+              dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/30'
+            )}
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Upload className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium">{t('wizard.file.dragHere')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('wizard.file.clickSelect')}</p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-sm font-medium">{t('wizard.file.dragHere')}</p>
-            <p className="text-xs text-muted-foreground mt-1">{t('wizard.file.clickSelect')}</p>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground">o</span>
+            <div className="flex-1 h-px bg-border" />
           </div>
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={() => setLibraryOpen(true)}
+          >
+            <FolderOpen className="h-4 w-4" />
+            Seleccionar de tu biblioteca
+          </Button>
         </div>
       )}
 
