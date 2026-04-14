@@ -532,6 +532,14 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
           <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
             {t('dashboard.firstHit.heroSubtitle')}
           </p>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/credits')}
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+          >
+            <Coins className="h-3.5 w-3.5" />
+            {t('dashboard.firstHit.seePricing', { defaultValue: 'Ver planes y precios' })}
+          </button>
         </div>
 
         {/* ══ PASO 1 ══════════════════════════════════════════════ */}
