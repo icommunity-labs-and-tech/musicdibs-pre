@@ -238,8 +238,8 @@ serve(async (req) => {
       if (uploadError) {
         console.error('[GENERATE-AUDIO] Upload error:', uploadError);
       } else {
-        const { data: urlData } = supabaseAdmin.storage.from('ai-generations').getPublicUrl(fileName);
-        savedAudioUrl = urlData.publicUrl;
+        const { data: urlData } = await supabaseAdmin.storage.from('ai-generations').createSignedUrl(fileName, 60 * 60 * 24 * 365);
+        savedAudioUrl = urlData?.signedUrl || null;
 
         const { data: gen } = await supabaseAdmin.from('ai_generations').insert({
           user_id: userId,
