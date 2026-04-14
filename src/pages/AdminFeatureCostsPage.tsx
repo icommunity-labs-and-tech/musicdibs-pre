@@ -71,13 +71,15 @@ export default function AdminFeatureCostsPage() {
     if (!changes) return;
 
     setSaving(row.operation_key);
+    const updatePayload: Record<string, unknown> = {};
+    if (changes.operation_name !== undefined) updatePayload.operation_name = changes.operation_name;
+    if (changes.credits_cost !== undefined) updatePayload.credits_cost = changes.credits_cost;
+    if (changes.description !== undefined) updatePayload.description = changes.description;
+    if (changes.operation_icon !== undefined) updatePayload.operation_icon = changes.operation_icon;
+
     const { error } = await supabase
       .from('operation_pricing')
-      .update({
-        operation_label: (changes.operation_name ?? row.operation_name),
-        credits_cost: (changes.credits_cost ?? row.credits_cost),
-        description: (changes.description ?? row.description),
-      } as any)
+      .update(updatePayload as any)
       .eq('operation_key', row.operation_key);
 
     if (error) {
