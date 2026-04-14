@@ -384,21 +384,22 @@ const AIStudioCreate = () => {
         const voiceIdForGen = mode === 'song' ? selectedVoice : null;
         const voiceNameForGen = selectedVoiceProfile?.label || null;
 
-        const { data: savedGen, error: saveError } = await supabase
-          .from('ai_generations')
-          .insert({
-            user_id: user.id,
-            prompt: prompt.trim(),
-            duration: data.duration,
-            audio_url: audioUrl,
-            voice_profile_id: voiceIdForGen,
-            voice_id: voiceIdForGen,
-            voice_name: voiceNameForGen,
-          } as any)
-          .select()
-          .single();
+        // The Edge Function already saved to ai_generations — use its returned ID
+        const generationId = data.generationId;
 
-        if (saveError) throw { message: saveError.message };
+        // Update the existing record with voice metadata if needed
+        if (generationId && (voiceIdForGen || voiceNameForGen)) {
+          await supabase
+            .from('ai_generations')
+            .update({
+              voice_profile_id: voiceIdForGen,
+              voice_id: voiceIdForGen,
+              voice_name: voiceNameForGen,
+            } as any)
+            .eq('id', generationId);
+        }
+
+        const savedGen = { id: generationId || crypto.randomUUID(), created_at: new Date().toISOString() };
 
         const newResult: GenerationResult = {
           id: savedGen.id,
