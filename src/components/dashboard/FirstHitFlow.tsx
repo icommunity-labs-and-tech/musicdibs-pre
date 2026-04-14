@@ -16,7 +16,7 @@ import {
   Loader2, CheckCircle2, Play, Pause,
   Music2, FileUp, AlertTriangle, Rocket,
   ArrowRight, Key, RefreshCw, Link as LinkIcon,
-  Share2, Plus, Trash2,
+  Share2, Plus, Trash2, Coins,
 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -532,6 +532,14 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
           <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
             {t('dashboard.firstHit.heroSubtitle')}
           </p>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard/credits')}
+            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+          >
+            <Coins className="h-3.5 w-3.5" />
+            {t('dashboard.firstHit.seePricing', { defaultValue: 'Ver planes y precios' })}
+          </button>
         </div>
 
         {/* ══ PASO 1 ══════════════════════════════════════════════ */}
