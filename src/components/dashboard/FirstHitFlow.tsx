@@ -425,12 +425,33 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
     e.preventDefault()
     setPromoting(true)
     try {
-      await submitPromotionRequest({
-        artistName: promoArtist, mainLink: promoLink,
-        workTitle: regTitle || promoDesc, description: promoDesc,
-        promotionGoal: promoGoal, socialNetworks: promoSocial,
-        consent: promoConsent,
+      // 1. Spend credits (same as PremiumPromoForm)
+      const { data: spendData, error: spendError } = await supabase.functions.invoke('spend-credits', {
+        body: { feature: 'promote_premium', description: `Promo Premium: ${regTitle || promoDesc}` },
       })
+      if (spendError) throw new Error(spendError.message)
+      if (spendData?.error === 'insufficient_credits') {
+        toast.error('No tienes suficientes créditos para esta promoción.')
+        setPromoting(false)
+        return
+      }
+      if (spendData?.error) throw new Error(spendData.error)
+
+      // 2. Submit premium promo request (sends email to marketing)
+      const { data, error } = await supabase.functions.invoke('submit-premium-promo', {
+        body: {
+          work_id: regId || null,
+          artist_name: promoArtist.trim(),
+          song_title: (regTitle || promoDesc).trim(),
+          description: promoDesc.trim(),
+          external_link: promoLink.trim() || null,
+          team_notes: [promoGoal, promoSocial].filter(Boolean).join(' | ') || null,
+          media_file_path: null,
+        },
+      })
+      if (error) throw new Error(error.message)
+      if (data?.error) throw new Error(data.error)
+
       markDone(3)
       setActiveStep('done')
     } catch (err: any) {
