@@ -1,0 +1,12 @@
+UPDATE operation_pricing SET operation_icon = '📝' WHERE operation_key = 'register_work';
+UPDATE operation_pricing SET operation_icon = '🎵' WHERE operation_key = 'generate_audio';
+UPDATE operation_pricing SET operation_icon = '🎶' WHERE operation_key = 'generate_audio_song';
+UPDATE operation_pricing SET operation_icon = '🎤' WHERE operation_key = 'generate_vocal_track';
+UPDATE operation_pricing SET operation_icon = '✂️' WHERE operation_key = 'edit_audio';
+UPDATE operation_pricing SET operation_icon = '✨' WHERE operation_key = 'enhance_audio';
+UPDATE operation_pricing SET operation_icon = '🎨' WHERE operation_key = 'generate_cover';
+UPDATE operation_pricing SET operation_icon = '🎬' WHERE operation_key = 'generate_video';
+UPDATE operation_pricing SET operation_icon = '📣' WHERE operation_key = 'promote_work';
+UPDATE operation_pricing SET operation_icon = '📰' WHERE operation_key = 'generate_press_release';
+UPDATE operation_pricing SET operation_icon = '🎼' WHERE operation_key = 'generate_lyrics';
+UPDATE operation_pricing SET operation_icon = '💡' WHERE operation_key = 'improve_prompt';
