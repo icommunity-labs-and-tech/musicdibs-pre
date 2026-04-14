@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 export function useCredits() {
   const { user } = useAuth();
   const [credits, setCredits] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const prevCreditsRef = useRef<number | null>(null);
 
   useEffect(() => {
