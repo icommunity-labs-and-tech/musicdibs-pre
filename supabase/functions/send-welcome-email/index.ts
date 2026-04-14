@@ -143,26 +143,13 @@ serve(async (req) => {
         <tr><td style="background-color:#1a0a2e;border-radius:16px;padding:40px 36px;">
           <h1 style="margin:0 0 16px;color:#f3f4f6;font-size:24px;font-weight:700;text-align:center;">${t.welcome}</h1>
           <p style="margin:0 0 28px;color:#d1d5db;font-size:15px;line-height:1.7;text-align:center;">${t.intro}</p>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
-            <tr><td align="center">
-              <table role="presentation" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(109,40,217,0.15));border:1px solid rgba(168,85,247,0.3);border-radius:12px;padding:20px 32px;">
-                <tr>
-                  <td style="padding-right:16px;"><span style="font-size:36px;font-weight:800;color:#a855f7;">1</span></td>
-                  <td>
-                    <p style="margin:0;color:#c084fc;font-size:14px;font-weight:600;">${t.creditLabel}</p>
-                    <p style="margin:4px 0 0;color:#9ca3af;font-size:12px;">${t.creditNote}</p>
-                  </td>
-                </tr>
-              </table>
-            </td></tr>
-          </table>
           <h3 style="margin:0 0 20px;color:#e5e7eb;font-size:16px;font-weight:600;text-align:center;">${t.howTo}</h3>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
             <tr>
               <td width="36" valign="top" style="padding-right:12px;"><div style="width:28px;height:28px;border-radius:50%;background:#a855f7;color:#fff;font-size:14px;font-weight:700;text-align:center;line-height:28px;">1</div></td>
               <td style="padding-bottom:16px;border-bottom:1px solid rgba(168,85,247,0.15);">
                 <p style="margin:0;color:#f3f4f6;font-size:14px;font-weight:600;">${t.step1Title}</p>
-                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step1Desc}<br/><a href="${registerUrl}" style="color:#a855f7;text-decoration:none;">${t.step1Link}</a></p>
+                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step1Desc}<br/><a href="${creditsUrl}" style="color:#a855f7;text-decoration:none;">${t.step1Link}</a></p>
               </td>
             </tr>
           </table>
@@ -171,7 +158,7 @@ serve(async (req) => {
               <td width="36" valign="top" style="padding-right:12px;"><div style="width:28px;height:28px;border-radius:50%;background:#a855f7;color:#fff;font-size:14px;font-weight:700;text-align:center;line-height:28px;">2</div></td>
               <td style="padding-bottom:16px;border-bottom:1px solid rgba(168,85,247,0.15);">
                 <p style="margin:0;color:#f3f4f6;font-size:14px;font-weight:600;">${t.step2Title}</p>
-                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step2Desc}</p>
+                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step2Desc}<br/><a href="${registerUrl}" style="color:#a855f7;text-decoration:none;">${t.step2Link}</a></p>
               </td>
             </tr>
           </table>
@@ -180,7 +167,7 @@ serve(async (req) => {
               <td width="36" valign="top" style="padding-right:12px;"><div style="width:28px;height:28px;border-radius:50%;background:#a855f7;color:#fff;font-size:14px;font-weight:700;text-align:center;line-height:28px;">3</div></td>
               <td>
                 <p style="margin:0;color:#f3f4f6;font-size:14px;font-weight:600;">${t.step3Title}</p>
-                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step3Desc}<br/><a href="${creditsUrl}" style="color:#a855f7;text-decoration:none;">${t.step3Link}</a></p>
+                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step3Desc}</p>
               </td>
             </tr>
           </table>
