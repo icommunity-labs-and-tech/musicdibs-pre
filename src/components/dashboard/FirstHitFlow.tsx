@@ -16,7 +16,7 @@ import {
   Loader2, CheckCircle2, Play, Pause,
   Music2, FileUp, AlertTriangle, Rocket,
   ArrowRight, Key, RefreshCw, Link as LinkIcon,
-  Share2, Plus, Trash2, Coins,
+  Share2, Plus, Trash2, Coins, Download,
 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -707,6 +707,19 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                       {t('dashboard.firstHit.aiGenerated', { n: '' })}
                     </p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const a = document.createElement('a')
+                      a.href = audioUrl
+                      a.download = `${audioTitle || 'cancion'}.mp3`
+                      a.click()
+                    }}
+                    title={t('dashboard.firstHit.download', { defaultValue: 'Descargar' })}
+                    className="h-9 w-9 rounded-full border border-border flex items-center justify-center shrink-0 hover:bg-muted transition-colors"
+                  >
+                    <Download className="h-4 w-4 text-muted-foreground" />
+                  </button>
                   <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
                 </div>
               )}
