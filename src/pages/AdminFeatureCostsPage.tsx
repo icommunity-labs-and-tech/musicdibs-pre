@@ -237,9 +237,11 @@ export default function AdminFeatureCostsPage() {
                         className="h-16 min-h-[40px] text-xs resize-y"
                       />
                     </TableCell>
-                    <TableCell>
-                      {row.is_annual_only && (
-                        <Crown className="h-4 w-4 text-amber-500" />
+                    <TableCell className="text-center">
+                      {row.is_annual_only ? (
+                        <Crown className="h-4 w-4 text-amber-500 inline-block" />
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
                       )}
                     </TableCell>
                     <TableCell>
