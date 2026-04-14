@@ -166,10 +166,10 @@ export const CreativesSection = () => {
           />
         </div>
 
-        {!hasEnough(creditCost) ? (
+        {!isLoading && !hasEnough(creditCost) ? (
           <NoCreditsAlert message="Generar creatividad (1 crédito)" />
         ) : (
-          <Button className="w-full gap-2" size="lg" onClick={handleGenerate} disabled={generating || !canGenerate}>
+          <Button className="w-full gap-2" size="lg" onClick={handleGenerate} disabled={generating || !canGenerate || isLoading}>
             {generating ? (
               <><Loader2 className="h-4 w-4 animate-spin" />{FORMAT_LOADING[currentFormat]}</>
             ) : (
