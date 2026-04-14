@@ -60,7 +60,7 @@ export const CreativesSection = () => {
 
   const currentFormat: Format = platform === 'youtube' ? 'youtube' : instagramFormat;
   const creditCost = FEATURE_COSTS.generate_cover ?? 1;
-  const canGenerate = description.trim().length > 0 && hasEnough(creditCost);
+  const canGenerate = description.trim().length > 0 && !isLoading && hasEnough(creditCost);
 
   const handleGenerate = async () => {
     if (!description.trim()) {
