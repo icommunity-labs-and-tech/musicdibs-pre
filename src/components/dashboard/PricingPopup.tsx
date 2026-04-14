@@ -28,12 +28,13 @@ const CATEGORY_LABELS: Record<string, string> = {
   gratis: '🆓 Gratis',
   registro: '🛡️ Registro',
   distribucion: '🌍 Distribución',
-  audio: '🎧 Audio',
   musica: '🎵 Creación musical',
-  promo: '📣 Material promocional',
+  audio: '🎧 Audio y voz',
+  visual: '🎨 Imagen y vídeo',
+  promo: '📣 Promoción',
 };
 
-const CATEGORY_ORDER = ['gratis', 'distribucion', 'registro', 'promo', 'musica', 'audio'];
+const CATEGORY_ORDER = ['gratis', 'registro', 'distribucion', 'musica', 'audio', 'visual', 'promo'];
 
 
 export function PricingPopup({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {

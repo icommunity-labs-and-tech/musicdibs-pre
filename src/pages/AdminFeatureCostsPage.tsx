@@ -14,10 +14,11 @@ const PAGE_SIZE = 10;
 
 const CATEGORY_LABELS: Record<string, string> = {
   gratis: 'Gratis',
-  distribucion: 'Distribución',
   registro: 'Registro',
-  audio: 'Audio',
-  musica: 'Música',
+  distribucion: 'Distribución',
+  musica: 'Creación musical',
+  audio: 'Audio y voz',
+  visual: 'Imagen y vídeo',
   promo: 'Promoción',
 };
 
