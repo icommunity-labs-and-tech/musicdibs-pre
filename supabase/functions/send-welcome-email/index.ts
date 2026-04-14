@@ -64,67 +64,61 @@ serve(async (req) => {
         subtitle: "by iCommunity · Registro de Propiedad Intelectual",
         welcome: `¡Bienvenido, ${escapeHtml(name)}!`,
         intro: "Tu cuenta en MusicDibs está lista. Ahora puedes registrar tus obras musicales en blockchain y proteger tu propiedad intelectual de forma permanente e inmutable.",
-        creditLabel: "crédito de bienvenida",
-        creditNote: "Ya está en tu cuenta. Úsalo para registrar tu primera obra.",
         howTo: "Cómo empezar",
-        step1Title: "Registra tu primera obra",
-        step1Desc: "Sube tu archivo de audio, vídeo o documento.",
-        step1Link: "Ir a Registrar obra →",
-        step2Title: "Recibe tu certificado blockchain",
-        step2Desc: "En minutos tu obra queda certificada en la red blockchain con un hash inmutable como prueba de autoría.",
-        step3Title: "¿Necesitas más créditos?",
-        step3Desc: "Cada registro consume 1 crédito.",
-        step3Link: "Ver planes y precios →",
+        step1Title: "Elige tu plan",
+        step1Desc: "Selecciona el plan que mejor se adapte a tus necesidades.",
+        step1Link: "Ver planes y precios →",
+        step2Title: "Registra tu primera obra",
+        step2Desc: "Sube tu archivo de audio, vídeo o documento.",
+        step2Link: "Ir a Registrar obra →",
+        step3Title: "Recibe tu certificado blockchain",
+        step3Desc: "En minutos tu obra queda certificada en la red blockchain con un hash inmutable como prueba de autoría.",
         ctaLabel: "Ir a mi panel →",
         footer: "Este correo fue enviado automáticamente porque te registraste en MusicDibs.",
         panel: "Mi panel",
         support: "Soporte",
-        subject: "🎵 Bienvenido a MusicDibs — tu crédito de bienvenida te espera",
-        textBody: `¡Bienvenido a MusicDibs, ${name}! Tu cuenta está lista. Tienes 1 crédito de bienvenida para registrar tu primera obra. Accede a tu panel: ${dashboardUrl}`,
+        subject: "🎵 Bienvenido a MusicDibs — protege tu música",
+        textBody: `¡Bienvenido a MusicDibs, ${name}! Tu cuenta está lista. Elige un plan y registra tu primera obra. Accede a tu panel: ${dashboardUrl}`,
       },
       en: {
         subtitle: "by iCommunity · Intellectual Property Registration",
         welcome: `Welcome, ${escapeHtml(name)}!`,
         intro: "Your MusicDibs account is ready. You can now register your musical works on blockchain and permanently protect your intellectual property.",
-        creditLabel: "welcome credit",
-        creditNote: "Already in your account. Use it to register your first work.",
         howTo: "How to get started",
-        step1Title: "Register your first work",
-        step1Desc: "Upload your audio, video or document file.",
-        step1Link: "Go to Register work →",
-        step2Title: "Receive your blockchain certificate",
-        step2Desc: "In minutes your work is certified on the blockchain with an immutable hash as proof of authorship.",
-        step3Title: "Need more credits?",
-        step3Desc: "Each registration uses 1 credit.",
-        step3Link: "See plans and pricing →",
+        step1Title: "Choose your plan",
+        step1Desc: "Select the plan that best fits your needs.",
+        step1Link: "See plans and pricing →",
+        step2Title: "Register your first work",
+        step2Desc: "Upload your audio, video or document file.",
+        step2Link: "Go to Register work →",
+        step3Title: "Receive your blockchain certificate",
+        step3Desc: "In minutes your work is certified on the blockchain with an immutable hash as proof of authorship.",
         ctaLabel: "Go to my dashboard →",
         footer: "This email was sent automatically because you signed up for MusicDibs.",
         panel: "My dashboard",
         support: "Support",
-        subject: "🎵 Welcome to MusicDibs — your welcome credit awaits",
-        textBody: `Welcome to MusicDibs, ${name}! Your account is ready. You have 1 welcome credit to register your first work. Dashboard: ${dashboardUrl}`,
+        subject: "🎵 Welcome to MusicDibs — protect your music",
+        textBody: `Welcome to MusicDibs, ${name}! Your account is ready. Choose a plan and register your first work. Dashboard: ${dashboardUrl}`,
       },
       pt: {
         subtitle: "by iCommunity · Registro de Propriedade Intelectual",
         welcome: `Bem-vindo, ${escapeHtml(name)}!`,
         intro: "Sua conta no MusicDibs está pronta. Agora você pode registrar suas obras musicais na blockchain e proteger sua propriedade intelectual de forma permanente e imutável.",
-        creditLabel: "crédito de boas-vindas",
-        creditNote: "Já está na sua conta. Use-o para registrar sua primeira obra.",
         howTo: "Como começar",
-        step1Title: "Registre sua primeira obra",
-        step1Desc: "Envie seu arquivo de áudio, vídeo ou documento.",
-        step1Link: "Ir para Registrar obra →",
-        step2Title: "Receba seu certificado blockchain",
-        step2Desc: "Em minutos sua obra é certificada na blockchain com um hash imutável como prova de autoria.",
-        step3Title: "Precisa de mais créditos?",
-        step3Desc: "Cada registro consome 1 crédito.",
-        step3Link: "Ver planos e preços →",
+        step1Title: "Escolha seu plano",
+        step1Desc: "Selecione o plano que melhor se adapta às suas necessidades.",
+        step1Link: "Ver planos e preços →",
+        step2Title: "Registre sua primeira obra",
+        step2Desc: "Envie seu arquivo de áudio, vídeo ou documento.",
+        step2Link: "Ir para Registrar obra →",
+        step3Title: "Receba seu certificado blockchain",
+        step3Desc: "Em minutos sua obra é certificada na blockchain com um hash imutável como prova de autoria.",
         ctaLabel: "Ir ao meu painel →",
         footer: "Este email foi enviado automaticamente porque você se registrou no MusicDibs.",
         panel: "Meu painel",
         support: "Suporte",
-        subject: "🎵 Bem-vindo ao MusicDibs — seu crédito de boas-vindas está esperando",
-        textBody: `Bem-vindo ao MusicDibs, ${name}! Sua conta está pronta. Você tem 1 crédito de boas-vindas para registrar sua primeira obra. Painel: ${dashboardUrl}`,
+        subject: "🎵 Bem-vindo ao MusicDibs — proteja sua música",
+        textBody: `Bem-vindo ao MusicDibs, ${name}! Sua conta está pronta. Escolha um plano e registre sua primeira obra. Painel: ${dashboardUrl}`,
       },
     };
 
@@ -149,26 +143,13 @@ serve(async (req) => {
         <tr><td style="background-color:#1a0a2e;border-radius:16px;padding:40px 36px;">
           <h1 style="margin:0 0 16px;color:#f3f4f6;font-size:24px;font-weight:700;text-align:center;">${t.welcome}</h1>
           <p style="margin:0 0 28px;color:#d1d5db;font-size:15px;line-height:1.7;text-align:center;">${t.intro}</p>
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:32px;">
-            <tr><td align="center">
-              <table role="presentation" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(168,85,247,0.15),rgba(109,40,217,0.15));border:1px solid rgba(168,85,247,0.3);border-radius:12px;padding:20px 32px;">
-                <tr>
-                  <td style="padding-right:16px;"><span style="font-size:36px;font-weight:800;color:#a855f7;">1</span></td>
-                  <td>
-                    <p style="margin:0;color:#c084fc;font-size:14px;font-weight:600;">${t.creditLabel}</p>
-                    <p style="margin:4px 0 0;color:#9ca3af;font-size:12px;">${t.creditNote}</p>
-                  </td>
-                </tr>
-              </table>
-            </td></tr>
-          </table>
           <h3 style="margin:0 0 20px;color:#e5e7eb;font-size:16px;font-weight:600;text-align:center;">${t.howTo}</h3>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:12px;">
             <tr>
               <td width="36" valign="top" style="padding-right:12px;"><div style="width:28px;height:28px;border-radius:50%;background:#a855f7;color:#fff;font-size:14px;font-weight:700;text-align:center;line-height:28px;">1</div></td>
               <td style="padding-bottom:16px;border-bottom:1px solid rgba(168,85,247,0.15);">
                 <p style="margin:0;color:#f3f4f6;font-size:14px;font-weight:600;">${t.step1Title}</p>
-                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step1Desc}<br/><a href="${registerUrl}" style="color:#a855f7;text-decoration:none;">${t.step1Link}</a></p>
+                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step1Desc}<br/><a href="${creditsUrl}" style="color:#a855f7;text-decoration:none;">${t.step1Link}</a></p>
               </td>
             </tr>
           </table>
@@ -177,7 +158,7 @@ serve(async (req) => {
               <td width="36" valign="top" style="padding-right:12px;"><div style="width:28px;height:28px;border-radius:50%;background:#a855f7;color:#fff;font-size:14px;font-weight:700;text-align:center;line-height:28px;">2</div></td>
               <td style="padding-bottom:16px;border-bottom:1px solid rgba(168,85,247,0.15);">
                 <p style="margin:0;color:#f3f4f6;font-size:14px;font-weight:600;">${t.step2Title}</p>
-                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step2Desc}</p>
+                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step2Desc}<br/><a href="${registerUrl}" style="color:#a855f7;text-decoration:none;">${t.step2Link}</a></p>
               </td>
             </tr>
           </table>
@@ -186,7 +167,7 @@ serve(async (req) => {
               <td width="36" valign="top" style="padding-right:12px;"><div style="width:28px;height:28px;border-radius:50%;background:#a855f7;color:#fff;font-size:14px;font-weight:700;text-align:center;line-height:28px;">3</div></td>
               <td>
                 <p style="margin:0;color:#f3f4f6;font-size:14px;font-weight:600;">${t.step3Title}</p>
-                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step3Desc}<br/><a href="${creditsUrl}" style="color:#a855f7;text-decoration:none;">${t.step3Link}</a></p>
+                <p style="margin:4px 0 0;color:#9ca3af;font-size:13px;">${t.step3Desc}</p>
               </td>
             </tr>
           </table>
