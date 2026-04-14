@@ -222,8 +222,40 @@ serve(async (req) => {
 
     const audioBuffer = await response.arrayBuffer();
     const base64Audio = base64Encode(audioBuffer);
+    const audioBytes = new Uint8Array(audioBuffer);
 
     console.log(`[GENERATE-AUDIO] Success! Audio size: ${audioBuffer.byteLength} bytes, ${CREDITS_COST} credits charged`);
+
+    // ── Persist to storage + ai_generations ──
+    let savedAudioUrl: string | null = null;
+    let generationId: string | null = null;
+    try {
+      const fileName = `${userId}/gen_${Date.now()}.mp3`;
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('ai-generations')
+        .upload(fileName, audioBytes, { contentType: 'audio/mpeg', upsert: false });
+
+      if (uploadError) {
+        console.error('[GENERATE-AUDIO] Upload error:', uploadError);
+      } else {
+        const { data: urlData } = supabaseAdmin.storage.from('ai-generations').getPublicUrl(fileName);
+        savedAudioUrl = urlData.publicUrl;
+
+        const { data: gen } = await supabaseAdmin.from('ai_generations').insert({
+          user_id: userId,
+          prompt: prompt.slice(0, 500),
+          audio_url: savedAudioUrl,
+          duration: duration || 60,
+          genre: genre || null,
+          mood: mood || null,
+        }).select('id').single();
+
+        generationId = gen?.id || null;
+        console.log(`[GENERATE-AUDIO] Saved generation: ${generationId}`);
+      }
+    } catch (persistErr) {
+      console.error('[GENERATE-AUDIO] Persist error (non-fatal):', persistErr);
+    }
 
     return new Response(
       JSON.stringify({
@@ -232,6 +264,8 @@ serve(async (req) => {
         duration: duration || 60,
         provider: 'elevenlabs',
         status: 'completed',
+        generationId,
+        audioUrl: savedAudioUrl,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
