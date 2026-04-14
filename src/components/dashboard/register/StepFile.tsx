@@ -1,10 +1,11 @@
 import { useRef, useCallback, useState } from 'react';
-import { Upload, X, FileUp, Music, Plus, AlertTriangle } from 'lucide-react';
+import { Upload, X, FileUp, Music, Plus, AlertTriangle, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import type { WizardData } from './types';
 import { toast } from 'sonner';
+import { LibraryAudioPicker } from './LibraryAudioPicker';
 
 const MAX_FILE_SIZE_MB = 100;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -30,7 +31,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const totalSize = data.files.reduce((sum, f) => sum + f.size, 0);
 
   const handleFiles = useCallback(
@@ -159,23 +160,38 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
           )}
         </div>
       ) : (
-        <div
-          className={cn(
-            'flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-10 cursor-pointer transition-colors',
-            dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/30'
-          )}
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={onDrop}
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <Upload className="h-6 w-6 text-primary" />
+        <div className="space-y-3">
+          <div
+            className={cn(
+              'flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-10 cursor-pointer transition-colors',
+              dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-muted/30'
+            )}
+            onClick={() => inputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={onDrop}
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+              <Upload className="h-6 w-6 text-primary" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium">{t('wizard.file.dragHere')}</p>
+              <p className="text-xs text-muted-foreground mt-1">{t('wizard.file.clickSelect')}</p>
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-sm font-medium">{t('wizard.file.dragHere')}</p>
-            <p className="text-xs text-muted-foreground mt-1">{t('wizard.file.clickSelect')}</p>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-border" />
+            <span className="text-xs text-muted-foreground">o</span>
+            <div className="flex-1 h-px bg-border" />
           </div>
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={() => setLibraryOpen(true)}
+          >
+            <FolderOpen className="h-4 w-4" />
+            Seleccionar de tu biblioteca
+          </Button>
         </div>
       )}
 
@@ -199,6 +215,15 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
         <Button variant="outline" onClick={onBack}>{t('wizard.back')}</Button>
         <Button variant="hero" onClick={onNext} disabled={!hasFile}>{t('wizard.continue')}</Button>
       </div>
+
+      <LibraryAudioPicker
+        open={libraryOpen}
+        onOpenChange={setLibraryOpen}
+        onSelect={(url, title) => {
+          onUpdate({ aiAudioUrl: url, file: null, files: [], title: data.title || title });
+          setErrors([]);
+        }}
+      />
     </div>
   );
 }
