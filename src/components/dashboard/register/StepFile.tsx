@@ -31,7 +31,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const totalSize = data.files.reduce((sum, f) => sum + f.size, 0);
 
   const handleFiles = useCallback(
