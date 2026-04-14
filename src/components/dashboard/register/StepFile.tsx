@@ -1,10 +1,11 @@
 import { useRef, useCallback, useState } from 'react';
-import { Upload, X, FileUp, Music, Plus, AlertTriangle } from 'lucide-react';
+import { Upload, X, FileUp, Music, Plus, AlertTriangle, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import type { WizardData } from './types';
 import { toast } from 'sonner';
+import { LibraryAudioPicker } from './LibraryAudioPicker';
 
 const MAX_FILE_SIZE_MB = 100;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
