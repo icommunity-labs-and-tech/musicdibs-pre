@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { toast } from 'sonner';
-import { Save, Loader2, Crown } from 'lucide-react';
+import { Save, Loader2, Crown, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
 
 const PAGE_SIZE = 10;
 
@@ -34,12 +34,17 @@ interface OperationRow {
   description: string | null;
 }
 
+type SortField = 'operation_key' | 'operation_name' | 'category' | 'credits_cost' | 'display_order' | 'is_annual_only' | 'is_active';
+type SortDir = 'asc' | 'desc';
+
 export default function AdminFeatureCostsPage() {
   const [rows, setRows] = useState<OperationRow[]>([]);
   const [editing, setEditing] = useState<Record<string, Partial<OperationRow>>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [sortField, setSortField] = useState<SortField>('display_order');
+  const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   const load = async () => {
     const { data, error } = await supabase
@@ -55,6 +60,29 @@ export default function AdminFeatureCostsPage() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+    setPage(1);
+  };
+
+  const sortedRows = [...rows].sort((a, b) => {
+    const dir = sortDir === 'asc' ? 1 : -1;
+    const av = a[sortField];
+    const bv = b[sortField];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === 'string' && typeof bv === 'string') return av.localeCompare(bv) * dir;
+    if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+    if (typeof av === 'boolean' && typeof bv === 'boolean') return ((av ? 1 : 0) - (bv ? 1 : 0)) * dir;
+    return 0;
+  });
 
   const handleChange = (key: string, field: keyof OperationRow, value: string | number) => {
     setEditing(prev => ({
@@ -102,8 +130,28 @@ export default function AdminFeatureCostsPage() {
 
   const isDirty = (key: string) => !!editing[key];
 
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const paginatedRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / PAGE_SIZE));
+  const paginatedRows = sortedRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
+    return sortDir === 'asc'
+      ? <ArrowUp className="h-3 w-3 ml-1" />
+      : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
+  const SortableHead = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
+    <TableHead className={className}>
+      <button
+        type="button"
+        className="flex items-center gap-0.5 hover:text-foreground transition-colors"
+        onClick={() => handleSort(field)}
+      >
+        {children}
+        <SortIcon field={field} />
+      </button>
+    </TableHead>
+  );
 
   if (loading) {
     return (
@@ -128,13 +176,13 @@ export default function AdminFeatureCostsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[50px]">Icono</TableHead>
-                  <TableHead className="w-[150px]">Clave</TableHead>
-                  <TableHead className="w-[180px]">Nombre</TableHead>
-                  <TableHead className="w-[100px]">Categoría</TableHead>
-                  <TableHead className="w-[80px]">Créditos</TableHead>
+                  <SortableHead field="operation_key" className="w-[150px]">Clave</SortableHead>
+                  <SortableHead field="operation_name" className="w-[180px]">Nombre</SortableHead>
+                  <SortableHead field="category" className="w-[100px]">Categoría</SortableHead>
+                  <SortableHead field="credits_cost" className="w-[80px]">Créditos</SortableHead>
                   <TableHead className="w-[80px]">€/op</TableHead>
                   <TableHead className="w-[200px]">Descripción (tooltip)</TableHead>
-                  <TableHead className="w-[60px]">Anual</TableHead>
+                  <SortableHead field="is_annual_only" className="w-[60px]">Anual</SortableHead>
                   <TableHead className="w-[60px]">Acción</TableHead>
                 </TableRow>
               </TableHeader>
@@ -213,7 +261,7 @@ export default function AdminFeatureCostsPage() {
               </TableBody>
             </Table>
           </div>
-          {rows.length > PAGE_SIZE && (
+          {sortedRows.length > PAGE_SIZE && (
             <div className="flex items-center justify-center gap-4 mt-4">
               <span className="text-sm text-muted-foreground">
                 Página {page} de {totalPages}
