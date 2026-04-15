@@ -1,59 +1,50 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
-import { Users, MoreHorizontal, Search, ChevronLeft, ChevronRight, Shield, Download } from 'lucide-react';
+import { Users, MoreHorizontal, Search, Shield, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import UserDetailSheet from '@/components/admin/UserDetailSheet';
+import AdminUserModals from '@/components/admin/AdminUserModals';
+
+const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 export default function AdminUsersPage() {
   const { user } = useAuth();
   const [users, setUsers] = useState<any[]>([]);
   const [search, setSearch] = useState('');
-  const [offset, setOffset] = useState(0);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(50);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
-
-  // Credit modal
-  const [creditModal, setCreditModal] = useState<{ open: boolean; userId: string; email: string; currentCredits: number }>({ open: false, userId: '', email: '', currentCredits: 0 });
-  const [creditAmount, setCreditAmount] = useState('');
-  const [creditReason, setCreditReason] = useState('');
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
-  const load = async () => {
+  // Modal state
+  const [creditModal, setCreditModal] = useState<{ open: boolean; userId: string; email: string; currentCredits: number }>({ open: false, userId: '', email: '', currentCredits: 0 });
+  const [deleteModal, setDeleteModal] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
+
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminApi.getUsers(offset, search);
+      const res = await adminApi.getUsers(page * pageSize, search, pageSize);
       setUsers(res.users || []);
+      setTotal(res.total || 0);
     } catch (e: any) {
       toast.error(e.message);
     }
     setLoading(false);
-  };
+  }, [page, pageSize, search]);
 
-  useEffect(() => { load(); }, [offset]);
+  useEffect(() => { load(); }, [load]);
 
-  const handleSearch = () => { setOffset(0); load(); };
+  const handleSearch = () => { setPage(0); load(); };
 
-  const handleAdjustCredits = async () => {
-    const amt = parseInt(creditAmount);
-    if (isNaN(amt) || !creditReason.trim()) { toast.error('Cantidad y motivo obligatorios'); return; }
-    try {
-      await adminApi.adjustCredits(creditModal.userId, amt, creditReason);
-      toast.success('Créditos ajustados');
-      setCreditModal({ open: false, userId: '', email: '', currentCredits: 0 });
-      setCreditAmount('');
-      setCreditReason('');
-      load();
-    } catch (e: any) { toast.error(e.message); }
-  };
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const handleSetKyc = async (userId: string, status: string) => {
     try {
@@ -90,27 +81,27 @@ export default function AdminUsersPage() {
     } catch (e: any) { toast.error(e.message); }
   };
 
-  // Force delete user
-  const [deleteModal, setDeleteModal] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
-  const [deleteConfirmText, setDeleteConfirmText] = useState('');
-  const [deleting, setDeleting] = useState(false);
-
-  const handleForceDelete = async () => {
-    if (deleteConfirmText !== 'ELIMINAR') return;
-    setDeleting(true);
-    try {
-      await adminApi.callAction('force_delete_user', { user_id: deleteModal.userId });
-      toast.success('Usuario eliminado correctamente');
-      setDeleteModal({ open: false, userId: '', email: '' });
-      setDeleteConfirmText('');
-      load();
-    } catch (e: any) { toast.error(e.message); }
-    setDeleting(false);
-  };
-
   const kycBadge = (status: string) => {
     const map: Record<string, string> = { verified: 'bg-green-500/20 text-green-400', pending: 'bg-yellow-500/20 text-yellow-400', unverified: 'bg-muted text-muted-foreground', rejected: 'bg-destructive/20 text-destructive' };
     return <Badge className={map[status] || map.unverified}>{status}</Badge>;
+  };
+
+  // Generate visible page numbers
+  const getPageNumbers = () => {
+    const pages: (number | 'ellipsis')[] = [];
+    const maxVisible = 7;
+    if (totalPages <= maxVisible) {
+      for (let i = 0; i < totalPages; i++) pages.push(i);
+    } else {
+      pages.push(0);
+      if (page > 3) pages.push('ellipsis');
+      const start = Math.max(1, page - 1);
+      const end = Math.min(totalPages - 2, page + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (page < totalPages - 4) pages.push('ellipsis');
+      pages.push(totalPages - 1);
+    }
+    return pages;
   };
 
   return (
@@ -119,6 +110,7 @@ export default function AdminUsersPage() {
         <Users className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Usuarios</h1>
         <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">Admin</Badge>
+        {!loading && <span className="text-sm text-muted-foreground ml-2">{total.toLocaleString()} usuarios</span>}
       </div>
 
       <div className="flex gap-2 items-center">
@@ -144,7 +136,7 @@ export default function AdminUsersPage() {
 
       <div className="rounded-lg border border-border/40 overflow-hidden">
         <Table>
-           <TableHeader>
+          <TableHeader>
             <TableRow className="bg-muted/30">
               <TableHead>Usuario</TableHead>
               <TableHead>Teléfono</TableHead>
@@ -207,7 +199,7 @@ export default function AdminUsersPage() {
                       <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { setCreditModal({ open: true, userId: u.user_id, email: u.email, currentCredits: u.available_credits }); }}>
+                      <DropdownMenuItem onClick={() => setCreditModal({ open: true, userId: u.user_id, email: u.email, currentCredits: u.available_credits })}>
                         Ajustar créditos
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -225,9 +217,7 @@ export default function AdminUsersPage() {
                       >
                         {(u.roles || []).includes('admin') ? 'Quitar admin' : 'Dar admin'}
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleToggleManager(u.user_id, !(u.roles || []).includes('manager'))}
-                      >
+                      <DropdownMenuItem onClick={() => handleToggleManager(u.user_id, !(u.roles || []).includes('manager'))}>
                         {(u.roles || []).includes('manager') ? 'Quitar manager' : 'Dar manager'}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
@@ -247,81 +237,61 @@ export default function AdminUsersPage() {
         </Table>
       </div>
 
-      <div className="flex justify-between">
-        <Button variant="outline" size="sm" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 50))}>
-          <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
-        </Button>
-        <Button variant="outline" size="sm" disabled={users.length < 50} onClick={() => setOffset(offset + 50)}>
-          Siguiente <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
+      {/* Pagination bar */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>Mostrando {Math.min(page * pageSize + 1, total)}–{Math.min((page + 1) * pageSize, total)} de {total.toLocaleString()}</span>
+          <Select value={String(pageSize)} onValueChange={v => { setPageSize(Number(v)); setPage(0); }}>
+            <SelectTrigger className="w-20 h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_SIZE_OPTIONS.map(s => <SelectItem key={s} value={String(s)}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <span>por página</span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(0)}>
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="h-8 w-8" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          {getPageNumbers().map((p, i) =>
+            p === 'ellipsis' ? (
+              <span key={`e${i}`} className="px-1 text-muted-foreground">…</span>
+            ) : (
+              <Button
+                key={p}
+                variant={p === page ? 'default' : 'outline'}
+                size="icon"
+                className="h-8 w-8 text-xs"
+                onClick={() => setPage(p)}
+              >
+                {p + 1}
+              </Button>
+            )
+          )}
+
+          <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="icon" className="h-8 w-8" disabled={page >= totalPages - 1} onClick={() => setPage(totalPages - 1)}>
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
-      {/* Credit adjustment modal */}
-      <Dialog open={creditModal.open} onOpenChange={open => !open && setCreditModal({ open: false, userId: '', email: '', currentCredits: 0 })}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Ajustar créditos — {creditModal.email}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Saldo actual: <span className="font-mono font-medium text-primary">{creditModal.currentCredits}</span> créditos</p>
-            {creditAmount && !isNaN(parseInt(creditAmount)) && (creditModal.currentCredits + parseInt(creditAmount)) < 0 && (
-              <div className="p-2 rounded bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs">
-                ⚠️ El resultado sería negativo. El saldo se ajustará a 0.
-              </div>
-            )}
-            <div>
-              <Label>Cantidad (+/-)</Label>
-              <Input type="number" value={creditAmount} onChange={e => setCreditAmount(e.target.value)} placeholder="Ej: 10 o -5" />
-            </div>
-            <div>
-              <Label>Motivo (obligatorio)</Label>
-              <Textarea value={creditReason} onChange={e => setCreditReason(e.target.value)} placeholder="Motivo del ajuste..." />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreditModal({ open: false, userId: '', email: '', currentCredits: 0 })}>Cancelar</Button>
-            <Button onClick={handleAdjustCredits} disabled={!creditReason.trim() || !creditAmount || isNaN(parseInt(creditAmount))}>Aplicar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Force delete confirmation modal */}
-      <Dialog open={deleteModal.open} onOpenChange={open => { if (!open) { setDeleteModal({ open: false, userId: '', email: '' }); setDeleteConfirmText(''); } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-destructive">Eliminar cuenta de usuario</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Estás a punto de eliminar permanentemente la cuenta de <span className="font-medium text-foreground">{deleteModal.email}</span>.
-            </p>
-            <div className="p-3 rounded-md bg-destructive/10 border border-destructive/30 text-sm space-y-1">
-              <p className="font-medium text-destructive">Esta acción es irreversible:</p>
-              <ul className="list-disc list-inside text-muted-foreground text-xs space-y-0.5">
-                <li>Se eliminará el perfil, créditos y datos personales</li>
-                <li>Las obras con blockchain se anonimizarán (user_id → NULL)</li>
-                <li>Los registros de compra se anonimizarán por obligación fiscal</li>
-                <li>Se eliminará el usuario de auth.users</li>
-              </ul>
-            </div>
-            <div>
-              <Label>Escribe <span className="font-mono font-bold">ELIMINAR</span> para confirmar</Label>
-              <Input
-                value={deleteConfirmText}
-                onChange={e => setDeleteConfirmText(e.target.value)}
-                placeholder="ELIMINAR"
-                className="mt-1"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setDeleteModal({ open: false, userId: '', email: '' }); setDeleteConfirmText(''); }}>Cancelar</Button>
-            <Button variant="destructive" onClick={handleForceDelete} disabled={deleteConfirmText !== 'ELIMINAR' || deleting}>
-              {deleting ? 'Eliminando…' : 'Eliminar cuenta'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AdminUserModals
+        creditModal={creditModal}
+        setCreditModal={setCreditModal}
+        deleteModal={deleteModal}
+        setDeleteModal={setDeleteModal}
+        onRefresh={load}
+      />
 
       <UserDetailSheet user={selectedUser} open={!!selectedUser} onOpenChange={open => !open && setSelectedUser(null)} />
     </div>
