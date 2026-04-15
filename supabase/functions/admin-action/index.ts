@@ -85,41 +85,53 @@ serve(async (req) => {
 
     if (action === "get_users") {
       const offset = payload.offset || 0;
-      const search = payload.search || "";
+      const limit = Math.min(payload.limit || 50, 100);
+      const search = (payload.search || "").trim().toLowerCase();
 
-      const { data: profiles, error } = await admin
-        .from("profiles")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .range(offset, offset + 49);
+      // --- Build query with optional server-side search ---
+      let query = admin.from("profiles").select("*", { count: "exact" });
+
+      if (search) {
+        // Search by display_name (ilike) — email search handled post-filter
+        query = query.or(`display_name.ilike.%${search}%`);
+      }
+
+      query = query.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
+
+      const { data: profiles, error, count: profilesCount } = await query;
       if (error) return json({ error: error.message }, 500);
 
       const userIds = (profiles || []).map((p: any) => p.user_id);
+      if (userIds.length === 0) return json({ users: [], total: 0 });
 
-      // 1 query for all roles
-      const { data: roles } = await admin.from("user_roles").select("user_id, role").in("user_id", userIds);
+      // Batch: roles + works counts
+      const [{ data: roles }, { data: worksCounts }] = await Promise.all([
+        admin.from("user_roles").select("user_id, role").in("user_id", userIds),
+        admin.from("works").select("user_id").in("user_id", userIds),
+      ]);
+
       const rolesMap: Record<string, string[]> = {};
       (roles || []).forEach((r: any) => {
         if (!rolesMap[r.user_id]) rolesMap[r.user_id] = [];
         rolesMap[r.user_id].push(r.role);
       });
 
-      // 1 query for all works counts
-      const { data: worksCounts } = await admin.from("works").select("user_id").in("user_id", userIds);
       const worksCountMap: Record<string, number> = {};
       (worksCounts || []).forEach((w: any) => {
         worksCountMap[w.user_id] = (worksCountMap[w.user_id] || 0) + 1;
       });
 
-      // 1 call for all auth users (emails + metadata)
-      const { data: { users: authUsers } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      // Fetch auth data only for the page's users (not all 9k)
       const emailsMap: Record<string, string> = {};
       const metaNameMap: Record<string, string> = {};
-      (authUsers || []).forEach((u: any) => {
-        if (u.email) emailsMap[u.id] = u.email;
-        const metaName = u.user_metadata?.display_name || u.user_metadata?.full_name || "";
-        if (metaName) metaNameMap[u.id] = metaName;
-      });
+      for (const uid of userIds) {
+        try {
+          const { data: { user: au } } = await admin.auth.admin.getUserById(uid);
+          if (au?.email) emailsMap[au.id] = au.email;
+          const metaName = au?.user_metadata?.display_name || au?.user_metadata?.full_name || "";
+          if (metaName) metaNameMap[au!.id] = metaName;
+        } catch { /* skip */ }
+      }
 
       let result = (profiles || []).map((p: any) => ({
         ...p,
@@ -129,14 +141,18 @@ serve(async (req) => {
         email: emailsMap[p.user_id] || "",
       }));
 
+      // If searching, also filter by email (not in profiles table)
       if (search) {
         result = result.filter((u: any) =>
-          u.email.toLowerCase().includes(search.toLowerCase()) ||
-          u.display_name?.toLowerCase().includes(search.toLowerCase())
+          u.email.toLowerCase().includes(search) ||
+          u.display_name?.toLowerCase().includes(search)
         );
       }
 
-      return json({ users: result, total: result.length });
+      // For search, total is approximate from profiles count
+      const total = search ? (profilesCount ?? result.length) : (profilesCount ?? 0);
+
+      return json({ users: result, total });
     }
 
     if (action === "adjust_credits") {
