@@ -10,7 +10,7 @@ async function adminAction(action: string, payload: Record<string, any> = {}) {
 }
 
 export const adminApi = {
-  getUsers: (offset = 0, search = '') => adminAction('get_users', { offset, search }),
+  getUsers: (offset = 0, search = '', limit = 50) => adminAction('get_users', { offset, search, limit }),
   adjustCredits: (user_id: string, amount: number, reason: string) => adminAction('adjust_credits', { user_id, amount, reason }),
   setKyc: (user_id: string, status: string) => adminAction('set_kyc', { user_id, status }),
   toggleBlock: (user_id: string, blocked: boolean) => adminAction('toggle_block', { user_id, blocked }),
