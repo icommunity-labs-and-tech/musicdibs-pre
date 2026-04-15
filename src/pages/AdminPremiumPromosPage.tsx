@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { adminApi } from '@/services/adminApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Crown, ChevronLeft, ChevronRight, Eye, Download, Paperclip, Trash2, FileAudio, Video, Image as ImageIcon } from 'lucide-react';
+import { Crown, ChevronLeft, ChevronRight, Eye, Download, Paperclip, FileAudio, Video, Image as ImageIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -65,8 +65,6 @@ export default function AdminPremiumPromosPage() {
   // Files modal state
   const [filesTarget, setFilesTarget] = useState<any | null>(null);
   const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string | null>(null);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -122,17 +120,22 @@ export default function AdminPremiumPromosPage() {
       const res = await adminApi.callAction('get_premium_promo_media_url', { file_path: filePath });
       if (!res?.signed_url) throw new Error('No se pudo obtener la URL del archivo');
       const filename = extractFileName(filePath);
-      const response = await fetch(res.signed_url);
-      if (!response.ok) throw new Error('Download failed');
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
+      try {
+        const response = await fetch(res.signed_url);
+        if (!response.ok) throw new Error('Blob download failed');
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        // Fallback: open URL directly for large files
+        window.open(res.signed_url, '_blank');
+      }
     } catch (e: any) { toast.error('Error descargando archivo: ' + e.message); }
   };
 
@@ -147,41 +150,7 @@ export default function AdminPremiumPromosPage() {
     }
   };
 
-  const handleDeleteFiles = async () => {
-    if (!filesTarget) return;
-    setDeleting(true);
-    try {
-      const removePaths: string[] = [];
-      if (filesTarget.audio_file_path) removePaths.push(filesTarget.audio_file_path);
-      if (filesTarget.media_file_path) removePaths.push(filesTarget.media_file_path);
 
-      if (removePaths.length > 0) {
-        const { error: storageErr } = await supabase.storage
-          .from('premium-promo-media')
-          .remove(removePaths);
-        if (storageErr) console.error('Storage delete error:', storageErr);
-      }
-
-      await adminApi.callAction('update_premium_promo_files', {
-        promo_id: filesTarget.id,
-        audio_file_path: null,
-        media_file_path: null,
-        media_file_type: null,
-      });
-
-      toast.success('Archivos eliminados permanentemente');
-      setPromos(prev => prev.map(p =>
-        p.id === filesTarget.id
-          ? { ...p, audio_file_path: null, media_file_path: null, media_file_type: null }
-          : p
-      ));
-      setShowDeleteConfirm(false);
-      setFilesTarget(null);
-    } catch (e: any) {
-      toast.error('Error eliminando archivos: ' + e.message);
-    }
-    setDeleting(false);
-  };
 
   return (
     <div className="space-y-6">
@@ -387,34 +356,11 @@ export default function AdminPremiumPromosPage() {
                 )}
               </div>
 
-              {/* Delete button — only if files exist */}
-              {(filesTarget.audio_file_path || filesTarget.media_file_path) && (
-                <Button variant="destructive" className="w-full gap-2" onClick={() => setShowDeleteConfirm(true)}>
-                  <Trash2 className="h-4 w-4" /> Eliminar archivos permanentemente
-                </Button>
-              )}
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar archivos permanentemente?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Eliminar ambos archivos permanentemente? Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteFiles} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {deleting ? 'Eliminando…' : 'Eliminar permanentemente'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Rejection Reason Dialog */}
       <AlertDialog open={!!rejectTarget} onOpenChange={open => !open && setRejectTarget(null)}>
