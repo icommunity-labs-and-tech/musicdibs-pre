@@ -515,12 +515,23 @@ const AIStudioCreate = () => {
     if (error) { toast({ title: t('aiShared.error'), variant: "destructive" }); loadHistory(); }
   };
 
-  const downloadAudio = (result: GenerationResult) => {
-    const link = document.createElement('a');
-    link.href = result.audioUrl;
-    link.download = `musicdibs-${mode}-${result.id.slice(0, 8)}.mp3`;
-    link.click();
-    track('audio_downloaded', { feature: 'create_music' });
+  const downloadAudio = async (result: GenerationResult) => {
+    try {
+      const response = await fetch(result.audioUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `musicdibs-${mode}-${result.id.slice(0, 8)}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+      track('audio_downloaded', { feature: 'create_music' });
+    } catch (err) {
+      console.error('Download error:', err);
+      toast({ title: 'Error al descargar', description: 'No se pudo descargar el archivo. Inténtalo de nuevo.', variant: 'destructive' });
+    }
   };
 
   // ── Save as Virtual Artist ──
