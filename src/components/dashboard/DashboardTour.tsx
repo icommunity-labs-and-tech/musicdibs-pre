@@ -23,7 +23,7 @@ function useSteps(): Step[] {
     {
       target: '[data-tour="account-summary"]',
       title: t('dashboard.tour.accountTitle', 'Resumen de la cuenta'),
-      content: t('dashboard.tour.accountContent', 'Aquí puedes ver un resumen de tu actividad:\n• Obras registradas\n• Registros pendientes\n• Créditos disponibles\n\nLos créditos son los que utilizas para usar cada herramienta: registros, promociones, distribución, creación con IA MusicDibs Studio.'),
+      content: t('dashboard.tour.accountContent', 'Aquí puedes ver un resumen de tu actividad:\n• Obras registradas\n• Registros pendientes\n• Créditos disponibles\n\nLos créditos son los que utilizas para usar cada herramienta: registros, promociones, distribución, creación con IA Music Studio.'),
       disableBeacon: true,
     },
     {
