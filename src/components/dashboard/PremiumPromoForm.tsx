@@ -50,7 +50,7 @@ interface PremiumPromoFormProps {
 }
 
 const PREMIUM_COST = FEATURE_COSTS.promote_premium;
-const ACCEPTED_AUDIO = '.mp3,.aac';
+const ACCEPTED_AUDIO = '.mp3,.aac,.m4a,.wav,.ogg,.flac';
 const ACCEPTED_VISUAL = '.mp4,.mov,.jpg,.jpeg,.png';
 const VIDEO_EXTS = ['.mp4', '.mov'];
 const IMAGE_EXTS = ['.jpg', '.jpeg', '.png'];
