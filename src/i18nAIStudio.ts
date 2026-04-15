@@ -2,7 +2,7 @@
 export const aiStudioTranslations: Record<string, Record<string, any>> = {
   es: {
     aiCreate: {
-      backToStudio: 'Volver a AI MusicDibs Studio',
+      backToStudio: 'Volver a AI Music Studio',
       title: 'Crea tu música',
       subtitle: 'Crea música e inspírate con IA',
       tabMusic: 'Crear Música',
@@ -175,7 +175,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       onboardingTipMockTitle: 'Mi canción favorita',
     },
     aiEdit: {
-      backToStudio: 'Volver a AI MusicDibs Studio',
+      backToStudio: 'Volver a AI Music Studio',
     },
     masterize: {
       title: 'Masterización profesional',
@@ -217,9 +217,9 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       errorTimeout: 'El procesamiento ha tardado demasiado. Inténtalo de nuevo.',
     },
     aiInspire: {
-      backToStudio: 'Volver a AI MusicDibs Studio',
+      backToStudio: 'Volver a AI Music Studio',
       badge: 'Inspiración Musical',
-      title: 'AI MusicDibs Studio - Inspiración',
+      title: 'AI Music Studio - Inspiración',
       subtitle: 'Explora prompts sugeridos, combina géneros y moods, o deja que el azar te sorprenda.',
       randomTitle: 'Generador Aleatorio',
       randomDesc: '¿Sin ideas? Genera una combinación aleatoria de género y mood para empezar.',
@@ -255,7 +255,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       },
     },
     aiVideo: {
-      backToStudio: 'Volver a AI MusicDibs Studio',
+      backToStudio: 'Volver a AI Music Studio',
       title: 'Videoclips con IA',
       subtitle: 'Genera videoclips musicales con IA',
       generationMode: 'Modo de Generación',
@@ -347,7 +347,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       },
     },
     aiCovers: {
-      backToStudio: 'Volver a AI MusicDibs Studio',
+      backToStudio: 'Volver a AI Music Studio',
       poweredBy: 'IA generativa',
       title: 'Generador de Portadas',
       subtitle: 'Crea portadas profesionales para tu single o álbum con IA.',
@@ -524,7 +524,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
   },
   en: {
     aiCreate: {
-      backToStudio: 'Back to AI MusicDibs Studio',
+      backToStudio: 'Back to AI Music Studio',
       title: 'Create your music',
       subtitle: 'Create music and get inspired with AI',
       tabMusic: 'Create Music',
@@ -693,7 +693,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       onboardingTipMockTitle: 'My favorite song',
     },
     aiEdit: {
-      backToStudio: 'Back to AI MusicDibs Studio',
+      backToStudio: 'Back to AI Music Studio',
     },
     masterize: {
       title: 'Professional mastering',
@@ -735,9 +735,9 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       errorTimeout: 'Processing took too long. Please try again.',
     },
     aiInspire: {
-      backToStudio: 'Back to AI MusicDibs Studio',
+      backToStudio: 'Back to AI Music Studio',
       badge: 'Musical Inspiration',
-      title: 'AI MusicDibs Studio - Inspiration',
+      title: 'AI Music Studio - Inspiration',
       subtitle: 'Explore suggested prompts, combine genres and moods, or let chance surprise you.',
       randomTitle: 'Random Generator',
       randomDesc: 'Out of ideas? Generate a random genre and mood combination to start.',
@@ -773,7 +773,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       },
     },
     aiVideo: {
-      backToStudio: 'Back to AI MusicDibs Studio',
+      backToStudio: 'Back to AI Music Studio',
       title: 'AI Videoclips',
       subtitle: 'Generate music videos with AI',
       generationMode: 'Generation Mode',
@@ -865,7 +865,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       },
     },
     aiCovers: {
-      backToStudio: 'Back to AI MusicDibs Studio',
+      backToStudio: 'Back to AI Music Studio',
       poweredBy: 'IA generativa',
       title: 'Cover Generator',
       subtitle: 'Create professional covers for your single or album with AI.',
@@ -1039,7 +1039,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
   },
   'pt-BR': {
     aiCreate: {
-      backToStudio: 'Voltar ao AI MusicDibs Studio',
+      backToStudio: 'Voltar ao AI Music Studio',
       title: 'Crie sua música',
       subtitle: 'Crie música e inspire-se com IA',
       tabMusic: 'Criar Música',
@@ -1208,7 +1208,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       onboardingTipMockTitle: 'Minha música favorita',
     },
     aiEdit: {
-      backToStudio: 'Voltar ao AI MusicDibs Studio',
+      backToStudio: 'Voltar ao AI Music Studio',
     },
     masterize: {
       title: 'Masterização profissional',
@@ -1250,9 +1250,9 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       errorTimeout: 'O processamento demorou demais. Tente novamente.',
     },
     aiInspire: {
-      backToStudio: 'Voltar ao AI MusicDibs Studio',
+      backToStudio: 'Voltar ao AI Music Studio',
       badge: 'Inspiração Musical',
-      title: 'AI MusicDibs Studio - Inspiração',
+      title: 'AI Music Studio - Inspiração',
       subtitle: 'Explore prompts sugeridos, combine gêneros e moods, ou deixe o acaso surpreendê-lo.',
       randomTitle: 'Gerador Aleatório',
       randomDesc: 'Sem ideias? Gere uma combinação aleatória de gênero e mood.',
@@ -1288,7 +1288,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       },
     },
     aiVideo: {
-      backToStudio: 'Voltar ao AI MusicDibs Studio',
+      backToStudio: 'Voltar ao AI Music Studio',
       title: 'Videoclipes com IA',
       subtitle: 'Gere videoclipes musicais com IA',
       generationMode: 'Modo de Geração',
@@ -1380,7 +1380,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       },
     },
     aiCovers: {
-      backToStudio: 'Voltar ao AI MusicDibs Studio',
+      backToStudio: 'Voltar ao AI Music Studio',
       poweredBy: 'IA generativa',
       title: 'Gerador de Capas',
       subtitle: 'Crie capas profissionais para seu single ou álbum com IA.',
