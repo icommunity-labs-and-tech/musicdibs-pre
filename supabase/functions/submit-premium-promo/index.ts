@@ -41,7 +41,7 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    const { work_id, artist_name, song_title, description, external_link, team_notes, media_file_path } = body;
+    const { work_id, artist_name, song_title, description, external_link, team_notes, media_file_path, audio_file_path, media_file_type } = body;
 
     if (!artist_name || !song_title || !description) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -63,6 +63,8 @@ serve(async (req) => {
         external_link: external_link || null,
         team_notes: team_notes || null,
         media_file_path: media_file_path || null,
+        audio_file_path: audio_file_path || null,
+        media_file_type: media_file_type || null,
         status: 'submitted',
         credits_spent: 30,
       })
@@ -79,6 +81,10 @@ serve(async (req) => {
     // Send notification email to marketing
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
     if (RESEND_API_KEY) {
+      const hasAudio = !!audio_file_path;
+      const hasMedia = !!media_file_path;
+      const attachmentInfo = [hasAudio ? 'Audio' : '', hasMedia ? (media_file_type === 'video' ? 'Vídeo' : 'Imagen') : ''].filter(Boolean).join(' + ') || 'No';
+
       const html = `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8" /></head>
@@ -98,7 +104,7 @@ serve(async (req) => {
             <tr><td style="padding:8px 0;color:#9ca3af;font-size:13px;border-bottom:1px solid rgba(245,158,11,0.15);width:140px;">Email</td><td style="padding:8px 0;color:#f3f4f6;font-size:13px;font-weight:600;border-bottom:1px solid rgba(245,158,11,0.15);">${escapeHtml(user.email || '—')}</td></tr>
             <tr><td style="padding:8px 0;color:#9ca3af;font-size:13px;border-bottom:1px solid rgba(245,158,11,0.15);width:140px;">Letra</td><td style="padding:8px 0;color:#f3f4f6;font-size:13px;font-weight:600;border-bottom:1px solid rgba(245,158,11,0.15);">${escapeHtml(description.length > 200 ? description.slice(0, 200) + '…' : description)}</td></tr>
             ${external_link ? `<tr><td style="padding:8px 0;color:#9ca3af;font-size:13px;border-bottom:1px solid rgba(245,158,11,0.15);width:140px;">Enlaces / Notas</td><td style="padding:8px 0;color:#f3f4f6;font-size:13px;font-weight:600;border-bottom:1px solid rgba(245,158,11,0.15);">${escapeHtml(external_link)}</td></tr>` : ''}
-            ${media_file_path ? `<tr><td style="padding:8px 0;color:#9ca3af;font-size:13px;width:140px;">Archivo adjunto</td><td style="padding:8px 0;color:#f3f4f6;font-size:13px;font-weight:600;">Sí (ver en panel admin)</td></tr>` : ''}
+            <tr><td style="padding:8px 0;color:#9ca3af;font-size:13px;width:140px;">Archivos adjuntos</td><td style="padding:8px 0;color:#f3f4f6;font-size:13px;font-weight:600;">${attachmentInfo}</td></tr>
           </table>
           <p style="margin:16px 0 0;color:#9ca3af;font-size:12px;text-align:center;">ID: ${promo.id} · Créditos: ${promo.credits_spent}</p>
         </td></tr>
