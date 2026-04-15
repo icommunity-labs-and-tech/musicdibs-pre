@@ -17,7 +17,15 @@ serve(async (req) => {
   try {
     // ── Validar que la llamada viene de pg_cron ──────────────
     const cronSecret = req.headers.get("x-cron-secret");
-    const expectedSecret = Deno.env.get("CRON_SECRET") ?? "ibs_cron_secret_2026_musicdibs";
+    const expectedSecret = Deno.env.get("CRON_SECRET");
+
+    if (!expectedSecret) {
+      console.error("[IBS-SYNC-CRON] CRON_SECRET not configured");
+      return new Response(JSON.stringify({ error: "Server misconfiguration" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (cronSecret !== expectedSecret) {
       console.warn("[IBS-SYNC-CRON] Unauthorized call — invalid x-cron-secret");
