@@ -175,16 +175,16 @@ export const CoversSection = () => {
         }
 
         if (edgeErrorData?.error) {
-          const { title, description: desc } = parseAiError(edgeErrorData, t, edgeErrorData);
-          throw { userTitle: title, userDesc: desc };
+          const { userMessage } = parseAiError(edgeErrorData, edgeErrorData);
+          throw { userTitle: userMessage, userDesc: userMessage };
         }
 
         throw error;
       }
 
       if (data?.fallback || data?.error) {
-        const { title, description: desc } = parseAiError(data, t, data);
-        throw { userTitle: title, userDesc: desc };
+        const { userMessage } = parseAiError(data, data);
+        throw { userTitle: userMessage, userDesc: userMessage };
       }
 
       setImageUrl(data.imageUrl);

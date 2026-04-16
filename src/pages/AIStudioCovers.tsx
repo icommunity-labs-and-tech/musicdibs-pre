@@ -140,25 +140,25 @@ const AIStudioCovers = () => {
         }
 
         if (edgeErrorData?.error) {
-          const friendly = parseAiError(edgeErrorData, t, edgeErrorData)
-          throw new Error(friendly.description)
+          const friendly = parseAiError(edgeErrorData, edgeErrorData)
+          throw new Error(friendly.userMessage)
         }
 
         throw error
       }
 
       if (data?.fallback || data?.error) {
-        const friendly = parseAiError(data, t, data)
-        throw new Error(friendly.description)
+        const friendly = parseAiError(data, data)
+        throw new Error(friendly.userMessage)
       }
 
       setImageUrl(data.imageUrl)
       toast.success(t('aiCovers.coverGenerated'))
       track('cover_generated', { feature: 'cover' })
     } catch (err: any) {
-      const friendly = parseAiError(err, t)
-      setGenError(friendly.description)
-      toast.error(friendly.title, { description: friendly.description })
+      const friendly = parseAiError(err)
+      setGenError(friendly.userMessage)
+      toast.error(friendly.userMessage)
     }
 
     setIsGenerating(false)
