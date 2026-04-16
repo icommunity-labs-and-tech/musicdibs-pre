@@ -573,8 +573,8 @@ const AIStudioCreate = () => {
         .insert({
           user_id: user.id,
           name: saveArtistName.trim(),
-          voice_profile_id: saveArtistVoiceId,
-          voice_type: 'preset',
+          voice_profile_id: saveArtistVoiceId || null,
+          voice_type: saveArtistVoiceId ? 'preset' : null,
           genre: null,
           mood: null,
           default_duration: duration,
