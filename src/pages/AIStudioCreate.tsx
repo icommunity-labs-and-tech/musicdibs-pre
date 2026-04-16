@@ -555,7 +555,10 @@ const AIStudioCreate = () => {
   };
 
   const handleSaveVirtualArtist = async () => {
-    if (!saveArtistName.trim() || !saveArtistVoiceId || !user) return;
+    if (!saveArtistName.trim() || !user) return;
+    const styleText = (saveArtistPrompt || saveArtistStyle).trim();
+    // Require either a voice OR style text with >10 chars
+    if (!saveArtistVoiceId && styleText.length <= 10) return;
 
     // Check limit
     if (virtualArtistsCount >= 10) {
