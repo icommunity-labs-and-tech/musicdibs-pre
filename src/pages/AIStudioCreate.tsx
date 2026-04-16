@@ -426,10 +426,10 @@ const AIStudioCreate = () => {
       }
     } catch (error: any) {
       console.error('Generation error:', error);
-      const friendly = parseAiError(error, t);
+      const friendly = parseAiError(error);
       setGenerationError({
-        message: friendly.title,
-        details: friendly.description,
+        message: friendly.userMessage,
+        details: friendly.userMessage,
       });
       track('generation_failed', { feature: 'create_music', metadata: { error: error.message } });
     } finally {

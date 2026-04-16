@@ -233,7 +233,7 @@ export default function AIStudioVocal() {
         body: { description: lyricsDesc, genre: lyricsGenre, mood: lyricsMood, style: lyricsStyle, language: lyricsLanguage, structure: lyricsStructure, rhymeScheme: lyricsRhyme, pov: lyricsPov, artistRefs: lyricsArtistRefs }
       });
       if (error) throw error;
-      if (data?.error) { const friendly = parseAiError(data, t); toast({ title: friendly.title, description: friendly.description, variant: 'destructive' }); return; }
+      if (data?.error) { const friendly = parseAiError(data, data); toast({ title: t('aiShared.error'), description: friendly.userMessage, variant: 'destructive' }); return; }
       if (data?.lyrics) { setLyrics(data.lyrics); toast({ title: tv('lyricsGenerated'), description: tv('lyricsGeneratedDesc') }); }
     } catch { toast({ title: s('aiShared.error'), description: 'Inténtalo de nuevo más tarde.', variant: 'destructive' }); }
     finally { setIsGeneratingLyrics(false); }
@@ -256,7 +256,7 @@ export default function AIStudioVocal() {
       const data = await res.json();
       if (!res.ok || data?.error) {
         if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: tv('insufficientCreditsDesc'), variant: 'destructive' });
-        else { const friendly = parseAiError(data, t); toast({ title: friendly.title, description: friendly.description, variant: 'destructive' }); }
+        else { const friendly = parseAiError(data, data); toast({ title: t('aiShared.error'), description: friendly.userMessage, variant: 'destructive' }); }
         return;
       }
       setAudioUrl(data.audioUrl);
