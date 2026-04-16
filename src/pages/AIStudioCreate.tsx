@@ -846,9 +846,9 @@ const AIStudioCreate = () => {
           {t('aiCreate.backToStudio')}
         </Link>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-8 items-stretch">
           {/* ═══ LEFT: Creation Panel ═══ */}
-          <div className="space-y-6" ref={formRef}>
+          <div className="space-y-6 flex flex-col" ref={formRef}>
             <MusicCreatorTour />
             <div className="flex items-center justify-between">
               <div>
