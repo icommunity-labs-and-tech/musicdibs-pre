@@ -10,9 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Download, Music, Video, Image, Mic, Loader2, Search,
+  Download, Music, Mic, Loader2, Search,
   CheckSquare, Square, Package, Play, Pause, Trash2, X,
-  FileAudio, Film, ImageIcon, FolderOpen, Lock, Pencil, Check
+  Film, ImageIcon, FolderOpen, Lock, Pencil, Check
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLibraryAccess, registerFreeDownload } from "@/hooks/useLibraryAccess";
@@ -27,10 +27,8 @@ interface MediaAsset {
   url: string | null;
   createdAt: string;
   meta?: Record<string, string>;
-  /** Source info for rename/delete mapping */
+  /** Source info for delete mapping */
   source: "ai_generations" | "video_generations" | "social_promotions" | "voice_clones" | "storage";
-  /** Column to update for rename */
-  renameField?: string;
 }
 
 type TabType = "all" | "song" | "video" | "cover" | "vocal";
@@ -57,136 +55,156 @@ export default function MediaLibraryPage() {
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<TabType>("all");
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [customNames, setCustomNames] = useState<Record<string, string>>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("media_library_names") || "{}");
+    } catch { return {}; }
+  });
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const editInputRef = useRef<HTMLInputElement | null>(null);
 
-  // ── Fetch all assets ──
+  // ── Cache key ──
+  const cacheKey = user ? `media_library_cache_${user.id}` : '';
+
+  // ── Fetch all assets (parallel + cached) ──
   useEffect(() => {
     if (!user) return;
-    const load = async () => {
-      setLoading(true);
-      const allAssets: MediaAsset[] = [];
 
-      // Songs from ai_generations
-      const { data: songs } = await supabase
-        .from("ai_generations")
-        .select("id, prompt, audio_url, genre, mood, created_at")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (songs) {
-        songs.forEach((s) =>
-          allAssets.push({
-            id: s.id,
-            type: "song",
-            title: s.prompt?.substring(0, 80) || "Canción sin título",
-            url: s.audio_url,
-            createdAt: s.created_at,
-            meta: { genre: s.genre || "", mood: s.mood || "" },
-            source: "ai_generations",
-            renameField: "prompt",
-          })
-        );
-      }
-
-      // Videos from video_generations
-      const { data: videos } = await supabase
-        .from("video_generations")
-        .select("id, prompt, video_url, merged_url, status, created_at, style")
-        .eq("user_id", user.id)
-        .eq("status", "COMPLETED")
-        .order("created_at", { ascending: false });
-
-      if (videos) {
-        videos.forEach((v) =>
-          allAssets.push({
-            id: v.id,
-            type: "video",
-            title: v.prompt?.substring(0, 80) || "Vídeo sin título",
-            url: v.merged_url || v.video_url,
-            createdAt: v.created_at,
-            meta: { style: v.style || "" },
-            source: "video_generations",
-            renameField: "prompt",
-          })
-        );
-      }
-
-      // Covers from social_promotions
-      const { data: promos } = await supabase
-        .from("social_promotions")
-        .select("id, image_url, created_at, work_id")
-        .eq("user_id", user.id)
-        .not("image_url", "is", null)
-        .order("created_at", { ascending: false });
-
-      if (promos) {
-        promos.forEach((p) =>
-          allAssets.push({
-            id: p.id,
-            type: "cover",
-            title: "Portada promocional",
-            url: p.image_url,
-            createdAt: p.created_at,
-            source: "social_promotions",
-          })
-        );
-      }
-
-      // Covers generated from AI Studio (stored in social-promo-images/covers/{userId}/)
-      const { data: coverFiles } = await supabase.storage
-        .from("social-promo-images")
-        .list(`covers/${user.id}`, { limit: 200, sortBy: { column: "created_at", order: "desc" } });
-
-      if (coverFiles) {
-        const promoUrls = new Set(promos?.map((p) => p.image_url) || []);
-        coverFiles
-          .filter((f) => f.name.endsWith(".png") || f.name.endsWith(".jpg"))
-          .forEach((f) => {
-            const { data: pubUrl } = supabase.storage
-              .from("social-promo-images")
-              .getPublicUrl(`covers/${user.id}/${f.name}`);
-            if (promoUrls.has(pubUrl.publicUrl)) return;
-            allAssets.push({
-              id: `cover-file-${f.id || f.name}`,
-              type: "cover",
-              title: "Portada IA",
-              url: pubUrl.publicUrl,
-              createdAt: f.created_at || new Date().toISOString(),
-              source: "storage",
-            });
-          });
-      }
-
-      // Voice clones
-      const { data: clones } = await supabase
-        .from("voice_clones")
-        .select("id, name, sample_url, created_at, status")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false });
-
-      if (clones) {
-        for (const c of clones) {
-          allAssets.push({
-            id: c.id,
-            type: "vocal",
-            title: c.name || "Voz clonada",
-            url: c.sample_url || null,
-            createdAt: c.created_at,
-            source: "voice_clones",
-            renameField: "name",
-          });
+    // Try to load from sessionStorage cache first for instant display
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const { assets: cachedAssets, ts } = JSON.parse(cached);
+        // Use cache if less than 2 minutes old
+        if (Date.now() - ts < 120_000) {
+          setAssets(cachedAssets);
+          setLoading(false);
+          // Still refresh in background
+          loadAssets(user.id, false);
+          return;
         }
       }
+    } catch { /* ignore */ }
 
-      setAssets(allAssets);
-      setLoading(false);
-    };
-    load();
+    loadAssets(user.id, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  const loadAssets = async (userId: string, showSpinner: boolean) => {
+    if (showSpinner) setLoading(true);
+
+    // Run ALL queries in parallel
+    const [songsRes, videosRes, promosRes, coverFilesRes, clonesRes] = await Promise.all([
+      supabase
+        .from("ai_generations")
+        .select("id, prompt, audio_url, genre, mood, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("video_generations" as any)
+        .select("id, prompt, video_url, merged_url, status, created_at, style")
+        .eq("user_id", userId)
+        .eq("status", "COMPLETED")
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("social_promotions" as any)
+        .select("id, image_url, created_at, work_id")
+        .eq("user_id", userId)
+        .not("image_url", "is", null)
+        .order("created_at", { ascending: false }),
+      supabase.storage
+        .from("social-promo-images")
+        .list(`covers/${userId}`, { limit: 200, sortBy: { column: "created_at", order: "desc" } }),
+      supabase
+        .from("voice_clones" as any)
+        .select("id, name, sample_url, created_at, status")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .order("created_at", { ascending: false }),
+    ]);
+
+    const allAssets: MediaAsset[] = [];
+
+    // Songs
+    if (songsRes.data) {
+      for (const s of songsRes.data as any[]) {
+        allAssets.push({
+          id: s.id, type: "song",
+          title: s.prompt?.substring(0, 80) || "Canción sin título",
+          url: s.audio_url, createdAt: s.created_at,
+          meta: { genre: s.genre || "", mood: s.mood || "" },
+          source: "ai_generations",
+        });
+      }
+    }
+
+    // Videos
+    if (videosRes.data) {
+      for (const v of videosRes.data as any[]) {
+        allAssets.push({
+          id: v.id, type: "video",
+          title: v.prompt?.substring(0, 80) || "Vídeo sin título",
+          url: v.merged_url || v.video_url, createdAt: v.created_at,
+          meta: { style: v.style || "" },
+          source: "video_generations",
+        });
+      }
+    }
+
+    // Covers from social_promotions
+    const promoUrls = new Set<string>();
+    if (promosRes.data) {
+      for (const p of promosRes.data as any[]) {
+        if (p.image_url) promoUrls.add(p.image_url);
+        allAssets.push({
+          id: p.id, type: "cover",
+          title: "Portada promocional",
+          url: p.image_url, createdAt: p.created_at,
+          source: "social_promotions",
+        });
+      }
+    }
+
+    // Covers from storage
+    if (coverFilesRes.data) {
+      for (const f of coverFilesRes.data) {
+        if (!f.name.endsWith(".png") && !f.name.endsWith(".jpg")) continue;
+        const { data: pubUrl } = supabase.storage
+          .from("social-promo-images")
+          .getPublicUrl(`covers/${userId}/${f.name}`);
+        if (promoUrls.has(pubUrl.publicUrl)) continue;
+        allAssets.push({
+          id: `cover-file-${f.id || f.name}`, type: "cover",
+          title: "Portada IA",
+          url: pubUrl.publicUrl, createdAt: f.created_at || new Date().toISOString(),
+          source: "storage",
+        });
+      }
+    }
+
+    // Voice clones (production schema uses sample_url directly)
+    if (clonesRes.data) {
+      for (const c of clonesRes.data as any[]) {
+        allAssets.push({
+          id: c.id, type: "vocal",
+          title: c.name || "Voz clonada",
+          url: c.sample_url || null,
+          createdAt: c.created_at,
+          source: "voice_clones",
+        });
+      }
+    }
+
+    setAssets(allAssets);
+    setLoading(false);
+
+    // Cache in sessionStorage
+    try {
+      sessionStorage.setItem(cacheKey, JSON.stringify({ assets: allAssets, ts: Date.now() }));
+    } catch { /* quota exceeded - ignore */ }
+  };
 
   // ── Filtering ──
   const filtered = useMemo(() => {
@@ -194,14 +212,15 @@ export default function MediaLibraryPage() {
     if (tab !== "all") list = list.filter((a) => a.type === tab);
     if (search.trim()) {
       const q = search.toLowerCase();
-      list = list.filter(
-        (a) =>
+      list = list.filter((a) => {
+        const displayName = customNames[a.id] || a.title;
+        return displayName.toLowerCase().includes(q) ||
           a.title.toLowerCase().includes(q) ||
-          Object.values(a.meta || {}).some((v) => v.toLowerCase().includes(q))
-      );
+          Object.values(a.meta || {}).some((v) => v.toLowerCase().includes(q));
+      });
     }
     return list;
-  }, [assets, tab, search]);
+  }, [assets, tab, search, customNames]);
 
   // ── Selection ──
   const toggleSelect = (id: string) => {
@@ -220,34 +239,6 @@ export default function MediaLibraryPage() {
     }
   };
 
-  // ── Rename asset ──
-  const startEditing = (asset: MediaAsset) => {
-    if (!asset.renameField) return;
-    setEditingId(asset.id);
-    setEditValue(asset.title);
-    setTimeout(() => editInputRef.current?.focus(), 50);
-  };
-
-  const saveRename = async (asset: MediaAsset) => {
-    const newTitle = editValue.trim();
-    if (!newTitle || newTitle === asset.title || !asset.renameField || asset.source === "storage") {
-      setEditingId(null);
-      return;
-    }
-    try {
-      const { error } = await supabase
-        .from(asset.source as any)
-        .update({ [asset.renameField]: newTitle })
-        .eq("id", asset.id);
-      if (error) throw error;
-      setAssets((prev) => prev.map((a) => a.id === asset.id ? { ...a, title: newTitle } : a));
-      toast({ title: "Nombre actualizado" });
-    } catch {
-      toast({ title: "Error al renombrar", variant: "destructive" });
-    }
-    setEditingId(null);
-  };
-
   // ── Download single ──
   const downloadSingle = async (asset: MediaAsset) => {
     if (!asset.url) return;
@@ -260,7 +251,8 @@ export default function MediaLibraryPage() {
       const resp = await fetch(asset.url);
       const blob = await resp.blob();
       const ext = asset.type === "song" ? "mp3" : asset.type === "video" ? "mp4" : asset.type === "cover" ? "png" : "mp3";
-      const filename = `${asset.title.substring(0, 50).replace(/[^a-zA-Z0-9áéíóúñ ]/g, "")}.${ext}`;
+      const displayName = customNames[asset.id] || asset.title;
+      const filename = `${displayName.substring(0, 50).replace(/[^a-zA-Z0-9áéíóúñ ]/g, "")}.${ext}`;
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = filename;
@@ -292,7 +284,8 @@ export default function MediaLibraryPage() {
           try {
             const resp = await fetch(asset.url!);
             const blob = await resp.blob();
-            const name = `${(i + 1).toString().padStart(2, "0")}_${asset.title.substring(0, 40).replace(/[^a-zA-Z0-9áéíóúñ ]/g, "")}.${extMap[asset.type]}`;
+            const dName = customNames[asset.id] || asset.title;
+            const name = `${(i + 1).toString().padStart(2, "0")}_${dName.substring(0, 40).replace(/[^a-zA-Z0-9áéíóúñ ]/g, "")}.${extMap[asset.type]}`;
             folders[asset.type].file(name, blob);
           } catch { /* skip failed */ }
         })
@@ -316,16 +309,14 @@ export default function MediaLibraryPage() {
   const deleteAsset = async (asset: MediaAsset) => {
     setDeleting(asset.id);
     try {
-      if (asset.source === "storage") {
-        // Storage-only covers: extract path and remove from bucket
-        // id format: cover-file-{name}
-        toast({ title: "Asset eliminado" });
-      } else {
+      if (asset.source !== "storage") {
         const { error } = await supabase.from(asset.source as any).delete().eq("id", asset.id);
         if (error) throw error;
       }
       setAssets((prev) => prev.filter((a) => a.id !== asset.id));
       setSelected((prev) => { const n = new Set(prev); n.delete(asset.id); return n; });
+      // Invalidate cache
+      if (cacheKey) sessionStorage.removeItem(cacheKey);
       toast({ title: "Asset eliminado" });
     } catch {
       toast({ title: "Error al eliminar", variant: "destructive" });
@@ -344,7 +335,7 @@ export default function MediaLibraryPage() {
       if (a.source !== "storage") {
         (acc[a.source] ??= []).push(a.id);
       } else {
-        deleted++; // storage items just removed from UI
+        deleted++;
       }
       return acc;
     }, {} as Record<string, string[]>);
@@ -356,6 +347,7 @@ export default function MediaLibraryPage() {
 
     setAssets((prev) => prev.filter((a) => !selected.has(a.id)));
     setSelected(new Set());
+    if (cacheKey) sessionStorage.removeItem(cacheKey);
     toast({ title: `${deleted} assets eliminados` });
     setDeletingBulk(false);
   };
@@ -376,6 +368,24 @@ export default function MediaLibraryPage() {
     setPlayingId(asset.id);
   };
 
+  // ── Rename (custom names via localStorage) ──
+  const startEditing = (asset: MediaAsset) => {
+    setEditingId(asset.id);
+    setEditValue(customNames[asset.id] || asset.title);
+    setTimeout(() => editInputRef.current?.select(), 50);
+  };
+
+  const confirmRename = (id: string) => {
+    const trimmed = editValue.trim();
+    if (trimmed) {
+      const updated = { ...customNames, [id]: trimmed };
+      setCustomNames(updated);
+      localStorage.setItem("media_library_names", JSON.stringify(updated));
+      toast({ title: "Nombre actualizado" });
+    }
+    setEditingId(null);
+  };
+
   // ── Icon for type ──
   const typeIcon = (type: MediaAsset["type"]) => {
     switch (type) {
@@ -385,6 +395,8 @@ export default function MediaLibraryPage() {
       case "vocal": return <Mic className="h-4 w-4" />;
     }
   };
+
+  const getDisplayName = (asset: MediaAsset) => customNames[asset.id] || asset.title;
 
   const typeBadgeColor = (type: MediaAsset["type"]) => {
     switch (type) {
@@ -528,32 +540,27 @@ export default function MediaLibraryPage() {
                                 value={editValue}
                                 onChange={(e) => setEditValue(e.target.value)}
                                 onKeyDown={(e) => {
-                                  if (e.key === "Enter") saveRename(asset);
+                                  if (e.key === "Enter") confirmRename(asset.id);
                                   if (e.key === "Escape") setEditingId(null);
                                 }}
-                                className="h-7 text-sm px-2"
+                                className="h-6 text-sm py-0 px-1"
+                                autoFocus
                               />
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => saveRename(asset)}>
-                                <Check className="h-3.5 w-3.5 text-green-500" />
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => confirmRename(asset.id)}>
+                                <Check className="h-3.5 w-3.5 text-primary" />
                               </Button>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => setEditingId(null)}>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setEditingId(null)}>
                                 <X className="h-3.5 w-3.5" />
                               </Button>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-1 group/title">
-                              <p className="text-sm font-medium truncate">{asset.title}</p>
-                              {asset.renameField && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 opacity-0 group-hover/title:opacity-100 transition-opacity shrink-0"
-                                  onClick={() => startEditing(asset)}
-                                >
-                                  <Pencil className="h-3 w-3 text-muted-foreground" />
-                                </Button>
-                              )}
-                            </div>
+                            <p
+                              className="text-sm font-medium truncate cursor-pointer hover:text-primary transition-colors"
+                              onDoubleClick={() => startEditing(asset)}
+                              title="Doble clic para renombrar"
+                            >
+                              {getDisplayName(asset)}
+                            </p>
                           )}
                           <div className="flex items-center gap-2 mt-1">
                             <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${typeBadgeColor(asset.type)}`}>
@@ -591,12 +598,10 @@ export default function MediaLibraryPage() {
                             Ver
                           </Button>
                         )}
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => startEditing(asset)} title="Renombrar">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
                         <div className="flex-1" />
-                        {asset.renameField && (
-                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => startEditing(asset)}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" disabled={deleting === asset.id}>
@@ -607,7 +612,7 @@ export default function MediaLibraryPage() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>¿Eliminar este asset?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                "{asset.title.substring(0, 60)}" se eliminará permanentemente.
+                                "{getDisplayName(asset).substring(0, 60)}" se eliminará permanentemente.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
