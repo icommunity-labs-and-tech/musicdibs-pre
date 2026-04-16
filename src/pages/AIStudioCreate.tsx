@@ -555,7 +555,10 @@ const AIStudioCreate = () => {
   };
 
   const handleSaveVirtualArtist = async () => {
-    if (!saveArtistName.trim() || !saveArtistVoiceId || !user) return;
+    if (!saveArtistName.trim() || !user) return;
+    const styleText = (saveArtistPrompt || saveArtistStyle).trim();
+    // Require either a voice OR style text with >10 chars
+    if (!saveArtistVoiceId && styleText.length <= 10) return;
 
     // Check limit
     if (virtualArtistsCount >= 10) {
@@ -570,8 +573,8 @@ const AIStudioCreate = () => {
         .insert({
           user_id: user.id,
           name: saveArtistName.trim(),
-          voice_profile_id: saveArtistVoiceId,
-          voice_type: 'preset',
+          voice_profile_id: saveArtistVoiceId || null,
+          voice_type: saveArtistVoiceId ? 'preset' : null,
           genre: null,
           mood: null,
           default_duration: duration,
@@ -1798,7 +1801,7 @@ const AIStudioCreate = () => {
             <Button variant="outline" onClick={() => setShowSaveArtistForm(false)} disabled={isSavingArtist}>
               {t('aiCreate.saveArtistCancel')}
             </Button>
-            <Button onClick={handleSaveVirtualArtist} disabled={saveArtistName.trim().length < 3 || !saveArtistVoiceId || isSavingArtist} className="gap-2">
+            <Button onClick={handleSaveVirtualArtist} disabled={saveArtistName.trim().length < 3 || (!saveArtistVoiceId && (saveArtistPrompt || saveArtistStyle).trim().length <= 10) || isSavingArtist} className="gap-2">
               {isSavingArtist ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> {t('aiCreate.saveArtistSaving')}</>
               ) : (
