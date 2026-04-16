@@ -707,7 +707,7 @@ const AIStudioCreate = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.improved) {
-        setPrompt(data.improved.slice(0, 1000));
+        setPrompt(data.improved.slice(0, 2500));
         toast({ title: t('aiCreate.promptImproved'), description: t('aiCreate.promptImprovedDesc') });
       }
     } catch (e: any) {
@@ -730,7 +730,7 @@ const AIStudioCreate = () => {
         },
       });
       if (error || !data?.improved) throw new Error(error?.message || 'No response');
-      setLyricsDesc(data.improved.slice(0, 1000));
+      setLyricsDesc(data.improved.slice(0, 2500));
       setImprovedLyricsDesc(true);
       toast({ title: t('aiCreate.lyricsDescImproved'), description: t('aiCreate.lyricsDescImprovedSub') });
     } catch {
@@ -789,7 +789,7 @@ const AIStudioCreate = () => {
   const sendLyricsToMusic = () => {
     setLyricsText(generatedLyrics);
     setLyricsExpanded(true);
-    if (lyricsDesc) setPrompt(lyricsDesc.slice(0, 1000));
+    if (lyricsDesc) setPrompt(lyricsDesc.slice(0, 2500));
     setMode('song');
     setActiveTab('music');
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
@@ -1267,7 +1267,7 @@ const AIStudioCreate = () => {
                           }
                         </button>
                       </div>
-                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="resize-none" maxLength={2000} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
+                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="resize-none" maxLength={2500} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
                       {improvedLyricsDesc && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {t('aiCreate.lyricsDescImproved')} — {t('aiCreate.lyricsDescImprovedSub')}
