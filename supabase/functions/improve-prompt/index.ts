@@ -174,10 +174,10 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
     let improved: string | null = null;
     let lastError = '';
 
-    // Try Google Generative Language API (Gemini 3 Flash) first
+    // Try Google Generative Language API (Gemini 2.5 Flash) first
     if (GEMINI_API_KEY) {
       try {
-        const geminiModel = 'gemini-3-flash-preview';
+        const geminiModel = 'gemini-2.5-flash';
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
 
         const parts: any[] = [{ text: userTextContent }];
@@ -193,7 +193,11 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [{ role: 'user', parts }],
-            generationConfig: { maxOutputTokens: 1200, temperature: 0.8 },
+            generationConfig: {
+              maxOutputTokens: 1500,
+              temperature: 0.8,
+              thinkingConfig: { thinkingBudget: 0 },
+            },
           }),
         });
 
@@ -205,10 +209,19 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
 
         if (gResp.ok) {
           const data = await gResp.json();
-          const text = data?.candidates?.[0]?.content?.parts
+          let text = data?.candidates?.[0]?.content?.parts
             ?.map((p: any) => p?.text || '')
             .join('')
+            .trim() || '';
+
+          // Clean up: strip markdown code fences, internal "thinking" markers, leading critique lines
+          text = text.replace(/^```[a-z]*\n?/gi, '').replace(/\n?```$/g, '').trim();
+          // Remove lines that look like internal reasoning (e.g. "*Critique:*", "*Refined Paragraph:*")
+          text = text.split('\n')
+            .filter((line) => !/^\s*\*+\s*(critique|refined|thinking|reasoning|note|step \d+)/i.test(line))
+            .join('\n')
             .trim();
+
           improved = text || null;
         } else {
           lastError = `Gemini ${gResp.status}: ${await gResp.text()}`;
