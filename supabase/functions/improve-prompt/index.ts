@@ -177,7 +177,7 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
     // Try Google Generative Language API (Gemini 2.5 Flash) first
     if (GEMINI_API_KEY) {
       try {
-        const geminiModel = 'gemini-2.5-flash';
+        const geminiModel = 'gemini-2.0-flash';
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
 
         const parts: any[] = [{ text: userTextContent }];
@@ -196,7 +196,6 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
             generationConfig: {
               maxOutputTokens: 1500,
               temperature: 0.8,
-              thinkingConfig: { thinkingBudget: 0 },
             },
           }),
         });
