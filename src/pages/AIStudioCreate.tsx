@@ -268,7 +268,6 @@ const AIStudioCreate = () => {
       }));
 
       setVoiceProfiles(signedProfiles);
-      setSelectedVoice((current) => current || signedProfiles[0]?.id || '');
     };
 
     void loadVoiceProfiles();
