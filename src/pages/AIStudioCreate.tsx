@@ -1801,7 +1801,7 @@ const AIStudioCreate = () => {
             <Button variant="outline" onClick={() => setShowSaveArtistForm(false)} disabled={isSavingArtist}>
               {t('aiCreate.saveArtistCancel')}
             </Button>
-            <Button onClick={handleSaveVirtualArtist} disabled={saveArtistName.trim().length < 3 || !saveArtistVoiceId || isSavingArtist} className="gap-2">
+            <Button onClick={handleSaveVirtualArtist} disabled={saveArtistName.trim().length < 3 || (!saveArtistVoiceId && (saveArtistPrompt || saveArtistStyle).trim().length <= 10) || isSavingArtist} className="gap-2">
               {isSavingArtist ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> {t('aiCreate.saveArtistSaving')}</>
               ) : (
