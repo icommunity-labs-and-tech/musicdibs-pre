@@ -1414,18 +1414,25 @@ const AIStudioCreate = () => {
           </div>
 
           {/* ═══ RIGHT: Results Panel ═══ */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">
-                {activeTab === "lyrics" ? t('aiCreate.myLyrics') : t('aiCreate.results')}
-              </h2>
+          <div className="space-y-6 flex flex-col">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-3xl font-bold mb-2">
+                  {activeTab === "lyrics" ? t('aiCreate.myLyrics') : t('aiCreate.results')}
+                </h2>
+                <p className="text-muted-foreground">
+                  {activeTab === "lyrics"
+                    ? t('aiCreate.lyricsHistorySubtitle', 'Historial de letras generadas')
+                    : t('aiCreate.resultsSubtitle', 'Tus generaciones musicales recientes')}
+                </p>
+              </div>
               {activeTab === "lyrics" && lyricsHistory.length > 0 ? (
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0 mt-2">
                   <Clock className="h-3 w-3" />
                   {t('aiCreate.latest')} {lyricsHistory.length}
                 </span>
               ) : activeTab === "music" && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0 mt-2">
                   {results.length > 0 && (
                     <>
                       <span className="text-sm text-muted-foreground">
