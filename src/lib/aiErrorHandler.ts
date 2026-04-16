@@ -1,68 +1,71 @@
 /**
- * Maps AI provider error responses to user-friendly, i18n-aware messages.
- * Used across all AI Studio pages for consistent error handling.
+ * Centralised AI-provider error handler.
+ * Maps raw backend / provider errors to i18n keys for user-friendly messages.
  */
+import i18n from 'i18next';
 
-type TFunc = (key: string) => string;
+const t = (key: string) => i18n.t(key);
 
-const ERROR_KEYS: Record<string, { titleKey: string; descKey: string }> = {
-  provider_unavailable: { titleKey: 'aiShared.errProviderUnavailableTitle', descKey: 'aiShared.errProviderUnavailableDesc' },
-  rate_limit_exceeded: { titleKey: 'aiShared.errRateLimitTitle', descKey: 'aiShared.errRateLimitDesc' },
-  insufficient_credits: { titleKey: 'aiShared.errInsufficientCreditsTitle', descKey: 'aiShared.errInsufficientCreditsDesc' },
-  provider_rate_limit: { titleKey: 'aiShared.errProviderRateLimitTitle', descKey: 'aiShared.errProviderRateLimitDesc' },
-  content_filtered: { titleKey: 'aiShared.errContentFilteredTitle', descKey: 'aiShared.errContentFilteredDesc' },
+const statusToKey: Record<number, string> = {
+  429: 'aiShared.aiRateLimit',
+  402: 'aiShared.aiInsufficientCredits',
+  401: 'aiShared.aiSessionExpired',
+  403: 'aiShared.aiForbidden',
+  500: 'aiShared.aiServerError',
+  502: 'aiShared.aiBadGateway',
+  503: 'aiShared.aiServiceDown',
+  504: 'aiShared.aiTimeout',
 };
 
-const TIMEOUT_KEYS = { titleKey: 'aiShared.errTimeoutTitle', descKey: 'aiShared.errTimeoutDesc' };
-const DEFAULT_KEYS = { titleKey: 'aiShared.errDefaultTitle', descKey: 'aiShared.errDefaultDesc' };
+/** Known error strings mapped to i18n keys. */
+const KNOWN_ERRORS: Array<[RegExp, string]> = [
+  [/rate_limit|auphonic_rate_limited/i, 'aiShared.aiRateLimit'],
+  [/insufficient.?credits/i, 'aiShared.aiInsufficientCredits'],
+  [/too many requests/i, 'aiShared.aiRateLimit'],
+  [/api.?key.?not.?configured|auphonic_auth_error/i, 'aiShared.aiConfigError'],
+  [/timeout|timed?\s*out/i, 'aiShared.aiTimeout'],
+  [/bad_prompt|content.?policy|moderation/i, 'aiShared.aiContentPolicy'],
+  [/network|fetch|ECONNREFUSED|ENOTFOUND/i, 'aiShared.aiNetworkError'],
+  [/unauthorized|jwt/i, 'aiShared.aiSessionExpired'],
+  [/providers? failed|auphonic_service_unavailable/i, 'aiShared.aiServiceDown'],
+  [/auphonic_invalid_audio|invalid.?audio|unsupported.?format/i, 'aiShared.aiInvalidAudio'],
+  [/auphonic_error/i, 'aiShared.aiServiceDown'],
+];
 
-export interface AiErrorResult {
-  title: string;
-  description: string;
+export interface AiErrorInfo {
+  userMessage: string;
+  isRetryable: boolean;
 }
 
 /**
- * Parses an error from an AI edge function call and returns a friendly, translated message.
- * @param error - The caught error object
- * @param t - i18next translation function (from useTranslation)
- * @param data - Optional response data from the edge function
+ * Parses an error (from supabase.functions.invoke or a catch block)
+ * and returns a user-friendly, localised message.
  */
-export function parseAiError(error: any, t?: TFunc, data?: any): AiErrorResult {
-  const resolve = (keys: { titleKey: string; descKey: string }) =>
-    t
-      ? { title: t(keys.titleKey), description: t(keys.descKey) }
-      : { title: keys.titleKey, description: keys.descKey };
-
-  const errorCode = data?.error || error?.error || error?.message || '';
-
-  // Check known error codes first
-  if (typeof errorCode === 'string') {
-    const match = ERROR_KEYS[errorCode];
-    if (match) return resolve(match);
+export function parseAiError(
+  error: unknown,
+  responseData?: Record<string, unknown> | null,
+): AiErrorInfo {
+  const status = (error as any)?.status ?? (error as any)?.context?.status;
+  if (status && statusToKey[status]) {
+    return {
+      userMessage: t(statusToKey[status]),
+      isRetryable: status !== 402 && status !== 401 && status !== 403,
+    };
   }
 
-  // Check for provider-specific patterns in error messages or details
-  const errorText = JSON.stringify({ error: errorCode, details: data?.details || error?.details || '' }).toLowerCase();
+  const dataError = responseData?.error as string | undefined;
+  const rawMessage = dataError
+    || (error instanceof Error ? error.message : '')
+    || String(error ?? '');
 
-  if (errorText.includes('payment_required') || errorText.includes('paid_plan_required') || errorText.includes('billing')) {
-    return resolve(ERROR_KEYS.provider_unavailable);
+  for (const [pattern, key] of KNOWN_ERRORS) {
+    if (pattern.test(rawMessage)) {
+      return {
+        userMessage: t(key),
+        isRetryable: !(/insufficient|unauthorized|policy|moderation|api.?key/i.test(rawMessage)),
+      };
+    }
   }
 
-  if (errorText.includes('rate_limit') || errorText.includes('too many requests') || errorText.includes('429')) {
-    return resolve(ERROR_KEYS.provider_rate_limit);
-  }
-
-  if (errorText.includes('content_policy') || errorText.includes('safety') || errorText.includes('nsfw')) {
-    return resolve(ERROR_KEYS.content_filtered);
-  }
-
-  if (errorText.includes('unauthorized') || errorText.includes('forbidden') || errorText.includes('401') || errorText.includes('403')) {
-    return resolve(ERROR_KEYS.provider_unavailable);
-  }
-
-  if (errorText.includes('timeout') || errorText.includes('503') || errorText.includes('502') || errorText.includes('504')) {
-    return resolve(TIMEOUT_KEYS);
-  }
-
-  return resolve(DEFAULT_KEYS);
+  return { userMessage: t('aiShared.aiUnavailable'), isRetryable: true };
 }
