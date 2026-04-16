@@ -90,9 +90,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
-    if (!LOVABLE_API_KEY && !ANTHROPIC_API_KEY) {
+    if (!GEMINI_API_KEY && !ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ error: 'Server configuration error' }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -171,59 +171,51 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
       userTextContent = `Rewrite this song description for ${modeContext}.${contextStr}\n\nOriginal description from the user:\n"""\n${prompt}\n"""\n\nProduce the final professional prompt now, in the SAME language as the original. Return ONLY the rewritten prompt as a single flowing paragraph.`;
     }
 
-    // Build messages for OpenAI-compatible gateway
-    const userMessage = userImageContent
-      ? {
-          role: 'user',
-          content: [
-            { type: 'text', text: userTextContent },
-            { type: 'image_url', image_url: userImageContent },
-          ],
-        }
-      : { role: 'user', content: userTextContent };
-
     let improved: string | null = null;
     let lastError = '';
 
-    // Try Lovable AI Gateway (Gemini 3 Flash) first
-    if (LOVABLE_API_KEY) {
+    // Try Google Generative Language API (Gemini 3 Flash) first
+    if (GEMINI_API_KEY) {
       try {
-        const gwResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        const geminiModel = 'gemini-3-flash-preview';
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
+
+        const parts: any[] = [{ text: userTextContent }];
+        if (image_base64) {
+          parts.unshift({
+            inline_data: { mime_type: 'image/jpeg', data: image_base64 },
+          });
+        }
+
+        const gResp = await fetch(geminiUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            model: 'google/gemini-3-flash-preview',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              userMessage,
-            ],
-            max_tokens: 1200,
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ role: 'user', parts }],
+            generationConfig: { maxOutputTokens: 1200, temperature: 0.8 },
           }),
         });
 
-        if (gwResp.status === 429) {
+        if (gResp.status === 429) {
           return new Response(JSON.stringify({ error: 'Rate limit exceeded, please try again later.' }), {
             status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
-        if (gwResp.status === 402) {
-          return new Response(JSON.stringify({ error: 'AI credits exhausted. Please add funds to your workspace.' }), {
-            status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
 
-        if (gwResp.ok) {
-          const data = await gwResp.json();
-          improved = data.choices?.[0]?.message?.content?.trim() || null;
+        if (gResp.ok) {
+          const data = await gResp.json();
+          const text = data?.candidates?.[0]?.content?.parts
+            ?.map((p: any) => p?.text || '')
+            .join('')
+            .trim();
+          improved = text || null;
         } else {
-          lastError = `Gateway ${gwResp.status}: ${await gwResp.text()}`;
-          console.error('[improve-prompt] Gateway failed:', lastError);
+          lastError = `Gemini ${gResp.status}: ${await gResp.text()}`;
+          console.error('[improve-prompt] Gemini failed:', lastError);
         }
       } catch (e) {
-        lastError = `Gateway exception: ${e instanceof Error ? e.message : String(e)}`;
+        lastError = `Gemini exception: ${e instanceof Error ? e.message : String(e)}`;
         console.error('[improve-prompt]', lastError);
       }
     }
