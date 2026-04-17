@@ -1229,6 +1229,7 @@ export type Database = {
           is_active: boolean | null
           is_annual_only: boolean | null
           is_free: boolean | null
+          model_name: string | null
           operation_icon: string | null
           operation_key: string
           operation_label: string
@@ -1246,6 +1247,7 @@ export type Database = {
           is_active?: boolean | null
           is_annual_only?: boolean | null
           is_free?: boolean | null
+          model_name?: string | null
           operation_icon?: string | null
           operation_key: string
           operation_label: string
@@ -1263,6 +1265,7 @@ export type Database = {
           is_active?: boolean | null
           is_annual_only?: boolean | null
           is_free?: boolean | null
+          model_name?: string | null
           operation_icon?: string | null
           operation_key?: string
           operation_label?: string

@@ -33,6 +33,7 @@ interface OperationRow {
   display_order: number;
   is_active: boolean | null;
   description: string | null;
+  model_name: string | null;
 }
 
 type SortField = 'operation_key' | 'operation_name' | 'category' | 'credits_cost' | 'display_order' | 'is_annual_only' | 'is_active';
@@ -50,7 +51,7 @@ export default function AdminFeatureCostsPage() {
   const load = async () => {
     const { data, error } = await supabase
       .from('operation_pricing')
-      .select('operation_key, operation_name, operation_icon, credits_cost, euro_cost, category, is_annual_only, display_order, is_active, description')
+      .select('operation_key, operation_name, operation_icon, credits_cost, euro_cost, category, is_annual_only, display_order, is_active, description, model_name')
       .order('display_order');
     if (error) {
       toast.error('Error cargando precios');
@@ -105,6 +106,7 @@ export default function AdminFeatureCostsPage() {
     if (changes.credits_cost !== undefined) updatePayload.credits_cost = changes.credits_cost;
     if (changes.description !== undefined) updatePayload.description = changes.description;
     if (changes.operation_icon !== undefined) updatePayload.operation_icon = changes.operation_icon;
+    if (changes.model_name !== undefined) updatePayload.model_name = changes.model_name;
 
     const { error } = await supabase
       .from('operation_pricing')
@@ -178,6 +180,7 @@ export default function AdminFeatureCostsPage() {
                 <TableRow>
                   <TableHead className="w-[50px]">Icono</TableHead>
                   <SortableHead field="operation_key" className="w-[150px]">Clave</SortableHead>
+                  <TableHead className="w-[200px]">Modelo IA</TableHead>
                   <SortableHead field="operation_name" className="w-[180px]">Nombre</SortableHead>
                   <SortableHead field="category" className="w-[100px]">Categoría</SortableHead>
                   <SortableHead field="credits_cost" className="w-[80px]">Créditos</SortableHead>
@@ -202,6 +205,14 @@ export default function AdminFeatureCostsPage() {
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-xs">{row.operation_key}</TableCell>
+                    <TableCell>
+                      <Input
+                        value={String(getValue(row, 'model_name') || '')}
+                        onChange={e => handleChange(row.operation_key, 'model_name', e.target.value)}
+                        placeholder="ej: claude-haiku-4-5..."
+                        className="h-8 text-xs font-mono"
+                      />
+                    </TableCell>
                     <TableCell>
                       {isDirty(row.operation_key) ? (
                         <Input
