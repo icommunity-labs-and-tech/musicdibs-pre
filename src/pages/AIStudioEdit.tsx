@@ -46,6 +46,10 @@ const LOUDNESS_PRESETS = [
 type StyleValue = typeof STYLE_PRESETS[number]['value'];
 type LoudnessValue = typeof LOUDNESS_PRESETS[number]['value'];
 
+// Formatos de audio aceptados por la API de ROEX
+const ALLOWED_AUDIO_EXTS = ['mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg'] as const;
+const ALLOWED_AUDIO_ACCEPT = '.mp3,.wav,.flac,.aac,.m4a,.ogg,audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/aac,audio/mp4,audio/x-m4a,audio/ogg';
+
 const AIStudioEdit = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
