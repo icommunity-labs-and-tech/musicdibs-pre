@@ -1219,6 +1219,7 @@ export type Database = {
       }
       operation_pricing: {
         Row: {
+          api_cost_eur: number | null
           category: string
           created_at: string | null
           credits_cost: number
@@ -1229,6 +1230,10 @@ export type Database = {
           is_active: boolean | null
           is_annual_only: boolean | null
           is_free: boolean | null
+          llm_model: string | null
+          llm_provider: string | null
+          llm_recommendation: string | null
+          margin_multiplier: number | null
           model_name: string | null
           operation_icon: string | null
           operation_key: string
@@ -1237,6 +1242,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          api_cost_eur?: number | null
           category?: string
           created_at?: string | null
           credits_cost?: number
@@ -1247,6 +1253,10 @@ export type Database = {
           is_active?: boolean | null
           is_annual_only?: boolean | null
           is_free?: boolean | null
+          llm_model?: string | null
+          llm_provider?: string | null
+          llm_recommendation?: string | null
+          margin_multiplier?: number | null
           model_name?: string | null
           operation_icon?: string | null
           operation_key: string
@@ -1255,6 +1265,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          api_cost_eur?: number | null
           category?: string
           created_at?: string | null
           credits_cost?: number
@@ -1265,6 +1276,10 @@ export type Database = {
           is_active?: boolean | null
           is_annual_only?: boolean | null
           is_free?: boolean | null
+          llm_model?: string | null
+          llm_provider?: string | null
+          llm_recommendation?: string | null
+          margin_multiplier?: number | null
           model_name?: string | null
           operation_icon?: string | null
           operation_key?: string
