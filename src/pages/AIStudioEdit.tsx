@@ -46,6 +46,10 @@ const LOUDNESS_PRESETS = [
 type StyleValue = typeof STYLE_PRESETS[number]['value'];
 type LoudnessValue = typeof LOUDNESS_PRESETS[number]['value'];
 
+// Formatos de audio aceptados por la API de ROEX
+const ALLOWED_AUDIO_EXTS = ['mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg'] as const;
+const ALLOWED_AUDIO_ACCEPT = '.mp3,.wav,.flac,.aac,.m4a,.ogg,audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/aac,audio/mp4,audio/x-m4a,audio/ogg';
+
 const AIStudioEdit = () => {
   const { t } = useTranslation();
   const { toast } = useToast();
@@ -89,6 +93,15 @@ const AIStudioEdit = () => {
   const stopProgress = () => { if (progressRef.current) { clearInterval(progressRef.current); progressRef.current = null; } };
 
   const handleFileSelect = (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!ALLOWED_AUDIO_EXTS.includes(ext as typeof ALLOWED_AUDIO_EXTS[number])) {
+      toast({
+        title: 'Formato no compatible',
+        description: `Solo se aceptan archivos de audio: ${ALLOWED_AUDIO_EXTS.join(', ').toUpperCase()}. Los vídeos (MP4, MOV…) no son válidos.`,
+        variant: 'destructive',
+      });
+      return;
+    }
     setAudioFile(file);
     setAudioUrl(URL.createObjectURL(file));
     setAudioName(file.name);
@@ -346,7 +359,7 @@ const AIStudioEdit = () => {
                     <TabsContent value="upload">
                       <FileDropzone
                         fileType="audio"
-                        accept="audio/*"
+                        accept={ALLOWED_AUDIO_ACCEPT}
                         maxSize={50}
                         label={tr('uploadLabel')}
                         description={tr('uploadDescription')}
@@ -364,7 +377,7 @@ const AIStudioEdit = () => {
                   <>
                     <FileDropzone
                       fileType="audio"
-                      accept="audio/*"
+                      accept={ALLOWED_AUDIO_ACCEPT}
                       maxSize={50}
                       label={tr('uploadLabel')}
                       description={tr('uploadDescription')}
