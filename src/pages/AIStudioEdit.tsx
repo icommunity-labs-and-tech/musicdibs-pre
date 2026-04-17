@@ -149,7 +149,7 @@ const AIStudioEdit = () => {
   // ============================================================
   const handleListenPreview = async () => {
     if (!audioFile || !user) return;
-    track('enhance_audio_preview_started', { feature: 'enhance_audio', metadata: { style: musicalStyle, loudness: desiredLoudness } });
+    track('enhance_audio_started', { feature: 'enhance_audio', metadata: { mode: 'preview', style: musicalStyle, loudness: desiredLoudness } });
     setIsPreviewing(true);
     setProcessError(null);
     setPreviewUrl(null);
@@ -193,7 +193,7 @@ const AIStudioEdit = () => {
               setPreviewUrl(st.previewUrl);
               setIsPreviewing(false);
               toast({ title: 'Preview lista 🎧', description: 'Escucha cómo sonaría tu master.' });
-              track('enhance_audio_preview_completed', { feature: 'enhance_audio' });
+              track('enhance_audio_completed', { feature: 'enhance_audio', metadata: { mode: 'preview' } });
             }, 400);
           } else if (st?.status === 'error') {
             stopPolling(); stopProgress();
@@ -218,7 +218,7 @@ const AIStudioEdit = () => {
       const responseData = err?.context?.body || err?.context || null;
       const { userMessage } = parseAiError(err, responseData);
       setProcessError(userMessage);
-      track('enhance_audio_preview_failed', { feature: 'enhance_audio', metadata: { reason: err?.message || 'unknown' } });
+      track('enhance_audio_failed', { feature: 'enhance_audio', metadata: { mode: 'preview', reason: err?.message || 'unknown' } });
     }
   };
 
@@ -232,7 +232,7 @@ const AIStudioEdit = () => {
       return;
     }
 
-    track('enhance_audio_final_started', { feature: 'enhance_audio' });
+    track('enhance_audio_started', { feature: 'enhance_audio', metadata: { mode: 'final' } });
     setIsFinalizing(true);
     setProcessError(null);
 
