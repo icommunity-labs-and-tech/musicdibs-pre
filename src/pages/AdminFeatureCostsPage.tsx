@@ -206,12 +206,9 @@ export default function AdminFeatureCostsPage() {
                     </TableCell>
                     <TableCell className="font-mono text-xs">{row.operation_key}</TableCell>
                     <TableCell>
-                      <Input
-                        value={String(getValue(row, 'model_name') || '')}
-                        onChange={e => handleChange(row.operation_key, 'model_name', e.target.value)}
-                        placeholder="ej: claude-haiku-4-5..."
-                        className="h-8 text-xs font-mono"
-                      />
+                      <span className="text-[10px] font-mono text-muted-foreground leading-tight block break-words">
+                        {row.model_name || '—'}
+                      </span>
                     </TableCell>
                     <TableCell>
                       {isDirty(row.operation_key) ? (
