@@ -180,6 +180,7 @@ export default function AdminFeatureCostsPage() {
                 <TableRow>
                   <TableHead className="w-[50px]">Icono</TableHead>
                   <SortableHead field="operation_key" className="w-[150px]">Clave</SortableHead>
+                  <TableHead className="w-[200px]">Modelo IA</TableHead>
                   <SortableHead field="operation_name" className="w-[180px]">Nombre</SortableHead>
                   <SortableHead field="category" className="w-[100px]">Categoría</SortableHead>
                   <SortableHead field="credits_cost" className="w-[80px]">Créditos</SortableHead>
@@ -204,6 +205,14 @@ export default function AdminFeatureCostsPage() {
                       )}
                     </TableCell>
                     <TableCell className="font-mono text-xs">{row.operation_key}</TableCell>
+                    <TableCell>
+                      <Input
+                        value={String(getValue(row, 'model_name') || '')}
+                        onChange={e => handleChange(row.operation_key, 'model_name', e.target.value)}
+                        placeholder="ej: claude-haiku-4-5..."
+                        className="h-8 text-xs font-mono"
+                      />
+                    </TableCell>
                     <TableCell>
                       {isDirty(row.operation_key) ? (
                         <Input
