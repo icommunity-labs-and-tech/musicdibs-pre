@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Loader2, Play, Pause, Download,
   Music, Sparkles, CheckCircle2, AlertTriangle,
-  Headphones, Volume2, Waves, Wind, Radio, RefreshCw, Upload
+  Headphones, Volume2, RefreshCw, Upload, Gift
 } from "lucide-react";
 import { Navbar } from "@/components/Navbar";
 
@@ -24,13 +24,27 @@ import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { GenerationPicker } from "@/components/ai-studio/GenerationPicker";
 
-const PROCESSING_STEPS = [
-  { icon: Waves, key: "eq" },
-  { icon: Volume2, key: "compression" },
-  { icon: Radio, key: "loudness" },
-  { icon: Wind, key: "noise" },
-  { icon: Sparkles, key: "stereo" },
+// ROEX musical style presets (from Tonn API spec)
+const STYLE_PRESETS = [
+  { value: 'POP', label: 'Pop' },
+  { value: 'ROCK_INDIE', label: 'Rock / Indie' },
+  { value: 'HIPHOP_GRIME', label: 'Hip-Hop / Grime' },
+  { value: 'ELECTRONIC', label: 'Electrónica' },
+  { value: 'ACOUSTIC', label: 'Acústica' },
+  { value: 'REGGAE_DUB', label: 'Reggae / Dub' },
+  { value: 'ORCHESTRAL', label: 'Orquestal' },
+  { value: 'METAL', label: 'Metal' },
+  { value: 'OTHER', label: 'Otro' },
 ] as const;
+
+const LOUDNESS_PRESETS = [
+  { value: 'LOW', label: 'Suave (-14 LUFS)', hint: 'Ideal para Spotify' },
+  { value: 'MEDIUM', label: 'Medio (-10 LUFS)', hint: 'Streaming general' },
+  { value: 'HIGH', label: 'Alto (-8 LUFS)', hint: 'Máxima presencia' },
+] as const;
+
+type StyleValue = typeof STYLE_PRESETS[number]['value'];
+type LoudnessValue = typeof LOUDNESS_PRESETS[number]['value'];
 
 const AIStudioEdit = () => {
   const { t } = useTranslation();
@@ -45,48 +59,43 @@ const AIStudioEdit = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioName, setAudioName] = useState<string | null>(null);
 
-  // Processing
-  const [isProcessing, setIsProcessing] = useState(false);
+  // Presets
+  const [musicalStyle, setMusicalStyle] = useState<StyleValue>('POP');
+  const [desiredLoudness, setDesiredLoudness] = useState<LoudnessValue>('MEDIUM');
+
+  // Mastering task state
+  const [taskId, setTaskId] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [finalUrl, setFinalUrl] = useState<string | null>(null);
+
+  // Loading/progress
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const [progressPercent, setProgressPercent] = useState(0);
-  const [activeStep, setActiveStep] = useState(0);
+  const [processError, setProcessError] = useState<string | null>(null);
+
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Result
-  const [processedUrl, setProcessedUrl] = useState<string | null>(null);
-  const [processError, setProcessError] = useState<string | null>(null);
-
   // A/B comparison
-  const [playingTrack, setPlayingTrack] = useState<"original" | "mastered" | null>(null);
+  const [playingTrack, setPlayingTrack] = useState<"original" | "preview" | "mastered" | null>(null);
   const originalAudioRef = useRef<HTMLAudioElement | null>(null);
+  const previewAudioRef = useRef<HTMLAudioElement | null>(null);
   const masteredAudioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopPolling();
-      stopProgress();
-    };
-  }, []);
+  useEffect(() => () => { stopPolling(); stopProgress(); }, []);
 
-  const stopPolling = () => {
-    if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; }
-  };
-  const stopProgress = () => {
-    if (progressRef.current) { clearInterval(progressRef.current); progressRef.current = null; }
-  };
+  const stopPolling = () => { if (pollingRef.current) { clearInterval(pollingRef.current); pollingRef.current = null; } };
+  const stopProgress = () => { if (progressRef.current) { clearInterval(progressRef.current); progressRef.current = null; } };
 
   const handleFileSelect = (file: File) => {
     setAudioFile(file);
     setAudioUrl(URL.createObjectURL(file));
     setAudioName(file.name);
-    setProcessedUrl(null);
-    setProcessError(null);
-    setPlayingTrack(null);
+    resetResults();
   };
 
   const handleGenerationSelect = async (url: string, name: string) => {
-    // Fetch the audio as a File so the upload flow works identically
     try {
       const res = await fetch(url);
       const blob = await res.blob();
@@ -94,203 +103,207 @@ const AIStudioEdit = () => {
       setAudioFile(file);
       setAudioUrl(url);
       setAudioName(name);
-      setProcessedUrl(null);
-      setProcessError(null);
-      setPlayingTrack(null);
+      resetResults();
     } catch {
       toast({ title: t("masterize.errorGeneric", "Error al cargar el audio"), variant: "destructive" });
     }
+  };
+
+  const resetResults = () => {
+    setTaskId(null);
+    setPreviewUrl(null);
+    setFinalUrl(null);
+    setProcessError(null);
+    setProgressPercent(0);
+    stopAllAudio();
   };
 
   const handleRemoveFile = () => {
     setAudioFile(null);
     setAudioUrl(null);
     setAudioName(null);
-    setProcessedUrl(null);
-    setProcessError(null);
-    stopAllAudio();
+    resetResults();
   };
 
   const stopAllAudio = () => {
     originalAudioRef.current?.pause();
+    previewAudioRef.current?.pause();
     masteredAudioRef.current?.pause();
     setPlayingTrack(null);
   };
 
-  // Upload to auphonic-temp bucket
-  const uploadForProcessing = async (file: File): Promise<string> => {
+  // Upload audio to a temp public URL so ROEX can fetch it
+  const uploadForRoex = async (file: File): Promise<string> => {
     const safeName = file.name
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-zA-Z0-9._-]/g, "_")
-      .replace(/_+/g, "_")
-      .toLowerCase();
-    const path = `auphonic/${user!.id}/${Date.now()}_${safeName}`;
-    const { error } = await supabase.storage
-      .from("auphonic-temp")
-      .upload(path, file, { upsert: true });
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]/g, "_").replace(/_+/g, "_").toLowerCase();
+    const path = `roex/${user!.id}/${Date.now()}_${safeName}`;
+    const { error } = await supabase.storage.from("auphonic-temp").upload(path, file, { upsert: true });
     if (error) throw new Error(`Upload error: ${error.message}`);
     const { data } = supabase.storage.from("auphonic-temp").getPublicUrl(path);
     return data.publicUrl;
   };
 
-  const handleMasterize = async () => {
+  // ============================================================
+  // FREE PREVIEW (no credits)
+  // ============================================================
+  const handleListenPreview = async () => {
     if (!audioFile || !user) return;
+    track('enhance_audio_preview_started', { feature: 'enhance_audio', metadata: { style: musicalStyle, loudness: desiredLoudness } });
+    setIsPreviewing(true);
+    setProcessError(null);
+    setPreviewUrl(null);
+    setFinalUrl(null);
+    setProgressPercent(0);
+    stopAllAudio();
 
+    progressRef.current = setInterval(() => {
+      setProgressPercent(prev => prev >= 90 ? 90 : prev + Math.random() * 4);
+    }, 1500);
+
+    try {
+      const uploadedUrl = await uploadForRoex(audioFile);
+      const { data, error } = await supabase.functions.invoke("roex-master", {
+        body: {
+          action: "preview",
+          audioUrl: uploadedUrl,
+          filename: audioFile.name,
+          musicalStyle,
+          desiredLoudness,
+        },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message || 'roex_preview_failed');
+
+      const newTaskId: string | undefined = data.taskId;
+      if (!newTaskId) throw new Error('no_task_id');
+      setTaskId(newTaskId);
+
+      // Poll for preview URL
+      pollingRef.current = setInterval(async () => {
+        try {
+          const { data: st, error: stErr } = await supabase.functions.invoke("roex-master", {
+            body: { action: "preview_status", taskId: newTaskId },
+          });
+          if (stErr) return;
+          if (st?.status === 'done' && st.previewUrl) {
+            stopPolling();
+            stopProgress();
+            setProgressPercent(100);
+            setTimeout(() => {
+              setPreviewUrl(st.previewUrl);
+              setIsPreviewing(false);
+              toast({ title: 'Preview lista 🎧', description: 'Escucha cómo sonaría tu master.' });
+              track('enhance_audio_preview_completed', { feature: 'enhance_audio' });
+            }, 400);
+          } else if (st?.status === 'error') {
+            stopPolling(); stopProgress();
+            setIsPreviewing(false);
+            setProcessError(st.error || 'Error generando la preview');
+          }
+        } catch { /* keep polling */ }
+      }, 6000);
+
+      // 4-min timeout
+      setTimeout(() => {
+        if (pollingRef.current) {
+          stopPolling(); stopProgress();
+          setIsPreviewing(false);
+          setProcessError(tr('errorTimeout'));
+        }
+      }, 240_000);
+
+    } catch (err: any) {
+      stopProgress();
+      setIsPreviewing(false);
+      const responseData = err?.context?.body || err?.context || null;
+      const { userMessage } = parseAiError(err, responseData);
+      setProcessError(userMessage);
+      track('enhance_audio_preview_failed', { feature: 'enhance_audio', metadata: { reason: err?.message || 'unknown' } });
+    }
+  };
+
+  // ============================================================
+  // FINAL MASTER (consumes credits)
+  // ============================================================
+  const handleGetFinal = async () => {
+    if (!taskId || !user) return;
     if (!hasEnough(FEATURE_COSTS.enhance_audio)) {
       toast({ title: t('aiShared.noCredits'), variant: "destructive" });
       return;
     }
 
-    track('enhance_audio_started', { feature: 'enhance_audio' });
-    setIsProcessing(true);
+    track('enhance_audio_final_started', { feature: 'enhance_audio' });
+    setIsFinalizing(true);
     setProcessError(null);
-    setProcessedUrl(null);
-    setProgressPercent(0);
-    setActiveStep(0);
-    stopAllAudio();
-
-    // Animate progress & steps
-    progressRef.current = setInterval(() => {
-      setProgressPercent(prev => {
-        if (prev >= 90) return 90;
-        return prev + Math.random() * 3;
-      });
-      setActiveStep(prev => {
-        if (prev >= PROCESSING_STEPS.length - 1) return PROCESSING_STEPS.length - 1;
-        return prev + (Math.random() > 0.6 ? 1 : 0);
-      });
-    }, 3000);
 
     try {
-      // Validate credits
-      const { data: spend, error: spendErr } = await supabase.functions.invoke(
-        "spend-credits",
-        { body: { feature: "enhance_audio", description: "Masterización profesional" } }
-      );
-      if (spendErr || spend?.error) throw new Error(spend?.error || "Error de créditos");
-
-      // Upload file
-      const uploadedUrl = await uploadForProcessing(audioFile);
-
-      // Start Auphonic processing with "professional" mode
-      const { data, error } = await supabase.functions.invoke("auphonic-enhance", {
-        body: {
-          action: "process",
-          mode: "professional",
-          audioUrl: uploadedUrl,
-          filename: audioFile.name,
-        },
-      });
-      if (error || data?.error) throw new Error(data?.error || error?.message);
-
-      const uuid = data.productionUuid;
-
-      // Poll for result
-      pollingRef.current = setInterval(async () => {
-        try {
-          const { data: st, error: stErr } = await supabase.functions.invoke("auphonic-enhance", {
-            body: { action: "status", productionUuid: uuid },
-          });
-          if (stErr) {
-            console.warn('[Auphonic] status poll transient error', stErr);
-            return; // continue polling
-          }
-          if (st?.done) {
-            stopPolling();
-            stopProgress();
-            setProgressPercent(100);
-            setActiveStep(PROCESSING_STEPS.length - 1);
-
-            setTimeout(() => {
-              setProcessedUrl(st.outputUrl);
-              setIsProcessing(false);
-              toast({ title: tr('success.title') });
-              track('enhance_audio_completed', { feature: 'enhance_audio' });
-            }, 500);
-          } else if (st?.errored) {
-            stopPolling();
-            stopProgress();
-            setIsProcessing(false);
-            // Map upstream Auphonic error message via centralized handler
-            const { userMessage } = parseAiError(
-              new Error(st.errorMessage || 'auphonic_error'),
-              { error: st.errorMessage } as any,
-            );
-            setProcessError(userMessage);
-            console.error('[Auphonic] processing failed:', st.errorMessage);
-            track('enhance_audio_failed', { feature: 'enhance_audio', metadata: { reason: st.errorMessage || 'unknown' } });
-          }
-        } catch (e) {
-          console.warn('[Auphonic] status poll exception', e);
-          /* continue polling */
+      // Retry loop in case the master is still processing
+      let attempts = 0;
+      while (attempts < 30) {
+        const { data, error } = await supabase.functions.invoke("roex-master", {
+          body: { action: "final", taskId },
+        });
+        if (error) throw new Error(error.message);
+        if (data?.error) throw new Error(data.error);
+        if (data?.success && data.finalUrl) {
+          setFinalUrl(data.finalUrl);
+          toast({ title: tr('success.title') });
+          track('enhance_audio_completed', { feature: 'enhance_audio' });
+          setIsFinalizing(false);
+          return;
         }
-      }, 8000);
-
-      // Timeout after 5 min
-      setTimeout(() => {
-        if (pollingRef.current) {
-          stopPolling();
-          stopProgress();
-          setIsProcessing(false);
-          setProcessError(tr('errorTimeout'));
+        if (data?.status === 'processing') {
+          await new Promise(r => setTimeout(r, 5000));
+          attempts++;
+          continue;
         }
-      }, 300_000);
-
+        throw new Error('roex_unknown_response');
+      }
+      throw new Error('roex_final_timeout');
     } catch (err: any) {
-      stopProgress();
-      setIsProcessing(false);
-      // Edge function errors via supabase.functions.invoke include the response body in context
-      const responseData =
-        (err?.context?.body && typeof err.context.body === 'object') ? err.context.body :
-        (err?.context && typeof err.context === 'object' ? err.context : null);
+      setIsFinalizing(false);
+      const responseData = err?.context?.body || err?.context || null;
       const { userMessage } = parseAiError(err, responseData);
       setProcessError(userMessage);
-      console.error('[Auphonic] enhance failed:', err);
       track('enhance_audio_failed', { feature: 'enhance_audio', metadata: { reason: err?.message || 'unknown' } });
     }
   };
 
-  const playAudio = (track: "original" | "mastered") => {
-    // Stop both
+  const playAudio = (which: "original" | "preview" | "mastered") => {
     originalAudioRef.current?.pause();
+    previewAudioRef.current?.pause();
     masteredAudioRef.current?.pause();
 
-    if (playingTrack === track) {
-      setPlayingTrack(null);
-      return;
-    }
+    if (playingTrack === which) { setPlayingTrack(null); return; }
 
-    if (track === "original" && audioUrl) {
-      if (!originalAudioRef.current) {
-        originalAudioRef.current = new Audio(audioUrl);
-        originalAudioRef.current.onended = () => setPlayingTrack(null);
-      }
-      originalAudioRef.current.currentTime = 0;
-      originalAudioRef.current.play();
-    } else if (track === "mastered" && processedUrl) {
-      if (!masteredAudioRef.current) {
-        masteredAudioRef.current = new Audio(processedUrl);
-        masteredAudioRef.current.onended = () => setPlayingTrack(null);
-      }
-      masteredAudioRef.current.currentTime = 0;
-      masteredAudioRef.current.play();
+    const map: Record<typeof which, { ref: typeof originalAudioRef; src: string | null }> = {
+      original: { ref: originalAudioRef, src: audioUrl },
+      preview: { ref: previewAudioRef, src: previewUrl },
+      mastered: { ref: masteredAudioRef, src: finalUrl },
+    };
+    const { ref, src } = map[which];
+    if (!src) return;
+    if (!ref.current) {
+      ref.current = new Audio(src);
+      ref.current.onended = () => setPlayingTrack(null);
     }
-    setPlayingTrack(track);
+    ref.current.currentTime = 0;
+    ref.current.play();
+    setPlayingTrack(which);
   };
 
   const handleReset = () => {
     stopAllAudio();
     originalAudioRef.current = null;
+    previewAudioRef.current = null;
     masteredAudioRef.current = null;
     setAudioFile(null);
     setAudioUrl(null);
     setAudioName(null);
-    setProcessedUrl(null);
-    setProcessError(null);
-    setProgressPercent(0);
-    setActiveStep(0);
+    resetResults();
   };
+
+  const isBusy = isPreviewing || isFinalizing;
 
   return (
     <div className="min-h-screen bg-background">
@@ -302,7 +315,6 @@ const AIStudioEdit = () => {
           {t('aiEdit.backToStudio')}
         </Link>
 
-        {/* Header */}
         <div className="mb-8 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
             <Headphones className="w-8 h-8 text-primary" />
@@ -313,7 +325,7 @@ const AIStudioEdit = () => {
 
         <div className="space-y-6">
           {/* Upload */}
-          {!processedUrl && !isProcessing && (
+          {!finalUrl && !isBusy && (
             <Card>
               <CardContent className="p-6">
                 {!audioFile ? (
@@ -359,13 +371,11 @@ const AIStudioEdit = () => {
                       onRemove={handleRemoveFile}
                     />
 
-                    {/* Audio preview */}
                     {audioUrl && (
                       <div className="mt-4 rounded-xl border border-border/40 bg-muted/20 p-4">
                         <div className="flex items-center gap-3 mb-3">
                           <Button
-                            variant="outline"
-                            size="icon"
+                            variant="outline" size="icon"
                             className="shrink-0 rounded-full"
                             onClick={() => playAudio('original')}
                           >
@@ -387,84 +397,107 @@ const AIStudioEdit = () => {
             </Card>
           )}
 
-          {/* CTA Button */}
-          {audioFile && !isProcessing && !processedUrl && (
-            <div className="space-y-2">
-              {!hasEnough(FEATURE_COSTS.enhance_audio) ? (
-                <NoCreditsAlert message={tr('ctaButton')} />
-              ) : (
-                <Button
-                  onClick={handleMasterize}
-                  className="w-full h-14 text-base gap-3"
-                  size="lg"
-                >
-                  <Headphones className="w-5 h-5" />
-                  {tr('ctaButton')}
-                </Button>
-              )}
-              <PricingLink className="block text-center" />
-            </div>
-          )}
-
-          {/* Processing state */}
-          {isProcessing && (
-            <Card className="border-primary/20">
-              <CardContent className="p-6 space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="font-semibold">{tr('processing.title')}</p>
-                    <p className="text-sm text-muted-foreground">{tr('processing.subtitle')}</p>
+          {/* Presets — visible whenever a file is loaded and we don't have the final yet */}
+          {audioFile && !isBusy && !finalUrl && (
+            <Card>
+              <CardContent className="p-6 space-y-5">
+                <div>
+                  <p className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" /> Estilo musical
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {STYLE_PRESETS.map(p => (
+                      <Button
+                        key={p.value}
+                        variant={musicalStyle === p.value ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => { setMusicalStyle(p.value); setPreviewUrl(null); setTaskId(null); }}
+                        className="rounded-full"
+                      >
+                        {p.label}
+                      </Button>
+                    ))}
                   </div>
                 </div>
 
-                <Progress value={progressPercent} className="h-2" />
-
-                <div className="space-y-2">
-                  {PROCESSING_STEPS.map((step, i) => {
-                    const Icon = step.icon;
-                    const done = i < activeStep;
-                    const active = i === activeStep;
-                    return (
-                      <div
-                        key={step.key}
-                        className={`flex items-center gap-3 text-sm transition-all duration-300 ${
-                          done ? 'text-primary' : active ? 'text-foreground' : 'text-muted-foreground/50'
-                        }`}
+                <div>
+                  <p className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Volume2 className="w-4 h-4 text-primary" /> Volumen objetivo
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {LOUDNESS_PRESETS.map(p => (
+                      <Button
+                        key={p.value}
+                        variant={desiredLoudness === p.value ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => { setDesiredLoudness(p.value); setPreviewUrl(null); setTaskId(null); }}
+                        className="flex-col h-auto py-2"
                       >
-                        {done ? (
-                          <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
-                        ) : active ? (
-                          <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                        ) : (
-                          <Icon className="w-4 h-4 shrink-0" />
-                        )}
-                        {tr(`processing.steps.${step.key}`)}
-                      </div>
-                    );
-                  })}
+                        <span className="text-xs font-semibold">{p.label}</span>
+                        <span className="text-[10px] opacity-70 font-normal">{p.hint}</span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* CTA: free preview */}
+          {audioFile && !isBusy && !previewUrl && !finalUrl && (
+            <Button
+              onClick={handleListenPreview}
+              className="w-full h-14 text-base gap-3"
+              variant="hero"
+              size="lg"
+            >
+              <Gift className="w-5 h-5" />
+              Escuchar preview gratis
+            </Button>
+          )}
+
+          {/* Processing state */}
+          {isPreviewing && (
+            <Card className="border-primary/20">
+              <CardContent className="p-6 space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Generando tu preview…</p>
+                    <p className="text-sm text-muted-foreground">Sin coste — solo escuchas un fragmento</p>
+                  </div>
+                </div>
+                <Progress value={progressPercent} className="h-2" />
+              </CardContent>
+            </Card>
+          )}
+
+          {isFinalizing && (
+            <Card className="border-primary/20">
+              <CardContent className="p-6 flex items-center gap-4">
+                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                <div>
+                  <p className="font-semibold">Generando master final…</p>
+                  <p className="text-sm text-muted-foreground">Procesando la pista completa</p>
                 </div>
               </CardContent>
             </Card>
           )}
 
           {/* Error */}
-          {processError && !isProcessing && (
+          {processError && !isBusy && (
             <Card className="border-destructive/30">
               <CardContent className="p-4 space-y-3">
                 <div className="flex items-start gap-3 text-destructive">
                   <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
                   <p className="text-sm">{processError}</p>
                 </div>
-                {audioFile && hasEnough(FEATURE_COSTS.enhance_audio) && (
+                {audioFile && (
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => { setProcessError(null); handleMasterize(); }}
+                    variant="outline" size="sm"
+                    onClick={() => { setProcessError(null); previewUrl ? handleGetFinal() : handleListenPreview(); }}
                     className="gap-2 w-full"
                   >
                     <RefreshCw className="w-4 h-4" />
@@ -475,10 +508,79 @@ const AIStudioEdit = () => {
             </Card>
           )}
 
-          {/* Success result */}
-          {processedUrl && (
+          {/* Preview ready (free) — show A/B and CTA to get final master */}
+          {previewUrl && !finalUrl && (
             <div className="space-y-4">
-              {/* Success header */}
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Gift className="w-6 h-6 text-primary" />
+                    <div>
+                      <h2 className="text-lg font-semibold">Tu preview gratis está lista</h2>
+                      <p className="text-xs text-muted-foreground">Es un fragmento del master — gratis y sin créditos</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl border border-border/40 bg-background p-4 mb-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Button
+                        variant="outline" size="icon" className="shrink-0 rounded-full"
+                        onClick={() => playAudio('preview')}
+                      >
+                        {playingTrack === 'preview' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                      </Button>
+                      <div>
+                        <p className="text-sm font-medium">Preview masterizada</p>
+                        <p className="text-xs text-muted-foreground">
+                          {STYLE_PRESETS.find(s => s.value === musicalStyle)?.label} · {LOUDNESS_PRESETS.find(l => l.value === desiredLoudness)?.label}
+                        </p>
+                      </div>
+                    </div>
+                    <audio src={previewUrl} className="w-full h-8" controls />
+                  </div>
+
+                  {/* A/B */}
+                  {audioUrl && (
+                    <div className="flex gap-2 mb-4">
+                      <Button
+                        variant={playingTrack === 'original' ? "default" : "outline"} size="sm"
+                        onClick={() => playAudio('original')} className="gap-2 flex-1"
+                      >
+                        {playingTrack === 'original' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                        {tr('success.original')}
+                      </Button>
+                      <Button
+                        variant={playingTrack === 'preview' ? "default" : "outline"} size="sm"
+                        onClick={() => playAudio('preview')} className="gap-2 flex-1"
+                      >
+                        {playingTrack === 'preview' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                        Preview
+                      </Button>
+                    </div>
+                  )}
+
+                  {!hasEnough(FEATURE_COSTS.enhance_audio) ? (
+                    <NoCreditsAlert message="Generar el master final completo" />
+                  ) : (
+                    <Button onClick={handleGetFinal} className="w-full h-12 gap-2" size="lg">
+                      <Sparkles className="w-4 h-4" />
+                      Generar master final completo ({FEATURE_COSTS.enhance_audio} créditos)
+                    </Button>
+                  )}
+                  <PricingLink className="block text-center mt-2" />
+
+                  <Button variant="ghost" size="sm" onClick={() => { setPreviewUrl(null); setTaskId(null); }} className="w-full mt-2 gap-2">
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Probar otro estilo
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Final master */}
+          {finalUrl && (
+            <div className="space-y-4">
               <Card className="border-primary/20 bg-primary/5">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
@@ -501,13 +603,10 @@ const AIStudioEdit = () => {
                     </span>
                   </div>
 
-                  {/* Mastered audio player */}
                   <div className="rounded-xl border border-border/40 bg-background p-4">
                     <div className="flex items-center gap-3 mb-3">
                       <Button
-                        variant="outline"
-                        size="icon"
-                        className="shrink-0 rounded-full"
+                        variant="outline" size="icon" className="shrink-0 rounded-full"
                         onClick={() => playAudio('mastered')}
                       >
                         {playingTrack === 'mastered' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -517,31 +616,26 @@ const AIStudioEdit = () => {
                         <p className="text-xs text-muted-foreground">{tr('success.masteredSubtitle')}</p>
                       </div>
                     </div>
-                    <audio src={processedUrl} className="w-full h-8" controls />
+                    <audio src={finalUrl} className="w-full h-8" controls />
                   </div>
                 </CardContent>
               </Card>
 
-              {/* A/B Comparison */}
               {audioUrl && (
                 <Card>
                   <CardContent className="p-4">
                     <p className="text-sm font-medium mb-3">📊 {tr('success.compare')}</p>
                     <div className="flex gap-2">
                       <Button
-                        variant={playingTrack === 'original' ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => playAudio('original')}
-                        className="gap-2 flex-1"
+                        variant={playingTrack === 'original' ? "default" : "outline"} size="sm"
+                        onClick={() => playAudio('original')} className="gap-2 flex-1"
                       >
                         {playingTrack === 'original' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                         {tr('success.original')}
                       </Button>
                       <Button
-                        variant={playingTrack === 'mastered' ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => playAudio('mastered')}
-                        className="gap-2 flex-1"
+                        variant={playingTrack === 'mastered' ? "default" : "outline"} size="sm"
+                        onClick={() => playAudio('mastered')} className="gap-2 flex-1"
                       >
                         {playingTrack === 'mastered' ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                         {tr('success.mastered')}
@@ -551,10 +645,9 @@ const AIStudioEdit = () => {
                 </Card>
               )}
 
-              {/* Actions */}
               <div className="grid grid-cols-2 gap-3">
                 <Button asChild className="gap-2">
-                  <a href={processedUrl} download target="_blank" rel="noopener noreferrer">
+                  <a href={finalUrl} download target="_blank" rel="noopener noreferrer">
                     <Download className="w-4 h-4" />
                     {tr('actions.download')}
                   </a>
@@ -568,8 +661,6 @@ const AIStudioEdit = () => {
           )}
         </div>
       </main>
-
-      
     </div>
   );
 };
