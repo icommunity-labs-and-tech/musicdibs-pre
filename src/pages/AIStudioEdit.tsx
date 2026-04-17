@@ -93,6 +93,15 @@ const AIStudioEdit = () => {
   const stopProgress = () => { if (progressRef.current) { clearInterval(progressRef.current); progressRef.current = null; } };
 
   const handleFileSelect = (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase() || '';
+    if (!ALLOWED_AUDIO_EXTS.includes(ext as typeof ALLOWED_AUDIO_EXTS[number])) {
+      toast({
+        title: 'Formato no compatible',
+        description: `Solo se aceptan archivos de audio: ${ALLOWED_AUDIO_EXTS.join(', ').toUpperCase()}. Los vídeos (MP4, MOV…) no son válidos.`,
+        variant: 'destructive',
+      });
+      return;
+    }
     setAudioFile(file);
     setAudioUrl(URL.createObjectURL(file));
     setAudioName(file.name);
