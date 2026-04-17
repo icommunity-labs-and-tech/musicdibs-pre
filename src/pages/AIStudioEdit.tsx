@@ -377,7 +377,7 @@ const AIStudioEdit = () => {
                   <>
                     <FileDropzone
                       fileType="audio"
-                      accept="audio/*"
+                      accept={ALLOWED_AUDIO_ACCEPT}
                       maxSize={50}
                       label={tr('uploadLabel')}
                       description={tr('uploadDescription')}
