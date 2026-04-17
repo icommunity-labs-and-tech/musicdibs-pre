@@ -51,7 +51,7 @@ export default function AdminFeatureCostsPage() {
   const load = async () => {
     const { data, error } = await supabase
       .from('operation_pricing')
-      .select('operation_key, operation_name, operation_icon, credits_cost, euro_cost, category, is_annual_only, display_order, is_active, description')
+      .select('operation_key, operation_name, operation_icon, credits_cost, euro_cost, category, is_annual_only, display_order, is_active, description, model_name')
       .order('display_order');
     if (error) {
       toast.error('Error cargando precios');
