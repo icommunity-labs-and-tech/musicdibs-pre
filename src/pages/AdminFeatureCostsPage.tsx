@@ -33,6 +33,7 @@ interface OperationRow {
   display_order: number;
   is_active: boolean | null;
   description: string | null;
+  model_name: string | null;
 }
 
 type SortField = 'operation_key' | 'operation_name' | 'category' | 'credits_cost' | 'display_order' | 'is_annual_only' | 'is_active';
