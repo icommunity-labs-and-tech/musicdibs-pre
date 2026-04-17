@@ -140,8 +140,10 @@ const AIStudioEdit = () => {
     const path = `roex/${user!.id}/${Date.now()}_${safeName}`;
     const { error } = await supabase.storage.from("auphonic-temp").upload(path, file, { upsert: true });
     if (error) throw new Error(`Upload error: ${error.message}`);
-    const { data } = supabase.storage.from("auphonic-temp").getPublicUrl(path);
-    return data.publicUrl;
+    // Bucket is private — use a signed URL so the edge function (and ROEX) can fetch it
+    const { data, error: signErr } = await supabase.storage.from("auphonic-temp").createSignedUrl(path, 60 * 60);
+    if (signErr || !data?.signedUrl) throw new Error(`Signed URL error: ${signErr?.message || 'unknown'}`);
+    return data.signedUrl;
   };
 
   // ============================================================
