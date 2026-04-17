@@ -106,6 +106,7 @@ export default function AdminFeatureCostsPage() {
     if (changes.credits_cost !== undefined) updatePayload.credits_cost = changes.credits_cost;
     if (changes.description !== undefined) updatePayload.description = changes.description;
     if (changes.operation_icon !== undefined) updatePayload.operation_icon = changes.operation_icon;
+    if (changes.model_name !== undefined) updatePayload.model_name = changes.model_name;
 
     const { error } = await supabase
       .from('operation_pricing')
