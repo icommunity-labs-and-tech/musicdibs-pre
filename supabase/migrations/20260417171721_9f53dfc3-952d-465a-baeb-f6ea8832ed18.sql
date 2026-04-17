@@ -1,0 +1,1 @@
+UPDATE public.operation_pricing SET model_name = 'ROEX Tonn API (Mastering)', updated_at = now() WHERE operation_key = 'enhance_audio';
