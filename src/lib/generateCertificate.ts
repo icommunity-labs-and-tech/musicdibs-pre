@@ -25,6 +25,12 @@ export interface CertificateData {
   checkerUrl: string
   ibsUrl: string
   evidenceId: string
+  metadata?: string
+  externalContent?: string
+  explorerUrl?: string
+  blockNumber?: string
+  blockHash?: string
+  contractAddress?: string
 }
 
 // ── Labels per locale ────────────────────────────────────────
@@ -45,6 +51,12 @@ interface CertLabels {
   algorithmLabel: string
   networkLabel: string
   dateLabel: string
+  metadataLabel: string
+  externalContentLabel: string
+  explorerLabel: string
+  blockNumberLabel: string
+  blockHashLabel: string
+  contractLabel: string
   verifyLabel: string
   footerPowered: string
   filePrefix: string
@@ -68,6 +80,12 @@ const labelsMap: Record<string, CertLabels> = {
     algorithmLabel: 'Algoritmo de huella digital:',
     networkLabel: 'Red de blockchain:',
     dateLabel: 'Fecha:',
+    metadataLabel: 'Metadatos:',
+    externalContentLabel: 'Contenido externo:',
+    explorerLabel: 'Enlace blockchain:',
+    blockNumberLabel: 'Número de bloque:',
+    blockHashLabel: 'Hash del bloque:',
+    contractLabel: 'Contrato:',
     verifyLabel: 'Verificar',
     footerPowered: 'powered by',
     filePrefix: 'certificado-musicdibs',
@@ -89,6 +107,12 @@ const labelsMap: Record<string, CertLabels> = {
     algorithmLabel: 'Fingerprint algorithm:',
     networkLabel: 'Blockchain network:',
     dateLabel: 'Date:',
+    metadataLabel: 'Metadata:',
+    externalContentLabel: 'External content:',
+    explorerLabel: 'Blockchain link:',
+    blockNumberLabel: 'Block number:',
+    blockHashLabel: 'Block hash:',
+    contractLabel: 'Contract:',
     verifyLabel: 'Verify',
     footerPowered: 'powered by',
     filePrefix: 'certificate-musicdibs',
@@ -110,6 +134,12 @@ const labelsMap: Record<string, CertLabels> = {
     algorithmLabel: 'Algoritmo de impressão digital:',
     networkLabel: 'Rede de blockchain:',
     dateLabel: 'Data:',
+    metadataLabel: 'Metadados:',
+    externalContentLabel: 'Conteúdo externo:',
+    explorerLabel: 'Link blockchain:',
+    blockNumberLabel: 'Número do bloco:',
+    blockHashLabel: 'Hash do bloco:',
+    contractLabel: 'Contrato:',
     verifyLabel: 'Verificar',
     footerPowered: 'powered by',
     filePrefix: 'certificado-musicdibs',
@@ -277,6 +307,12 @@ export async function generateCertificate(data: CertificateData, locale?: string
   y = field(y, L.titleLabel, data.title)
   y = field(y, L.filenameLabel, data.filename)
   y = field(y, L.sizeLabel, data.filesize)
+  if (data.metadata) {
+    y = field(y, L.metadataLabel, data.metadata)
+  }
+  if (data.externalContent) {
+    y = field(y, L.externalContentLabel, data.externalContent, true)
+  }
 
   if (data.description) {
     y = field(y, L.descriptionLabel, data.description)
@@ -315,6 +351,18 @@ export async function generateCertificate(data: CertificateData, locale?: string
   y = field(y, L.fingerprintLabel, data.fingerprint, true)
   y = field(y, L.algorithmLabel, data.algorithm)
   y = field(y, L.networkLabel, data.network)
+  if (data.blockNumber) {
+    y = field(y, L.blockNumberLabel, data.blockNumber)
+  }
+  if (data.blockHash) {
+    y = field(y, L.blockHashLabel, data.blockHash, true)
+  }
+  if (data.contractAddress) {
+    y = field(y, L.contractLabel, data.contractAddress, true)
+  }
+  if (data.explorerUrl) {
+    y = field(y, L.explorerLabel, data.explorerUrl)
+  }
   y = field(y, L.dateLabel, data.certifiedAt)
 
   // ══════════════════════════════════════════════════════════
