@@ -154,7 +154,7 @@ export default function AdminWorksPage() {
             <SelectItem value="failed">Fallido</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={load} variant="secondary">Buscar</Button>
+        <Button onClick={() => { setOffset(0); load(); }} variant="secondary">Buscar</Button>
         <Button onClick={handleExportCsv} variant="outline" size="sm">
           <Download className="h-4 w-4 mr-1" /> Exportar CSV
         </Button>
