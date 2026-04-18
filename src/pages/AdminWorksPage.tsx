@@ -352,6 +352,22 @@ export default function AdminWorksPage() {
                   ) : '—'}
                 </TableCell>
                 <TableCell>
+                  {w.blockchain_hash && w.ibs_evidence_id && w.status === 'registered' ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs gap-1"
+                      onClick={() => handleDownloadCertificate(w)}
+                      disabled={generatingCert === w.id}
+                    >
+                      {generatingCert === w.id
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <FileText className="h-3 w-3" />}
+                      PDF
+                    </Button>
+                  ) : '—'}
+                </TableCell>
+                <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm">
