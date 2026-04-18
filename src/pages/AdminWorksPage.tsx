@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -9,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
-import { Music, Search, ChevronLeft, ChevronRight, ExternalLink, Download, Eye, Loader2, MoreHorizontal, Trash2, RotateCcw, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Music, Search, ChevronLeft, ChevronRight, ExternalLink, Download, Eye, Loader2, MoreHorizontal, Trash2, RotateCcw, ArrowUp, ArrowDown, ArrowUpDown, X } from 'lucide-react';
 
 const PAGE_SIZE = 50;
 type SortKey = 'user_display_name' | 'user_email' | 'status' | 'created_at';
@@ -27,6 +28,9 @@ export default function AdminWorksPage() {
   const [detailWork, setDetailWork] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -34,11 +38,84 @@ export default function AdminWorksPage() {
       const res = await adminApi.getAllWorks(offset, statusFilter, search, sortBy, sortDir, PAGE_SIZE);
       setWorks(res.works || []);
       setTotal(res.total || 0);
+      setSelectedIds(new Set());
     } catch (e: any) { toast.error(e.message); }
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [offset, statusFilter, sortBy, sortDir]);
+
+  const allOnPageSelected = useMemo(
+    () => works.length > 0 && works.every(w => selectedIds.has(w.id)),
+    [works, selectedIds]
+  );
+  const someOnPageSelected = useMemo(
+    () => works.some(w => selectedIds.has(w.id)) && !allOnPageSelected,
+    [works, selectedIds, allOnPageSelected]
+  );
+
+  const togglePageSelection = (checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (checked) works.forEach(w => next.add(w.id));
+      else works.forEach(w => next.delete(w.id));
+      return next;
+    });
+  };
+
+  const toggleRow = (id: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+
+  const selectedWorks = useMemo(
+    () => works.filter(w => selectedIds.has(w.id)),
+    [works, selectedIds]
+  );
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleting(true);
+    const ids = Array.from(selectedIds);
+    let ok = 0; let fail = 0;
+    for (const id of ids) {
+      try {
+        await adminApi.deleteWork(id);
+        ok++;
+      } catch (e: any) {
+        fail++;
+        console.error('Bulk delete error', id, e);
+      }
+    }
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    if (ok > 0) toast.success(`${ok} obra(s) eliminada(s)`);
+    if (fail > 0) toast.error(`${fail} obra(s) no se pudieron eliminar`);
+    load();
+  };
+
+  const handleBulkExport = () => {
+    if (selectedWorks.length === 0) return;
+    const headers = ['id', 'title', 'type', 'status', 'user_email', 'user_display_name', 'created_at', 'certified_at', 'blockchain_hash', 'blockchain_network', 'ibs_evidence_id', 'checker_url'];
+    const escape = (v: any) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = selectedWorks.map(w => headers.map(h => escape(w[h])).join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `obras_seleccionadas_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${selectedWorks.length} obra(s) exportada(s)`);
+  };
+
 
   const toggleSort = (key: SortKey) => {
     if (sortBy === key) {
@@ -160,10 +237,36 @@ export default function AdminWorksPage() {
         </Button>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2">
+          <p className="text-sm">
+            <strong>{selectedIds.size}</strong> obra(s) seleccionada(s)
+          </p>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={handleBulkExport}>
+              <Download className="h-4 w-4 mr-1" /> Exportar selección
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => setBulkDeleteOpen(true)}>
+              <Trash2 className="h-4 w-4 mr-1" /> Eliminar selección
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+              <X className="h-4 w-4 mr-1" /> Limpiar
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-lg border border-border/40 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30">
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={allOnPageSelected ? true : someOnPageSelected ? 'indeterminate' : false}
+                  onCheckedChange={(c) => togglePageSelection(c === true)}
+                  aria-label="Seleccionar todas"
+                />
+              </TableHead>
               <TableHead onClick={() => toggleSort('user_display_name')} className="cursor-pointer select-none">
                 Usuario<SortIcon k="user_display_name" />
               </TableHead>
@@ -184,11 +287,18 @@ export default function AdminWorksPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
             ) : works.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
             ) : works.map(w => (
-              <TableRow key={w.id}>
+              <TableRow key={w.id} data-state={selectedIds.has(w.id) ? 'selected' : undefined}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedIds.has(w.id)}
+                    onCheckedChange={(c) => toggleRow(w.id, c === true)}
+                    aria-label={`Seleccionar ${w.title}`}
+                  />
+                </TableCell>
                 <TableCell className="text-sm">{w.user_display_name || '—'}</TableCell>
                 <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{w.user_email || '—'}</TableCell>
                 <TableCell className="font-medium text-sm max-w-[200px] truncate">{w.title}</TableCell>
@@ -252,6 +362,29 @@ export default function AdminWorksPage() {
           </Button>
         </div>
       </div>
+
+      {/* Bulk Delete Confirmation */}
+      <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar {selectedIds.size} obra(s)?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vas a eliminar permanentemente <strong>{selectedIds.size}</strong> obra(s) seleccionada(s), incluyendo sus archivos asociados, registros de gestión y datos de la cola de certificación. <strong>No se puede deshacer.</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {bulkDeleting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Eliminar {selectedIds.size}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteTarget} onOpenChange={open => !open && setDeleteTarget(null)}>
