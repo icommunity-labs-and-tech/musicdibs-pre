@@ -237,6 +237,25 @@ export default function AdminWorksPage() {
         </Button>
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2">
+          <p className="text-sm">
+            <strong>{selectedIds.size}</strong> obra(s) seleccionada(s)
+          </p>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={handleBulkExport}>
+              <Download className="h-4 w-4 mr-1" /> Exportar selección
+            </Button>
+            <Button size="sm" variant="destructive" onClick={() => setBulkDeleteOpen(true)}>
+              <Trash2 className="h-4 w-4 mr-1" /> Eliminar selección
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+              <X className="h-4 w-4 mr-1" /> Limpiar
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-lg border border-border/40 overflow-hidden">
         <Table>
           <TableHeader>
