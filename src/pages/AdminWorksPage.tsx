@@ -415,6 +415,29 @@ export default function AdminWorksPage() {
         </div>
       </div>
 
+      {/* Bulk Progress Overlay */}
+      <Dialog open={bulkDeleting} onOpenChange={() => {}}>
+        <DialogContent className="max-w-sm" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              Eliminando obras...
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full bg-primary transition-all"
+                style={{ width: `${bulkProgress.total > 0 ? (bulkProgress.done / bulkProgress.total) * 100 : 0}%` }}
+              />
+            </div>
+            <p className="text-center text-sm text-muted-foreground">
+              {bulkProgress.done} de {bulkProgress.total}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Bulk Delete Confirmation */}
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
         <AlertDialogContent>
