@@ -87,16 +87,41 @@ serve(async (req) => {
       const offset = payload.offset || 0;
       const limit = Math.min(payload.limit || 50, 100);
       const search = (payload.search || "").trim().toLowerCase();
+      const kycFilter = (payload.kyc_filter || "").trim();
+      const planFilter = (payload.plan_filter || "").trim();
+      const stripeFilter = (payload.stripe_filter || "").trim(); // 'linked' | 'unlinked'
+      const statusFilter = (payload.status_filter || "").trim(); // 'active' | 'blocked'
+      const roleFilter = (payload.role_filter || "").trim(); // 'admin' | 'manager' | 'user'
+      const sortBy = ["created_at", "updated_at", "display_name", "available_credits", "subscription_plan", "kyc_status"].includes(payload.sort_by) ? payload.sort_by : "created_at";
+      const sortDir = payload.sort_dir === "asc" ? true : false;
 
-      // --- Build query with optional server-side search ---
-      let query = admin.from("profiles").select("*", { count: "exact" });
-
-      if (search) {
-        // Search by display_name (ilike) — email search handled post-filter
-        query = query.or(`display_name.ilike.%${search}%`);
+      // If filtering by role, pre-fetch matching user_ids
+      let roleUserIds: string[] | null = null;
+      if (roleFilter) {
+        if (roleFilter === "user") {
+          const { data: nonUsers } = await admin.from("user_roles").select("user_id").in("role", ["admin", "manager"]);
+          const exclude = new Set((nonUsers || []).map((r: any) => r.user_id));
+          const { data: allP } = await admin.from("profiles").select("user_id");
+          roleUserIds = (allP || []).map((p: any) => p.user_id).filter((id: string) => !exclude.has(id));
+        } else {
+          const { data: rs } = await admin.from("user_roles").select("user_id").eq("role", roleFilter);
+          roleUserIds = (rs || []).map((r: any) => r.user_id);
+        }
+        if (roleUserIds.length === 0) return json({ users: [], total: 0 });
       }
 
-      query = query.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
+      let query = admin.from("profiles").select("*", { count: "exact" });
+
+      if (search) query = query.ilike("display_name", `%${search}%`);
+      if (kycFilter) query = query.eq("kyc_status", kycFilter);
+      if (planFilter) query = query.eq("subscription_plan", planFilter);
+      if (stripeFilter === "linked") query = query.not("stripe_customer_id", "is", null);
+      if (stripeFilter === "unlinked") query = query.is("stripe_customer_id", null);
+      if (statusFilter === "blocked") query = query.eq("is_blocked", true);
+      if (statusFilter === "active") query = query.or("is_blocked.is.null,is_blocked.eq.false");
+      if (roleUserIds) query = query.in("user_id", roleUserIds);
+
+      query = query.order(sortBy, { ascending: sortDir }).range(offset, offset + limit - 1);
 
       const { data: profiles, error, count: profilesCount } = await query;
       if (error) return json({ error: error.message }, 500);
@@ -104,7 +129,6 @@ serve(async (req) => {
       const userIds = (profiles || []).map((p: any) => p.user_id);
       if (userIds.length === 0) return json({ users: [], total: 0 });
 
-      // Batch: roles + works counts
       const [{ data: roles }, { data: worksCounts }] = await Promise.all([
         admin.from("user_roles").select("user_id, role").in("user_id", userIds),
         admin.from("works").select("user_id").in("user_id", userIds),
@@ -121,7 +145,6 @@ serve(async (req) => {
         worksCountMap[w.user_id] = (worksCountMap[w.user_id] || 0) + 1;
       });
 
-      // Fetch auth data only for the page's users (not all 9k)
       const emailsMap: Record<string, string> = {};
       const metaNameMap: Record<string, string> = {};
       for (const uid of userIds) {
@@ -141,7 +164,6 @@ serve(async (req) => {
         email: emailsMap[p.user_id] || "",
       }));
 
-      // If searching, also filter by email (not in profiles table)
       if (search) {
         result = result.filter((u: any) =>
           u.email.toLowerCase().includes(search) ||
@@ -149,10 +171,27 @@ serve(async (req) => {
         );
       }
 
-      // For search, total is approximate from profiles count
-      const total = search ? (profilesCount ?? result.length) : (profilesCount ?? 0);
-
+      const total = profilesCount ?? result.length;
       return json({ users: result, total });
+    }
+
+    if (action === "bulk_user_action") {
+      const { user_ids, op } = payload;
+      if (!Array.isArray(user_ids) || user_ids.length === 0) return json({ error: "user_ids required" }, 400);
+      if (user_ids.length > 200) return json({ error: "Máximo 200 usuarios por operación" }, 400);
+      let success = 0; let failed = 0;
+      for (const uid of user_ids) {
+        try {
+          if (op === "block") await admin.from("profiles").update({ is_blocked: true, updated_at: new Date().toISOString() }).eq("user_id", uid);
+          else if (op === "unblock") await admin.from("profiles").update({ is_blocked: false, updated_at: new Date().toISOString() }).eq("user_id", uid);
+          else if (op === "kyc_verified") await admin.from("profiles").update({ kyc_status: "verified", updated_at: new Date().toISOString() }).eq("user_id", uid);
+          else if (op === "kyc_pending") await admin.from("profiles").update({ kyc_status: "pending", updated_at: new Date().toISOString() }).eq("user_id", uid);
+          else { failed++; continue; }
+          success++;
+        } catch { failed++; }
+      }
+      await audit({ action: `bulk_${op}`, details: { count: user_ids.length, success, failed } });
+      return json({ success, failed });
     }
 
     if (action === "adjust_credits") {
