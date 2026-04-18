@@ -11,7 +11,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
 import { Music, Search, ChevronLeft, ChevronRight, ExternalLink, Download, Eye, Loader2, MoreHorizontal, Trash2, RotateCcw, ArrowUp, ArrowDown, ArrowUpDown, X, FileText } from 'lucide-react';
-import { generateCertificate, type CertificateData } from '@/lib/generateCertificate';
+import { generateCertificate } from '@/lib/generateCertificate';
+import { buildCertificateData } from '@/lib/certificateData';
 
 const PAGE_SIZE = 50;
 type SortKey = 'user_display_name' | 'user_email' | 'status' | 'created_at';
@@ -37,30 +38,22 @@ export default function AdminWorksPage() {
   const handleDownloadCertificate = async (w: any) => {
     setGeneratingCert(w.id);
     try {
-      const network = w.blockchain_network || 'Polygon';
-      const checkerNetwork = ['fantom_opera_mainnet', 'fantom', 'opera'].includes(network.toLowerCase())
-        ? 'opera'
-        : network.toLowerCase();
-      const certData: CertificateData = {
+      const certData = await buildCertificateData({
         title: w.title,
         filename: w.original_filename || `${w.title}.mp3`,
-        filesize: w.file_size ? `${Number(w.file_size).toLocaleString('es')} bytes` : 'N/A',
+        filesize: w.file_size,
         fileType: w.type || 'audio',
         description: w.description || undefined,
         authorName: w.user_display_name || w.user_email || 'N/A',
-        authorDocId: undefined,
-        certifiedAt: new Date(w.certified_at || w.created_at).toLocaleDateString('es', {
-          day: '2-digit', month: 'long', year: 'numeric',
-          hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
-        }),
-        network,
+        certifiedAt: w.certified_at || w.created_at,
+        network: w.blockchain_network || 'Polygon',
         txHash: w.blockchain_hash,
-        fingerprint: w.blockchain_hash,
-        algorithm: 'base64 SHA-512',
-        checkerUrl: w.checker_url || `https://checker.icommunitylabs.com/check/${checkerNetwork}/${w.blockchain_hash}`,
-        ibsUrl: `https://app.icommunitylabs.com/evidences/${w.ibs_evidence_id}`,
-        evidenceId: w.ibs_evidence_id,
-      };
+        checkerUrl: w.checker_url,
+        ibsEvidenceId: w.ibs_evidence_id,
+        locale: 'es',
+        fallbackFingerprint: w.file_hash_sha512_b64,
+        fallbackAlgorithm: 'SHA-512',
+      });
       await generateCertificate(certData, 'es');
       toast.success('Certificado descargado');
     } catch (e: any) {
