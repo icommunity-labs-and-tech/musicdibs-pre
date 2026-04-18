@@ -251,7 +251,7 @@ export default function AdminWorksPage() {
       <div className="flex gap-2 flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por título, usuario o email..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && { setOffset(0); load(); }} className="pl-9" />
+          <Input placeholder="Buscar por título, usuario o email..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { setOffset(0); load(); } }} className="pl-9" />
         </div>
         <Select value={statusFilter} onValueChange={v => { setStatusFilter(v === 'all' ? '' : v); setOffset(0); }}>
           <SelectTrigger className="w-40"><SelectValue placeholder="Estado" /></SelectTrigger>
