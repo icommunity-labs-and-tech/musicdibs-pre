@@ -336,7 +336,14 @@ export default function BillingPage() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold">{planLabel}</p>
+              <p className="font-semibold">
+                {planLabel}
+                {plan === 'Annual' && tierDetail && (
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    · {tierDetail}
+                  </span>
+                )}
+              </p>
               <p className="text-sm text-muted-foreground">
                 {cancelAtPeriodEnd
                   ? t('dashboard.billing.cancelledAccess', { date: subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString(lang, { day: '2-digit', month: 'long', year: 'numeric' }) : '' })
