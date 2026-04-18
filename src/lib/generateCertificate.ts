@@ -347,6 +347,9 @@ export async function generateCertificate(data: CertificateData, locale?: string
   doc.text(L.sectionTransaction, ML, y)
   y += 10
 
+  if (data.explorerUrl) {
+    y = field(y, L.explorerLabel, data.explorerUrl)
+  }
   y = field(y, L.txIdLabel, data.txHash, true)
   y = field(y, L.fingerprintLabel, data.fingerprint, true)
   y = field(y, L.algorithmLabel, data.algorithm)
@@ -360,18 +363,15 @@ export async function generateCertificate(data: CertificateData, locale?: string
   if (data.contractAddress) {
     y = field(y, L.contractLabel, data.contractAddress, true)
   }
-  if (data.explorerUrl) {
-    y = field(y, L.explorerLabel, data.explorerUrl)
-  }
   y = field(y, L.dateLabel, data.certifiedAt)
 
   // ══════════════════════════════════════════════════════════
-  // QR CODE (bottom-right)
+  // QR CODE (bottom-right corner)
   // ══════════════════════════════════════════════════════════
 
   const qrSz = 32
   const qrX = W - MR - qrSz
-  const qrY = H - 65
+  const qrY = H - 32 - qrSz
 
   font('bold', 10)
   hex(BLACK)
