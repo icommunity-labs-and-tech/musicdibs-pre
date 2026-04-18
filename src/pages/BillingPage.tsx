@@ -50,8 +50,21 @@ export default function BillingPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [plan, setPlan] = useState<string | null>(null);
+  const [tier, setTier] = useState<string | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+
+  // Annual tier → credits (for display next to the plan label)
+  const ANNUAL_TIER_CREDITS: Record<string, number> = {
+    annual_100: 100,
+    annual_200: 200,
+    annual_300: 300,
+    annual_400: 500,
+    annual_500: 1000,
+  };
+  const tierDetail = tier && ANNUAL_TIER_CREDITS[tier]
+    ? `${ANNUAL_TIER_CREDITS[tier]} ${t('dashboard.billing.creditsLabel', { defaultValue: 'créditos' })}/año`
+    : null;
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(true);
@@ -88,6 +101,17 @@ export default function BillingPage() {
       if (mounted) {
         setPlan(profile?.subscription_plan ?? 'Free');
       }
+
+      // Load tier from subscriptions table for annual plan detail
+      const { data: subRow } = await supabase
+        .from('subscriptions')
+        .select('tier')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (mounted && subRow?.tier) setTier(subRow.tier);
 
       const { data, error } = await supabase.functions.invoke('check-subscription');
       if (error || !mounted) return;
@@ -312,7 +336,14 @@ export default function BillingPage() {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-semibold">{planLabel}</p>
+              <p className="font-semibold">
+                {planLabel}
+                {plan === 'Annual' && tierDetail && (
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    · {tierDetail}
+                  </span>
+                )}
+              </p>
               <p className="text-sm text-muted-foreground">
                 {cancelAtPeriodEnd
                   ? t('dashboard.billing.cancelledAccess', { date: subscriptionEnd ? new Date(subscriptionEnd).toLocaleDateString(lang, { day: '2-digit', month: 'long', year: 'numeric' }) : '' })

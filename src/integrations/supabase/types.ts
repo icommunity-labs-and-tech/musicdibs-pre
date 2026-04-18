@@ -191,6 +191,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       audiomack_connections: {
         Row: {
           audiomack_id: string | null
@@ -1964,6 +1982,33 @@ export type Database = {
           },
         ]
       }
+      renewal_log: {
+        Row: {
+          action: string
+          created_at: string
+          detail: string | null
+          email: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          detail?: string | null
+          email?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          detail?: string | null
+          email?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       social_promotions: {
         Row: {
           copy_ig_feed: string | null
@@ -2026,6 +2071,7 @@ export type Database = {
           plan: string
           status: string
           stripe_customer_id: string | null
+          tier: string | null
           updated_at: string
           user_id: string
         }
@@ -2039,6 +2085,7 @@ export type Database = {
           plan: string
           status?: string
           stripe_customer_id?: string | null
+          tier?: string | null
           updated_at?: string
           user_id: string
         }
@@ -2052,6 +2099,7 @@ export type Database = {
           plan?: string
           status?: string
           stripe_customer_id?: string | null
+          tier?: string | null
           updated_at?: string
           user_id?: string
         }
