@@ -386,7 +386,7 @@ export async function generateCertificate(data: CertificateData, locale?: string
 
   const qrSz = 32
   const qrX = W - MR - qrSz
-  const qrY = H - 32 - qrSz
+  const qrY = H - 22 - qrSz
 
   font('bold', 10)
   hex(BLACK)
