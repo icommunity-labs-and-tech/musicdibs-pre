@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { FileText, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
-import { generateCertificate, CertificateData } from '@/lib/generateCertificate'
+import { generateCertificate } from '@/lib/generateCertificate'
+import { buildCertificateData } from '@/lib/certificateData'
 import { useTranslation } from 'react-i18next'
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
     file_size?: number
     type: string
     description?: string
+    file_hash_sha512_b64?: string
     blockchain_hash: string
     blockchain_network: string
     checker_url?: string
@@ -35,34 +37,23 @@ export function CertificateButton({ work, authorName, authorDocId }: Props) {
   const handleDownload = async () => {
     setGenerating(true)
     try {
-      const network = work.blockchain_network || 'Polygon'
-      const checkerNetwork = ['fantom_opera_mainnet', 'fantom', 'opera'].includes(network.toLowerCase())
-        ? 'opera'
-        : network.toLowerCase()
-
-      const certData: CertificateData = {
-        title:       work.title,
-        filename:    work.original_filename || `${work.title}.mp3`,
-        filesize:    work.file_size
-                       ? `${work.file_size.toLocaleString(locale)} bytes`
-                       : t('dashboard.certificate.notAvailable'),
-        fileType:    work.type || t('dashboard.certificate.fileTypeFallback'),
+      const certData = await buildCertificateData({
+        title: work.title,
+        filename: work.original_filename || `${work.title}.mp3`,
+        filesize: work.file_size,
+        fileType: work.type || t('dashboard.certificate.fileTypeFallback'),
         description: work.description || undefined,
         authorName,
         authorDocId,
-        certifiedAt: new Date(work.certified_at || work.created_at).toLocaleDateString(locale, {
-          day: '2-digit', month: 'long', year: 'numeric',
-          hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
-        }),
-        network,
-        txHash:      work.blockchain_hash,
-        fingerprint: work.blockchain_hash,
-        algorithm:   'base64 SHA-512',
-        checkerUrl:  work.checker_url ||
-          `https://checker.icommunitylabs.com/check/${checkerNetwork}/${work.blockchain_hash}`,
-        ibsUrl:      `https://app.icommunitylabs.com/evidences/${work.ibs_evidence_id}`,
-        evidenceId:  work.ibs_evidence_id,
-      }
+        certifiedAt: work.certified_at || work.created_at,
+        network: work.blockchain_network || 'Polygon',
+        txHash: work.blockchain_hash,
+        checkerUrl: work.checker_url,
+        ibsEvidenceId: work.ibs_evidence_id,
+        locale,
+        fallbackFingerprint: work.file_hash_sha512_b64,
+        fallbackAlgorithm: 'SHA-512',
+      })
       await generateCertificate(certData, locale)
       toast.success(t('dashboard.certificate.downloadSuccess'))
     } catch (e) {

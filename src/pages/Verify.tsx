@@ -7,7 +7,8 @@ import { useTranslation } from "react-i18next";
 import { SEO } from "@/components/SEO";
 import { verifyFile } from "@/services/dashboardApi";
 import type { VerificationResult } from "@/types/dashboard";
-import { generateCertificate, CertificateData } from "@/lib/generateCertificate";
+import { generateCertificate } from "@/lib/generateCertificate";
+import { buildCertificateData } from "@/lib/certificateData";
 import { toast } from "sonner";
 
 const Verify = () => {
@@ -47,31 +48,22 @@ const Verify = () => {
     if (!result || !result.found || !result.blockchainHash || !result.ibsEvidenceId) return;
     setGenerating(true);
     try {
-      const network = result.blockchainNetwork || 'Polygon';
-      const checkerNetwork = ['fantom_opera_mainnet', 'fantom', 'opera'].includes(network.toLowerCase())
-        ? 'opera'
-        : network.toLowerCase();
-
-      const certData: CertificateData = {
+      const certData = await buildCertificateData({
         title: result.title || '',
         filename: file?.name || `${result.title}.mp3`,
-        filesize: file ? `${file.size.toLocaleString(locale)} bytes` : t('dashboard.certificate.notAvailable'),
+        filesize: file?.size,
         fileType: result.workType || t('dashboard.certificate.fileTypeFallback'),
         description: result.description || undefined,
         authorName: result.author || t('dashboard.certificate.notAvailable'),
-        certifiedAt: new Date(result.registeredAt!).toLocaleDateString(locale, {
-          day: '2-digit', month: 'long', year: 'numeric',
-          hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
-        }),
-        network,
+        certifiedAt: result.registeredAt,
+        network: result.blockchainNetwork || 'Polygon',
         txHash: result.blockchainHash,
-        fingerprint: result.blockchainHash,
-        algorithm: 'base64 SHA-512',
-        checkerUrl: result.certificateUrl ||
-          `https://checker.icommunitylabs.com/check/${checkerNetwork}/${result.blockchainHash}`,
-        ibsUrl: `https://app.icommunitylabs.com/evidences/${result.ibsEvidenceId}`,
-        evidenceId: result.ibsEvidenceId,
-      };
+        checkerUrl: result.certificateUrl,
+        ibsEvidenceId: result.ibsEvidenceId,
+        locale,
+        sourceFile: file,
+        fallbackAlgorithm: 'SHA-512',
+      });
       await generateCertificate(certData, locale);
       toast.success(t('dashboard.certificate.downloadSuccess'));
     } catch (e) {
