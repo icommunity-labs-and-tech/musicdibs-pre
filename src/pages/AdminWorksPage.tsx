@@ -28,6 +28,9 @@ export default function AdminWorksPage() {
   const [detailWork, setDetailWork] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -35,11 +38,84 @@ export default function AdminWorksPage() {
       const res = await adminApi.getAllWorks(offset, statusFilter, search, sortBy, sortDir, PAGE_SIZE);
       setWorks(res.works || []);
       setTotal(res.total || 0);
+      setSelectedIds(new Set());
     } catch (e: any) { toast.error(e.message); }
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [offset, statusFilter, sortBy, sortDir]);
+
+  const allOnPageSelected = useMemo(
+    () => works.length > 0 && works.every(w => selectedIds.has(w.id)),
+    [works, selectedIds]
+  );
+  const someOnPageSelected = useMemo(
+    () => works.some(w => selectedIds.has(w.id)) && !allOnPageSelected,
+    [works, selectedIds, allOnPageSelected]
+  );
+
+  const togglePageSelection = (checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (checked) works.forEach(w => next.add(w.id));
+      else works.forEach(w => next.delete(w.id));
+      return next;
+    });
+  };
+
+  const toggleRow = (id: string, checked: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+
+  const selectedWorks = useMemo(
+    () => works.filter(w => selectedIds.has(w.id)),
+    [works, selectedIds]
+  );
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setBulkDeleting(true);
+    const ids = Array.from(selectedIds);
+    let ok = 0; let fail = 0;
+    for (const id of ids) {
+      try {
+        await adminApi.deleteWork(id);
+        ok++;
+      } catch (e: any) {
+        fail++;
+        console.error('Bulk delete error', id, e);
+      }
+    }
+    setBulkDeleting(false);
+    setBulkDeleteOpen(false);
+    if (ok > 0) toast.success(`${ok} obra(s) eliminada(s)`);
+    if (fail > 0) toast.error(`${fail} obra(s) no se pudieron eliminar`);
+    load();
+  };
+
+  const handleBulkExport = () => {
+    if (selectedWorks.length === 0) return;
+    const headers = ['id', 'title', 'type', 'status', 'user_email', 'user_display_name', 'created_at', 'certified_at', 'blockchain_hash', 'blockchain_network', 'ibs_evidence_id', 'checker_url'];
+    const escape = (v: any) => {
+      const s = v == null ? '' : String(v);
+      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows = selectedWorks.map(w => headers.map(h => escape(w[h])).join(','));
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `obras_seleccionadas_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${selectedWorks.length} obra(s) exportada(s)`);
+  };
+
 
   const toggleSort = (key: SortKey) => {
     if (sortBy === key) {
