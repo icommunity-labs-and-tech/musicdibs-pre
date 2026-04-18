@@ -18,6 +18,25 @@ const toCheckerNetworkSlug = (network?: string) => {
   return normalized;
 };
 
+const readString = (...values: unknown[]) => {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" || typeof value === "boolean") return String(value);
+  }
+  return undefined;
+};
+
+const jsonToText = (value: unknown) => {
+  if (value == null) return undefined;
+  if (typeof value === "string") return value.trim() || undefined;
+  try {
+    const serialized = JSON.stringify(value);
+    return serialized === '{}' || serialized === '[]' ? undefined : serialized;
+  } catch {
+    return undefined;
+  }
+};
+
 /**
  * Manages iCommunity signatures (identities) for users.
  * 
@@ -341,10 +360,57 @@ serve(async (req) => {
         }
       }
 
+      const certification = evidence.certification || {};
+      const payload = evidence.payload || {};
+      const integrityEntry = Array.isArray(payload?.integrity) ? payload.integrity[0] : null;
+      const fileEntry = Array.isArray(payload?.files) ? payload.files[0] : null;
+      const metadata = payload?.metadata ?? evidence.metadata ?? null;
+      const externalContent = payload?.external_content ?? payload?.externalContent ?? evidence.external_content ?? null;
+      const network = readString(certification?.network, evidence?.network) || 'polygon';
+      const txHash = readString(certification?.hash, evidence?.transaction_hash, evidence?.tx_hash);
+      const checkerNetwork = toCheckerNetworkSlug(network);
+      const checkerUrl = readString(
+        certification?.links?.checker,
+        evidence?.links?.checker,
+        txHash ? `https://checker.icommunitylabs.com/check/${checkerNetwork}/${txHash}` : undefined,
+      );
+      const explorerUrl = txHash && checkerNetwork === 'opera'
+        ? `https://explorer.fantom.network/tx/${txHash}`
+        : undefined;
+
       return new Response(JSON.stringify({
         evidenceId: evidence.id,
         status: evidence.status,
         certification: evidence.certification || null,
+        detail: {
+          title: readString(payload?.title, evidence?.title),
+          description: readString(payload?.description, evidence?.description),
+          fileName: readString(fileEntry?.name, fileEntry?.filename),
+          fileSize: fileEntry?.size ?? fileEntry?.file_size ?? null,
+          metadata: jsonToText(metadata),
+          externalContent: jsonToText(externalContent),
+          txHash,
+          network,
+          certifiedAt: readString(certification?.timestamp, evidence?.created_at),
+          checkerUrl,
+          ibsUrl: readString(evidence?.link, `https://app.icommunitylabs.com/evidences/${evidence.id}`),
+          explorerUrl,
+          blockNumber: readString(certification?.block_number, certification?.blockNumber, evidence?.block_number),
+          blockHash: readString(certification?.block_hash, certification?.blockHash, evidence?.block_hash),
+          contractAddress: readString(certification?.contract, certification?.contract_address, certification?.contractAddress, evidence?.contract),
+          fingerprint: readString(
+            integrityEntry?.checksum,
+            integrityEntry?.code,
+            payload?.checksum,
+            evidence?.checksum,
+          ),
+          algorithm: readString(
+            integrityEntry?.algorithm,
+            integrityEntry?.algo,
+            payload?.algorithm,
+            evidence?.algorithm,
+          ),
+        },
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
