@@ -111,7 +111,9 @@ export default function AdminWorksPage() {
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
     setBulkDeleting(true);
+    setBulkDeleteOpen(false);
     const ids = Array.from(selectedIds);
+    setBulkProgress({ done: 0, total: ids.length });
     let ok = 0; let fail = 0;
     for (const id of ids) {
       try {
@@ -121,9 +123,10 @@ export default function AdminWorksPage() {
         fail++;
         console.error('Bulk delete error', id, e);
       }
+      setBulkProgress(p => ({ ...p, done: p.done + 1 }));
     }
     setBulkDeleting(false);
-    setBulkDeleteOpen(false);
+    setBulkProgress({ done: 0, total: 0 });
     if (ok > 0) toast.success(`${ok} obra(s) eliminada(s)`);
     if (fail > 0) toast.error(`${fail} obra(s) no se pudieron eliminar`);
     load();
