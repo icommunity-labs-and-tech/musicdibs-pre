@@ -320,6 +320,7 @@ export default function AdminWorksPage() {
                 Fecha<SortIcon k="created_at" />
               </TableHead>
               <TableHead>Checker</TableHead>
+              <TableHead>Certificado</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
