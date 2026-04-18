@@ -260,6 +260,13 @@ export default function AdminWorksPage() {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30">
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={allOnPageSelected ? true : someOnPageSelected ? 'indeterminate' : false}
+                  onCheckedChange={(c) => togglePageSelection(c === true)}
+                  aria-label="Seleccionar todas"
+                />
+              </TableHead>
               <TableHead onClick={() => toggleSort('user_display_name')} className="cursor-pointer select-none">
                 Usuario<SortIcon k="user_display_name" />
               </TableHead>
@@ -280,11 +287,18 @@ export default function AdminWorksPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
             ) : works.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
             ) : works.map(w => (
-              <TableRow key={w.id}>
+              <TableRow key={w.id} data-state={selectedIds.has(w.id) ? 'selected' : undefined}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedIds.has(w.id)}
+                    onCheckedChange={(c) => toggleRow(w.id, c === true)}
+                    aria-label={`Seleccionar ${w.title}`}
+                  />
+                </TableCell>
                 <TableCell className="text-sm">{w.user_display_name || '—'}</TableCell>
                 <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{w.user_email || '—'}</TableCell>
                 <TableCell className="font-medium text-sm max-w-[200px] truncate">{w.title}</TableCell>
