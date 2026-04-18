@@ -164,28 +164,33 @@ export default function AdminWorksPage() {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30">
-              <TableHead>Usuario</TableHead>
+              <TableHead onClick={() => toggleSort('user_display_name')} className="cursor-pointer select-none">
+                Usuario<SortIcon k="user_display_name" />
+              </TableHead>
+              <TableHead onClick={() => toggleSort('user_email')} className="cursor-pointer select-none">
+                Correo<SortIcon k="user_email" />
+              </TableHead>
               <TableHead>Título</TableHead>
               <TableHead>Tipo</TableHead>
-              <TableHead>Estado</TableHead>
-              <TableHead>Fecha</TableHead>
+              <TableHead onClick={() => toggleSort('status')} className="cursor-pointer select-none">
+                Estado<SortIcon k="status" />
+              </TableHead>
+              <TableHead onClick={() => toggleSort('created_at')} className="cursor-pointer select-none">
+                Fecha<SortIcon k="created_at" />
+              </TableHead>
               <TableHead>Checker</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
             ) : works.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
             ) : works.map(w => (
               <TableRow key={w.id}>
-                <TableCell>
-                  <div>
-                    <p className="text-sm">{w.user_email}</p>
-                    <p className="text-xs text-muted-foreground">{w.user_display_name}</p>
-                  </div>
-                </TableCell>
+                <TableCell className="text-sm">{w.user_display_name || '—'}</TableCell>
+                <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{w.user_email || '—'}</TableCell>
                 <TableCell className="font-medium text-sm max-w-[200px] truncate">{w.title}</TableCell>
                 <TableCell><Badge variant="outline">{w.type}</Badge></TableCell>
                 <TableCell>{statusBadge(w.status, w.created_at)}</TableCell>
@@ -232,13 +237,20 @@ export default function AdminWorksPage() {
         </Table>
       </div>
 
-      <div className="flex justify-between">
-        <Button variant="outline" size="sm" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - 50))}>
-          <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
-        </Button>
-        <Button variant="outline" size="sm" disabled={works.length < 50} onClick={() => setOffset(offset + 50)}>
-          Siguiente <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <p className="text-xs text-muted-foreground">
+          {total > 0 ? (
+            <>Mostrando <strong>{offset + 1}–{Math.min(offset + works.length, total)}</strong> de <strong>{total}</strong> registros · Página <strong>{currentPage}</strong> de <strong>{totalPages}</strong></>
+          ) : 'Sin registros'}
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - PAGE_SIZE))}>
+            <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
+          </Button>
+          <Button variant="outline" size="sm" disabled={offset + PAGE_SIZE >= total} onClick={() => setOffset(offset + PAGE_SIZE)}>
+            Siguiente <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
       </div>
 
       {/* Delete Confirmation */}
