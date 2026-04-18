@@ -17,9 +17,12 @@ type SortDir = 'asc' | 'desc';
 
 export default function AdminWorksPage() {
   const [works, setWorks] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<SortKey>('created_at');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [loading, setLoading] = useState(false);
   const [detailWork, setDetailWork] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<any | null>(null);
@@ -28,13 +31,34 @@ export default function AdminWorksPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await adminApi.getAllWorks(offset, statusFilter, search);
+      const res = await adminApi.getAllWorks(offset, statusFilter, search, sortBy, sortDir, PAGE_SIZE);
       setWorks(res.works || []);
+      setTotal(res.total || 0);
     } catch (e: any) { toast.error(e.message); }
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [offset, statusFilter]);
+  useEffect(() => { load(); }, [offset, statusFilter, sortBy, sortDir]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortBy === key) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(key);
+      setSortDir(key === 'created_at' ? 'desc' : 'asc');
+    }
+    setOffset(0);
+  };
+
+  const SortIcon = ({ k }: { k: SortKey }) => {
+    if (sortBy !== k) return <ArrowUpDown className="h-3 w-3 inline ml-1 opacity-40" />;
+    return sortDir === 'asc'
+      ? <ArrowUp className="h-3 w-3 inline ml-1" />
+      : <ArrowDown className="h-3 w-3 inline ml-1" />;
+  };
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
 
   const handleExportCsv = async () => {
     try {
