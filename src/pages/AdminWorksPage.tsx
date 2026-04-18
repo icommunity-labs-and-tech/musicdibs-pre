@@ -32,6 +32,43 @@ export default function AdminWorksPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [generatingCert, setGeneratingCert] = useState<string | null>(null);
+
+  const handleDownloadCertificate = async (w: any) => {
+    setGeneratingCert(w.id);
+    try {
+      const network = w.blockchain_network || 'Polygon';
+      const checkerNetwork = ['fantom_opera_mainnet', 'fantom', 'opera'].includes(network.toLowerCase())
+        ? 'opera'
+        : network.toLowerCase();
+      const certData: CertificateData = {
+        title: w.title,
+        filename: w.original_filename || `${w.title}.mp3`,
+        filesize: w.file_size ? `${Number(w.file_size).toLocaleString('es')} bytes` : 'N/A',
+        fileType: w.type || 'audio',
+        description: w.description || undefined,
+        authorName: w.user_display_name || w.user_email || 'N/A',
+        authorDocId: undefined,
+        certifiedAt: new Date(w.certified_at || w.created_at).toLocaleDateString('es', {
+          day: '2-digit', month: 'long', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+        }),
+        network,
+        txHash: w.blockchain_hash,
+        fingerprint: w.blockchain_hash,
+        algorithm: 'base64 SHA-512',
+        checkerUrl: w.checker_url || `https://checker.icommunitylabs.com/check/${checkerNetwork}/${w.blockchain_hash}`,
+        ibsUrl: `https://app.icommunitylabs.com/evidences/${w.ibs_evidence_id}`,
+        evidenceId: w.ibs_evidence_id,
+      };
+      await generateCertificate(certData, 'es');
+      toast.success('Certificado descargado');
+    } catch (e: any) {
+      console.error(e);
+      toast.error('No se pudo generar el certificado');
+    }
+    setGeneratingCert(null);
+  };
 
   const load = async () => {
     setLoading(true);
