@@ -33,6 +33,7 @@ export default function AdminWorksPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const [generatingCert, setGeneratingCert] = useState<string | null>(null);
 
   const handleDownloadCertificate = async (w: any) => {
@@ -110,7 +111,9 @@ export default function AdminWorksPage() {
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
     setBulkDeleting(true);
+    setBulkDeleteOpen(false);
     const ids = Array.from(selectedIds);
+    setBulkProgress({ done: 0, total: ids.length });
     let ok = 0; let fail = 0;
     for (const id of ids) {
       try {
@@ -120,9 +123,10 @@ export default function AdminWorksPage() {
         fail++;
         console.error('Bulk delete error', id, e);
       }
+      setBulkProgress(p => ({ ...p, done: p.done + 1 }));
     }
     setBulkDeleting(false);
-    setBulkDeleteOpen(false);
+    setBulkProgress({ done: 0, total: 0 });
     if (ok > 0) toast.success(`${ok} obra(s) eliminada(s)`);
     if (fail > 0) toast.error(`${fail} obra(s) no se pudieron eliminar`);
     load();
@@ -251,7 +255,7 @@ export default function AdminWorksPage() {
       <div className="flex gap-2 flex-wrap">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por título o email..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => e.key === 'Enter' && load()} className="pl-9" />
+          <Input placeholder="Buscar por título, usuario o email..." value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { setOffset(0); load(); } }} className="pl-9" />
         </div>
         <Select value={statusFilter} onValueChange={v => { setStatusFilter(v === 'all' ? '' : v); setOffset(0); }}>
           <SelectTrigger className="w-40"><SelectValue placeholder="Estado" /></SelectTrigger>
@@ -410,6 +414,29 @@ export default function AdminWorksPage() {
           </Button>
         </div>
       </div>
+
+      {/* Bulk Progress Overlay */}
+      <Dialog open={bulkDeleting} onOpenChange={() => {}}>
+        <DialogContent className="max-w-sm" onInteractOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              Eliminando obras...
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full bg-primary transition-all"
+                style={{ width: `${bulkProgress.total > 0 ? (bulkProgress.done / bulkProgress.total) * 100 : 0}%` }}
+              />
+            </div>
+            <p className="text-center text-sm text-muted-foreground">
+              {bulkProgress.done} de {bulkProgress.total}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Bulk Delete Confirmation */}
       <AlertDialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
