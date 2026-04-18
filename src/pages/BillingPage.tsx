@@ -102,6 +102,17 @@ export default function BillingPage() {
         setPlan(profile?.subscription_plan ?? 'Free');
       }
 
+      // Load tier from subscriptions table for annual plan detail
+      const { data: subRow } = await supabase
+        .from('subscriptions')
+        .select('tier')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (mounted && subRow?.tier) setTier(subRow.tier);
+
       const { data, error } = await supabase.functions.invoke('check-subscription');
       if (error || !mounted) return;
 
