@@ -33,6 +33,7 @@ export default function AdminWorksPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0 });
   const [generatingCert, setGeneratingCert] = useState<string | null>(null);
 
   const handleDownloadCertificate = async (w: any) => {
