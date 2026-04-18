@@ -10,7 +10,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
-import { Music, Search, ChevronLeft, ChevronRight, ExternalLink, Download, Eye, Loader2, MoreHorizontal, Trash2, RotateCcw, ArrowUp, ArrowDown, ArrowUpDown, X } from 'lucide-react';
+import { Music, Search, ChevronLeft, ChevronRight, ExternalLink, Download, Eye, Loader2, MoreHorizontal, Trash2, RotateCcw, ArrowUp, ArrowDown, ArrowUpDown, X, FileText } from 'lucide-react';
+import { generateCertificate, type CertificateData } from '@/lib/generateCertificate';
 
 const PAGE_SIZE = 50;
 type SortKey = 'user_display_name' | 'user_email' | 'status' | 'created_at';
