@@ -50,8 +50,21 @@ export default function BillingPage() {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [plan, setPlan] = useState<string | null>(null);
+  const [tier, setTier] = useState<string | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+
+  // Annual tier → credits (for display next to the plan label)
+  const ANNUAL_TIER_CREDITS: Record<string, number> = {
+    annual_100: 100,
+    annual_200: 200,
+    annual_300: 300,
+    annual_400: 500,
+    annual_500: 1000,
+  };
+  const tierDetail = tier && ANNUAL_TIER_CREDITS[tier]
+    ? `${ANNUAL_TIER_CREDITS[tier]} ${t('dashboard.billing.creditsLabel', { defaultValue: 'créditos' })}/año`
+    : null;
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(true);
