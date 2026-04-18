@@ -10,7 +10,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
-import { Music, Search, ChevronLeft, ChevronRight, ExternalLink, Download, Eye, Loader2, MoreHorizontal, Trash2, RotateCcw, ArrowUp, ArrowDown, ArrowUpDown, X } from 'lucide-react';
+import { Music, Search, ChevronLeft, ChevronRight, ExternalLink, Download, Eye, Loader2, MoreHorizontal, Trash2, RotateCcw, ArrowUp, ArrowDown, ArrowUpDown, X, FileText } from 'lucide-react';
+import { generateCertificate, type CertificateData } from '@/lib/generateCertificate';
 
 const PAGE_SIZE = 50;
 type SortKey = 'user_display_name' | 'user_email' | 'status' | 'created_at';
@@ -31,6 +32,43 @@ export default function AdminWorksPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [generatingCert, setGeneratingCert] = useState<string | null>(null);
+
+  const handleDownloadCertificate = async (w: any) => {
+    setGeneratingCert(w.id);
+    try {
+      const network = w.blockchain_network || 'Polygon';
+      const checkerNetwork = ['fantom_opera_mainnet', 'fantom', 'opera'].includes(network.toLowerCase())
+        ? 'opera'
+        : network.toLowerCase();
+      const certData: CertificateData = {
+        title: w.title,
+        filename: w.original_filename || `${w.title}.mp3`,
+        filesize: w.file_size ? `${Number(w.file_size).toLocaleString('es')} bytes` : 'N/A',
+        fileType: w.type || 'audio',
+        description: w.description || undefined,
+        authorName: w.user_display_name || w.user_email || 'N/A',
+        authorDocId: undefined,
+        certifiedAt: new Date(w.certified_at || w.created_at).toLocaleDateString('es', {
+          day: '2-digit', month: 'long', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
+        }),
+        network,
+        txHash: w.blockchain_hash,
+        fingerprint: w.blockchain_hash,
+        algorithm: 'base64 SHA-512',
+        checkerUrl: w.checker_url || `https://checker.icommunitylabs.com/check/${checkerNetwork}/${w.blockchain_hash}`,
+        ibsUrl: `https://app.icommunitylabs.com/evidences/${w.ibs_evidence_id}`,
+        evidenceId: w.ibs_evidence_id,
+      };
+      await generateCertificate(certData, 'es');
+      toast.success('Certificado descargado');
+    } catch (e: any) {
+      console.error(e);
+      toast.error('No se pudo generar el certificado');
+    }
+    setGeneratingCert(null);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -282,14 +320,15 @@ export default function AdminWorksPage() {
                 Fecha<SortIcon k="created_at" />
               </TableHead>
               <TableHead>Checker</TableHead>
+              <TableHead>Certificado</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
             ) : works.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
             ) : works.map(w => (
               <TableRow key={w.id} data-state={selectedIds.has(w.id) ? 'selected' : undefined}>
                 <TableCell>
@@ -310,6 +349,22 @@ export default function AdminWorksPage() {
                     <a href={w.checker_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
                       Ver <ExternalLink className="h-3 w-3" />
                     </a>
+                  ) : '—'}
+                </TableCell>
+                <TableCell>
+                  {w.blockchain_hash && w.ibs_evidence_id && w.status === 'registered' ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs gap-1"
+                      onClick={() => handleDownloadCertificate(w)}
+                      disabled={generatingCert === w.id}
+                    >
+                      {generatingCert === w.id
+                        ? <Loader2 className="h-3 w-3 animate-spin" />
+                        : <FileText className="h-3 w-3" />}
+                      PDF
+                    </Button>
                   ) : '—'}
                 </TableCell>
                 <TableCell>
