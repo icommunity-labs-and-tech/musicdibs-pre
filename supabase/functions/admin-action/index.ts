@@ -364,27 +364,97 @@ serve(async (req) => {
 
     if (action === "get_all_works") {
       const offset = payload.offset || 0;
-      let query = admin.from("works").select("*").order("created_at", { ascending: false }).range(offset, offset + 49);
-      if (payload.status_filter) query = query.eq("status", payload.status_filter);
-      if (payload.search) query = query.ilike("title", `%${payload.search}%`);
+      const limit = payload.limit || 50;
+      const sortBy = payload.sort_by || "created_at"; // created_at | status | user_email | user_display_name
+      const sortDir = payload.sort_dir === "asc" ? "asc" : "desc";
+      const search = (payload.search || "").trim();
 
-      const { data: works, error } = await query;
-      if (error) return json({ error: error.message }, 500);
-
-      const userIds = [...new Set((works || []).map((w: any) => w.user_id))];
       const emailsMap = await getAllEmailsMap();
 
+      // If sorting/searching by email, we need to pre-resolve user_ids
+      let userIdFilter: string[] | null = null;
+      if (search) {
+        const matchingUserIds = Object.entries(emailsMap)
+          .filter(([, em]) => (em || "").toLowerCase().includes(search.toLowerCase()))
+          .map(([uid]) => uid);
+        const { data: nameMatches } = await admin
+          .from("profiles")
+          .select("user_id")
+          .ilike("display_name", `%${search}%`);
+        userIdFilter = [...new Set([...matchingUserIds, ...(nameMatches || []).map((p: any) => p.user_id)])];
+      }
+
+      const buildBase = () => {
+        let q = admin.from("works").select("*", { count: "exact" });
+        if (payload.status_filter) q = q.eq("status", payload.status_filter);
+        if (search) {
+          // title match OR user_id in resolved list
+          const idsCsv = (userIdFilter || []).map((id) => `"${id}"`).join(",");
+          if ((userIdFilter || []).length > 0) {
+            q = q.or(`title.ilike.%${search}%,user_id.in.(${idsCsv})`);
+          } else {
+            q = q.ilike("title", `%${search}%`);
+          }
+        }
+        return q;
+      };
+
+      // For DB-level sortable columns
+      const dbSortable: Record<string, string> = {
+        created_at: "created_at",
+        status: "status",
+      };
+
+      let works: any[] = [];
+      let total = 0;
+
+      if (dbSortable[sortBy]) {
+        const { data, count, error } = await buildBase()
+          .order(dbSortable[sortBy], { ascending: sortDir === "asc" })
+          .range(offset, offset + limit - 1);
+        if (error) return json({ error: error.message }, 500);
+        works = data || [];
+        total = count || 0;
+      } else {
+        // Sort by user_email / user_display_name → fetch all matching, sort in memory, then paginate
+        const { data, count, error } = await buildBase()
+          .order("created_at", { ascending: false })
+          .range(0, 9999);
+        if (error) return json({ error: error.message }, 500);
+        const all = data || [];
+        total = count || 0;
+
+        const userIdsAll = [...new Set(all.map((w: any) => w.user_id))];
+        const { data: profilesAll } = await admin.from("profiles").select("user_id, display_name").in("user_id", userIdsAll);
+        const namesMapAll: Record<string, string> = {};
+        (profilesAll || []).forEach((p: any) => { namesMapAll[p.user_id] = p.display_name || ""; });
+
+        const keyFn = (w: any) =>
+          sortBy === "user_email"
+            ? (emailsMap[w.user_id] || "").toLowerCase()
+            : (namesMapAll[w.user_id] || "").toLowerCase();
+
+        all.sort((a: any, b: any) => {
+          const ka = keyFn(a); const kb = keyFn(b);
+          if (ka < kb) return sortDir === "asc" ? -1 : 1;
+          if (ka > kb) return sortDir === "asc" ? 1 : -1;
+          return 0;
+        });
+        works = all.slice(offset, offset + limit);
+      }
+
+      const userIds = [...new Set(works.map((w: any) => w.user_id))];
       const { data: profiles } = await admin.from("profiles").select("user_id, display_name").in("user_id", userIds);
       const namesMap: Record<string, string> = {};
       (profiles || []).forEach((p: any) => { namesMap[p.user_id] = p.display_name; });
 
-      const enriched = (works || []).map((w: any) => ({
+      const enriched = works.map((w: any) => ({
         ...w,
         user_email: emailsMap[w.user_id] || "",
         user_display_name: namesMap[w.user_id] || "",
       }));
 
-      return json({ works: enriched });
+      return json({ works: enriched, total });
     }
 
     if (action === "get_metrics") {

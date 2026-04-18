@@ -16,7 +16,7 @@ export const adminApi = {
   toggleBlock: (user_id: string, blocked: boolean) => adminAction('toggle_block', { user_id, blocked }),
   setAdminRole: (user_id: string, is_admin: boolean) => adminAction('set_admin_role', { user_id, is_admin }),
   setManagerRole: (user_id: string, is_manager: boolean) => adminAction('set_manager_role', { user_id, is_manager }),
-  getAllWorks: (offset = 0, status_filter = '', search = '') => adminAction('get_all_works', { offset, status_filter, search }),
+  getAllWorks: (offset = 0, status_filter = '', search = '', sort_by = 'created_at', sort_dir: 'asc' | 'desc' = 'desc', limit = 50) => adminAction('get_all_works', { offset, status_filter, search, sort_by, sort_dir, limit }),
   getMetrics: () => adminAction('get_metrics'),
   getSaasMetrics: (filters?: { periodType?: string; weekStart?: string; month?: string; year?: string }) => adminAction('get_saas_metrics', filters || {}),
   getAllTransactions: (offset = 0, type_filter = '', date_from = '', date_to = '') => adminAction('get_all_transactions', { offset, type_filter, date_from, date_to }),
