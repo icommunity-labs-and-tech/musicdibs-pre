@@ -348,7 +348,22 @@ export async function generateCertificate(data: CertificateData, locale?: string
   y += 10
 
   if (data.explorerUrl) {
-    y = field(y, L.explorerLabel, data.explorerUrl)
+    // Label
+    font('normal', 9.5)
+    hex(GRAY_D)
+    doc.text(L.explorerLabel, ML, y)
+    y += 5
+    // URL: shrink font to fit single line
+    hex(BLACK)
+    let urlSize = 9.5
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(urlSize)
+    while (doc.getTextWidth(data.explorerUrl) > contentW && urlSize > 5) {
+      urlSize -= 0.5
+      doc.setFontSize(urlSize)
+    }
+    doc.textWithLink(data.explorerUrl, ML, y, { url: data.explorerUrl })
+    y += 4.2 + 4
   }
   y = field(y, L.txIdLabel, data.txHash, true)
   y = field(y, L.fingerprintLabel, data.fingerprint, true)
@@ -371,7 +386,7 @@ export async function generateCertificate(data: CertificateData, locale?: string
 
   const qrSz = 32
   const qrX = W - MR - qrSz
-  const qrY = H - 32 - qrSz
+  const qrY = H - 22 - qrSz
 
   font('bold', 10)
   hex(BLACK)
