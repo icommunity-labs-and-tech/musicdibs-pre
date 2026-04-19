@@ -7,6 +7,96 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+// ── Composition plan helper ──────────────────────────────────
+// Calls ElevenLabs /v1/music/composition-plan to get a structural plan
+// from a style prompt, then injects user-provided lyrics into vocal sections
+// word-for-word. Returns null on any failure (caller falls back to prompt-only).
+async function buildCompositionPlan(
+  stylePrompt: string,
+  lyrics: string,
+  durationMs: number,
+  apiKey: string,
+): Promise<any | null> {
+  try {
+    const planResp = await fetch('https://api.elevenlabs.io/v1/music/composition-plan', {
+      method: 'POST',
+      headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: stylePrompt,
+        music_length_ms: durationMs,
+      }),
+    });
+
+    if (!planResp.ok) {
+      console.warn(`[GENERATE-AUDIO] composition-plan failed: ${planResp.status} ${await planResp.text().catch(() => '')}`);
+      return null;
+    }
+
+    const plan = await planResp.json();
+    const sections = Array.isArray(plan?.sections) ? plan.sections : [];
+    if (sections.length === 0) return null;
+
+    // Identify vocal sections — exclude intro/outro/instrumental/break
+    const isVocalSection = (s: any): boolean => {
+      const name = String(s?.section_name || s?.name || '').toLowerCase();
+      const type = String(s?.section_type || s?.type || '').toLowerCase();
+      const blockedKeywords = ['intro', 'outro', 'instrumental', 'break', 'interlude', 'solo'];
+      if (blockedKeywords.some(k => name.includes(k) || type.includes(k))) return false;
+      return true;
+    };
+
+    const vocalIdxs: number[] = sections
+      .map((s: any, i: number) => (isVocalSection(s) ? i : -1))
+      .filter((i: number) => i >= 0);
+
+    if (vocalIdxs.length === 0) return null;
+
+    // Split user lyrics into non-empty lines, strip section markers like [Verso], [Coro]
+    const rawLines = lyrics
+      .split(/\r?\n/)
+      .map(l => l.trim())
+      .filter(l => l.length > 0 && !/^\[.*\]$/.test(l));
+
+    if (rawLines.length === 0) return null;
+
+    // Enforce 200-char max per line by soft-wrapping at word boundaries
+    const lines: string[] = [];
+    for (const ln of rawLines) {
+      if (ln.length <= 200) { lines.push(ln); continue; }
+      const words = ln.split(/\s+/);
+      let buf = '';
+      for (const w of words) {
+        if ((buf + ' ' + w).trim().length > 200) {
+          if (buf) lines.push(buf.trim());
+          buf = w;
+        } else {
+          buf = (buf + ' ' + w).trim();
+        }
+      }
+      if (buf) lines.push(buf.trim());
+    }
+
+    // Distribute lines across vocal sections as evenly as possible
+    const buckets: string[][] = vocalIdxs.map(() => []);
+    lines.forEach((line, i) => buckets[i % buckets.length].push(line));
+
+    vocalIdxs.forEach((sIdx, k) => {
+      const text = buckets[k].join('\n').trim();
+      if (text.length > 0) {
+        sections[sIdx].lines = buckets[k];
+        // Some plan schemas use `lyrics` instead of `lines`
+        sections[sIdx].lyrics = text;
+      }
+    });
+
+    plan.sections = sections;
+    return plan;
+  } catch (err) {
+    console.warn('[GENERATE-AUDIO] composition-plan exception:', err);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -139,60 +229,91 @@ serve(async (req) => {
     if (cleanPrompt) parts.push(cleanPrompt);
     const enrichedPrompt = parts.join('. ');
 
-    console.log(`[GENERATE-AUDIO] ElevenLabs Music: mode=${mode || 'song'} | "${enrichedPrompt.substring(0, 100)}"`);
+    const durationSecs = duration || 60;
+    const durationMs = durationSecs * 1000;
+    const hasUserLyrics = typeof lyrics === 'string' && lyrics.trim().length > 0 && mode === 'song';
 
-    const callElevenLabs = async (promptText: string) => {
+    // Pre-build composition plan if user provided lyrics
+    let compositionPlan: any | null = null;
+    if (hasUserLyrics) {
+      console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars)`);
+      compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), durationMs, ELEVENLABS_API_KEY);
+      if (!compositionPlan) {
+        console.warn('[GENERATE-AUDIO] composition plan unavailable — falling back to prompt-only mode');
+      }
+    }
+
+    console.log(`[GENERATE-AUDIO] ElevenLabs Music: mode=${mode || 'song'} | plan=${compositionPlan ? 'yes' : 'no'} | "${enrichedPrompt.substring(0, 100)}"`);
+
+    // ── ElevenLabs call (mutually exclusive: plan OR prompt) ──
+    const callElevenLabs = async (planOrPrompt: { plan?: any; promptText?: string }) => {
+      const body: Record<string, unknown> = { music_length_ms: durationMs };
+      if (planOrPrompt.plan) {
+        body.composition_plan = planOrPrompt.plan;
+      } else {
+        body.prompt = planOrPrompt.promptText;
+      }
       return fetch('https://api.elevenlabs.io/v1/music', {
         method: 'POST',
-        headers: {
-          'xi-api-key': ELEVENLABS_API_KEY,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: promptText,
-          duration_seconds: duration || 60,
-        }),
+        headers: { 'xi-api-key': ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       });
     };
 
-    let response = await callElevenLabs(enrichedPrompt);
+    let response = compositionPlan
+      ? await callElevenLabs({ plan: compositionPlan })
+      : await callElevenLabs({ promptText: enrichedPrompt });
 
     // If prompt was rejected (bad_prompt), retry with the suggested prompt
     if (!response.ok && response.status === 400) {
       const errText = await response.text();
-      console.warn(`[GENERATE-AUDIO] Prompt rejected (400): ${errText.substring(0, 200)}`);
+      console.warn(`[GENERATE-AUDIO] Request rejected (400): ${errText.substring(0, 200)}`);
 
-      try {
-        const errJson = JSON.parse(errText);
-        const detail = errJson?.detail || errJson;
-        const suggestion = detail?.data?.prompt_suggestion;
+      // If the failure came from composition_plan, retry once in prompt-only mode
+      if (compositionPlan) {
+        console.log('[GENERATE-AUDIO] Retrying without composition plan (prompt-only fallback)');
+        response = await callElevenLabs({ promptText: enrichedPrompt });
+        if (!response.ok) {
+          const retryErr = await response.text();
+          await refundCredits(`Fallo plan + prompt: ${response.status}`);
+          return new Response(
+            JSON.stringify({ error: `Generation failed: ${response.status}`, details: retryErr }),
+            { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      } else {
+        try {
+          const errJson = JSON.parse(errText);
+          const detail = errJson?.detail || errJson;
+          const suggestion = detail?.data?.prompt_suggestion;
 
-        if (detail?.status === 'bad_prompt' && suggestion) {
-          console.log(`[GENERATE-AUDIO] Retrying with suggested prompt: "${suggestion.substring(0, 100)}"`);
-          response = await callElevenLabs(suggestion);
+          if (detail?.status === 'bad_prompt' && suggestion) {
+            console.log(`[GENERATE-AUDIO] Retrying with suggested prompt: "${suggestion.substring(0, 100)}"`);
+            response = await callElevenLabs({ promptText: suggestion });
 
-          if (!response.ok) {
-            const retryErr = await response.text();
-            console.error(`[GENERATE-AUDIO] Retry also failed: ${response.status} - ${retryErr}`);
-            await refundCredits(`Fallo generación audio (reintento): ${response.status}`);
+            if (!response.ok) {
+              const retryErr = await response.text();
+              console.error(`[GENERATE-AUDIO] Retry also failed: ${response.status} - ${retryErr}`);
+              await refundCredits(`Fallo generación audio (reintento): ${response.status}`);
+              return new Response(
+                JSON.stringify({ error: `Generation failed on retry: ${response.status}`, details: retryErr }),
+                { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
+            }
+          } else {
+            await refundCredits(`Prompt rechazado: ${errText.slice(0, 100)}`);
             return new Response(
-              JSON.stringify({ error: `Generation failed on retry: ${response.status}`, details: retryErr }),
-              { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              JSON.stringify({ error: `Generation failed: 400`, details: errText }),
+              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
           }
-        } else {
-          await refundCredits(`Prompt rechazado: ${errText.slice(0, 100)}`);
+        } catch {
+          await refundCredits(`Fallo generación audio: 400`);
           return new Response(
             JSON.stringify({ error: `Generation failed: 400`, details: errText }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
-      } catch {
-        await refundCredits(`Fallo generación audio: 400`);
-        return new Response(
-          JSON.stringify({ error: `Generation failed: 400`, details: errText }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
       }
     } else if (!response.ok) {
       const errText = await response.text();
@@ -224,7 +345,7 @@ serve(async (req) => {
     const base64Audio = base64Encode(audioBuffer);
     const audioBytes = new Uint8Array(audioBuffer);
 
-    console.log(`[GENERATE-AUDIO] Success! Audio size: ${audioBuffer.byteLength} bytes, ${CREDITS_COST} credits charged`);
+    console.log(`[GENERATE-AUDIO] Success! Audio size: ${audioBuffer.byteLength} bytes, ${CREDITS_COST} credits charged${compositionPlan ? ' (with composition plan)' : ''}`);
 
     // ── Persist to storage + ai_generations ──
     let savedAudioUrl: string | null = null;
@@ -245,7 +366,7 @@ serve(async (req) => {
           user_id: userId,
           prompt: prompt.slice(0, 500),
           audio_url: savedAudioUrl,
-          duration: duration || 60,
+          duration: durationSecs,
           genre: genre || null,
           mood: mood || null,
         }).select('id').single();
@@ -261,19 +382,18 @@ serve(async (req) => {
       JSON.stringify({
         audio: base64Audio,
         format: 'audio/mpeg',
-        duration: duration || 60,
+        duration: durationSecs,
         provider: 'elevenlabs',
         status: 'completed',
         generationId,
         audioUrl: savedAudioUrl,
+        usedCompositionPlan: !!compositionPlan,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
     console.error('[GENERATE-AUDIO] Error:', error);
-    // Note: if we reach here after deducting credits, the error is unexpected.
-    // We attempt a refund but can't guarantee it in all edge cases.
     return new Response(
       JSON.stringify({ error: error.message || 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
