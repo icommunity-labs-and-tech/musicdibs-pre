@@ -49,6 +49,78 @@ serve(async (req) => {
       });
     }
 
+    // ─── Server-side credit enforcement ───────────────────────
+    const { data: costRow } = await supabase
+      .from('feature_costs')
+      .select('credit_cost')
+      .eq('feature_key', 'promote_premium')
+      .maybeSingle();
+    const creditCost = costRow?.credit_cost ?? 30;
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('available_credits')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (profileError || !profile) {
+      return new Response(JSON.stringify({ error: 'Profile not found' }), {
+        status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const currentBalance = profile.available_credits ?? 0;
+    if (currentBalance < creditCost) {
+      return new Response(JSON.stringify({ error: 'Insufficient credits', required: creditCost, available: currentBalance }), {
+        status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Atomic optimistic-lock deduction
+    const { data: deducted, error: deductError } = await supabase
+      .from('profiles')
+      .update({ available_credits: currentBalance - creditCost })
+      .eq('user_id', user.id)
+      .eq('available_credits', currentBalance)
+      .select('available_credits')
+      .maybeSingle();
+
+    if (deductError || !deducted) {
+      return new Response(JSON.stringify({ error: 'Credit deduction conflict, please retry' }), {
+        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Log the credit transaction
+    await supabase.from('credit_transactions').insert({
+      user_id: user.id,
+      amount: -creditCost,
+      type: 'promote_premium',
+      description: `Premium promo: ${song_title}`,
+    });
+
+    // Helper for refund on failure
+    const refundCredits = async (reason: string) => {
+      console.error(`[PREMIUM-PROMO] Refunding ${creditCost} credits to ${user.id}: ${reason}`);
+      const { data: p } = await supabase
+        .from('profiles')
+        .select('available_credits')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (p) {
+        await supabase
+          .from('profiles')
+          .update({ available_credits: (p.available_credits ?? 0) + creditCost })
+          .eq('user_id', user.id);
+        await supabase.from('credit_transactions').insert({
+          user_id: user.id,
+          amount: creditCost,
+          type: 'refund',
+          description: `Refund premium promo (${reason})`,
+        });
+      }
+    };
+
     // Insert premium promo request
     const { data: promo, error: insertError } = await supabase
       .from('premium_social_promotions')
