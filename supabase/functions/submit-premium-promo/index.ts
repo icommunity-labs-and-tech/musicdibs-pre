@@ -138,13 +138,14 @@ serve(async (req) => {
         audio_file_path: audio_file_path || null,
         media_file_type: media_file_type || null,
         status: 'submitted',
-        credits_spent: 30,
+        credits_spent: creditCost,
       })
       .select()
       .single();
 
     if (insertError) {
       console.error('[PREMIUM-PROMO] Insert error:', insertError);
+      await refundCredits('insert_failed');
       return new Response(JSON.stringify({ error: insertError.message }), {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
