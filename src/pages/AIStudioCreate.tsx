@@ -44,7 +44,7 @@ import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { useProductTracking } from "@/hooks/useProductTracking";
 
 // ── Music tab constants ──
-const DURATION_OPTIONS = [30, 60, 90, 120] as const;
+const DURATION_OPTIONS = [60, 120, 180, 210, 240] as const;
 
 // ── Lyrics tab constants ──
 const LYRIC_STYLES = ["Narrativa", "Abstracta", "Descriptiva", "Reivindicativa", "Introspectiva", "Poética"];
