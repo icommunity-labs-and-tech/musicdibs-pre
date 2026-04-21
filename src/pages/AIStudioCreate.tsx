@@ -118,7 +118,7 @@ const AIStudioCreate = () => {
   // ── Music tab state ──
   const [mode, setMode] = useState<'song' | 'instrumental'>('song');
   const [prompt, setPrompt] = useState("");
-  const [duration, setDuration] = useState(210);
+  const [duration, setDuration] = useState<number | null>(null);
   const [lyricsText, setLyricsText] = useState("");
   const [lyricsExpanded, setLyricsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -357,7 +357,7 @@ const AIStudioCreate = () => {
           prompt: enrichedPrompt,
           lyrics: mode === 'song' ? lyricsText.trim() : '',
           mode,
-          duration,
+          ...(duration ? { duration } : {}),
         }
       });
 
@@ -1226,7 +1226,7 @@ const AIStudioCreate = () => {
                                 key={secs}
                                 variant={active ? 'default' : 'outline'}
                                 className="cursor-pointer text-xs px-3 py-1.5"
-                                onClick={() => setDuration(secs)}
+                                onClick={() => setDuration(active ? null : secs)}
                               >
                                 {label}
                               </Badge>
@@ -1234,7 +1234,9 @@ const AIStudioCreate = () => {
                           })}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Las canciones más largas pueden tardar algo más en generarse.
+                          {duration
+                            ? 'Las canciones más largas pueden tardar algo más en generarse.'
+                            : 'Si no eliges una duración, el modelo decidirá la más adecuada.'}
                         </p>
                       </div>
 
