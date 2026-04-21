@@ -406,16 +406,20 @@ export default function MediaLibraryPage() {
     setDeletingBulk(false);
   };
 
-  // ── Playback ──
-  const togglePlay = (asset: MediaAsset) => {
-    if (!asset.url) return;
+  // ── Playback (resolves audio URL on demand) ──
+  const togglePlay = async (asset: MediaAsset) => {
     if (playingId === asset.id) {
       audioRef.current?.pause();
       setPlayingId(null);
       return;
     }
+    const url = await resolveAssetUrl(asset);
+    if (!url) {
+      toast({ title: "Audio no disponible", variant: "destructive" });
+      return;
+    }
     if (audioRef.current) audioRef.current.pause();
-    const audio = new Audio(asset.url);
+    const audio = new Audio(url);
     audio.onended = () => setPlayingId(null);
     audio.play();
     audioRef.current = audio;
