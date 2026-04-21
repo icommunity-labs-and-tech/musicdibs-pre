@@ -24,12 +24,16 @@ interface MediaAsset {
   id: string;
   type: "song" | "video" | "cover" | "vocal";
   title: string;
+  /** May be null until lazily resolved (see resolveAssetUrl) */
   url: string | null;
   createdAt: string;
   meta?: Record<string, string>;
-  /** Source info for delete mapping */
+  /** Source info for delete mapping + lazy URL resolution */
   source: "ai_generations" | "video_generations" | "social_promotions" | "voice_clones" | "storage";
 }
+
+// Per-source row cap for the initial listing — keeps payload small & fast.
+const PAGE_LIMIT = 100;
 
 type TabType = "all" | "song" | "video" | "cover" | "vocal";
 
@@ -95,65 +99,70 @@ export default function MediaLibraryPage() {
   const loadAssets = async (userId: string, showSpinner: boolean) => {
     if (showSpinner) setLoading(true);
 
-    // Run ALL queries in parallel
+    // Lightweight queries: NO heavy URL columns (audio_url, video_url, merged_url, sample_url).
+    // URLs are resolved on demand (play / download / open) via resolveAssetUrl().
     const [songsRes, videosRes, promosRes, coverFilesRes, clonesRes] = await Promise.all([
       supabase
         .from("ai_generations")
-        .select("id, prompt, audio_url, genre, mood, created_at")
+        .select("id, prompt, genre, mood, created_at")
         .eq("user_id", userId)
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(PAGE_LIMIT),
       supabase
         .from("video_generations" as any)
-        .select("id, prompt, video_url, merged_url, status, created_at, style")
+        .select("id, prompt, status, created_at, style")
         .eq("user_id", userId)
         .eq("status", "COMPLETED")
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(PAGE_LIMIT),
       supabase
         .from("social_promotions" as any)
         .select("id, image_url, created_at, work_id")
         .eq("user_id", userId)
         .not("image_url", "is", null)
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(PAGE_LIMIT),
       supabase.storage
         .from("social-promo-images")
-        .list(`covers/${userId}`, { limit: 200, sortBy: { column: "created_at", order: "desc" } }),
+        .list(`covers/${userId}`, { limit: PAGE_LIMIT, sortBy: { column: "created_at", order: "desc" } }),
       supabase
         .from("voice_clones" as any)
-        .select("id, name, sample_url, created_at, status")
+        .select("id, name, created_at, status")
         .eq("user_id", userId)
         .eq("status", "active")
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(PAGE_LIMIT),
     ]);
 
     const allAssets: MediaAsset[] = [];
 
-    // Songs
+    // Songs (URL lazily resolved)
     if (songsRes.data) {
       for (const s of songsRes.data as any[]) {
         allAssets.push({
           id: s.id, type: "song",
           title: s.prompt?.substring(0, 80) || "Canción sin título",
-          url: s.audio_url, createdAt: s.created_at,
+          url: null, createdAt: s.created_at,
           meta: { genre: s.genre || "", mood: s.mood || "" },
           source: "ai_generations",
         });
       }
     }
 
-    // Videos
+    // Videos (URL lazily resolved)
     if (videosRes.data) {
       for (const v of videosRes.data as any[]) {
         allAssets.push({
           id: v.id, type: "video",
           title: v.prompt?.substring(0, 80) || "Vídeo sin título",
-          url: v.merged_url || v.video_url, createdAt: v.created_at,
+          url: null, createdAt: v.created_at,
           meta: { style: v.style || "" },
           source: "video_generations",
         });
       }
     }
 
-    // Covers from social_promotions
+    // Covers from social_promotions (image_url is small, keep it)
     const promoUrls = new Set<string>();
     if (promosRes.data) {
       for (const p of promosRes.data as any[]) {
@@ -184,13 +193,13 @@ export default function MediaLibraryPage() {
       }
     }
 
-    // Voice clones (production schema uses sample_url directly)
+    // Voice clones (URL lazily resolved)
     if (clonesRes.data) {
       for (const c of clonesRes.data as any[]) {
         allAssets.push({
           id: c.id, type: "vocal",
           title: c.name || "Voz clonada",
-          url: c.sample_url || null,
+          url: null,
           createdAt: c.created_at,
           source: "voice_clones",
         });
@@ -205,6 +214,48 @@ export default function MediaLibraryPage() {
       sessionStorage.setItem(cacheKey, JSON.stringify({ assets: allAssets, ts: Date.now() }));
     } catch { /* quota exceeded - ignore */ }
   };
+
+  // ── Lazy URL resolver (only fetched when user plays / downloads / opens) ──
+  const urlCache = useRef<Map<string, string>>(new Map());
+  const resolveAssetUrl = async (asset: MediaAsset): Promise<string | null> => {
+    if (asset.url) return asset.url;
+    const cached = urlCache.current.get(asset.id);
+    if (cached) return cached;
+
+    let url: string | null = null;
+    try {
+      if (asset.source === "ai_generations") {
+        const { data } = await supabase
+          .from("ai_generations")
+          .select("audio_url")
+          .eq("id", asset.id)
+          .maybeSingle();
+        url = (data as any)?.audio_url ?? null;
+      } else if (asset.source === "video_generations") {
+        const { data } = await supabase
+          .from("video_generations" as any)
+          .select("video_url, merged_url")
+          .eq("id", asset.id)
+          .maybeSingle();
+        url = (data as any)?.merged_url || (data as any)?.video_url || null;
+      } else if (asset.source === "voice_clones") {
+        const { data } = await supabase
+          .from("voice_clones" as any)
+          .select("sample_url")
+          .eq("id", asset.id)
+          .maybeSingle();
+        url = (data as any)?.sample_url ?? null;
+      }
+    } catch { /* swallow */ }
+
+    if (url) {
+      urlCache.current.set(asset.id, url);
+      // Patch asset in state so UI knows it's available without re-fetch.
+      setAssets((prev) => prev.map((a) => a.id === asset.id ? { ...a, url } : a));
+    }
+    return url;
+  };
+
 
   // ── Filtering ──
   const filtered = useMemo(() => {
@@ -241,14 +292,15 @@ export default function MediaLibraryPage() {
 
   // ── Download single ──
   const downloadSingle = async (asset: MediaAsset) => {
-    if (!asset.url) return;
     if (!libraryAccess.canDownload) return;
     setDownloading(asset.id);
     try {
+      const url = await resolveAssetUrl(asset);
+      if (!url) throw new Error("URL no disponible");
       if (libraryAccess.tier === 'warning' && user) {
         await registerFreeDownload(user.id);
       }
-      const resp = await fetch(asset.url);
+      const resp = await fetch(url);
       const blob = await resp.blob();
       const ext = asset.type === "song" ? "mp3" : asset.type === "video" ? "mp4" : asset.type === "cover" ? "png" : "mp3";
       const displayName = customNames[asset.id] || asset.title;
@@ -266,7 +318,7 @@ export default function MediaLibraryPage() {
 
   // ── Download ZIP ──
   const downloadZip = async () => {
-    const items = assets.filter((a) => selected.has(a.id) && a.url);
+    const items = assets.filter((a) => selected.has(a.id));
     if (!items.length) return;
     setDownloadingZip(true);
     try {
@@ -282,7 +334,9 @@ export default function MediaLibraryPage() {
       await Promise.all(
         items.map(async (asset, i) => {
           try {
-            const resp = await fetch(asset.url!);
+            const url = await resolveAssetUrl(asset);
+            if (!url) return;
+            const resp = await fetch(url);
             const blob = await resp.blob();
             const dName = customNames[asset.id] || asset.title;
             const name = `${(i + 1).toString().padStart(2, "0")}_${dName.substring(0, 40).replace(/[^a-zA-Z0-9áéíóúñ ]/g, "")}.${extMap[asset.type]}`;
@@ -352,16 +406,20 @@ export default function MediaLibraryPage() {
     setDeletingBulk(false);
   };
 
-  // ── Playback ──
-  const togglePlay = (asset: MediaAsset) => {
-    if (!asset.url) return;
+  // ── Playback (resolves audio URL on demand) ──
+  const togglePlay = async (asset: MediaAsset) => {
     if (playingId === asset.id) {
       audioRef.current?.pause();
       setPlayingId(null);
       return;
     }
+    const url = await resolveAssetUrl(asset);
+    if (!url) {
+      toast({ title: "Audio no disponible", variant: "destructive" });
+      return;
+    }
     if (audioRef.current) audioRef.current.pause();
-    const audio = new Audio(asset.url);
+    const audio = new Audio(url);
     audio.onended = () => setPlayingId(null);
     audio.play();
     audioRef.current = audio;
@@ -580,14 +638,18 @@ export default function MediaLibraryPage() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border/40">
-                        {(asset.type === "song" || asset.type === "vocal") && asset.url && (
+                        {(asset.type === "song" || asset.type === "vocal") && (
                           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => togglePlay(asset)}>
                             {playingId === asset.id ? <Pause className="h-3.5 w-3.5 mr-1" /> : <Play className="h-3.5 w-3.5 mr-1" />}
                             {playingId === asset.id ? "Parar" : "Escuchar"}
                           </Button>
                         )}
-                        {asset.type === "video" && asset.url && (
-                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => window.open(asset.url!, "_blank")}>
+                        {asset.type === "video" && (
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={async () => {
+                            const url = await resolveAssetUrl(asset);
+                            if (url) window.open(url, "_blank");
+                            else toast({ title: "Vídeo no disponible", variant: "destructive" });
+                          }}>
                             <Play className="h-3.5 w-3.5 mr-1" />
                             Ver
                           </Button>
@@ -624,7 +686,7 @@ export default function MediaLibraryPage() {
                           </AlertDialogContent>
                         </AlertDialog>
                         {libraryAccess.canDownload ? (
-                          <Button variant="ghost" size="sm" className="h-7 text-xs" disabled={!asset.url || downloading === asset.id} onClick={() => downloadSingle(asset)}>
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" disabled={(asset.type === "cover" && !asset.url) || downloading === asset.id} onClick={() => downloadSingle(asset)}>
                             {downloading === asset.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
                           </Button>
                         ) : (
