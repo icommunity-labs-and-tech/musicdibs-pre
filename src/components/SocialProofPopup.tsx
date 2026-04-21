@@ -151,7 +151,7 @@ const SocialProofPopup = () => {
   };
 
   useEffect(() => {
-    if (dismissed || isAppRoute) return;
+    if (dismissed || hide) return;
 
     const initialTimer = setTimeout(() => {
       setData(generateNotification());
@@ -174,9 +174,9 @@ const SocialProofPopup = () => {
       clearTimeout(initialTimer);
       clearInterval(interval);
     };
-  }, [dismissed, generateNotification, isAppRoute]);
+  }, [dismissed, generateNotification, hide]);
 
-  if (!visible || !data || dismissed || isAppRoute) return null;
+  if (!visible || !data || dismissed || hide) return null;
 
   const actionIcon = data.action === "distributed" ? Music : ShieldCheck;
   const ActionIcon = actionIcon;
