@@ -81,15 +81,34 @@ async function buildCompositionPlan(
     lines.forEach((line, i) => buckets[i % buckets.length].push(line));
 
     vocalIdxs.forEach((sIdx, k) => {
-      const text = buckets[k].join('\n').trim();
-      if (text.length > 0) {
-        sections[sIdx].lines = buckets[k];
-        // Some plan schemas use `lyrics` instead of `lines`
-        sections[sIdx].lyrics = text;
+      const sectionLines = buckets[k];
+      if (sectionLines.length > 0) {
+        // ElevenLabs Music API requires `lines` as string[]
+        sections[sIdx].lines = sectionLines;
+      }
+    });
+
+    // Ensure every section has the required `negative_local_styles` field
+    sections.forEach((s: any) => {
+      if (!Array.isArray(s.negative_local_styles)) {
+        s.negative_local_styles = [];
+      }
+      // Drop legacy `lyrics` string if present (API rejects it)
+      if (typeof s.lyrics === 'string') {
+        delete s.lyrics;
       }
     });
 
     plan.sections = sections;
+
+    // Required at the root level alongside positive_global_styles
+    if (!Array.isArray(plan.positive_global_styles)) {
+      plan.positive_global_styles = [];
+    }
+    if (!Array.isArray(plan.negative_global_styles)) {
+      plan.negative_global_styles = [];
+    }
+
     return plan;
   } catch (err) {
     console.warn('[GENERATE-AUDIO] composition-plan exception:', err);
