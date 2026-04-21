@@ -114,12 +114,14 @@ const APP_ROUTE_PREFIXES = ["/dashboard", "/admin", "/manager", "/ia-studio", "/
 const SocialProofPopup = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const { user } = useAuth();
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [data, setData] = useState<NotificationData | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
   const isAppRoute = APP_ROUTE_PREFIXES.some((p) => location.pathname.startsWith(p));
+  const hide = isAppRoute || !!user;
 
   const lang = i18n.resolvedLanguage || i18n.language || "es";
   const langKey = lang.startsWith("pt") ? "pt-BR" : NAMES_BY_LANG[lang] ? lang : "en";
