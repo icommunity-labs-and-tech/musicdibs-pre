@@ -1209,6 +1209,35 @@ const AIStudioCreate = () => {
                       </div>{/* close data-tour="mc-settings" */}
 
 
+                      {/* Duración de la canción */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium flex items-center gap-2">
+                          <Clock className="w-4 h-4" />
+                          Duración
+                        </Label>
+                        <div className="flex flex-wrap gap-2">
+                          {DURATION_OPTIONS.map((secs) => {
+                            const mins = Math.floor(secs / 60);
+                            const rem = secs % 60;
+                            const label = rem === 0 ? `${mins} min` : `${mins}:${String(rem).padStart(2, '0')} min`;
+                            const active = duration === secs;
+                            return (
+                              <Badge
+                                key={secs}
+                                variant={active ? 'default' : 'outline'}
+                                className="cursor-pointer text-xs px-3 py-1.5"
+                                onClick={() => setDuration(secs)}
+                              >
+                                {label}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Las canciones más largas pueden tardar algo más en generarse.
+                        </p>
+                      </div>
+
                       {/* Error */}
                       {generationError && (
                         <Alert variant="destructive">
