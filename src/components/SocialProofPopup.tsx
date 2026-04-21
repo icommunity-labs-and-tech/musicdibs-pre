@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { X, Music, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NotificationData {
   name: string;
@@ -113,12 +114,14 @@ const APP_ROUTE_PREFIXES = ["/dashboard", "/admin", "/manager", "/ia-studio", "/
 const SocialProofPopup = () => {
   const { t, i18n } = useTranslation();
   const location = useLocation();
+  const { user } = useAuth();
   const [visible, setVisible] = useState(false);
   const [exiting, setExiting] = useState(false);
   const [data, setData] = useState<NotificationData | null>(null);
   const [dismissed, setDismissed] = useState(false);
 
   const isAppRoute = APP_ROUTE_PREFIXES.some((p) => location.pathname.startsWith(p));
+  const hide = isAppRoute || !!user;
 
   const lang = i18n.resolvedLanguage || i18n.language || "es";
   const langKey = lang.startsWith("pt") ? "pt-BR" : NAMES_BY_LANG[lang] ? lang : "en";
@@ -148,7 +151,7 @@ const SocialProofPopup = () => {
   };
 
   useEffect(() => {
-    if (dismissed || isAppRoute) return;
+    if (dismissed || hide) return;
 
     const initialTimer = setTimeout(() => {
       setData(generateNotification());
@@ -171,9 +174,9 @@ const SocialProofPopup = () => {
       clearTimeout(initialTimer);
       clearInterval(interval);
     };
-  }, [dismissed, generateNotification, isAppRoute]);
+  }, [dismissed, generateNotification, hide]);
 
-  if (!visible || !data || dismissed || isAppRoute) return null;
+  if (!visible || !data || dismissed || hide) return null;
 
   const actionIcon = data.action === "distributed" ? Music : ShieldCheck;
   const ActionIcon = actionIcon;
