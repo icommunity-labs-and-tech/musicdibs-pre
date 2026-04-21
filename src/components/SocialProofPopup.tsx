@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { X, Music, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NotificationData {
   name: string;
