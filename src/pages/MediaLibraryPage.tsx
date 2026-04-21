@@ -99,65 +99,70 @@ export default function MediaLibraryPage() {
   const loadAssets = async (userId: string, showSpinner: boolean) => {
     if (showSpinner) setLoading(true);
 
-    // Run ALL queries in parallel
+    // Lightweight queries: NO heavy URL columns (audio_url, video_url, merged_url, sample_url).
+    // URLs are resolved on demand (play / download / open) via resolveAssetUrl().
     const [songsRes, videosRes, promosRes, coverFilesRes, clonesRes] = await Promise.all([
       supabase
         .from("ai_generations")
-        .select("id, prompt, audio_url, genre, mood, created_at")
+        .select("id, prompt, genre, mood, created_at")
         .eq("user_id", userId)
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(PAGE_LIMIT),
       supabase
         .from("video_generations" as any)
-        .select("id, prompt, video_url, merged_url, status, created_at, style")
+        .select("id, prompt, status, created_at, style")
         .eq("user_id", userId)
         .eq("status", "COMPLETED")
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(PAGE_LIMIT),
       supabase
         .from("social_promotions" as any)
         .select("id, image_url, created_at, work_id")
         .eq("user_id", userId)
         .not("image_url", "is", null)
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(PAGE_LIMIT),
       supabase.storage
         .from("social-promo-images")
-        .list(`covers/${userId}`, { limit: 200, sortBy: { column: "created_at", order: "desc" } }),
+        .list(`covers/${userId}`, { limit: PAGE_LIMIT, sortBy: { column: "created_at", order: "desc" } }),
       supabase
         .from("voice_clones" as any)
-        .select("id, name, sample_url, created_at, status")
+        .select("id, name, created_at, status")
         .eq("user_id", userId)
         .eq("status", "active")
-        .order("created_at", { ascending: false }),
+        .order("created_at", { ascending: false })
+        .limit(PAGE_LIMIT),
     ]);
 
     const allAssets: MediaAsset[] = [];
 
-    // Songs
+    // Songs (URL lazily resolved)
     if (songsRes.data) {
       for (const s of songsRes.data as any[]) {
         allAssets.push({
           id: s.id, type: "song",
           title: s.prompt?.substring(0, 80) || "Canción sin título",
-          url: s.audio_url, createdAt: s.created_at,
+          url: null, createdAt: s.created_at,
           meta: { genre: s.genre || "", mood: s.mood || "" },
           source: "ai_generations",
         });
       }
     }
 
-    // Videos
+    // Videos (URL lazily resolved)
     if (videosRes.data) {
       for (const v of videosRes.data as any[]) {
         allAssets.push({
           id: v.id, type: "video",
           title: v.prompt?.substring(0, 80) || "Vídeo sin título",
-          url: v.merged_url || v.video_url, createdAt: v.created_at,
+          url: null, createdAt: v.created_at,
           meta: { style: v.style || "" },
           source: "video_generations",
         });
       }
     }
 
-    // Covers from social_promotions
+    // Covers from social_promotions (image_url is small, keep it)
     const promoUrls = new Set<string>();
     if (promosRes.data) {
       for (const p of promosRes.data as any[]) {
@@ -188,13 +193,13 @@ export default function MediaLibraryPage() {
       }
     }
 
-    // Voice clones (production schema uses sample_url directly)
+    // Voice clones (URL lazily resolved)
     if (clonesRes.data) {
       for (const c of clonesRes.data as any[]) {
         allAssets.push({
           id: c.id, type: "vocal",
           title: c.name || "Voz clonada",
-          url: c.sample_url || null,
+          url: null,
           createdAt: c.created_at,
           source: "voice_clones",
         });
@@ -209,6 +214,48 @@ export default function MediaLibraryPage() {
       sessionStorage.setItem(cacheKey, JSON.stringify({ assets: allAssets, ts: Date.now() }));
     } catch { /* quota exceeded - ignore */ }
   };
+
+  // ── Lazy URL resolver (only fetched when user plays / downloads / opens) ──
+  const urlCache = useRef<Map<string, string>>(new Map());
+  const resolveAssetUrl = async (asset: MediaAsset): Promise<string | null> => {
+    if (asset.url) return asset.url;
+    const cached = urlCache.current.get(asset.id);
+    if (cached) return cached;
+
+    let url: string | null = null;
+    try {
+      if (asset.source === "ai_generations") {
+        const { data } = await supabase
+          .from("ai_generations")
+          .select("audio_url")
+          .eq("id", asset.id)
+          .maybeSingle();
+        url = (data as any)?.audio_url ?? null;
+      } else if (asset.source === "video_generations") {
+        const { data } = await supabase
+          .from("video_generations" as any)
+          .select("video_url, merged_url")
+          .eq("id", asset.id)
+          .maybeSingle();
+        url = (data as any)?.merged_url || (data as any)?.video_url || null;
+      } else if (asset.source === "voice_clones") {
+        const { data } = await supabase
+          .from("voice_clones" as any)
+          .select("sample_url")
+          .eq("id", asset.id)
+          .maybeSingle();
+        url = (data as any)?.sample_url ?? null;
+      }
+    } catch { /* swallow */ }
+
+    if (url) {
+      urlCache.current.set(asset.id, url);
+      // Patch asset in state so UI knows it's available without re-fetch.
+      setAssets((prev) => prev.map((a) => a.id === asset.id ? { ...a, url } : a));
+    }
+    return url;
+  };
+
 
   // ── Filtering ──
   const filtered = useMemo(() => {
