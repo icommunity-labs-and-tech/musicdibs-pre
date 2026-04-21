@@ -44,7 +44,7 @@ import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { useProductTracking } from "@/hooks/useProductTracking";
 
 // ── Music tab constants ──
-const DURATION_OPTIONS = [30, 60, 90, 120] as const;
+const DURATION_OPTIONS = [60, 120, 180, 210, 240] as const;
 
 // ── Lyrics tab constants ──
 const LYRIC_STYLES = ["Narrativa", "Abstracta", "Descriptiva", "Reivindicativa", "Introspectiva", "Poética"];
@@ -118,7 +118,7 @@ const AIStudioCreate = () => {
   // ── Music tab state ──
   const [mode, setMode] = useState<'song' | 'instrumental'>('song');
   const [prompt, setPrompt] = useState("");
-  const [duration, setDuration] = useState(60);
+  const [duration, setDuration] = useState(210);
   const [lyricsText, setLyricsText] = useState("");
   const [lyricsExpanded, setLyricsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
