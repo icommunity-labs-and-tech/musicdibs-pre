@@ -638,14 +638,18 @@ export default function MediaLibraryPage() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border/40">
-                        {(asset.type === "song" || asset.type === "vocal") && asset.url && (
+                        {(asset.type === "song" || asset.type === "vocal") && (
                           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => togglePlay(asset)}>
                             {playingId === asset.id ? <Pause className="h-3.5 w-3.5 mr-1" /> : <Play className="h-3.5 w-3.5 mr-1" />}
                             {playingId === asset.id ? "Parar" : "Escuchar"}
                           </Button>
                         )}
-                        {asset.type === "video" && asset.url && (
-                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => window.open(asset.url!, "_blank")}>
+                        {asset.type === "video" && (
+                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={async () => {
+                            const url = await resolveAssetUrl(asset);
+                            if (url) window.open(url, "_blank");
+                            else toast({ title: "Vídeo no disponible", variant: "destructive" });
+                          }}>
                             <Play className="h-3.5 w-3.5 mr-1" />
                             Ver
                           </Button>
