@@ -24,12 +24,16 @@ interface MediaAsset {
   id: string;
   type: "song" | "video" | "cover" | "vocal";
   title: string;
+  /** May be null until lazily resolved (see resolveAssetUrl) */
   url: string | null;
   createdAt: string;
   meta?: Record<string, string>;
-  /** Source info for delete mapping */
+  /** Source info for delete mapping + lazy URL resolution */
   source: "ai_generations" | "video_generations" | "social_promotions" | "voice_clones" | "storage";
 }
+
+// Per-source row cap for the initial listing — keeps payload small & fast.
+const PAGE_LIMIT = 100;
 
 type TabType = "all" | "song" | "video" | "cover" | "vocal";
 
