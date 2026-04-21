@@ -357,6 +357,7 @@ const AIStudioCreate = () => {
           prompt: enrichedPrompt,
           lyrics: mode === 'song' ? lyricsText.trim() : '',
           mode,
+          duration,
         }
       });
 
