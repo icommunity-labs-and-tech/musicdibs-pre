@@ -118,7 +118,7 @@ const AIStudioCreate = () => {
   // ── Music tab state ──
   const [mode, setMode] = useState<'song' | 'instrumental'>('song');
   const [prompt, setPrompt] = useState("");
-  const [duration, setDuration] = useState(210);
+  const [duration, setDuration] = useState<number | null>(null);
   const [lyricsText, setLyricsText] = useState("");
   const [lyricsExpanded, setLyricsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
