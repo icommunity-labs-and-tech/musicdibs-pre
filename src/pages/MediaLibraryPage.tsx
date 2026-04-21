@@ -292,14 +292,15 @@ export default function MediaLibraryPage() {
 
   // ── Download single ──
   const downloadSingle = async (asset: MediaAsset) => {
-    if (!asset.url) return;
     if (!libraryAccess.canDownload) return;
     setDownloading(asset.id);
     try {
+      const url = await resolveAssetUrl(asset);
+      if (!url) throw new Error("URL no disponible");
       if (libraryAccess.tier === 'warning' && user) {
         await registerFreeDownload(user.id);
       }
-      const resp = await fetch(asset.url);
+      const resp = await fetch(url);
       const blob = await resp.blob();
       const ext = asset.type === "song" ? "mp3" : asset.type === "video" ? "mp4" : asset.type === "cover" ? "png" : "mp3";
       const displayName = customNames[asset.id] || asset.title;
@@ -317,7 +318,7 @@ export default function MediaLibraryPage() {
 
   // ── Download ZIP ──
   const downloadZip = async () => {
-    const items = assets.filter((a) => selected.has(a.id) && a.url);
+    const items = assets.filter((a) => selected.has(a.id));
     if (!items.length) return;
     setDownloadingZip(true);
     try {
@@ -333,7 +334,9 @@ export default function MediaLibraryPage() {
       await Promise.all(
         items.map(async (asset, i) => {
           try {
-            const resp = await fetch(asset.url!);
+            const url = await resolveAssetUrl(asset);
+            if (!url) return;
+            const resp = await fetch(url);
             const blob = await resp.blob();
             const dName = customNames[asset.id] || asset.title;
             const name = `${(i + 1).toString().padStart(2, "0")}_${dName.substring(0, 40).replace(/[^a-zA-Z0-9áéíóúñ ]/g, "")}.${extMap[asset.type]}`;
