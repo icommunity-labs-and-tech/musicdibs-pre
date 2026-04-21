@@ -176,18 +176,27 @@ export default function MediaLibraryPage() {
       }
     }
 
-    // Covers from storage
-    if (coverFilesRes.data) {
-      for (const f of coverFilesRes.data) {
-        if (!f.name.endsWith(".png") && !f.name.endsWith(".jpg")) continue;
-        const { data: pubUrl } = supabase.storage
-          .from("social-promo-images")
-          .getPublicUrl(`covers/${userId}/${f.name}`);
-        if (promoUrls.has(pubUrl.publicUrl)) continue;
+    // Covers from storage (signed URLs — bucket is private)
+    if (coverFilesRes.data && coverFilesRes.data.length > 0) {
+      const validFiles = coverFilesRes.data.filter(
+        (f) => f.name.endsWith(".png") || f.name.endsWith(".jpg")
+      );
+      const paths = validFiles.map((f) => `covers/${userId}/${f.name}`);
+      const { data: signed } = await supabase.storage
+        .from("social-promo-images")
+        .createSignedUrls(paths, 60 * 60); // 1h
+      const signedByPath = new Map<string, string>();
+      signed?.forEach((s) => {
+        if (s.signedUrl && s.path) signedByPath.set(s.path, s.signedUrl);
+      });
+      for (const f of validFiles) {
+        const path = `covers/${userId}/${f.name}`;
+        const url = signedByPath.get(path);
+        if (!url) continue;
         allAssets.push({
           id: `cover-file-${f.id || f.name}`, type: "cover",
           title: "Portada IA",
-          url: pubUrl.publicUrl, createdAt: f.created_at || new Date().toISOString(),
+          url, createdAt: f.created_at || new Date().toISOString(),
           source: "storage",
         });
       }
