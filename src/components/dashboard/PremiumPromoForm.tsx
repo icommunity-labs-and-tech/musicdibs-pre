@@ -262,6 +262,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
         ? ' ' + t('dashboard.premium.refundHint', 'Si los créditos no se reembolsan automáticamente, contacta con soporte.')
         : '';
       toast.error(baseMsg + refundHint);
+      setProgressStep('idle');
     } finally {
       setSubmitting(false);
     }
