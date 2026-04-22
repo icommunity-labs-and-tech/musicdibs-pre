@@ -175,6 +175,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
       const ts = Date.now();
 
       // 2) Upload audio
+      setProgressStep('audio');
       const audioExt = audioFile.name.split('.').pop() || 'mp3';
       const audioPath = `promotions/${user.id}/${promoId}/audio_${ts}.${audioExt}`;
       const { error: audioUpErr } = await supabase.storage
