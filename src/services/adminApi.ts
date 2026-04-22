@@ -19,7 +19,7 @@ export const adminApi = {
   setAdminRole: (user_id: string, is_admin: boolean) => adminAction('set_admin_role', { user_id, is_admin }),
   setManagerRole: (user_id: string, is_manager: boolean) => adminAction('set_manager_role', { user_id, is_manager }),
   sendPasswordReset: (user_id: string) => adminAction('send_password_reset', { user_id }),
-  setTemporaryPassword: (user_id: string) => adminAction('set_temporary_password', { user_id }),
+  setTemporaryPassword: (user_id: string, send_email = false) => adminAction('set_temporary_password', { user_id, send_email }),
   getAllWorks: (offset = 0, status_filter = '', search = '', sort_by = 'created_at', sort_dir: 'asc' | 'desc' = 'desc', limit = 50) => adminAction('get_all_works', { offset, status_filter, search, sort_by, sort_dir, limit }),
   getMetrics: () => adminAction('get_metrics'),
   getSaasMetrics: (filters?: { periodType?: string; weekStart?: string; month?: string; year?: string }) => adminAction('get_saas_metrics', filters || {}),

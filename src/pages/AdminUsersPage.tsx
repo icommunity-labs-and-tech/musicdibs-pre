@@ -45,7 +45,7 @@ export default function AdminUsersPage() {
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
   const [bulkConfirm, setBulkConfirm] = useState<{ open: boolean; op: 'block' | 'unblock' | 'kyc_verified' | 'kyc_pending' | null; label: string }>({ open: false, op: null, label: '' });
   const [tempPwConfirm, setTempPwConfirm] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
-  const [tempPwResult, setTempPwResult] = useState<{ open: boolean; email: string; password: string; copied: boolean }>({ open: false, email: '', password: '', copied: false });
+  const [tempPwResult, setTempPwResult] = useState<{ open: boolean; email: string; password: string; copied: boolean; emailSent: boolean; sending: boolean }>({ open: false, email: '', password: '', copied: false, emailSent: false, sending: false });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -495,37 +495,57 @@ export default function AdminUsersPage() {
             <AlertDialogTitle>Establecer contraseña temporal</AlertDialogTitle>
             <AlertDialogDescription>
               Se generará una nueva contraseña aleatoria para <strong>{tempPwConfirm.email}</strong> y reemplazará la actual.
-              Podrás copiarla y enviársela al usuario por correo. La acción quedará registrada en el log de auditoría.
+              Puedes copiarla manualmente o enviársela automáticamente al usuario por correo. La acción quedará registrada en el log de auditoría.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={async () => {
                 const { userId, email } = tempPwConfirm;
                 setTempPwConfirm({ open: false, userId: '', email: '' });
                 try {
-                  const res = await adminApi.setTemporaryPassword(userId);
-                  setTempPwResult({ open: true, email: res.email || email, password: res.temporary_password, copied: false });
+                  const res = await adminApi.setTemporaryPassword(userId, false);
+                  setTempPwResult({ open: true, email: res.email || email, password: res.temporary_password, copied: false, emailSent: false, sending: false });
                 } catch (e: any) {
                   toast.error(e.message || 'Error al generar la contraseña temporal');
                 }
               }}
             >
-              Generar contraseña
+              Generar y copiar
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={async () => {
+                const { userId, email } = tempPwConfirm;
+                setTempPwConfirm({ open: false, userId: '', email: '' });
+                try {
+                  const res = await adminApi.setTemporaryPassword(userId, true);
+                  setTempPwResult({ open: true, email: res.email || email, password: res.temporary_password, copied: false, emailSent: !!res.email_sent, sending: false });
+                  if (res.email_sent) {
+                    toast.success(`Contraseña enviada por correo a ${res.email || email}`);
+                  } else if (res.email_error) {
+                    toast.warning(`Contraseña generada, pero falló el envío: ${res.email_error}`);
+                  }
+                } catch (e: any) {
+                  toast.error(e.message || 'Error al generar la contraseña temporal');
+                }
+              }}
+            >
+              Generar y enviar por correo
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       {/* Show generated temporary password */}
-      <AlertDialog open={tempPwResult.open} onOpenChange={open => !open && setTempPwResult({ open: false, email: '', password: '', copied: false })}>
+      <AlertDialog open={tempPwResult.open} onOpenChange={open => !open && setTempPwResult({ open: false, email: '', password: '', copied: false, emailSent: false, sending: false })}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Contraseña temporal generada</AlertDialogTitle>
             <AlertDialogDescription>
-              Copia esta contraseña y envíala al usuario <strong>{tempPwResult.email}</strong> por un canal seguro.
-              No volverá a mostrarse después de cerrar este diálogo.
+              {tempPwResult.emailSent
+                ? <>Se ha enviado automáticamente la contraseña a <strong>{tempPwResult.email}</strong>. También puedes copiarla por si quieres reenviarla por otro canal.</>
+                : <>Copia esta contraseña y envíala al usuario <strong>{tempPwResult.email}</strong> por un canal seguro. No volverá a mostrarse después de cerrar este diálogo.</>}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="my-4 flex items-center gap-2 rounded-md border bg-muted px-3 py-2 font-mono text-sm break-all">
@@ -548,8 +568,14 @@ export default function AdminUsersPage() {
               {tempPwResult.copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </Button>
           </div>
+          {tempPwResult.emailSent && (
+            <div className="mb-2 flex items-center gap-2 rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
+              <Check className="h-4 w-4" />
+              <span>Correo enviado a {tempPwResult.email}</span>
+            </div>
+          )}
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setTempPwResult({ open: false, email: '', password: '', copied: false })}>
+            <AlertDialogAction onClick={() => setTempPwResult({ open: false, email: '', password: '', copied: false, emailSent: false, sending: false })}>
               Cerrar
             </AlertDialogAction>
           </AlertDialogFooter>
