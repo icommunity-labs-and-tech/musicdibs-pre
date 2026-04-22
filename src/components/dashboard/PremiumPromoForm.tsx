@@ -72,6 +72,8 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  type PromoStep = 'idle' | 'credits' | 'audio' | 'media' | 'submit' | 'done';
+  const [progressStep, setProgressStep] = useState<PromoStep>('idle');
 
   // Lyrics import
   const [showLyricsImport, setShowLyricsImport] = useState(false);
