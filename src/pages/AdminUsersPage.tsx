@@ -400,6 +400,10 @@ export default function AdminUsersPage() {
                         <KeyRound className="h-4 w-4 mr-2" />
                         Enviar enlace de recuperar contraseña
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setTempPwConfirm({ open: true, userId: u.user_id, email: u.email })}>
+                        <Lock className="h-4 w-4 mr-2" />
+                        Establecer contraseña temporal
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleToggleBlock(u.user_id, !u.is_blocked)}>
                         {u.is_blocked ? 'Desbloquear' : 'Bloquear'}
