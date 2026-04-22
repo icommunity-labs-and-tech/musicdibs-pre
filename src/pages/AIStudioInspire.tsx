@@ -1,73 +1,192 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/Navbar";
 import { useProductTracking } from "@/hooks/useProductTracking";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useCredits } from "@/hooks/useCredits";
+import { PricingLink } from "@/components/dashboard/PricingPopup";
+import { parseAiError } from "@/lib/aiErrorHandler";
 
-import { ArrowLeft, Lightbulb, Shuffle, Copy, Sparkles, Music, Palette, Zap, FileText } from "lucide-react";
-import { GENRES, MOODS } from "@/types/aiStudio";
+import {
+  ArrowLeft, Lightbulb, Sparkles, Loader2, AlertCircle,
+  Download, RefreshCw, ArrowRight, Music,
+} from "lucide-react";
 import { toast } from "sonner";
 
-const SUGGESTED_PROMPTS = [
-  { prompt: "A cinematic orchestral piece with rising strings and epic brass, building to an emotional climax", genre: "Cinematic", mood: "Epic", tagKey: "movie" },
-  { prompt: "Chill lo-fi hip hop beat with vinyl crackle, mellow piano chords and a laid-back drum groove", genre: "Lo-Fi", mood: "Chill", tagKey: "studio" },
-  { prompt: "Energetic EDM drop with heavy bass, soaring synth leads and a four-on-the-floor kick", genre: "Electronic", mood: "Energetic", tagKey: "club" },
-  { prompt: "Acoustic folk ballad with fingerpicked guitar, soft harmonics and a warm, nostalgic atmosphere", genre: "Folk", mood: "Nostalgic", tagKey: "acoustic" },
-  { prompt: "Dark trap beat with 808 bass, eerie melodies and hard-hitting hi-hats", genre: "Trap", mood: "Dark", tagKey: "urban" },
-  { prompt: "Smooth jazz improvisation with walking bass, brushed drums and a mellow saxophone melody", genre: "Jazz", mood: "Calm", tagKey: "relaxing" },
-  { prompt: "Uplifting pop anthem with catchy synth hooks, clap percussion and a feel-good chorus vibe", genre: "Pop", mood: "Happy", tagKey: "radio" },
-  { prompt: "Ambient soundscape with ethereal pads, gentle rain textures and deep reverb spaces", genre: "Ambient", mood: "Dreamy", tagKey: "meditation" },
-  { prompt: "Latin reggaeton beat with dembow rhythm, tropical synths and a danceable groove", genre: "Latin", mood: "Energetic", tagKey: "party" },
-  { prompt: "Classical piano sonata in minor key with dramatic dynamics and expressive rubato", genre: "Classical", mood: "Sad", tagKey: "classical" },
-  { prompt: "Motivational rock anthem with powerful electric guitar riffs, driving drums and triumphant energy", genre: "Rock", mood: "Motivational", tagKey: "sport" },
-  { prompt: "Mysterious electronic track with glitchy textures, haunting vocal samples and deep sub-bass", genre: "Electronic", mood: "Mysterious", tagKey: "thriller" },
+// ── Listas para construir prompts aleatorios ───────────────────
+const GENEROS = ["pop", "pop urbano", "reggaeton", "trap", "indie pop", "electrónica", "balada"];
+const TEMAS = [
+  "una ruptura reciente",
+  "un amor imposible",
+  "una noche de verano",
+  "superación personal",
+  "nostalgia del pasado",
+  "una relación tóxica",
+  "fiesta sin control",
+];
+const VOCES = [
+  "voz femenina suave",
+  "voz masculina emocional",
+  "voz juvenil energética",
+  "voz profunda y melancólica",
+];
+const REFERENCIAS = [
+  "estilo Aitana", "estilo Quevedo", "estilo Bad Bunny",
+  "estilo Rosalía", "estilo Mora", "estilo The Weeknd",
+];
+const EMOCIONES = ["melancólica", "energética", "nostálgica", "intensa", "feliz", "oscura"];
+const TEMPOS = ["lento", "medio", "rápido"];
+const ESTRUCTURAS = [
+  "verso + estribillo + verso + estribillo",
+  "intro + verso + pre-estribillo + estribillo + puente",
+  "estructura simple pegadiza",
 ];
 
-const COMBO_RECIPE_KEYS = [
-  { key: "tropical", genres: ["Latin", "Ambient"], moods: ["Chill", "Romantic"], emoji: "🌅" },
-  { key: "cyberpunk", genres: ["Electronic", "Trap"], moods: ["Dark", "Energetic"], emoji: "🌃" },
-  { key: "productive", genres: ["Lo-Fi", "Jazz"], moods: ["Calm", "Uplifting"], emoji: "☕" },
-  { key: "cinematic", genres: ["Cinematic", "Classical"], moods: ["Epic", "Motivational"], emoji: "🎬" },
-  { key: "urban", genres: ["Hip Hop", "Latin"], moods: ["Energetic", "Happy"], emoji: "🎉" },
-  { key: "forest", genres: ["Folk", "Ambient"], moods: ["Dreamy", "Peaceful"], emoji: "🌿" },
-  { key: "studio", genres: ["R&B", "Lo-Fi"], moods: ["Romantic", "Nostalgic"], emoji: "🌙" },
-  { key: "arena", genres: ["Rock", "Electronic"], moods: ["Aggressive", "Epic"], emoji: "⚔️" },
+const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
+
+const buildRandomPrompt = (): string => {
+  return [
+    `Canción de ${pick(GENEROS)} sobre ${pick(TEMAS)}`,
+    `con ${pick(VOCES)}`,
+    pick(REFERENCIAS),
+    `sensación ${pick(EMOCIONES)}`,
+    `tempo ${pick(TEMPOS)}`,
+    `(${pick(ESTRUCTURAS)})`,
+  ].join(", ");
+};
+
+const PRESET_IDEAS = [
+  { emoji: "💔", labelKey: "breakup", prompt: "Balada pop melancólica sobre una ruptura reciente, voz femenina emocional, piano acústico y cuerdas suaves, estilo Aitana, tempo lento" },
+  { emoji: "🌴", labelKey: "summer", prompt: "Hit pop urbano de verano, voz juvenil energética, guitarra acústica y palmas, sensación feliz, tempo medio, estilo Quevedo" },
+  { emoji: "🔥", labelKey: "trap", prompt: "Trap oscuro con 808s pesados, voz masculina rasgada, atmósfera intensa, estilo Mora, tempo medio" },
+  { emoji: "🎤", labelKey: "popRomantic", prompt: "Pop romántico con voz femenina suave, sintetizadores cálidos, estribillo pegadizo, sensación nostálgica" },
+  { emoji: "💃", labelKey: "reggaeton", prompt: "Reggaeton bailable con dembow clásico, voz masculina, sintes tropicales y graves potentes, tempo medio-rápido" },
+  { emoji: "🎸", labelKey: "rock", prompt: "Rock indie con guitarras eléctricas, batería potente, voz juvenil energética, sensación intensa, estructura clásica verso-estribillo" },
 ];
+
+interface InspireResult {
+  audioUrl: string;
+  prompt: string;
+  duration: number;
+}
 
 const AIStudioInspire = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { track } = useProductTracking();
-  const [randomCombo, setRandomCombo] = useState<{ genre: string; mood: string } | null>(null);
+  const { user } = useAuth();
+  const { hasEnough, isLoading: creditsLoading } = useCredits();
+
+  const [generating, setGenerating] = useState(false);
+  const [result, setResult] = useState<InspireResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const lastPromptRef = useRef<string>("");
 
   useEffect(() => {
     track('ai_studio_entered', { feature: 'inspire' });
   }, []);
 
-  const generateRandomCombo = () => {
-    const genre = GENRES[Math.floor(Math.random() * GENRES.length)];
-    const mood = MOODS[Math.floor(Math.random() * MOODS.length)];
-    setRandomCombo({ genre, mood });
+  const handleGenerate = async (prompt: string) => {
+    if (!user) {
+      toast.error("Inicia sesión para generar música");
+      navigate('/login');
+      return;
+    }
+
+    // Soft credit check (servidor también valida)
+    if (!creditsLoading && !hasEnough(3)) {
+      navigate('/dashboard/credits');
+      return;
+    }
+
+    lastPromptRef.current = prompt;
+    setError(null);
+    setResult(null);
+    setGenerating(true);
+
+    try {
+      const { data, error: invokeError } = await supabase.functions.invoke("generate-audio", {
+        body: {
+          prompt,
+          lyrics: "",
+          mode: "song",
+        },
+      });
+
+      if (invokeError) throw new Error(invokeError.message);
+      if (data?.error) {
+        const handled = parseAiError(invokeError, data);
+        throw new Error(handled?.userMessage || data.error);
+      }
+
+      // El edge function devuelve `audioUrl` (firmado) o `audio` en base64
+      const audioUrl: string = data?.audioUrl
+        || (data?.audio ? `data:${data.format || 'audio/mpeg'};base64,${data.audio}` : '');
+
+      if (!audioUrl) throw new Error("No se recibió audio del servidor");
+
+      setResult({
+        audioUrl,
+        prompt,
+        duration: data?.duration || 0,
+      });
+
+      track('generation_completed', { feature: 'inspire' });
+      toast.success("¡Tu canción está lista!");
+    } catch (err: any) {
+      console.error('[AIStudioInspire] generation error:', err);
+      setError(err.message || t('aiInspire.genericError'));
+    } finally {
+      setGenerating(false);
+    }
   };
 
-  const copyPrompt = (prompt: string) => {
-    navigator.clipboard.writeText(prompt);
-    toast.success(t('aiInspire.promptCopied'));
+  const handleSurpriseMe = () => {
+    handleGenerate(buildRandomPrompt());
+  };
+
+  const handlePreset = (prompt: string) => {
+    handleGenerate(prompt);
+  };
+
+  const handleReset = () => {
+    setResult(null);
+    setError(null);
+  };
+
+  const handleGoToStudio = () => {
+    if (!result) return;
+    const params = new URLSearchParams({ prompt: result.prompt });
+    navigate(`/ai-studio/create?${params.toString()}`);
+  };
+
+  const handleDownload = () => {
+    if (!result?.audioUrl) return;
+    const a = document.createElement('a');
+    a.href = result.audioUrl;
+    a.download = `musicdibs-${Date.now()}.mp3`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="container mx-auto px-4 py-6 pt-20">
-        <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
+      <main className="container mx-auto px-4 py-6 pt-20 max-w-3xl">
+        <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="w-4 h-4" />
           {t('aiInspire.backToStudio')}
         </Link>
 
-        <div className="text-center mb-12">
+        {/* Hero */}
+        <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 mb-6">
             <Lightbulb className="w-4 h-4" />
             <span className="text-sm font-medium">{t('aiInspire.badge')}</span>
@@ -78,136 +197,127 @@ const AIStudioInspire = () => {
           </p>
         </div>
 
-        {/* Compositor de Letras */}
-        <Card className="mb-12 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardContent className="flex flex-col md:flex-row items-center gap-6 py-8">
-            <div className="flex-1 text-center md:text-left">
-              <h2 className="text-2xl font-bold mb-2 flex items-center gap-2 justify-center md:justify-start">
-                <FileText className="w-6 h-6 text-primary" />
-                {t('aiInspire.lyricsTitle', 'Compositor de Letras')}
-              </h2>
-              <p className="text-muted-foreground mb-4">
-                {t('aiInspire.lyricsDesc', 'Crea letras originales de canciones. Describe el tema y genera tu letra.')}
-                {' '}
-                <Badge variant="secondary" className="text-xs ml-1">{t('aiInspire.free', 'Gratis')}</Badge>
-              </p>
-              <Button asChild variant="default" size="lg" className="min-h-[44px]">
-                <Link to="/ai-studio/create?tab=lyrics">
-                  <FileText className="w-4 h-4 mr-2" />
-                  {t('aiInspire.createLyrics', 'Crear Letras')}
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Botón principal */}
+        <div className="flex justify-center mb-8">
+          <Button
+            size="lg"
+            onClick={handleSurpriseMe}
+            disabled={generating}
+            className="gap-2 bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white text-base px-8 h-12"
+          >
+            {generating
+              ? <><Loader2 className="w-5 h-5 animate-spin" />{t('aiInspire.generating')}</>
+              : <><Sparkles className="w-5 h-5" />{t('aiInspire.surpriseMe')}</>
+            }
+          </Button>
+        </div>
 
-        {/* Generador Aleatorio */}
-        <Card className="mb-12 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardContent className="flex flex-col md:flex-row items-center gap-6 py-8">
-            <div className="flex-1 text-center md:text-left">
-              <h2 className="text-2xl font-bold mb-2 flex items-center gap-2 justify-center md:justify-start">
-                <Shuffle className="w-6 h-6 text-primary" />
-                {t('aiInspire.randomTitle')}
-              </h2>
-              <p className="text-muted-foreground mb-4">
-                {t('aiInspire.randomDesc')}
-              </p>
-              <Button onClick={generateRandomCombo} variant="default" size="lg">
-                <Shuffle className="w-4 h-4 mr-2" />
-                {t('aiInspire.generateCombo')}
+        {/* Estado: generando */}
+        {generating && !result && (
+          <Card className="mb-6 border-violet-500/30 bg-violet-500/5">
+            <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
+              <Loader2 className="w-10 h-10 text-violet-500 animate-spin" />
+              <p className="font-semibold text-base">{t('aiInspire.generating')}</p>
+              <p className="text-sm text-muted-foreground">{t('aiInspire.generatingHint')}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Estado: error */}
+        {error && !generating && (
+          <Card className="mb-6 border-destructive/40 bg-destructive/5">
+            <CardContent className="flex flex-col items-center gap-3 py-6 text-center">
+              <AlertCircle className="w-8 h-8 text-destructive" />
+              <p className="text-sm">{error}</p>
+              <Button
+                variant="outline"
+                onClick={() => handleGenerate(lastPromptRef.current || buildRandomPrompt())}
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                {t('aiInspire.tryAgain')}
               </Button>
-            </div>
-            {randomCombo && (
-              <div className="flex flex-col items-center gap-3 p-6 rounded-xl bg-background border min-w-[220px]">
-                <Sparkles className="w-8 h-8 text-primary animate-pulse" />
-                <div className="flex gap-2">
-                  <Badge variant="secondary" className="text-sm">{randomCombo.genre}</Badge>
-                  <span className="text-muted-foreground">+</span>
-                  <Badge variant="outline" className="text-sm">{randomCombo.mood}</Badge>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Estado: resultado */}
+        {result && !generating && (
+          <Card className="mb-6 border-emerald-500/30 bg-emerald-500/5">
+            <CardContent className="py-6 space-y-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Music className="w-5 h-5 text-emerald-500 shrink-0" />
+                  <p className="text-sm font-semibold truncate">
+                    {result.prompt.length > 90 ? result.prompt.slice(0, 90) + '…' : result.prompt}
+                  </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  asChild
-                >
-                  <Link to={`/ai-studio/create?genre=${randomCombo.genre}&mood=${randomCombo.mood}`}>
-                    <Zap className="w-3 h-3 mr-1" />
-                    {t('aiInspire.useInStudio')}
-                  </Link>
+                {result.duration > 0 && (
+                  <Badge variant="outline" className="text-xs shrink-0">
+                    {Math.round(result.duration)}s
+                  </Badge>
+                )}
+              </div>
+
+              <audio controls src={result.audioUrl} className="w-full" />
+
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                <Button variant="outline" size="sm" onClick={handleDownload} className="gap-2">
+                  <Download className="w-4 h-4" />
+                  {t('aiInspire.download')}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleReset} className="gap-2">
+                  <RefreshCw className="w-4 h-4" />
+                  {t('aiInspire.anotherSong')}
+                </Button>
+                <Button size="sm" onClick={handleGoToStudio} className="gap-2">
+                  {t('aiInspire.goToStudio')}
+                  <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Palette className="w-6 h-6 text-primary" />
-            {t('aiInspire.comboRecipes')}
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {COMBO_RECIPE_KEYS.map((recipe) => (
-              <Card key={recipe.key} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <span className="text-2xl">{recipe.emoji}</span>
-                    {t(`aiInspire.recipes.${recipe.key}`)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex flex-wrap gap-1">
-                    {recipe.genres.map((g) => (
-                      <Badge key={g} variant="secondary" className="text-xs">{g}</Badge>
-                    ))}
-                    {recipe.moods.map((m) => (
-                      <Badge key={m} variant="outline" className="text-xs">{m}</Badge>
-                    ))}
-                  </div>
-                  <Button variant="ghost" size="sm" className="w-full" asChild>
-                    <Link to={`/ai-studio/create?genre=${recipe.genres[0]}&mood=${recipe.moods[0]}`}>
-                      <Zap className="w-3 h-3 mr-1" />
-                      {t('aiInspire.tryBtn')}
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+        {/* Presets de ideas */}
+        {!result && !generating && (
+          <section className="mb-8">
+            <p className="text-center text-sm text-muted-foreground mb-4">
+              {t('aiInspire.ideasTitle')}
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {PRESET_IDEAS.map((idea) => {
+                const label = t(`aiInspire.presets.${idea.labelKey}`, {
+                  defaultValue: idea.labelKey === 'breakup' ? 'Ruptura emocional'
+                    : idea.labelKey === 'summer' ? 'Hit de verano'
+                    : idea.labelKey === 'trap' ? 'Trap'
+                    : idea.labelKey === 'popRomantic' ? 'Pop romántico'
+                    : idea.labelKey === 'reggaeton' ? 'Reggaeton'
+                    : idea.labelKey === 'rock' ? 'Rock'
+                    : idea.labelKey,
+                });
+                return (
+                  <button
+                    key={idea.labelKey}
+                    type="button"
+                    onClick={() => handlePreset(idea.prompt)}
+                    disabled={generating}
+                    className="flex flex-col items-center gap-1 p-4 rounded-xl border border-border/60 hover:border-primary/40 hover:bg-primary/5 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="text-2xl">{idea.emoji}</span>
+                    <span className="text-sm font-medium text-center leading-tight">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Music className="w-6 h-6 text-primary" />
-            {t('aiInspire.suggestedPrompts')}
-          </h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            {SUGGESTED_PROMPTS.map((item, i) => (
-              <Card key={i} className="group hover:shadow-md transition-all">
-                <CardContent className="py-5 space-y-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-sm leading-relaxed flex-1">{item.prompt}</p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => copyPrompt(item.prompt)}
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant="secondary" className="text-xs">{item.genre}</Badge>
-                    <Badge variant="outline" className="text-xs">{item.mood}</Badge>
-                    <Badge className="text-xs bg-primary/10 text-primary border-0">{t(`aiInspire.tags.${item.tagKey}`)}</Badge>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+        {/* Ver precios */}
+        <div className="mt-6 flex justify-center">
+          <PricingLink />
+        </div>
       </main>
-
-      
     </div>
   );
 };
