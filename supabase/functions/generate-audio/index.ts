@@ -395,7 +395,7 @@ serve(async (req) => {
 
         const { data: gen } = await supabaseAdmin.from('ai_generations').insert({
           user_id: userId,
-          prompt: prompt.slice(0, 1500),
+          prompt: description ? `${description.slice(0, MAX_LENGTH)}\n\n---\n\n${prompt}` : prompt,
           audio_url: savedAudioUrl,
           duration: durationSecs,
           genre: genre || null,
