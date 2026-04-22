@@ -1214,8 +1214,8 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
           />
 
           {activeStep === 3 && (
-            <div className="px-5 pb-6 border-t border-border/40 pt-4">
-              <div className="mb-4 space-y-1">
+            <div className="px-5 pb-6 border-t border-border/40 pt-4 space-y-3">
+              <div className="space-y-1">
                 <p className="text-sm font-medium">
                   {t('dashboard.firstHit.promoTitle')}
                 </p>
@@ -1226,101 +1226,16 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                 </p>
               </div>
 
-              <form onSubmit={handlePromote} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">
-                      {t('dashboard.firstHit.artistName')}
-                      <span className="text-destructive ml-1">*</span>
-                    </Label>
-                    <Input value={promoArtist}
-                      onChange={e => setPromoArtist(e.target.value)}
-                      required className="h-9 text-sm"
-                      placeholder={t('dashboard.firstHit.artistNamePromoPlaceholder')} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">
-                      {t('dashboard.premium.songTitle', 'Título de la canción')}
-                      <span className="text-destructive ml-1">*</span>
-                    </Label>
-                    <Input value={promoSongTitle}
-                      onChange={e => setPromoSongTitle(e.target.value)}
-                      required className="h-9 text-sm"
-                      placeholder={t('dashboard.premium.songTitlePlaceholder', 'Mi canción')} />
-                  </div>
-                </div>
+              <PremiumPromoForm
+                works={[]}
+                onBack={() => { markDone(3); setActiveStep('done') }}
+              />
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs">
-                    {t('dashboard.premium.lyrics', 'Letra / descripción')}
-                    <span className="text-destructive ml-1">*</span>
-                  </Label>
-                  <Textarea value={promoLyrics}
-                    onChange={e => setPromoLyrics(e.target.value)}
-                    required rows={3} className="text-sm resize-none"
-                    placeholder={t('dashboard.premium.lyricsPlaceholder', 'Pega aquí la letra o describe la canción')} />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs">
-                    {t('dashboard.premium.externalLinks', 'Enlaces (Spotify, YouTube, redes…)')}
-                  </Label>
-                  <Input value={promoLinks}
-                    onChange={e => setPromoLinks(e.target.value)}
-                    className="h-9 text-sm"
-                    placeholder="https://..." />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">
-                      {t('dashboard.premium.audioFile', 'Audio de la canción')}
-                      <span className="text-destructive ml-1">*</span>
-                    </Label>
-                    <Input type="file" accept="audio/*"
-                      onChange={handlePromoAudioChange}
-                      className="h-9 text-xs" />
-                    {promoAudioFile && (
-                      <p className="text-[10px] text-muted-foreground truncate">{promoAudioFile.name}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">
-                      {t('dashboard.premium.mediaFile', 'Vídeo o imagen')}
-                      <span className="text-destructive ml-1">*</span>
-                    </Label>
-                    <Input type="file" accept="image/*,video/*"
-                      onChange={handlePromoMediaChange}
-                      className="h-9 text-xs" />
-                    {promoMediaFile && (
-                      <p className="text-[10px] text-muted-foreground truncate">{promoMediaFile.name}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-2">
-                  <Checkbox id="promo-rights" checked={rightsConfirmed}
-                    onCheckedChange={v => setRightsConfirmed(!!v)} />
-                  <Label htmlFor="promo-rights"
-                    className="text-xs leading-tight cursor-pointer">
-                    {t('dashboard.premium.rightsConfirm', 'Confirmo que poseo todos los derechos del audio y del material visual')}
-                  </Label>
-                </div>
-
-                <Button type="submit" className="w-full gap-2"
-                  disabled={promoting || !rightsConfirmed || !promoArtist || !promoSongTitle || !promoLyrics || !promoAudioFile || !promoMediaFile}>
-                  {promoting
-                    ? <><Loader2 className="h-4 w-4 animate-spin" />{t('dashboard.firstHit.sendingRequest')}</>
-                    : <><Megaphone className="h-4 w-4" />{t('dashboard.firstHit.wantPromotion')}</>
-                  }
-                </Button>
-
-                <button type="button"
-                  className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
-                  onClick={() => { markDone(3); setActiveStep('done') }}>
-                  {t('dashboard.firstHit.skipPromo')}
-                </button>
-              </form>
+              <button type="button"
+                className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
+                onClick={() => { markDone(3); setActiveStep('done') }}>
+                {t('dashboard.firstHit.skipPromo')}
+              </button>
             </div>
           )}
         </div>
