@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { premiumPromoApprovedEmail, premiumPromoPublishedEmail, premiumPromoRejectedEmail, kycRejectedEmail, kycVerifiedEmail } from "../_shared/transactional-email.ts";
+import { premiumPromoApprovedEmail, premiumPromoPublishedEmail, premiumPromoRejectedEmail, kycRejectedEmail, kycVerifiedEmail, temporaryPasswordEmail } from "../_shared/transactional-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -428,7 +428,7 @@ serve(async (req) => {
     }
 
     if (action === "set_temporary_password") {
-      const { user_id } = payload;
+      const { user_id, send_email } = payload;
       if (!user_id) return json({ error: "user_id required" }, 400);
 
       const { data: targetAuth, error: getErr } = await admin.auth.admin.getUserById(user_id);
@@ -460,14 +460,52 @@ serve(async (req) => {
       });
       if (updErr) return json({ error: updErr.message }, 500);
 
+      let emailSent = false;
+      let emailError: string | null = null;
+      if (send_email && targetEmail) {
+        try {
+          const { data: profile } = await admin.from("profiles").select("display_name, language").eq("user_id", user_id).single();
+          const name = profile?.display_name || targetEmail.split("@")[0] || "Usuario";
+          const emailData = temporaryPasswordEmail({ name, password: tempPassword, lang: profile?.language });
+          const messageId = crypto.randomUUID();
+          await admin.from("email_send_log").insert({
+            message_id: messageId,
+            template_name: "temporary_password",
+            recipient_email: targetEmail,
+            status: "pending",
+          });
+          await admin.rpc("enqueue_email", {
+            queue_name: "transactional_emails",
+            payload: {
+              message_id: messageId,
+              to: targetEmail,
+              from: "MusicDibs <noreply@notify.musicdibs.com>",
+              sender_domain: "notify.musicdibs.com",
+              subject: emailData.subject,
+              html: emailData.html,
+              text: emailData.text,
+              purpose: "transactional",
+              label: "temporary_password",
+              idempotency_key: `temp-pw-${user_id}-${Date.now()}`,
+              queued_at: new Date().toISOString(),
+            },
+          });
+          emailSent = true;
+          console.log(`[ADMIN] Enqueued temporary_password email to ${targetEmail}`);
+        } catch (err) {
+          emailError = err instanceof Error ? err.message : String(err);
+          console.error("[ADMIN] Failed to enqueue temporary password email:", err);
+        }
+      }
+
       await audit({
         action: "set_temporary_password",
         target_user_id: user_id,
         target_email: targetEmail,
-        details: { method: "admin_generated" },
+        details: { method: "admin_generated", email_sent: emailSent },
       });
 
-      return json({ success: true, temporary_password: tempPassword, email: targetEmail });
+      return json({ success: true, temporary_password: tempPassword, email: targetEmail, email_sent: emailSent, email_error: emailError });
     }
 
     if (action === "get_all_works") {
