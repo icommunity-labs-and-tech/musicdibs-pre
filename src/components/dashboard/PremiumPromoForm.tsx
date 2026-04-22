@@ -515,3 +515,57 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
     </>
   );
 }
+
+type PromoStepName = 'idle' | 'credits' | 'audio' | 'media' | 'submit' | 'done';
+
+const PROMO_STEPS: { key: Exclude<PromoStepName, 'idle' | 'done'>; fallback: string }[] = [
+  { key: 'credits', fallback: 'Validando créditos…' },
+  { key: 'audio', fallback: 'Subiendo audio…' },
+  { key: 'media', fallback: 'Subiendo vídeo o imagen…' },
+  { key: 'submit', fallback: 'Enviando solicitud…' },
+];
+
+function getProgressFallback(step: PromoStepName): string {
+  const found = PROMO_STEPS.find(s => s.key === step);
+  return found?.fallback ?? 'Procesando…';
+}
+
+function PromoProgressIndicator({ step }: { step: PromoStepName }) {
+  const { t } = useTranslation();
+  const currentIdx = PROMO_STEPS.findIndex(s => s.key === step);
+  return (
+    <div className="rounded-md border border-border/40 bg-muted/30 p-3 space-y-2">
+      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+        {t('dashboard.premium.progress.title', 'Procesando solicitud')}
+      </p>
+      <ol className="space-y-1.5">
+        {PROMO_STEPS.map((s, idx) => {
+          const isDone = idx < currentIdx;
+          const isActive = idx === currentIdx;
+          return (
+            <li key={s.key} className="flex items-center gap-2 text-xs">
+              {isDone ? (
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+              ) : isActive ? (
+                <Loader2 className="h-3.5 w-3.5 text-primary animate-spin shrink-0" />
+              ) : (
+                <div className="h-3.5 w-3.5 rounded-full border border-border/60 shrink-0" />
+              )}
+              <span
+                className={
+                  isActive
+                    ? 'text-foreground font-medium'
+                    : isDone
+                    ? 'text-muted-foreground line-through'
+                    : 'text-muted-foreground/60'
+                }
+              >
+                {t(`dashboard.premium.progress.${s.key}`, s.fallback)}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
