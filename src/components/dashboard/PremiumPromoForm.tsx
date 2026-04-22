@@ -450,6 +450,9 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
 
           {/* Submit */}
           <div className="space-y-3 pt-2 border-t border-border/30">
+            {submitting && progressStep !== 'idle' && (
+              <PromoProgressIndicator step={progressStep} />
+            )}
             {noCredits ? (
               <NoCreditsAlert message={t('dashboard.premium.submit', { defaultValue: 'Enviar promoción' }) + ` (${PREMIUM_COST} créditos)`} />
             ) : (
@@ -465,7 +468,9 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
                   ) : (
                     <Crown className="h-4 w-4" />
                   )}
-                  {t('dashboard.premium.submit')}
+                  {submitting
+                    ? t(`dashboard.premium.progress.${progressStep}`, getProgressFallback(progressStep))
+                    : t('dashboard.premium.submit')}
                 </Button>
               </div>
             )}
