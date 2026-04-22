@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
-import { Users, MoreHorizontal, Search, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUp, ArrowDown, ArrowUpDown, X, KeyRound } from 'lucide-react';
+import { Users, MoreHorizontal, Search, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUp, ArrowDown, ArrowUpDown, X, KeyRound, Lock, Copy, Check } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import UserDetailSheet from '@/components/admin/UserDetailSheet';
 import AdminUserModals from '@/components/admin/AdminUserModals';
@@ -44,6 +44,8 @@ export default function AdminUsersPage() {
   const [creditModal, setCreditModal] = useState<{ open: boolean; userId: string; email: string; currentCredits: number }>({ open: false, userId: '', email: '', currentCredits: 0 });
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
   const [bulkConfirm, setBulkConfirm] = useState<{ open: boolean; op: 'block' | 'unblock' | 'kyc_verified' | 'kyc_pending' | null; label: string }>({ open: false, op: null, label: '' });
+  const [tempPwConfirm, setTempPwConfirm] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
+  const [tempPwResult, setTempPwResult] = useState<{ open: boolean; email: string; password: string; copied: boolean }>({ open: false, email: '', password: '', copied: false });
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -398,6 +400,10 @@ export default function AdminUsersPage() {
                         <KeyRound className="h-4 w-4 mr-2" />
                         Enviar enlace de recuperar contraseña
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setTempPwConfirm({ open: true, userId: u.user_id, email: u.email })}>
+                        <Lock className="h-4 w-4 mr-2" />
+                        Establecer contraseña temporal
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleToggleBlock(u.user_id, !u.is_blocked)}>
                         {u.is_blocked ? 'Desbloquear' : 'Bloquear'}
@@ -478,6 +484,74 @@ export default function AdminUsersPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={() => bulkConfirm.op && runBulk(bulkConfirm.op)}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Confirm setting temporary password */}
+      <AlertDialog open={tempPwConfirm.open} onOpenChange={open => !open && setTempPwConfirm({ open: false, userId: '', email: '' })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Establecer contraseña temporal</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se generará una nueva contraseña aleatoria para <strong>{tempPwConfirm.email}</strong> y reemplazará la actual.
+              Podrás copiarla y enviársela al usuario por correo. La acción quedará registrada en el log de auditoría.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                const { userId, email } = tempPwConfirm;
+                setTempPwConfirm({ open: false, userId: '', email: '' });
+                try {
+                  const res = await adminApi.setTemporaryPassword(userId);
+                  setTempPwResult({ open: true, email: res.email || email, password: res.temporary_password, copied: false });
+                } catch (e: any) {
+                  toast.error(e.message || 'Error al generar la contraseña temporal');
+                }
+              }}
+            >
+              Generar contraseña
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Show generated temporary password */}
+      <AlertDialog open={tempPwResult.open} onOpenChange={open => !open && setTempPwResult({ open: false, email: '', password: '', copied: false })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Contraseña temporal generada</AlertDialogTitle>
+            <AlertDialogDescription>
+              Copia esta contraseña y envíala al usuario <strong>{tempPwResult.email}</strong> por un canal seguro.
+              No volverá a mostrarse después de cerrar este diálogo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="my-4 flex items-center gap-2 rounded-md border bg-muted px-3 py-2 font-mono text-sm break-all">
+            <span className="flex-1 select-all">{tempPwResult.password}</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(tempPwResult.password);
+                  setTempPwResult(s => ({ ...s, copied: true }));
+                  toast.success('Contraseña copiada al portapapeles');
+                } catch {
+                  toast.error('No se pudo copiar');
+                }
+              }}
+            >
+              {tempPwResult.copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            </Button>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setTempPwResult({ open: false, email: '', password: '', copied: false })}>
+              Cerrar
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
