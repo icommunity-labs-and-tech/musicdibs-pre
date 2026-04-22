@@ -17,7 +17,7 @@ const FALLBACK_COSTS: Record<string, number> = {
   edit_audio: 2,
   enhance_audio: 1,
   generate_cover: 2,
-  inspiration: 0,
+  one_click_create: 0,
   generate_video: 6,
   voice_translation_per_min: 2,
   instagram_creative: 1,

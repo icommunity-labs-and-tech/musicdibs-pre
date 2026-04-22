@@ -56,7 +56,7 @@ const AIStudio = () => {
       href: "__inline__",
       available: true,
       costsCredits: false,
-      featureKey: 'inspiration' as const,
+      featureKey: 'one_click_create' as const,
       color: "from-violet-500 to-purple-600",
       inlineView: "virtual-artists" as ActiveView,
     },
@@ -77,7 +77,7 @@ const AIStudio = () => {
       href: "/ai-studio/inspire",
       available: true,
       costsCredits: null,
-      featureKey: 'inspiration' as const,
+      featureKey: 'one_click_create' as const,
       color: "from-amber-500 to-orange-500"
     },
   ];

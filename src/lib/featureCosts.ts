@@ -19,7 +19,7 @@ const DEFAULT_COSTS: Record<string, number> = {
   enhance_audio: 2,
   generate_cover: 1,
   generate_vocal_track: 1,
-  inspiration: 2,
+  one_click_create: 2,
   generate_video: 3,
   voice_translation_per_min: 2,
   instagram_creative: 1,
