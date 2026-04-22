@@ -241,6 +241,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
         );
       }
 
+      setProgressStep('done');
       setShowSuccess(true);
       toast.success(t('dashboard.premium.requestSent'));
       track('premium_promotion_submitted', { feature: 'premium_promotion' });
