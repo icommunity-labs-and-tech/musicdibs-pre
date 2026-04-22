@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      _tmp_ibs_migration: {
+        Row: {
+          email: string | null
+          sig_id: string | null
+        }
+        Insert: {
+          email?: string | null
+          sig_id?: string | null
+        }
+        Update: {
+          email?: string | null
+          sig_id?: string | null
+        }
+        Relationships: []
+      }
       ab_test_events: {
         Row: {
           created_at: string
