@@ -387,6 +387,18 @@ export default function AdminUsersPage() {
                       <DropdownMenuItem onClick={() => handleSetKyc(u.user_id, 'pending')}>KYC → Pendiente</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleSetKyc(u.user_id, 'rejected')}>KYC → Rechazado</DropdownMenuItem>
                       <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={async () => {
+                        try {
+                          await adminApi.sendPasswordReset(u.user_id);
+                          toast.success(`Enlace de recuperación enviado a ${u.email}`);
+                        } catch (e: any) {
+                          toast.error(e.message || 'Error al enviar el enlace');
+                        }
+                      }}>
+                        <KeyRound className="h-4 w-4 mr-2" />
+                        Enviar enlace de recuperar contraseña
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleToggleBlock(u.user_id, !u.is_blocked)}>
                         {u.is_blocked ? 'Desbloquear' : 'Bloquear'}
                       </DropdownMenuItem>
