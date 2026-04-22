@@ -443,6 +443,64 @@ export function premiumPromoRejectedEmail(data: { name: string; artistName: stri
   return { subject: i.subject, html: wrap("❌", i.title, body, lang), text: `${greeting} ${data.name}, ${i.greeting}` };
 }
 
+// ─── 9b. Temporary Password (Admin generated) ───────────────────────────────
+
+const tTemp: Record<Lang, { greeting: string; intro: string; pwLabel: string; loginCta: string; security: string; subject: string; title: string; text: (name: string, pw: string) => string }> = {
+  es: {
+    greeting: "Hola",
+    intro: "Un administrador de MusicDibs ha generado una contraseña temporal para tu cuenta. Úsala para iniciar sesión y, por seguridad, cámbiala inmediatamente desde tu perfil.",
+    pwLabel: "Contraseña temporal",
+    loginCta: "Iniciar sesión →",
+    security: "Si no esperabas este correo, contacta con soporte de inmediato.",
+    subject: "🔑 Tu contraseña temporal de MusicDibs",
+    title: "Contraseña temporal generada",
+    text: (name, pw) => `Hola ${name}, tu contraseña temporal es: ${pw}. Inicia sesión en https://musicdibs.com y cámbiala desde tu perfil.`,
+  },
+  en: {
+    greeting: "Hi",
+    intro: "A MusicDibs administrator has generated a temporary password for your account. Use it to sign in and, for your security, change it immediately from your profile.",
+    pwLabel: "Temporary password",
+    loginCta: "Sign in →",
+    security: "If you weren't expecting this email, contact support immediately.",
+    subject: "🔑 Your MusicDibs temporary password",
+    title: "Temporary password generated",
+    text: (name, pw) => `Hi ${name}, your temporary password is: ${pw}. Sign in at https://musicdibs.com and change it from your profile.`,
+  },
+  pt: {
+    greeting: "Olá",
+    intro: "Um administrador do MusicDibs gerou uma senha temporária para sua conta. Use-a para entrar e, por segurança, altere-a imediatamente no seu perfil.",
+    pwLabel: "Senha temporária",
+    loginCta: "Entrar →",
+    security: "Se você não esperava este email, entre em contato com o suporte imediatamente.",
+    subject: "🔑 Sua senha temporária do MusicDibs",
+    title: "Senha temporária gerada",
+    text: (name, pw) => `Olá ${name}, sua senha temporária é: ${pw}. Entre em https://musicdibs.com e altere-a no seu perfil.`,
+  },
+};
+
+export function temporaryPasswordEmail(data: { name: string; password: string; lang?: string }) {
+  const lang = normLang(data.lang);
+  const i = tTemp[lang];
+  const safeName = escapeHtml(data.name);
+  const safePw = escapeHtml(data.password);
+
+  const body = `
+    <p style="margin:0 0 20px;color:#d1d5db;font-size:15px;line-height:1.7;text-align:center;">${i.greeting} <strong style="color:#f3f4f6;">${safeName}</strong>,</p>
+    <p style="margin:0 0 24px;color:#d1d5db;font-size:14px;line-height:1.7;">${i.intro}</p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(109,40,217,0.12));border:1px solid rgba(168,85,247,0.25);border-radius:12px;padding:20px 24px;margin-bottom:8px;">
+      <tr><td style="color:#9ca3af;font-size:12px;letter-spacing:0.5px;text-transform:uppercase;padding-bottom:8px;">${i.pwLabel}</td></tr>
+      <tr><td style="color:#f3f4f6;font-size:18px;font-weight:700;font-family:'Courier New',monospace;letter-spacing:1px;word-break:break-all;">${safePw}</td></tr>
+    </table>
+    ${cta("https://musicdibs.com/login", i.loginCta)}
+    <p style="margin:24px 0 0;color:#9ca3af;font-size:12px;text-align:center;line-height:1.6;">${i.security}</p>`;
+
+  return {
+    subject: i.subject,
+    html: wrap("🔑", i.title, body, lang),
+    text: i.text(data.name, data.password),
+  };
+}
+
 // ─── 10. Metric Alert Notification (Admin) ───────────────────────────────────
 
 export function metricAlertEmail(data: { alerts: Array<{ title: string; description: string; severity: string }> }) {
