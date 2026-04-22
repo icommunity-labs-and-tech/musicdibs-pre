@@ -72,6 +72,8 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  type PromoStep = 'idle' | 'credits' | 'audio' | 'media' | 'submit' | 'done';
+  const [progressStep, setProgressStep] = useState<PromoStep>('idle');
 
   // Lyrics import
   const [showLyricsImport, setShowLyricsImport] = useState(false);
@@ -142,6 +144,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
     }
 
     setSubmitting(true);
+    setProgressStep('credits');
     const uploadedPaths: string[] = [];
     let creditsSpent = false;
     try {
@@ -157,6 +160,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
       if (spendData?.error === 'insufficient_credits') {
         toast.error(t('dashboard.premium.insufficientCredits'));
         setSubmitting(false);
+        setProgressStep('idle');
         return;
       }
       if (spendData?.error) {
@@ -172,6 +176,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
       const ts = Date.now();
 
       // 2) Upload audio
+      setProgressStep('audio');
       const audioExt = audioFile.name.split('.').pop() || 'mp3';
       const audioPath = `promotions/${user.id}/${promoId}/audio_${ts}.${audioExt}`;
       const { error: audioUpErr } = await supabase.storage
@@ -187,6 +192,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
       uploadedPaths.push(audioPath);
 
       // 3) Upload media (video/image)
+      setProgressStep('media');
       const mediaExt = mediaFile.name.split('.').pop() || 'bin';
       const mediaPath = `promotions/${user.id}/${promoId}/media_${ts}.${mediaExt}`;
       const { error: mediaUpErr } = await supabase.storage
@@ -206,6 +212,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
       const mediaFileType = VIDEO_EXTS.includes(extLower) ? 'video' : 'image';
 
       // 4) Insert premium request via edge function
+      setProgressStep('submit');
       const { data, error } = await supabase.functions.invoke('submit-premium-promo', {
         body: {
           work_id: selectedWorkId || null,
@@ -235,6 +242,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
         );
       }
 
+      setProgressStep('done');
       setShowSuccess(true);
       toast.success(t('dashboard.premium.requestSent'));
       track('premium_promotion_submitted', { feature: 'premium_promotion' });
@@ -255,6 +263,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
         ? ' ' + t('dashboard.premium.refundHint', 'Si los créditos no se reembolsan automáticamente, contacta con soporte.')
         : '';
       toast.error(baseMsg + refundHint);
+      setProgressStep('idle');
     } finally {
       setSubmitting(false);
     }
@@ -441,6 +450,9 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
 
           {/* Submit */}
           <div className="space-y-3 pt-2 border-t border-border/30">
+            {submitting && progressStep !== 'idle' && (
+              <PromoProgressIndicator step={progressStep} />
+            )}
             {noCredits ? (
               <NoCreditsAlert message={t('dashboard.premium.submit', { defaultValue: 'Enviar promoción' }) + ` (${PREMIUM_COST} créditos)`} />
             ) : (
@@ -456,7 +468,9 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
                   ) : (
                     <Crown className="h-4 w-4" />
                   )}
-                  {t('dashboard.premium.submit')}
+                  {submitting
+                    ? t(`dashboard.premium.progress.${progressStep}`, getProgressFallback(progressStep))
+                    : t('dashboard.premium.submit')}
                 </Button>
               </div>
             )}
@@ -499,5 +513,59 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+type PromoStepName = 'idle' | 'credits' | 'audio' | 'media' | 'submit' | 'done';
+
+const PROMO_STEPS: { key: Exclude<PromoStepName, 'idle' | 'done'>; fallback: string }[] = [
+  { key: 'credits', fallback: 'Validando créditos…' },
+  { key: 'audio', fallback: 'Subiendo audio…' },
+  { key: 'media', fallback: 'Subiendo vídeo o imagen…' },
+  { key: 'submit', fallback: 'Enviando solicitud…' },
+];
+
+function getProgressFallback(step: PromoStepName): string {
+  const found = PROMO_STEPS.find(s => s.key === step);
+  return found?.fallback ?? 'Procesando…';
+}
+
+function PromoProgressIndicator({ step }: { step: PromoStepName }) {
+  const { t } = useTranslation();
+  const currentIdx = PROMO_STEPS.findIndex(s => s.key === step);
+  return (
+    <div className="rounded-md border border-border/40 bg-muted/30 p-3 space-y-2">
+      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+        {t('dashboard.premium.progress.title', 'Procesando solicitud')}
+      </p>
+      <ol className="space-y-1.5">
+        {PROMO_STEPS.map((s, idx) => {
+          const isDone = idx < currentIdx;
+          const isActive = idx === currentIdx;
+          return (
+            <li key={s.key} className="flex items-center gap-2 text-xs">
+              {isDone ? (
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+              ) : isActive ? (
+                <Loader2 className="h-3.5 w-3.5 text-primary animate-spin shrink-0" />
+              ) : (
+                <div className="h-3.5 w-3.5 rounded-full border border-border/60 shrink-0" />
+              )}
+              <span
+                className={
+                  isActive
+                    ? 'text-foreground font-medium'
+                    : isDone
+                    ? 'text-muted-foreground line-through'
+                    : 'text-muted-foreground/60'
+                }
+              >
+                {t(`dashboard.premium.progress.${s.key}`, s.fallback)}
+              </span>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
