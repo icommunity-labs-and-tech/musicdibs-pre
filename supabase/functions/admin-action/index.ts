@@ -427,6 +427,49 @@ serve(async (req) => {
       return json({ success: true });
     }
 
+    if (action === "set_temporary_password") {
+      const { user_id } = payload;
+      if (!user_id) return json({ error: "user_id required" }, 400);
+
+      const { data: targetAuth, error: getErr } = await admin.auth.admin.getUserById(user_id);
+      if (getErr || !targetAuth?.user) return json({ error: "Usuario no encontrado" }, 404);
+      const targetEmail = targetAuth.user.email || "";
+
+      // Generate a strong temporary password: 14 chars, includes upper/lower/digit/symbol
+      function generateTempPassword(): string {
+        const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+        const lower = "abcdefghijkmnopqrstuvwxyz";
+        const digits = "23456789";
+        const symbols = "!@#$%&*?";
+        const all = upper + lower + digits + symbols;
+        const pick = (s: string) => s[Math.floor(Math.random() * s.length)];
+        const base = [pick(upper), pick(lower), pick(digits), pick(symbols)];
+        for (let i = 0; i < 10; i++) base.push(pick(all));
+        // shuffle
+        for (let i = base.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [base[i], base[j]] = [base[j], base[i]];
+        }
+        return base.join("");
+      }
+
+      const tempPassword = generateTempPassword();
+
+      const { error: updErr } = await admin.auth.admin.updateUserById(user_id, {
+        password: tempPassword,
+      });
+      if (updErr) return json({ error: updErr.message }, 500);
+
+      await audit({
+        action: "set_temporary_password",
+        target_user_id: user_id,
+        target_email: targetEmail,
+        details: { method: "admin_generated" },
+      });
+
+      return json({ success: true, temporary_password: tempPassword, email: targetEmail });
+    }
+
     if (action === "get_all_works") {
       const offset = payload.offset || 0;
       const limit = payload.limit || 50;
