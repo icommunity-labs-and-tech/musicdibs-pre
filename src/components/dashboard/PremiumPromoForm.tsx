@@ -160,6 +160,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
       if (spendData?.error === 'insufficient_credits') {
         toast.error(t('dashboard.premium.insufficientCredits'));
         setSubmitting(false);
+        setProgressStep('idle');
         return;
       }
       if (spendData?.error) {
