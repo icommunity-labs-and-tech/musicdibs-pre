@@ -144,6 +144,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
     }
 
     setSubmitting(true);
+    setProgressStep('credits');
     const uploadedPaths: string[] = [];
     let creditsSpent = false;
     try {
