@@ -34,6 +34,8 @@ interface OperationRow {
   is_active: boolean | null;
   description: string | null;
   model_name: string | null;
+  llm_provider: string | null;
+  llm_model: string | null;
 }
 
 type SortField = 'operation_key' | 'operation_name' | 'category' | 'credits_cost' | 'display_order' | 'is_annual_only' | 'is_active';
@@ -51,7 +53,7 @@ export default function AdminFeatureCostsPage() {
   const load = async () => {
     const { data, error } = await supabase
       .from('operation_pricing')
-      .select('operation_key, operation_name, operation_icon, credits_cost, euro_cost, category, is_annual_only, display_order, is_active, description, model_name')
+      .select('operation_key, operation_name, operation_icon, credits_cost, euro_cost, category, is_annual_only, display_order, is_active, description, model_name, llm_provider, llm_model')
       .order('display_order');
     if (error) {
       toast.error('Error cargando precios');
@@ -107,6 +109,8 @@ export default function AdminFeatureCostsPage() {
     if (changes.description !== undefined) updatePayload.description = changes.description;
     if (changes.operation_icon !== undefined) updatePayload.operation_icon = changes.operation_icon;
     if (changes.model_name !== undefined) updatePayload.model_name = changes.model_name;
+    if (changes.llm_provider !== undefined) updatePayload.llm_provider = changes.llm_provider;
+    if (changes.llm_model !== undefined) updatePayload.llm_model = changes.llm_model;
 
     const { error } = await supabase
       .from('operation_pricing')
@@ -180,7 +184,7 @@ export default function AdminFeatureCostsPage() {
                 <TableRow>
                   <TableHead className="w-[50px]">Icono</TableHead>
                   <SortableHead field="operation_key" className="w-[150px]">Clave</SortableHead>
-                  <TableHead className="w-[200px]">Modelo IA</TableHead>
+                  <TableHead className="w-[220px]">Modelo IA (proveedor · modelo)</TableHead>
                   <SortableHead field="operation_name" className="w-[180px]">Nombre</SortableHead>
                   <SortableHead field="category" className="w-[100px]">Categoría</SortableHead>
                   <SortableHead field="credits_cost" className="w-[80px]">Créditos</SortableHead>
@@ -206,11 +210,31 @@ export default function AdminFeatureCostsPage() {
                     </TableCell>
                     <TableCell className="font-mono text-xs">{row.operation_key}</TableCell>
                     <TableCell>
-                      <span className="text-[10px] font-mono text-muted-foreground leading-tight block break-words">
-                        {row.model_name || '—'}
-                      </span>
+                      {isDirty(row.operation_key) ? (
+                        <div className="space-y-1">
+                          <Input
+                            value={String(getValue(row, 'llm_provider') || '')}
+                            onChange={e => handleChange(row.operation_key, 'llm_provider', e.target.value)}
+                            placeholder="Proveedor (ej. Anthropic)"
+                            className="h-7 text-xs"
+                          />
+                          <Input
+                            value={String(getValue(row, 'llm_model') || getValue(row, 'model_name') || '')}
+                            onChange={e => handleChange(row.operation_key, 'llm_model', e.target.value)}
+                            placeholder="Modelo (ej. claude-haiku-4-5)"
+                            className="h-7 text-xs font-mono"
+                          />
+                        </div>
+                      ) : (
+                        <div className="text-[11px] leading-tight">
+                          <div className="font-medium text-foreground">{row.llm_provider || '—'}</div>
+                          <div className="font-mono text-muted-foreground break-words">
+                            {row.llm_model || row.model_name || '—'}
+                          </div>
+                        </div>
+                      )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell title={row.description || ''}>
                       {isDirty(row.operation_key) ? (
                         <Input
                           value={String(getValue(row, 'operation_name'))}
@@ -218,7 +242,7 @@ export default function AdminFeatureCostsPage() {
                           className="h-8"
                         />
                       ) : (
-                        row.operation_name
+                        <span title={row.description || ''}>{row.operation_name}</span>
                       )}
                     </TableCell>
                     <TableCell>
