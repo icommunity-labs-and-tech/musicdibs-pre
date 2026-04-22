@@ -182,10 +182,22 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, lyrics, genre, mood, duration, mode } = await req.json();
+    const { prompt, lyrics, genre, mood, duration, mode, description } = await req.json();
 
-    if (!prompt) {
+    // Server-side validation: prompt and description must not exceed 1500 characters
+    const MAX_LENGTH = 1500;
+    if (!prompt || typeof prompt !== 'string') {
       return new Response(JSON.stringify({ error: 'Prompt required' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    if (prompt.length > MAX_LENGTH) {
+      return new Response(JSON.stringify({ error: `Prompt exceeds maximum length of ${MAX_LENGTH} characters` }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    if (description && typeof description === 'string' && description.length > MAX_LENGTH) {
+      return new Response(JSON.stringify({ error: `Description exceeds maximum length of ${MAX_LENGTH} characters` }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
