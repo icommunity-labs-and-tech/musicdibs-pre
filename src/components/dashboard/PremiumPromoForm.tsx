@@ -211,6 +211,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
       const mediaFileType = VIDEO_EXTS.includes(extLower) ? 'video' : 'image';
 
       // 4) Insert premium request via edge function
+      setProgressStep('submit');
       const { data, error } = await supabase.functions.invoke('submit-premium-promo', {
         body: {
           work_id: selectedWorkId || null,
