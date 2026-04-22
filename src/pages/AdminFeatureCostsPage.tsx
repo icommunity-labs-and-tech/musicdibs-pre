@@ -244,9 +244,11 @@ export default function AdminFeatureCostsPage() {
                           />
                         </div>
                       ) : (
-                        <div className="text-[11px] leading-tight">
-                          <div className="font-medium text-foreground">{row.llm_provider || '—'}</div>
-                          <div className="font-mono text-muted-foreground break-words">
+                        <div className="space-y-1">
+                          <Badge variant="outline" className={`text-[10px] font-medium ${getProviderBadgeClass(row.llm_provider)}`}>
+                            {row.llm_provider || '—'}
+                          </Badge>
+                          <div className="font-mono text-[11px] text-muted-foreground break-words leading-tight">
                             {row.llm_model || row.model_name || '—'}
                           </div>
                         </div>
