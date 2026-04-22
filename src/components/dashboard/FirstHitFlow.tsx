@@ -38,6 +38,7 @@ import {
 } from '@/components/dashboard/register/types'
 import { useTranslation } from 'react-i18next'
 import { useCreatorRoleLabels, useWorkTypeLabels } from '@/components/dashboard/register/useWizardLabels'
+import { PremiumPromoForm } from '@/components/dashboard/PremiumPromoForm'
 
 // Voice profiles loaded from DB
 
