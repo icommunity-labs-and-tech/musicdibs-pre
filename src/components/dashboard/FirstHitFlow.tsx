@@ -408,49 +408,102 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
     setRegistering(false)
   }
 
-  // ── PASO 3: Promoción ─────────────────────────────────────────
-  const [promoArtist,  setPromoArtist]  = useState('')
-  const [promoLink,    setPromoLink]    = useState('')
-  const [promoDesc,    setPromoDesc]    = useState('')
-  const [promoGoal,    setPromoGoal]    = useState('')
-  const [promoSocial,  setPromoSocial]  = useState('')
-  const [promoConsent, setPromoConsent] = useState(false)
+  // ── PASO 3: Promoción Premium ─────────────────────────────────
+  const [promoArtist,    setPromoArtist]    = useState('')
+  const [promoSongTitle, setPromoSongTitle] = useState('')
+  const [promoLyrics,    setPromoLyrics]    = useState('')
+  const [promoLinks,     setPromoLinks]     = useState('')
+  const [promoAudioFile, setPromoAudioFile] = useState<File | null>(null)
+  const [promoMediaFile, setPromoMediaFile] = useState<File | null>(null)
+  const [rightsConfirmed, setRightsConfirmed] = useState(false)
   const [promoting,    setPromoting]    = useState(false)
   const [skipWarning,  setSkipWarning]  = useState(false)
+  const [showLyricsImport, setShowLyricsImport] = useState(false)
+  const [savedLyrics, setSavedLyrics] = useState<any[]>([])
+  const [loadingLyrics, setLoadingLyrics] = useState(false)
 
   useEffect(() => {
-    if (activeStep === 3 && regAuthor) setPromoArtist(regAuthor)
-    if (activeStep === 3 && regTitle)  {
-      setPromoDesc(`${t('dashboard.firstHit.workTitle')}: ${regTitle}`)
+    if (activeStep === 3) {
+      if (regAuthor && !promoArtist) setPromoArtist(regAuthor)
+      if (regTitle && !promoSongTitle) setPromoSongTitle(regTitle)
     }
-  }, [activeStep, regAuthor, regTitle, t])
+  }, [activeStep, regAuthor, regTitle])
+
+  const loadSavedLyrics = async () => {
+    if (!user) return
+    setLoadingLyrics(true)
+    const { data } = await supabase
+      .from('lyrics_generations' as any)
+      .select('id, lyrics, description, theme, genre, mood, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(50)
+    setSavedLyrics((data as any[]) || [])
+    setLoadingLyrics(false)
+  }
+
+  const handlePromoAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 50 * 1024 * 1024) { toast.error('Archivo demasiado grande (máx. 50 MB)'); return }
+    setPromoAudioFile(file)
+  }
+  const handlePromoMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 50 * 1024 * 1024) { toast.error('Archivo demasiado grande (máx. 50 MB)'); return }
+    setPromoMediaFile(file)
+  }
 
   const handlePromote = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user) return
+    if (!promoArtist.trim() || !promoSongTitle.trim() || !promoLyrics.trim()) {
+      toast.error(t('dashboard.premium.fillRequired')); return
+    }
+    if (!promoAudioFile) { toast.error(t('dashboard.premium.audioRequired', 'El audio de tu canción es obligatorio')); return }
+    if (!promoMediaFile) { toast.error(t('dashboard.premium.mediaRequired', 'El vídeo o imagen es obligatorio')); return }
+
     setPromoting(true)
     try {
-      // 1. Spend credits (same as PremiumPromoForm)
       const { data: spendData, error: spendError } = await supabase.functions.invoke('spend-credits', {
-        body: { feature: 'promote_premium', description: `Promo Premium: ${regTitle || promoDesc}` },
+        body: { feature: 'promote_premium', description: `Promo Premium: ${promoSongTitle.trim()}` },
       })
       if (spendError) throw new Error(spendError.message)
       if (spendData?.error === 'insufficient_credits') {
-        toast.error('No tienes suficientes créditos para esta promoción.')
-        setPromoting(false)
-        return
+        toast.error(t('dashboard.premium.insufficientCredits')); setPromoting(false); return
       }
       if (spendData?.error) throw new Error(spendData.error)
 
-      // 2. Submit premium promo request (sends email to marketing)
+      const promoId = crypto.randomUUID()
+      const ts = Date.now()
+
+      const audioExt = promoAudioFile.name.split('.').pop() || 'mp3'
+      const audioPath = `promotions/${user.id}/${promoId}/audio_${ts}.${audioExt}`
+      const { error: audioUpErr } = await supabase.storage
+        .from('premium-promo-media').upload(audioPath, promoAudioFile)
+      if (audioUpErr) throw new Error(audioUpErr.message)
+
+      const mediaExt = promoMediaFile.name.split('.').pop() || 'bin'
+      const mediaPath = `promotions/${user.id}/${promoId}/media_${ts}.${mediaExt}`
+      const { error: mediaUpErr } = await supabase.storage
+        .from('premium-promo-media').upload(mediaPath, promoMediaFile)
+      if (mediaUpErr) throw new Error(mediaUpErr.message)
+
+      const extLower = '.' + mediaExt.toLowerCase()
+      const mediaFileType = ['.mp4', '.mov'].includes(extLower) ? 'video' : 'image'
+
       const { data, error } = await supabase.functions.invoke('submit-premium-promo', {
         body: {
           work_id: regId || null,
           artist_name: promoArtist.trim(),
-          song_title: (regTitle || promoDesc).trim(),
-          description: promoDesc.trim(),
-          external_link: promoLink.trim() || null,
-          team_notes: [promoGoal, promoSocial].filter(Boolean).join(' | ') || null,
-          media_file_path: null,
+          song_title: promoSongTitle.trim(),
+          description: promoLyrics.trim(),
+          external_link: promoLinks.trim() || null,
+          team_notes: null,
+          media_file_path: mediaPath,
+          audio_file_path: audioPath,
+          media_file_type: mediaFileType,
         },
       })
       if (error) throw new Error(error.message)
