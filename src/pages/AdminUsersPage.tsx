@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
-import { Users, MoreHorizontal, Search, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUp, ArrowDown, ArrowUpDown, X } from 'lucide-react';
+import { Users, MoreHorizontal, Search, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUp, ArrowDown, ArrowUpDown, X, KeyRound } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import UserDetailSheet from '@/components/admin/UserDetailSheet';
 import AdminUserModals from '@/components/admin/AdminUserModals';
@@ -386,6 +386,18 @@ export default function AdminUsersPage() {
                       <DropdownMenuItem onClick={() => handleSetKyc(u.user_id, 'verified')}>KYC → Verificado</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleSetKyc(u.user_id, 'pending')}>KYC → Pendiente</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleSetKyc(u.user_id, 'rejected')}>KYC → Rechazado</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={async () => {
+                        try {
+                          await adminApi.sendPasswordReset(u.user_id);
+                          toast.success(`Enlace de recuperación enviado a ${u.email}`);
+                        } catch (e: any) {
+                          toast.error(e.message || 'Error al enviar el enlace');
+                        }
+                      }}>
+                        <KeyRound className="h-4 w-4 mr-2" />
+                        Enviar enlace de recuperar contraseña
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => handleToggleBlock(u.user_id, !u.is_blocked)}>
                         {u.is_blocked ? 'Desbloquear' : 'Bloquear'}

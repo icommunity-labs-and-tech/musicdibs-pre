@@ -401,6 +401,32 @@ serve(async (req) => {
       return json({ success: true });
     }
 
+    if (action === "send_password_reset") {
+      const { user_id } = payload;
+      if (!user_id) return json({ error: "user_id required" }, 400);
+
+      const { data: targetAuth, error: getErr } = await admin.auth.admin.getUserById(user_id);
+      if (getErr || !targetAuth?.user?.email) return json({ error: "Usuario no encontrado" }, 404);
+      const targetEmail = targetAuth.user.email;
+
+      // Derive redirect URL from request origin (falls back to env SITE_URL)
+      const origin = req.headers.get("origin") || req.headers.get("referer") || Deno.env.get("SITE_URL") || "";
+      const cleanOrigin = origin.replace(/\/$/, "").replace(/\/dashboard.*$/, "");
+      const redirectTo = `${cleanOrigin}/reset-password`;
+
+      const { error: resetErr } = await admin.auth.resetPasswordForEmail(targetEmail, { redirectTo });
+      if (resetErr) return json({ error: resetErr.message }, 500);
+
+      await audit({
+        action: "send_password_reset",
+        target_user_id: user_id,
+        target_email: targetEmail,
+        details: { redirectTo },
+      });
+
+      return json({ success: true });
+    }
+
     if (action === "get_all_works") {
       const offset = payload.offset || 0;
       const limit = payload.limit || 50;
