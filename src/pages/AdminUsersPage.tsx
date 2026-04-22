@@ -44,6 +44,8 @@ export default function AdminUsersPage() {
   const [creditModal, setCreditModal] = useState<{ open: boolean; userId: string; email: string; currentCredits: number }>({ open: false, userId: '', email: '', currentCredits: 0 });
   const [deleteModal, setDeleteModal] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
   const [bulkConfirm, setBulkConfirm] = useState<{ open: boolean; op: 'block' | 'unblock' | 'kyc_verified' | 'kyc_pending' | null; label: string }>({ open: false, op: null, label: '' });
+  const [tempPwConfirm, setTempPwConfirm] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
+  const [tempPwResult, setTempPwResult] = useState<{ open: boolean; email: string; password: string; copied: boolean }>({ open: false, email: '', password: '', copied: false });
 
   const load = useCallback(async () => {
     setLoading(true);
