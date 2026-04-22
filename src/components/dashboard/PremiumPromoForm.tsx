@@ -191,6 +191,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
       uploadedPaths.push(audioPath);
 
       // 3) Upload media (video/image)
+      setProgressStep('media');
       const mediaExt = mediaFile.name.split('.').pop() || 'bin';
       const mediaPath = `promotions/${user.id}/${promoId}/media_${ts}.${mediaExt}`;
       const { error: mediaUpErr } = await supabase.storage
