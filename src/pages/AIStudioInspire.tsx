@@ -120,7 +120,7 @@ const AIStudioInspire = () => {
 
       if (invokeError) throw new Error(invokeError.message);
       if (data?.error) {
-        const handled = parseAiError(data, 'inspire');
+        const handled = parseAiError(invokeError, data);
         throw new Error(handled?.userMessage || data.error);
       }
 
