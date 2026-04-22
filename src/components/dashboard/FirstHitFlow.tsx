@@ -17,7 +17,11 @@ import {
   Music2, FileUp, AlertTriangle, Rocket,
   ArrowRight, Key, RefreshCw, Link as LinkIcon,
   Share2, Plus, Trash2, Coins, Download,
+  Crown, Video, Users, Instagram, Upload, FileText, X, Import,
 } from 'lucide-react'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog'
 import { supabase } from '@/integrations/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { useCredits } from '@/hooks/useCredits'
