@@ -1240,59 +1240,75 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs">
-                      {t('dashboard.firstHit.mainLink')}
+                      {t('dashboard.premium.songTitle', 'Título de la canción')}
                       <span className="text-destructive ml-1">*</span>
                     </Label>
-                    <Input value={promoLink}
-                      onChange={e => setPromoLink(e.target.value)}
-                      required type="url" className="h-9 text-sm"
-                      placeholder="https://..." />
+                    <Input value={promoSongTitle}
+                      onChange={e => setPromoSongTitle(e.target.value)}
+                      required className="h-9 text-sm"
+                      placeholder={t('dashboard.premium.songTitlePlaceholder', 'Mi canción')} />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-xs">
-                      {t('dashboard.firstHit.aboutSong')}
+                    {t('dashboard.premium.lyrics', 'Letra / descripción')}
                     <span className="text-destructive ml-1">*</span>
                   </Label>
-                  <Textarea value={promoDesc}
-                    onChange={e => setPromoDesc(e.target.value)}
-                    required rows={2} className="text-sm resize-none"
-                    placeholder={t('dashboard.firstHit.aboutSongPlaceholder')} />
+                  <Textarea value={promoLyrics}
+                    onChange={e => setPromoLyrics(e.target.value)}
+                    required rows={3} className="text-sm resize-none"
+                    placeholder={t('dashboard.premium.lyricsPlaceholder', 'Pega aquí la letra o describe la canción')} />
                 </div>
 
                 <div className="space-y-1.5">
                   <Label className="text-xs">
-                    {t('dashboard.firstHit.promoGoal')}
-                    <span className="text-destructive ml-1">*</span>
+                    {t('dashboard.premium.externalLinks', 'Enlaces (Spotify, YouTube, redes…)')}
                   </Label>
-                  <Input value={promoGoal}
-                    onChange={e => setPromoGoal(e.target.value)}
-                    required className="h-9 text-sm"
-                    placeholder={t('dashboard.firstHit.promoGoalPlaceholder')} />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs">
-                    {t('dashboard.firstHit.yourSocials')}
-                  </Label>
-                  <Input value={promoSocial}
-                    onChange={e => setPromoSocial(e.target.value)}
+                  <Input value={promoLinks}
+                    onChange={e => setPromoLinks(e.target.value)}
                     className="h-9 text-sm"
-                    placeholder={t('dashboard.firstHit.yourSocialsPlaceholder')} />
+                    placeholder="https://..." />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">
+                      {t('dashboard.premium.audioFile', 'Audio de la canción')}
+                      <span className="text-destructive ml-1">*</span>
+                    </Label>
+                    <Input type="file" accept="audio/*"
+                      onChange={handlePromoAudioChange}
+                      className="h-9 text-xs" />
+                    {promoAudioFile && (
+                      <p className="text-[10px] text-muted-foreground truncate">{promoAudioFile.name}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">
+                      {t('dashboard.premium.mediaFile', 'Vídeo o imagen')}
+                      <span className="text-destructive ml-1">*</span>
+                    </Label>
+                    <Input type="file" accept="image/*,video/*"
+                      onChange={handlePromoMediaChange}
+                      className="h-9 text-xs" />
+                    {promoMediaFile && (
+                      <p className="text-[10px] text-muted-foreground truncate">{promoMediaFile.name}</p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-start gap-2">
-                  <Checkbox id="promo-consent" checked={promoConsent}
-                    onCheckedChange={v => setPromoConsent(!!v)} />
-                  <Label htmlFor="promo-consent"
+                  <Checkbox id="promo-rights" checked={rightsConfirmed}
+                    onCheckedChange={v => setRightsConfirmed(!!v)} />
+                  <Label htmlFor="promo-rights"
                     className="text-xs leading-tight cursor-pointer">
-                    {t('dashboard.firstHit.promoConsent')}
+                    {t('dashboard.premium.rightsConfirm', 'Confirmo que poseo todos los derechos del audio y del material visual')}
                   </Label>
                 </div>
 
                 <Button type="submit" className="w-full gap-2"
-                  disabled={promoting || !promoConsent || !promoArtist || !promoLink || !promoDesc || !promoGoal}>
+                  disabled={promoting || !rightsConfirmed || !promoArtist || !promoSongTitle || !promoLyrics || !promoAudioFile || !promoMediaFile}>
                   {promoting
                     ? <><Loader2 className="h-4 w-4 animate-spin" />{t('dashboard.firstHit.sendingRequest')}</>
                     : <><Megaphone className="h-4 w-4" />{t('dashboard.firstHit.wantPromotion')}</>
