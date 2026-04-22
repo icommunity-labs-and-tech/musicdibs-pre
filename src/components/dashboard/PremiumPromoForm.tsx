@@ -142,43 +142,70 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
     }
 
     setSubmitting(true);
+    const uploadedPaths: string[] = [];
+    let creditsSpent = false;
     try {
-      // Validate and spend credits
+      // 1) Validate and spend credits
       const { data: spendData, error: spendError } = await supabase.functions.invoke('spend-credits', {
         body: { feature: 'promote_premium', description: `Promo Premium: ${songTitle.trim()}` },
       });
-      if (spendError) throw new Error(spendError.message);
+      if (spendError) {
+        throw new Error(
+          t('dashboard.premium.errorCredits', 'No se pudieron validar los créditos. Inténtalo de nuevo.')
+        );
+      }
       if (spendData?.error === 'insufficient_credits') {
         toast.error(t('dashboard.premium.insufficientCredits'));
         setSubmitting(false);
         return;
       }
-      if (spendData?.error) throw new Error(spendData.error);
+      if (spendData?.error) {
+        throw new Error(
+          t('dashboard.premium.errorCreditsDetail', 'Error al descontar créditos: {{detail}}', {
+            detail: spendData.error,
+          })
+        );
+      }
+      creditsSpent = true;
 
       const promoId = crypto.randomUUID();
       const ts = Date.now();
 
-      // Upload audio
+      // 2) Upload audio
       const audioExt = audioFile.name.split('.').pop() || 'mp3';
       const audioPath = `promotions/${user.id}/${promoId}/audio_${ts}.${audioExt}`;
       const { error: audioUpErr } = await supabase.storage
         .from('premium-promo-media')
         .upload(audioPath, audioFile);
-      if (audioUpErr) throw new Error(audioUpErr.message);
+      if (audioUpErr) {
+        throw new Error(
+          t('dashboard.premium.errorAudioUpload', 'No se pudo subir el audio: {{detail}}', {
+            detail: audioUpErr.message,
+          })
+        );
+      }
+      uploadedPaths.push(audioPath);
 
-      // Upload media (video/image)
+      // 3) Upload media (video/image)
       const mediaExt = mediaFile.name.split('.').pop() || 'bin';
       const mediaPath = `promotions/${user.id}/${promoId}/media_${ts}.${mediaExt}`;
       const { error: mediaUpErr } = await supabase.storage
         .from('premium-promo-media')
         .upload(mediaPath, mediaFile);
-      if (mediaUpErr) throw new Error(mediaUpErr.message);
+      if (mediaUpErr) {
+        throw new Error(
+          t('dashboard.premium.errorMediaUpload', 'No se pudo subir el vídeo o la imagen: {{detail}}', {
+            detail: mediaUpErr.message,
+          })
+        );
+      }
+      uploadedPaths.push(mediaPath);
 
       // Determine media_file_type
       const extLower = '.' + mediaExt.toLowerCase();
       const mediaFileType = VIDEO_EXTS.includes(extLower) ? 'video' : 'image';
 
-      // Insert premium request via edge function
+      // 4) Insert premium request via edge function
       const { data, error } = await supabase.functions.invoke('submit-premium-promo', {
         body: {
           work_id: selectedWorkId || null,
@@ -193,14 +220,41 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
         },
       });
 
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
+      if (error) {
+        throw new Error(
+          t('dashboard.premium.errorSubmit', 'No se pudo registrar la promoción: {{detail}}', {
+            detail: error.message,
+          })
+        );
+      }
+      if (data?.error) {
+        throw new Error(
+          t('dashboard.premium.errorSubmit', 'No se pudo registrar la promoción: {{detail}}', {
+            detail: data.error,
+          })
+        );
+      }
 
       setShowSuccess(true);
       toast.success(t('dashboard.premium.requestSent'));
       track('premium_promotion_submitted', { feature: 'premium_promotion' });
     } catch (err: any) {
-      toast.error(err.message || t('dashboard.premium.submitError'));
+      console.error('[PremiumPromoForm] submit error:', err);
+
+      // Rollback uploaded files if a later step failed
+      if (uploadedPaths.length > 0) {
+        try {
+          await supabase.storage.from('premium-promo-media').remove(uploadedPaths);
+        } catch (cleanupErr) {
+          console.error('[PremiumPromoForm] cleanup failed:', cleanupErr);
+        }
+      }
+
+      const baseMsg = err?.message || t('dashboard.premium.submitError');
+      const refundHint = creditsSpent
+        ? ' ' + t('dashboard.premium.refundHint', 'Si los créditos no se reembolsan automáticamente, contacta con soporte.')
+        : '';
+      toast.error(baseMsg + refundHint);
     } finally {
       setSubmitting(false);
     }
