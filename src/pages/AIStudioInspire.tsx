@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
-import { aiErrorHandler } from "@/lib/aiErrorHandler";
+import { parseAiError } from "@/lib/aiErrorHandler";
 
 import {
   ArrowLeft, Lightbulb, Sparkles, Loader2, AlertCircle,
@@ -80,7 +80,7 @@ const AIStudioInspire = () => {
   const navigate = useNavigate();
   const { track } = useProductTracking();
   const { user } = useAuth();
-  const { hasEnough, isLoading: creditsLoading, refresh: refreshCredits } = useCredits();
+  const { hasEnough, isLoading: creditsLoading } = useCredits();
 
   const [generating, setGenerating] = useState(false);
   const [result, setResult] = useState<InspireResult | null>(null);
@@ -120,7 +120,7 @@ const AIStudioInspire = () => {
 
       if (invokeError) throw new Error(invokeError.message);
       if (data?.error) {
-        const handled = aiErrorHandler(data);
+        const handled = parseAiError(data, 'inspire');
         throw new Error(handled?.userMessage || data.error);
       }
 
@@ -136,8 +136,7 @@ const AIStudioInspire = () => {
         duration: data?.duration || 0,
       });
 
-      refreshCredits();
-      track('ai_studio_inspire_generated', { feature: 'inspire' });
+      track('generation_completed', { feature: 'inspire' });
       toast.success("¡Tu canción está lista!");
     } catch (err: any) {
       console.error('[AIStudioInspire] generation error:', err);
