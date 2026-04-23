@@ -1375,7 +1375,7 @@ serve(async (req) => {
 
       const creditsPercentage = totalRevenue > 0 ? parseFloat((((revenueSingle + revenueTopup + creditsRevenue) / totalRevenue) * 100).toFixed(1)) : 0;
 
-      return json({
+      const responsePayload = {
         mrr, arr,
         mrrChange,
         arrChange: mrrChange,
@@ -1405,7 +1405,6 @@ serve(async (req) => {
         activeSubscriptions: activeSubsCount,
         cancelledThisMonth: cancelledSubsThisMonth,
         stripePlanBreakdown,
-        // New orders-based fields
         customersTotal, customersNew, customersReturning,
         totalOrders, averageOrderValue,
         unitsSoldAnnual, unitsSoldMonthly, unitsSoldSingle, unitsSoldTopup,
@@ -1423,7 +1422,18 @@ serve(async (req) => {
           { feature: "Letras", uses: lyricsGen.count || 0 },
         ].sort((a, b) => b.uses - a.uses),
         _dataSource: stripe ? "stripe_real" : "estimated",
-      });
+      };
+
+      // Persist to cache (best-effort, non-blocking semantics not needed: we already have the result)
+      try {
+        await admin
+          .from("app_settings")
+          .upsert({ key: cacheKey, value: responsePayload, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      } catch (cacheErr: any) {
+        console.warn("[get_saas_metrics] cache write failed:", cacheErr?.message);
+      }
+
+      return json({ ...responsePayload, _cached: false });
     }
 
     // ── save_marketing_metrics ────────────────────────────────────
