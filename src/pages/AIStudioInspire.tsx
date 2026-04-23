@@ -260,7 +260,7 @@ const AIStudioInspire = () => {
             ) : (
               <>
                 <Dice5 className="w-5 h-5 mr-2" />
-                🎲 Sorpréndeme ({cost} cr.)
+                🎲 Sorpréndeme
               </>
             )}
           </Button>
