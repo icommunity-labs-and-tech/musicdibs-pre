@@ -109,7 +109,7 @@ export default function AdminMetricsPage() {
     else setLoading(true);
     try {
       const [data] = await Promise.all([
-        adminApi.getSaasMetrics(filters),
+        adminApi.getSaasMetrics({ ...filters, force_refresh: showRefresh }),
         loadIbsQueue(),
       ]);
       setMetrics(data);
