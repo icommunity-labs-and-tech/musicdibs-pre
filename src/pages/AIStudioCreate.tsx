@@ -593,7 +593,7 @@ const AIStudioCreate = () => {
           default_duration: duration,
           style_notes: saveArtistStyle.trim() || null,
           is_default: false,
-        })
+        } as any)
         .select('*, voice_profiles(label, emoji, sample_url)')
         .single();
       if (error) throw error;
