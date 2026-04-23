@@ -239,7 +239,13 @@ const ArtistProfilesPage = () => {
 
   return (
     <div className="space-y-6">
-      <VirtualArtistsTour />
+      <VirtualArtistsTour
+        isFormOpen={showForm}
+        onRequestOpenForm={() => {
+          resetForm();
+          setShowForm(true);
+        }}
+      />
       <VirtualArtistsWelcomeModal
         open={showWelcomeModal}
         onOpenChange={setShowWelcomeModal}
@@ -270,7 +276,7 @@ const ArtistProfilesPage = () => {
 
       {/* Form */}
       {showForm && (
-        <Card className="border-primary/30">
+        <Card className="border-primary/30" data-tour="va-form">
           <CardHeader>
             <CardTitle className="text-lg">{editingId ? "Editar perfil" : "Nuevo perfil de artista"}</CardTitle>
           </CardHeader>
