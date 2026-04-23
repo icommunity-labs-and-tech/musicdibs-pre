@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { parseAiError } from "@/lib/aiErrorHandler";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
@@ -19,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { parseAiError } from "@/lib/aiErrorHandler";
 import { cn } from "@/lib/utils";
 import { 
   ArrowLeft, Wand2, Loader2, Play, Pause, Download, 
@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Navbar } from "@/components/Navbar";
+import { AIStudioThemeBar } from "@/components/ai-studio/AIStudioThemeBar";
 
 import { GENRES, MOODS, type GenerationResult } from "@/types/aiStudio";
 import { useCredits } from "@/hooks/useCredits";
@@ -44,7 +45,15 @@ import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { useProductTracking } from "@/hooks/useProductTracking";
 
 // ── Music tab constants ──
-const DURATION_OPTIONS = [60, 120, 180, 210, 240] as const;
+const DURATION_OPTIONS: { value: number; label: string }[] = [
+  { value: 60,  label: "1 min" },
+  { value: 120, label: "2 min" },
+  { value: 180, label: "3 min" },
+  { value: 210, label: "3:30 min" },
+  { value: 240, label: "4 min" },
+];
+const DEFAULT_DURATION: number | null = null;
+const INSTRUMENTAL_PROMPT_REGEX = /\b(instrumental|karaoke|sin voz|sin voces|base instrumental)\b/i;
 
 // ── Lyrics tab constants ──
 const LYRIC_STYLES = ["Narrativa", "Abstracta", "Descriptiva", "Reivindicativa", "Introspectiva", "Poética"];
@@ -75,20 +84,6 @@ interface LyricsGeneration {
   created_at: string;
 }
 
-interface VoiceProfileOption {
-  id: string;
-  label: string;
-  description: string;
-  prompt_tag: string;
-  emoji: string;
-  sample_url: string | null;
-}
-
-const getVoiceSampleStoragePath = (voiceId: string, sampleUrl: string | null) => {
-  const storedPath = sampleUrl?.split('/voice-samples/')[1]?.split('?')[0];
-  return storedPath || `${voiceId}.mp3`;
-};
-
 // ── Audio Wave Animation Component ──
 const AudioWaveAnimation = () => (
   <div className="flex items-end justify-center gap-1 h-16">
@@ -118,7 +113,8 @@ const AIStudioCreate = () => {
   // ── Music tab state ──
   const [mode, setMode] = useState<'song' | 'instrumental'>('song');
   const [prompt, setPrompt] = useState("");
-  const [duration, setDuration] = useState<number | null>(null);
+  const [lyrics, setLyrics] = useState<string>('');
+  const [duration, setDuration] = useState<number | null>(DEFAULT_DURATION);
   const [lyricsText, setLyricsText] = useState("");
   const [lyricsExpanded, setLyricsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -174,28 +170,36 @@ const AIStudioCreate = () => {
 
   // ── Voice selector state ──
   const [selectedVoice, setSelectedVoice] = useState<string>('');
-  const [voiceProfiles, setVoiceProfiles] = useState<VoiceProfileOption[]>([]);
+  const [voiceProfiles, setVoiceProfiles] = useState<any[]>([]);
   const [playingVoice, setPlayingVoice] = useState<string>('');
   const [audioRef] = useState<Record<string, HTMLAudioElement>>({});
 
   // ── Virtual Artists state ──
-  const [voiceTab, setVoiceTab] = useState<'preset' | 'my_artists'>('preset');
+  const [voiceTab, setVoiceTab] = useState<'preset' | 'my_artists' | 'my_presets'>('preset');
   const [virtualArtists, setVirtualArtists] = useState<any[]>([]);
   const [virtualArtistsCount, setVirtualArtistsCount] = useState(0);
   const [selectedArtistId, setSelectedArtistId] = useState<string>('');
+
+  // Derived counts by generation_type
+  const vocalArtists = useMemo(() => virtualArtists.filter(a => (a.generation_type || 'vocal') === 'vocal'), [virtualArtists]);
+  const instrumentalPresets = useMemo(() => virtualArtists.filter(a => a.generation_type === 'instrumental'), [virtualArtists]);
 
   // ── Save as Virtual Artist modal state ──
   const [showSaveArtistForm, setShowSaveArtistForm] = useState(false);
   const [saveArtistName, setSaveArtistName] = useState('');
   const [saveArtistStyle, setSaveArtistStyle] = useState('');
   const [isSavingArtist, setIsSavingArtist] = useState(false);
-  const [saveArtistVoiceId, setSaveArtistVoiceId] = useState('');
-  const [saveArtistVoiceName, setSaveArtistVoiceName] = useState('');
-  const [saveArtistGenerationId, setSaveArtistGenerationId] = useState('');
-  const [saveArtistPrompt, setSaveArtistPrompt] = useState('');
-  const [savedArtistGenerationIds, setSavedArtistGenerationIds] = useState<Set<string>>(new Set());
-  const [showOnboardingTip, setShowOnboardingTip] = useState(false);
+  const [lastGeneratedVoiceId, setLastGeneratedVoiceId] = useState<string>('');
+  const [lastGeneratedVoiceName, setLastGeneratedVoiceName] = useState<string>('');
+  const [saveArtistGenerationId, setSaveArtistGenerationId] = useState<string>('');
+
+  // Track voice used per generation, especially for historical rows without persisted metadata
   const generationVoiceMapRef = useRef<Map<string, { voiceId: string; voiceName: string }>>(new Map());
+  // Track which generations already saved as virtual artist
+  const [savedArtistGenIds, setSavedArtistGenIds] = useState<Set<string>>(new Set());
+
+  // ── Virtual Artist onboarding tip state ──
+  const [showVirtualArtistTip, setShowVirtualArtistTip] = useState(false);
 
   // ── Derived values ──
   const selectedGenre: string | null = null;
@@ -203,6 +207,10 @@ const AIStudioCreate = () => {
   const currentCost = mode === 'song' ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio;
   const currentFeature = mode === 'song' ? 'generate_audio_song' : 'generate_audio';
   const modeLabel = mode === 'song' ? t('aiCreate.songWithVoice') : t('aiCreate.instrumentalBase');
+  const canSaveAsVirtualArtist = (_result: GenerationResult) => {
+    // Allow saving any generation (vocal or instrumental) as a virtual artist
+    return true;
+  };
 
   const availableGenres = useMemo(() => {
     const genres = new Set<string>();
@@ -240,37 +248,15 @@ const AIStudioCreate = () => {
     } else {
       setIsLoading(false);
     }
-    const loadVoiceProfiles = async () => {
-      const { data, error } = await supabase
-        .from('voice_profiles')
-        .select('*')
-        .eq('active', true)
-        .order('sort_order');
-
-      if (error) {
-        console.error('Error loading voice profiles:', error);
-        return;
-      }
-
-      const signedProfiles = await Promise.all((data || []).map(async (profile) => {
-        if (!profile.sample_url) return profile;
-
-        const { data: signedData, error: signedError } = await supabase.storage
-          .from('voice-samples')
-          .createSignedUrl(getVoiceSampleStoragePath(profile.id, profile.sample_url), 3600);
-
-        if (signedError) {
-          console.error(`Error signing sample for voice ${profile.id}:`, signedError);
-          return { ...profile, sample_url: null };
-        }
-
-        return { ...profile, sample_url: signedData?.signedUrl || null };
-      }));
-
-      setVoiceProfiles(signedProfiles);
-    };
-
-    void loadVoiceProfiles();
+    // Load voice profiles
+    supabase
+      .from('voice_profiles')
+      .select('*')
+      .eq('active', true)
+      .order('sort_order')
+      .then(({ data }) => {
+        setVoiceProfiles(data || []);
+      });
 
     // Load virtual artists
     if (user) {
@@ -282,15 +268,25 @@ const AIStudioCreate = () => {
           if (!error && data) {
             setVirtualArtists(data);
             setVirtualArtistsCount(data.length);
-            // Track which generations already created virtual artists
-            const genIds = new Set<string>();
-            data.forEach((a: any) => { if (a.created_from_generation_id) genIds.add(a.created_from_generation_id); });
-            setSavedArtistGenerationIds(genIds);
           }
         });
     }
 
   }, [user]);
+
+  // ── Preload prompt and mode from URL params (e.g. from /ai-studio/inspire) ──
+  useEffect(() => {
+    const urlPrompt = searchParams.get('prompt');
+    const urlMode = searchParams.get('mode');
+    if (urlPrompt) {
+      setPrompt(urlPrompt.slice(0, 2500));
+      setActiveTab('music');
+    }
+    if (urlMode === 'song' || urlMode === 'instrumental') {
+      setMode(urlMode);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadHistory = async () => {
     try {
@@ -309,7 +305,6 @@ const AIStudioCreate = () => {
         mood: item.mood || undefined,
         createdAt: new Date(item.created_at),
         isFavorite: item.is_favorite || false,
-        voiceProfileId: (item as any).voice_profile_id || undefined,
         voiceId: (item as any).voice_id || undefined,
         voiceName: (item as any).voice_name || undefined,
       })));
@@ -355,7 +350,7 @@ const AIStudioCreate = () => {
       const { data, error } = await supabase.functions.invoke('generate-audio', {
         body: {
           prompt: enrichedPrompt,
-          lyrics: mode === 'song' ? lyricsText.trim() : '',
+          lyrics: mode === 'song' ? lyrics.trim() : '',
           mode,
           ...(duration ? { duration } : {}),
         }
@@ -366,74 +361,104 @@ const AIStudioCreate = () => {
           toast({ title: 'Demasiadas generaciones', description: data.message, variant: 'destructive' });
           return;
         }
+        if (data?.error === 'insufficient_credits') {
+          throw { message: data.message || 'Créditos del proveedor insuficientes', details: data.details };
+        }
         if (data?.error) throw { message: data.error, details: data.details };
         throw { message: error.message || 'Error al generar audio' };
       }
 
       if (data?.error) {
+        if (data.error === 'insufficient_credits') {
+          throw { message: data.message || 'Créditos del proveedor insuficientes', details: data.details };
+        }
         throw { message: data.error, details: data.details };
       }
 
       if (data?.audio) {
-        const audioUrl = `data:${data.format};base64,${data.audio}`;
+        // Prefer the persisted signed URL from the edge function; fall back to inline data URL
+        const audioUrl = data.audioUrl || `data:${data.format};base64,${data.audio}`;
 
-        const selectedVoiceProfile = mode === 'song' ? voiceProfiles.find(v => v.id === selectedVoice) : null;
-        const voiceIdForGen = mode === 'song' ? selectedVoice : null;
-        const voiceNameForGen = selectedVoiceProfile?.label || null;
+        const selectedVoiceProfile = voiceProfiles.find(v => v.id === selectedVoice);
+        const artistVoiceId = selectedArtistId
+          ? (virtualArtists.find(artist => artist.id === selectedArtistId)?.voice_profile_id || null)
+          : null;
+        const voiceIdToSave = mode === 'song' ? (artistVoiceId || selectedVoice || null) : null;
+        const voiceNameToSave = voiceIdToSave
+          ? (selectedVoiceProfile?.label || virtualArtists.find(artist => artist.id === selectedArtistId)?.voice_profiles?.label || '')
+          : null;
 
-        // The Edge Function already saved to ai_generations — use its returned ID
-        const generationId = data.generationId;
+        // The edge function already inserts the row in ai_generations and returns its id.
+        // Just update the voice metadata if applicable — never insert again to avoid duplicates.
+        let generationId: string | null = data.generationId || null;
+        let createdAt = new Date();
 
-        // Update the existing record with voice metadata if needed
-        if (generationId && (voiceIdForGen || voiceNameForGen)) {
-          await supabase
+        if (generationId && voiceIdToSave) {
+          const { error: updateError } = await supabase
             .from('ai_generations')
-            .update({
-              voice_profile_id: voiceIdForGen,
-              voice_id: voiceIdForGen,
-              voice_name: voiceNameForGen,
-            } as any)
-            .eq('id', generationId);
+            .update({ voice_id: voiceIdToSave, voice_name: voiceNameToSave })
+            .eq('id', generationId)
+            .eq('user_id', user.id);
+          if (updateError) console.error('[AIStudioCreate] voice metadata update failed:', updateError);
         }
 
-        const savedGen = { id: generationId || crypto.randomUUID(), created_at: new Date().toISOString() };
+        // Fallback: only insert if the edge function failed to persist (no generationId returned)
+        if (!generationId) {
+          const { data: savedGen, error: saveError } = await supabase
+            .from('ai_generations')
+            .insert({
+              user_id: user.id,
+              prompt: prompt.trim(),
+              duration: data.duration,
+              audio_url: audioUrl,
+              ...(voiceIdToSave ? { voice_id: voiceIdToSave, voice_name: voiceNameToSave } : {}),
+            })
+            .select()
+            .single();
+          if (saveError) throw { message: saveError.message };
+          generationId = savedGen.id;
+          createdAt = new Date(savedGen.created_at);
+        }
 
         const newResult: GenerationResult = {
-          id: savedGen.id,
+          id: generationId!,
           audioUrl,
           prompt: prompt.trim(),
           duration: data.duration,
-          createdAt: new Date(savedGen.created_at),
+          createdAt,
           isFavorite: false,
-          voiceProfileId: voiceIdForGen || undefined,
-          voiceId: voiceIdForGen || undefined,
-          voiceName: voiceNameForGen || undefined,
+          voiceId: voiceIdToSave || undefined,
+          voiceName: voiceNameToSave || undefined,
         };
-
-        // Track voice mapping for virtual artist feature
-        if (voiceIdForGen) {
-          generationVoiceMapRef.current.set(savedGen.id, { voiceId: voiceIdForGen, voiceName: voiceNameForGen || '' });
-        }
-
         setResults(prev => [newResult, ...prev]);
         setLastResult(newResult);
         toast({ title: t('aiCreate.musicGenerated'), description: t('aiCreate.songReady') });
         track('generation_completed', { feature: 'create_music' });
         sessionStorage.setItem('md_last_generation', Date.now().toString());
 
-        // Onboarding tip: show once on first vocal generation if no virtual artists
-        if (mode === 'song' && !localStorage.getItem('virtual_artist_tip_shown') && virtualArtistsCount === 0) {
-          setTimeout(() => setShowOnboardingTip(true), 800);
+        // Show onboarding tip for first vocal generation
+        if (mode === 'song') {
+          const hasSeenTip = localStorage.getItem('virtual_artist_tip_shown');
+          if (!hasSeenTip && virtualArtistsCount === 0) {
+            setTimeout(() => setShowVirtualArtistTip(true), 800);
+          }
+        }
+
+        if (voiceIdToSave && generationId) {
+          generationVoiceMapRef.current.set(generationId, {
+            voiceId: voiceIdToSave,
+            voiceName: voiceNameToSave || '',
+          });
         }
       }
     } catch (error: any) {
       console.error('Generation error:', error);
-      const friendly = parseAiError(error);
+      const { userMessage, isRetryable } = parseAiError(error);
       setGenerationError({
-        message: friendly.userMessage,
-        details: friendly.userMessage,
+        message: userMessage,
+        details: isRetryable ? t('aiShared.aiRetryHint') : undefined,
       });
-      track('generation_failed', { feature: 'create_music', metadata: { error: error.message } });
+      track('generation_failed', { feature: 'create_music', metadata: { error: (error as any)?.message } });
     } finally {
       setIsGenerating(false);
     }
@@ -513,92 +538,102 @@ const AIStudioCreate = () => {
   };
 
   const downloadAudio = async (result: GenerationResult) => {
+    const filename = `musicdibs-${mode}-${result.id.slice(0, 8)}.mp3`;
     try {
+      // Fetch as blob to force download (avoids browser opening cross-origin URL in new tab)
       const response = await fetch(result.audioUrl);
+      if (!response.ok) throw new Error('fetch failed');
       const blob = await response.blob();
       const blobUrl = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = blobUrl;
-      link.download = `musicdibs-${mode}-${result.id.slice(0, 8)}.mp3`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-      track('audio_downloaded', { feature: 'create_music' });
-    } catch (err) {
-      console.error('Download error:', err);
-      toast({ title: 'Error al descargar', description: 'No se pudo descargar el archivo. Inténtalo de nuevo.', variant: 'destructive' });
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch {
+      // Fallback: direct link with download attribute
+      const link = document.createElement('a');
+      link.href = result.audioUrl;
+      link.download = filename;
+      link.rel = 'noopener';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
+    track('audio_downloaded', { feature: 'create_music' });
   };
 
   // ── Save as Virtual Artist ──
-  // ── Instrumental detection regex ──
-  const INSTRUMENTAL_PROMPT_REGEX = /\b(instrumental|karaoke|sin voz|sin voces|base instrumental)\b/i;
-
-  const canSaveAsVirtualArtist = (result: GenerationResult) => {
-    if (result.voiceId || result.voiceProfileId || generationVoiceMapRef.current.has(result.id)) return true;
-    return !INSTRUMENTAL_PROMPT_REGEX.test(result.prompt);
-  };
-
-  const openSaveArtistModal = (result: GenerationResult) => {
-    // Get voice info from result, or from in-memory map
-    const voiceMap = generationVoiceMapRef.current.get(result.id);
-    const voiceId = result.voiceId || result.voiceProfileId || voiceMap?.voiceId || '';
-    const vp = voiceProfiles.find(v => v.id === voiceId);
-    const voiceName = result.voiceName || voiceMap?.voiceName || vp?.label || '';
-
-    setSaveArtistVoiceId(voiceId);
-    setSaveArtistVoiceName(voiceName);
-    setSaveArtistGenerationId(result.id);
-    setSaveArtistPrompt(result.prompt);
-    setSaveArtistName('');
-    setSaveArtistStyle('');
-    setShowSaveArtistForm(true);
-  };
-
   const handleSaveVirtualArtist = async () => {
     if (!saveArtistName.trim() || !user) return;
-    const styleText = (saveArtistPrompt || saveArtistStyle).trim();
-    // Require either a voice OR style text with >10 chars
-    if (!saveArtistVoiceId && styleText.length <= 10) return;
-
-    // Check limit
-    if (virtualArtistsCount >= 10) {
-      toast({ title: 'Límite alcanzado', description: 'Máximo 10 artistas virtuales. Elimina uno para crear otro.', variant: 'destructive' });
-      return;
-    }
-
+    const hasStyleFallback = saveArtistStyle.trim().length > 10;
+    const isInstrumentalSave = mode === 'instrumental' || (!lastGeneratedVoiceId && hasStyleFallback);
+    const voiceIdToPersist = isInstrumentalSave ? '' : (lastGeneratedVoiceId || (hasStyleFallback ? '' : voiceProfiles[0]?.id) || '');
+    if (!isInstrumentalSave && !voiceIdToPersist && !hasStyleFallback) return;
     setIsSavingArtist(true);
     try {
+      // Check limit of 10
+      if (virtualArtistsCount >= 10) {
+        toast({ title: t('aiCreate.saveArtistLimit'), variant: 'destructive' });
+        return;
+      }
+      const isInstrumental = mode === 'instrumental';
       const { data: newArtist, error } = await supabase
         .from('user_artist_profiles')
         .insert({
           user_id: user.id,
           name: saveArtistName.trim(),
-          voice_profile_id: saveArtistVoiceId || null,
-          voice_type: saveArtistVoiceId ? 'preset' : null,
+          voice_profile_id: isInstrumental ? null : voiceIdToPersist,
+          voice_type: isInstrumental ? null : 'preset',
+          generation_type: mode === 'song' ? 'vocal' : 'instrumental',
           genre: null,
           mood: null,
           default_duration: duration,
-          style_notes: saveArtistPrompt ? `Estilo original: ${saveArtistPrompt.slice(0, 200)}` : (saveArtistStyle.trim() || null),
+          style_notes: saveArtistStyle.trim() || null,
           is_default: false,
-          created_from_generation_id: saveArtistGenerationId || null,
-        } as any)
+        })
         .select('*, voice_profiles(label, emoji, sample_url)')
         .single();
       if (error) throw error;
       setVirtualArtists(prev => [newArtist, ...prev]);
       setVirtualArtistsCount(prev => prev + 1);
-      setSavedArtistGenerationIds(prev => new Set(prev).add(saveArtistGenerationId));
-      toast({ title: `Artista virtual "${saveArtistName.trim()}" guardado ✅` });
+      if (saveArtistGenerationId) {
+        setSavedArtistGenIds(prev => new Set(prev).add(saveArtistGenerationId));
+      }
+      toast({ title: t('aiCreate.saveArtistSuccess', { name: saveArtistName.trim() }) });
       setShowSaveArtistForm(false);
       setSaveArtistName('');
       setSaveArtistStyle('');
+      setSaveArtistGenerationId('');
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
     } finally {
       setIsSavingArtist(false);
     }
+  };
+
+  // ── Open save-as-artist modal from library ──
+  const openSaveArtistFromLibrary = (generationId: string) => {
+    const voiceInfo = generationVoiceMapRef.current.get(generationId);
+    const result = results.find(r => r.id === generationId);
+
+    if (mode === 'instrumental') {
+      setLastGeneratedVoiceId('');
+      setLastGeneratedVoiceName('');
+    } else {
+      const fallbackVoice = voiceProfiles[0];
+      const voiceId = voiceInfo?.voiceId || result?.voiceId || fallbackVoice?.id || '';
+      const voiceName = voiceInfo?.voiceName || result?.voiceName || fallbackVoice?.label || '';
+      setLastGeneratedVoiceId(voiceId);
+      setLastGeneratedVoiceName(voiceName);
+    }
+
+    setSaveArtistGenerationId(generationId);
+    setSaveArtistName('');
+    setSaveArtistStyle(result?.prompt || '');
+    setShowSaveArtistForm(true);
   };
 
   // ── Select virtual artist ──
@@ -609,8 +644,16 @@ const AIStudioCreate = () => {
       return;
     }
     setSelectedArtistId(artist.id);
-    setSelectedVoice(artist.voice_profile_id || '');
+    // Restore generation type
+    const artistGenType = artist.generation_type || 'vocal';
+    setMode(artistGenType === 'instrumental' ? 'instrumental' : 'song');
+    if (artistGenType === 'instrumental') {
+      setSelectedVoice('');
+    } else {
+      setSelectedVoice(artist.voice_profile_id || '');
+    }
     if (artist.default_duration) setDuration(artist.default_duration);
+    if (artist.style_notes) setPrompt(artist.style_notes);
   };
 
   // ── Bulk helpers ──
@@ -672,25 +715,9 @@ const AIStudioCreate = () => {
 
     const audio = new Audio(sampleUrl);
     audioRef[voiceId] = audio;
+    audio.play();
     setPlayingVoice(voiceId);
-    audio.onerror = () => {
-      setPlayingVoice('');
-      toast({
-        title: t('aiShared.error'),
-        description: 'No se pudo cargar la muestra de voz',
-        variant: 'destructive',
-      });
-    };
     audio.onended = () => setPlayingVoice('');
-    void audio.play().catch((error) => {
-      console.error('Error playing voice sample:', error);
-      setPlayingVoice('');
-      toast({
-        title: t('aiShared.error'),
-        description: 'No se pudo reproducir la muestra de voz',
-        variant: 'destructive',
-      });
-    });
   };
 
   // ── Improve prompt with AI ──
@@ -713,7 +740,8 @@ const AIStudioCreate = () => {
         toast({ title: t('aiCreate.promptImproved'), description: t('aiCreate.promptImprovedDesc') });
       }
     } catch (e: any) {
-      toast({ title: "Error al mejorar", description: e.message, variant: "destructive" });
+      const { userMessage } = parseAiError(e);
+      toast({ title: "Error al mejorar", description: userMessage, variant: "destructive" });
     } finally {
       setIsImprovingPrompt(false);
     }
@@ -728,7 +756,7 @@ const AIStudioCreate = () => {
         body: {
           prompt: lyricsDesc,
           genre: lyricsGenre || '',
-          mode: 'lyrics',
+          mode: 'lyrics_description',
         },
       });
       if (error || !data?.improved) throw new Error(error?.message || 'No response');
@@ -841,18 +869,19 @@ const AIStudioCreate = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <AIStudioThemeBar />
 
-      <main className="container mx-auto px-4 py-6 pt-20">
+      <main className="container mx-auto px-4 py-6 pt-16">
         <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
           <ArrowLeft className="w-4 h-4" />
           {t('aiCreate.backToStudio')}
         </Link>
 
-        <div className="grid lg:grid-cols-2 gap-8 items-stretch">
+        <div className="grid lg:grid-cols-2 gap-8 lg:items-stretch">
           {/* ═══ LEFT: Creation Panel ═══ */}
           <div className="space-y-6 flex flex-col" ref={formRef}>
             <MusicCreatorTour />
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between min-h-[68px]">
               <div>
                 <h1 className="text-3xl font-bold mb-2">{t('aiCreate.title')}</h1>
                 <p className="text-muted-foreground">{t('aiCreate.subtitle')}</p>
@@ -877,7 +906,7 @@ const AIStudioCreate = () => {
                   <Music className="h-4 w-4" />
                   {t('aiCreate.tabMusic')}
                 </TabsTrigger>
-                <TabsTrigger value="lyrics" className="gap-2">
+                <TabsTrigger value="lyrics" className="gap-2" data-tour="mc-tab-lyrics">
                   <FileText className="h-4 w-4" />
                   {t('aiCreate.tabLyrics')}
                 </TabsTrigger>
@@ -937,7 +966,11 @@ const AIStudioCreate = () => {
                       </div>
 
                       {/* Action buttons */}
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                        <Button variant="outline" onClick={handleRegenerate} className="gap-2">
+                          <ArrowLeft className="h-4 w-4" />
+                          {t('aiCreate.newSong', 'Nueva canción')}
+                        </Button>
                         <Button variant="outline" onClick={() => downloadAudio(lastResult)} className="gap-2">
                           <Download className="h-4 w-4" />
                           {t('aiCreate.download')}
@@ -996,36 +1029,35 @@ const AIStudioCreate = () => {
                           </button>
                         </div>
                         <Textarea
-                          placeholder="Ej: Una canción pop alegre en español sobre amor de verano, con un ritmo enérgico y romántico…"
+                          id="mc-description-textarea"
+                          placeholder="Ej: Una canción pop alegre en español sobre amor de verano, con ritmo enérgico..."
                           value={prompt}
                           onChange={(e) => setPrompt(e.target.value.slice(0, 2500))}
-                          rows={6}
+                          rows={5}
                           className="resize-none"
                           maxLength={2500}
                         />
                         <div className="flex items-center justify-between">
-                          <p className="text-xs text-muted-foreground">Incluye: género, subgénero, BPM, instrumentos, estructura, mood, idioma, tipo de voz…</p>
+                          <p className="text-xs text-muted-foreground">Incluye: género, mood, idioma, tema, ritmo, tipo de voz...</p>
                           <p className="text-xs text-muted-foreground">{prompt.length}/2500</p>
                         </div>
                       </div>
 
-                      {/* Optional lyrics — only for song mode */}
+                      {/* Lyrics textarea — only visible in 'song' mode */}
                       {mode === 'song' && (
-                        <div className="space-y-1.5">
+                        <div className="space-y-1.5" data-tour="mc-lyrics">
                           <Label>Letra de la canción (opcional)</Label>
                           <Textarea
-                            placeholder={"Ej:\n[Verso 1]\nCaminaba solo por la orilla del mar\n…\n\n[Coro]\nY el viento me dijo tu nombre…"}
-                            value={lyricsText}
-                            onChange={(e) => setLyricsText(e.target.value.slice(0, 3000))}
+                            placeholder="Pega aquí tu letra completa. La IA la cantará respetando cada palabra tal como la escribas..."
+                            value={lyrics}
+                            onChange={(e) => setLyrics(e.target.value.slice(0, 3000))}
                             rows={6}
-                            className="resize-none font-mono text-sm"
+                            className="resize-none"
                             maxLength={3000}
                           />
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-xs text-muted-foreground">
-                              💡 Si incluyes letra, ElevenLabs la cantará palabra por palabra. Cuanto más detallada, mejor resultado.
-                            </p>
-                            <p className="text-xs text-muted-foreground whitespace-nowrap">{lyricsText.length}/3000</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground">💡 Si incluyes letra, ElevenLabs la cantará palabra por palabra. Cuanto más detallada, mejor resultado.</p>
+                            <p className="text-xs text-muted-foreground">{lyrics.length}/3000</p>
                           </div>
                         </div>
                       )}
@@ -1036,7 +1068,10 @@ const AIStudioCreate = () => {
                         <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={() => setMode('song')}
+                            onClick={() => {
+                              setMode('song');
+                              setVoiceTab('preset');
+                            }}
                             className={cn(
                               "flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-all flex items-center justify-center gap-2",
                               mode === 'song'
@@ -1049,7 +1084,12 @@ const AIStudioCreate = () => {
                           </button>
                           <button
                             type="button"
-                            onClick={() => { setMode('instrumental'); setSelectedVoice(''); setSelectedArtistId(''); }}
+                            onClick={() => {
+                              setMode('instrumental');
+                              setSelectedVoice('');
+                              setSelectedArtistId('');
+                              setVoiceTab(instrumentalPresets.length > 0 ? 'my_presets' : 'preset');
+                            }}
                             className={cn(
                               "flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-all flex items-center justify-center gap-2",
                               mode === 'instrumental'
@@ -1064,13 +1104,16 @@ const AIStudioCreate = () => {
                       </div>
 
                       <div data-tour="mc-settings">
-                      {/* Voice selector — only for song mode */}
-                      {mode === 'song' && (
+                      {/* Voice/Preset selector */}
                       <div className="space-y-3">
-                         <Label className="text-sm font-medium">Elige una voz *</Label>
-                        {/* Tabs: Voces IA / Mis artistas virtuales */}
+                         <Label className="text-sm font-medium">
+                           {mode === 'song' ? 'Elige una voz *' : 'Mis presets musicales'}
+                         </Label>
+                        {/* Tabs: Voces IA / Mis artistas virtuales / Mis presets musicales */}
                         <TooltipProvider delayDuration={200}>
-                        <div className="flex gap-2 mb-3">
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {/* Tab: Voces IA — only in song mode */}
+                          {mode === 'song' && (
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
@@ -1093,30 +1136,62 @@ const AIStudioCreate = () => {
                               </TooltipContent>
                             </Tooltip>
                           </div>
+                          )}
+                          {/* Tab: Mis artistas virtuales — only in song mode */}
+                          {mode === 'song' && (
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
-                              onClick={() => { if (virtualArtistsCount > 0) setVoiceTab('my_artists'); }}
-                              disabled={virtualArtistsCount === 0}
+                              onClick={() => { if (vocalArtists.length > 0) setVoiceTab('my_artists'); }}
+                              disabled={vocalArtists.length === 0}
                               className={cn(
                                 "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
                                 voiceTab === 'my_artists'
                                   ? "border-primary bg-primary/10 text-primary border-2"
-                                  : virtualArtistsCount === 0
+                                  : vocalArtists.length === 0
                                     ? "border-border text-muted-foreground/40 cursor-not-allowed"
                                     : "border-border text-muted-foreground hover:border-primary/50"
                               )}
                             >
-                              👤 Mis artistas virtuales {virtualArtistsCount > 0 && `(${virtualArtistsCount})`}
+                              👤 Mis artistas virtuales {vocalArtists.length > 0 && `(${vocalArtists.length})`}
                             </button>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
                               </TooltipTrigger>
                               <TooltipContent side="top" className="max-w-xs text-sm">
-                                {virtualArtistsCount > 0
+                                {vocalArtists.length > 0
                                   ? "Los artistas virtuales son las voces que has guardado de otras canciones para crear nuevas con el mismo estilo."
                                   : "Aquí aparecen tus artistas guardados. Úsalos para crear canciones con el mismo estilo."}
+                              </TooltipContent>
+                            </Tooltip>
+                          </div>
+                          )}
+                          {/* Tab: Mis presets musicales */}
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => { if (instrumentalPresets.length > 0) setVoiceTab('my_presets'); }}
+                              disabled={instrumentalPresets.length === 0}
+                              className={cn(
+                                "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
+                                voiceTab === 'my_presets'
+                                  ? "border-primary bg-primary/10 text-primary border-2"
+                                  : instrumentalPresets.length === 0
+                                    ? "border-border text-muted-foreground/40 cursor-not-allowed"
+                                    : "border-border text-muted-foreground hover:border-primary/50"
+                              )}
+                            >
+                              🎹 Mis presets musicales {instrumentalPresets.length > 0 && `(${instrumentalPresets.length})`}
+                            </button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="max-w-xs text-sm">
+                                {instrumentalPresets.length > 0
+                                  ? "Presets musicales guardados de tus generaciones instrumentales. Reutiliza su configuración."
+                                  : "Genera una canción instrumental y guárdala como preset para reutilizar su estilo."}
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -1124,7 +1199,7 @@ const AIStudioCreate = () => {
                         </TooltipProvider>
 
                         {/* TAB: Voces IA del catálogo */}
-                        {voiceTab === 'preset' && (
+                        {voiceTab === 'preset' && mode === 'song' && (
                           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             {voiceProfiles.map((v) => (
                               <button
@@ -1154,18 +1229,18 @@ const AIStudioCreate = () => {
                           </div>
                         )}
 
-                        {/* TAB: Mis artistas virtuales */}
+                        {/* TAB: Mis artistas virtuales (vocal only) */}
                         {voiceTab === 'my_artists' && (
                           <div className="space-y-2">
-                            {virtualArtistsCount === 0 ? (
+                            {vocalArtists.length === 0 ? (
                               <div className="text-center py-6 border border-dashed border-border rounded-lg">
                                 <User className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                                 <p className="text-sm text-muted-foreground">Aún no tienes artistas guardados</p>
-                                <p className="text-xs text-muted-foreground mt-1">Aquí aparecen tus artistas guardados. Úsalos para crear canciones con el mismo estilo.</p>
+                                <p className="text-xs text-muted-foreground mt-1">Genera una canción con voz y guárdala como artista virtual.</p>
                               </div>
                             ) : (
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                {virtualArtists.map((artist) => (
+                                {vocalArtists.map((artist) => (
                                   <button
                                     key={artist.id}
                                     type="button"
@@ -1192,52 +1267,95 @@ const AIStudioCreate = () => {
                           </div>
                         )}
 
-                        {/* Micro-copy */}
-                        {voiceTab === 'my_artists' && virtualArtistsCount === 0 && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-2">
-                            💡 Los artistas virtuales son voces que has guardado de otras canciones para crear nuevas con el mismo estilo
-                          </p>
+                        {/* TAB: Mis presets musicales (instrumental only) */}
+                        {voiceTab === 'my_presets' && (
+                          <div className="space-y-2">
+                            {instrumentalPresets.length === 0 ? (
+                              <div className="text-center py-6 border border-dashed border-border rounded-lg">
+                                <Music2 className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                                <p className="text-sm text-muted-foreground">Aún no tienes presets musicales</p>
+                                <p className="text-xs text-muted-foreground mt-1">Genera una canción instrumental y guárdala como preset para reutilizar su estilo.</p>
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                {instrumentalPresets.map((preset) => (
+                                  <button
+                                    key={preset.id}
+                                    type="button"
+                                    onClick={() => handleSelectArtist(preset)}
+                                    className={cn(
+                                      "flex flex-col items-start p-2 px-3 rounded-lg border text-left w-full transition-all",
+                                      selectedArtistId === preset.id
+                                        ? "border-2 border-primary bg-primary/5"
+                                        : "border-border hover:border-primary/30"
+                                    )}
+                                  >
+                                    <div className="w-7 h-7 rounded-md flex items-center justify-center mb-0.5" style={{ background: '#E1F5EE' }}>
+                                      <Music2 className="h-4 w-4" style={{ color: '#0F6E56' }} />
+                                    </div>
+                                    <span className="text-xs font-medium text-foreground">{preset.name}</span>
+                                    <div className="flex flex-wrap gap-1 mt-0.5">
+                                      {preset.genre && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: '#E1F5EE', color: '#085041' }}>{preset.genre}</span>
+                                      )}
+                                      {preset.mood && (
+                                        <span className="text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: '#E1F5EE', color: '#085041' }}>{preset.mood}</span>
+                                      )}
+                                    </div>
+                                    {preset.style_notes && (
+                                      <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{preset.style_notes}</span>
+                                    )}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         )}
 
-                        {selectedVoice && !selectedArtistId && (
+                        {selectedVoice && !selectedArtistId && mode === 'song' && (
                           <p className="text-xs text-muted-foreground mt-1">
                             {voiceProfiles.find(v => v.id === selectedVoice)?.description}
                           </p>
                         )}
                       </div>
-                      )}
                       </div>{/* close data-tour="mc-settings" */}
 
 
-                      {/* Duración de la canción */}
+                      {/* Duration selector */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
+                        <Label className="text-sm flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                           Duración
                         </Label>
                         <div className="flex flex-wrap gap-2">
-                          {DURATION_OPTIONS.map((secs) => {
-                            const mins = Math.floor(secs / 60);
-                            const rem = secs % 60;
-                            const label = rem === 0 ? `${mins} min` : `${mins}:${String(rem).padStart(2, '0')} min`;
-                            const active = duration === secs;
-                            return (
-                              <Badge
-                                key={secs}
-                                variant={active ? 'default' : 'outline'}
-                                className="cursor-pointer text-xs px-3 py-1.5"
-                                onClick={() => setDuration(active ? null : secs)}
-                              >
-                                {label}
-                              </Badge>
-                            );
-                          })}
+                          <Badge
+                            variant={duration === null ? "default" : "outline"}
+                            className={cn(
+                              "cursor-pointer text-xs px-3 py-1.5 transition-colors",
+                              duration === null
+                                ? "bg-primary text-primary-foreground"
+                                : "hover:bg-muted"
+                            )}
+                            onClick={() => setDuration(null)}
+                          >
+                            Auto (IA decide)
+                          </Badge>
+                          {DURATION_OPTIONS.map((opt) => (
+                            <Badge
+                              key={opt.value}
+                              variant={duration === opt.value ? "default" : "outline"}
+                              className={cn(
+                                "cursor-pointer text-xs px-3 py-1.5 transition-colors",
+                                duration === opt.value
+                                  ? "bg-primary text-primary-foreground"
+                                  : "hover:bg-muted"
+                              )}
+                              onClick={() => setDuration(opt.value)}
+                            >
+                              {opt.label}
+                            </Badge>
+                          ))}
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          {duration
-                            ? 'Las canciones más largas pueden tardar algo más en generarse.'
-                            : 'Si no eliges una duración, el modelo decidirá la más adecuada.'}
-                        </p>
                       </div>
 
                       {/* Error */}
@@ -1266,6 +1384,7 @@ const AIStudioCreate = () => {
                           disabled={isGenerating || !prompt.trim() || prompt.trim().length < 10}
                           className="w-full"
                           size="lg"
+                          data-tour="mc-generate"
                         >
                           <Wand2 className="w-4 h-4 mr-2" />
                           {t('aiCreate.generateBtn')} {mode === 'song' ? 'canción' : 'instrumental'} con IA
@@ -1327,7 +1446,7 @@ const AIStudioCreate = () => {
                           {t('aiCreate.lyricsDescImproved')} — {t('aiCreate.lyricsDescImprovedSub')}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground text-right">{lyricsDesc.length}/2000</p>
+                      <p className="text-xs text-muted-foreground text-right">{lyricsDesc.length}/2500</p>
                     </div>
 
 
@@ -1468,25 +1587,18 @@ const AIStudioCreate = () => {
           </div>
 
           {/* ═══ RIGHT: Results Panel ═══ */}
-          <div className="space-y-6 flex flex-col">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-3xl font-bold mb-2">
-                  {activeTab === "lyrics" ? t('aiCreate.myLyrics') : t('aiCreate.results')}
-                </h2>
-                <p className="text-muted-foreground">
-                  {activeTab === "lyrics"
-                    ? t('aiCreate.lyricsHistorySubtitle', 'Historial de letras generadas')
-                    : t('aiCreate.resultsSubtitle', 'Tus generaciones musicales recientes')}
-                </p>
-              </div>
+          <div className="space-y-6 flex flex-col" data-tour="mc-results">
+            <div className="flex items-center justify-between min-h-[68px]">
+              <h2 className="text-xl font-semibold">
+                {activeTab === "lyrics" ? t('aiCreate.myLyrics') : t('aiCreate.results')}
+              </h2>
               {activeTab === "lyrics" && lyricsHistory.length > 0 ? (
-                <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0 mt-2">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   {t('aiCreate.latest')} {lyricsHistory.length}
                 </span>
               ) : activeTab === "music" && (
-                <div className="flex items-center gap-2 shrink-0 mt-2">
+                <div className="flex items-center gap-2">
                   {results.length > 0 && (
                     <>
                       <span className="text-sm text-muted-foreground">
@@ -1515,7 +1627,7 @@ const AIStudioCreate = () => {
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-3 max-h-[700px] overflow-y-auto pr-1">
+                <div className="space-y-3 flex-1 min-h-0 overflow-y-auto pr-1">
                   {lyricsHistory.map((item) => (
                     <Card key={item.id} className="border-border/40">
                       <CardContent className="p-4 space-y-3">
@@ -1679,7 +1791,7 @@ const AIStudioCreate = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                  <div className="space-y-4 flex-1 min-h-0 overflow-y-auto pr-2">
                     {filteredResults.map(result => (
                       <Card key={result.id} className="overflow-hidden">
                         <CardContent className="p-4">
@@ -1730,26 +1842,22 @@ const AIStudioCreate = () => {
                                   </TooltipTrigger>
                                   <TooltipContent><p>{result.isFavorite ? t('aiCreate.removeFav') : t('aiCreate.addFav')}</p></TooltipContent>
                                 </Tooltip>
-                                {/* Save as Virtual Artist button — vocal & non-instrumental */}
+                                {/* Save as Virtual Artist button */}
                                 {canSaveAsVirtualArtist(result) && (
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        disabled={savedArtistGenerationIds.has(result.id)}
-                                        onClick={() => openSaveArtistModal(result)}
-                                        className={savedArtistGenerationIds.has(result.id) ? 'text-emerald-500' : ''}
-                                      >
-                                        {savedArtistGenerationIds.has(result.id) ? (
+                                      {savedArtistGenIds.has(result.id) ? (
+                                        <Button variant="ghost" size="icon" disabled className="text-primary">
                                           <CheckCircle2 className="w-4 h-4" />
-                                        ) : (
+                                        </Button>
+                                      ) : (
+                                        <Button variant="ghost" size="icon" onClick={() => openSaveArtistFromLibrary(result.id)}>
                                           <User className="w-4 h-4" />
-                                        )}
-                                      </Button>
+                                        </Button>
+                                      )}
                                     </TooltipTrigger>
                                     <TooltipContent>
-                                      <p>{savedArtistGenerationIds.has(result.id) ? t('aiCreate.saveArtistAlready') : t('aiCreate.saveArtistTooltip')}</p>
+                                      <p>{savedArtistGenIds.has(result.id) ? t('aiCreate.saveArtistAlready') : t('aiCreate.saveArtistTooltip')}</p>
                                     </TooltipContent>
                                   </Tooltip>
                                 )}
@@ -1803,46 +1911,64 @@ const AIStudioCreate = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              {t('aiCreate.saveArtistTitle')}
+              {mode === 'instrumental' ? 'Guardar como Preset Musical' : t('aiCreate.saveArtistTitle')}
             </DialogTitle>
             <DialogDescription>
-              {t('aiCreate.saveArtistDesc')}
+              {mode === 'instrumental'
+                ? 'Guarda la configuración de estilo para reutilizarla en futuras generaciones instrumentales.'
+                : t('aiCreate.saveArtistDesc')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            {/* Preview */}
-            <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-1">
-              {saveArtistVoiceId ? (
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground">{t('aiCreate.saveArtistVoice')}</span>
-                  <span className="font-medium">{saveArtistVoiceName}</span>
-                </div>
-              ) : (
+            {mode === 'instrumental' ? (
+              <div className="rounded-lg border border-primary/20 bg-primary/5 px-3.5 py-2.5 flex items-center gap-2">
+                <span>🎹</span>
+                <span className="text-sm text-primary font-medium">Canción instrumental (sin voz)</span>
+              </div>
+            ) : (
+              <>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">{t('aiCreate.saveArtistVoice')}</Label>
-                  <Select value={saveArtistVoiceId} onValueChange={(val) => {
-                    setSaveArtistVoiceId(val);
-                    const vp = voiceProfiles.find(v => v.id === val);
-                    setSaveArtistVoiceName(vp?.label || '');
+                  <Label htmlFor="save-artist-voice">
+                    {t('aiCreate.saveArtistVoice')}
+                    {saveArtistStyle.trim().length > 10 && (
+                      <span className="text-muted-foreground font-normal"> (opcional)</span>
+                    )}
+                  </Label>
+                  <Select value={lastGeneratedVoiceId || (saveArtistStyle.trim().length > 10 ? '' : voiceProfiles[0]?.id || '')} onValueChange={(value) => {
+                    if (value === '__none__') {
+                      setLastGeneratedVoiceId('');
+                      setLastGeneratedVoiceName('');
+                      return;
+                    }
+                    setLastGeneratedVoiceId(value);
+                    const profile = voiceProfiles.find(v => v.id === value);
+                    setLastGeneratedVoiceName(profile?.label || '');
                   }}>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger id="save-artist-voice">
                       <SelectValue placeholder={t('aiCreate.saveArtistVoiceOptional')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {voiceProfiles.map(v => (
-                        <SelectItem key={v.id} value={v.id}>{v.emoji} {v.label}</SelectItem>
+                      {saveArtistStyle.trim().length > 10 && (
+                        <SelectItem value="__none__">— Sin voz específica —</SelectItem>
+                      )}
+                      {voiceProfiles.map((voice) => (
+                        <SelectItem key={voice.id} value={voice.id}>{voice.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {saveArtistStyle.trim().length > 10 && !lastGeneratedVoiceId && (
+                    <p className="text-xs text-muted-foreground">
+                      Como has añadido una descripción de estilo detallada, la voz es opcional.
+                    </p>
+                  )}
                 </div>
-              )}
-              {saveArtistPrompt && (
-                <div className="flex items-start gap-2">
-                  <span className="text-muted-foreground shrink-0">{t('aiCreate.saveArtistStyleLabel')}:</span>
-                  <span className="text-xs line-clamp-2">{saveArtistPrompt}</span>
-                </div>
-              )}
-            </div>
+                {lastGeneratedVoiceName && (
+                  <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-foreground">
+                    {t('aiCreate.saveArtistVoice')} {lastGeneratedVoiceName}
+                  </div>
+                )}
+              </>
+            )}
             <div className="space-y-1.5">
               <Label htmlFor="save-artist-name">{t('aiCreate.saveArtistNameLabel')}</Label>
               <Input
@@ -1851,85 +1977,119 @@ const AIStudioCreate = () => {
                 value={saveArtistName}
                 onChange={(e) => setSaveArtistName(e.target.value)}
                 maxLength={50}
-                autoFocus
               />
               {saveArtistName.trim().length > 0 && saveArtistName.trim().length < 3 && (
                 <p className="text-xs text-destructive">{t('aiCreate.saveArtistNameMin')}</p>
               )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="save-artist-style">{t('aiCreate.saveArtistStyleLabel')}</Label>
+              <Input
+                id="save-artist-style"
+                placeholder={t('aiCreate.saveArtistStylePlaceholder')}
+                value={saveArtistStyle}
+                onChange={(e) => setSaveArtistStyle(e.target.value)}
+                maxLength={100}
+              />
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setShowSaveArtistForm(false)} disabled={isSavingArtist}>
               {t('aiCreate.saveArtistCancel')}
             </Button>
-            <Button onClick={handleSaveVirtualArtist} disabled={saveArtistName.trim().length < 3 || (!saveArtistVoiceId && (saveArtistPrompt || saveArtistStyle).trim().length <= 10) || isSavingArtist} className="gap-2">
+            <Button onClick={handleSaveVirtualArtist} disabled={!saveArtistName.trim() || saveArtistName.trim().length < 3 || isSavingArtist} className="gap-2">
               {isSavingArtist ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> {t('aiCreate.saveArtistSaving')}</>
               ) : (
-                <><Save className="h-4 w-4" /> {t('aiCreate.saveArtistBtn')}</>
+                <><Save className="h-4 w-4" /> {mode === 'instrumental' ? 'Guardar preset musical' : t('aiCreate.saveArtistBtn')}</>
               )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* ── Onboarding Tip Modal — first vocal generation ── */}
-      <Dialog open={showOnboardingTip} onOpenChange={(open) => {
+      {/* ── Virtual Artist Onboarding Tip Modal ── */}
+      <Dialog open={showVirtualArtistTip} onOpenChange={(open) => {
         if (!open) {
           localStorage.setItem('virtual_artist_tip_shown', 'true');
-          setShowOnboardingTip(false);
+          setShowVirtualArtistTip(false);
         }
       }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-w-md sm:rounded-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl">{t('aiCreate.onboardingTipTitle')}</DialogTitle>
-            <DialogDescription className="text-sm leading-relaxed">
+            <DialogDescription className="text-sm text-muted-foreground">
               {t('aiCreate.onboardingTipMsg')}
             </DialogDescription>
           </DialogHeader>
-          {/* Visual mockup */}
-          <div className="rounded-lg border bg-muted/30 p-3 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <Play className="w-4 h-4 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{t('aiCreate.onboardingTipMockTitle')}</p>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-[10px] text-muted-foreground">0:30</span>
-                <div className="flex-1 h-1 bg-muted rounded-full">
-                  <div className="w-1/3 h-full bg-primary rounded-full" />
+
+          {/* Mockup illustration */}
+          <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <Play className="h-4 w-4 text-primary ml-0.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{t('aiCreate.onboardingTipMockTitle')}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="h-1 flex-1 rounded-full bg-border">
+                    <div className="h-1 w-1/3 rounded-full bg-primary" />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">1:00</span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-0.5">
-              <ShieldCheck className="w-4 h-4 text-muted-foreground" />
-              <Heart className="w-4 h-4 text-muted-foreground" />
-              <div className="relative">
-                <User className="w-4 h-4 text-primary animate-pulse" />
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-ping" />
+            <div className="flex items-center justify-center gap-3 pt-1">
+              <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
               </div>
-              <Download className="w-4 h-4 text-muted-foreground" />
-              <Trash2 className="w-4 h-4 text-muted-foreground" />
+              <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                <Heart className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+              {/* Highlighted person icon */}
+              <div className="relative flex flex-col items-center">
+                {/* Animated arrow */}
+                <div className="absolute -top-5 animate-bounce text-destructive text-lg leading-none">↓</div>
+                {/* Pulsing ring */}
+                <div className="absolute inset-0 rounded-md border-2 border-[hsl(263,70%,50%)] animate-pulse" />
+                <div className="h-8 w-8 rounded-md bg-[hsl(263,70%,50%)]/20 flex items-center justify-center relative z-10">
+                  <User className="h-3.5 w-3.5 text-[hsl(263,70%,50%)]" />
+                </div>
+              </div>
+              <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                <Download className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+              <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
             </div>
           </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" onClick={() => {
-              localStorage.setItem('virtual_artist_tip_shown', 'true');
-              setShowOnboardingTip(false);
-              navigate('/dashboard/artist-profiles');
-            }}>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
+            <Button
+              variant="outline"
+              className="sm:order-1"
+              onClick={() => {
+                localStorage.setItem('virtual_artist_tip_shown', 'true');
+                setShowVirtualArtistTip(false);
+                navigate('/dashboard/artist-profiles');
+              }}
+            >
               {t('aiCreate.onboardingTipViewArtists')}
             </Button>
-            <Button onClick={() => {
-              localStorage.setItem('virtual_artist_tip_shown', 'true');
-              setShowOnboardingTip(false);
-            }}>
+            <Button
+              className="sm:order-2"
+              onClick={() => {
+                localStorage.setItem('virtual_artist_tip_shown', 'true');
+                setShowVirtualArtistTip(false);
+              }}
+            >
               {t('aiCreate.onboardingTipGotIt')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
     </div>
   );
 };

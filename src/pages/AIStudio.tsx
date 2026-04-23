@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Wand2, Sparkles, Music, AlertTriangle, ArrowLeft, Zap, Edit3, Lightbulb, Coins, Image, Users } from "lucide-react";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { Navbar } from "@/components/Navbar";
+import { AIStudioThemeBar } from "@/components/ai-studio/AIStudioThemeBar";
 
 import { useCredits } from "@/hooks/useCredits";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
@@ -56,7 +57,7 @@ const AIStudio = () => {
       href: "__inline__",
       available: true,
       costsCredits: false,
-      featureKey: 'one_click_create' as const,
+      featureKey: 'inspiration' as const,
       color: "from-violet-500 to-purple-600",
       inlineView: "virtual-artists" as ActiveView,
     },
@@ -77,7 +78,7 @@ const AIStudio = () => {
       href: "/ai-studio/inspire",
       available: true,
       costsCredits: null,
-      featureKey: 'one_click_create' as const,
+      featureKey: 'inspiration' as const,
       color: "from-amber-500 to-orange-500"
     },
   ];
@@ -153,8 +154,8 @@ const AIStudio = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <main className="container mx-auto px-4 py-6 pt-20">
+      <AIStudioThemeBar />
+      <main className="container mx-auto px-4 py-6 pt-16">
         {/* Back Button */}
         {activeView === "grid" ? (
           <Link to="/dashboard" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">

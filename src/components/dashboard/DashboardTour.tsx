@@ -23,12 +23,12 @@ function useSteps(): Step[] {
     {
       target: '[data-tour="account-summary"]',
       title: t('dashboard.tour.accountTitle', 'Resumen de la cuenta'),
-      content: t('dashboard.tour.accountContent', 'Aquí puedes ver un resumen de tu actividad:\n• Obras registradas\n• Registros pendientes\n• Créditos disponibles\n\nLos créditos son los que utilizas para usar cada herramienta: registros, promociones, distribución, creación con IA Music Studio.'),
+      content: t('dashboard.tour.accountContent', 'Aquí puedes ver un resumen de tu actividad:\n• Obras registradas\n• Registros pendientes\n• Créditos disponibles\n\nLos créditos son los que utilizas para usar cada herramienta: registros, promociones, distribución, creación con IA MusicDibs Studio.'),
       disableBeacon: true,
     },
     {
       target: '[data-tour="ai-studio"]',
-      title: t('dashboard.tour.aiStudioTitle', 'AI Studio'),
+      title: t('dashboard.tour.aiStudioTitle', 'AI Music Studio'),
       content: t('dashboard.tour.aiStudioContent', 'Crea música, voces y contenido visual con IA\n\n🎵 Música: Genera canciones completas\n🎤 Voces: Clona voces o usa 29 idiomas\n🎨 Imágenes: Portadas, creatividades, carteles\n🎬 Videos: Clips para redes sociales\n\nTodo en un solo lugar.'),
       disableBeacon: true,
     },
@@ -47,7 +47,7 @@ function useSteps(): Step[] {
     {
       target: '[data-tour="promotion"]',
       title: t('dashboard.tour.promotionTitle', 'Promoción RRSS'),
-      content: t('dashboard.tour.promotionContent', 'Da visibilidad a tu música:\n\n📱 Promoción en redes\nPublica en TikTok e Instagram con +350K seguidores\n\n📰 Prensa y medios\nGenera notas de prensa con IA y distribúyelas en medios'),
+      content: t('dashboard.tour.promotionContent', 'Da visibilidad a tu música:\n\n📱 Promoción en redes\nPublica en TikTok e Instagram con +200K seguidores\n\n📰 Prensa y medios\nGenera notas de prensa con IA y distribúyelas en medios'),
       disableBeacon: true,
       placement: 'right' as const,
     },

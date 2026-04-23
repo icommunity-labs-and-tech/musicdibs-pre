@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { parseAiError } from "@/lib/aiErrorHandler";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -16,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useFFmpegMerge } from "@/hooks/useFFmpegMerge";
 import { supabase } from "@/integrations/supabase/client";
+import { parseAiError } from "@/lib/aiErrorHandler";
 import {
   ArrowLeft, Video, Music, Sparkles, Play, Pause,
   Image, Film, Layers, Wand2, Clock, Ratio, Upload,
@@ -27,6 +27,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Navbar } from "@/components/Navbar";
+import { AIStudioThemeBar } from "@/components/ai-studio/AIStudioThemeBar";
 
 import type { GenerationResult } from "@/types/aiStudio";
 import { useCredits } from "@/hooks/useCredits";
@@ -294,7 +295,8 @@ const AIStudioVideo = () => {
       toast({ title: t('aiVideo.audioMerged'), description: t('aiVideo.audioMergedDesc') });
     } catch (err: any) {
       console.error('Merge error:', err);
-      toast({ title: t('aiShared.error'), description: err.message, variant: "destructive" });
+      const { userMessage } = parseAiError(err);
+      toast({ title: t('aiShared.error'), description: userMessage, variant: "destructive" });
     } finally {
       setIsMerging(false);
     }
@@ -488,8 +490,8 @@ const AIStudioVideo = () => {
       toast({ title: t('aiVideo.genStarted'), description: t('aiVideo.genStartedDesc') });
     } catch (err: any) {
       console.error('Generate error:', err);
-      const friendly = parseAiError(err);
-      setError(friendly.userMessage);
+      const { userMessage } = parseAiError(err);
+      setError(userMessage);
     } finally {
       setIsGenerating(false);
     }
@@ -542,8 +544,9 @@ const AIStudioVideo = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <AIStudioThemeBar />
 
-      <main className="container mx-auto px-4 py-6 pt-20">
+      <main className="container mx-auto px-4 py-6 pt-16">
         <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
           <ArrowLeft className="w-4 h-4" />
           {t('aiVideo.backToStudio')}
@@ -1168,7 +1171,7 @@ const AIStudioVideo = () => {
                   <li>• {t('aiVideo.info3', { defaultValue: 'Modelo de IA de última generación' })}</li>
                   <li>• {t('aiVideo.info4', { defaultValue: 'Los prompts en inglés dan mejores resultados' })}</li>
                   
-                  <li>• {t('aiVideo.info6', { defaultValue: 'Puedes fusionar audio de AI Studio con el vídeo directamente en tu navegador' })}</li>
+                  <li>• {t('aiVideo.info6', { defaultValue: 'Puedes fusionar audio de AI Music Studio con el vídeo directamente en tu navegador' })}</li>
                 </ul>
               </CardContent>
             </Card>
