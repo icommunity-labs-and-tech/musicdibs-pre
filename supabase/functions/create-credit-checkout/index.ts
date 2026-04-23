@@ -9,6 +9,8 @@ const corsHeaders = {
 
 // TABLA DE PLANES DEFINITIVA
 const PLANS: Record<string, { priceId: string; credits: number; mode: "subscription" | "payment"; label: string }> = {
+  // Alias usado por la landing (PricingSection) — apunta al plan anual estándar
+  annual:      { priceId: "price_1TMDVkFULeu7PzK6aNdFYW91", credits: 100,  mode: "subscription", label: "Plan Anual" },
   // Anuales escalonados
   annual_100:  { priceId: "price_1THT7cF9ZCIiqrz6sWS67Q4V", credits: 100,  mode: "subscription", label: "Anual 100 créditos" },
   annual_200:  { priceId: "price_1THT7gF9ZCIiqrz6Acb2CkDC", credits: 200,  mode: "subscription", label: "Anual 200 créditos" },
