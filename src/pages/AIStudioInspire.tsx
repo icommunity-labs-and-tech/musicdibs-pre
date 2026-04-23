@@ -9,6 +9,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
+import { useCredits } from "@/hooks/useCredits";
+import { getFeatureCost } from "@/lib/featureCosts";
+import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
 import { ArrowLeft, Sparkles, Dice5, Loader2, Download, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 
 const GENEROS = ["pop", "pop urbano", "reggaeton", "trap", "indie pop", "electrónica", "balada"];
@@ -107,6 +110,9 @@ const AIStudioInspire = () => {
   const { track } = useProductTracking();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { credits, isLoading: creditsLoading } = useCredits();
+  const cost = getFeatureCost("generate_audio_song");
+  const hasEnoughCredits = credits !== null && credits >= cost;
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<InspireResult | null>(null);
@@ -242,7 +248,7 @@ const AIStudioInspire = () => {
 
           <Button
             onClick={handleSurprise}
-            disabled={isGenerating}
+            disabled={isGenerating || creditsLoading || !hasEnoughCredits}
             size="xl"
             className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg min-w-[260px]"
           >
@@ -254,10 +260,16 @@ const AIStudioInspire = () => {
             ) : (
               <>
                 <Dice5 className="w-5 h-5 mr-2" />
-                🎲 Sorpréndeme
+                🎲 Sorpréndeme ({cost} cr.)
               </>
             )}
           </Button>
+
+          {!creditsLoading && !hasEnoughCredits && user && (
+            <div className="mt-6 max-w-md mx-auto">
+              <NoCreditsAlert message={`Necesitas ${cost} créditos para generar una canción.`} />
+            </div>
+          )}
 
           {/* Loading state */}
           {isGenerating && (
@@ -342,7 +354,7 @@ const AIStudioInspire = () => {
                 <button
                   key={idea.label}
                   onClick={() => generateInline(idea.prompt)}
-                  disabled={isGenerating}
+                  disabled={isGenerating || creditsLoading || !hasEnoughCredits}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card hover:bg-accent hover:border-primary/40 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-border"
                 >
                   <span aria-hidden>{idea.emoji}</span>
