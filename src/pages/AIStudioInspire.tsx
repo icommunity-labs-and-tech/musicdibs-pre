@@ -110,6 +110,9 @@ const AIStudioInspire = () => {
   const { track } = useProductTracking();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { credits, isLoading: creditsLoading } = useCredits();
+  const cost = getFeatureCost("generate_audio_song");
+  const hasEnoughCredits = credits !== null && credits >= cost;
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<InspireResult | null>(null);
