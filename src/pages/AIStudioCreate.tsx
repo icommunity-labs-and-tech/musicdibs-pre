@@ -1984,13 +1984,16 @@ const AIStudioCreate = () => {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="save-artist-style">{t('aiCreate.saveArtistStyleLabel')}</Label>
-              <Input
+              <Textarea
                 id="save-artist-style"
                 placeholder={t('aiCreate.saveArtistStylePlaceholder')}
                 value={saveArtistStyle}
                 onChange={(e) => setSaveArtistStyle(e.target.value)}
-                maxLength={100}
+                maxLength={2500}
+                rows={4}
+                className="resize-none"
               />
+              <p className="text-xs text-muted-foreground text-right">{saveArtistStyle.length}/2500</p>
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">

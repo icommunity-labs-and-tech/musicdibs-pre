@@ -391,9 +391,9 @@ const ArtistProfilesPage = () => {
                 value={formNotes}
                 onChange={e => setFormNotes(e.target.value)}
                 placeholder="Describe el estilo del artista: temática, idioma habitual, referencias..."
-                rows={3} className="resize-none" maxLength={2000}
+                rows={4} className="resize-none" maxLength={2500}
               />
-              <p className="text-xs text-muted-foreground text-right">{formNotes.length}/2000</p>
+              <p className="text-xs text-muted-foreground text-right">{formNotes.length}/2500</p>
             </div>
 
             {/* Default checkbox */}

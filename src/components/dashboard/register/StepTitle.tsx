@@ -106,13 +106,13 @@ export function StepTitle({ data, onUpdate, onNext, onBack }: StepTitleProps) {
           <Textarea
             value={data.description}
             onChange={(e) => {
-              if (e.target.value.length <= 1500) onUpdate({ description: e.target.value });
+              if (e.target.value.length <= 2500) onUpdate({ description: e.target.value });
             }}
             rows={6}
-            maxLength={1500}
+            maxLength={2500}
             placeholder={t('wizard.stepTitle.descPlaceholder')}
           />
-          <p className="text-xs text-muted-foreground text-right">{data.description.length}/1500</p>
+          <p className="text-xs text-muted-foreground text-right">{data.description.length}/2500</p>
         </div>
       </div>
 
