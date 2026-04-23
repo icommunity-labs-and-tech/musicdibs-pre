@@ -111,7 +111,7 @@ const AIStudioInspire = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const { credits, isLoading: creditsLoading } = useCredits();
-  const cost = getFeatureCost("generate_audio_song");
+  const cost = getFeatureCost("one_click_create");
   const hasEnoughCredits = credits !== null && credits >= cost;
 
   const [isGenerating, setIsGenerating] = useState(false);
