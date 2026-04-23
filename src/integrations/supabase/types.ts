@@ -14,21 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      _tmp_ibs_migration: {
-        Row: {
-          email: string | null
-          sig_id: string | null
-        }
-        Insert: {
-          email?: string | null
-          sig_id?: string | null
-        }
-        Update: {
-          email?: string | null
-          sig_id?: string | null
-        }
-        Relationships: []
-      }
       ab_test_events: {
         Row: {
           created_at: string
@@ -2545,6 +2530,13 @@ export type Database = {
         Returns: number
       }
       get_user_library_tier: { Args: { p_user_id: string }; Returns: string }
+      get_wp_password_hash: {
+        Args: { user_email: string }
+        Returns: {
+          encrypted_password: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
