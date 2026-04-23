@@ -91,6 +91,16 @@ const ArtistProfilesPage = () => {
     setShowForm(false); setEditingId(null);
   };
 
+  const handleShowTutorial = () => {
+    setShowWelcomeModal(false);
+    resetForm();
+    setShowForm(true);
+
+    window.setTimeout(() => {
+      window.dispatchEvent(new Event('musicdibs:start-virtual-artists-tour'));
+    }, 300);
+  };
+
   const startEdit = (p: ArtistProfile) => {
     setEditingId(p.id);
     setFormName(p.name);
@@ -234,6 +244,7 @@ const ArtistProfilesPage = () => {
         open={showWelcomeModal}
         onOpenChange={setShowWelcomeModal}
         onCreateFirst={() => { setShowWelcomeModal(false); resetForm(); setShowForm(true); }}
+        onShowTutorial={handleShowTutorial}
       />
 
       <div className="flex items-center justify-between">
