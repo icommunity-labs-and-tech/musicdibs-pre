@@ -3,8 +3,14 @@ import Joyride, { CallBackProps, STATUS, ACTIONS, Step, TooltipRenderProps } fro
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 
-function useSteps(): Step[] {
+interface VirtualArtistsTourProps {
+  isFormOpen: boolean;
+  onRequestOpenForm: () => void;
+}
+
+function useSteps(isFormOpen: boolean): Step[] {
   const { t } = useTranslation();
+
   return useMemo(() => {
     const steps: Step[] = [
       {
@@ -18,17 +24,19 @@ function useSteps(): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="va-new"]',
+        target: isFormOpen ? '[data-tour="va-form"]' : '[data-tour="va-new"]',
         title: t('virtualArtists.tour.newTitle', 'Crea un nuevo perfil'),
         content: t(
-          'virtualArtists.tour.newContent',
-          'Pulsa aquí para abrir el formulario y empezar a configurar un nuevo artista virtual.',
+          isFormOpen ? 'virtualArtists.tour.newContentOpened' : 'virtualArtists.tour.newContent',
+          isFormOpen
+            ? 'Ya hemos abierto el formulario para que puedas ver todos los pasos de configuración del artista virtual.'
+            : 'Pulsa aquí para abrir el formulario y empezar a configurar un nuevo artista virtual.',
         ),
         disableBeacon: true,
       },
     ];
 
-    if (typeof document !== 'undefined' && document.querySelector('[data-tour="va-name"]')) {
+    if (isFormOpen) {
       steps.push(
         {
           target: '[data-tour="va-name"]',
@@ -79,7 +87,7 @@ function useSteps(): Step[] {
     }
 
     return steps;
-  }, [t]);
+  }, [isFormOpen, t]);
 }
 
 function CustomTooltip({
@@ -155,10 +163,10 @@ function CustomTooltip({
   );
 }
 
-export function VirtualArtistsTour() {
+export function VirtualArtistsTour({ isFormOpen, onRequestOpenForm }: VirtualArtistsTourProps) {
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-  const steps = useSteps();
+  const steps = useSteps(isFormOpen);
 
   useEffect(() => {
     const handler = () => {
@@ -181,11 +189,16 @@ export function VirtualArtistsTour() {
     if (type === 'step:after') {
       if (action === ACTIONS.PREV) {
         setStepIndex(index - 1);
+      } else if (index === 1 && !isFormOpen) {
+        onRequestOpenForm();
+        window.setTimeout(() => {
+          setStepIndex(index + 1);
+        }, 50);
       } else {
         setStepIndex(index + 1);
       }
     }
-  }, []);
+  }, [isFormOpen, onRequestOpenForm]);
 
   return (
     <Joyride
