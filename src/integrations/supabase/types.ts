@@ -2134,6 +2134,7 @@ export type Database = {
           created_at: string
           created_from_generation_id: string | null
           default_duration: number | null
+          generation_type: string | null
           genre: string | null
           id: string
           is_default: boolean | null
@@ -2150,6 +2151,7 @@ export type Database = {
           created_at?: string
           created_from_generation_id?: string | null
           default_duration?: number | null
+          generation_type?: string | null
           genre?: string | null
           id?: string
           is_default?: boolean | null
@@ -2166,6 +2168,7 @@ export type Database = {
           created_at?: string
           created_from_generation_id?: string | null
           default_duration?: number | null
+          generation_type?: string | null
           genre?: string | null
           id?: string
           is_default?: boolean | null
