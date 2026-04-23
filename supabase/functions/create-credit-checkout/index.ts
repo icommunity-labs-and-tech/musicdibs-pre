@@ -9,18 +9,18 @@ const corsHeaders = {
 
 // TABLA DE PLANES DEFINITIVA
 const PLANS: Record<string, { priceId: string; credits: number; mode: "subscription" | "payment"; label: string }> = {
-  // Alias usado por la landing (PricingSection) — apunta al plan anual estándar
-  annual:      { priceId: "price_1TMDVkFULeu7PzK6aNdFYW91", credits: 100,  mode: "subscription", label: "Plan Anual" },
   // Anuales escalonados
   annual_100:  { priceId: "price_1THT7cF9ZCIiqrz6sWS67Q4V", credits: 100,  mode: "subscription", label: "Anual 100 créditos" },
   annual_200:  { priceId: "price_1THT7gF9ZCIiqrz6Acb2CkDC", credits: 200,  mode: "subscription", label: "Anual 200 créditos" },
   annual_300:  { priceId: "price_1THT7jF9ZCIiqrz6i02J4bj4", credits: 300,  mode: "subscription", label: "Anual 300 créditos" },
   annual_500:  { priceId: "price_1THT7nF9ZCIiqrz6r1ZcqH8L", credits: 500,  mode: "subscription", label: "Anual 500 créditos" },
   annual_1000: { priceId: "price_1THT7rF9ZCIiqrz6UmJDkBNZ", credits: 1000, mode: "subscription", label: "Anual 1000 créditos" },
+  // Alias usado por la landing (PricingSection) — apunta al plan anual estándar
+  annual:      { priceId: "price_1THT7cF9ZCIiqrz6sWS67Q4V", credits: 100,  mode: "subscription", label: "Plan Anual" },
   // Mensual (sin cuota inscripción)
   monthly:     { priceId: "price_1T9SZvF9ZCIiqrz6TWLtfMBs", credits: 8,    mode: "subscription", label: "Mensual 8 créditos" },
   // Pago único individual
-  individual:  { priceId: "price_1THULsF9ZCIiqrz64SbA3AK6", credits: 1,    mode: "payment",       label: "Crédito individual" },
+  individual:  { priceId: "price_1TMDVkFULeu7PzK6aNdFYW91", credits: 1,    mode: "payment",       label: "Crédito individual" },
   // Top-ups
   topup_10:    { priceId: "price_1THT7xF9ZCIiqrz60FfiGbfv", credits: 10,   mode: "payment",       label: "Top-up 10 créditos" },
   topup_25:    { priceId: "price_1THT80F9ZCIiqrz6H31dYDMG", credits: 25,   mode: "payment",       label: "Top-up 25 créditos" },
@@ -29,7 +29,7 @@ const PLANS: Record<string, { priceId: string; credits: number; mode: "subscript
   topup_200:   { priceId: "price_1THT8AF9ZCIiqrz626wSH9Rz", credits: 200,  mode: "payment",       label: "Top-up 200 créditos" },
 };
 
-const ANNUAL_PLANS = ["annual", "annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
+const ANNUAL_PLANS = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000", "annual"];
 
 // Derive product_type from planId
 function getProductType(planId: string): string {
