@@ -9,6 +9,8 @@ const corsHeaders = {
 
 // TABLA DE PLANES DEFINITIVA
 const PLANS: Record<string, { priceId: string; credits: number; mode: "subscription" | "payment"; label: string }> = {
+  // Alias usado por la landing (PricingSection) — apunta al plan anual estándar
+  annual:      { priceId: "price_1TMDVkFULeu7PzK6aNdFYW91", credits: 100,  mode: "subscription", label: "Plan Anual" },
   // Anuales escalonados
   annual_100:  { priceId: "price_1THT7cF9ZCIiqrz6sWS67Q4V", credits: 100,  mode: "subscription", label: "Anual 100 créditos" },
   annual_200:  { priceId: "price_1THT7gF9ZCIiqrz6Acb2CkDC", credits: 200,  mode: "subscription", label: "Anual 200 créditos" },
@@ -27,7 +29,7 @@ const PLANS: Record<string, { priceId: string; credits: number; mode: "subscript
   topup_200:   { priceId: "price_1THT8AF9ZCIiqrz626wSH9Rz", credits: 200,  mode: "payment",       label: "Top-up 200 créditos" },
 };
 
-const ANNUAL_PLANS = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
+const ANNUAL_PLANS = ["annual", "annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
 
 // Derive product_type from planId
 function getProductType(planId: string): string {
