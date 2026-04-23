@@ -108,10 +108,9 @@ function buildSteps(t: (k: string, fallback?: string) => string): Step[] {
         ),
         disableBeacon: true,
       },
-    );
+  );
 
-    return steps;
-  }, [t]);
+  return steps;
 }
 
 function CustomTooltip({
