@@ -97,7 +97,7 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
       if (data?.error) throw new Error(data.error);
       if (data?.already_subscribed) { toast.info(data.message); return; }
       if (data?.switched || data?.reactivated) { toast.success(data.message); if (data.reactivated) setCancelAtPeriodEnd(false); return; }
-      if (data?.url) window.open(data.url, '_blank');
+      if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       setError(err?.message || t(`${cs}.paymentError`));
     } finally {
