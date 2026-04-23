@@ -92,7 +92,17 @@ export const VirtualArtistsWelcomeModal = ({ open, onOpenChange, onCreateFirst }
             <Button variant="hero" className="flex-1" onClick={onCreateFirst}>
               👉 {t('virtualArtists.welcome.ctaPrimary', 'Crear mi primer artista virtual')}
             </Button>
-            <Button variant="outline" className="flex-1" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                onOpenChange(false);
+                // Slight delay so the dialog finishes closing before the tour overlay mounts
+                setTimeout(() => {
+                  window.dispatchEvent(new Event('musicdibs:start-virtual-artists-tour'));
+                }, 250);
+              }}
+            >
               {t('virtualArtists.welcome.ctaSecondary', 'Ver cómo funciona')}
             </Button>
           </div>

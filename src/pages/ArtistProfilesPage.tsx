@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Pencil, Music, X, Check, ExternalLink, Copy, Sparkles, Loader2, HelpCircle } from "lucide-react";
 import { VirtualArtistsWelcomeModal } from "@/components/dashboard/VirtualArtistsWelcomeModal";
+import { VirtualArtistsTour } from "@/components/ai-studio/VirtualArtistsTour";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const MUSIC_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Reggaeton', 'Flamenco', 'Electrónica', 'Jazz', 'Clásica', 'R&B', 'Latin'];
@@ -228,6 +229,7 @@ const ArtistProfilesPage = () => {
 
   return (
     <div className="space-y-6">
+      <VirtualArtistsTour />
       <VirtualArtistsWelcomeModal
         open={showWelcomeModal}
         onOpenChange={setShowWelcomeModal}
@@ -247,7 +249,7 @@ const ArtistProfilesPage = () => {
             <span className="hidden sm:inline">{t('virtualArtists.welcome.showAgain', 'Ver introducción')}</span>
           </Button>
           {!showForm && (
-            <Button onClick={() => { resetForm(); setShowForm(true); }} className="gap-2">
+            <Button data-tour="va-new" onClick={() => { resetForm(); setShowForm(true); }} className="gap-2">
               <Plus className="h-4 w-4" />
               {t('dashboard.virtualArtists.newArtist', { defaultValue: 'Nuevo Artista Virtual' })}
             </Button>
@@ -263,7 +265,7 @@ const ArtistProfilesPage = () => {
           </CardHeader>
           <CardContent className="space-y-5">
             {/* Name */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" data-tour="va-name">
               <Label>Nombre del artista *</Label>
               <input
                 type="text"
@@ -276,7 +278,7 @@ const ArtistProfilesPage = () => {
             </div>
 
             {/* Voice selection — preset only */}
-            <div className="space-y-2">
+            <div className="space-y-2" data-tour="va-voice">
               <Label>Voz del artista</Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {voiceProfiles.map((v) => (
@@ -314,7 +316,7 @@ const ArtistProfilesPage = () => {
             </div>
 
             {/* Genre chips */}
-            <div className="space-y-2">
+            <div className="space-y-2" data-tour="va-genre">
               <Label>Género</Label>
               <div className="flex flex-wrap gap-2">
                 {MUSIC_GENRES.map(g => (
@@ -338,7 +340,7 @@ const ArtistProfilesPage = () => {
             </div>
 
             {/* Style notes */}
-            <div className="space-y-1.5">
+            <div className="space-y-1.5" data-tour="va-notes">
               <div className="flex items-center justify-between">
                 <Label>Notas de estilo</Label>
                 <div className="flex items-center gap-1">
@@ -386,7 +388,7 @@ const ArtistProfilesPage = () => {
 
             {/* Actions */}
             <div className="flex gap-3">
-              <Button onClick={handleSave} disabled={!formName.trim() || saving} className="gap-2">
+              <Button data-tour="va-save" onClick={handleSave} disabled={!formName.trim() || saving} className="gap-2">
                 <Check className="h-4 w-4" />
                 {saving ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear perfil'}
               </Button>
