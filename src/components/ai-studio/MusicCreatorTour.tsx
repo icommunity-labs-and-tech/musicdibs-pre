@@ -189,9 +189,10 @@ function CustomTooltip({
 
 export function MusicCreatorTour() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-  const steps = useSteps();
+  const steps = buildSteps(t);
 
   useEffect(() => {
     if (!user) return;
@@ -224,7 +225,13 @@ export function MusicCreatorTour() {
         return;
       }
 
-      if (type === 'step:after') {
+      // Don't close the tour if a target element is missing — just advance.
+      if (type === EVENTS.TARGET_NOT_FOUND) {
+        setStepIndex(index + 1);
+        return;
+      }
+
+      if (type === EVENTS.STEP_AFTER) {
         if (action === ACTIONS.PREV) {
           setStepIndex(index - 1);
         } else {
