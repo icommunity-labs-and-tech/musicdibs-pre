@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import Joyride, { CallBackProps, STATUS, ACTIONS, Step, TooltipRenderProps } from 'react-joyride';
+import { useState, useEffect, useCallback } from 'react';
+import Joyride, { CallBackProps, STATUS, ACTIONS, EVENTS, Step, TooltipRenderProps } from 'react-joyride';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
