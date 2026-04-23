@@ -18,13 +18,19 @@ function useSteps(): Step[] {
         target: 'body',
         placement: 'center' as const,
         title: t('aiCreate.tour.welcomeTitle', 'Crea música completa con IA 🎵'),
-        content: t('aiCreate.tour.welcomeContent', 'Esta herramienta genera canciones completas a partir de una descripción.\n\nPuedes crear:\n• Canciones originales con letra\n• Bases instrumentales\n• Cualquier género musical\n\nTe mostramos cómo obtener los mejores resultados.'),
+        content: t(
+          'aiCreate.tour.welcomeContent',
+          'Esta herramienta genera canciones completas a partir de una descripción.\n\n• Canciones originales con letra\n• Bases instrumentales\n• Cualquier género musical\n\nTe mostramos cómo obtener los mejores resultados en pocos pasos.'
+        ),
         disableBeacon: true,
       },
       {
         target: '[data-tour="mc-description"]',
-        title: t('aiCreate.tour.descTitle', 'Describe tu canción (lo más importante)'),
-        content: t('aiCreate.tour.descContent', 'Cuanto más detallado seas, mejor será el resultado.\n\nIncluye en tu descripción:\n✓ Género (ej: pop, rock, reggaeton)\n✓ Mood/ambiente (ej: romántico, energético)\n✓ Idioma (ej: en español, in English)\n✓ Tema de la letra (ej: amor, fiesta)\n✓ Tipo de voz (ej: voz femenina suave)\n\n💡 Usa "Mejorar con IA" para enriquecer tu descripción automáticamente.'),
+        title: t('aiCreate.tour.descTitle', 'Describe tu canción 🎙️'),
+        content: t(
+          'aiCreate.tour.descContent',
+          'Escribe cómo quieres que suene tu canción. Cuanto más detalle incluyas, mejores serán los resultados.\n\nEjemplo: "Una canción pop sobre un amor de verano, voz femenina, estilo Aitana"\n\n⚠️ No pongas textos contradictorios entre la descripción y el campo de letra. En ese caso la IA elegirá uno de los dos de forma aleatoria.'
+        ),
         disableBeacon: true,
       },
     ];
@@ -33,8 +39,11 @@ function useSteps(): Step[] {
     if (typeof document !== 'undefined' && document.querySelector('[data-tour="mc-lyrics"]')) {
       steps.push({
         target: '[data-tour="mc-lyrics"]',
-        title: t('aiCreate.tour.lyricsTitle', 'Letra de la canción (opcional)'),
-        content: t('aiCreate.tour.lyricsContent', 'Puedes:\n• Dejar que la IA genere la letra automáticamente\n• Escribir tu propia letra aquí\n\nSi escribes tu letra:\n✓ La IA la adaptará musicalmente\n✓ Mantiene tu contenido exacto\n✓ Mejor control creativo'),
+        title: t('aiCreate.tour.lyricsTitle', 'Añade tu letra (opcional) 🎤'),
+        content: t(
+          'aiCreate.tour.lyricsContent',
+          'Si tienes una letra escrita, pégala en el campo correspondiente. La IA la usará como base para la canción.\n\n⚠️ La IA puede modificar la letra para adaptarla a la descripción musical.\n\n💡 Si lo dejas vacío, la IA generará la letra automáticamente a partir de la descripción.'
+        ),
         disableBeacon: true,
       });
     }
@@ -42,14 +51,57 @@ function useSteps(): Step[] {
     steps.push(
       {
         target: '[data-tour="mc-settings"]',
-        title: t('aiCreate.tour.voiceTitle', 'Voz y ajustes 🎤'),
-        content: t('aiCreate.tour.voiceContent', 'Selecciona entre voces predefinidas o usa tu propia voz clonada, y ajusta la duración de la pista.\n\n🎤 Predefinidas: variedad de estilos y géneros\n🎙️ Mi voz: usa un clon de tu voz\n\nSi eliges "Solo instrumental", no se aplicará ninguna voz.'),
+        title: t('aiCreate.tour.voiceTitle', 'Ajusta el estilo musical 🎧'),
+        content: t(
+          'aiCreate.tour.voiceContent',
+          'Selecciona una voz del catálogo o elige un artista virtual guardado para personalizar el estilo vocal de tu canción.\n\n🎤 Catálogo: voces predefinidas listas para usar\n🎙️ Artistas virtuales: tus voces y estilos guardados\n\nSi eliges "Solo instrumental", no se aplicará ninguna voz.'
+        ),
+        disableBeacon: true,
+      },
+      {
+        target: '[data-tour="mc-settings"]',
+        title: t('aiCreate.tour.durationTitle', 'Elige la duración ⏱️'),
+        content: t(
+          'aiCreate.tour.durationContent',
+          'Define cuánto durará tu canción (de 1 a 4 minutos).\n\n💡 Consejo: empieza con duraciones cortas (1–2 min) para iterar rápido y, cuando te guste el resultado, genera la versión completa.\n\nRecuerda: a mayor duración, mayor consumo de créditos.'
+        ),
         disableBeacon: true,
       },
       {
         target: '[data-tour="mc-generate"]',
         title: t('aiCreate.tour.generateTitle', 'Genera tu canción 🚀'),
-        content: t('aiCreate.tour.generateContent', 'Cuando todo esté listo, pulsa este botón para generar tu canción.\n\n💡 Consejo: empieza con duraciones cortas (30–60s) para iterar rápido y, cuando te guste el resultado, genera la versión completa.'),
+        content: t(
+          'aiCreate.tour.generateContent',
+          'Cuando todo esté listo, pulsa este botón para generar tu canción.\n\nEl proceso dura aproximadamente 30–60 segundos. Mientras tanto, puedes seguir trabajando o explorar otras secciones.'
+        ),
+        disableBeacon: true,
+      },
+      {
+        target: '[data-tour="mc-results"]',
+        title: t('aiCreate.tour.resultsTitle', 'Tus resultados 🎶'),
+        content: t(
+          'aiCreate.tour.resultsContent',
+          'Aquí aparecerán todas tus canciones generadas. Podrás:\n\n▶️ Reproducirlas y escuchar el resultado\n❤️ Marcarlas como favoritas\n⬇️ Descargarlas en alta calidad\n🛡️ Registrarlas en blockchain con un solo clic\n\nTodas tus generaciones quedan guardadas en tu biblioteca.'
+        ),
+        disableBeacon: true,
+      },
+      {
+        target: '[data-tour="mc-tab-lyrics"]',
+        title: t('aiCreate.tour.lyricsTabTitle', 'Compositor de letras ✍️'),
+        content: t(
+          'aiCreate.tour.lyricsTabContent',
+          'Si solo necesitas una letra, cambia a esta pestaña.\n\nPodrás generar letras profesionales eligiendo género, mood, estructura, esquema de rima y más, para luego usarlas en la creación musical.'
+        ),
+        disableBeacon: true,
+      },
+      {
+        target: 'body',
+        placement: 'center' as const,
+        title: t('aiCreate.tour.readyTitle', '¡Listo para crear! 🎉'),
+        content: t(
+          'aiCreate.tour.readyContent',
+          'Ya conoces todo lo que necesitas para crear tu música con IA.\n\n💡 Recuerda: cuanto más específica sea tu descripción, mejores resultados obtendrás.\n\nPuedes volver a ver este tutorial en cualquier momento desde el botón de ayuda.'
+        ),
         disableBeacon: true,
       },
     );
