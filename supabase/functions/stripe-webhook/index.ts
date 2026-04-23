@@ -49,7 +49,8 @@ const PRICE_CREDITS: Record<string, number> = {
   "price_1THT7nF9ZCIiqrz6r1ZcqH8L": 500,
   "price_1THT7rF9ZCIiqrz6UmJDkBNZ": 1000,
   "price_1T9SZvF9ZCIiqrz6TWLtfMBs": 8,
-  "price_1THULsF9ZCIiqrz64SbA3AK6": 1,
+  "price_1THULsF9ZCIiqrz64SbA3AK6": 1,   // individual legacy (test)
+  "price_1TMDVkFULeu7PzK6aNdFYW91": 1,   // individual producción
   "price_1THT7xF9ZCIiqrz60FfiGbfv": 10,
   "price_1THT80F9ZCIiqrz6H31dYDMG": 25,
   "price_1THT83F9ZCIiqrz6BD2wmUaO": 50,
@@ -75,7 +76,8 @@ const PRICE_TO_PLAN_ID: Record<string, string> = {
   "price_1THT7nF9ZCIiqrz6r1ZcqH8L": "annual_500",
   "price_1THT7rF9ZCIiqrz6UmJDkBNZ": "annual_1000",
   "price_1T9SZvF9ZCIiqrz6TWLtfMBs": "monthly",
-  "price_1THULsF9ZCIiqrz64SbA3AK6": "individual",
+  "price_1THULsF9ZCIiqrz64SbA3AK6": "individual",   // individual legacy (test)
+  "price_1TMDVkFULeu7PzK6aNdFYW91": "individual",   // individual producción
   "price_1THT7xF9ZCIiqrz60FfiGbfv": "topup_10",
   "price_1THT80F9ZCIiqrz6H31dYDMG": "topup_25",
   "price_1THT83F9ZCIiqrz6BD2wmUaO": "topup_50",
