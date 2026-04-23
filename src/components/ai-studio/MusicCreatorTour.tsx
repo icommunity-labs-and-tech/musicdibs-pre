@@ -10,9 +10,13 @@ function getTourKey(userId: string) {
   return `${TOUR_KEY}_${userId}`;
 }
 
-function useSteps(): Step[] {
-  const { t } = useTranslation();
-  return useMemo(() => {
+function buildSteps(t: (k: string, fallback?: string) => string): Step[] {
+  const has = (sel: string) =>
+    typeof document !== 'undefined' && !!document.querySelector(sel);
+  const targetOrBody = (sel: string): { target: string; placement?: 'center' } =>
+    has(sel) ? { target: sel } : { target: 'body', placement: 'center' };
+
+
     const steps: Step[] = [
       {
         target: 'body',
