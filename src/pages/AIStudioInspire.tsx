@@ -354,7 +354,7 @@ const AIStudioInspire = () => {
                 <button
                   key={idea.label}
                   onClick={() => generateInline(idea.prompt)}
-                  disabled={isGenerating}
+                  disabled={isGenerating || creditsLoading || !hasEnoughCredits}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card hover:bg-accent hover:border-primary/40 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-border"
                 >
                   <span aria-hidden>{idea.emoji}</span>
