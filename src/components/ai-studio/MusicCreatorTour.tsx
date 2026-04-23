@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import Joyride, { CallBackProps, STATUS, ACTIONS, Step, TooltipRenderProps } from 'react-joyride';
+import { useState, useEffect, useCallback } from 'react';
+import Joyride, { CallBackProps, STATUS, ACTIONS, EVENTS, Step, TooltipRenderProps } from 'react-joyride';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
@@ -10,9 +10,13 @@ function getTourKey(userId: string) {
   return `${TOUR_KEY}_${userId}`;
 }
 
-function useSteps(): Step[] {
-  const { t } = useTranslation();
-  return useMemo(() => {
+function buildSteps(t: (key: string, defaultValue?: string) => string): Step[] {
+  const has = (sel: string) =>
+    typeof document !== 'undefined' && !!document.querySelector(sel);
+  const targetOrBody = (sel: string): { target: string; placement?: 'center' } =>
+    has(sel) ? { target: sel } : { target: 'body', placement: 'center' };
+
+
     const steps: Step[] = [
       {
         target: 'body',
@@ -25,7 +29,7 @@ function useSteps(): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="mc-description"]',
+        ...targetOrBody('[data-tour="mc-description"]'),
         title: t('aiCreate.tour.descTitle', 'Describe tu canción 🎙️'),
         content: t(
           'aiCreate.tour.descContent',
@@ -36,7 +40,7 @@ function useSteps(): Step[] {
     ];
 
     // Only include the lyrics step if the lyrics block is actually rendered (song mode)
-    if (typeof document !== 'undefined' && document.querySelector('[data-tour="mc-lyrics"]')) {
+    if (has('[data-tour="mc-lyrics"]')) {
       steps.push({
         target: '[data-tour="mc-lyrics"]',
         title: t('aiCreate.tour.lyricsTitle', 'Añade tu letra (opcional) 🎤'),
@@ -50,7 +54,7 @@ function useSteps(): Step[] {
 
     steps.push(
       {
-        target: '[data-tour="mc-settings"]',
+        ...targetOrBody('[data-tour="mc-settings"]'),
         title: t('aiCreate.tour.voiceTitle', 'Ajusta el estilo musical 🎧'),
         content: t(
           'aiCreate.tour.voiceContent',
@@ -59,7 +63,7 @@ function useSteps(): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="mc-settings"]',
+        ...targetOrBody('[data-tour="mc-settings"]'),
         title: t('aiCreate.tour.durationTitle', 'Elige la duración ⏱️'),
         content: t(
           'aiCreate.tour.durationContent',
@@ -68,7 +72,7 @@ function useSteps(): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="mc-generate"]',
+        ...targetOrBody('[data-tour="mc-generate"]'),
         title: t('aiCreate.tour.generateTitle', 'Genera tu canción 🚀'),
         content: t(
           'aiCreate.tour.generateContent',
@@ -77,7 +81,7 @@ function useSteps(): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="mc-results"]',
+        ...targetOrBody('[data-tour="mc-results"]'),
         title: t('aiCreate.tour.resultsTitle', 'Tus resultados 🎶'),
         content: t(
           'aiCreate.tour.resultsContent',
@@ -86,7 +90,7 @@ function useSteps(): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="mc-tab-lyrics"]',
+        ...targetOrBody('[data-tour="mc-tab-lyrics"]'),
         title: t('aiCreate.tour.lyricsTabTitle', 'Compositor de letras ✍️'),
         content: t(
           'aiCreate.tour.lyricsTabContent',
@@ -104,10 +108,9 @@ function useSteps(): Step[] {
         ),
         disableBeacon: true,
       },
-    );
+  );
 
-    return steps;
-  }, [t]);
+  return steps;
 }
 
 function CustomTooltip({
@@ -186,9 +189,10 @@ function CustomTooltip({
 
 export function MusicCreatorTour() {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-  const steps = useSteps();
+  const steps = buildSteps(t as unknown as (key: string, defaultValue?: string) => string);
 
   useEffect(() => {
     if (!user) return;
@@ -221,7 +225,13 @@ export function MusicCreatorTour() {
         return;
       }
 
-      if (type === 'step:after') {
+      // Don't close the tour if a target element is missing — just advance.
+      if (type === EVENTS.TARGET_NOT_FOUND) {
+        setStepIndex(index + 1);
+        return;
+      }
+
+      if (type === EVENTS.STEP_AFTER) {
         if (action === ACTIONS.PREV) {
           setStepIndex(index - 1);
         } else {
