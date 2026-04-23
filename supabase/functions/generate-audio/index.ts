@@ -184,8 +184,8 @@ serve(async (req) => {
 
     const { prompt, lyrics, genre, mood, duration, mode, description } = await req.json();
 
-    // Server-side validation: prompt and description must not exceed 1500 characters
-    const MAX_LENGTH = 1500;
+    // Server-side validation: prompt and description must not exceed 2500 characters
+    const MAX_LENGTH = 2500;
     if (!prompt || typeof prompt !== 'string') {
       return new Response(JSON.stringify({ error: 'Prompt required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
