@@ -186,6 +186,8 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.create(sessionParams);
     console.log(`[CHECKOUT] Created session for ${planId}: ${session.id}`);
 
+    const checkoutUrl = session.url?.replace("https://checkout.musicdibs.com", "https://checkout.stripe.com") ?? session.url;
+
     // Save stripe_customer_id in profiles if not set yet
     const resolvedCustomerId = session.customer as string | undefined;
     if (resolvedCustomerId && user.id) {
@@ -196,7 +198,7 @@ serve(async (req) => {
         .is("stripe_customer_id", null);
     }
 
-    return new Response(JSON.stringify({ url: session.url }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ url: checkoutUrl }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err: any) {
     console.error("[CHECKOUT] Error:", err.message);
