@@ -10,7 +10,7 @@ function getTourKey(userId: string) {
   return `${TOUR_KEY}_${userId}`;
 }
 
-function buildSteps(t: (k: string, fallback?: string) => string): Step[] {
+function buildSteps(t: (key: string, defaultValue?: string) => string): Step[] {
   const has = (sel: string) =>
     typeof document !== 'undefined' && !!document.querySelector(sel);
   const targetOrBody = (sel: string): { target: string; placement?: 'center' } =>
