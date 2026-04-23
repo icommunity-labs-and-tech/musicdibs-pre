@@ -892,21 +892,52 @@ serve(async (req) => {
 
       if (stripe) {
         try {
-          // 1) Get all active subscriptions for real MRR
-          const allSubs: any[] = [];
-          let hasMore = true;
-          let startingAfter: string | undefined;
-          while (hasMore) {
-            const params: any = { status: "active", limit: 100, expand: ["data.items.data.price"] };
-            if (startingAfter) params.starting_after = startingAfter;
-            const batch = await stripe.subscriptions.list(params);
-            allSubs.push(...batch.data);
-            hasMore = batch.has_more;
-            if (batch.data.length > 0) startingAfter = batch.data[batch.data.length - 1].id;
-          }
+          // Helper: paginate a Stripe list endpoint until exhausted (or until shouldStop returns true)
+          const paginateAll = async (
+            listFn: (params: any) => Promise<any>,
+            baseParams: any,
+            shouldStop?: (lastItem: any) => boolean,
+          ): Promise<any[]> => {
+            const out: any[] = [];
+            let hasMore = true;
+            let startingAfter: string | undefined;
+            while (hasMore) {
+              const params: any = { ...baseParams, limit: 100 };
+              if (startingAfter) params.starting_after = startingAfter;
+              const batch = await listFn(params);
+              out.push(...batch.data);
+              if (batch.data.length === 0) break;
+              if (shouldStop && shouldStop(batch.data[batch.data.length - 1])) break;
+              hasMore = batch.has_more;
+              startingAfter = batch.data[batch.data.length - 1].id;
+            }
+            return out;
+          };
+
+          const thisMonthTs = Math.floor(new Date(thisMonthStart).getTime() / 1000);
+          const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
+          const twelveMonthsAgoTs = Math.floor(new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime() / 1000);
+
+          // Run the three heavy Stripe queries in parallel
+          const [allSubs, cancelledSubsRaw, allCharges] = await Promise.all([
+            paginateAll(
+              (p) => stripe.subscriptions.list(p),
+              { status: "active", expand: ["data.items.data.price"] },
+            ),
+            paginateAll(
+              (p) => stripe.subscriptions.list(p),
+              { status: "canceled" },
+              (last) => last.canceled_at && last.canceled_at < lastMonthTs,
+            ),
+            paginateAll(
+              (p) => stripe.charges.list(p),
+              { created: { gte: twelveMonthsAgoTs } },
+            ),
+          ]);
+
           activeSubsCount = allSubs.length;
 
-          // Collect unique product IDs to resolve names
+          // Collect unique product IDs and resolve names in parallel (instead of sequential retrieves)
           const productIds = new Set<string>();
           for (const sub of allSubs) {
             for (const item of sub.items.data) {
@@ -914,14 +945,15 @@ serve(async (req) => {
               if (prodId) productIds.add(prodId);
             }
           }
-          // Fetch product names
           const productNames: Record<string, string> = {};
-          for (const pid of productIds) {
-            try {
-              const prod = await stripe.products.retrieve(pid);
-              productNames[pid] = prod.name || pid;
-            } catch { productNames[pid] = pid; }
-          }
+          await Promise.all(
+            [...productIds].map(async (pid) => {
+              try {
+                const prod = await stripe.products.retrieve(pid);
+                productNames[pid] = prod.name || pid;
+              } catch { productNames[pid] = pid; }
+            }),
+          );
 
           for (const sub of allSubs) {
             for (const item of sub.items.data) {
@@ -946,54 +978,22 @@ serve(async (req) => {
           }
           stripeArr = stripeMrr * 12;
 
-          // 2) Cancelled subscriptions (churn) - this month & last month
-          const thisMonthTs = Math.floor(new Date(thisMonthStart).getTime() / 1000);
-          const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
-          const nowTs = Math.floor(now.getTime() / 1000);
-
-          cancelledSubs = [];
-          hasMore = true;
-          startingAfter = undefined;
-          while (hasMore) {
-            const params: any = { status: "canceled", limit: 100 };
-            if (startingAfter) params.starting_after = startingAfter;
-            const batch = await stripe.subscriptions.list(params);
-            // Only keep those cancelled in the last 2 months
-            const relevant = batch.data.filter((s: any) => s.canceled_at && s.canceled_at >= lastMonthTs);
-            cancelledSubs.push(...relevant);
-            // Stop if we've gone past our time window
-            if (batch.data.length > 0 && batch.data[batch.data.length - 1].canceled_at < lastMonthTs) {
-              hasMore = false;
-            } else {
-              hasMore = batch.has_more;
-              if (batch.data.length > 0) startingAfter = batch.data[batch.data.length - 1].id;
-            }
-          }
+          // Cancelled subs in last 2 months
+          cancelledSubs = cancelledSubsRaw.filter((s: any) => s.canceled_at && s.canceled_at >= lastMonthTs);
           cancelledSubsThisMonth = cancelledSubs.filter((s: any) => s.canceled_at >= thisMonthTs).length;
           cancelledSubsLastMonth = cancelledSubs.filter((s: any) => s.canceled_at >= lastMonthTs && s.canceled_at < thisMonthTs).length;
 
-          // 3) Real revenue from Stripe charges (last 12 months)
-          const twelveMonthsAgoTs = Math.floor(new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime() / 1000);
+          // Aggregate charges by month
           const chargesByMonth: Record<string, number> = {};
-          hasMore = true;
-          startingAfter = undefined;
-          while (hasMore) {
-            const params: any = { limit: 100, created: { gte: twelveMonthsAgoTs } };
-            if (startingAfter) params.starting_after = startingAfter;
-            const batch = await stripe.charges.list(params);
-            for (const charge of batch.data) {
-              if (charge.status !== "succeeded" || charge.refunded) continue;
-              const d = new Date(charge.created * 1000);
-              const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-              chargesByMonth[key] = (chargesByMonth[key] || 0) + (charge.amount / 100);
-              totalStripeRevenue += charge.amount / 100;
-              // Detect one-time payments (no invoice or invoice without subscription)
-              if (!charge.invoice) {
-                oneTimeRevenue += charge.amount / 100;
-              }
+          for (const charge of allCharges) {
+            if (charge.status !== "succeeded" || charge.refunded) continue;
+            const d = new Date(charge.created * 1000);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+            chargesByMonth[key] = (chargesByMonth[key] || 0) + (charge.amount / 100);
+            totalStripeRevenue += charge.amount / 100;
+            if (!charge.invoice) {
+              oneTimeRevenue += charge.amount / 100;
             }
-            hasMore = batch.has_more;
-            if (batch.data.length > 0) startingAfter = batch.data[batch.data.length - 1].id;
           }
 
           // Build MRR evolution from real charges
