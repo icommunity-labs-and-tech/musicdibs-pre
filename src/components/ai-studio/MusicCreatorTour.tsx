@@ -29,7 +29,7 @@ function buildSteps(t: (k: string, fallback?: string) => string): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="mc-description"]',
+        ...targetOrBody('[data-tour="mc-description"]'),
         title: t('aiCreate.tour.descTitle', 'Describe tu canción 🎙️'),
         content: t(
           'aiCreate.tour.descContent',
