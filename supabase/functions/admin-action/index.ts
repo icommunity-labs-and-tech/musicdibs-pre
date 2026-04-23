@@ -814,8 +814,28 @@ serve(async (req) => {
 
     // ── get_saas_metrics ──────────────────────────────────────────
     if (action === "get_saas_metrics") {
-      const { periodType, weekStart, month, year } = payload || {};
+      const { periodType, weekStart, month, year, force_refresh } = payload || {};
       const now = new Date();
+
+      // ── Cache layer (5 min TTL per filter combination) ──
+      const cacheKey = `saas_metrics_cache:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const CACHE_TTL_MS = 5 * 60 * 1000;
+      if (!force_refresh) {
+        try {
+          const { data: cacheRow } = await admin
+            .from("app_settings")
+            .select("value, updated_at")
+            .eq("key", cacheKey)
+            .maybeSingle();
+          if (cacheRow?.value && cacheRow?.updated_at) {
+            const age = Date.now() - new Date(cacheRow.updated_at).getTime();
+            if (age < CACHE_TTL_MS) {
+              return json({ ...(cacheRow.value as any), _cached: true, _cache_age_ms: age });
+            }
+          }
+        } catch { /* cache miss is non-fatal */ }
+      }
+
       const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
       let stripe: any = null;
       if (stripeKey) {
