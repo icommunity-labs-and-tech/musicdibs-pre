@@ -199,8 +199,7 @@ export default function PromotionPage() {
 
             {/* Premium promo card — enhanced */}
             <Card
-              className="border-amber-400/30 bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all duration-300 cursor-pointer group relative overflow-hidden"
-              onClick={() => setShowForm(true)}
+              className="border-amber-400/30 bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
             >
               {/* Decorative background pattern */}
               <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
@@ -244,13 +243,28 @@ export default function PromotionPage() {
                 </p>
 
                 {/* Stats chips */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 items-center">
                   <Badge variant="secondary" className="text-xs px-3 py-1 gap-1.5 font-medium">
                     <Eye className="h-3 w-3" /> 5-50K {t('dashboard.promoSelector.potentialViews', 'visualizaciones potenciales')}
                   </Badge>
-                  <Badge variant="secondary" className="text-xs px-3 py-1 gap-1.5 font-medium">
-                    <Instagram className="h-3 w-3" /> TikTok + Instagram
-                  </Badge>
+                  <a
+                    href="https://www.tiktok.com/@musicdibs_"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-semibold hover:bg-amber-500/25 hover:border-amber-500/60 transition-colors"
+                  >
+                    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.75a8.18 8.18 0 004.77 1.52V6.84a4.84 4.84 0 01-1-.15z" /></svg>
+                    @musicdibs_
+                  </a>
+                  <a
+                    href="https://www.instagram.com/musicdibs/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-semibold hover:bg-amber-500/25 hover:border-amber-500/60 transition-colors"
+                  >
+                    <Instagram className="h-3 w-3" />
+                    @musicdibs
+                  </a>
                 </div>
 
                 {/* Feature badges */}
@@ -276,27 +290,16 @@ export default function PromotionPage() {
                 </p>
 
                 {/* CTA */}
-                <Button size="lg" className="w-full text-sm font-semibold h-12 gap-2 group-hover:shadow-lg transition-all bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-700 hover:to-orange-600 text-white border-0">
+                <Button
+                  size="lg"
+                  onClick={() => setShowForm(true)}
+                  className="w-full text-sm font-semibold h-12 gap-2 group-hover:shadow-lg transition-all bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-700 hover:to-orange-600 text-white border-0"
+                >
                   <Rocket className="h-4 w-4" />
                   {t('dashboard.promoSelector.premiumCtaNew', 'Impulsar mi canción ahora 🚀')}
                 </Button>
               </CardContent>
             </Card>
-
-            {/* Social links */}
-            <div className="space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">{t('dashboard.promoSelector.followUs', 'Síguenos en nuestras redes')}</p>
-              <div className="flex flex-wrap gap-2">
-                <a href="https://www.tiktok.com/@musicdibs_" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 border border-border hover:border-primary/50 rounded-lg transition-colors text-sm">
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.75a8.18 8.18 0 004.77 1.52V6.84a4.84 4.84 0 01-1-.15z" /></svg>
-                  @musicdibs_
-                </a>
-                <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 border border-border hover:border-primary/50 rounded-lg transition-colors text-sm">
-                  <Instagram className="h-4 w-4" />
-                  @musicdibs
-                </a>
-              </div>
-            </div>
 
             {/* Premium promo history */}
             {premiumPromos.length > 0 && (

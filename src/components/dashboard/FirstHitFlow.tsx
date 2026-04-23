@@ -16,8 +16,9 @@ import {
   Loader2, CheckCircle2, Play, Pause,
   Music2, FileUp, AlertTriangle, Rocket,
   ArrowRight, Key, RefreshCw, Link as LinkIcon,
-  Share2, Plus, Trash2, Coins, Download,
-  Crown, Video, Users, Instagram, Upload, FileText, X, Import,
+  Share2, Plus, Trash2, Download,
+  Crown, Video, Users, Clock, Instagram, Music,
+  Upload, FileText, X, Import,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -38,7 +39,6 @@ import {
 } from '@/components/dashboard/register/types'
 import { useTranslation } from 'react-i18next'
 import { useCreatorRoleLabels, useWorkTypeLabels } from '@/components/dashboard/register/useWizardLabels'
-import { PremiumPromoForm } from '@/components/dashboard/PremiumPromoForm'
 
 // Voice profiles loaded from DB
 
@@ -116,7 +116,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
   const { t } = useTranslation()
   const { user } = useAuth()
   const navigate  = useNavigate()
-  const { hasEnough, isLoading: creditsLoading } = useCredits()
+  const { hasEnough } = useCredits()
   const creatorRoleLabels = useCreatorRoleLabels()
   const workTypeLabels = useWorkTypeLabels()
 
@@ -181,19 +181,12 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
     setIsImproving(false);
   };
 
-  const audioGenerationCost = genMode === 'song' ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio
-  const noCreditsForGeneration = !creditsLoading && !hasEnough(audioGenerationCost)
-
   const handleGenerate = async () => {
     if (!prompt.trim()) {
       toast.error(t('dashboard.firstHit.describeError'))
       return
     }
-    if (noCreditsForGeneration) {
-      navigate('/dashboard/credits')
-      return
-    }
-    if (!hasEnough(audioGenerationCost)) {
+    if (!hasEnough(genMode === 'song' ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio)) {
       toast.error(t('dashboard.firstHit.noCreditsAudio'))
       return
     }
@@ -225,6 +218,21 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
         const url = `data:${data.format || 'audio/mpeg'};base64,${data.audio}`
         setAudioUrl(url)
         setAudioTitle(prompt.slice(0, 50))
+
+        // Save to ai_generations so it appears in media library and AI Studio history
+        if (user) {
+          const voiceProfile = voiceProfiles.find((v: any) => v.id === selectedVoice)
+          const voiceIdToSave = genMode === 'song' ? (selectedVoice || null) : null
+          const voiceNameToSave = voiceIdToSave ? (voiceProfile?.label || '') : null
+          await supabase.from('ai_generations').insert({
+            user_id: user.id,
+            prompt: prompt.trim(),
+            duration: data.duration || 0,
+            audio_url: url,
+            ...(voiceIdToSave ? { voice_id: voiceIdToSave, voice_name: voiceNameToSave } : {}),
+          })
+        }
+
         toast.success(t('dashboard.firstHit.audioGenerated'))
       }
     } catch (err: any) {
@@ -409,26 +417,25 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
     setRegistering(false)
   }
 
-  // ── PASO 3: Promoción Premium ─────────────────────────────────
+  // ── PASO 3: Promoción Premium (alineado con PremiumPromoForm) ────
+  const ACCEPTED_AUDIO = '.mp3,.aac'
+  const ACCEPTED_VISUAL = '.mp4,.mov,.jpg,.jpeg,.png'
+  const VIDEO_EXTS = ['.mp4', '.mov']
+
   const [promoArtist,    setPromoArtist]    = useState('')
   const [promoSongTitle, setPromoSongTitle] = useState('')
   const [promoLyrics,    setPromoLyrics]    = useState('')
   const [promoLinks,     setPromoLinks]     = useState('')
   const [promoAudioFile, setPromoAudioFile] = useState<File | null>(null)
   const [promoMediaFile, setPromoMediaFile] = useState<File | null>(null)
-  const [rightsConfirmed, setRightsConfirmed] = useState(false)
-  const [promoting,    setPromoting]    = useState(false)
-  const [skipWarning,  setSkipWarning]  = useState(false)
+  const [promoConsent,   setPromoConsent]   = useState(false)
+  const [promoting,      setPromoting]      = useState(false)
+  const [skipWarning,    setSkipWarning]    = useState(false)
+
+  // Lyrics import dialog
   const [showLyricsImport, setShowLyricsImport] = useState(false)
   const [savedLyrics, setSavedLyrics] = useState<any[]>([])
   const [loadingLyrics, setLoadingLyrics] = useState(false)
-
-  useEffect(() => {
-    if (activeStep === 3) {
-      if (regAuthor && !promoArtist) setPromoArtist(regAuthor)
-      if (regTitle && !promoSongTitle) setPromoSongTitle(regTitle)
-    }
-  }, [activeStep, regAuthor, regTitle])
 
   const loadSavedLyrics = async () => {
     if (!user) return
@@ -443,28 +450,56 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
     setLoadingLyrics(false)
   }
 
+  useEffect(() => {
+    if (activeStep === 3 && regAuthor && !promoArtist) setPromoArtist(regAuthor)
+    if (activeStep === 3 && regTitle && !promoSongTitle) setPromoSongTitle(regTitle)
+  }, [activeStep, regAuthor, regTitle])
+
   const handlePromoAudioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 50 * 1024 * 1024) { toast.error('Archivo demasiado grande (máx. 50 MB)'); return }
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error(t('dashboard.premium.fileTooLarge', 'Archivo demasiado grande (máx. 50 MB)'))
+      return
+    }
     setPromoAudioFile(file)
   }
+
   const handlePromoMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.size > 50 * 1024 * 1024) { toast.error('Archivo demasiado grande (máx. 50 MB)'); return }
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error(t('dashboard.premium.fileTooLarge', 'Archivo demasiado grande (máx. 50 MB)'))
+      return
+    }
     setPromoMediaFile(file)
+  }
+
+  const handleImportLyrics = (item: any) => {
+    setPromoLyrics(item.lyrics)
+    setShowLyricsImport(false)
+    toast.success(t('dashboard.premium.lyricsImported', 'Letra importada'))
   }
 
   const handlePromote = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
     if (!promoArtist.trim() || !promoSongTitle.trim() || !promoLyrics.trim()) {
-      toast.error(t('dashboard.premium.fillRequired')); return
+      toast.error(t('dashboard.premium.fillRequired'))
+      return
     }
-    if (!promoAudioFile) { toast.error(t('dashboard.premium.audioRequired', 'El audio de tu canción es obligatorio')); return }
-    if (!promoMediaFile) { toast.error(t('dashboard.premium.mediaRequired', 'El vídeo o imagen es obligatorio')); return }
-
+    if (!promoAudioFile) {
+      toast.error(t('dashboard.premium.audioRequired', 'El audio de tu canción es obligatorio'))
+      return
+    }
+    if (!promoMediaFile) {
+      toast.error(t('dashboard.premium.mediaRequired', 'El vídeo o imagen es obligatorio'))
+      return
+    }
+    if (!hasEnough(FEATURE_COSTS.promote_premium)) {
+      toast.error(t('dashboard.firstHit.noCreditsAudio'))
+      return
+    }
     setPromoting(true)
     try {
       const { data: spendData, error: spendError } = await supabase.functions.invoke('spend-credits', {
@@ -472,7 +507,9 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
       })
       if (spendError) throw new Error(spendError.message)
       if (spendData?.error === 'insufficient_credits') {
-        toast.error(t('dashboard.premium.insufficientCredits')); setPromoting(false); return
+        toast.error(t('dashboard.premium.insufficientCredits'))
+        setPromoting(false)
+        return
       }
       if (spendData?.error) throw new Error(spendData.error)
 
@@ -482,17 +519,19 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
       const audioExt = promoAudioFile.name.split('.').pop() || 'mp3'
       const audioPath = `promotions/${user.id}/${promoId}/audio_${ts}.${audioExt}`
       const { error: audioUpErr } = await supabase.storage
-        .from('premium-promo-media').upload(audioPath, promoAudioFile)
+        .from('premium-promo-media')
+        .upload(audioPath, promoAudioFile)
       if (audioUpErr) throw new Error(audioUpErr.message)
 
       const mediaExt = promoMediaFile.name.split('.').pop() || 'bin'
       const mediaPath = `promotions/${user.id}/${promoId}/media_${ts}.${mediaExt}`
       const { error: mediaUpErr } = await supabase.storage
-        .from('premium-promo-media').upload(mediaPath, promoMediaFile)
+        .from('premium-promo-media')
+        .upload(mediaPath, promoMediaFile)
       if (mediaUpErr) throw new Error(mediaUpErr.message)
 
       const extLower = '.' + mediaExt.toLowerCase()
-      const mediaFileType = ['.mp4', '.mov'].includes(extLower) ? 'video' : 'image'
+      const mediaFileType = VIDEO_EXTS.includes(extLower) ? 'video' : 'image'
 
       const { data, error } = await supabase.functions.invoke('submit-premium-promo', {
         body: {
@@ -611,14 +650,6 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
           <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
             {t('dashboard.firstHit.heroSubtitle')}
           </p>
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard/credits')}
-            className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
-          >
-            <Coins className="h-3.5 w-3.5" />
-            {t('dashboard.firstHit.seePricing', { defaultValue: 'Ver planes y precios' })}
-          </button>
         </div>
 
         {/* ══ PASO 1 ══════════════════════════════════════════════ */}
@@ -788,14 +819,15 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                   </div>
                   <button
                     type="button"
+                    title={t('common.download', 'Descargar')}
                     onClick={() => {
+                      if (!audioUrl) return
                       const a = document.createElement('a')
                       a.href = audioUrl
-                      a.download = `${audioTitle || 'cancion'}.mp3`
+                      a.download = `${audioTitle || 'ai-song'}.mp3`
                       a.click()
                     }}
-                    title={t('dashboard.firstHit.download', { defaultValue: 'Descargar' })}
-                    className="h-9 w-9 rounded-full border border-border flex items-center justify-center shrink-0 hover:bg-muted transition-colors"
+                    className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted/50 transition-colors shrink-0"
                   >
                     <Download className="h-4 w-4 text-muted-foreground" />
                   </button>
@@ -805,25 +837,16 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
 
               {/* Botones */}
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                {noCreditsForGeneration ? (
-                  <Button
-                    className="flex-1 gap-2"
-                    onClick={() => navigate('/dashboard/credits')}
-                  >
-                    {t('dashboard.noCredits.buyCredits')}
-                  </Button>
-                ) : (
-                  <Button
-                    className="flex-1 gap-2 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700"
-                    onClick={handleGenerate}
-                    disabled={creditsLoading || generating || !prompt.trim() || prompt.trim().length < 10 || (genMode === 'song' && !selectedVoice)}
-                  >
-                    {generating
-                      ? <><Loader2 className="h-4 w-4 animate-spin" />{t('dashboard.firstHit.generating')}</>
-                      : <><Sparkles className="h-4 w-4" />{t('dashboard.firstHit.generateAI')}</>
-                    }
-                  </Button>
-                )}
+                <Button
+                  className="flex-1 gap-2 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700"
+                  onClick={handleGenerate}
+                  disabled={generating || !prompt.trim() || prompt.trim().length < 10 || (genMode === 'song' && !selectedVoice)}
+                >
+                  {generating
+                    ? <><Loader2 className="h-4 w-4 animate-spin" />{t('dashboard.firstHit.generating')}</>
+                    : <><Sparkles className="h-4 w-4" />{t('dashboard.firstHit.generateAI')}</>
+                  }
+                </Button>
                 <Button
                   variant="outline" className="flex-1 gap-2"
                   onClick={handleStep1Next}
@@ -1215,31 +1238,218 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
           />
 
           {activeStep === 3 && (
-            <div className="px-5 pb-6 border-t border-border/40 pt-4 space-y-3">
-              <div className="space-y-1">
-                <p className="text-sm font-medium">
-                  {t('dashboard.firstHit.promoTitle')}
-                </p>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Más de <strong>100.000 seguidores reales</strong> entre
-                  Instagram y TikTok — fans que buscan artistas como tú.
-                  Tu música, delante de las personas correctas.
+            <div className="px-5 pb-6 border-t border-border/40 pt-4 space-y-5">
+              {/* Info banner Promo Premium */}
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
+                  <Crown className="h-4 w-4" /> {t('dashboard.premium.whatIncluded')}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Video className="h-3.5 w-3.5 text-amber-500/70" />
+                    {t('dashboard.premium.includesVideo')}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="h-3.5 w-3.5 text-amber-500/70" />
+                    {t('dashboard.premium.includesAudience')}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <a
+                      href="https://www.tiktok.com/@musicdibs_"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-semibold hover:bg-amber-500/25 hover:border-amber-500/60 transition-colors"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.75a8.18 8.18 0 004.77 1.52V6.84a4.84 4.84 0 01-1-.15z" /></svg>
+                      @musicdibs_
+                    </a>
+                    <a
+                      href="https://www.instagram.com/musicdibs/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-semibold hover:bg-amber-500/25 hover:border-amber-500/60 transition-colors"
+                    >
+                      <Instagram className="h-3.5 w-3.5" />
+                      @musicdibs
+                    </a>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5 text-amber-500/70" />
+                    {t('dashboard.premium.includesManual')}
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground/70 mt-1">
+                  {t('dashboard.premium.manualNote')}
                 </p>
               </div>
 
-              <PremiumPromoForm
-                works={[]}
-                onBack={() => { markDone(3); setActiveStep('done') }}
-              />
+              <form onSubmit={handlePromote} className="space-y-4">
+                {/* Artist + Song title row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">{t('dashboard.premium.artistName')} *</Label>
+                    <Input
+                      value={promoArtist}
+                      onChange={e => setPromoArtist(e.target.value)}
+                      placeholder={t('dashboard.premium.artistPlaceholder')}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">{t('dashboard.premium.songTitle')} *</Label>
+                    <Input
+                      value={promoSongTitle}
+                      onChange={e => setPromoSongTitle(e.target.value)}
+                      placeholder={t('dashboard.premium.songPlaceholder')}
+                    />
+                  </div>
+                </div>
 
-              <button type="button"
-                className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
-                onClick={() => { markDone(3); setActiveStep('done') }}>
-                {t('dashboard.firstHit.skipPromo')}
-              </button>
+                {/* Lyrics with import */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">{t('dashboard.premium.lyricsLabel')} *</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 text-[11px] gap-1 text-primary"
+                      onClick={() => { setShowLyricsImport(true); loadSavedLyrics(); }}
+                    >
+                      <Import className="h-3 w-3" /> {t('dashboard.premium.importLyrics')}
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={promoLyrics}
+                    onChange={e => setPromoLyrics(e.target.value)}
+                    placeholder={t('dashboard.premium.lyricsPlaceholder')}
+                    rows={6}
+                  />
+                </div>
+
+                {/* Audio file upload */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm">{t('dashboard.premium.audioLabel', 'Audio de tu canción')} *</Label>
+                  <p className="text-[11px] text-muted-foreground">{t('dashboard.premium.audioDesc', 'Sube tu propio audio para que nuestro equipo lo use en la promoción.')}</p>
+                  {promoAudioFile ? (
+                    <div className="flex items-center gap-2 rounded-md border border-border/40 p-2 text-sm">
+                      <Music className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="truncate flex-1">{promoAudioFile.name}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">
+                        {(promoAudioFile.size / (1024 * 1024)).toFixed(1)} MB
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setPromoAudioFile(null)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center gap-2 cursor-pointer rounded-md border border-dashed border-border/60 p-4 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors">
+                      <Upload className="h-4 w-4" />
+                      {t('dashboard.premium.audioUploadCta', 'Subir audio (MP3, AAC)')}
+                      <input type="file" accept={ACCEPTED_AUDIO} className="hidden" onChange={handlePromoAudioChange} />
+                    </label>
+                  )}
+                </div>
+
+                {/* Video/Image upload */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm">{t('dashboard.premium.visualLabel', 'Vídeo o imagen')} *</Label>
+                  <p className="text-[11px] text-muted-foreground">{t('dashboard.premium.visualDesc', 'Vídeo: MP4 o MOV, 1080×1920px (9:16). Imagen: JPG o PNG (9:16).')}</p>
+                  {promoMediaFile ? (
+                    <div className="flex items-center gap-2 rounded-md border border-border/40 p-2 text-sm">
+                      <Upload className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <span className="truncate flex-1">{promoMediaFile.name}</span>
+                      <span className="text-[10px] text-muted-foreground shrink-0">
+                        {(promoMediaFile.size / (1024 * 1024)).toFixed(1)} MB
+                      </span>
+                      <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setPromoMediaFile(null)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center justify-center gap-2 cursor-pointer rounded-md border border-dashed border-border/60 p-4 text-sm text-muted-foreground hover:border-primary/40 hover:text-foreground transition-colors">
+                      <Upload className="h-4 w-4" />
+                      {t('dashboard.premium.visualUploadCta', 'Subir vídeo o imagen')}
+                      <input type="file" accept={ACCEPTED_VISUAL} className="hidden" onChange={handlePromoMediaChange} />
+                    </label>
+                  )}
+                </div>
+
+                {/* Links and notes */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm">{t('dashboard.premium.linksAndNotes')}</Label>
+                  <Textarea
+                    value={promoLinks}
+                    onChange={e => setPromoLinks(e.target.value)}
+                    placeholder={t('dashboard.premium.linksAndNotesPlaceholder')}
+                    rows={3}
+                  />
+                </div>
+
+                {/* Consent */}
+                <div className="flex items-start gap-2">
+                  <Checkbox id="promo-consent" checked={promoConsent}
+                    onCheckedChange={v => setPromoConsent(!!v)} />
+                  <Label htmlFor="promo-consent"
+                    className="text-xs leading-tight cursor-pointer">
+                    {t('dashboard.firstHit.promoConsent')}
+                  </Label>
+                </div>
+
+                <Button type="submit" className="w-full gap-2"
+                  disabled={
+                    promoting || !promoConsent ||
+                    !promoArtist.trim() || !promoSongTitle.trim() || !promoLyrics.trim() ||
+                    !promoAudioFile || !promoMediaFile
+                  }>
+                  {promoting
+                    ? <><Loader2 className="h-4 w-4 animate-spin" />{t('dashboard.firstHit.sendingRequest')}</>
+                    : <><Megaphone className="h-4 w-4" />{t('dashboard.firstHit.wantPromotion')}</>
+                  }
+                </Button>
+
+                <button type="button"
+                  className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
+                  onClick={() => { markDone(3); setActiveStep('done') }}>
+                  {t('dashboard.firstHit.skipPromo')}
+                </button>
+              </form>
             </div>
           )}
         </div>
+
+        {/* Lyrics Import Dialog */}
+        <Dialog open={showLyricsImport} onOpenChange={setShowLyricsImport}>
+          <DialogContent className="max-w-lg max-h-[70vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-4 w-4" /> {t('dashboard.premium.importLyricsTitle')}
+              </DialogTitle>
+              <DialogDescription>{t('dashboard.premium.importLyricsDesc')}</DialogDescription>
+            </DialogHeader>
+            {loadingLyrics ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+            ) : savedLyrics.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">{t('dashboard.premium.noSavedLyrics')}</p>
+            ) : (
+              <div className="space-y-2">
+                {savedLyrics.map(l => (
+                  <button
+                    key={l.id}
+                    className="w-full text-left rounded-lg border border-border/40 p-3 hover:border-primary/40 hover:bg-accent/30 transition-colors space-y-1"
+                    onClick={() => handleImportLyrics(l)}
+                  >
+                    <p className="text-sm font-medium truncate">{l.description || l.theme || l.lyrics.slice(0, 60)}</p>
+                    <p className="text-[11px] text-muted-foreground line-clamp-2">{l.lyrics.slice(0, 120)}…</p>
+                    <div className="flex gap-2 mt-1">
+                      {l.genre && <Badge variant="outline" className="text-[9px] px-1 py-0">{l.genre}</Badge>}
+                      {l.mood && <Badge variant="outline" className="text-[9px] px-1 py-0">{l.mood}</Badge>}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {/* Skip total */}
         <div className="text-center">

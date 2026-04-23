@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { parseAiError } from "@/lib/aiErrorHandler"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -10,17 +9,20 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Navbar } from "@/components/Navbar"
+import { AIStudioThemeBar } from "@/components/ai-studio/AIStudioThemeBar"
 import { FileDropzone } from "@/components/FileDropzone"
 import { useAuth } from "@/hooks/useAuth"
 import { useCredits } from "@/hooks/useCredits"
+import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert"
 import { FEATURE_COSTS } from "@/lib/featureCosts"
 import { PricingLink } from "@/components/dashboard/PricingPopup"
 import { supabase } from "@/integrations/supabase/client"
+import { parseAiError } from "@/lib/aiErrorHandler"
 import { toast } from "sonner"
 import { useProductTracking } from "@/hooks/useProductTracking"
 import {
   ArrowLeft, Loader2, Download,
-  RefreshCw, ImageIcon, Sparkles, Coins,
+  RefreshCw, ImageIcon, Sparkles,
 } from "lucide-react"
 
 type CoverMode = "none" | "artist"
@@ -42,9 +44,8 @@ const fileToBase64 = (file: File): Promise<string> =>
 const AIStudioCovers = () => {
   const { t } = useTranslation()
   const { user } = useAuth()
-  const { hasEnough, isLoading } = useCredits()
+  const { hasEnough } = useCredits()
   const { track } = useProductTracking()
-  const insufficientCredits = !isLoading && !hasEnough(FEATURE_COSTS.generate_cover)
 
 
   useEffect(() => {
@@ -82,14 +83,9 @@ const AIStudioCovers = () => {
     }
   }
 
-  const canGenerate = artistName.trim() && trackTitle.trim() && !insufficientCredits
+  const canGenerate = artistName.trim() && trackTitle.trim() && hasEnough(FEATURE_COSTS.generate_cover)
 
   const handleGenerate = async () => {
-    if (insufficientCredits) {
-      window.location.href = '/dashboard/credits'
-      return
-    }
-
     if (!artistName.trim() || !trackTitle.trim()) {
       toast.error("Introduce el nombre del artista y el título")
       return
@@ -123,42 +119,16 @@ const AIStudioCovers = () => {
         },
       })
 
-      if (error) {
-        let edgeErrorData: Record<string, unknown> | null = null
-
-        if (
-          typeof error === 'object' &&
-          error !== null &&
-          'context' in error &&
-          error.context instanceof Response
-        ) {
-          try {
-            edgeErrorData = await error.context.clone().json()
-          } catch {
-            edgeErrorData = null
-          }
-        }
-
-        if (edgeErrorData?.error) {
-          const friendly = parseAiError(edgeErrorData, edgeErrorData)
-          throw new Error(friendly.userMessage)
-        }
-
-        throw error
-      }
-
-      if (data?.fallback || data?.error) {
-        const friendly = parseAiError(data, data)
-        throw new Error(friendly.userMessage)
-      }
+      if (data?.fallback) throw new Error(data.message || "Servicio no disponible temporalmente.")
+      if (error || data?.error) throw new Error(data?.error || error?.message)
 
       setImageUrl(data.imageUrl)
       toast.success(t('aiCovers.coverGenerated'))
       track('cover_generated', { feature: 'cover' })
     } catch (err: any) {
-      const friendly = parseAiError(err)
-      setGenError(friendly.userMessage)
-      toast.error(friendly.userMessage)
+      const { userMessage } = parseAiError(err)
+      setGenError(userMessage)
+      toast.error(userMessage)
     }
 
     setIsGenerating(false)
@@ -190,7 +160,8 @@ const AIStudioCovers = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="container mx-auto px-4 py-6 pt-20">
+      <AIStudioThemeBar />
+      <main className="container mx-auto px-4 py-6 pt-16">
         <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
           <ArrowLeft className="w-4 h-4" />
           {t('aiCovers.backToStudio')}
@@ -325,14 +296,10 @@ const AIStudioCovers = () => {
 
                 {genError && <p className="text-xs text-destructive">{genError}</p>}
 
-                {insufficientCredits ? (
-                  <Button asChild className="w-full gap-2" size="lg">
-                    <Link to="/dashboard/credits">
-                      <Coins className="h-4 w-4" />Comprar créditos
-                    </Link>
-                  </Button>
+                {!hasEnough(FEATURE_COSTS.generate_cover) ? (
+                  <NoCreditsAlert message="Generar portada (1 crédito)" />
                 ) : (
-                  <Button className="w-full gap-2" size="lg" onClick={handleGenerate} disabled={isLoading || isGenerating || !canGenerate}>
+                  <Button className="w-full gap-2" size="lg" onClick={handleGenerate} disabled={isGenerating || !canGenerate}>
                     {isGenerating ? (
                       <><Loader2 className="h-4 w-4 animate-spin" />Generando tu portada con IA...</>
                     ) : (
@@ -379,17 +346,9 @@ const AIStudioCovers = () => {
                   <Button className="flex-1 gap-2" onClick={handleDownload}>
                     <Download className="h-4 w-4" />Descargar portada
                   </Button>
-                  {insufficientCredits ? (
-                    <Button asChild variant="outline" className="gap-2">
-                      <Link to="/dashboard/credits">
-                        <Coins className="h-4 w-4" />Comprar créditos
-                      </Link>
-                    </Button>
-                  ) : (
-                    <Button variant="outline" className="gap-2" onClick={handleReset}>
-                      <RefreshCw className="h-4 w-4" />Generar otra (1 crédito)
-                    </Button>
-                  )}
+                  <Button variant="outline" className="gap-2" onClick={handleReset}>
+                    <RefreshCw className="h-4 w-4" />Generar otra (1 crédito)
+                  </Button>
                 </div>
               </div>
             ) : (

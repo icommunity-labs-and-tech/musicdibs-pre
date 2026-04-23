@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { parseAiError } from '@/lib/aiErrorHandler';
 import { FileDropzone } from '@/components/FileDropzone';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,6 +6,7 @@ import { ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { parseAiError } from '@/lib/aiErrorHandler';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,13 +27,12 @@ import {
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
+import { AIStudioThemeBar } from '@/components/ai-studio/AIStudioThemeBar';
 
 import { VoiceTranslator } from '@/components/voice/VoiceTranslator';
 import { VoiceToolsTour } from '@/components/ai-studio/VoiceToolsTour';
 import { HelpCircle } from 'lucide-react';
 import { useProductTracking } from '@/hooks/useProductTracking';
-import { useCredits } from '@/hooks/useCredits';
-import { FEATURE_COSTS } from '@/lib/featureCosts';
 
 const THEMES = ["Amor", "Desamor", "Superación", "Fiesta", "Calle", "Familia", "Libertad", "Nostalgia", "Éxito", "Identidad"];
 const MUSIC_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Reggaeton', 'Flamenco', 'Electrónica', 'Jazz', 'Clásica', 'R&B', 'Latin'];
@@ -58,7 +57,6 @@ const POVS = ["Primera persona", "Segunda persona", "Tercera persona"];
 export default function AIStudioVocal() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const { hasEnough, isLoading: creditsLoading } = useCredits();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
 
@@ -66,8 +64,6 @@ export default function AIStudioVocal() {
   const vc = (key: string, opts?: any): string => String(t(`dashboard.voiceCloning.${key}`, opts));
   const tv = (key: string, opts?: any): string => String(t(`aiVocal.${key}`, opts));
   const { track } = useProductTracking();
-  const vocalTrackCost = FEATURE_COSTS.generate_vocal_track ?? 1;
-  const insufficientVocalCredits = !creditsLoading && !hasEnough(vocalTrackCost);
 
   useEffect(() => {
     track('ai_studio_entered', { feature: 'vocal' });
@@ -189,13 +185,13 @@ export default function AIStudioVocal() {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/clone-voice`,
         { method: 'POST', headers: { 'Authorization': `Bearer ${session?.access_token}`, 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY }, body: form });
       const data = await response.json();
-      if (!response.ok) { toast({ title: vc('cloneError'), description: data.error, variant: 'destructive' }); return; }
+      if (!response.ok) { const { userMessage } = parseAiError({ status: response.status }, data); toast({ title: vc('cloneError'), description: userMessage, variant: 'destructive' }); return; }
       toast({ title: vc('cloneSuccess'), description: vc('cloneSuccessDesc', { name: cloneName.trim() }) });
       track('voice_cloned', { feature: 'voice_cloning' });
       setCloneName(''); setCloneDescription(''); setCloneAudioFile(null); setCloneAudioDuration(null); setCloneRemoveNoise(false); setShowCloneForm(false);
       if (cloneFileRef.current) cloneFileRef.current.value = '';
       await loadClones(); setActiveTab('sing');
-    } catch { toast({ title: vc('connectionError'), variant: 'destructive' }); }
+    } catch (err) { const { userMessage } = parseAiError(err); toast({ title: vc('connectionError'), description: userMessage, variant: 'destructive' }); }
     finally { setIsCloning(false); }
   };
 
@@ -233,9 +229,8 @@ export default function AIStudioVocal() {
         body: { description: lyricsDesc, genre: lyricsGenre, mood: lyricsMood, style: lyricsStyle, language: lyricsLanguage, structure: lyricsStructure, rhymeScheme: lyricsRhyme, pov: lyricsPov, artistRefs: lyricsArtistRefs }
       });
       if (error) throw error;
-      if (data?.error) { const friendly = parseAiError(data, data); toast({ title: t('aiShared.error'), description: friendly.userMessage, variant: 'destructive' }); return; }
       if (data?.lyrics) { setLyrics(data.lyrics); toast({ title: tv('lyricsGenerated'), description: tv('lyricsGeneratedDesc') }); }
-    } catch { toast({ title: s('aiShared.error'), description: 'Inténtalo de nuevo más tarde.', variant: 'destructive' }); }
+    } catch (err) { const { userMessage } = parseAiError(err); toast({ title: userMessage, variant: 'destructive' }); }
     finally { setIsGeneratingLyrics(false); }
   };
 
@@ -243,10 +238,6 @@ export default function AIStudioVocal() {
     if (!lyrics.trim()) { toast({ title: tv('errorWriteLyrics'), variant: 'destructive' }); return; }
     const selectedClone = voiceClones.find((c: any) => c.id === selectedCloneId);
     if (!selectedClone) { toast({ title: tv('errorSelectVoice'), description: tv('errorSelectVoiceDesc'), variant: 'destructive' }); return; }
-    if (insufficientVocalCredits) {
-      window.location.href = '/dashboard/credits';
-      return;
-    }
     setIsGenerating(true); setAudioUrl('');
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -254,16 +245,16 @@ export default function AIStudioVocal() {
         { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
           body: JSON.stringify({ lyrics, voice_id: selectedClone.elevenlabs_voice_id, voice_name: selectedClone.name }) });
       const data = await res.json();
-      if (!res.ok || data?.error) {
+      if (!res.ok) {
         if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: tv('insufficientCreditsDesc'), variant: 'destructive' });
-        else { const friendly = parseAiError(data, data); toast({ title: t('aiShared.error'), description: friendly.userMessage, variant: 'destructive' }); }
+        else { const { userMessage } = parseAiError({ status: res.status }, data); toast({ title: s('aiShared.error'), description: userMessage, variant: 'destructive' }); }
         return;
       }
       setAudioUrl(data.audioUrl);
       setHistory(prev => [{ id: data.generationId, audio_url: data.audioUrl, prompt: `Pista vocal: ${selectedClone.name}`, created_at: new Date().toISOString() }, ...prev]);
       toast({ title: tv('vocalGenerated'), description: tv('vocalGeneratedDesc') });
       track('vocal_track_generated', { feature: 'vocal' });
-    } catch { toast({ title: s('aiShared.error'), variant: 'destructive' }); }
+    } catch (err) { const { userMessage } = parseAiError(err); toast({ title: s('aiShared.error'), description: userMessage, variant: 'destructive' }); }
     finally { setIsGenerating(false); }
   };
 
@@ -361,7 +352,8 @@ export default function AIStudioVocal() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <main className="container mx-auto px-4 py-6 pt-20">
+        <AIStudioThemeBar />
+        <main className="container mx-auto px-4 py-6 pt-16">
           <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
             <ArrowLeft className="w-4 h-4" /> {tv('backToStudio')}
           </Link>
@@ -397,7 +389,8 @@ export default function AIStudioVocal() {
     <div className="min-h-screen bg-background">
       <VoiceToolsTour />
       <Navbar />
-      <main className="container mx-auto px-4 py-6 pt-20">
+      <AIStudioThemeBar />
+      <main className="container mx-auto px-4 py-6 pt-16">
         <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
           <ArrowLeft className="w-4 h-4" /> {tv('backToStudio')}
         </Link>
@@ -560,15 +553,9 @@ export default function AIStudioVocal() {
                     <p className="text-xs text-muted-foreground">{tv('charsCount', { count: lyrics.length })}</p>
                   </CardContent>
                 </Card>
-                {insufficientVocalCredits ? (
-                  <Button className="w-full" size="lg" onClick={() => { window.location.href = '/dashboard/credits'; }}>
-                    {t('dashboard.noCredits.buyCredits')}
-                  </Button>
-                ) : (
-                  <Button className="w-full" size="lg" onClick={handleGenerate} disabled={creditsLoading || isGenerating || !lyrics.trim() || !selectedCloneId}>
-                    {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{tv('generatingVocal')}</> : <><Mic className="w-4 h-4 mr-2" />{tv('generateVocalBtn')}</>}
-                  </Button>
-                )}
+                <Button className="w-full" size="lg" onClick={handleGenerate} disabled={isGenerating || !lyrics.trim() || !selectedCloneId}>
+                  {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{tv('generatingVocal')}</> : <><Mic className="w-4 h-4 mr-2" />{tv('generateVocalBtn')}</>}
+                </Button>
               </div>
 
               {/* Right column */}
