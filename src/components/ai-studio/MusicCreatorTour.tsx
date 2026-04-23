@@ -192,7 +192,7 @@ export function MusicCreatorTour() {
   const { t } = useTranslation();
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-  const steps = buildSteps(t);
+  const steps = buildSteps(t as unknown as (key: string, defaultValue?: string) => string);
 
   useEffect(() => {
     if (!user) return;
