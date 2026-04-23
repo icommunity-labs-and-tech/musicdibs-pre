@@ -40,7 +40,7 @@ function buildSteps(t: (k: string, fallback?: string) => string): Step[] {
     ];
 
     // Only include the lyrics step if the lyrics block is actually rendered (song mode)
-    if (typeof document !== 'undefined' && document.querySelector('[data-tour="mc-lyrics"]')) {
+    if (has('[data-tour="mc-lyrics"]')) {
       steps.push({
         target: '[data-tour="mc-lyrics"]',
         title: t('aiCreate.tour.lyricsTitle', 'Añade tu letra (opcional) 🎤'),
@@ -54,7 +54,7 @@ function buildSteps(t: (k: string, fallback?: string) => string): Step[] {
 
     steps.push(
       {
-        target: '[data-tour="mc-settings"]',
+        ...targetOrBody('[data-tour="mc-settings"]'),
         title: t('aiCreate.tour.voiceTitle', 'Ajusta el estilo musical 🎧'),
         content: t(
           'aiCreate.tour.voiceContent',
@@ -63,7 +63,7 @@ function buildSteps(t: (k: string, fallback?: string) => string): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="mc-settings"]',
+        ...targetOrBody('[data-tour="mc-settings"]'),
         title: t('aiCreate.tour.durationTitle', 'Elige la duración ⏱️'),
         content: t(
           'aiCreate.tour.durationContent',
@@ -72,7 +72,7 @@ function buildSteps(t: (k: string, fallback?: string) => string): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="mc-generate"]',
+        ...targetOrBody('[data-tour="mc-generate"]'),
         title: t('aiCreate.tour.generateTitle', 'Genera tu canción 🚀'),
         content: t(
           'aiCreate.tour.generateContent',
@@ -81,7 +81,7 @@ function buildSteps(t: (k: string, fallback?: string) => string): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="mc-results"]',
+        ...targetOrBody('[data-tour="mc-results"]'),
         title: t('aiCreate.tour.resultsTitle', 'Tus resultados 🎶'),
         content: t(
           'aiCreate.tour.resultsContent',
@@ -90,7 +90,7 @@ function buildSteps(t: (k: string, fallback?: string) => string): Step[] {
         disableBeacon: true,
       },
       {
-        target: '[data-tour="mc-tab-lyrics"]',
+        ...targetOrBody('[data-tour="mc-tab-lyrics"]'),
         title: t('aiCreate.tour.lyricsTabTitle', 'Compositor de letras ✍️'),
         content: t(
           'aiCreate.tour.lyricsTabContent',
