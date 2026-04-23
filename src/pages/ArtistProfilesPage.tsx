@@ -337,19 +337,6 @@ const ArtistProfilesPage = () => {
               </div>
             </div>
 
-            {/* Duration */}
-            <div className="space-y-2">
-              <Label>Duración por defecto</Label>
-              <div className="flex gap-2">
-                {DURATION_OPTIONS.map(d => (
-                  <button key={d} onClick={() => setFormDuration(d)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
-                      formDuration === d ? 'bg-primary text-primary-foreground border-primary' : 'border-border hover:border-primary/50'
-                    }`}>{d}s</button>
-                ))}
-              </div>
-            </div>
-
             {/* Style notes */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
@@ -438,7 +425,7 @@ const ArtistProfilesPage = () => {
                     {p.voice_profiles?.label && <Badge variant="outline" className="text-xs">{p.voice_profiles.label}</Badge>}
                     {p.genre && <Badge variant="outline" className="text-xs">{p.genre}</Badge>}
                     {p.mood && <Badge variant="outline" className="text-xs">{p.mood}</Badge>}
-                    <Badge variant="outline" className="text-xs">{p.default_duration}s</Badge>
+                    
                   </div>
                   {p.style_notes && (
                     <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{p.style_notes}</p>
