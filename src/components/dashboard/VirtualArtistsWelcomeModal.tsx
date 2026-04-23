@@ -7,9 +7,10 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreateFirst: () => void;
+  onShowTutorial: () => void;
 }
 
-export const VirtualArtistsWelcomeModal = ({ open, onOpenChange, onCreateFirst }: Props) => {
+export const VirtualArtistsWelcomeModal = ({ open, onOpenChange, onCreateFirst, onShowTutorial }: Props) => {
   const { t } = useTranslation();
 
   const flowSteps = [
@@ -95,13 +96,7 @@ export const VirtualArtistsWelcomeModal = ({ open, onOpenChange, onCreateFirst }
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => {
-                onOpenChange(false);
-                // Slight delay so the dialog finishes closing before the tour overlay mounts
-                setTimeout(() => {
-                  window.dispatchEvent(new Event('musicdibs:start-virtual-artists-tour'));
-                }, 250);
-              }}
+              onClick={onShowTutorial}
             >
               {t('virtualArtists.welcome.ctaSecondary', 'Ver cómo funciona')}
             </Button>
