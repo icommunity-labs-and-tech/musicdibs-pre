@@ -9,6 +9,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
+import { useCredits } from "@/hooks/useCredits";
+import { getFeatureCost } from "@/lib/featureCosts";
+import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
 import { ArrowLeft, Sparkles, Dice5, Loader2, Download, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 
 const GENEROS = ["pop", "pop urbano", "reggaeton", "trap", "indie pop", "electrónica", "balada"];
