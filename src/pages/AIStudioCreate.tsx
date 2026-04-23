@@ -339,19 +339,12 @@ const AIStudioCreate = () => {
       if (spendError) throw { message: spendError.message || 'Error al descontar créditos' };
       if (spendResult?.error) throw { message: spendResult.error };
 
-      // Enrich prompt with voice tag (only for song mode). Cap at 1500 chars (server limit).
-      const MAX_PROMPT_LENGTH = 1500;
+      // Enrich prompt with voice tag (only for song mode).
       let enrichedPrompt = prompt.trim();
       if (mode === 'song') {
         const selectedVoiceProfile = voiceProfiles.find(v => v.id === selectedVoice);
         const voiceTag = selectedVoiceProfile ? `, ${selectedVoiceProfile.prompt_tag}` : '';
-        const availableSpace = MAX_PROMPT_LENGTH - voiceTag.length;
-        if (enrichedPrompt.length > availableSpace) {
-          enrichedPrompt = enrichedPrompt.slice(0, availableSpace).trim();
-        }
         enrichedPrompt = `${enrichedPrompt}${voiceTag}`;
-      } else if (enrichedPrompt.length > MAX_PROMPT_LENGTH) {
-        enrichedPrompt = enrichedPrompt.slice(0, MAX_PROMPT_LENGTH).trim();
       }
 
       const { data, error } = await supabase.functions.invoke('generate-audio', {
@@ -1042,11 +1035,11 @@ const AIStudioCreate = () => {
                           onChange={(e) => setPrompt(e.target.value.slice(0, 1500))}
                           rows={5}
                           className="resize-none"
-                          maxLength={1500}
+                          maxLength={2500}
                         />
                         <div className="flex items-center justify-between">
                           <p className="text-xs text-muted-foreground">Incluye: género, mood, idioma, tema, ritmo, tipo de voz...</p>
-                          <p className="text-xs text-muted-foreground">{prompt.length}/1500</p>
+                          <p className="text-xs text-muted-foreground">{prompt.length}/2500</p>
                         </div>
                       </div>
 
