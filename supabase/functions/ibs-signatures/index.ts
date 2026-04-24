@@ -120,58 +120,30 @@ serve(async (req) => {
 
       const result = await ibsRes.json();
 
-      // Save to local DB
+      // Save to local DB with status 'initiated' (signature created in iBS but documents NOT yet submitted by user)
+      // The signature only progresses to 'pending' / kyc_status='pending' when iBS confirms documents received
+      // via the signature.created webhook. This way, if the user abandons the flow before submitting docs,
+      // their kyc_status stays 'unverified' and they can restart.
       await supabaseAdmin.from("ibs_signatures").insert({
         user_id: user.id,
         ibs_signature_id: result.signature_id,
         signature_name: signatureName,
-        status: "pending",
+        status: "initiated",
         kyc_url: result.url,
       });
 
-      // Update profiles.kyc_status to pending (service_role bypasses RLS)
+      // DO NOT update profiles.kyc_status here. Keep it as 'unverified' until iBS webhook confirms
+      // documents were received (signature.created event).
+      // We only persist the ibs_signature_id so we can correlate the webhook later.
       await supabaseAdmin
         .from("profiles")
-        .update({ kyc_status: "pending", ibs_signature_id: result.signature_id, updated_at: new Date().toISOString() })
+        .update({ ibs_signature_id: result.signature_id, updated_at: new Date().toISOString() })
         .eq("user_id", user.id);
-      console.log(`[IBS-SIGNATURES] KYC set to pending for user ${user.id}`);
+      console.log(`[IBS-SIGNATURES] Signature initiated for user ${user.id} (kyc_status remains unverified until docs received)`);
 
-      // Send "en proceso" email
-      try {
-        const { data: profile } = await supabaseAdmin
-          .from("profiles")
-          .select("display_name, language")
-          .eq("user_id", user.id)
-          .single();
-        const userName = profile?.display_name || user.email?.split("@")[0] || "Usuario";
-        const emailData = kycInProcessEmail({ name: userName, lang: profile?.language });
-        const messageId = crypto.randomUUID();
-        await supabaseAdmin.from("email_send_log").insert({
-          message_id: messageId,
-          template_name: "kyc_in_process",
-          recipient_email: user.email!,
-          status: "pending",
-        });
-        await supabaseAdmin.rpc("enqueue_email", {
-          queue_name: "transactional_emails",
-          payload: {
-            idempotency_key: `kyc-in-process-${messageId}`,
-            message_id: messageId,
-            to: user.email,
-            from: "MusicDibs <noreply@notify.musicdibs.com>",
-            sender_domain: "notify.musicdibs.com",
-            subject: emailData.subject,
-            html: emailData.html,
-            text: emailData.text,
-            purpose: "transactional",
-            label: "kyc_in_process",
-            queued_at: new Date().toISOString(),
-          },
-        });
-        console.log(`[IBS-SIGNATURES] Enqueued kyc_in_process email for ${user.email}`);
-      } catch (emailErr) {
-        console.warn("[IBS-SIGNATURES] Failed to send KYC in-process email:", emailErr);
-      }
+      // Note: kyc_in_process email is now sent from the ibs-webhook-signature-ok handler
+      // when iBS confirms receipt of documents (signature.created event), to avoid
+      // sending it prematurely if the user abandons before submitting documents.
 
       return new Response(JSON.stringify({
         signatureId: result.signature_id,
