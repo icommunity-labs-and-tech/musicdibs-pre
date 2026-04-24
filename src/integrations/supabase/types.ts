@@ -1986,25 +1986,43 @@ export type Database = {
         Row: {
           action: string
           created_at: string
+          credits_granted: number | null
           detail: string | null
           email: string | null
           id: string
+          metadata: Json | null
+          processed_at: string | null
+          status: string | null
+          stripe_subscription_id: string | null
+          subscription_id: string | null
           user_id: string | null
         }
         Insert: {
           action: string
           created_at?: string
+          credits_granted?: number | null
           detail?: string | null
           email?: string | null
           id?: string
+          metadata?: Json | null
+          processed_at?: string | null
+          status?: string | null
+          stripe_subscription_id?: string | null
+          subscription_id?: string | null
           user_id?: string | null
         }
         Update: {
           action?: string
           created_at?: string
+          credits_granted?: number | null
           detail?: string | null
           email?: string | null
           id?: string
+          metadata?: Json | null
+          processed_at?: string | null
+          status?: string | null
+          stripe_subscription_id?: string | null
+          subscription_id?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -2063,42 +2081,54 @@ export type Database = {
       subscriptions: {
         Row: {
           amount: number | null
+          cancel_at_period_end: boolean | null
+          canceled_at: string | null
           created_at: string
           currency: string
           current_period_end: string | null
           current_period_start: string | null
           id: string
           plan: string
+          plan_type: string | null
           status: string
           stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           tier: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           amount?: number | null
+          cancel_at_period_end?: boolean | null
+          canceled_at?: string | null
           created_at?: string
           currency?: string
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
           plan: string
+          plan_type?: string | null
           status?: string
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           tier?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number | null
+          cancel_at_period_end?: boolean | null
+          canceled_at?: string | null
           created_at?: string
           currency?: string
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
           plan?: string
+          plan_type?: string | null
           status?: string
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           tier?: string | null
           updated_at?: string
           user_id?: string
