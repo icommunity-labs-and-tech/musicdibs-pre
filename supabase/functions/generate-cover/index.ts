@@ -72,7 +72,7 @@ serve(async (req) => {
       .from("profiles")
       .select("available_credits")
       .eq("user_id", user.id)
-      .single()
+      .single() as { data: { available_credits: number } | null }
 
     if (!profile || profile.available_credits < CREDITS_COST) {
       return new Response(

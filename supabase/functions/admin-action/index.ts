@@ -1493,7 +1493,7 @@ serve(async (req) => {
           cash_balance: parseFloat(cash_balance || "0"),
           monthly_burn: parseFloat(monthly_burn || "0"),
           notes: notes || null,
-          updated_by: userEmail,
+          updated_by: callerEmail,
           updated_at: new Date().toISOString(),
         }, { onConflict: "year,month" });
       if (error) return json({ error: error.message }, 500);
@@ -2470,9 +2470,9 @@ serve(async (req) => {
 
       const { data: profile } = await admin
         .from("profiles")
-        .select("subscription_plan, available_credits")
+        .select("subscription_plan, available_credits, stripe_customer_id")
         .eq("user_id", user_id)
-        .single();
+        .single() as { data: { subscription_plan: string; available_credits: number; stripe_customer_id: string | null } | null };
 
       // Import the deletion logic inline (same steps as delete-account)
       const errors: string[] = [];
