@@ -65,7 +65,7 @@ serve(async (req) => {
     );
 
     // Use getClaims for fast local JWT validation (no network call)
-    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    const { data: claimsData, error: claimsError } = await (supabaseAuth.auth as any).getClaims(token);
     if (claimsError || !claimsData?.claims?.sub) {
       logStep("JWT validation failed, returning graceful response");
       return new Response(JSON.stringify({ subscribed: false, plan: "Free", cancel_at_period_end: false, subscription_end: null, auth_error: true }), {
