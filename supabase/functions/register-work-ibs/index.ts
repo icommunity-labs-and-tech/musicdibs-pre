@@ -382,7 +382,7 @@ async function handleInlineUpload(
 
   const fileRes = await fetch(signedUrl);
   const fileBuffer = await fileRes.arrayBuffer();
-  const fileBase64 = base64Encode(new Uint8Array(fileBuffer));
+  const fileBase64 = base64Encode(new Uint8Array(fileBuffer) as any);
   const fileName = (work.file_path.split("/").pop() || "file").replace(/^\d+_/, "");
 
   const ibsPayload: Record<string, unknown> = {

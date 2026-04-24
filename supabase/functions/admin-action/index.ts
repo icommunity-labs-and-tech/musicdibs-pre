@@ -686,7 +686,7 @@ serve(async (req) => {
       const emailsMap: Record<string, string> = {};
       (authList?.users || []).forEach((u: any) => { if (userIds.includes(u.id) && u.email) emailsMap[u.id] = u.email; });
       // For users not in first page, fetch individually
-      const missing = userIds.filter((id: string) => !emailsMap[id]);
+      const missing = (userIds as string[]).filter((id: string) => !emailsMap[id]);
       await Promise.all(missing.map(async (id: string) => {
         try {
           const { data } = await admin.auth.admin.getUserById(id);

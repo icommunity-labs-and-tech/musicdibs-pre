@@ -59,7 +59,7 @@ serve(async (req) => {
     // Use a more targeted approach
     const { data: allUsers } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
     const foundUser = allUsers?.users?.find(
-      (u) => u.email?.toLowerCase() === email.trim().toLowerCase()
+      (u: any) => u.email?.toLowerCase() === email.trim().toLowerCase()
     );
 
     if (!foundUser) {
@@ -86,7 +86,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

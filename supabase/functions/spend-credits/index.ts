@@ -123,7 +123,7 @@ serve(async (req) => {
       });
     }
 
-    if (profile.available_credits < amount) {
+    if (profile.available_credits < (amount as number)) {
       return new Response(
         JSON.stringify({
           error: "Créditos insuficientes",
