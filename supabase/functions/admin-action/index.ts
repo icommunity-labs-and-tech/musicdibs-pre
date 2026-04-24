@@ -73,11 +73,34 @@ serve(async (req) => {
       }
     }
 
-    // ── Helper: get all auth emails in one call ──────────────
+    // ── Helper: get all auth emails (paginated) ──────────────
     async function getAllEmailsMap(): Promise<Record<string, string>> {
-      const { data: { users: authUsers } } = await admin.auth.admin.listUsers({ perPage: 1000 });
       const map: Record<string, string> = {};
-      (authUsers || []).forEach((u: any) => { if (u.email) map[u.id] = u.email; });
+      const perPage = 1000;
+      for (let page = 1; page <= 50; page++) {
+        const { data, error } = await admin.auth.admin.listUsers({ perPage, page });
+        if (error) break;
+        const users = data?.users || [];
+        users.forEach((u: any) => { if (u.email) map[u.id] = u.email; });
+        if (users.length < perPage) break;
+      }
+      return map;
+    }
+
+    // ── Helper: get display_name map from profiles ──────────
+    async function getAllNamesMap(): Promise<Record<string, string>> {
+      const map: Record<string, string> = {};
+      const pageSize = 1000;
+      for (let from = 0; from < 50000; from += pageSize) {
+        const { data, error } = await admin
+          .from("profiles")
+          .select("user_id, display_name")
+          .range(from, from + pageSize - 1);
+        if (error) break;
+        const rows = data || [];
+        rows.forEach((p: any) => { if (p.display_name) map[p.user_id] = p.display_name; });
+        if (rows.length < pageSize) break;
+      }
       return map;
     }
 
