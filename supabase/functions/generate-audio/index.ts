@@ -202,8 +202,15 @@ serve(async (req) => {
       });
     }
 
-    // ── Credit deduction ──────────────────────────────────────
-    const CREDITS_COST = mode === 'song' ? 3 : 2;
+    // ── Credit deduction (cost from feature_costs table) ──────
+    const featureKey = mode === 'song' ? 'generate_audio_song' : 'generate_audio';
+    const { data: costRow } = await supabaseAdmin
+      .from('feature_costs')
+      .select('credit_cost')
+      .eq('feature_key', featureKey)
+      .maybeSingle();
+    const CREDITS_COST = costRow?.credit_cost ?? (mode === 'song' ? 3 : 2);
+
     const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('available_credits')
