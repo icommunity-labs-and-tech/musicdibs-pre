@@ -260,17 +260,73 @@ export default function IdentityVerificationPage() {
 
   const isIframeStep = step === 2 && !!kycUrl;
 
+  const statusBanner = !kycLoading && !isIframeStep && (
+    <Card className="border-border/40">
+      <CardContent className="p-4 flex items-start gap-3">
+        {kycStatus === 'verified' && (
+          <>
+            <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-emerald-600">Identidad verificada</p>
+              <p className="text-xs text-muted-foreground">Puedes registrar obras sin restricciones.</p>
+            </div>
+          </>
+        )}
+        {kycStatus === 'pending' && (
+          <>
+            <Loader2 className="h-5 w-5 text-amber-500 animate-spin mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-600">Verificación en proceso</p>
+              <p className="text-xs text-muted-foreground">
+                iCommunity Labs ha recibido tus documentos y los está revisando. Puede tardar hasta 48 horas. Te avisaremos por email cuando esté lista.
+              </p>
+            </div>
+          </>
+        )}
+        {kycStatus === 'initiated' && (
+          <>
+            <Clock className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+            <div className="flex-1 space-y-2">
+              <div>
+                <p className="text-sm font-semibold text-amber-600">Verificación incompleta</p>
+                <p className="text-xs text-muted-foreground">
+                  Has iniciado el proceso pero no has llegado a enviar los documentos. Vuelve a empezar para completarlo.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 h-8"
+                onClick={() => { setStep(1); setKycUrl(null); setSignatureId(null); setIframeError(false); }}
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Reintentar verificación
+              </Button>
+            </div>
+          </>
+        )}
+        {(kycStatus === 'unverified' || !kycStatus) && (
+          <>
+            <ShieldAlert className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold">Identidad sin verificar</p>
+              <p className="text-xs text-muted-foreground">
+                Necesitas completar la verificación para poder registrar obras. El proceso es rápido y seguro, realizado por iCommunity Labs.
+              </p>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+
   return (
     <div className={`space-y-4 ${isIframeStep ? 'max-w-full' : 'max-w-2xl'}`}>
       <h2 className="text-xl font-bold flex items-center gap-2">
         <Shield className="h-5 w-5 text-primary" /> Verificación de identidad
       </h2>
-      {!isIframeStep && (
-        <p className="text-sm text-muted-foreground">
-          Necesitas verificar tu identidad para registrar obras en MusicDibs.
-          El proceso es rápido y seguro, realizado por iCommunity Labs.
-        </p>
-      )}
+
+      {statusBanner}
+
 
       {kycLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
