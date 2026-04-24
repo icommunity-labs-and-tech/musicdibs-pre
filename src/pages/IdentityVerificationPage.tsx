@@ -14,7 +14,7 @@ import {
 import {
   Shield, ChevronRight, Loader2, CheckCircle2,
   AlertCircle, ExternalLink, User, FileText,
-  Globe, Info,
+  Globe, Info, RefreshCw, Clock, ShieldAlert,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
