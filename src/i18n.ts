@@ -177,7 +177,7 @@ const resources = {
       },
       tutorial: {
         heading: 'Todo lo que puedes hacer en MusicDibs',
-        subtitle: 'Desde la idea hasta el streaming: crea, protege y haz crecer tu música en una sola plataforma.',
+        subtitle: 'Desde la idea hasta el streaming: crea, protege, promociona y haz crecer tu música en una sola plataforma.',
         steps: {
           step: 'Paso',
           s1: { title: 'Date de alta', desc: 'Regístrate y verifica tu identidad para dar validez legal a tus registros.' },
