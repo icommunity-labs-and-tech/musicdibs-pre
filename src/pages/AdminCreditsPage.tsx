@@ -216,20 +216,20 @@ export default function AdminCreditsPage() {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/30">
-              <TableHead>Email</TableHead>
-              <TableHead>Nombre</TableHead>
+              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('email')}>Email<SortIcon k="email" /></TableHead>
+              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('display_name')}>Nombre<SortIcon k="display_name" /></TableHead>
               <TableHead>Cantidad</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Descripción</TableHead>
-              <TableHead>Fecha</TableHead>
+              <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('created_at')}>Fecha<SortIcon k="created_at" /></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
-            ) : transactions.length === 0 ? (
+            ) : sortedTransactions.length === 0 ? (
               <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Sin resultados para los filtros seleccionados</TableCell></TableRow>
-            ) : transactions.map(t => (
+            ) : sortedTransactions.map(t => (
               <TableRow key={t.id}>
                 <TableCell className="text-sm">{t.email || <span className="text-muted-foreground italic">sin email</span>}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{t.display_name || '—'}</TableCell>
