@@ -185,6 +185,7 @@ export default function AdminCreditsPage() {
           <TableHeader>
             <TableRow className="bg-muted/30">
               <TableHead>Email</TableHead>
+              <TableHead>Nombre</TableHead>
               <TableHead>Cantidad</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Descripción</TableHead>
@@ -193,12 +194,13 @@ export default function AdminCreditsPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
             ) : transactions.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Sin resultados para los filtros seleccionados</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Sin resultados para los filtros seleccionados</TableCell></TableRow>
             ) : transactions.map(t => (
               <TableRow key={t.id}>
-                <TableCell className="text-sm">{t.email}</TableCell>
+                <TableCell className="text-sm">{t.email || <span className="text-muted-foreground italic">sin email</span>}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{t.display_name || '—'}</TableCell>
                 <TableCell className={`font-mono font-medium ${t.amount > 0 ? 'text-green-400' : 'text-destructive'}`}>{t.amount > 0 ? '+' : ''}{t.amount}</TableCell>
                 <TableCell><Badge className={typeBadge[t.type] || 'bg-muted text-muted-foreground'}>{t.type}</Badge></TableCell>
                 <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{t.description}</TableCell>
