@@ -190,10 +190,21 @@ export default function IdentityVerificationPage() {
         ? `${data.kycUrl}?lang=es`
         : `https://identity.icommunitylabs.com/identification/${data.signatureId}?lang=es`;
 
+      // Mark KYC as started right BEFORE redirecting the user to the KYC URL.
+      // This sets profiles.kyc_status='pending' and triggers the "verification in process" email.
+      // Done here (not on signature creation, not on webhook) so it fires at the exact moment
+      // the user is sent off to complete the KYC flow.
+      try {
+        await supabase.functions.invoke('ibs-signatures', {
+          body: { action: 'mark_kyc_started', signatureId: data.signatureId },
+        });
+        setKycStatus('pending');
+      } catch (markErr) {
+        console.error('[KYC] mark_kyc_started failed (non-blocking):', markErr);
+      }
+
       setKycUrl(url);
 
-      // kyc_status remains 'unverified' until the user submits documents AND iBS confirms receipt
-      // via webhook (signature.created event). This way, if the user abandons here, they can restart.
       setStep(2);
       setPolling(true);
       toast.success('Datos enviados. Completa la verificación biométrica.');
