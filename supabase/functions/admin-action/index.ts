@@ -678,8 +678,28 @@ serve(async (req) => {
       const { data: txs, error } = await query;
       if (error) return json({ error: error.message }, 500);
 
-      const emailsMap = await getAllEmailsMap();
-      const enriched = (txs || []).map((t: any) => ({ ...t, email: emailsMap[t.user_id] || "" }));
+      const userIds = [...new Set((txs || []).map((t: any) => t.user_id))];
+      const [{ data: authList }, { data: profiles }] = await Promise.all([
+        admin.auth.admin.listUsers({ perPage: 1000 }),
+        admin.from("profiles").select("user_id, display_name").in("user_id", userIds),
+      ]);
+      const emailsMap: Record<string, string> = {};
+      (authList?.users || []).forEach((u: any) => { if (userIds.includes(u.id) && u.email) emailsMap[u.id] = u.email; });
+      // For users not in first page, fetch individually
+      const missing = userIds.filter((id) => !emailsMap[id]);
+      await Promise.all(missing.map(async (id) => {
+        try {
+          const { data } = await admin.auth.admin.getUserById(id);
+          if (data?.user?.email) emailsMap[id] = data.user.email;
+        } catch { /* ignore */ }
+      }));
+      const namesMap: Record<string, string> = {};
+      (profiles || []).forEach((p: any) => { if (p.display_name) namesMap[p.user_id] = p.display_name; });
+      const enriched = (txs || []).map((t: any) => ({
+        ...t,
+        email: emailsMap[t.user_id] || "",
+        display_name: namesMap[t.user_id] || "",
+      }));
       return json({ transactions: enriched });
     }
 
