@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { kycInProcessEmail, kycVerifiedEmail } from "../_shared/transactional-email.ts";
+import { kycVerifiedEmail } from "../_shared/transactional-email.ts";
 import { validateIbsWebhookAuth } from "../_shared/ibs-webhook-auth.ts";
 
 const corsHeaders = {
@@ -97,21 +97,9 @@ serve(async (req) => {
         .eq("ibs_signature_id", signatureId);
       console.log(`[IBS-WEBHOOK-SIG-OK] Signature ${signatureId} created`);
 
-      // Mark kyc_status as pending
-      const userInfo = await getUserFromSignature(signatureId);
-      if (userInfo) {
-        await supabaseAdmin
-          .from("profiles")
-          .update({ kyc_status: "pending", ibs_signature_id: signatureId, updated_at: new Date().toISOString() })
-          .eq("user_id", userInfo.userId);
-        console.log(`[IBS-WEBHOOK-SIG-OK] KYC set to pending for user ${userInfo.userId}`);
-
-        // Send "in process" email
-        if (userInfo.email) {
-          const emailData = kycInProcessEmail({ name: userInfo.name });
-          await enqueueKycEmail(supabaseAdmin, userInfo.email, emailData, "kyc_in_process");
-        }
-      }
+      // NOTE: profiles.kyc_status='pending' and the "kyc_in_process" email are now handled
+      // by the ibs-signatures `mark_kyc_started` action, called from the frontend at the
+      // exact moment the user is redirected to the KYC URL. Do NOT duplicate them here.
 
     } else if (event === "identity.verification.success" || event === "signature.verification.success") {
       const signatureId = data.signature_id;

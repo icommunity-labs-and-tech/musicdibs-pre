@@ -153,6 +153,95 @@ serve(async (req) => {
       });
     }
 
+    // ── MARK KYC STARTED ─────────────────────────────────────
+    // Called by the frontend at the EXACT moment the user is redirected to the KYC URL.
+    // Sets profiles.kyc_status='pending', marks the signature row as 'pending', and sends
+    // the "verification in process" email. Idempotent: only fires the email/status change
+    // when the user is currently 'unverified' or 'initiated'.
+    if (action === "mark_kyc_started") {
+      const { signatureId } = body;
+      if (!signatureId) {
+        return new Response(JSON.stringify({ error: "signatureId is required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Verify the signature belongs to this user
+      const { data: sigRow } = await supabaseAdmin
+        .from("ibs_signatures")
+        .select("id, user_id, status")
+        .eq("ibs_signature_id", signatureId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!sigRow) {
+        return new Response(JSON.stringify({ error: "Signature not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("kyc_status, display_name, language")
+        .eq("user_id", user.id)
+        .single();
+
+      const currentStatus = profile?.kyc_status || "unverified";
+      const shouldNotify = currentStatus === "unverified" || currentStatus === "initiated";
+
+      if (shouldNotify) {
+        await supabaseAdmin
+          .from("profiles")
+          .update({
+            kyc_status: "pending",
+            ibs_signature_id: signatureId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", user.id);
+
+        await supabaseAdmin
+          .from("ibs_signatures")
+          .update({ status: "pending", updated_at: new Date().toISOString() })
+          .eq("id", sigRow.id);
+
+        const name = profile?.display_name || user.email?.split("@")[0] || "Usuario";
+        const emailData = kycInProcessEmail({ name, lang: profile?.language || undefined });
+        const messageId = crypto.randomUUID();
+        const recipientEmail = user.email!;
+        await supabaseAdmin.from("email_send_log").insert({
+          message_id: messageId,
+          template_name: "kyc_in_process",
+          recipient_email: recipientEmail,
+          status: "pending",
+        });
+        await supabaseAdmin.rpc("enqueue_email", {
+          queue_name: "transactional_emails",
+          payload: {
+            idempotency_key: `kyc_in_process-${messageId}`,
+            message_id: messageId,
+            to: recipientEmail,
+            from: "MusicDibs <noreply@notify.musicdibs.com>",
+            sender_domain: "notify.musicdibs.com",
+            subject: emailData.subject,
+            html: emailData.html,
+            text: emailData.text,
+            purpose: "transactional",
+            label: "kyc_in_process",
+            queued_at: new Date().toISOString(),
+          },
+        });
+        console.log(`[IBS-SIGNATURES] mark_kyc_started: kyc_status -> pending, email enqueued for user ${user.id}`);
+      } else {
+        console.log(`[IBS-SIGNATURES] mark_kyc_started: skipped (kyc_status=${currentStatus}) for user ${user.id}`);
+      }
+
+      return new Response(JSON.stringify({ success: true, notified: shouldNotify }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // ── CREATE from identity sources ─────────────────────────
     if (action === "create_source") {
       const { signatureName, sources } = body;
