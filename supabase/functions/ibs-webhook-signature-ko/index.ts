@@ -99,14 +99,14 @@ serve(async (req) => {
         .eq("ibs_signature_id", signatureId);
       console.log(`[IBS-WEBHOOK-SIG-KO] Signature ${signatureId} failed`);
 
-      // Reset kyc_status to unverified
+      // Mark kyc as failed (keep ibs_signature_id so user can see and retry)
       const userInfo = await getUserFromSignature(signatureId);
       if (userInfo) {
         await supabaseAdmin
           .from("profiles")
-          .update({ kyc_status: "unverified", ibs_signature_id: null, updated_at: new Date().toISOString() })
+          .update({ kyc_status: "failed", updated_at: new Date().toISOString() })
           .eq("user_id", userInfo.userId);
-        console.log(`[IBS-WEBHOOK-SIG-KO] KYC reset to unverified for user ${userInfo.userId}`);
+        console.log(`[IBS-WEBHOOK-SIG-KO] KYC marked as failed for user ${userInfo.userId}`);
 
         // Send failure email
         if (userInfo.email) {
@@ -123,18 +123,44 @@ serve(async (req) => {
         .eq("ibs_signature_id", signatureId);
       console.log(`[IBS-WEBHOOK-SIG-KO] Identity verification failed for ${signatureId}`);
 
-      // Reset kyc_status to unverified
+      // Mark kyc as failed (keep ibs_signature_id so user can see and retry)
       const userInfo = await getUserFromSignature(signatureId);
       if (userInfo) {
         await supabaseAdmin
           .from("profiles")
-          .update({ kyc_status: "unverified", ibs_signature_id: null, updated_at: new Date().toISOString() })
+          .update({ kyc_status: "failed", updated_at: new Date().toISOString() })
           .eq("user_id", userInfo.userId);
-        console.log(`[IBS-WEBHOOK-SIG-KO] KYC reset to unverified for user ${userInfo.userId}`);
+        console.log(`[IBS-WEBHOOK-SIG-KO] KYC marked as failed for user ${userInfo.userId}`);
 
         // Send failure email
         if (userInfo.email) {
           const emailData = kycFailedEmail({ name: userInfo.name, reason: failureReason, lang: userInfo.lang });
+          await enqueueKycEmail(supabaseAdmin, userInfo.email, emailData, "kyc_failed");
+        }
+      }
+
+    } else if (event === "signature.verification.failed") {
+      const signatureId = data.signature_id;
+      const description = data.description || {};
+      const errorType = description.type || "";
+      const errorComment = description.comment || "";
+      const sigFailureReason = errorComment ? `${errorType}: ${errorComment}`.trim() : errorType || undefined;
+      await supabaseAdmin
+        .from("ibs_signatures")
+        .update({ status: "failed", updated_at: new Date().toISOString() })
+        .eq("ibs_signature_id", signatureId);
+      console.log(`[IBS-WEBHOOK-SIG-KO] Signature verification failed for ${signatureId}`);
+
+      const userInfo = await getUserFromSignature(signatureId);
+      if (userInfo) {
+        await supabaseAdmin
+          .from("profiles")
+          .update({ kyc_status: "failed", updated_at: new Date().toISOString() })
+          .eq("user_id", userInfo.userId);
+        console.log(`[IBS-WEBHOOK-SIG-KO] KYC marked as failed for user ${userInfo.userId}`);
+
+        if (userInfo.email) {
+          const emailData = kycFailedEmail({ name: userInfo.name, reason: sigFailureReason, lang: userInfo.lang });
           await enqueueKycEmail(supabaseAdmin, userInfo.email, emailData, "kyc_failed");
         }
       }
