@@ -145,17 +145,10 @@ export default function ProfilePage() {
       return;
     }
     setPwLoading(true);
-    // Verify current password by attempting a sign-in
-    const { error: verifyError } = await supabase.auth.signInWithPassword({
-      email: user!.email!,
-      password: currentPw,
+    const { error } = await supabase.auth.updateUser({
+      password: newPw,
+      current_password: currentPw,
     });
-    if (verifyError) {
-      setPwLoading(false);
-      setPwMsg({ type: 'error', text: t('dashboard.profile.pwCurrentInvalid') });
-      return;
-    }
-    const { error } = await supabase.auth.updateUser({ password: newPw });
     setPwLoading(false);
     if (error) {
       setPwMsg({ type: 'error', text: error.message });
