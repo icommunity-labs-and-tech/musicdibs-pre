@@ -30,9 +30,8 @@ export default function AdminCreditsPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // Quick adjust
-  const [searchEmail, setSearchEmail] = useState('');
+  const [sortKey, setSortKey] = useState<SortKey>('created_at');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [foundUser, setFoundUser] = useState<any>(null);
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
