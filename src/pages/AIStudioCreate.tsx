@@ -339,18 +339,52 @@ const AIStudioCreate = () => {
       if (spendError) throw { message: spendError.message || 'Error al descontar créditos' };
       if (spendResult?.error) throw { message: spendResult.error };
 
-      // Enrich prompt with voice tag (only for song mode).
-      let enrichedPrompt = prompt.trim();
-      if (mode === 'song') {
-        const selectedVoiceProfile = voiceProfiles.find(v => v.id === selectedVoice);
-        const voiceTag = selectedVoiceProfile ? `, ${selectedVoiceProfile.prompt_tag}` : '';
-        enrichedPrompt = `${enrichedPrompt}${voiceTag}`;
+      // Build prompt with strict precedence:
+      //  1. Lyrics field (if provided) defines the song content — description must NOT add narrative.
+      //  2. Voice selection (preset or virtual artist) overrides any voice/gender hint in description.
+      //  3. Free description only fully prevails when neither lyrics nor voice are selected.
+      const userLyrics = mode === 'song' ? lyrics.trim() : '';
+      const hasLyrics = userLyrics.length > 0;
+
+      const selectedVoiceProfile = voiceProfiles.find(v => v.id === selectedVoice);
+      const selectedArtist = selectedArtistId ? virtualArtists.find(a => a.id === selectedArtistId) : null;
+      const artistVoiceProfile = selectedArtist
+        ? voiceProfiles.find(v => v.id === selectedArtist.voice_profile_id)
+        : null;
+      const effectiveVoiceProfile = selectedVoiceProfile || artistVoiceProfile;
+      const hasVoice = mode === 'song' && !!effectiveVoiceProfile;
+
+      // Strip voice/gender/lyrics-content hints from the description when an explicit
+      // voice or lyrics block is provided, so the explicit choice wins.
+      const stripVoiceHints = (text: string) => text
+        .replace(/\b(voz|cantad[ao]|cantante|vocalist[ao]?|singer|vocals?)\s+(de\s+)?(mujer|hombre|chica|chico|femenina?|masculina?|female|male|woman|man|girl|boy)\b/gi, '')
+        .replace(/\b(female|male|woman|man|girl|boy)\s+(voice|vocal|vocals|singer|vocalist)\b/gi, '')
+        .replace(/\b(que\s+(la\s+)?cante|sung\s+by)\s+(una\s+)?(mujer|hombre|chica|chico|female|male|woman|man)\b/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .replace(/\s+([,.;:])/g, '$1')
+        .trim();
+      const stripLyricsHints = (text: string) => text
+        .replace(/\b(letra|lyrics?|que\s+habl[ae]\s+de|que\s+diga|talks?\s+about|about\s+how)[\s\S]*?(?=[.!?\n]|$)/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+
+      let basePrompt = prompt.trim();
+      if (hasVoice) basePrompt = stripVoiceHints(basePrompt);
+      if (hasLyrics) basePrompt = stripLyricsHints(basePrompt);
+
+      // If after stripping the description is empty but we have voice/lyrics, fall back
+      // to a neutral musical descriptor so the API still receives a valid prompt.
+      if (!basePrompt && (hasVoice || hasLyrics)) {
+        basePrompt = mode === 'song' ? 'modern song' : 'instrumental track';
       }
+
+      const voiceTag = effectiveVoiceProfile?.prompt_tag ? `, ${effectiveVoiceProfile.prompt_tag}` : '';
+      const enrichedPrompt = `${basePrompt}${voiceTag}`.trim();
 
       const { data, error } = await supabase.functions.invoke('generate-audio', {
         body: {
           prompt: enrichedPrompt,
-          lyrics: mode === 'song' ? lyrics.trim() : '',
+          lyrics: userLyrics,
           mode,
           ...(duration ? { duration } : {}),
         }
