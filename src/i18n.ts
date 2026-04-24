@@ -176,13 +176,15 @@ const resources = {
         },
       },
       tutorial: {
-        heading: 'Así de fácil es empezar',
-        subtitle: 'En solo 3 pasos tendrás tu música protegida y disponible en todo el mundo.',
+        heading: 'Todo lo que puedes hacer en MusicDibs',
+        subtitle: 'Desde la idea hasta el streaming: crea, protege y haz crecer tu música en una sola plataforma.',
         steps: {
           step: 'Paso',
           s1: { title: 'Date de alta', desc: 'Regístrate y verifica tu identidad para dar validez legal a tus registros.' },
-          s2: { title: 'Registra tu canción', desc: 'Sube tu obra; generamos una huella digital y la registramos en blockchain en segundos. Descarga tu certificado de registro, con sello de tiempo.', link: 'Ver ej. certificado' },
-          s3: { title: 'Distribuye tu música', desc: 'Llega a Spotify, Apple Music, YouTube y más de 200 plataformas con un solo clic. Controla y monetiza tus lanzamientos desde tu panel.' },
+          s2: { title: 'Crea tu música', desc: 'Compón canciones con IA, genera letras, clona voces o sube tu propia obra al estudio.' },
+          s3: { title: 'Crea material promocional', desc: 'Genera portadas, vídeos y creatividades para redes sociales con IA en segundos.' },
+          s4: { title: 'Registra tu obra', desc: 'Protege canción, portada y vídeo en blockchain con sello de tiempo y certificado legal.', link: 'Ver ej. certificado' },
+          s5: { title: 'Distribuye y promociona', desc: 'Llega a Spotify, Apple Music, YouTube y +200 plataformas. Difunde en nuestras redes con +300.000 seguidores.' },
         },
         ctaTitle: '¿A qué esperas? Protege y monetiza tu música hoy mismo',
         ctaButton: 'Empezar ahora',
@@ -689,7 +691,7 @@ const resources = {
         },
       },
       tutorial: {
-        heading: 'It\'s that easy to get started', subtitle: 'In just 3 steps your music will be protected and available worldwide.', steps: { step: 'Step', s1: { title: 'Sign up', desc: 'Register and verify your identity to give legal validity to your records.' }, s2: { title: 'Register your song', desc: 'Upload your work; we generate a digital fingerprint and record it on blockchain in seconds. Download your registration certificate with timestamp.', link: 'See sample certificate' }, s3: { title: 'Distribute your music', desc: 'Reach Spotify, Apple Music, YouTube and 200+ platforms with one click. Control and monetize from your dashboard.' } }, ctaTitle: 'What are you waiting for? Protect and monetize your music today', ctaButton: 'Start now'
+        heading: 'Everything you can do on MusicDibs', subtitle: 'From idea to streaming: create, protect and grow your music in one platform.', steps: { step: 'Step', s1: { title: 'Sign up', desc: 'Register and verify your identity to give legal validity to your records.' }, s2: { title: 'Create your music', desc: 'Compose songs with AI, generate lyrics, clone voices or upload your own work to the studio.' }, s3: { title: 'Create promo material', desc: 'Generate covers, videos and social media creatives with AI in seconds.' }, s4: { title: 'Register your work', desc: 'Protect song, cover and video on blockchain with timestamp and legal certificate.', link: 'See sample certificate' }, s5: { title: 'Distribute & promote', desc: 'Reach Spotify, Apple Music, YouTube and 200+ platforms. Get featured on our socials with 300k+ followers.' } }, ctaTitle: 'What are you waiting for? Protect and monetize your music today', ctaButton: 'Start now'
       },
       promoBanner: { text: "Valentine's Day: -20% on all subscriptions" },
       summerPromo: { title: "VALENTINE'S DAY", discount: '-20%', onAllSubs: 'On all subscriptions', enterCoupon: 'Enter the coupon at checkout.', discountCode: 'Discount code', code: 'LOVE20', footnote: '*Limited time offer' },
