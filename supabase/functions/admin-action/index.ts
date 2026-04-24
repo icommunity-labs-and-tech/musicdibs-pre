@@ -130,7 +130,7 @@ serve(async (req) => {
           const { data: rs } = await admin.from("user_roles").select("user_id").eq("role", roleFilter);
           roleUserIds = (rs || []).map((r: any) => r.user_id);
         }
-        if (roleUserIds.length === 0) return json({ users: [], total: 0 });
+        if ((roleUserIds || []).length === 0) return json({ users: [], total: 0 });
       }
 
       let query = admin.from("profiles").select("*", { count: "exact" });
@@ -686,8 +686,8 @@ serve(async (req) => {
       const emailsMap: Record<string, string> = {};
       (authList?.users || []).forEach((u: any) => { if (userIds.includes(u.id) && u.email) emailsMap[u.id] = u.email; });
       // For users not in first page, fetch individually
-      const missing = userIds.filter((id) => !emailsMap[id]);
-      await Promise.all(missing.map(async (id) => {
+      const missing = (userIds as string[]).filter((id: string) => !emailsMap[id]);
+      await Promise.all(missing.map(async (id: string) => {
         try {
           const { data } = await admin.auth.admin.getUserById(id);
           if (data?.user?.email) emailsMap[id] = data.user.email;
@@ -1493,7 +1493,7 @@ serve(async (req) => {
           cash_balance: parseFloat(cash_balance || "0"),
           monthly_burn: parseFloat(monthly_burn || "0"),
           notes: notes || null,
-          updated_by: userEmail,
+          updated_by: callerEmail,
           updated_at: new Date().toISOString(),
         }, { onConflict: "year,month" });
       if (error) return json({ error: error.message }, 500);
@@ -2470,9 +2470,9 @@ serve(async (req) => {
 
       const { data: profile } = await admin
         .from("profiles")
-        .select("subscription_plan, available_credits")
+        .select("subscription_plan, available_credits, stripe_customer_id")
         .eq("user_id", user_id)
-        .single();
+        .single() as { data: { subscription_plan: string; available_credits: number; stripe_customer_id: string | null } | null };
 
       // Import the deletion logic inline (same steps as delete-account)
       const errors: string[] = [];

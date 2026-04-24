@@ -217,7 +217,7 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
           text = text.replace(/^```[a-z]*\n?/gi, '').replace(/\n?```$/g, '').trim();
           // Remove lines that look like internal reasoning (e.g. "*Critique:*", "*Refined Paragraph:*")
           text = text.split('\n')
-            .filter((line) => !/^\s*\*+\s*(critique|refined|thinking|reasoning|note|step \d+)/i.test(line))
+            .filter((line: string) => !/^\s*\*+\s*(critique|refined|thinking|reasoning|note|step \d+)/i.test(line))
             .join('\n')
             .trim();
 
