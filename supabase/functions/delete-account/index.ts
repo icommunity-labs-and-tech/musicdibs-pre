@@ -16,7 +16,7 @@ function json(body: unknown, status = 200) {
 }
 
 async function executeAccountDeletion(
-  admin: ReturnType<typeof createClient>,
+  admin: any,
   userId: string,
   userEmail: string,
   reason: string,
