@@ -87,6 +87,33 @@ export default function AdminCreditsPage() {
 
   const hasFilters = typeFilter || dateFrom || dateTo;
 
+  const sortedTransactions = useMemo(() => {
+    const arr = [...transactions];
+    arr.sort((a, b) => {
+      const av = (a[sortKey] ?? '').toString().toLowerCase();
+      const bv = (b[sortKey] ?? '').toString().toLowerCase();
+      if (sortKey === 'created_at') {
+        const at = new Date(a.created_at).getTime();
+        const bt = new Date(b.created_at).getTime();
+        return sortDir === 'asc' ? at - bt : bt - at;
+      }
+      if (av < bv) return sortDir === 'asc' ? -1 : 1;
+      if (av > bv) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return arr;
+  }, [transactions, sortKey, sortDir]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir(key === 'created_at' ? 'desc' : 'asc'); }
+  };
+
+  const SortIcon = ({ k }: { k: SortKey }) => {
+    if (sortKey !== k) return <ArrowUpDown className="h-3 w-3 inline ml-1 opacity-50" />;
+    return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 inline ml-1" /> : <ArrowDown className="h-3 w-3 inline ml-1" />;
+  };
+
   const handleExportCsv = async () => {
     try {
       const res = await adminApi.exportCsv('transactions');
