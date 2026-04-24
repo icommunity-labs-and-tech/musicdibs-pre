@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
-import { CreditCard, Search, ChevronLeft, ChevronRight, Download, X } from 'lucide-react';
+import { CreditCard, Search, ChevronLeft, ChevronRight, Download, X, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+
+type SortKey = 'email' | 'display_name' | 'created_at';
+type SortDir = 'asc' | 'desc';
 
 const typeBadge: Record<string, string> = {
   purchase: 'bg-green-500/20 text-green-400',
