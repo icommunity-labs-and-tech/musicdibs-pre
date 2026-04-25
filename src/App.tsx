@@ -1,4 +1,4 @@
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,9 +9,6 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { AuthProvider } from "./hooks/useAuth";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 import { preloadFeatureCosts } from "./lib/featureCosts";
-
-// Preload feature costs from DB as early as possible
-preloadFeatureCosts();
 
 const ChatWidget = lazyWithRetry(() => import("./components/ChatWidget").then(m => ({ default: m.ChatWidget })));
 const SocialProofPopup = lazyWithRetry(() => import("./components/SocialProofPopup").then(m => ({ default: m.SocialProofPopup })));
@@ -90,8 +87,46 @@ const queryClient = new QueryClient();
 import { captureAttribution } from "@/lib/attribution";
 
 const AppInit = () => {
-  useEffect(() => { captureAttribution(); }, []);
+  useEffect(() => {
+    const runAfterLoad = () => {
+      captureAttribution();
+      preloadFeatureCosts();
+    };
+
+    if (document.readyState === "complete") {
+      window.setTimeout(runAfterLoad, 0);
+      return;
+    }
+
+    window.addEventListener("load", runAfterLoad, { once: true });
+    return () => window.removeEventListener("load", runAfterLoad);
+  }, []);
   return null;
+};
+
+const DelayedStartupWidgets = () => {
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    const showWidgets = () => setShouldRender(true);
+
+    if (document.readyState === "complete") {
+      const timeoutId = window.setTimeout(showWidgets, 0);
+      return () => window.clearTimeout(timeoutId);
+    }
+
+    window.addEventListener("load", showWidgets, { once: true });
+    return () => window.removeEventListener("load", showWidgets);
+  }, []);
+
+  if (!shouldRender) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <ChatWidget />
+      <SocialProofPopup />
+    </Suspense>
+  );
 };
 
 const App = () => (
@@ -104,10 +139,7 @@ const App = () => (
         <BrowserRouter>
           <ScrollToTop />
           <AppInit />
-          <Suspense fallback={null}>
-            <ChatWidget />
-            <SocialProofPopup />
-          </Suspense>
+          <DelayedStartupWidgets />
           <Suspense fallback={null}>
             <Routes>
               <Route path="/" element={<Index />} />
