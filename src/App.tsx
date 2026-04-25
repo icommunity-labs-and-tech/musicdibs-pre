@@ -88,13 +88,24 @@ import { captureAttribution } from "@/lib/attribution";
 
 const AppInit = () => {
   useEffect(() => {
+    const runWhenIdle = (callback: () => void) => {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(callback, { timeout: 3000 });
+        return;
+      }
+
+      window.setTimeout(callback, 1500);
+    };
+
     const runAfterLoad = () => {
-      captureAttribution();
-      preloadFeatureCosts();
+      runWhenIdle(() => {
+        captureAttribution();
+        preloadFeatureCosts();
+      });
     };
 
     if (document.readyState === "complete") {
-      window.setTimeout(runAfterLoad, 0);
+      runAfterLoad();
       return;
     }
 
