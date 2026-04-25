@@ -129,7 +129,7 @@ export const PricingSection = () => {
             <CardContent className="p-8">
               <div className="text-center mb-6">
                 {isAnnual && (
-                  <div className="bg-yellow-400 text-pink-600 font-bold text-sm px-4 py-2 rounded-full mb-3 inline-block">
+                  <div className="bg-yellow-400 pricing-badge-contrast font-bold text-sm px-4 py-2 rounded-full mb-3 inline-block">
                     {t("pricing.badgeAnnual")}
                   </div>
                 )}
