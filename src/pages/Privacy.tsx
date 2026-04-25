@@ -17,7 +17,7 @@ const Privacy = () => {
             {t('privacy.title')}
           </h1>
 
-          <div className="prose prose-invert prose-pink max-w-none space-y-8">
+          <div className="article-content space-y-8">
             {/* Legal Notice */}
             <h2 className="text-2xl font-bold text-white">{t('privacy.legal_notice_title')}</h2>
             <p className="text-white/80 leading-relaxed">{t('privacy.legal_notice_1')}</p>

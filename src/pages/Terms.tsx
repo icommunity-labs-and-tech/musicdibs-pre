@@ -17,7 +17,7 @@ const Terms = () => {
             {t("terms.title")}
           </h1>
 
-          <div className="prose prose-invert prose-pink max-w-none space-y-8">
+          <div className="article-content space-y-8">
             <h2 className="text-2xl font-bold text-white">{t("terms.general_purchase_title")}</h2>
             <h3 className="text-xl font-semibold text-pink-300">{t("terms.general_conditions_title")}</h3>
             <p className="text-white/80 leading-relaxed">

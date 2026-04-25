@@ -297,3 +297,34 @@ All colors MUST be HSL.
 .pricing-badge-contrast {
   color: hsl(var(--pricing-badge-foreground));
 }
+
+.article-content {
+  max-width: none;
+}
+
+.article-content-lg {
+  font-size: 1.125rem;
+  line-height: 1.75;
+}
+
+.article-content-lg h1,
+.article-content-lg h2,
+.article-content-lg h3,
+.article-content-lg h4 {
+  color: hsl(var(--page-text) / 0.9);
+  font-weight: 700;
+}
+
+.article-content-lg p,
+.article-content-lg li {
+  color: hsl(var(--page-text-muted));
+}
+
+.article-content-lg a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+}
+
+.article-content-lg strong {
+  color: hsl(var(--page-text) / 0.8);
+}

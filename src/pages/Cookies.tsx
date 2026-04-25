@@ -17,7 +17,7 @@ const Cookies = () => {
             {t("cookies.title")}
           </h1>
 
-          <div className="prose prose-invert prose-pink max-w-none space-y-8">
+          <div className="article-content space-y-8">
             <p className="text-white/80 leading-relaxed">{t("cookies.intro")}</p>
 
             <h2 className="text-2xl font-bold text-white">{t("cookies.what_title")}</h2>
