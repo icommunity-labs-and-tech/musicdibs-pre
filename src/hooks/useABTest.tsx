@@ -23,13 +23,27 @@ const getSessionId = (): string => {
 };
 
 const persistEvent = (testId: string, variantIndex: number, variantText: string, eventType: 'impression' | 'click') => {
-  supabase.from('ab_test_events').insert({
-    test_id: testId,
-    variant_index: variantIndex,
-    variant_text: variantText,
-    event_type: eventType,
-    session_id: getSessionId(),
-  }).then(); // fire-and-forget
+  const sendEvent = () => {
+    supabase.from('ab_test_events').insert({
+      test_id: testId,
+      variant_index: variantIndex,
+      variant_text: variantText,
+      event_type: eventType,
+      session_id: getSessionId(),
+    }).then(); // fire-and-forget
+  };
+
+  if (eventType === 'impression' && typeof window.requestIdleCallback === 'function') {
+    window.requestIdleCallback(sendEvent, { timeout: 5000 });
+    return;
+  }
+
+  if (eventType === 'impression') {
+    window.setTimeout(sendEvent, 2500);
+    return;
+  }
+
+  sendEvent();
 };
 
 export const useABTest = (test: ABTest): ABVariant & { variantIndex: number } => {
