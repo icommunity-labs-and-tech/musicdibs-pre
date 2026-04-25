@@ -82,10 +82,17 @@
       gtag('js', new Date());
       gtag('config', 'G-518359138');
       window.addEventListener('load', function() {
-        var s = document.createElement('script');
-        s.src = 'https://www.googletagmanager.com/gtag/js?id=G-518359138';
-        s.async = true;
-        document.head.appendChild(s);
+        var loadAnalytics = function() {
+          var s = document.createElement('script');
+          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-518359138';
+          s.async = true;
+          document.head.appendChild(s);
+        };
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(loadAnalytics, { timeout: 4000 });
+        } else {
+          window.setTimeout(loadAnalytics, 2500);
+        }
       });
     </script>
     <style>
