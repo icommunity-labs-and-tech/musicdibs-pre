@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { ReactNode, Suspense, useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { ArtistsBanner } from "@/components/ArtistsBanner";
@@ -18,6 +18,32 @@ const RoyaltiesCalculator = lazyWithRetry(() => import("@/components/RoyaltiesCa
 
 const ManagerBannerSection = lazyWithRetry(() => import("@/components/ManagerBannerSection").then(m => ({ default: m.ManagerBannerSection })));
 const Footer = lazyWithRetry(() => import("@/components/Footer").then(m => ({ default: m.Footer })));
+
+const DeferredSection = ({ children, minHeight = 320 }: { children: ReactNode; minHeight?: number }) => {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [shouldRender, setShouldRender] = useState(false);
+
+  useEffect(() => {
+    if (shouldRender) return;
+    const node = ref.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShouldRender(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "900px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [shouldRender]);
+
+  return <div ref={ref} style={!shouldRender ? { minHeight } : undefined}>{shouldRender ? children : null}</div>;
+};
 
 const Index = () => {
   return (
@@ -80,19 +106,17 @@ const Index = () => {
       <Navbar />
       <HeroSection />
       <ArtistsBanner />
-      <Suspense fallback={null}>
-        <WhyChooseSection />
-        <AIStudioShowcase />
-        <BridgeStatement />
-        <PromoVisualsShowcase />
-        <MasteringHighlight />
-        <DistributionSection />
-        <RoyaltiesCalculator />
-        <TestimonialsSection />
-        <PricingSection />
-        <ManagerBannerSection />
-        <Footer />
-      </Suspense>
+      <DeferredSection minHeight={520}><Suspense fallback={null}><WhyChooseSection /></Suspense></DeferredSection>
+      <DeferredSection minHeight={620}><Suspense fallback={null}><AIStudioShowcase /></Suspense></DeferredSection>
+      <DeferredSection minHeight={220}><Suspense fallback={null}><BridgeStatement /></Suspense></DeferredSection>
+      <DeferredSection minHeight={980}><Suspense fallback={null}><PromoVisualsShowcase /></Suspense></DeferredSection>
+      <DeferredSection minHeight={520}><Suspense fallback={null}><MasteringHighlight /></Suspense></DeferredSection>
+      <DeferredSection minHeight={560}><Suspense fallback={null}><DistributionSection /></Suspense></DeferredSection>
+      <DeferredSection minHeight={560}><Suspense fallback={null}><RoyaltiesCalculator /></Suspense></DeferredSection>
+      <DeferredSection minHeight={520}><Suspense fallback={null}><TestimonialsSection /></Suspense></DeferredSection>
+      <DeferredSection minHeight={720}><Suspense fallback={null}><PricingSection /></Suspense></DeferredSection>
+      <DeferredSection minHeight={520}><Suspense fallback={null}><ManagerBannerSection /></Suspense></DeferredSection>
+      <DeferredSection minHeight={360}><Suspense fallback={null}><Footer /></Suspense></DeferredSection>
     </div>
   );
 };
