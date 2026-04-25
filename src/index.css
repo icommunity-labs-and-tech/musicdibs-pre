@@ -53,6 +53,10 @@ All colors MUST be HSL.
     --page-card-bg: 0 0% 100% / 0.05;
     --page-card-border: 0 0% 100% / 0.1;
     --page-nav-scrolled: 0 0% 0% / 0.8;
+    --hero-contrast-blue: 221 83% 53%;
+    --hero-contrast-blue-hover: 224 76% 48%;
+    --hero-contrast-blue-foreground: 0 0% 100%;
+    --pricing-badge-foreground: 340 82% 35%;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -279,4 +283,17 @@ All colors MUST be HSL.
   background: radial-gradient(circle at 25% 70%, hsl(var(--accent) / 0.85), transparent 32%),
     radial-gradient(circle at 75% 25%, hsl(var(--primary) / 0.9), transparent 30%),
     linear-gradient(135deg, hsl(var(--foreground) / 0.94), hsl(var(--primary) / 0.8));
+}
+
+.hero-contrast-cta {
+  background-color: hsl(var(--hero-contrast-blue));
+  color: hsl(var(--hero-contrast-blue-foreground));
+}
+
+.hero-contrast-cta:hover {
+  background-color: hsl(var(--hero-contrast-blue-hover));
+}
+
+.pricing-badge-contrast {
+  color: hsl(var(--pricing-badge-foreground));
 }
