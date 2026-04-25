@@ -62,51 +62,45 @@ export const HeroSection = () => {
       {/* Main content */}
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         {/* Main heading */}
-        <ScrollReveal delay={200}>
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            {t("hero.title")}{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300">
-              {t("hero.highlight")}
-            </span>
-          </h1>
-        </ScrollReveal>
+        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+          {t("hero.title")}{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300">
+            {t("hero.highlight")}
+          </span>
+        </h1>
 
         {/* Subtitle */}
-        <ScrollReveal delay={400}>
-          <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto leading-relaxed">
-            {t("hero.subtitle_prefix")} {t("hero.subtitle_strong")}{" "}
-            <a
-              href="/legal-validity"
-              className="text-pink-300 hover:text-pink-200 underline transition-colors text-xs md:text-sm"
-            >
-              {t("hero.legal_more")}
-            </a>
-          </p>
-        </ScrollReveal>
+        <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto leading-relaxed">
+          {t("hero.subtitle_prefix")} {t("hero.subtitle_strong")}{" "}
+          <a
+            href="/legal-validity"
+            className="text-pink-300 hover:text-pink-200 underline transition-colors text-xs md:text-sm"
+          >
+            {t("hero.legal_more")}
+          </a>
+        </p>
 
         {/* CTA buttons with A/B testing */}
-        <ScrollReveal delay={600}>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              variant="hero"
-              size="xl"
-              className="font-semibold"
-              onClick={() => navigate("/login?tab=register")}
-            >
-              {t("hero.cta_start")}
-            </Button>
-            <Button
-              variant="blue"
-              size="xl"
-              className="font-semibold"
-              onClick={() => {
-                document.getElementById("all-in-one-section")?.scrollIntoView({ behavior: "smooth" });
-              }}
-            >
-              {t("hero.cta_how")}
-            </Button>
-          </div>
-        </ScrollReveal>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button
+            variant="hero"
+            size="xl"
+            className="font-semibold"
+            onClick={() => navigate("/login?tab=register")}
+          >
+            {t("hero.cta_start")}
+          </Button>
+          <Button
+            variant="blue"
+            size="xl"
+            className="font-semibold"
+            onClick={() => {
+              document.getElementById("all-in-one-section")?.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            {t("hero.cta_how")}
+          </Button>
+        </div>
       </div>
     </section>
   );
