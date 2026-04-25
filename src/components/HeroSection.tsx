@@ -4,13 +4,14 @@ import { useTranslation } from "react-i18next";
 import { getFooterLinks } from "@/i18nLinks";
 import { useParallax } from "@/hooks/useParallax";
 import { useEffect, useState } from "react";
+import type { RefObject } from "react";
 
 export const HeroSection = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const footerLinks = getFooterLinks(i18n.resolvedLanguage || i18n.language);
-  const { offset } = useParallax({ speed: 0.4 });
-  const { offset: bgOffset } = useParallax({ speed: 0.15 });
+  const { ref: videoParallaxRef } = useParallax({ speed: 0.2 });
+  const { ref: textureParallaxRef } = useParallax({ speed: 0.1 });
   const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
 
   useEffect(() => {
@@ -29,6 +30,7 @@ export const HeroSection = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Video background with parallax */}
       <video
+        ref={videoParallaxRef as RefObject<HTMLVideoElement>}
         autoPlay
         loop
         muted
@@ -37,7 +39,7 @@ export const HeroSection = () => {
         poster="/lovable-uploads/8a9c1220-8213-4d45-a928-debd5429a44c.webp"
         onError={(e) => console.error("Video failed to load:", e)}
         className="absolute inset-0 w-full h-full object-cover will-change-transform"
-        style={{ transform: `translateY(${offset * 0.5}px) scale(1.1)` }}
+        style={{ transform: "translateY(var(--parallax-offset, 0px)) scale(1.1)" }}
       >
         {shouldLoadVideo && <source src="/hero-video-new.mp4" type="video/mp4" />}
         {shouldLoadVideo && <source src="/hero-video.mp4" type="video/mp4" />}
@@ -50,8 +52,9 @@ export const HeroSection = () => {
 
       {/* Background pattern/texture overlay with parallax */}
       <div
+        ref={textureParallaxRef as RefObject<HTMLDivElement>}
         className="absolute inset-0 opacity-20 will-change-transform"
-        style={{ transform: `translateY(${bgOffset}px)` }}
+        style={{ transform: "translateY(var(--parallax-offset, 0px))" }}
       >
         <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-white/10 blur-xl"></div>
         <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-pink-300/20 blur-lg"></div>
