@@ -1,19 +1,62 @@
-import { Shield, Zap, Palette, Globe } from "lucide-react";
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Blocks, Clapperboard, FileCheck2, Fingerprint, Globe, ImageIcon, Megaphone, Music, Palette, PenLine, Rocket, Scale, ShieldCheck, SlidersHorizontal, Smartphone } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollReveal, StaggerGrid } from "@/components/ScrollReveal";
 import { useTranslation, Trans } from "react-i18next";
 
 export const WhyChooseSection = () => {
   const { t } = useTranslation();
+  const scrollToPricing = () => {
+    document.getElementById("pricing-section")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const InfoCard = ({ Icon, title, desc }: { Icon: typeof Music; title: string; desc: string }) => (
+    <div className="rounded-lg border border-border bg-background/90 p-4 shadow-sm transition-transform duration-300 hover:-translate-y-1">
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-md">
+        <Icon className="h-5 w-5" />
+      </div>
+      <h4 className="mb-1.5 text-sm font-semibold text-foreground">{title}</h4>
+      <p className="text-xs leading-relaxed text-muted-foreground">{desc}</p>
+    </div>
+  );
+
+  const ModalCta = ({ children }: { children: string }) => (
+    <DialogClose asChild>
+      <Button variant="hero" size="lg" className="mt-2 w-full sm:w-auto" onClick={scrollToPricing}>
+        {children}
+      </Button>
+    </DialogClose>
+  );
+
   const features = [
     {
-      icon: Shield,
-      title: t("why.features.legal.title"),
+      icon: Music,
+      title: "AI Music Studio",
       description: t("why.features.legal.desc"),
-      color: "from-pink-500 to-purple-600",
+      cta: "Quiero crear mi canción",
       popupContent: (
-        <span style={{ whiteSpace: 'pre-line' }}>{t("why.features.legal.popup")}</span>
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg">
+              <Music className="h-8 w-8" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-bold text-foreground">AI Music Studio</DialogTitle>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Tu estudio creativo con IA para crear canciones, mejorar tu sonido y preparar todo tu lanzamiento.</p>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <InfoCard Icon={Music} title="Crear canciones" desc="Canciones completas, instrumentales o con voz." />
+            <InfoCard Icon={SlidersHorizontal} title="Masterizar" desc="Mejora el sonido y déjalo listo para plataformas." />
+            <InfoCard Icon={PenLine} title="Crear letras" desc="Genera ideas, letras y estructuras en segundos." />
+            <InfoCard Icon={ImageIcon} title="Diseñar portadas" desc="Arte visual para singles, EPs y álbumes." />
+            <InfoCard Icon={Smartphone} title="Crear contenido" desc="Posts, creatividades y piezas para redes." />
+            <InfoCard Icon={Clapperboard} title="Vídeos cortos" desc="Clips promocionales para Reels, TikTok y Spotify Canvas." />
+          </div>
+          <div className="rounded-lg border border-primary/20 bg-primary/10 p-4 text-center text-sm font-semibold text-foreground">
+            De la idea al lanzamiento, sin saltar entre herramientas.
+          </div>
+        </div>
       )
     },
     {
@@ -26,51 +69,48 @@ export const WhyChooseSection = () => {
       )
     },
     {
-      icon: Zap,
+      icon: ShieldCheck,
       title: t("why.features.instant.title"), 
       description: t("why.features.instant.desc"),
-      color: "from-purple-500 to-blue-600",
+      cta: "Quiero registrar mi obra",
       popupContent: (
-        <>
-          <Trans
-            i18nKey="why.features.instant.popup"
-            components={{
-              strong1: <span className="font-bold text-primary" />,
-              strong2: <span className="font-bold text-primary" />,
-              a1: (
-                <a
-                  href="https://www.wipo.int/treaties/es/ip/berne/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary underline hover:text-primary/80"
-                />
-              ),
-              a2: (
-                <a
-                  href="https://www.wipo.int/treaties/es/ip/wct/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary underline hover:text-primary/80"
-                />
-              ),
-              a3: (
-                <a
-                  href="https://digital-strategy.ec.europa.eu/es/policies/copyright"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary underline hover:text-primary/80"
-                />
-              ),
-            }}
-          />
-        </>
+        <div className="space-y-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-lg">
+              <ShieldCheck className="h-8 w-8" />
+            </div>
+            <div>
+              <DialogTitle className="text-2xl font-bold text-foreground">Registro de Propiedad Intelectual</DialogTitle>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Protege tu música en segundos con una evidencia digital verificable registrada en blockchain.</p>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <InfoCard Icon={Fingerprint} title="Huella digital única" desc="Generamos un hash criptográfico del archivo para identificar tu obra de forma única." />
+            <InfoCard Icon={Blocks} title="Registro blockchain" desc="La evidencia queda sellada con fecha y hora en una red blockchain, sin poder alterarse." />
+            <InfoCard Icon={FileCheck2} title="Certificado verificable" desc="Recibes un comprobante digital con los datos de la obra, hash y enlace de verificación." />
+            <InfoCard Icon={Scale} title="Evidencia de autoría" desc="El registro ayuda a demostrar la existencia e integridad de tu obra ante terceros." />
+          </div>
+          <div className="rounded-lg border border-border bg-secondary/70 p-4">
+            <h4 className="mb-2 text-sm font-semibold text-foreground">Marco internacional de derechos de autor</h4>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              La protección de obras musicales se apoya en marcos internacionales como el{" "}
+              <a href="https://www.wipo.int/treaties/es/ip/berne/" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-4">Convenio de Berna</a>, el{" "}
+              <a href="https://www.wipo.int/treaties/es/ip/wct/" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-4">Tratado de la OMPI</a>{" "}
+              y la{" "}
+              <a href="https://digital-strategy.ec.europa.eu/es/policies/copyright" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-4">Directiva sobre Derechos de Autor en la Era Digital</a>. MusicDibs añade una capa tecnológica de evidencia digital verificable mediante blockchain.
+            </p>
+          </div>
+          <div className="rounded-lg border border-primary/20 bg-primary/10 p-4 text-center text-sm font-semibold text-foreground">
+            Registra tu obra en segundos. Conserva una prueba digital verificable para siempre.
+          </div>
+        </div>
       )
     },
     {
       icon: Globe,
       title: t("why.features.distribution.title"),
       description: t("why.features.distribution.desc"),
-      color: "from-blue-500 to-cyan-600",
+      cta: "Quiero distribuir mi música",
       popupContent: (
         <>
           <Trans
