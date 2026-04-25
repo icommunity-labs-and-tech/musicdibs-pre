@@ -21,18 +21,20 @@ export const PromoMaterialShowcase = () => {
   };
 
   return (
-    <section className="overflow-hidden bg-gradient-to-b from-background via-secondary to-background py-20">
-      <div className="mx-auto max-w-6xl px-6 text-center">
+    <section className="relative overflow-hidden bg-gradient-to-b from-primary via-primary to-accent py-20">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,hsl(var(--accent)/0.35),transparent_32%),radial-gradient(circle_at_80%_55%,hsl(var(--primary)/0.45),transparent_30%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-background/20" />
+      <div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
         <ScrollReveal>
           <div className="mx-auto mb-10 max-w-3xl">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-4 py-2 text-sm font-semibold text-primary-foreground backdrop-blur">
               <Sparkles className="h-4 w-4" />
               Material promocional con IA
             </div>
-            <h2 className="text-4xl font-bold leading-tight text-foreground md:text-5xl">
+            <h2 className="text-4xl font-bold leading-tight text-primary-foreground md:text-5xl">
               Crea también la imagen de tu lanzamiento
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+            <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-primary-foreground/80 md:text-lg">
               Genera portadas, posts, flyers y vídeos cortos para promocionar tu música en redes. Todo desde MusicDibs.
             </p>
           </div>
@@ -41,8 +43,8 @@ export const PromoMaterialShowcase = () => {
 
       <ScrollReveal delay={150}>
         <div className="promo-marquee group relative">
-          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-background to-background/0" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-background to-background/0" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-primary to-primary/0" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-accent to-accent/0" />
           <div className="promo-marquee-track flex w-max gap-5 px-5 py-4 group-hover:[animation-play-state:paused]">
             {loopItems.map((item, index) => (
               <article
