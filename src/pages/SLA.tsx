@@ -17,7 +17,7 @@ const SLA = () => {
             {t('sla.title')}
           </h1>
 
-          <div className="prose prose-invert prose-pink max-w-none space-y-8">
+          <div className="article-content space-y-8">
             {/* Intro */}
             <p className="text-white/80 leading-relaxed">
               {t('sla.intro')}
