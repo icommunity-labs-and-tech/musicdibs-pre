@@ -156,7 +156,7 @@ export const WhyChooseSection = () => {
                   </div>
                 </DialogTrigger>
                 <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto rounded-2xl border-border bg-gradient-to-br from-background via-background to-secondary p-5 shadow-2xl sm:p-7">
-                  {index > 1 && (
+                  {index !== 0 && index !== 2 && (
                     <DialogHeader>
                       <DialogTitle className="text-xl font-semibold mb-4">
                         {feature.title}
