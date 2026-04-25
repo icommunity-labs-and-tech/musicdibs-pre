@@ -1,4 +1,4 @@
-import { Blocks, Clapperboard, FileCheck2, Fingerprint, Globe, ImageIcon, Megaphone, Music, Palette, PenLine, Rocket, Scale, ShieldCheck, SlidersHorizontal, Smartphone } from "lucide-react";
+import { Blocks, Clapperboard, FileCheck2, Fingerprint, Globe, ImageIcon, type LucideIcon, Megaphone, Music, Palette, PenLine, Scale, ShieldCheck, SlidersHorizontal, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollReveal, StaggerGrid } from "@/components/ScrollReveal";
@@ -10,7 +10,7 @@ export const WhyChooseSection = () => {
     document.getElementById("pricing-section")?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const InfoCard = ({ Icon, title, desc }: { Icon: typeof Music; title: string; desc: string }) => (
+  const InfoCard = ({ Icon, title, desc }: { Icon: LucideIcon; title: string; desc: string }) => (
     <div className="rounded-lg border border-border bg-background/90 p-4 shadow-sm transition-transform duration-300 hover:-translate-y-1">
       <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent text-primary-foreground shadow-md">
         <Icon className="h-5 w-5" />
@@ -63,7 +63,7 @@ export const WhyChooseSection = () => {
       icon: Palette,
       title: t("why.features.promo.title"),
       description: t("why.features.promo.desc"),
-      color: "from-cyan-500 to-pink-600",
+      cta: "Quiero promocionar mi lanzamiento",
       popupContent: (
         <span style={{ whiteSpace: 'pre-line' }}>{t("why.features.promo.popup")}</span>
       )
@@ -126,12 +126,12 @@ export const WhyChooseSection = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-b from-purple-900 to-purple-800">
+    <section id="why-section" className="py-20 bg-gradient-to-b from-primary via-primary to-accent">
       <div className="max-w-6xl mx-auto px-6">
         {/* Section header */}
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
               {t("why.heading")}
             </h2>
           </div>
@@ -143,26 +143,31 @@ export const WhyChooseSection = () => {
             {features.map((feature, index) => (
               <Dialog key={index}>
                 <DialogTrigger asChild>
-                  <div className="relative bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-105 cursor-pointer h-full flex flex-col">
-                    <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${feature.color} flex items-center justify-center mb-4 mx-auto`}>
-                      <feature.icon className="w-8 h-8 text-white" />
+                  <div className="relative bg-background/10 backdrop-blur-sm rounded-xl p-6 border border-background/20 hover:bg-background/15 transition-all duration-300 hover:scale-105 cursor-pointer h-full flex flex-col">
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-4 mx-auto">
+                      <feature.icon className="w-8 h-8 text-primary-foreground" />
                     </div>
-                    <h3 className="text-xl font-semibold text-white mb-3 text-center">
+                    <h3 className="text-xl font-semibold text-primary-foreground mb-3 text-center">
                       {feature.title}
                     </h3>
-                    <p className="text-white/70 text-center leading-relaxed flex-1">
+                    <p className="text-primary-foreground/80 text-center leading-relaxed flex-1">
                       {feature.description}
                     </p>
                   </div>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl font-semibold mb-4">
-                      {feature.title}
-                    </DialogTitle>
-                  </DialogHeader>
+                <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto rounded-2xl border-border bg-gradient-to-br from-background via-background to-secondary p-5 shadow-2xl sm:p-7">
+                  {index > 1 && (
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-semibold mb-4">
+                        {feature.title}
+                      </DialogTitle>
+                    </DialogHeader>
+                  )}
                   <div className="text-foreground leading-relaxed text-base">
                     {feature.popupContent}
+                  </div>
+                  <div className="mt-6 flex justify-center">
+                    <ModalCta>{feature.cta}</ModalCta>
                   </div>
                 </DialogContent>
               </Dialog>
