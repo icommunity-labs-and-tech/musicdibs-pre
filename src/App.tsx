@@ -1,6 +1,4 @@
 import { Suspense, useEffect, useState } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
@@ -11,6 +9,8 @@ import { preloadFeatureCosts } from "./lib/featureCosts";
 
 const ChatWidget = lazyWithRetry(() => import("./components/ChatWidget").then(m => ({ default: m.ChatWidget })));
 const SocialProofPopup = lazyWithRetry(() => import("./components/SocialProofPopup").then(m => ({ default: m.SocialProofPopup })));
+const Toaster = lazyWithRetry(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
+const Sonner = lazyWithRetry(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 
 // Eagerly load the landing page for best FCP/LCP
 import Index from "./pages/Index";
@@ -118,10 +118,19 @@ const DelayedStartupWidgets = () => {
   const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
-    const showWidgets = () => setShouldRender(true);
+    const runWhenIdle = (callback: () => void) => {
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(callback, { timeout: 5000 });
+        return;
+      }
+
+      globalThis.setTimeout(callback, 2500);
+    };
+
+    const showWidgets = () => runWhenIdle(() => setShouldRender(true));
 
     if (document.readyState === "complete") {
-      const timeoutId = window.setTimeout(showWidgets, 0);
+      const timeoutId = window.setTimeout(showWidgets, 2500);
       return () => window.clearTimeout(timeoutId);
     }
 
@@ -133,6 +142,8 @@ const DelayedStartupWidgets = () => {
 
   return (
     <Suspense fallback={null}>
+      <Toaster />
+      <Sonner />
       <ChatWidget />
       <SocialProofPopup />
     </Suspense>
@@ -143,8 +154,6 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
     <ThemeProvider>
-        <Toaster />
-        <Sonner />
         <BrowserRouter>
           <ScrollToTop />
           <AppInit />
