@@ -35,7 +35,7 @@ const DeferredSection = ({ children, minHeight = 320 }: { children: ReactNode; m
           observer.disconnect();
         }
       },
-      { rootMargin: "900px 0px" }
+      { rootMargin: "300px 0px" }
     );
 
     observer.observe(node);
