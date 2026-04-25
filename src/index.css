@@ -234,3 +234,49 @@ All colors MUST be HSL.
 .light-mode .page-bg .text-pink-300 {
   color: hsl(330 70% 55%);
 }
+
+@keyframes promo-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.promo-marquee-track {
+  animation: promo-marquee-scroll 42s linear infinite;
+}
+
+.promo-showcase-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 35% 25%, hsl(var(--accent) / 0.9), transparent 34%),
+    radial-gradient(circle at 72% 58%, hsl(var(--primary) / 0.75), transparent 36%),
+    linear-gradient(145deg, hsl(var(--primary) / 0.95), hsl(var(--foreground) / 0.88));
+}
+
+.promo-showcase-card::after {
+  content: "";
+  position: absolute;
+  inset: 18% 10%;
+  border-radius: 999px;
+  background: repeating-linear-gradient(90deg, hsl(var(--primary-foreground) / 0.85) 0 4px, transparent 4px 12px);
+  filter: blur(0.2px);
+  opacity: 0.35;
+  transform: rotate(-8deg);
+}
+
+.promo-showcase-card--reel::before,
+.promo-showcase-card--story::before {
+  background: radial-gradient(circle at 50% 18%, hsl(var(--accent) / 0.95), transparent 28%),
+    linear-gradient(180deg, hsl(var(--primary) / 0.92), hsl(var(--foreground) / 0.9));
+}
+
+.promo-showcase-card--canvas::before,
+.promo-showcase-card--electro::before {
+  background: radial-gradient(circle at 25% 70%, hsl(var(--accent) / 0.85), transparent 32%),
+    radial-gradient(circle at 75% 25%, hsl(var(--primary) / 0.9), transparent 30%),
+    linear-gradient(135deg, hsl(var(--foreground) / 0.94), hsl(var(--primary) / 0.8));
+}
