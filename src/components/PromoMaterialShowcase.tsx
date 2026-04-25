@@ -21,7 +21,15 @@ export const PromoMaterialShowcase = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-primary via-primary to-accent py-20">
+    <>
+      <div className="relative overflow-hidden bg-gradient-to-b from-accent to-primary px-6 py-8 text-center">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary-foreground)/0.14),transparent_34%)]" />
+        <p className="relative z-10 mx-auto max-w-4xl text-xl font-semibold leading-snug text-primary-foreground md:text-2xl">
+          La plataforma <span className="bg-gradient-to-r from-primary-foreground to-primary-foreground/75 bg-clip-text text-transparent">#1</span> para{" "}
+          <span className="text-primary-foreground">registrar y distribuir</span> música con IA de forma legal.
+        </p>
+      </div>
+      <section className="relative overflow-hidden bg-gradient-to-b from-primary via-primary to-accent py-20">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,hsl(var(--accent)/0.35),transparent_32%),radial-gradient(circle_at_80%_55%,hsl(var(--primary)/0.45),transparent_30%)]" />
       <div className="pointer-events-none absolute inset-0 bg-background/20" />
       <div className="relative z-10 mx-auto max-w-6xl px-6 text-center">
@@ -82,6 +90,7 @@ export const PromoMaterialShowcase = () => {
           Crear mi material promocional
         </Button>
       </div>
-    </section>
+      </section>
+    </>
   );
 };
