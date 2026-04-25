@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { getFooterLinks } from "@/i18nLinks";
 import { useParallax } from "@/hooks/useParallax";
 import { useEffect, useState } from "react";
+import type { RefObject } from "react";
 
 export const HeroSection = () => {
   const { t, i18n } = useTranslation();
@@ -29,7 +30,7 @@ export const HeroSection = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Video background with parallax */}
       <video
-        ref={videoParallaxRef as React.RefObject<HTMLVideoElement>}
+        ref={videoParallaxRef as RefObject<HTMLVideoElement>}
         autoPlay
         loop
         muted
@@ -51,7 +52,7 @@ export const HeroSection = () => {
 
       {/* Background pattern/texture overlay with parallax */}
       <div
-        ref={textureParallaxRef as React.RefObject<HTMLDivElement>}
+        ref={textureParallaxRef as RefObject<HTMLDivElement>}
         className="absolute inset-0 opacity-20 will-change-transform"
         style={{ transform: "translateY(var(--parallax-offset, 0px))" }}
       >
