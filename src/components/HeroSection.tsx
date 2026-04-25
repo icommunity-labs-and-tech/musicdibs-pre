@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { ScrollReveal } from "@/components/ScrollReveal";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getFooterLinks } from "@/i18nLinks";
 import { useParallax } from "@/hooks/useParallax";
+import { useEffect, useState } from "react";
 
 export const HeroSection = () => {
   const { t, i18n } = useTranslation();
@@ -11,6 +11,19 @@ export const HeroSection = () => {
   const footerLinks = getFooterLinks(i18n.resolvedLanguage || i18n.language);
   const { offset } = useParallax({ speed: 0.4 });
   const { offset: bgOffset } = useParallax({ speed: 0.15 });
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+
+  useEffect(() => {
+    const loadVideo = () => setShouldLoadVideo(true);
+
+    if (document.readyState === "complete") {
+      window.setTimeout(loadVideo, 0);
+      return;
+    }
+
+    window.addEventListener("load", loadVideo, { once: true });
+    return () => window.removeEventListener("load", loadVideo);
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -26,8 +39,8 @@ export const HeroSection = () => {
         className="absolute inset-0 w-full h-full object-cover will-change-transform"
         style={{ transform: `translateY(${offset * 0.5}px) scale(1.1)` }}
       >
-        <source src="/hero-video-new.mp4" type="video/mp4" />
-        <source src="/hero-video.mp4" type="video/mp4" />
+        {shouldLoadVideo && <source src="/hero-video-new.mp4" type="video/mp4" />}
+        {shouldLoadVideo && <source src="/hero-video.mp4" type="video/mp4" />}
       </video>
 
       {/* Background with gradient overlay */}
