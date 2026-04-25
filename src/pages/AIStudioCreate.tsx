@@ -379,7 +379,7 @@ const AIStudioCreate = () => {
       }
 
       const voiceTag = effectiveVoiceProfile?.prompt_tag ? `, ${effectiveVoiceProfile.prompt_tag}` : '';
-      const enrichedPrompt = `${basePrompt}${voiceTag}`.trim();
+      const enrichedPrompt = `${basePrompt}${voiceTag}`.trim().slice(0, 2500);
 
       const { data, error } = await supabase.functions.invoke('generate-audio', {
         body: {
@@ -1066,7 +1066,7 @@ const AIStudioCreate = () => {
                           id="mc-description-textarea"
                           placeholder="Ej: Una canción pop alegre en español sobre amor de verano, con ritmo enérgico..."
                           value={prompt}
-                          onChange={(e) => setPrompt(e.target.value.slice(0, 1500))}
+                          onChange={(e) => setPrompt(e.target.value.slice(0, 2500))}
                           rows={5}
                           className="resize-none"
                           maxLength={2500}
