@@ -89,12 +89,12 @@ import { captureAttribution } from "@/lib/attribution";
 const AppInit = () => {
   useEffect(() => {
     const runWhenIdle = (callback: () => void) => {
-      if ("requestIdleCallback" in window) {
+      if (typeof window.requestIdleCallback === "function") {
         window.requestIdleCallback(callback, { timeout: 3000 });
         return;
       }
 
-      window.setTimeout(callback, 1500);
+      globalThis.setTimeout(callback, 1500);
     };
 
     const runAfterLoad = () => {
