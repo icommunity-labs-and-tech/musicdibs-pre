@@ -118,7 +118,7 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img 
-              src="/lovable-uploads/81d79e1f-fd6f-4e2c-a573-89261bcf3879.png" 
+              src="/lovable-uploads/81d79e1f-fd6f-4e2c-a573-89261bcf3879.webp" 
               alt="by iCommunity" 
               className="h-12 w-auto"
               width={69}
