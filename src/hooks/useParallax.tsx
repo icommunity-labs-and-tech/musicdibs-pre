@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 interface UseParallaxOptions {
   speed?: number;
@@ -6,7 +6,6 @@ interface UseParallaxOptions {
 }
 
 export const useParallax = ({ speed = 0.3 }: UseParallaxOptions = {}) => {
-  const [offset, setOffset] = useState(0);
   const ref = useRef<HTMLElement | null>(null);
   const ticking = useRef(false);
   // Cache element dimensions to avoid forced reflow on every scroll
@@ -34,10 +33,10 @@ export const useParallax = ({ speed = 0.3 }: UseParallaxOptions = {}) => {
         const elementTop = cachedTop.current;
         if (scrollY + viewportHeight > elementTop && scrollY < elementTop + cachedHeight.current) {
           const relativeScroll = scrollY - elementTop;
-          setOffset(relativeScroll * speed);
+          ref.current?.style.setProperty('--parallax-offset', `${relativeScroll * speed}px`);
         }
       } else {
-        setOffset(scrollY * speed);
+        ref.current?.style.setProperty('--parallax-offset', `${scrollY * speed}px`);
       }
 
       ticking.current = false;
@@ -56,5 +55,5 @@ export const useParallax = ({ speed = 0.3 }: UseParallaxOptions = {}) => {
     };
   }, [handleScroll, cachePosition]);
 
-  return { offset, ref };
+  return { ref };
 };
