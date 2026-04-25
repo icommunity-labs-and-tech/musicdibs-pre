@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, Image as ImageIcon, Megaphone, Play, Film, Layers, FileImage, Instagram, Music2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ScrollReveal";
@@ -81,16 +82,39 @@ const CoverCardItem = ({ card }: { card: CoverCard }) => (
 const PromoCardItem = ({ card }: { card: PromoCard }) => {
   const Icon = card.Icon;
   const hasVideoSource = Boolean(card.video);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [canLoadVideo, setCanLoadVideo] = useState(false);
+
+  useEffect(() => {
+    if (!hasVideoSource || canLoadVideo) return;
+    const node = videoRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setCanLoadVideo(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "500px 0px" }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [canLoadVideo, hasVideoSource]);
+
   return (
     <div className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-xl shadow-purple-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-purple-500/40">
       {hasVideoSource ? (
         <video
-          src={card.video}
+          ref={videoRef}
+          src={canLoadVideo ? card.video : undefined}
           autoPlay
           loop
           muted
           playsInline
-          preload="metadata"
+          preload="none"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
         />
       ) : (
