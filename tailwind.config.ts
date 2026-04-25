@@ -19,6 +19,21 @@ export default {
 		},
 		extend: {
 			colors: {
+				page: {
+					DEFAULT: 'hsl(var(--page-text))',
+					muted: 'hsl(var(--page-text-muted))'
+				},
+				compare: {
+					panel: 'hsl(var(--compare-panel))',
+					row: 'hsl(var(--compare-row))',
+					highlight: 'hsl(var(--compare-highlight))',
+					border: 'hsl(var(--compare-border))',
+					accent: 'hsl(var(--compare-accent))',
+					badge: 'hsl(var(--compare-badge))',
+					success: 'hsl(var(--compare-success))',
+					danger: 'hsl(var(--compare-danger))',
+					warning: 'hsl(var(--compare-warning))'
+				},
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -89,6 +104,9 @@ export default {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out'
+			},
+			boxShadow: {
+				'compare-table': 'var(--compare-table-shadow)'
 			}
 		}
 	},

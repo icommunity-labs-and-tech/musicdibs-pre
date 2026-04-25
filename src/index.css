@@ -57,6 +57,16 @@ All colors MUST be HSL.
     --hero-contrast-blue-hover: 224 76% 48%;
     --hero-contrast-blue-foreground: 0 0% 100%;
     --pricing-badge-foreground: 340 82% 35%;
+    --compare-panel: 263 58% 18% / 0.96;
+    --compare-row: 269 47% 26% / 0.55;
+    --compare-highlight: 292 47% 28% / 0.52;
+    --compare-border: 266 45% 35% / 0.72;
+    --compare-accent: 319 84% 55% / 0.85;
+    --compare-badge: 316 82% 61%;
+    --compare-success: 151 81% 60%;
+    --compare-danger: 350 82% 68%;
+    --compare-warning: 43 91% 55%;
+    --compare-table-shadow: 0 24px 70px -32px hsl(267 84% 32% / 0.75);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -116,6 +126,10 @@ All colors MUST be HSL.
     --page-card-bg: 260 30% 96%;
     --page-card-border: 260 20% 88%;
     --page-nav-scrolled: 0 0% 100% / 0.9;
+    --compare-panel: 263 58% 18% / 0.96;
+    --compare-row: 269 47% 26% / 0.55;
+    --compare-highlight: 292 47% 28% / 0.52;
+    --compare-border: 266 45% 35% / 0.72;
   }
 }
 
