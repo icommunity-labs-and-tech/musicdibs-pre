@@ -1,5 +1,10 @@
 import { useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+
+type GtagWindow = Window & {
+  gtag?: (command: 'event', eventName: string, parameters: Record<string, string | number>) => void;
+};
+
+const getSupabaseClient = () => import('@/integrations/supabase/client').then((module) => module.supabase);
 
 export interface ABVariant {
   text: string;
@@ -24,13 +29,13 @@ const getSessionId = (): string => {
 
 const persistEvent = (testId: string, variantIndex: number, variantText: string, eventType: 'impression' | 'click') => {
   const sendEvent = () => {
-    supabase.from('ab_test_events').insert({
+    getSupabaseClient().then((supabase) => supabase.from('ab_test_events').insert({
       test_id: testId,
       variant_index: variantIndex,
       variant_text: variantText,
       event_type: eventType,
       session_id: getSessionId(),
-    }).then(); // fire-and-forget
+    })).then(); // fire-and-forget
   };
 
   if (eventType === 'impression' && typeof window.requestIdleCallback === 'function') {
@@ -60,8 +65,8 @@ export const useABTest = (test: ABTest): ABVariant & { variantIndex: number } =>
     sessionStorage.setItem(storageKey, String(idx));
 
     // GA4 event
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'ab_test_impression', {
+    if (typeof window !== 'undefined' && (window as GtagWindow).gtag) {
+      (window as GtagWindow).gtag?.('event', 'ab_test_impression', {
         test_id: id,
         variant_index: idx,
         variant_text: variants[idx].text,
@@ -78,8 +83,8 @@ export const useABTest = (test: ABTest): ABVariant & { variantIndex: number } =>
 };
 
 export const trackABClick = (testId: string, variantIndex: number, label: string) => {
-  if (typeof window !== 'undefined' && (window as any).gtag) {
-    (window as any).gtag('event', 'ab_test_click', {
+  if (typeof window !== 'undefined' && (window as GtagWindow).gtag) {
+    (window as GtagWindow).gtag?.('event', 'ab_test_click', {
       test_id: testId,
       variant_index: variantIndex,
       variant_text: label,
