@@ -93,7 +93,7 @@ export const HeroSection = () => {
           <Button
             variant="blue"
             size="xl"
-            className="font-semibold"
+            className="hero-contrast-cta font-semibold"
             onClick={() => {
               document.getElementById("all-in-one-section")?.scrollIntoView({ behavior: "smooth" });
             }}
