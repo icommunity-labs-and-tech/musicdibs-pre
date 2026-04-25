@@ -79,6 +79,7 @@ const resources = {
         howItWorks: '¿Cómo funciona?',
         accessServices: 'Acceso a servicios',
         marketing: 'Marketing y Promos',
+        distributionPromo: 'Distribución y Promoción',
         partners: 'Hazte Partner',
         legalValidity: 'Validez legal',
       },
@@ -93,35 +94,35 @@ const resources = {
       hero: {
         title: 'Crea. Protege. Distribuye.',
         highlight: 'Promociona.',
-        subtitle_prefix: 'La plataforma todo-en-uno para artistas: genera o mejora tu música con IA, regístrala con validez legal, promociónala y',
+        subtitle_prefix: 'La plataforma todo-en-uno para artistas: genera o mejora tu música con IA, regístrala con validez legal y',
         subtitle_strong: 'lánzala al mundo en minutos.',
         legal_more: '+info',
-        cta_start: '🚀 Crea tu primer ÉXITO',
-        cta_how: 'Ver Cómo Funciona',
+        cta_start: '🚀 Crear cuenta gratis',
+        cta_how: '▶ Mira cómo funciona en 20s',
       },
       why: {
         heading: 'La plataforma todo-en-uno para artistas independientes',
-        subheading: 'Creación de música, mejoras y recursos con IA + registro de propiedad intelectual legal con tecnología blockchain + distribución en 220+ plataformas y hasta un 95% en royalties.\nTodo desde un solo lugar.',
+        subheading: 'Crea con IA, registra tu propiedad intelectual, distribuye tu música en 220+ plataformas y promociónala ante una comunidad de más de 200k seguidores.\nTodo desde un solo lugar.',
         features: {
           legal: {
-            title: 'Crea y Edita',
-            desc: 'Crea, reinterpreta y documenta ideas musicales asistidas por IA y conviértelas en obras registrables y distribuibles',
-            popup: `Nuestro módulo de IA musical está diseñado como una herramienta de apoyo creativo para compositores y productores. Te ayuda a explorar ideas, probar arreglos, generar bases o mejorar composiciones existentes, manteniendo siempre al músico en el centro del proceso creativo.\n\nLa inteligencia artificial actúa como un asistente de inspiración, permitiéndote experimentar con nuevas posibilidades musicales, desbloquear ideas y desarrollar demos más completas en menos tiempo.\n\nCuando tu obra esté lista, podrás registrarla y protegerla inmediatamente en MusicDibs, garantizando prueba de autoría y protección legal desde el primer momento.\n\nCon este módulo podrás:\n\n• Explorar ideas musicales e inspiración creativa\n• Probar arreglos, estilos o variaciones\n• Mejorar composiciones existentes\n• Crear demos o bases de forma rápida\n• Registrar y proteger tu obra final en MusicDibs\n\nEste enfoque deja claro que la creatividad sigue siendo humana, y que la IA simplemente amplía las herramientas disponibles para el músico.`,
+            title: 'AI Music Studio',
+            desc: 'Crea canciones con IA, masterízalas y genera portadas y vídeos promocionales impresionantes.',
+            popup: `El AI Music Studio es el corazón creativo de MusicDibs: un entorno completo para llevar tu música de la idea al lanzamiento.\n\nCon una sola plataforma puedes:\n\n• Crear canciones originales con IA (instrumentales o con voz)\n• Editar, masterizar y mejorar tus producciones\n• Generar portadas profesionales de álbum y single\n• Diseñar creatividades para Instagram, TikTok y YouTube\n• Producir vídeos promocionales cortos para tus lanzamientos\n• Crear carteles para eventos y cabeceras para redes sociales\n\nLa IA actúa como tu asistente creativo, manteniéndote siempre en el centro del proceso. Cuando tu obra esté lista, podrás registrarla, distribuirla y promocionarla sin salir de MusicDibs.`,
           },
           instant: {
             title: 'Registro de PI',
-            desc: 'Protege tus obras y todo su contenido (letra, melodía, etc.) en segundos, con validez legal mundial gracias a la tecnología blockchain',
+            desc: 'Protege tus obras y su contenido en segundos con certificación blockchain y validez legal internacional.',
             popup: `Protección al instante, sin complicaciones. Olvídate del papeleo y de los procesos lentos y costosos. Con Musicdibs, registrar tu música es <strong1>tan fácil como subir tu archivo: en solo segundos generamos una huella digital única</strong1> y la registramos en blockchain <strong2>con validez legal internacional</strong2>. Sin intermediarios y por una fracción del coste de un registro tradicional.\n\nCada registro en Musicdibs genera un certificado digital inmutable respaldado por tecnología Blockchain, válido como prueba legal de autoría. Este certificado cumple con normativas internacionales y nacionales, incluyendo el <a1>Convenio de Berna</a1>, el <a2>Tratado de la OMPI</a2>, la <a3>Directiva sobre Derechos de Autor en la Era Digital</a3> y regulaciones sobre Blockchain aplicadas a la propiedad intelectual.`,
           },
           distribution: {
-            title: 'Distribución Mundial',
-            desc: 'Lanza en +220 plataformas digitales y GANA hasta un 95% en royalties',
-            popup: `Distribución Mundial. Lanza tu música en las <strong1>plataformas digitales más importantes del mundo: Spotify, Apple Music, Amazon Music, YouTube Music</strong1> y muchas más, hasta 220. <strong2>Gana royalties desde el primer stream</strong2> y haz que tu talento cruce fronteras sin intermediarios ni comisiones ocultas. Controla todo desde una sola plataforma, con estadísticas en tiempo real y soporte personalizado.`,
+            title: 'Distribución Global',
+            desc: 'Lanza tu música en Spotify, Apple Music, YouTube y más de 200 plataformas digitales desde una única integración.',
+            popup: `Distribución Global. Lanza tu música en las <strong1>plataformas digitales más importantes del mundo: Spotify, Apple Music, Amazon Music, YouTube Music</strong1> y muchas más, hasta 220. <strong2>Gana royalties desde el primer stream</strong2> y haz que tu talento cruce fronteras sin intermediarios ni comisiones ocultas. Controla todo desde una sola plataforma, con estadísticas en tiempo real y soporte personalizado.`,
           },
           promo: {
-            title: 'Material Promocional',
-            desc: 'Crea impresionantes portadas, carteles, vídeos y creatividades mediante IA, para tus RRSS, conciertos, promociones, etc..',
-            popup: `Desde el AI Studio puedes generar todo el material visual que necesitas para promocionar tu música:\n\n• Portadas de álbum y single con fotomontaje o foto del artista\n• Creatividades optimizadas para Instagram (Feed y Stories) y YouTube (miniaturas)\n• Vídeos promocionales de 5 a 15 segundos\n• Carteles para eventos en formatos profesionales (A5, A4, A3) y cabeceras para redes sociales\n\nTodo generado con modelos de IA de alta calidad, listo para publicar en tus plataformas favoritas.`,
+            title: 'Promoción en RRSS',
+            desc: 'Impulsa tus lanzamientos en nuestras redes sociales y gana visibilidad ante una comunidad de más de 200k seguidores.',
+            popup: `Amplifica el alcance de tu música a través de nuestras redes sociales oficiales:\n\n• Comunidad combinada de más de 200.000 seguidores en TikTok e Instagram\n• Promociones destacadas en nuestros perfiles para impulsar tus lanzamientos\n• Visibilidad ante una audiencia altamente segmentada de fans de música urbana e independiente\n• Estrategias de promoción adaptadas a cada single o álbum\n• Material promocional optimizado para cada red social\n\nNuestra red de seguidores se convierte en tu trampolín para ganar tracción real desde el día uno del lanzamiento.`,
           },
         },
       },
@@ -153,6 +154,9 @@ const resources = {
         indivSubtitle_dynamic: 'También puedes registrar una obra por {{price}}',
         indivButton: 'Comprar',
         legalPros: '¿Eres un profesional, empresa o academia? <contact>Contáctanos</contact> y solicita detalles para paquetes personalizados o licenciamientos (marca blanca).',
+        prosTitle: '¿Eres profesional, empresa o academia?',
+        prosSubtitle: 'Creamos paquetes personalizados, licencias para equipos y soluciones de marca blanca adaptadas a tu proyecto.',
+        prosCta: 'Solicitar paquete personalizado',
         conditionsTitle: '* Condiciones de la oferta',
         conditionsText: '* Impuestos NO incluidos (se aplicará el 21% de IVA para países UE). Las suscripciones mensuales y anuales se renuevan automáticamente al finalizar el periodo de suscripción. Más información en FAQ y en términos de uso y compra.',
         features: {
@@ -176,15 +180,13 @@ const resources = {
         },
       },
       tutorial: {
-        heading: 'Todo lo que puedes hacer en MusicDibs',
-        subtitle: 'Desde la idea hasta el streaming: crea, protege, promociona y haz crecer tu música en una sola plataforma.',
+        heading: 'Así de fácil es empezar',
+        subtitle: 'En solo 3 pasos tendrás tu música protegida y disponible en todo el mundo.',
         steps: {
           step: 'Paso',
           s1: { title: 'Date de alta', desc: 'Regístrate y verifica tu identidad para dar validez legal a tus registros.' },
-          s2: { title: 'Crea tu música', desc: 'Compón canciones con IA, genera letras, clona voces o sube tu propia obra al estudio.' },
-          s3: { title: 'Crea material promocional', desc: 'Genera portadas, vídeos y creatividades para redes sociales con IA en segundos.' },
-          s4: { title: 'Registra tu obra', desc: 'Protege canción, portada y vídeo en blockchain con sello de tiempo y certificado legal.', link: 'Ver ej. certificado' },
-          s5: { title: 'Distribuye y promociona', desc: 'Llega a Spotify, Apple Music, YouTube y +200 plataformas. Difunde en nuestras redes con +300.000 seguidores.' },
+          s2: { title: 'Registra tu canción', desc: 'Sube tu obra; generamos una huella digital y la registramos en blockchain en segundos. Descarga tu certificado de registro, con sello de tiempo.', link: 'Ver ej. certificado' },
+          s3: { title: 'Distribuye tu música', desc: 'Llega a Spotify, Apple Music, YouTube y más de 200 plataformas con un solo clic. Controla y monetiza tus lanzamientos desde tu panel.' },
         },
         ctaTitle: '¿A qué esperas? Protege y monetiza tu música hoy mismo',
         ctaButton: 'Empezar ahora',
@@ -202,8 +204,8 @@ const resources = {
       distro: {
         heading: 'Lanza tu música y haz que llegue más lejos',
         subheading: 'Distribuye tus canciones en las principales plataformas y promociónalas en nuestras redes para ganar visibilidad desde el primer día.',
-        world: { title: 'Distribución', desc: 'Publica tus canciones en más de 220 plataformas digitales y conserva hasta el 95% de tus royalties.', cta: 'Saber más' },
-        social: { title: 'Promoción en RRSS', desc: 'Da visibilidad a tu lanzamiento en nuestros canales de TikTok e Instagram, con una comunidad de +200.000 seguidores.', cta: 'Saber más' },
+        world: { title: 'Distribución', desc: 'Publica tus canciones en más de 220 plataformas digitales y conserva hasta el 95% de tus royalties.', cta: 'Quiero distribuir mi música' },
+        social: { title: 'Promoción en RRSS', desc: 'Da visibilidad a tu lanzamiento en nuestros canales de TikTok e Instagram, con +200.000 seguidores.', cta: 'Quiero promocionar mi lanzamiento' },
         market: { title: 'Marketplace', desc: 'Vende tus creaciones en nuestro marketplace y GANA dinero', cta: 'Accede a nuestro Market' },
         nfts: { title: 'Material promocional', desc: 'Crea impresionantes portadas y vídeos para tus lanzamientos y campañas de marketing', cta: 'Saber más' },
       },
@@ -222,25 +224,33 @@ const resources = {
         competitors: { musicdibs: 'MusicDibs', distrokid: 'DistroKid', cdbaby: 'CD Baby', tunecore: 'TuneCore' },
       },
       compare: {
-        title: '¿Por qué MusicDibs?',
-        subtitle: 'Compara nuestras condiciones con las de otros distribuidores y descubre por qué somos la mejor opción.',
-        feature: 'Característica',
+        title: 'MusicDibs, la solución más completa',
+        subtitle: 'Otras herramientas resuelven una parte del proceso. MusicDibs lo integra todo en una sola plataforma.',
+        feature: 'Capacidad',
         paid: 'De pago',
         included: 'Incluida',
-        competitors: { musicdibs: 'MusicDibs', distrokid: 'DistroKid', cdbaby: 'CD Baby', tunecore: 'TuneCore' },
-        features: {
-          royalties: 'Porcentaje de royalties',
-          annual_fee: 'Cuota anual',
-          per_release_fee: 'Coste por lanzamiento',
-          blockchain_cert: 'Certificación blockchain',
-          social_promo: 'Promoción en RRSS (+300K)',
-          cover_design: 'Diseño de portadas y vídeos',
-          unlimited_releases: 'Lanzamientos ilimitados',
-          youtube_content_id: 'YouTube Content ID',
-          copyright_protection: 'Protección de derechos de autor',
-          platforms: 'Plataformas disponibles',
+        recommended: 'Todo en uno',
+        partial: 'Parcial',
+        competitors: {
+          musicdibs: 'MusicDibs',
+          suno: 'Suno / IA musical',
+          ozone: 'iZotope Ozone / mastering',
+          distrokid: 'DistroKid / distribuidor',
+          traditional: 'Registro tradicional',
         },
-        disclaimer: '* Datos aproximados basados en información pública. Consulta cada servicio para detalles actualizados.',
+        features: {
+          create_ai: 'Crear canciones con IA',
+          mastering: 'Masterizar/mejorar audio',
+          lyrics: 'Crear letras',
+          covers: 'Crear portadas y visuales',
+          videos: 'Crear vídeos cortos/promos',
+          ip_register: 'Registrar propiedad intelectual',
+          blockchain_cert: 'Certificación blockchain',
+          distribution: 'Distribuir en 200+ plataformas',
+          social_promo: 'Promoción en RRSS',
+          all_in_one: 'Todo en una sola plataforma',
+        },
+        disclaimer: '* Comparativa orientativa basada en las funciones públicas de cada herramienta. Consulta cada servicio para detalles actualizados.',
       },
       distribution: {
         badge: 'Distribución Musical',
@@ -604,7 +614,7 @@ const resources = {
           typeDocument: 'Documento',
           typeOther: 'Otro',
         },
-        pageTitle: 'AI Music Studio',
+        pageTitle: 'Crea tu música',
         pageSubtitle: 'Crea música original con inteligencia artificial. Genera, edita y explora nuevos sonidos para tus proyectos creativos.',
         poweredBy: 'Powered by ElevenLabs AI',
         backToDashboard: 'Volver al Dashboard',
@@ -620,7 +630,7 @@ const resources = {
         modules: {
           createMusic: { title: 'Crea Música', desc: 'Genera música original desde cero usando IA. Describe el estilo, mood y características que deseas.' },
           editModify: { title: 'Masterizado profesional con IA', desc: 'Consigue un sonido listo para Spotify: más volumen, claridad y potencia en segundos.' },
-          inspire: { title: 'Crear en 1 click 🎵', desc: '¿No sabes por dónde empezar? Genera una canción automáticamente y empieza a crear al instante.' },
+          inspire: { title: 'Inspírate', desc: 'Obtén ideas, prompts sugeridos y descubre combinaciones de géneros y moods.' },
           createVideoclips: { title: 'Crea Videoclips', desc: 'Genera videoclips musicales con IA. Describe el estilo visual, sube una imagen o crea desde texto.' },
           createCovers: { title: 'Material promocional', desc: 'Crea portadas, flyers, posts y todo lo que necesitas para promocionar tu música.' },
           singYourSong: { title: 'Herramientas de Voz', desc: 'Tu estudio vocal IA: clona tu voz, canta en 29 idiomas, traduce audios y mucho más' },
@@ -641,7 +651,7 @@ const resources = {
   en: {
     translation: {
       nav: {
-        pricing: 'Pricing', faq: 'FAQ', support: 'Support', news: 'News', services: 'Services', distribution: 'Works Distribution', access: 'Access', info: 'Info', market: 'Works Marketplace', dibs: 'DIBS Token', verifier: 'Works Verifier', login: 'Access your account', contact: 'Contact', howItWorks: 'How it works?', accessServices: 'Access Services', marketing: 'Marketing & Promos', partners: 'Become a Partner', legalValidity: 'Legal Validity',
+        pricing: 'Pricing', faq: 'FAQ', support: 'Support', news: 'News', services: 'Services', distribution: 'Works Distribution', access: 'Access', info: 'Info', market: 'Works Marketplace', dibs: 'DIBS Token', verifier: 'Works Verifier', login: 'Access your account', contact: 'Contact', howItWorks: 'How it works?', accessServices: 'Access Services', marketing: 'Marketing & Promos', distributionPromo: 'Distribution & Promotion', partners: 'Become a Partner', legalValidity: 'Legal Validity',
       },
       footer: {
         corporate: 'Corporate',
@@ -652,16 +662,16 @@ const resources = {
         terms: 'Terms & Conditions',
       },
       hero: {
-        title: 'Create. Protect. Distribute.', highlight: 'Promote.', subtitle_prefix: 'The all-in-one platform for artists: create your music with AI, register it with legal validity, promote it and', subtitle_strong: 'launch it to the world in minutes.', legal_more: '+info', cta_start: '🚀 Create your first HIT', cta_how: 'See How It Works',
+        title: 'Create. Protect. Distribute.', highlight: 'Promote.', subtitle_prefix: 'The all-in-one platform for artists: create your music with AI, register it with legal validity and', subtitle_strong: 'launch it to the world in minutes.', legal_more: '+info', cta_start: '🚀 Create free account', cta_how: '▶ See how it works in 20s',
       },
       why: {
         heading: 'The all-in-one platform for independent artists',
-        subheading: 'Blockchain legal protection, distribution on 220+ platforms and up to 95% royalties.\nAll from one place.',
+        subheading: 'Create with AI, register your IP, distribute your music on 220+ platforms and promote it to a community of over 200k followers.\nAll from one place.',
         features: {
-          legal: { title: 'Create & Edit', desc: 'Create, reinterpret and document AI-assisted musical ideas and turn them into registrable and distributable works', popup: `Each registration on Musicdibs generates an immutable digital certificate backed by blockchain technology, valid as legal proof of authorship. This certificate complies with international and national regulations, including the <a1>Berne Convention</a1>, the <a2>WIPO Copyright Treaty</a2>, the <a3>EU Copyright Directive</a3>, and regulations on blockchain applied to intellectual property.` },
-          instant: { title: 'IP Registration', desc: 'Protect your works and all their content (lyrics, melody, etc.) in seconds, with worldwide legal validity thanks to blockchain technology', popup: `Instant protection, no hassle. Forget paperwork and slow, expensive processes. With Musicdibs, registering your music is <strong1>as easy as uploading your file: in seconds we generate a unique digital fingerprint</strong1> and record it on the blockchain <strong2>with international legal validity</strong2>. No intermediaries and at a fraction of the cost of traditional registration.` },
-          distribution: { title: 'Worldwide Distribution', desc: 'Launch on 220+ digital platforms and EARN up to 95% in royalties', popup: `Global distribution. Release your music on the <strong1>world's top digital platforms: Spotify, Apple Music, Amazon Music, YouTube Music</strong1> and many more, up to 220. <strong2>Earn royalties from the very first stream</strong2> and let your talent cross borders with no intermediaries or hidden fees. Manage everything from one platform, with real-time stats and dedicated support.` },
-          promo: { title: 'Promotional Material', desc: 'Create stunning covers, posters, videos and creatives via AI for your social media, concerts, promotions, etc.', popup: `From the AI Studio you can generate all the visual material you need to promote your music:\n\n• Album and single covers with photo montage or artist photo\n• Creatives optimized for Instagram (Feed and Stories) and YouTube (thumbnails)\n• Promotional videos from 5 to 15 seconds\n• Event posters in professional formats (A5, A4, A3) and social media headers\n\nAll generated with high-quality AI models, ready to publish on your favorite platforms.` },
+          legal: { title: 'AI Music Studio', desc: 'Create songs with AI, master them and generate covers, videos and promotional material for your releases — all from one place.', popup: `The AI Music Studio is the creative core of MusicDibs: a complete environment to take your music from idea to release.\n\nFrom a single platform you can:\n\n• Create original AI songs (instrumental or with vocals)\n• Edit, master and enhance your productions\n• Generate professional album and single covers\n• Design creatives for Instagram, TikTok and YouTube\n• Produce short promotional videos for your releases\n• Create event posters and social media headers\n\nAI acts as your creative assistant while keeping you at the center of the process. When your work is ready, register, distribute and promote it without leaving MusicDibs.` },
+          instant: { title: 'IP Registration', desc: 'Protect your works and their content in seconds with blockchain certification and international legal validity.', popup: `Instant protection, no hassle. Forget paperwork and slow, expensive processes. With Musicdibs, registering your music is <strong1>as easy as uploading your file: in seconds we generate a unique digital fingerprint</strong1> and record it on the blockchain <strong2>with international legal validity</strong2>. No intermediaries and at a fraction of the cost of traditional registration.` },
+          distribution: { title: 'Global Distribution', desc: 'Release your music on Spotify, Apple Music, YouTube and 200+ digital platforms from a single integration.', popup: `Global distribution. Release your music on the <strong1>world's top digital platforms: Spotify, Apple Music, Amazon Music, YouTube Music</strong1> and many more, up to 220. <strong2>Earn royalties from the very first stream</strong2> and let your talent cross borders with no intermediaries or hidden fees. Manage everything from one platform, with real-time stats and dedicated support.` },
+          promo: { title: 'Social Media Promotion', desc: 'Boost your releases on our social media and gain visibility in front of a community of over 200k followers.', popup: `Amplify the reach of your music through our official social media channels:\n\n• Combined community of over 200,000 followers on TikTok and Instagram\n• Featured promotions on our profiles to boost your releases\n• Exposure to a highly targeted audience of urban and independent music fans\n• Promotion strategies tailored to each single or album\n• Promotional material optimized for each social network\n\nOur follower network becomes your launchpad to gain real traction from day one of your release.` },
         },
       },
       artists: {
@@ -669,7 +679,7 @@ const resources = {
       },
       testimonials: { heading: 'Artists who already trust Musicdibs', videoTitle: 'Testimonial from {{name}}' },
       pricing: {
-        title: 'Pricing', subtitle: 'Save big versus buying separate services. Get our Plus+ plan!', toggleBasic: 'Basic', togglePlus: 'Plus+ Plan', badgeAnnual: 'Includes: sign-up fee + 4 months FREE', priceAnnualSuffix: ' / Year', priceMonthlySuffix: ' / Month', signupFeeNote: 'and €6.90 sign-up fee', signupFeeNote_dynamic: 'and {{price}} sign-up fee', buyNow: 'BUY', indivTitle: 'INDIVIDUAL REGISTRATIONS?', indivSubtitle: 'You can also register one work for €11.90', indivSubtitle_dynamic: 'You can also register one work for {{price}}', indivButton: 'Buy', legalPros: 'Are you a professional, company or academy? <contact>Contact us</contact> and request details for custom packages or white-label licensing.', conditionsTitle: '* Offer conditions', conditionsText: 'Taxes NOT included (21% VAT applies in EU countries). Monthly and yearly subscriptions renew automatically at the end of the term. More info in FAQ and in Terms of Use & Purchase.',
+        title: 'Pricing', subtitle: 'Save big versus buying separate services. Get our Plus+ plan!', toggleBasic: 'Basic', togglePlus: 'Plus+ Plan', badgeAnnual: 'Includes: sign-up fee + 4 months FREE', priceAnnualSuffix: ' / Year', priceMonthlySuffix: ' / Month', signupFeeNote: 'and €6.90 sign-up fee', signupFeeNote_dynamic: 'and {{price}} sign-up fee', buyNow: 'BUY', indivTitle: 'INDIVIDUAL REGISTRATIONS?', indivSubtitle: 'You can also register one work for €11.90', indivSubtitle_dynamic: 'You can also register one work for {{price}}', indivButton: 'Buy', legalPros: 'Are you a professional, company or academy? <contact>Contact us</contact> and request details for custom packages or white-label licensing.', prosTitle: 'Are you a professional, company or academy?', prosSubtitle: 'We craft custom packages, team licences and white-label solutions tailored to your project.', prosCta: 'Request a custom package', conditionsTitle: '* Offer conditions', conditionsText: 'Taxes NOT included (21% VAT applies in EU countries). Monthly and yearly subscriptions renew automatically at the end of the term. More info in FAQ and in Terms of Use & Purchase.',
         features: {
           annual: [
             'Protect your entire catalog (Up to 120 registrations/year, NO extra costs)',
@@ -691,11 +701,11 @@ const resources = {
         },
       },
       tutorial: {
-        heading: 'Everything you can do on MusicDibs', subtitle: 'From idea to streaming: create, protect and grow your music in one platform.', steps: { step: 'Step', s1: { title: 'Sign up', desc: 'Register and verify your identity to give legal validity to your records.' }, s2: { title: 'Create your music', desc: 'Compose songs with AI, generate lyrics, clone voices or upload your own work to the studio.' }, s3: { title: 'Create promo material', desc: 'Generate covers, videos and social media creatives with AI in seconds.' }, s4: { title: 'Register your work', desc: 'Protect song, cover and video on blockchain with timestamp and legal certificate.', link: 'See sample certificate' }, s5: { title: 'Distribute & promote', desc: 'Reach Spotify, Apple Music, YouTube and 200+ platforms. Get featured on our socials with 300k+ followers.' } }, ctaTitle: 'What are you waiting for? Protect and monetize your music today', ctaButton: 'Start now'
+        heading: 'It\'s that easy to get started', subtitle: 'In just 3 steps your music will be protected and available worldwide.', steps: { step: 'Step', s1: { title: 'Sign up', desc: 'Register and verify your identity to give legal validity to your records.' }, s2: { title: 'Register your song', desc: 'Upload your work; we generate a digital fingerprint and record it on blockchain in seconds. Download your registration certificate with timestamp.', link: 'See sample certificate' }, s3: { title: 'Distribute your music', desc: 'Reach Spotify, Apple Music, YouTube and 200+ platforms with one click. Control and monetize from your dashboard.' } }, ctaTitle: 'What are you waiting for? Protect and monetize your music today', ctaButton: 'Start now'
       },
       promoBanner: { text: "Valentine's Day: -20% on all subscriptions" },
       summerPromo: { title: "VALENTINE'S DAY", discount: '-20%', onAllSubs: 'On all subscriptions', enterCoupon: 'Enter the coupon at checkout.', discountCode: 'Discount code', code: 'LOVE20', footnote: '*Limited time offer' },
-      distro: { heading: 'Everything you need to succeed with your music', subheading: 'Protect your music, take it worldwide, sell it directly and reach millions of fans', world: { title: 'Distribution', desc: 'Release your works worldwide on 220+ DSPs and EARN royalties', cta: 'Learn more' }, social: { title: 'Social Media Promotion', desc: 'Promote yourself on our socials with 300,000+ followers!', cta: 'Learn more' }, market: { title: 'Marketplace', desc: 'Sell your creations in our market and EARN money', cta: 'Go to our Market' }, nfts: { title: 'Promotional Material', desc: 'Create stunning covers and videos for your releases and marketing campaigns', cta: 'Learn more' } },
+      distro: { heading: 'Release your music and take it further', subheading: 'Distribute your songs across the major platforms and promote them on our socials to gain visibility from day one.', world: { title: 'Distribution', desc: 'Release your works worldwide on 220+ DSPs and EARN royalties', cta: 'Learn more' }, social: { title: 'Social Media Promotion', desc: 'Promote yourself on our socials with 300,000+ followers!', cta: 'Learn more' }, market: { title: 'Marketplace', desc: 'Sell your creations in our market and EARN money', cta: 'Go to our Market' }, nfts: { title: 'Promotional Material', desc: 'Create stunning covers and videos for your releases and marketing campaigns', cta: 'Learn more' } },
       calculator: {
         badge: 'Royalties Calculator',
         title: 'How much could you earn from your streams?',
@@ -711,25 +721,33 @@ const resources = {
         competitors: { musicdibs: 'MusicDibs', distrokid: 'DistroKid', cdbaby: 'CD Baby', tunecore: 'TuneCore' },
       },
       compare: {
-        title: 'Why MusicDibs?',
-        subtitle: 'Compare our conditions with other distributors and see why we are the best choice.',
-        feature: 'Feature',
+        title: 'MusicDibs, the most complete solution',
+        subtitle: 'Other tools solve only part of the process. MusicDibs brings it all together in one platform.',
+        feature: 'Capability',
         paid: 'Paid',
         included: 'Included',
-        competitors: { musicdibs: 'MusicDibs', distrokid: 'DistroKid', cdbaby: 'CD Baby', tunecore: 'TuneCore' },
-        features: {
-          royalties: 'Royalty percentage',
-          annual_fee: 'Annual fee',
-          per_release_fee: 'Per-release fee',
-          blockchain_cert: 'Blockchain certification',
-          social_promo: 'Social media promo (+300K)',
-          cover_design: 'Cover & video design',
-          unlimited_releases: 'Unlimited releases',
-          youtube_content_id: 'YouTube Content ID',
-          copyright_protection: 'Copyright protection',
-          platforms: 'Available platforms',
+        recommended: 'All-in-one',
+        partial: 'Partial',
+        competitors: {
+          musicdibs: 'MusicDibs',
+          suno: 'Suno / Music AI',
+          ozone: 'iZotope Ozone / mastering',
+          distrokid: 'DistroKid / distributor',
+          traditional: 'Traditional registration',
         },
-        disclaimer: '* Approximate data based on public information. Check each service for updated details.',
+        features: {
+          create_ai: 'Create songs with AI',
+          mastering: 'Master/enhance audio',
+          lyrics: 'Write lyrics',
+          covers: 'Create covers & visuals',
+          videos: 'Short videos & promos',
+          ip_register: 'Register intellectual property',
+          blockchain_cert: 'Blockchain certification',
+          distribution: 'Distribute on 200+ platforms',
+          social_promo: 'Social media promotion',
+          all_in_one: 'All in a single platform',
+        },
+        disclaimer: '* Indicative comparison based on each tool\'s public features. Check each service for updated details.',
       },
       distribution: {
         badge: 'Music Distribution',
@@ -1093,7 +1111,7 @@ const resources = {
           typeDocument: 'Document',
           typeOther: 'Other',
         },
-        pageTitle: 'AI Music Studio',
+        pageTitle: 'Create your music',
         pageSubtitle: 'Create original music with artificial intelligence. Generate, edit and explore new sounds for your creative projects.',
         poweredBy: 'Powered by ElevenLabs AI',
         backToDashboard: 'Back to Dashboard',
@@ -1109,7 +1127,7 @@ const resources = {
         modules: {
           createMusic: { title: 'Create Music', desc: 'Generate original music from scratch using AI. Describe the style, mood and characteristics you want.' },
           editModify: { title: 'Professional AI Mastering', desc: 'Get a Spotify-ready sound: more volume, clarity and power in seconds.' },
-          inspire: { title: '1-click Create 🎵', desc: 'Not sure where to start? Generate a song automatically and start creating instantly.' },
+          inspire: { title: 'Get Inspired', desc: 'Get ideas, suggested prompts and discover genre and mood combinations.' },
           createVideoclips: { title: 'Create Videoclips', desc: 'Generate music videos with AI. Describe the visual style, upload an image or create from text.' },
           createCovers: { title: 'Promotional Material', desc: 'Create covers, flyers, posts and everything you need to promote your music.' },
           singYourSong: { title: 'Voice Tools', desc: 'Your AI vocal studio: clone your voice, sing in 29 languages, translate audio and much more' },
@@ -1129,14 +1147,14 @@ const resources = {
   },
   'pt-BR': {
     translation: {
-      nav: { pricing: 'Preços', faq: 'FAQ', support: 'Suporte', news: 'Notícias', services: 'Serviços', distribution: 'Distribuição de obras', access: 'Acesso', info: 'Informações', market: 'Marketplace de obras', dibs: 'DIBS Token', verifier: 'Verificador de obras', login: 'Acesse sua conta', contact: 'Contato', howItWorks: 'Como funciona?', accessServices: 'Acesso a serviços', marketing: 'Marketing e Promos', partners: 'Seja um Partner', legalValidity: 'Validade jurídica' },
+      nav: { pricing: 'Preços', faq: 'FAQ', support: 'Suporte', news: 'Notícias', services: 'Serviços', distribution: 'Distribuição de obras', access: 'Acesso', info: 'Informações', market: 'Marketplace de obras', dibs: 'DIBS Token', verifier: 'Verificador de obras', login: 'Acesse sua conta', contact: 'Contato', howItWorks: 'Como funciona?', accessServices: 'Acesso a serviços', marketing: 'Marketing e Promos', distributionPromo: 'Distribuição e Promoção', partners: 'Seja um Partner', legalValidity: 'Validade jurídica' },
       footer: { corporate: 'Corporativo', socialMedia: 'Redes Sociais', sla: 'Acordo de nível de serviço', privacy: 'Política de privacidade e proteção de dados', cookies: 'Política de cookies', terms: 'Termos e condições' },
-      hero: { title: 'Crie. Proteja. Distribua.', highlight: 'Promova.', subtitle_prefix: 'A plataforma tudo-em-um para artistas: gere sua música com IA, registre-a com validade legal, promova-a e', subtitle_strong: 'lance-a ao mundo em minutos.', legal_more: '+info', cta_start: '🚀 Crie seu primeiro SUCESSO', cta_how: 'Ver como funciona' },
-      why: { heading: 'A plataforma tudo-em-um para artistas independentes', subheading: 'Proteção legal com blockchain, distribuição em 220+ plataformas e até 95% em royalties.\nTudo em um só lugar.', features: { legal: { title: 'Crie e Edite', desc: 'Crie, reinterprete e documente ideias musicais assistidas por IA e transforme-as em obras registráveis e distribuíveis', popup: `Cada registro na Musicdibs gera um certificado digital imutável respaldado por blockchain, válido como prova legal de autoria. Este certificado está em conformidade com normas internacionais e nacionais, incluindo a <a1>Convenção de Berna</a1>, o <a2>Tratado da OMPI</a2>, a <a3>Diretiva Europeia de Direitos Autorais</a3> e regulamentos de blockchain aplicados à propriedade intelectual.` }, instant: { title: 'Registro de PI', desc: 'Proteja suas obras e todo o seu conteúdo (letra, melodia, etc.) em segundos, com validade legal mundial graças à tecnologia blockchain', popup: `Proteção imediata, sem complicações. Esqueça a papelada e os processos lentos e caros. Com a Musicdibs, registrar sua música é <strong1>tão fácil quanto enviar seu arquivo: em segundos geramos uma impressão digital única</strong1> e a registramos na blockchain <strong2>com validade jurídica internacional</strong2>. Sem intermediários e por uma fração do custo do registro tradicional.` }, distribution: { title: 'Distribuição Mundial', desc: 'Lance em +220 plataformas digitais e GANHE até 95% em royalties', popup: `Distribuição mundial. Lance sua música nas <strong1>principais plataformas digitais do mundo: Spotify, Apple Music, Amazon Music, YouTube Music</strong1> e muitas outras, até 220. <strong2>Ganhe royalties desde o primeiro stream</strong2> e leve seu talento além de fronteiras, sem intermediários nem taxas ocultas. Gerencie tudo em uma única plataforma, com estatísticas em tempo real e suporte dedicado.` }, promo: { title: 'Material Promocional', desc: 'Crie capas, cartazes, vídeos e criativos impressionantes com IA, para suas RRSS, shows, promoções, etc.', popup: `No AI Studio você pode gerar todo o material visual necessário para promover sua música:\n\n• Capas de álbum e single com fotomontagem ou foto do artista\n• Criativos otimizados para Instagram (Feed e Stories) e YouTube (miniaturas)\n• Vídeos promocionais de 5 a 15 segundos\n• Cartazes para eventos em formatos profissionais (A5, A4, A3) e cabeçalhos para redes sociais\n\nTudo gerado com modelos de IA de alta qualidade, pronto para publicar nas suas plataformas favoritas.` } } },
+      hero: { title: 'Crie. Proteja. Distribua.', highlight: 'Promova.', subtitle_prefix: 'A plataforma tudo-em-um para artistas: gere sua música com IA, registre-a com validade legal e', subtitle_strong: 'lance-a ao mundo em minutos.', legal_more: '+info', cta_start: '🚀 Criar conta grátis', cta_how: '▶ Veja como funciona em 20s' },
+      why: { heading: 'A plataforma tudo-em-um para artistas independentes', subheading: 'Crie com IA, registre sua propriedade intelectual, distribua sua música em 220+ plataformas e promova-a para uma comunidade de mais de 200k seguidores.\nTudo em um só lugar.', features: { legal: { title: 'AI Music Studio', desc: 'Crie músicas com IA, masterize-as e gere capas, vídeos e materiais promocionais para seus lançamentos em um só lugar.', popup: `O AI Music Studio é o coração criativo da MusicDibs: um ambiente completo para levar sua música da ideia ao lançamento.\n\nA partir de uma única plataforma você pode:\n\n• Criar músicas originais com IA (instrumentais ou com voz)\n• Editar, masterizar e melhorar suas produções\n• Gerar capas profissionais de álbum e single\n• Desenhar criativos para Instagram, TikTok e YouTube\n• Produzir vídeos promocionais curtos para seus lançamentos\n• Criar cartazes para eventos e cabeçalhos para redes sociais\n\nA IA atua como seu assistente criativo, mantendo você sempre no centro do processo. Quando sua obra estiver pronta, registre, distribua e promova sem sair da MusicDibs.` }, instant: { title: 'Registro de PI', desc: 'Proteja suas obras e seu conteúdo em segundos com certificação blockchain e validade jurídica internacional.', popup: `Proteção imediata, sem complicações. Esqueça a papelada e os processos lentos e caros. Com a Musicdibs, registrar sua música é <strong1>tão fácil quanto enviar seu arquivo: em segundos geramos uma impressão digital única</strong1> e a registramos na blockchain <strong2>com validade jurídica internacional</strong2>. Sem intermediários e por uma fração do custo do registro tradicional.` }, distribution: { title: 'Distribuição Global', desc: 'Lance sua música no Spotify, Apple Music, YouTube e mais de 200 plataformas digitais a partir de uma única integração.', popup: `Distribuição global. Lance sua música nas <strong1>principais plataformas digitais do mundo: Spotify, Apple Music, Amazon Music, YouTube Music</strong1> e muitas outras, até 220. <strong2>Ganhe royalties desde o primeiro stream</strong2> e leve seu talento além de fronteiras, sem intermediários nem taxas ocultas. Gerencie tudo em uma única plataforma, com estatísticas em tempo real e suporte dedicado.` }, promo: { title: 'Promoção em RRSS', desc: 'Impulsione seus lançamentos em nossas redes sociais e ganhe visibilidade para uma comunidade de mais de 200k seguidores.', popup: `Amplifique o alcance da sua música através das nossas redes sociais oficiais:\n\n• Comunidade combinada de mais de 200.000 seguidores no TikTok e Instagram\n• Promoções destacadas em nossos perfis para impulsionar seus lançamentos\n• Visibilidade para uma audiência altamente segmentada de fãs de música urbana e independente\n• Estratégias de promoção adaptadas a cada single ou álbum\n• Material promocional otimizado para cada rede social\n\nNossa rede de seguidores se torna seu trampolim para ganhar tração real desde o dia um do lançamento.` } } },
       artists: { heading1: '100.000+ ARTISTAS JÁ', heading2: 'USAM A MUSICDIBS!', subtext: 'Impulsionando o futuro da música urbana', join_now: 'ENTRE AGORA', view_testimonials: 'VER DEPOIMENTOS', stats: { artists: 'Artistas registrados', works: 'Obras protegidas', countries: 'Países' } },
       testimonials: { heading: 'Artistas que já confiam na Musicdibs', videoTitle: 'Depoimento de {{name}}' },
       pricing: {
-        title: 'Preços', subtitle: 'Economize muito em relação aos serviços separados. Assine o nosso plano Plus+!', toggleBasic: 'Basic', togglePlus: 'Plano Plus+', badgeAnnual: 'Inclui: taxa de adesão + 4 meses GRÁTIS', priceAnnualSuffix: ' / Ano', priceMonthlySuffix: ' / Mês', signupFeeNote: 'e €6,90 de taxa de adesão', signupFeeNote_dynamic: 'e {{price}} de taxa de adesão', buyNow: 'COMPRAR', indivTitle: 'REGISTROS INDIVIDUAIS?', indivSubtitle: 'Você também pode registrar uma obra por €11,90', indivSubtitle_dynamic: 'Você também pode registrar uma obra por {{price}}', indivButton: 'Comprar', legalPros: 'É profissional, empresa ou academia? <contact>Fale conosco</contact> e peça detalhes sobre pacotes personalizados ou licenciamento white-label.', conditionsTitle: '* Condições da oferta', conditionsText: 'Impostos NÃO incluídos (21% de IVA para países da UE). As assinaturas mensais e anuais renovam automaticamente ao final do período. Mais informações em FAQ e nos Termos de Uso e Compra.',
+        title: 'Preços', subtitle: 'Economize muito em relação aos serviços separados. Assine o nosso plano Plus+!', toggleBasic: 'Basic', togglePlus: 'Plano Plus+', badgeAnnual: 'Inclui: taxa de adesão + 4 meses GRÁTIS', priceAnnualSuffix: ' / Ano', priceMonthlySuffix: ' / Mês', signupFeeNote: 'e €6,90 de taxa de adesão', signupFeeNote_dynamic: 'e {{price}} de taxa de adesão', buyNow: 'COMPRAR', indivTitle: 'REGISTROS INDIVIDUAIS?', indivSubtitle: 'Você também pode registrar uma obra por €11,90', indivSubtitle_dynamic: 'Você também pode registrar uma obra por {{price}}', indivButton: 'Comprar', legalPros: 'É profissional, empresa ou academia? <contact>Fale conosco</contact> e peça detalhes sobre pacotes personalizados ou licenciamento white-label.', prosTitle: 'É profissional, empresa ou academia?', prosSubtitle: 'Criamos pacotes personalizados, licenças para equipes e soluções white-label adaptadas ao seu projeto.', prosCta: 'Solicitar pacote personalizado', conditionsTitle: '* Condições da oferta', conditionsText: 'Impostos NÃO incluídos (21% de IVA para países da UE). As assinaturas mensais e anuais renovam automaticamente ao final do período. Mais informações em FAQ e nos Termos de Uso e Compra.',
         features: {
           annual: [
             'Proteja seu catálogo completo (Até 120 registros/ano, SEM custos extras)',
@@ -1157,10 +1175,10 @@ const resources = {
           ],
         },
       },
-      tutorial: { heading: 'Tudo o que você pode fazer no MusicDibs', subtitle: 'Da ideia ao streaming: crie, proteja e impulsione sua música em uma única plataforma.', steps: { step: 'Passo', s1: { title: 'Cadastre-se', desc: 'Registre-se e verifique sua identidade para dar validade jurídica aos seus registros.' }, s2: { title: 'Crie sua música', desc: 'Componha músicas com IA, gere letras, clone vozes ou envie sua própria obra ao estúdio.' }, s3: { title: 'Crie material promocional', desc: 'Gere capas, vídeos e criativos para redes sociais com IA em segundos.' }, s4: { title: 'Registre sua obra', desc: 'Proteja música, capa e vídeo na blockchain com carimbo de tempo e certificado legal.', link: 'Ver exemplo de certificado' }, s5: { title: 'Distribua e promova', desc: 'Chegue ao Spotify, Apple Music, YouTube e +200 plataformas. Apareça nas nossas redes com +300.000 seguidores.' } }, ctaTitle: 'O que está esperando? Proteja e monetize sua música hoje', ctaButton: 'Começar agora' },
+      tutorial: { heading: 'É tão fácil começar', subtitle: 'Em apenas 3 passos sua música estará protegida e disponível no mundo todo.', steps: { step: 'Passo', s1: { title: 'Cadastre-se', desc: 'Registre-se e verifique sua identidade para dar validade jurídica aos seus registros.' }, s2: { title: 'Registre sua música', desc: 'Envie sua obra; geramos uma impressão digital e registramos na blockchain em segundos. Baixe seu certificado com carimbo de data e hora.', link: 'Ver exemplo de certificado' }, s3: { title: 'Distribua sua música', desc: 'Chegue ao Spotify, Apple Music, YouTube e mais de 200 plataformas com um clique. Controle e monetize no seu painel.' } }, ctaTitle: 'O que está esperando? Proteja e monetize sua música hoje', ctaButton: 'Começar agora' },
       promoBanner: { text: 'Dia dos Namorados: -20% em todas as assinaturas' },
       summerPromo: { title: 'DIA DOS NAMORADOS', discount: '-20%', onAllSubs: 'Em todas as assinaturas', enterCoupon: 'Insira o cupom na finalização da compra.', discountCode: 'Código de desconto', code: 'LOVE20', footnote: '*Oferta por tempo limitado' },
-      distro: { heading: 'Tudo o que você precisa para triunfar com sua música', subheading: 'Proteja sua música, leve-a ao mundo, venda diretamente e alcance milhões de fãs', world: { title: 'Distribuição', desc: 'Lance suas obras no mundo inteiro em 220+ DSPs e GANHE royalties', cta: 'Saiba mais' }, social: { title: 'Promoção em RRSS', desc: 'Promova-se nas nossas redes com mais de 300.000 seguidores!', cta: 'Saiba mais' }, market: { title: 'Marketplace', desc: 'Venda suas criações no nosso market e GANHE dinheiro', cta: 'Acesse nosso Market' }, nfts: { title: 'Material promocional', desc: 'Crie capas e vídeos incríveis para seus lançamentos e campanhas de marketing', cta: 'Saiba mais' } },
+      distro: { heading: 'Lance sua música e faça-a chegar mais longe', subheading: 'Distribua suas canções nas principais plataformas e promova-as em nossas redes para ganhar visibilidade desde o primeiro dia.', world: { title: 'Distribuição', desc: 'Lance suas obras no mundo inteiro em 220+ DSPs e GANHE royalties', cta: 'Saiba mais' }, social: { title: 'Promoção em RRSS', desc: 'Promova-se nas nossas redes com mais de 300.000 seguidores!', cta: 'Saiba mais' }, market: { title: 'Marketplace', desc: 'Venda suas criações no nosso market e GANHE dinheiro', cta: 'Acesse nosso Market' }, nfts: { title: 'Material promocional', desc: 'Crie capas e vídeos incríveis para seus lançamentos e campanhas de marketing', cta: 'Saiba mais' } },
       calculator: {
         badge: 'Calculadora de Royalties',
         title: 'Quanto você ganharia com suas reproduções?',
@@ -1176,25 +1194,33 @@ const resources = {
         competitors: { musicdibs: 'MusicDibs', distrokid: 'DistroKid', cdbaby: 'CD Baby', tunecore: 'TuneCore' },
       },
       compare: {
-        title: 'Por que MusicDibs?',
-        subtitle: 'Compare nossas condições com outros distribuidores e descubra por que somos a melhor opção.',
-        feature: 'Característica',
+        title: 'MusicDibs, a solução mais completa',
+        subtitle: 'Outras ferramentas resolvem apenas parte do processo. O MusicDibs integra tudo numa única plataforma.',
+        feature: 'Capacidade',
         paid: 'Pago',
         included: 'Incluída',
-        competitors: { musicdibs: 'MusicDibs', distrokid: 'DistroKid', cdbaby: 'CD Baby', tunecore: 'TuneCore' },
-        features: {
-          royalties: 'Percentual de royalties',
-          annual_fee: 'Taxa anual',
-          per_release_fee: 'Custo por lançamento',
-          blockchain_cert: 'Certificação blockchain',
-          social_promo: 'Promoção em RRSS (+300K)',
-          cover_design: 'Design de capas e vídeos',
-          unlimited_releases: 'Lançamentos ilimitados',
-          youtube_content_id: 'YouTube Content ID',
-          copyright_protection: 'Proteção de direitos autorais',
-          platforms: 'Plataformas disponíveis',
+        recommended: 'Tudo em um',
+        partial: 'Parcial',
+        competitors: {
+          musicdibs: 'MusicDibs',
+          suno: 'Suno / IA musical',
+          ozone: 'iZotope Ozone / mastering',
+          distrokid: 'DistroKid / distribuidor',
+          traditional: 'Registro tradicional',
         },
-        disclaimer: '* Dados aproximados baseados em informações públicas. Consulte cada serviço para detalhes atualizados.',
+        features: {
+          create_ai: 'Criar músicas com IA',
+          mastering: 'Masterizar/melhorar áudio',
+          lyrics: 'Criar letras',
+          covers: 'Criar capas e visuais',
+          videos: 'Criar vídeos curtos/promos',
+          ip_register: 'Registrar propriedade intelectual',
+          blockchain_cert: 'Certificação blockchain',
+          distribution: 'Distribuir em 200+ plataformas',
+          social_promo: 'Promoção em RRSS',
+          all_in_one: 'Tudo em uma única plataforma',
+        },
+        disclaimer: '* Comparativo orientativo baseado nas funções públicas de cada ferramenta. Consulte cada serviço para detalhes atualizados.',
       },
       distribution: {
         badge: 'Distribuição Musical',
@@ -1393,7 +1419,7 @@ const resources = {
           typeDocument: 'Documento',
           typeOther: 'Outro',
         },
-        pageTitle: 'AI Music Studio',
+        pageTitle: 'Crie sua música',
         pageSubtitle: 'Crie música original com inteligência artificial. Gere, edite e explore novos sons para seus projetos criativos.',
         poweredBy: 'Powered by ElevenLabs AI',
         backToDashboard: 'Voltar ao Dashboard',
@@ -1409,7 +1435,7 @@ const resources = {
         modules: {
           createMusic: { title: 'Crie Música', desc: 'Gere música original do zero usando IA. Descreva o estilo, mood e características que deseja.' },
           editModify: { title: 'Masterização profissional com IA', desc: 'Consiga um som pronto para o Spotify: mais volume, clareza e potência em segundos.' },
-          inspire: { title: 'Criar em 1 clique 🎵', desc: 'Não sabe por onde começar? Gere uma música automaticamente e comece a criar na hora.' },
+          inspire: { title: 'Inspire-se', desc: 'Obtenha ideias, prompts sugeridos e descubra combinações de gêneros e moods.' },
           createVideoclips: { title: 'Crie Videoclipes', desc: 'Gere videoclipes musicais com IA. Descreva o estilo visual, envie uma imagem ou crie a partir de texto.' },
           createCovers: { title: 'Material promocional', desc: 'Crie capas, flyers, posts e tudo o que você precisa para promover sua música.' },
           singYourSong: { title: 'Ferramentas de Voz', desc: 'Seu estúdio vocal IA: clone sua voz, cante em 29 idiomas, traduza áudios e muito mais' },
@@ -1479,7 +1505,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       modules: {
         createMusic: { title: 'Create music', desc: 'Generate songs or instrumentals from a text description.' },
         editModify: { title: 'Professional AI Mastering', desc: 'Get a Spotify-ready sound: more volume, clarity and power in seconds.' },
-        inspire: { title: '1-click Create 🎵', desc: 'Not sure where to start? Generate a song automatically and start creating instantly.' },
+        inspire: { title: 'Create in 1 click 🎵', desc: "Don't know where to start? Generate a song automatically and start creating instantly." },
         createVideoclips: { title: 'Videoclips', desc: 'Generate music videos and merge them with audio from your history.' },
         createCovers: { title: 'Promotional Material', desc: 'Create covers, flyers, posts and everything you need to promote your music.' },
         singYourSong: { title: 'Voice Tools', desc: 'Your AI vocal studio: clone your voice, sing in 29 languages, translate audio and much more' },
@@ -1511,7 +1537,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       modules: {
         createMusic: { title: 'Criar música', desc: 'Gere músicas ou instrumentais a partir de uma descrição.' },
         editModify: { title: 'Masterização profissional com IA', desc: 'Consiga um som pronto para o Spotify: mais volume, clareza e potência em segundos.' },
-        inspire: { title: 'Criar em 1 clique 🎵', desc: 'Não sabe por onde começar? Gere uma música automaticamente e comece a criar na hora.' },
+        inspire: { title: 'Criar em 1 clique 🎵', desc: 'Não sabe por onde começar? Gere uma música automaticamente e comece a criar instantaneamente.' },
         createVideoclips: { title: 'Videoclipes', desc: 'Gere vídeos musicais e combine com áudio do seu histórico.' },
         createCovers: { title: 'Material promocional', desc: 'Crie capas, flyers, posts e tudo o que você precisa para promover sua música.' },
         singYourSong: { title: 'Ferramentas de Voz', desc: 'Seu estúdio vocal IA: clone sua voz, cante em 29 idiomas, traduza áudios e muito mais' },
@@ -1632,7 +1658,7 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
   },
 };
 
-// Merge legal, FAQ and AI Studio translations into resources
+// Merge legal, FAQ and AI Music Studio translations into resources
 const langs = ['es', 'en', 'pt-BR'] as const;
 langs.forEach((lang) => {
   const key = lang === 'pt-BR' ? 'pt-BR' : lang;
@@ -1644,7 +1670,7 @@ langs.forEach((lang) => {
   }
 });
 
-// Merge AI Studio subpage translations
+// Merge AI Music Studio subpage translations
 const allLangs = ['es', 'en', 'pt-BR'] as const;
 allLangs.forEach((lang) => {
   if (resources[lang] && aiStudioTranslations[lang]) {
