@@ -1,6 +1,14 @@
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
+
+type SupabaseClientInstance = typeof import('@/integrations/supabase/client').supabase;
+
+let supabasePromise: Promise<SupabaseClientInstance> | null = null;
+
+const getSupabaseClient = () => {
+  supabasePromise ??= import('@/integrations/supabase/client').then((module) => module.supabase);
+  return supabasePromise;
+};
 
 interface AuthContextType {
   user: User | null;
@@ -34,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.error('[auth] Failed to initialize session', error);
 
     try {
+      const supabase = await getSupabaseClient();
       await supabase.auth.signOut({ scope: 'local' });
     } catch (signOutError) {
       console.warn('[auth] Failed to clear local session', signOutError);
@@ -52,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(currentSession.user);
 
     try {
+      const supabase = await getSupabaseClient();
       const { data: roles, error } = await supabase
         .from('user_roles')
         .select('role')
@@ -72,23 +82,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [resetAuthState]);
 
   useEffect(() => {
-    // IMPORTANT: Set up listener BEFORE getting session (per Supabase docs)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      // Use setTimeout to avoid async work directly in callback
-      setTimeout(() => {
-        void initializeUser(newSession).catch(recoverFromAuthError);
-      }, 0);
-    });
+    let subscription: { unsubscribe: () => void } | null = null;
+    let isMounted = true;
 
-    void supabase.auth.getSession()
-      .then(({ data: { session: currentSession } }) => initializeUser(currentSession))
+    // IMPORTANT: Set up listener BEFORE getting session (per Supabase docs)
+    void getSupabaseClient()
+      .then((supabase) => {
+        if (!isMounted) return;
+
+        const authState = supabase.auth.onAuthStateChange((_event, newSession) => {
+          // Use setTimeout to avoid async work directly in callback
+          setTimeout(() => {
+            void initializeUser(newSession).catch(recoverFromAuthError);
+          }, 0);
+        });
+        subscription = authState.data.subscription;
+
+        return supabase.auth.getSession()
+          .then(({ data: { session: currentSession } }) => initializeUser(currentSession));
+      })
       .catch(recoverFromAuthError);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription?.unsubscribe();
+    };
   }, [initializeUser, recoverFromAuthError]);
 
   const signIn = async (email: string, password: string) => {
     try {
+      const supabase = await getSupabaseClient();
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         if (error.message?.includes('banned')) {
@@ -106,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, metadata?: Record<string, string>) => {
     try {
+      const supabase = await getSupabaseClient();
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -124,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      const supabase = await getSupabaseClient();
       await supabase.auth.signOut();
     } finally {
       resetAuthState();
