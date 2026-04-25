@@ -1,4 +1,4 @@
-import { Blocks, Clapperboard, FileCheck2, Fingerprint, Globe, ImageIcon, type LucideIcon, Megaphone, Music, Palette, PenLine, Scale, ShieldCheck, SlidersHorizontal, Smartphone } from "lucide-react";
+import { Blocks, Clapperboard, FileCheck2, Fingerprint, Globe, ImageIcon, type LucideIcon, Music, Palette, PenLine, Scale, ShieldCheck, SlidersHorizontal, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollReveal, StaggerGrid } from "@/components/ScrollReveal";
