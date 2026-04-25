@@ -17,6 +17,7 @@ export const Navbar = () => {
   const lastScrollY = useRef(0);
   const closeTimeout = useRef<number | null>(null);
   const ticking = useRef(false);
+  const docScrollableHeight = useRef(1);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,7 +40,6 @@ export const Navbar = () => {
     ticking.current = true;
     requestAnimationFrame(() => {
       const currentY = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       
       // Scrolled state
       setScrolled(currentY > 50);
@@ -52,17 +52,34 @@ export const Navbar = () => {
       }
       
       // Progress bar
-      setScrollProgress(docHeight > 0 ? Math.min(currentY / docHeight, 1) : 0);
+      setScrollProgress(Math.min(currentY / docScrollableHeight.current, 1));
       
       lastScrollY.current = currentY;
       ticking.current = false;
     });
   }, []);
 
-  useEffect(() => {
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+  const updateScrollableHeight = useCallback(() => {
+    requestAnimationFrame(() => {
+      docScrollableHeight.current = Math.max(
+        document.documentElement.scrollHeight - window.innerHeight,
+        1
+      );
+      handleScroll();
+    });
   }, [handleScroll]);
+
+  useEffect(() => {
+    updateScrollableHeight();
+    window.addEventListener("load", updateScrollableHeight, { once: true });
+    window.addEventListener("resize", updateScrollableHeight, { passive: true });
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updateScrollableHeight);
+      window.removeEventListener("load", updateScrollableHeight);
+    };
+  }, [handleScroll, updateScrollableHeight]);
 
   // Always show navbar when mobile menu is open
   const isHidden = hidden && !mobileOpen;
