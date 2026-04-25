@@ -89,8 +89,7 @@
       });
     </script>
     <style>
-      #root:empty::before {
-        content: "Create. Protect. Distribute. Promote.";
+      .app-lcp-shell {
         position: fixed;
         inset: 0;
         display: flex;
@@ -105,6 +104,11 @@
         text-align: center;
         z-index: 0;
       }
+
+      .app-lcp-shell h1 {
+        margin: 0;
+        font: inherit;
+      }
     </style>
   <meta property="og:title" content="Musicdibs - La plataforma todo-en-uno para artistas">
   <meta name="twitter:title" content="Musicdibs - La plataforma todo-en-uno para artistas">
@@ -113,7 +117,7 @@
 </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root"><div class="app-lcp-shell" aria-hidden="true"><h1>Create. Protect. Distribute. Promote.</h1></div></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
