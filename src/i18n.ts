@@ -224,7 +224,7 @@ const resources = {
         competitors: { musicdibs: 'MusicDibs', distrokid: 'DistroKid', cdbaby: 'CD Baby', tunecore: 'TuneCore' },
       },
       compare: {
-        title: 'MusicDibs, la solución más completa',
+        title: 'Musicdibs, la solución más completa',
         subtitle: 'Otras herramientas resuelven una parte del proceso. MusicDibs lo integra todo en una sola plataforma.',
         feature: 'Capacidad',
         paid: 'De pago',
