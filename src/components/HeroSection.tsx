@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { ScrollReveal } from "@/components/ScrollReveal";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getFooterLinks } from "@/i18nLinks";
 import { useParallax } from "@/hooks/useParallax";
+import { useEffect, useState } from "react";
 
 export const HeroSection = () => {
   const { t, i18n } = useTranslation();
@@ -11,6 +11,19 @@ export const HeroSection = () => {
   const footerLinks = getFooterLinks(i18n.resolvedLanguage || i18n.language);
   const { offset } = useParallax({ speed: 0.4 });
   const { offset: bgOffset } = useParallax({ speed: 0.15 });
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+
+  useEffect(() => {
+    const loadVideo = () => setShouldLoadVideo(true);
+
+    if (document.readyState === "complete") {
+      window.setTimeout(loadVideo, 0);
+      return;
+    }
+
+    window.addEventListener("load", loadVideo, { once: true });
+    return () => window.removeEventListener("load", loadVideo);
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
@@ -26,8 +39,8 @@ export const HeroSection = () => {
         className="absolute inset-0 w-full h-full object-cover will-change-transform"
         style={{ transform: `translateY(${offset * 0.5}px) scale(1.1)` }}
       >
-        <source src="/hero-video-new.mp4" type="video/mp4" />
-        <source src="/hero-video.mp4" type="video/mp4" />
+        {shouldLoadVideo && <source src="/hero-video-new.mp4" type="video/mp4" />}
+        {shouldLoadVideo && <source src="/hero-video.mp4" type="video/mp4" />}
       </video>
 
       {/* Background with gradient overlay */}
@@ -49,51 +62,45 @@ export const HeroSection = () => {
       {/* Main content */}
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         {/* Main heading */}
-        <ScrollReveal delay={200}>
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-            {t("hero.title")}{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300">
-              {t("hero.highlight")}
-            </span>
-          </h1>
-        </ScrollReveal>
+        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+          {t("hero.title")}{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300">
+            {t("hero.highlight")}
+          </span>
+        </h1>
 
         {/* Subtitle */}
-        <ScrollReveal delay={400}>
-          <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto leading-relaxed">
-            {t("hero.subtitle_prefix")} {t("hero.subtitle_strong")}{" "}
-            <a
-              href="/legal-validity"
-              className="text-pink-300 hover:text-pink-200 underline transition-colors text-xs md:text-sm"
-            >
-              {t("hero.legal_more")}
-            </a>
-          </p>
-        </ScrollReveal>
+        <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto leading-relaxed">
+          {t("hero.subtitle_prefix")} {t("hero.subtitle_strong")}{" "}
+          <a
+            href="/legal-validity"
+            className="text-pink-300 hover:text-pink-200 underline transition-colors text-xs md:text-sm"
+          >
+            {t("hero.legal_more")}
+          </a>
+        </p>
 
         {/* CTA buttons with A/B testing */}
-        <ScrollReveal delay={600}>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              variant="hero"
-              size="xl"
-              className="font-semibold"
-              onClick={() => navigate("/login?tab=register")}
-            >
-              {t("hero.cta_start")}
-            </Button>
-            <Button
-              variant="blue"
-              size="xl"
-              className="font-semibold"
-              onClick={() => {
-                document.getElementById("all-in-one-section")?.scrollIntoView({ behavior: "smooth" });
-              }}
-            >
-              {t("hero.cta_how")}
-            </Button>
-          </div>
-        </ScrollReveal>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Button
+            variant="hero"
+            size="xl"
+            className="font-semibold"
+            onClick={() => navigate("/login?tab=register")}
+          >
+            {t("hero.cta_start")}
+          </Button>
+          <Button
+            variant="blue"
+            size="xl"
+            className="font-semibold"
+            onClick={() => {
+              document.getElementById("all-in-one-section")?.scrollIntoView({ behavior: "smooth" });
+            }}
+          >
+            {t("hero.cta_how")}
+          </Button>
+        </div>
       </div>
     </section>
   );
