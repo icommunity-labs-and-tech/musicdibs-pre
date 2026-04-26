@@ -44,8 +44,42 @@ function getProductMetadata(price: Stripe.Price): Stripe.Metadata {
     : {};
 }
 
+function normalize(value: unknown) {
+  return String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[_\s-]+/g, " ")
+    .trim();
+}
+
+function productName(price: Stripe.Price) {
+  return typeof price.product === "object" && price.product && "name" in price.product
+    ? price.product.name
+    : "";
+}
+
+function parseCreditsFromText(...values: unknown[]) {
+  const text = normalize(values.filter(Boolean).join(" "));
+  const match = text.match(/(?:^|\s)(\d{1,5})(?:\s)*(?:credit|credito|creditos|cr\b)/i);
+  return match ? Number.parseInt(match[1], 10) : Number.NaN;
+}
+
 function metadataMatchesPlan(price: Stripe.Price, planId: string) {
   const productMetadata = getProductMetadata(price);
+  const normalizedPlanId = normalize(planId);
+  const searchableValues = [
+    price.lookup_key,
+    price.nickname,
+    productName(price),
+    price.metadata.plan_id,
+    price.metadata.planId,
+    price.metadata.musicdibs_plan_id,
+    productMetadata.plan_id,
+    productMetadata.planId,
+    productMetadata.musicdibs_plan_id,
+  ].map(normalize);
+
   return (
     price.lookup_key === planId ||
     price.metadata.plan_id === planId ||
@@ -53,24 +87,33 @@ function metadataMatchesPlan(price: Stripe.Price, planId: string) {
     price.metadata.musicdibs_plan_id === planId ||
     productMetadata.plan_id === planId ||
     productMetadata.planId === planId ||
-    productMetadata.musicdibs_plan_id === planId
+    productMetadata.musicdibs_plan_id === planId ||
+    searchableValues.some((value) => value === normalizedPlanId || value.includes(normalizedPlanId))
   );
 }
 
 function matchesDefinition(price: Stripe.Price, definition: PlanDefinition) {
-  if (!metadataMatchesPlan(price, definition.planId)) return false;
   if (definition.mode === "subscription") {
     const expectedInterval = definition.billingInterval === "yearly" ? "year" : "month";
-    return price.type === "recurring" && price.recurring?.interval === expectedInterval;
+    if (price.type !== "recurring" || price.recurring?.interval !== expectedInterval) return false;
+    if (metadataMatchesPlan(price, definition.planId)) return true;
+    const inferredCredits = resolveCredits(price, definition);
+    return inferredCredits === definition.credits;
   }
-  return price.type === "one_time";
+  if (price.type !== "one_time") return false;
+  if (metadataMatchesPlan(price, definition.planId)) return true;
+  const inferredCredits = resolveCredits(price, definition);
+  return inferredCredits === definition.credits;
 }
 
 function resolveCredits(price: Stripe.Price, definition: PlanDefinition) {
   const productMetadata = getProductMetadata(price);
   const rawCredits = price.metadata.credits || productMetadata.credits;
   const parsedCredits = rawCredits ? Number.parseInt(rawCredits, 10) : Number.NaN;
-  return Number.isFinite(parsedCredits) && parsedCredits > 0 ? parsedCredits : definition.credits;
+  if (Number.isFinite(parsedCredits) && parsedCredits > 0) return parsedCredits;
+
+  const inferredCredits = parseCreditsFromText(price.lookup_key, price.nickname, productName(price));
+  return Number.isFinite(inferredCredits) && inferredCredits > 0 ? inferredCredits : definition.credits;
 }
 
 function formatMoney(unitAmount: number, currency: string, locale: string) {

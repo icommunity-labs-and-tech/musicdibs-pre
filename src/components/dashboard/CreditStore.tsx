@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -14,21 +14,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { CancellationSurveyModal } from './CancellationSurveyModal';
 
-const ANNUAL_OPTIONS = [
-  { planId: 'annual_100',  credits: 100,  price: '59,90 €',  pricePerCredit: '0,60 €' },
-  { planId: 'annual_200',  credits: 200,  price: '109,90 €', pricePerCredit: '0,55 €' },
-  { planId: 'annual_300',  credits: 300,  price: '149,90 €', pricePerCredit: '0,50 €' },
-  { planId: 'annual_500',  credits: 500,  price: '229,90 €', pricePerCredit: '0,46 €' },
-  { planId: 'annual_1000', credits: 1000, price: '399,90 €', pricePerCredit: '0,40 €' },
-];
+type StripePlan = {
+  planId: string;
+  credits: number;
+  productType: 'annual' | 'monthly' | 'single' | 'topup';
+  formattedPrice: string;
+  formattedPricePerCredit: string | null;
+  sortOrder: number;
+};
 
-const TOPUP_OPTIONS = [
-  { planId: 'topup_10',  credits: 10,  price: '9 €',   pricePerCredit: '0,90 €' },
-  { planId: 'topup_25',  credits: 25,  price: '19 €',  pricePerCredit: '0,76 €' },
-  { planId: 'topup_50',  credits: 50,  price: '35 €',  pricePerCredit: '0,70 €' },
-  { planId: 'topup_100', credits: 100, price: '65 €',  pricePerCredit: '0,65 €' },
-  { planId: 'topup_200', credits: 200, price: '119 €', pricePerCredit: '0,60 €' },
-];
+type PricingCatalogResponse = {
+  plans?: StripePlan[];
+  error?: string;
+};
 
 export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { compact?: boolean; cancelAtPeriodEnd?: boolean }) {
   const { t } = useTranslation();
@@ -39,6 +37,8 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(externalCancel ?? false);
   const [selectedAnnual, setSelectedAnnual] = useState('annual_100');
+  const [stripePlans, setStripePlans] = useState<StripePlan[]>([]);
+  const [pricingLoading, setPricingLoading] = useState(true);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const { user } = useAuth();
 
@@ -48,6 +48,29 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
   useEffect(() => {
     if (externalCancel !== undefined) setCancelAtPeriodEnd(externalCancel);
   }, [externalCancel]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPricingLoading(true);
+
+    supabase.functions.invoke<PricingCatalogResponse>('stripe-pricing-catalog', {
+      body: { locale: 'es-ES' },
+    }).then(({ data, error: fnError }) => {
+      if (cancelled) return;
+      if (fnError || data?.error) {
+        setError(data?.error || fnError?.message || t(`${cs}.paymentError`));
+        setStripePlans([]);
+        return;
+      }
+      setStripePlans(data?.plans ?? []);
+    }).finally(() => {
+      if (!cancelled) setPricingLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
 
   useEffect(() => {
     if (paymentStatus !== 'success' || !sessionId || !user) return;
@@ -124,10 +147,26 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
     }
   };
 
-  const selectedAnnualOption = ANNUAL_OPTIONS.find(o => o.planId === selectedAnnual)!;
+  const annualOptions = useMemo(
+    () => stripePlans.filter((plan) => plan.productType === 'annual').sort((a, b) => a.sortOrder - b.sortOrder),
+    [stripePlans]
+  );
+  const topupOptions = useMemo(
+    () => stripePlans.filter((plan) => plan.productType === 'topup').sort((a, b) => a.sortOrder - b.sortOrder),
+    [stripePlans]
+  );
+  const monthlyPlan = useMemo(() => stripePlans.find((plan) => plan.planId === 'monthly'), [stripePlans]);
+  const individualPlan = useMemo(() => stripePlans.find((plan) => plan.planId === 'individual'), [stripePlans]);
+  const selectedAnnualOption = annualOptions.find(o => o.planId === selectedAnnual) ?? annualOptions[0];
   const isAnnualActive = currentPlanId?.startsWith('annual');
   const isMonthlyActive = currentPlanId === 'monthly';
   const hasActiveSubscription = (isAnnualActive || isMonthlyActive) && !cancelAtPeriodEnd;
+
+  useEffect(() => {
+    if (annualOptions.length > 0 && !annualOptions.some((option) => option.planId === selectedAnnual)) {
+      setSelectedAnnual(annualOptions[0].planId);
+    }
+  }, [annualOptions, selectedAnnual]);
 
   return (
     <div className="space-y-6">
@@ -181,21 +220,21 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {ANNUAL_OPTIONS.map(o => (
+                    {annualOptions.map(o => (
                       <SelectItem key={o.planId} value={o.planId}>
-                        {t(`${cs}.nCredits`, { n: o.credits })} — {o.price}{t(`${cs}.perYear`)} ({o.pricePerCredit}/cr.)
+                        {t(`${cs}.nCredits`, { n: o.credits })} — {o.formattedPrice}{t(`${cs}.perYear`)} ({o.formattedPricePerCredit ?? '—'}/cr.)
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <span className="text-2xl font-bold">{selectedAnnualOption.credits}</span>
+                <span className="text-2xl font-bold">{selectedAnnualOption?.credits ?? '—'}</span>
                 <span className="text-sm text-muted-foreground ml-1">{t(`${cs}.creditsPerYear`)}</span>
               </div>
-              <p className="text-lg font-semibold">{selectedAnnualOption.price}<span className="text-sm font-normal text-muted-foreground">{t(`${cs}.perYear`)}</span></p>
-              <p className="text-xs text-muted-foreground">{selectedAnnualOption.pricePerCredit} {t(`${cs}.perCredit`)} · {t(`${cs}.autoRenewalAnnual`)}</p>
-              <Button className="w-full" onClick={() => handleBuy(selectedAnnual)} disabled={loading !== null}>
+              <p className="text-lg font-semibold">{selectedAnnualOption?.formattedPrice ?? '—'}<span className="text-sm font-normal text-muted-foreground">{t(`${cs}.perYear`)}</span></p>
+              <p className="text-xs text-muted-foreground">{selectedAnnualOption?.formattedPricePerCredit ?? '—'} {t(`${cs}.perCredit`)} · {t(`${cs}.autoRenewalAnnual`)}</p>
+              <Button className="w-full" onClick={() => selectedAnnualOption && handleBuy(selectedAnnualOption.planId)} disabled={loading !== null || pricingLoading || !selectedAnnualOption}>
                 {loading === selectedAnnual ? <Loader2 className="h-4 w-4 animate-spin" /> : isAnnualActive ? t(`${cs}.changeCapacity`) : t(`${cs}.subscribe`)}
               </Button>
             </CardContent>
@@ -216,12 +255,12 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <span className="text-2xl font-bold">8</span>
+                <span className="text-2xl font-bold">{monthlyPlan?.credits ?? '—'}</span>
                 <span className="text-sm text-muted-foreground ml-1">{t(`${cs}.creditsPerMonth`)}</span>
               </div>
-              <p className="text-lg font-semibold">6,90 €<span className="text-sm font-normal text-muted-foreground">{t(`${cs}.perMonth`)}</span></p>
-              <p className="text-xs text-muted-foreground">0,86 € {t(`${cs}.perCredit`)} · {t(`${cs}.noSignupFee`)}</p>
-              <Button className="w-full" variant="outline" onClick={() => handleBuy('monthly')} disabled={loading !== null || (isMonthlyActive && !cancelAtPeriodEnd)}>
+              <p className="text-lg font-semibold">{monthlyPlan?.formattedPrice ?? '—'}<span className="text-sm font-normal text-muted-foreground">{t(`${cs}.perMonth`)}</span></p>
+              <p className="text-xs text-muted-foreground">{monthlyPlan?.formattedPricePerCredit ?? '—'} {t(`${cs}.perCredit`)} · {t(`${cs}.noSignupFee`)}</p>
+              <Button className="w-full" variant="outline" onClick={() => monthlyPlan && handleBuy(monthlyPlan.planId)} disabled={loading !== null || pricingLoading || !monthlyPlan || (isMonthlyActive && !cancelAtPeriodEnd)}>
                 {loading === 'monthly' ? <Loader2 className="h-4 w-4 animate-spin" /> : isMonthlyActive && !cancelAtPeriodEnd ? t(`${cs}.currentPlan`) : t(`${cs}.subscribe`)}
               </Button>
             </CardContent>
@@ -249,9 +288,9 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <p className="text-sm font-bold">7 €</p>
-                <Button size="sm" variant="outline" onClick={() => handleBuy('individual')} disabled={loading !== null}>
-                  {loading === 'individual' ? <Loader2 className="h-3 w-3 animate-spin" /> : t(`${cs}.buy`)}
+                    <p className="text-sm font-bold">{individualPlan?.formattedPrice ?? '—'}</p>
+                <Button size="sm" variant="outline" onClick={() => individualPlan && handleBuy(individualPlan.planId)} disabled={loading !== null || pricingLoading || !individualPlan}>
+                  {loading === individualPlan?.planId ? <Loader2 className="h-3 w-3 animate-spin" /> : t(`${cs}.buy`)}
                 </Button>
               </div>
             </CardContent>
@@ -259,18 +298,18 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
 
           {/* TOP-UPS — solo con suscripción activa */}
           {hasActiveSubscription ? (
-            TOPUP_OPTIONS.map(topup => (
+            topupOptions.map(topup => (
               <Card key={topup.planId} className="border-border/40 shadow-sm">
                 <CardContent className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     <Zap className="h-4 w-4 text-primary shrink-0" />
                     <div>
                       <p className="text-sm font-medium">{t(`${cs}.topup`)} {t(`${cs}.nCredits`, { n: topup.credits })}</p>
-                      <p className="text-xs text-muted-foreground">{topup.pricePerCredit} {t(`${cs}.perCredit`)}</p>
+                      <p className="text-xs text-muted-foreground">{topup.formattedPricePerCredit ?? '—'} {t(`${cs}.perCredit`)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <p className="text-sm font-bold">{topup.price}</p>
+                    <p className="text-sm font-bold">{topup.formattedPrice}</p>
                     <Button size="sm" variant="outline" onClick={() => handleBuy(topup.planId)} disabled={loading !== null}>
                       {loading === topup.planId ? <Loader2 className="h-3 w-3 animate-spin" /> : t(`${cs}.buy`)}
                     </Button>
