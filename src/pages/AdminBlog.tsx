@@ -394,13 +394,13 @@ const AdminBlog = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <Label className="text-foreground">Publicaciones por semana</Label>
-                <select value={postsPerWeek} onChange={(event) => setPostsPerWeek(event.target.value)} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                <select value={postsPerWeek} onChange={(event) => setPostsPerWeek(event.target.value)} className="w-full h-10 rounded-md border border-input bg-card px-3 text-sm text-black">
                   {[1, 2, 3, 5].map((value) => <option key={value} value={value}>{value}</option>)}
                 </select>
               </div>
               <div>
                 <Label className="text-foreground">Meses a planificar</Label>
-                <select value={monthsToPlan} onChange={(event) => setMonthsToPlan(event.target.value)} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                <select value={monthsToPlan} onChange={(event) => setMonthsToPlan(event.target.value)} className="w-full h-10 rounded-md border border-input bg-card px-3 text-sm text-black">
                   {[1, 2, 3, 6].map((value) => <option key={value} value={value}>{value}</option>)}
                 </select>
               </div>
@@ -408,7 +408,7 @@ const AdminBlog = () => {
                 <Label className="text-foreground">Idiomas</Label>
                 <div className="flex gap-4 pt-2">
                   {[{ code: "es", label: "ES" }, { code: "en", label: "EN" }, { code: "pt", label: "PT" }].map((lang) => (
-                    <label key={lang.code} className="flex items-center gap-2 text-sm text-foreground">
+                    <label key={lang.code} className="flex items-center gap-2 text-sm text-black">
                       <input
                         type="checkbox"
                         checked={languages.includes(lang.code)}
@@ -435,9 +435,9 @@ const AdminBlog = () => {
             {generatingContent && <Progress value={(contentProgress.done / Math.max(contentProgress.total, 1)) * 100} />}
 
             {ideas.length > 0 && (
-              <div className="overflow-x-auto border border-border rounded-lg">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/50 text-muted-foreground">
+              <div className="overflow-x-auto border border-border rounded-lg bg-card text-black">
+                <table className="w-full text-sm text-black">
+                  <thead className="bg-muted/50 text-black">
                     <tr>
                       <th className="p-3 text-left">Título</th>
                       <th className="p-3 text-left">Categoría</th>
@@ -450,13 +450,13 @@ const AdminBlog = () => {
                     {ideas.map((idea) => (
                       <tr key={idea.id} className="border-t border-border">
                         <td className="p-3 min-w-72">
-                          {idea.editing ? <Input value={idea.title} onChange={(event) => updateIdea(idea.id, { title: event.target.value })} /> : idea.title}
+                           {idea.editing ? <Input value={idea.title} onChange={(event) => updateIdea(idea.id, { title: event.target.value })} className="text-black" /> : idea.title}
                         </td>
                         <td className="p-3">{idea.category}</td>
                         <td className="p-3 uppercase">{idea.language}</td>
                         <td className="p-3">
                           {idea.editing ? (
-                            <Input type="date" value={idea.suggested_publish_date.slice(0, 10)} onChange={(event) => updateIdea(idea.id, { suggested_publish_date: new Date(event.target.value).toISOString() })} />
+                             <Input type="date" value={idea.suggested_publish_date.slice(0, 10)} onChange={(event) => updateIdea(idea.id, { suggested_publish_date: new Date(event.target.value).toISOString() })} className="text-black" />
                           ) : new Date(idea.suggested_publish_date).toLocaleDateString("es-ES")}
                         </td>
                         <td className="p-3">
