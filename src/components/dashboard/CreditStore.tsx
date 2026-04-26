@@ -255,12 +255,12 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <span className="text-2xl font-bold">8</span>
+                <span className="text-2xl font-bold">{monthlyPlan?.credits ?? '—'}</span>
                 <span className="text-sm text-muted-foreground ml-1">{t(`${cs}.creditsPerMonth`)}</span>
               </div>
-              <p className="text-lg font-semibold">6,90 €<span className="text-sm font-normal text-muted-foreground">{t(`${cs}.perMonth`)}</span></p>
-              <p className="text-xs text-muted-foreground">0,86 € {t(`${cs}.perCredit`)} · {t(`${cs}.noSignupFee`)}</p>
-              <Button className="w-full" variant="outline" onClick={() => handleBuy('monthly')} disabled={loading !== null || (isMonthlyActive && !cancelAtPeriodEnd)}>
+              <p className="text-lg font-semibold">{monthlyPlan?.formattedPrice ?? '—'}<span className="text-sm font-normal text-muted-foreground">{t(`${cs}.perMonth`)}</span></p>
+              <p className="text-xs text-muted-foreground">{monthlyPlan?.formattedPricePerCredit ?? '—'} {t(`${cs}.perCredit`)} · {t(`${cs}.noSignupFee`)}</p>
+              <Button className="w-full" variant="outline" onClick={() => monthlyPlan && handleBuy(monthlyPlan.planId)} disabled={loading !== null || pricingLoading || !monthlyPlan || (isMonthlyActive && !cancelAtPeriodEnd)}>
                 {loading === 'monthly' ? <Loader2 className="h-4 w-4 animate-spin" /> : isMonthlyActive && !cancelAtPeriodEnd ? t(`${cs}.currentPlan`) : t(`${cs}.subscribe`)}
               </Button>
             </CardContent>
@@ -288,9 +288,9 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <p className="text-sm font-bold">7 €</p>
-                <Button size="sm" variant="outline" onClick={() => handleBuy('individual')} disabled={loading !== null}>
-                  {loading === 'individual' ? <Loader2 className="h-3 w-3 animate-spin" /> : t(`${cs}.buy`)}
+                    <p className="text-sm font-bold">{individualPlan?.formattedPrice ?? '—'}</p>
+                <Button size="sm" variant="outline" onClick={() => individualPlan && handleBuy(individualPlan.planId)} disabled={loading !== null || pricingLoading || !individualPlan}>
+                  {loading === individualPlan?.planId ? <Loader2 className="h-3 w-3 animate-spin" /> : t(`${cs}.buy`)}
                 </Button>
               </div>
             </CardContent>
