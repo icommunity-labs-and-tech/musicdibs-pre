@@ -147,10 +147,26 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
     }
   };
 
-  const selectedAnnualOption = ANNUAL_OPTIONS.find(o => o.planId === selectedAnnual)!;
+  const annualOptions = useMemo(
+    () => stripePlans.filter((plan) => plan.productType === 'annual').sort((a, b) => a.sortOrder - b.sortOrder),
+    [stripePlans]
+  );
+  const topupOptions = useMemo(
+    () => stripePlans.filter((plan) => plan.productType === 'topup').sort((a, b) => a.sortOrder - b.sortOrder),
+    [stripePlans]
+  );
+  const monthlyPlan = useMemo(() => stripePlans.find((plan) => plan.planId === 'monthly'), [stripePlans]);
+  const individualPlan = useMemo(() => stripePlans.find((plan) => plan.planId === 'individual'), [stripePlans]);
+  const selectedAnnualOption = annualOptions.find(o => o.planId === selectedAnnual) ?? annualOptions[0];
   const isAnnualActive = currentPlanId?.startsWith('annual');
   const isMonthlyActive = currentPlanId === 'monthly';
   const hasActiveSubscription = (isAnnualActive || isMonthlyActive) && !cancelAtPeriodEnd;
+
+  useEffect(() => {
+    if (annualOptions.length > 0 && !annualOptions.some((option) => option.planId === selectedAnnual)) {
+      setSelectedAnnual(annualOptions[0].planId);
+    }
+  }, [annualOptions, selectedAnnual]);
 
   return (
     <div className="space-y-6">
