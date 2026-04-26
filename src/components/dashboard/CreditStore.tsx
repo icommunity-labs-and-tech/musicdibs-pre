@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -14,21 +14,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { CancellationSurveyModal } from './CancellationSurveyModal';
 
-const ANNUAL_OPTIONS = [
-  { planId: 'annual_100',  credits: 100,  price: '59,90 €',  pricePerCredit: '0,60 €' },
-  { planId: 'annual_200',  credits: 200,  price: '109,90 €', pricePerCredit: '0,55 €' },
-  { planId: 'annual_300',  credits: 300,  price: '149,90 €', pricePerCredit: '0,50 €' },
-  { planId: 'annual_500',  credits: 500,  price: '229,90 €', pricePerCredit: '0,46 €' },
-  { planId: 'annual_1000', credits: 1000, price: '399,90 €', pricePerCredit: '0,40 €' },
-];
+type StripePlan = {
+  planId: string;
+  credits: number;
+  productType: 'annual' | 'monthly' | 'single' | 'topup';
+  formattedPrice: string;
+  formattedPricePerCredit: string | null;
+  sortOrder: number;
+};
 
-const TOPUP_OPTIONS = [
-  { planId: 'topup_10',  credits: 10,  price: '9 €',   pricePerCredit: '0,90 €' },
-  { planId: 'topup_25',  credits: 25,  price: '19 €',  pricePerCredit: '0,76 €' },
-  { planId: 'topup_50',  credits: 50,  price: '35 €',  pricePerCredit: '0,70 €' },
-  { planId: 'topup_100', credits: 100, price: '65 €',  pricePerCredit: '0,65 €' },
-  { planId: 'topup_200', credits: 200, price: '119 €', pricePerCredit: '0,60 €' },
-];
+type PricingCatalogResponse = {
+  plans?: StripePlan[];
+  error?: string;
+};
 
 export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { compact?: boolean; cancelAtPeriodEnd?: boolean }) {
   const { t } = useTranslation();
