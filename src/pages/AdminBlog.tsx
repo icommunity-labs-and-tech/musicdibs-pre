@@ -433,6 +433,9 @@ const AdminBlog = () => {
                 ✨ Generar todo el contenido
               </Button>
               {generatingContent && <span className="text-sm text-muted-foreground">{contentProgress.done} de {contentProgress.total} artículos generados</span>}
+              <span className="text-sm text-muted-foreground">
+                {plannedPublicationCount} publicaciones · {plannedArticleCount} artículos en {languages.length} idioma(s)
+              </span>
             </div>
             {generatingContent && <Progress value={(contentProgress.done / Math.max(contentProgress.total, 1)) * 100} />}
 
