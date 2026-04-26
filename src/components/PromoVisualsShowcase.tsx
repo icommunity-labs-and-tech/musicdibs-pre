@@ -23,6 +23,7 @@ import lateNightFrequency from "@/assets/promo/late-night-frequency.mp4";
 import goldenRoad from "@/assets/promo/golden-road.mp4";
 import theBrokenLines from "@/assets/promo/the-broken-lines.mp4";
 import beforeForgettingYouHikari from "@/assets/promo/before-forgetting-you-hikari.mp4";
+import nikoVarelaNewArtistSession from "@/assets/promo/niko-varela-new-artist-session.png";
 
 type CoverCard = {
   title: string;
@@ -64,6 +65,7 @@ const PROMO_CARDS: PromoCard[] = [
   { title: "Golden Road", badge: "Videoclip", description: "Ártico · Indie Folk", video: goldenRoad, isVideo: true, Icon: Video },
   { title: "The Broken Lines", badge: "Reel", description: "Black River · Rock", video: theBrokenLines, isVideo: true, Icon: Film },
   { title: "Before Forgetting You", badge: "Videoclip", description: "Hikari · Balada Pop", video: beforeForgettingYouHikari, isVideo: true, Icon: Video },
+  { title: "New Artist Session", badge: "Flyer promocional", description: "Niko Varela · Urban Pop / Latin", image: nikoVarelaNewArtistSession, Icon: FileImage },
   { title: "Urban Flyer", badge: "Flyer", description: "Kairo Beats · Flyer de lanzamiento", image: flyerUrban, Icon: FileImage },
   { title: "Last Pink Sky", badge: "Post", description: "Maya Rivers · Post Instagram", image: postPop, Icon: Instagram },
 ];
