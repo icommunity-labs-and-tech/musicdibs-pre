@@ -246,8 +246,8 @@ export const PricingSection = () => {
                 >
                   {isAnnual
                     ? t('pricing.creditsAnnualDynamic', {
-                        count: selectedAnnual.credits,
-                        defaultValue: `${selectedAnnual.credits} créditos incluidos`,
+                        count: selectedAnnualCredits,
+                        defaultValue: selectedAnnualCredits > 0 ? `${selectedAnnualCredits} créditos incluidos` : 'Cargando créditos...',
                       })
                     : t('pricing.creditsMonthly')}
                 </div>
