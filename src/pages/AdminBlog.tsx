@@ -267,7 +267,7 @@ const AdminBlog = () => {
     setGenerationErrors([]);
     try {
       const { data, error } = await supabase.functions.invoke("generate-blog-article", {
-        body: { action: "generate_ideas", count: plannedPublicationCount, languages },
+        body: { action: "generate_ideas", count: plannedPublicationCount, languages: ["es"] },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -276,7 +276,7 @@ const AdminBlog = () => {
         id: `${Date.now()}-${index}`,
       }));
       setIdeas(generatedIdeas);
-      toast({ title: "Ideas generadas", description: `${plannedPublicationCount} publicaciones y ${generatedIdeas.length} artículos listos para revisar.` });
+      toast({ title: "Ideas generadas", description: `${generatedIdeas.length} publicaciones base listas para revisar.` });
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudieron generar ideas.";
       toast({ title: "Error", description: message, variant: "destructive" });
