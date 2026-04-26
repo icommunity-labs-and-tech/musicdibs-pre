@@ -127,11 +127,14 @@ export const PricingSection = () => {
   });
 
   const prices = useMemo(() => ({
-    annual: selectedAnnual?.formattedPrice ?? '—',
-    annualPerCredit: selectedAnnual?.formattedPricePerCredit ?? '—',
-    monthly: monthlyPlan?.formattedPrice ?? '—',
-    individual: individualPlan?.formattedPrice ?? '—',
-  }), [selectedAnnual, monthlyPlan, individualPlan]);
+    annual: selectedAnnual?.formattedPrice ?? (pricingLoading ? '...' : '—'),
+    annualPerCredit: selectedAnnual?.formattedPricePerCredit ?? (pricingLoading ? '...' : '—'),
+    monthly: monthlyPlan?.formattedPrice ?? (pricingLoading ? '...' : '—'),
+    individual: individualPlan?.formattedPrice ?? (pricingLoading ? '...' : '—'),
+  }), [selectedAnnual, monthlyPlan, individualPlan, pricingLoading]);
+
+  const selectedAnnualCredits = selectedAnnual?.credits ?? 0;
+  const hasActiveDisplayPlan = isAnnual ? Boolean(selectedAnnual) : Boolean(monthlyPlan);
 
   const annualOptionLabel = useCallback((opt: StripePlan) => {
     const yearSuffix = t('pricing.priceAnnualSuffix').trim() || '/ year';
