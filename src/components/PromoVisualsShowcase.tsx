@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Sparkles, Image as ImageIcon, Megaphone, Play, Film, Layers, FileImage, Instagram, Music2, Video } from "lucide-react";
+import { Sparkles, Image as ImageIcon, Megaphone, Play, Film, FileImage, Instagram, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import neonPulse from "@/assets/covers/neon-pulse.png";
@@ -12,9 +12,6 @@ import brillaSinMiedo from "@/assets/covers/brilla-sin-miedo.png";
 import brokenThunder from "@/assets/covers/broken-thunder.png";
 import midnightDjAriaFlux from "@/assets/covers/midnight-dj-aria-flux.png";
 import reelMidnight from "@/assets/promo/reel-midnight-drop.jpg";
-import tiktokFuego from "@/assets/promo/tiktok-fuego-viral.jpg";
-import canvasLiquid from "@/assets/promo/canvas-liquid-dreams.jpg";
-import storyIndie from "@/assets/promo/story-indie-motion.jpg";
 import flyerUrban from "@/assets/promo/flyer-urban.jpg";
 import postPop from "@/assets/promo/post-pop-release.jpg";
 import videoclipNocheDeFuego from "@/assets/promo/videoclip-noche-de-fuego.mp4";
@@ -54,9 +51,6 @@ const PROMO_CARDS: PromoCard[] = [
   { title: "Sin Mirar Atrás", badge: "Videoclip", description: "Leo Marín · Latino", video: videoclipNocheDeFuego, isVideo: true, Icon: Video },
   { title: "Ritmo Salvaje", badge: "Videoclip", description: "Dario Cruz · Latino", video: videoclipUltimaLuz, isVideo: true, Icon: Video },
   { title: "Neon Pulse", badge: "Reel", description: "Vera Nova · Teaser electrónico", video: reelNeonPulse, isVideo: true, Icon: Film },
-  { title: "Fuego Viral", badge: "TikTok Promo", description: "Milo Reyes · Promo urbana", image: tiktokFuego, isVideo: true, Icon: Music2 },
-  { title: "Liquid Dreams", badge: "Canvas", description: "Noah Grey · Loop visual", image: canvasLiquid, isVideo: true, Icon: Layers },
-  { title: "Indie Motion", badge: "Story", description: "Luna Ártica · Story promo", image: storyIndie, Icon: Instagram },
   { title: "Urban Flyer", badge: "Flyer", description: "Kairo Beats · Flyer de lanzamiento", image: flyerUrban, Icon: FileImage },
   { title: "Last Pink Sky", badge: "Post", description: "Maya Rivers · Post Instagram", image: postPop, Icon: Instagram },
 ];
