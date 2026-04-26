@@ -17,6 +17,7 @@ import postPop from "@/assets/promo/post-pop-release.jpg";
 import videoclipNocheDeFuego from "@/assets/promo/videoclip-noche-de-fuego.mp4";
 import videoclipUltimaLuz from "@/assets/promo/videoclip-ultima-luz.mp4";
 import reelNeonPulse from "@/assets/promo/reel-neon-pulse.mp4";
+import violetFrequency from "@/assets/promo/violet-frequency.mp4";
 
 type CoverCard = {
   title: string;
@@ -52,6 +53,7 @@ const PROMO_CARDS: PromoCard[] = [
   { title: "Sin Mirar Atrás", badge: "Videoclip", description: "Leo Marín · Latino", video: videoclipNocheDeFuego, isVideo: true, Icon: Video },
   { title: "Ritmo Salvaje", badge: "Videoclip", description: "Dario Cruz · Latino", video: videoclipUltimaLuz, isVideo: true, Icon: Video },
   { title: "Neon Pulse", badge: "Reel", description: "Vera Nova · Teaser electrónico", video: reelNeonPulse, isVideo: true, Icon: Film },
+  { title: "Violet Frequency", badge: "Vídeo loop Spotify", description: "Kira Flux · Electrónica", video: violetFrequency, isVideo: true, Icon: Video },
   { title: "Urban Flyer", badge: "Flyer", description: "Kairo Beats · Flyer de lanzamiento", image: flyerUrban, Icon: FileImage },
   { title: "Last Pink Sky", badge: "Post", description: "Maya Rivers · Post Instagram", image: postPop, Icon: Instagram },
 ];
