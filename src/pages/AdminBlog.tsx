@@ -255,6 +255,9 @@ const AdminBlog = () => {
     setIdeas((current) => current.map((idea) => (idea.id === id ? { ...idea, ...patch } : idea)));
   };
 
+  const plannedPublicationCount = Number(postsPerWeek) * Number(monthsToPlan) * 4;
+  const plannedArticleCount = plannedPublicationCount * languages.length;
+
   const generateIdeas = async () => {
     if (!languages.length) {
       toast({ title: "Selecciona un idioma", description: "Elige al menos un idioma para generar ideas.", variant: "destructive" });
@@ -263,9 +266,8 @@ const AdminBlog = () => {
     setGeneratingIdeas(true);
     setGenerationErrors([]);
     try {
-      const count = Number(postsPerWeek) * Number(monthsToPlan) * 4;
       const { data, error } = await supabase.functions.invoke("generate-blog-article", {
-        body: { action: "generate_ideas", count, languages },
+        body: { action: "generate_ideas", count: plannedPublicationCount, languages },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -274,7 +276,7 @@ const AdminBlog = () => {
         id: `${Date.now()}-${index}`,
       }));
       setIdeas(generatedIdeas);
-      toast({ title: "Ideas generadas", description: `${generatedIdeas.length} ideas listas para revisar.` });
+      toast({ title: "Ideas generadas", description: `${plannedPublicationCount} publicaciones y ${generatedIdeas.length} artículos listos para revisar.` });
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudieron generar ideas.";
       toast({ title: "Error", description: message, variant: "destructive" });
@@ -431,6 +433,9 @@ const AdminBlog = () => {
                 ✨ Generar todo el contenido
               </Button>
               {generatingContent && <span className="text-sm text-muted-foreground">{contentProgress.done} de {contentProgress.total} artículos generados</span>}
+              <span className="text-sm text-muted-foreground">
+                {plannedPublicationCount} publicaciones · {plannedArticleCount} artículos en {languages.length} idioma(s)
+              </span>
             </div>
             {generatingContent && <Progress value={(contentProgress.done / Math.max(contentProgress.total, 1)) * 100} />}
 
