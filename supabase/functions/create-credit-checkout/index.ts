@@ -85,7 +85,7 @@ async function resolvePlan(stripe: Stripe, planId: string): Promise<ResolvedPlan
   if (!definition) throw new Error(`Invalid plan: ${planId}`);
 
   const prices = await stripe.prices.list({ active: true, limit: 100, expand: ["data.product"] });
-  const price = prices.data.find((candidate) => matchesDefinition(candidate, definition));
+  const price = prices.data.find((candidate: Stripe.Price) => matchesDefinition(candidate, definition));
 
   if (!price) {
     throw new Error(`No active Stripe price found for plan ${planId}. Set Stripe price lookup_key or metadata plan_id to ${planId}.`);
@@ -130,7 +130,7 @@ serve(async (req) => {
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
       if (!customers.data.length) throw new Error("No Stripe customer found");
       const subs = await stripe.subscriptions.list({ customer: customers.data[0].id, status: "all", limit: 10 });
-      const activeSub = subs.data.find((subscription) => isSubscriptionActive(subscription));
+      const activeSub = subs.data.find((subscription: Stripe.Subscription) => isSubscriptionActive(subscription));
       if (!activeSub) throw new Error("No active subscription");
       if (activeSub.cancel_at_period_end) return json({ message: "La renovación ya está cancelada." });
       await stripe.subscriptions.update(activeSub.id, { cancel_at_period_end: true });
@@ -144,7 +144,7 @@ serve(async (req) => {
       if (!customers2.data.length) throw new Error("Top-ups require an active subscription. Please subscribe first.");
 
       const subs = await stripe.subscriptions.list({ customer: customers2.data[0].id, status: "all", limit: 10 });
-      const activeSub = subs.data.find((subscription) => isSubscriptionActive(subscription) && !subscription.cancel_at_period_end);
+      const activeSub = subs.data.find((subscription: Stripe.Subscription) => isSubscriptionActive(subscription) && !subscription.cancel_at_period_end);
       if (!activeSub) throw new Error("Top-ups require an active subscription. Please subscribe first.");
     }
 
@@ -157,7 +157,7 @@ serve(async (req) => {
 
     if (plan.mode === "subscription") {
       const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 });
-      const activeSub = subs.data.find((subscription) => isSubscriptionActive(subscription));
+      const activeSub = subs.data.find((subscription: Stripe.Subscription) => isSubscriptionActive(subscription));
 
       if (activeSub) {
         const currentPriceId = activeSub.items.data[0]?.price?.id;

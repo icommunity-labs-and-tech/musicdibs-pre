@@ -96,7 +96,7 @@ serve(async (req) => {
     const prices = await stripe.prices.list({ active: true, limit: 100, expand: ["data.product"] });
 
     const plans = PLAN_DEFINITIONS.map((definition) => {
-      const price = prices.data.find((candidate) => matchesDefinition(candidate, definition));
+      const price = prices.data.find((candidate: Stripe.Price) => matchesDefinition(candidate, definition));
       if (!price || price.unit_amount === null) return null;
 
       const credits = resolveCredits(price, definition);
