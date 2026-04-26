@@ -352,6 +352,7 @@ export type Database = {
       }
       blog_posts: {
         Row: {
+          ai_generated: boolean | null
           author: string | null
           category: string | null
           content: string | null
@@ -362,12 +363,14 @@ export type Database = {
           language: string
           published: boolean | null
           published_at: string | null
+          scheduled: boolean | null
           slug: string
           tags: string[] | null
           title: string
           updated_at: string | null
         }
         Insert: {
+          ai_generated?: boolean | null
           author?: string | null
           category?: string | null
           content?: string | null
@@ -378,12 +381,14 @@ export type Database = {
           language?: string
           published?: boolean | null
           published_at?: string | null
+          scheduled?: boolean | null
           slug: string
           tags?: string[] | null
           title: string
           updated_at?: string | null
         }
         Update: {
+          ai_generated?: boolean | null
           author?: string | null
           category?: string | null
           content?: string | null
@@ -394,6 +399,7 @@ export type Database = {
           language?: string
           published?: boolean | null
           published_at?: string | null
+          scheduled?: boolean | null
           slug?: string
           tags?: string[] | null
           title?: string
