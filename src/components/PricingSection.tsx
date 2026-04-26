@@ -204,16 +204,17 @@ export const PricingSection = () => {
                     </p>
                     <Select
                       value={selectedAnnualPlanId}
-                      onValueChange={(v) => setSelectedAnnualPlanId(v as AnnualOption['planId'])}
+                      onValueChange={(v) => setSelectedAnnualPlanId(v as AnnualPlanId)}
+                      disabled={pricingLoading || annualOptions.length === 0}
                     >
                       <SelectTrigger
                         aria-label={t('pricing.annualSelectorAria', { defaultValue: 'Selecciona pack anual' })}
                         className="w-full bg-white/15 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-semibold h-12 text-sm md:text-base"
                       >
-                        <SelectValue>{annualOptionLabel(selectedAnnual)}</SelectValue>
+                        <SelectValue>{selectedAnnual ? annualOptionLabel(selectedAnnual) : '—'}</SelectValue>
                       </SelectTrigger>
                       <SelectContent className="z-50">
-                        {ANNUAL_OPTIONS.map(opt => (
+                        {annualOptions.map(opt => (
                           <SelectItem key={opt.planId} value={opt.planId}>
                             {annualOptionLabel(opt)}
                           </SelectItem>
