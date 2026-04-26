@@ -154,7 +154,8 @@ serve(async (req) => {
 
     if ("action" in body && body.action === "generate_ideas") {
       const count = Math.min(Math.max(Number(body.count || 24), 1), 120);
-      const languages = (body.languages?.length ? body.languages : ["es", "en", "pt"]).filter((lang) => ["es", "en", "pt"].includes(lang));
+      const languages = (body.languages?.length ? body.languages : ["es", "en", "pt"])
+        .filter((lang): lang is BlogLanguage => ["es", "en", "pt"].includes(lang));
       const fallbackDates = nextThursdayDates(count);
       const systemPrompt = "Eres un content strategist especializado en música y tecnología. Genera ideas de artículos para el blog de Musicdibs, una plataforma de registro blockchain y distribución de música con IA.";
       const userPrompt = `Genera ${count} ideas base de artículos. Cada idea se traducirá después a estos idiomas: ${languages.join(", ")}.
