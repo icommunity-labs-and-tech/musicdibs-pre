@@ -220,21 +220,21 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {ANNUAL_OPTIONS.map(o => (
+                    {annualOptions.map(o => (
                       <SelectItem key={o.planId} value={o.planId}>
-                        {t(`${cs}.nCredits`, { n: o.credits })} — {o.price}{t(`${cs}.perYear`)} ({o.pricePerCredit}/cr.)
+                        {t(`${cs}.nCredits`, { n: o.credits })} — {o.formattedPrice}{t(`${cs}.perYear`)} ({o.formattedPricePerCredit ?? '—'}/cr.)
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <span className="text-2xl font-bold">{selectedAnnualOption.credits}</span>
+                <span className="text-2xl font-bold">{selectedAnnualOption?.credits ?? '—'}</span>
                 <span className="text-sm text-muted-foreground ml-1">{t(`${cs}.creditsPerYear`)}</span>
               </div>
-              <p className="text-lg font-semibold">{selectedAnnualOption.price}<span className="text-sm font-normal text-muted-foreground">{t(`${cs}.perYear`)}</span></p>
-              <p className="text-xs text-muted-foreground">{selectedAnnualOption.pricePerCredit} {t(`${cs}.perCredit`)} · {t(`${cs}.autoRenewalAnnual`)}</p>
-              <Button className="w-full" onClick={() => handleBuy(selectedAnnual)} disabled={loading !== null}>
+              <p className="text-lg font-semibold">{selectedAnnualOption?.formattedPrice ?? '—'}<span className="text-sm font-normal text-muted-foreground">{t(`${cs}.perYear`)}</span></p>
+              <p className="text-xs text-muted-foreground">{selectedAnnualOption?.formattedPricePerCredit ?? '—'} {t(`${cs}.perCredit`)} · {t(`${cs}.autoRenewalAnnual`)}</p>
+              <Button className="w-full" onClick={() => selectedAnnualOption && handleBuy(selectedAnnualOption.planId)} disabled={loading !== null || pricingLoading || !selectedAnnualOption}>
                 {loading === selectedAnnual ? <Loader2 className="h-4 w-4 animate-spin" /> : isAnnualActive ? t(`${cs}.changeCapacity`) : t(`${cs}.subscribe`)}
               </Button>
             </CardContent>
@@ -298,18 +298,18 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
 
           {/* TOP-UPS — solo con suscripción activa */}
           {hasActiveSubscription ? (
-            TOPUP_OPTIONS.map(topup => (
+            topupOptions.map(topup => (
               <Card key={topup.planId} className="border-border/40 shadow-sm">
                 <CardContent className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     <Zap className="h-4 w-4 text-primary shrink-0" />
                     <div>
                       <p className="text-sm font-medium">{t(`${cs}.topup`)} {t(`${cs}.nCredits`, { n: topup.credits })}</p>
-                      <p className="text-xs text-muted-foreground">{topup.pricePerCredit} {t(`${cs}.perCredit`)}</p>
+                      <p className="text-xs text-muted-foreground">{topup.formattedPricePerCredit ?? '—'} {t(`${cs}.perCredit`)}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <p className="text-sm font-bold">{topup.price}</p>
+                    <p className="text-sm font-bold">{topup.formattedPrice}</p>
                     <Button size="sm" variant="outline" onClick={() => handleBuy(topup.planId)} disabled={loading !== null}>
                       {loading === topup.planId ? <Loader2 className="h-3 w-3 animate-spin" /> : t(`${cs}.buy`)}
                     </Button>
