@@ -86,6 +86,23 @@ function slugify(text: string): string {
     .replace(/(^-|-$)+/g, "");
 }
 
+function expandIdeasByLanguage(
+  ideas: Array<Record<string, string>>,
+  languages: BlogLanguage[],
+  fallbackDates: string[],
+) {
+  return ideas.flatMap((idea, index) => {
+    const publishDate = idea.suggested_publish_date || fallbackDates[index % fallbackDates.length];
+    return languages.map((language) => ({
+      title: idea.title || "Idea de artículo",
+      topic: idea.topic || idea.category || "Musicdibs",
+      category: idea.category || "Musicdibs",
+      language,
+      suggested_publish_date: publishDate,
+    }));
+  });
+}
+
 async function requireAdmin(req: Request): Promise<Response | null> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
@@ -140,7 +157,7 @@ serve(async (req) => {
       const languages = (body.languages?.length ? body.languages : ["es", "en", "pt"]).filter((lang) => ["es", "en", "pt"].includes(lang));
       const fallbackDates = nextThursdayDates(count);
       const systemPrompt = "Eres un content strategist especializado en música y tecnología. Genera ideas de artículos para el blog de Musicdibs, una plataforma de registro blockchain y distribución de música con IA.";
-      const userPrompt = `Genera ${count} ideas de artículos en estos idiomas: ${languages.join(", ")}.
+      const userPrompt = `Genera ${count} ideas base de artículos. Cada idea se traducirá después a estos idiomas: ${languages.join(", ")}.
 Temas obligatorios a cubrir de forma variada:
 - Funcionalidades de Musicdibs: registro blockchain, distribución, AI Studio, masterización, artistas virtuales, promoción en redes sociales.
 - Propiedad intelectual musical: copyright, derechos de autor, registro de obras.
@@ -149,18 +166,12 @@ Temas obligatorios a cubrir de forma variada:
 - Industria musical: tendencias, IA en música y distribución digital.
 - Artistas emergentes: consejos, entrevistas ficticias y casos de éxito.
 Usa fechas escalonadas en jueves, empezando por estas fechas ISO cuando encaje: ${fallbackDates.join(", ")}.
-Responde SOLO con JSON array válido: [{"title":"...","topic":"...","category":"...","language":"es|en|pt","suggested_publish_date":"ISO date"}]`;
+Responde SOLO con JSON array válido de ${count} elementos: [{"title":"...","topic":"...","category":"...","suggested_publish_date":"ISO date"}]`;
 
       const raw = stripCodeBlocks(await callClaude(systemPrompt, userPrompt, 8192));
       const jsonMatch = raw.match(/\[[\s\S]*\]/);
       const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw) as Array<Record<string, string>>;
-      const ideas = parsed.slice(0, count).map((idea, index) => ({
-        title: idea.title || "Idea de artículo",
-        topic: idea.topic || idea.category || "Musicdibs",
-        category: idea.category || "Musicdibs",
-        language: languages.includes(idea.language as BlogLanguage) ? idea.language : languages[index % languages.length],
-        suggested_publish_date: idea.suggested_publish_date || fallbackDates[index % fallbackDates.length],
-      }));
+      const ideas = expandIdeasByLanguage(parsed.slice(0, count), languages, fallbackDates);
 
       return new Response(JSON.stringify({ ideas }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
