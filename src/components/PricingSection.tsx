@@ -343,10 +343,11 @@ export const PricingSection = () => {
             variant="outline"
             size="sm"
             className="bg-transparent border border-white/40 text-white/90 hover:bg-white/10 hover:text-white px-6 py-2 rounded-full font-medium text-sm"
-            disabled={loadingPlan !== null}
-            onClick={() => handleCheckout('individual')}
+            disabled={loadingPlan !== null || pricingLoading || !individualPlan}
+            onClick={() => individualPlan && handleCheckout(individualPlan.planId)}
           >
-            {loadingPlan === 'individual' ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+            {loadingPlan === individualPlan?.planId ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+            {pricingLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
             {t("pricing.indivButton")}
           </Button>
         </div>
