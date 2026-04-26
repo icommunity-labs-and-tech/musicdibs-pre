@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from "react";
-import { Sparkles, Image as ImageIcon, Megaphone, Play, Film, FileImage, Instagram, Video } from "lucide-react";
+import { Sparkles, Image as ImageIcon, Megaphone, Play, Film, Layers, FileImage, Instagram, Music2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import neonPulse from "@/assets/covers/neon-pulse.png";
@@ -8,29 +7,31 @@ import caminoDeAbril from "@/assets/covers/camino-de-abril.png";
 import distrito9 from "@/assets/covers/distrito-9.png";
 import loQueQuedaDeTi from "@/assets/covers/lo-que-queda-de-ti.png";
 import cityLights from "@/assets/covers/city-lights.png";
-import brillaSinMiedo from "@/assets/covers/brilla-sin-miedo.png";
+import midnightPulse from "@/assets/covers/midnight-pulse.png";
 import brokenThunder from "@/assets/covers/broken-thunder.png";
-import midnightDjAriaFlux from "@/assets/covers/midnight-dj-aria-flux.png";
+import brillaSinMiedo from "@/assets/covers/brilla-sin-miedo.png";
 import reelMidnight from "@/assets/promo/reel-midnight-drop.jpg";
+import tiktokFuego from "@/assets/promo/tiktok-fuego-viral.jpg";
+import canvasLiquid from "@/assets/promo/canvas-liquid-dreams.jpg";
+import storyIndie from "@/assets/promo/story-indie-motion.jpg";
 import flyerUrban from "@/assets/promo/flyer-urban.jpg";
+import flyerMidnightPulse from "@/assets/promo/flyer-midnight-pulse.png";
 import postPop from "@/assets/promo/post-pop-release.jpg";
 import videoclipNocheDeFuego from "@/assets/promo/videoclip-noche-de-fuego.mp4";
 import videoclipUltimaLuz from "@/assets/promo/videoclip-ultima-luz.mp4";
 import reelNeonPulse from "@/assets/promo/reel-neon-pulse.mp4";
-import violetFrequency from "@/assets/promo/violet-frequency.mp4";
-import beforeForgettingYou from "@/assets/promo/before-forgetting-you.mp4";
-import lateNightFrequency from "@/assets/promo/late-night-frequency.mp4";
-import goldenRoad from "@/assets/promo/golden-road.mp4";
-import theBrokenLines from "@/assets/promo/the-broken-lines.mp4";
-import beforeForgettingYouHikari from "@/assets/promo/before-forgetting-you-hikari.mp4";
-import nikoVarelaNewArtistSession from "@/assets/promo/niko-varela-new-artist-session.png";
+import videoclipBeforeForgettingYou from "@/assets/promo/videoclip-before-forgetting-you.mp4";
+import reelTheBrokenLines from "@/assets/promo/reel-the-broken-lines.mp4";
+import videoclipGoldenRoad from "@/assets/promo/videoclip-golden-road.mp4";
+import tiktokLateNightFrequency from "@/assets/promo/tiktok-late-night-frequency.mp4";
+import spotifyLoopBeforeForgettingYou from "@/assets/promo/spotify-loop-before-forgetting-you.mp4";
+import spotifyLoopVioletFrequency from "@/assets/promo/spotify-loop-violet-frequency.mp4";
 
 type CoverCard = {
   title: string;
   artist: string;
   genre: string;
   image: string;
-  imagePosition?: string;
 };
 
 type PromoCard = {
@@ -38,36 +39,36 @@ type PromoCard = {
   badge: string;
   description: string;
   image?: string;
-  imagePosition?: string;
   video?: string;
   isVideo?: boolean;
   Icon: React.ComponentType<{ className?: string }>;
 };
 
 const COVER_CARDS: CoverCard[] = [
-  { title: "Midnight", artist: "DJ Aria Flux", genre: "Electrónica", image: midnightDjAriaFlux, imagePosition: "center 6%" },
-  { title: "Brilla Sin Miedo", artist: "Valeria Cruz", genre: "Pop latino", image: brillaSinMiedo, imagePosition: "center 12%" },
-  { title: "Broken Thunder", artist: "Stonefield Rebels", genre: "Rock alternativo", image: brokenThunder },
-  { title: "Neon Pulse", artist: "Vera Nova", genre: "EDM / Electrónica", image: neonPulse, imagePosition: "center 12%" },
-  { title: "Fuego Lento", artist: "Milo Reyes", genre: "Reggaeton / Urbano", image: fuegoLento, imagePosition: "center 10%" },
+  { title: "Neon Pulse", artist: "Vera Nova", genre: "EDM / Electrónica", image: neonPulse },
+  { title: "Fuego Lento", artist: "Milo Reyes", genre: "Reggaeton / Urbano", image: fuegoLento },
   { title: "Camino de Abril", artist: "Luna Ártica", genre: "Indie / Folk", image: caminoDeAbril },
-  { title: "Distrito 9", artist: "Kairo Beats", genre: "Hip Hop / Trap", image: distrito9, imagePosition: "center 4%" },
+  { title: "Distrito 9", artist: "Kairo Beats", genre: "Hip Hop / Trap", image: distrito9 },
   { title: "Lo Que Queda de Ti", artist: "Sira Vale", genre: "Pop / Balada", image: loQueQuedaDeTi },
   { title: "City Lights", artist: "Noah Grey", genre: "R&B / Soul", image: cityLights },
+  { title: "Midnight Pulse", artist: "DJ Aria Flux", genre: "Electrónica", image: midnightPulse },
+  { title: "Broken Thunder", artist: "Stonefield Rebels", genre: "Rock alternativo", image: brokenThunder },
+  { title: "Brilla Sin Miedo", artist: "Valeria Cruz", genre: "Pop latino", image: brillaSinMiedo },
 ];
 
 const PROMO_CARDS: PromoCard[] = [
   { title: "Sin Mirar Atrás", badge: "Videoclip", description: "Leo Marín · Latino", video: videoclipNocheDeFuego, isVideo: true, Icon: Video },
   { title: "Ritmo Salvaje", badge: "Videoclip", description: "Dario Cruz · Latino", video: videoclipUltimaLuz, isVideo: true, Icon: Video },
+  { title: "Before Forgetting You", badge: "Videoclip", description: "Hikari · Balada Pop", video: videoclipBeforeForgettingYou, isVideo: true, Icon: Video },
+  { title: "Golden Road", badge: "Videoclip", description: "Ártico · Indie Folk", video: videoclipGoldenRoad, isVideo: true, Icon: Video },
   { title: "Neon Pulse", badge: "Reel", description: "Vera Nova · Teaser electrónico", video: reelNeonPulse, isVideo: true, Icon: Film },
-  { title: "Violet Frequency", badge: "Vídeo loop Spotify", description: "Kira Flux · Electrónica", video: violetFrequency, isVideo: true, Icon: Video },
-  { title: "Before Forgetting You", badge: "Vídeo loop Spotify", description: "Nora Bloom · Pop", video: beforeForgettingYou, isVideo: true, Icon: Video },
-  { title: "Late Night Frequency", badge: "TikTok", description: "DJ NK · Electrónica", video: lateNightFrequency, isVideo: true, Icon: Video },
-  { title: "Golden Road", badge: "Videoclip", description: "Ártico · Indie Folk", video: goldenRoad, isVideo: true, Icon: Video },
-  { title: "The Broken Lines", badge: "Reel", description: "Black River · Rock", video: theBrokenLines, isVideo: true, Icon: Film },
-  { title: "Before Forgetting You", badge: "Videoclip", description: "Hikari · Balada Pop", video: beforeForgettingYouHikari, isVideo: true, Icon: Video },
-  { title: "New Artist Session", badge: "Flyer promocional", description: "Niko Varela · Urban Pop / Latin", image: nikoVarelaNewArtistSession, imagePosition: "center top", Icon: FileImage },
+  { title: "The Broken Lines", badge: "Reel", description: "Black River · Rock", video: reelTheBrokenLines, isVideo: true, Icon: Film },
+  { title: "Late Night Frequency", badge: "TikTok", description: "DJ NK · Electrónica", video: tiktokLateNightFrequency, isVideo: true, Icon: Music2 },
+  { title: "Before Forgetting You", badge: "Vídeo loop Spotify", description: "Nora Bloom · Pop", video: spotifyLoopBeforeForgettingYou, isVideo: true, Icon: Layers },
+  { title: "Violet Frequency", badge: "Vídeo loop Spotify", description: "Kira Flux · Electrónica", video: spotifyLoopVioletFrequency, isVideo: true, Icon: Layers },
+  
   { title: "Urban Flyer", badge: "Flyer", description: "Kairo Beats · Flyer de lanzamiento", image: flyerUrban, Icon: FileImage },
+  { title: "Midnight Pulse", badge: "Flyer", description: "DJ Nova K · Flyer electrónico", image: flyerMidnightPulse, Icon: FileImage },
   { title: "Last Pink Sky", badge: "Post", description: "Maya Rivers · Post Instagram", image: postPop, Icon: Instagram },
 ];
 
@@ -77,8 +78,7 @@ const CoverCardItem = ({ card }: { card: CoverCard }) => (
       src={card.image}
       alt={`Portada ${card.title} de ${card.artist}`}
       loading="lazy"
-      style={{ objectPosition: card.imagePosition ?? "center 18%" }}
-      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+      className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.06]"
     />
     <div className="absolute inset-0 bg-black/0 group-hover:bg-white/5 transition-colors duration-300" />
     <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white text-[11px] font-medium">
@@ -99,48 +99,24 @@ const CoverCardItem = ({ card }: { card: CoverCard }) => (
 const PromoCardItem = ({ card }: { card: PromoCard }) => {
   const Icon = card.Icon;
   const hasVideoSource = Boolean(card.video);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [canLoadVideo, setCanLoadVideo] = useState(false);
-
-  useEffect(() => {
-    if (!hasVideoSource || canLoadVideo) return;
-    const node = videoRef.current;
-    if (!node) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setCanLoadVideo(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "500px 0px" }
-    );
-
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [canLoadVideo, hasVideoSource]);
-
   return (
     <div className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-xl shadow-purple-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-purple-500/40">
       {hasVideoSource ? (
         <video
-          ref={videoRef}
-          src={canLoadVideo ? card.video : undefined}
+          src={card.video}
           autoPlay
           loop
           muted
           playsInline
-          preload="none"
-          className="absolute inset-0 h-full w-full scale-[1.16] object-cover object-center transition-transform duration-500 group-hover:scale-[1.22]"
+          preload="metadata"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
         />
       ) : (
         <img
           src={card.image}
           alt={`${card.badge} ${card.title}`}
           loading="lazy"
-          style={{ objectPosition: card.imagePosition ?? "center" }}
-          className="absolute inset-0 h-full w-full scale-[1.08] object-cover object-center transition-transform duration-500 group-hover:scale-[1.14]"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
         />
       )}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-white/5 transition-colors duration-300" />
@@ -213,7 +189,7 @@ export const PromoVisualsShowcase = () => {
             </h2>
             <p className="text-base sm:text-lg text-white/70 leading-relaxed">
               Genera portadas, posts, flyers y vídeos cortos para promocionar tu
-              música en redes. Todo desde Musicdibs.
+              música en redes. Todo desde MusicDibs.
             </p>
           </div>
         </ScrollReveal>

@@ -17,7 +17,6 @@ export const Navbar = () => {
   const lastScrollY = useRef(0);
   const closeTimeout = useRef<number | null>(null);
   const ticking = useRef(false);
-  const docScrollableHeight = useRef(1);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -40,6 +39,7 @@ export const Navbar = () => {
     ticking.current = true;
     requestAnimationFrame(() => {
       const currentY = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
       
       // Scrolled state
       setScrolled(currentY > 50);
@@ -52,34 +52,17 @@ export const Navbar = () => {
       }
       
       // Progress bar
-      setScrollProgress(Math.min(currentY / docScrollableHeight.current, 1));
+      setScrollProgress(docHeight > 0 ? Math.min(currentY / docHeight, 1) : 0);
       
       lastScrollY.current = currentY;
       ticking.current = false;
     });
   }, []);
 
-  const updateScrollableHeight = useCallback(() => {
-    requestAnimationFrame(() => {
-      docScrollableHeight.current = Math.max(
-        document.documentElement.scrollHeight - window.innerHeight,
-        1
-      );
-      handleScroll();
-    });
-  }, [handleScroll]);
-
   useEffect(() => {
-    updateScrollableHeight();
-    window.addEventListener("load", updateScrollableHeight, { once: true });
-    window.addEventListener("resize", updateScrollableHeight, { passive: true });
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", updateScrollableHeight);
-      window.removeEventListener("load", updateScrollableHeight);
-    };
-  }, [handleScroll, updateScrollableHeight]);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   // Always show navbar when mobile menu is open
   const isHidden = hidden && !mobileOpen;
@@ -135,7 +118,7 @@ export const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center">
             <img 
-              src="/lovable-uploads/81d79e1f-fd6f-4e2c-a573-89261bcf3879.webp" 
+              src="/lovable-uploads/81d79e1f-fd6f-4e2c-a573-89261bcf3879.png" 
               alt="by iCommunity" 
               className="h-12 w-auto"
               width={69}

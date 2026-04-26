@@ -49,7 +49,7 @@ const ArtistsBanner = () => {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `url('/lovable-uploads/8a9c1220-8213-4d45-a928-debd5429a44c.webp')`
+          backgroundImage: `url('/lovable-uploads/8a9c1220-8213-4d45-a928-debd5429a44c.png')`
         }}
       />
       
