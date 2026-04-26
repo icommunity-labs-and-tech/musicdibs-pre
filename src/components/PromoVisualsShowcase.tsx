@@ -51,14 +51,14 @@ const COVER_CARDS: CoverCard[] = [
 ];
 
 const PROMO_CARDS: PromoCard[] = [
-  { title: "Noche de Fuego", badge: "Videoclip", description: "Milo Reyes · Clip urbano", video: videoclipNocheDeFuego, isVideo: true, Icon: Video },
-  { title: "Última Luz", badge: "Videoclip", description: "Sira Vale · Clip pop", video: videoclipUltimaLuz, isVideo: true, Icon: Video },
+  { title: "Sin Mirar Atrás", badge: "Videoclip", description: "Leo Marín · Latino", video: videoclipNocheDeFuego, isVideo: true, Icon: Video },
+  { title: "Ritmo Salvaje", badge: "Videoclip", description: "Dario Cruz · Latino", video: videoclipUltimaLuz, isVideo: true, Icon: Video },
   { title: "Neon Pulse", badge: "Reel", description: "Vera Nova · Teaser electrónico", video: reelNeonPulse, isVideo: true, Icon: Film },
   { title: "Fuego Viral", badge: "TikTok Promo", description: "Milo Reyes · Promo urbana", image: tiktokFuego, isVideo: true, Icon: Music2 },
   { title: "Liquid Dreams", badge: "Canvas", description: "Noah Grey · Loop visual", image: canvasLiquid, isVideo: true, Icon: Layers },
   { title: "Indie Motion", badge: "Story", description: "Luna Ártica · Story promo", image: storyIndie, Icon: Instagram },
   { title: "Urban Flyer", badge: "Flyer", description: "Kairo Beats · Flyer de lanzamiento", image: flyerUrban, Icon: FileImage },
-  { title: "Pop Release", badge: "Post", description: "Sira Vale · Post Instagram", image: postPop, Icon: Instagram },
+  { title: "Last Pink Sky", badge: "Post", description: "Maya Rivers · Post Instagram", image: postPop, Icon: Instagram },
 ];
 
 const CoverCardItem = ({ card }: { card: CoverCard }) => (
