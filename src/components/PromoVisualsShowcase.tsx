@@ -38,6 +38,7 @@ type PromoCard = {
   badge: string;
   description: string;
   image?: string;
+  imagePosition?: string;
   video?: string;
   isVideo?: boolean;
   Icon: React.ComponentType<{ className?: string }>;
@@ -65,7 +66,7 @@ const PROMO_CARDS: PromoCard[] = [
   { title: "Golden Road", badge: "Videoclip", description: "Ártico · Indie Folk", video: goldenRoad, isVideo: true, Icon: Video },
   { title: "The Broken Lines", badge: "Reel", description: "Black River · Rock", video: theBrokenLines, isVideo: true, Icon: Film },
   { title: "Before Forgetting You", badge: "Videoclip", description: "Hikari · Balada Pop", video: beforeForgettingYouHikari, isVideo: true, Icon: Video },
-  { title: "New Artist Session", badge: "Flyer promocional", description: "Niko Varela · Urban Pop / Latin", image: nikoVarelaNewArtistSession, Icon: FileImage },
+  { title: "New Artist Session", badge: "Flyer promocional", description: "Niko Varela · Urban Pop / Latin", image: nikoVarelaNewArtistSession, imagePosition: "center top", Icon: FileImage },
   { title: "Urban Flyer", badge: "Flyer", description: "Kairo Beats · Flyer de lanzamiento", image: flyerUrban, Icon: FileImage },
   { title: "Last Pink Sky", badge: "Post", description: "Maya Rivers · Post Instagram", image: postPop, Icon: Instagram },
 ];
@@ -138,6 +139,7 @@ const PromoCardItem = ({ card }: { card: PromoCard }) => {
           src={card.image}
           alt={`${card.badge} ${card.title}`}
           loading="lazy"
+          style={{ objectPosition: card.imagePosition ?? "center" }}
           className="absolute inset-0 h-full w-full scale-[1.08] object-cover object-center transition-transform duration-500 group-hover:scale-[1.14]"
         />
       )}
