@@ -61,7 +61,7 @@ const CoverCardItem = ({ card }: { card: CoverCard }) => (
       src={card.image}
       alt={`Portada ${card.title} de ${card.artist}`}
       loading="lazy"
-      className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.06]"
+      className="absolute inset-0 h-full w-full scale-[1.08] object-cover object-center transition-transform duration-500 group-hover:scale-[1.14]"
     />
     <div className="absolute inset-0 bg-black/0 group-hover:bg-white/5 transition-colors duration-300" />
     <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white text-[11px] font-medium">
@@ -115,14 +115,14 @@ const PromoCardItem = ({ card }: { card: PromoCard }) => {
           muted
           playsInline
           preload="none"
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+          className="absolute inset-0 h-full w-full scale-[1.16] object-cover object-center transition-transform duration-500 group-hover:scale-[1.22]"
         />
       ) : (
         <img
           src={card.image}
           alt={`${card.badge} ${card.title}`}
           loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+          className="absolute inset-0 h-full w-full scale-[1.08] object-cover object-center transition-transform duration-500 group-hover:scale-[1.14]"
         />
       )}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-white/5 transition-colors duration-300" />
