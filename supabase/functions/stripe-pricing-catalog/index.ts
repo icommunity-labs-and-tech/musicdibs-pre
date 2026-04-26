@@ -89,8 +89,9 @@ serve(async (req) => {
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const url = new URL(req.url);
-    const locale = url.searchParams.get("locale") || "es-ES";
+    const locale = typeof body.locale === "string" ? body.locale : url.searchParams.get("locale") || "es-ES";
 
     const prices = await stripe.prices.list({ active: true, limit: 100, expand: ["data.product"] });
 
