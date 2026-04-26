@@ -19,6 +19,7 @@ import videoclipUltimaLuz from "@/assets/promo/videoclip-ultima-luz.mp4";
 import reelNeonPulse from "@/assets/promo/reel-neon-pulse.mp4";
 import violetFrequency from "@/assets/promo/violet-frequency.mp4";
 import beforeForgettingYou from "@/assets/promo/before-forgetting-you.mp4";
+import lateNightFrequency from "@/assets/promo/late-night-frequency.mp4";
 
 type CoverCard = {
   title: string;
@@ -56,6 +57,7 @@ const PROMO_CARDS: PromoCard[] = [
   { title: "Neon Pulse", badge: "Reel", description: "Vera Nova · Teaser electrónico", video: reelNeonPulse, isVideo: true, Icon: Film },
   { title: "Violet Frequency", badge: "Vídeo loop Spotify", description: "Kira Flux · Electrónica", video: violetFrequency, isVideo: true, Icon: Video },
   { title: "Before Forgetting You", badge: "Vídeo loop Spotify", description: "Nora Bloom · Pop", video: beforeForgettingYou, isVideo: true, Icon: Video },
+  { title: "Late Night Frequency", badge: "TikTok", description: "DJ NK · Electrónica", video: lateNightFrequency, isVideo: true, Icon: Video },
   { title: "Urban Flyer", badge: "Flyer", description: "Kairo Beats · Flyer de lanzamiento", image: flyerUrban, Icon: FileImage },
   { title: "Last Pink Sky", badge: "Post", description: "Maya Rivers · Post Instagram", image: postPop, Icon: Instagram },
 ];
