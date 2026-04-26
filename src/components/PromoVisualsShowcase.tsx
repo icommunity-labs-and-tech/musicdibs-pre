@@ -37,13 +37,13 @@ type PromoCard = {
 };
 
 const COVER_CARDS: CoverCard[] = [
-  { title: "Midnight", artist: "DJ Aria Flux", genre: "Electrónica", image: midnightDjAriaFlux, imagePosition: "center 12%" },
+  { title: "Midnight", artist: "DJ Aria Flux", genre: "Electrónica", image: midnightDjAriaFlux, imagePosition: "center 6%" },
   { title: "Brilla Sin Miedo", artist: "Valeria Cruz", genre: "Pop latino", image: brillaSinMiedo, imagePosition: "center 12%" },
   { title: "Broken Thunder", artist: "Stonefield Rebels", genre: "Rock alternativo", image: brokenThunder },
   { title: "Neon Pulse", artist: "Vera Nova", genre: "EDM / Electrónica", image: neonPulse, imagePosition: "center 12%" },
-  { title: "Fuego Lento", artist: "Milo Reyes", genre: "Reggaeton / Urbano", image: fuegoLento },
+  { title: "Fuego Lento", artist: "Milo Reyes", genre: "Reggaeton / Urbano", image: fuegoLento, imagePosition: "center 10%" },
   { title: "Camino de Abril", artist: "Luna Ártica", genre: "Indie / Folk", image: caminoDeAbril },
-  { title: "Distrito 9", artist: "Kairo Beats", genre: "Hip Hop / Trap", image: distrito9, imagePosition: "center 10%" },
+  { title: "Distrito 9", artist: "Kairo Beats", genre: "Hip Hop / Trap", image: distrito9, imagePosition: "center 4%" },
   { title: "Lo Que Queda de Ti", artist: "Sira Vale", genre: "Pop / Balada", image: loQueQuedaDeTi },
   { title: "City Lights", artist: "Noah Grey", genre: "R&B / Soul", image: cityLights },
 ];
