@@ -567,7 +567,13 @@ const AdminBlog = () => {
               <div className="flex items-center justify-between gap-4">
                 <div className="flex gap-2">
                   <Button variant={activeView === "articles" ? "default" : "outline"} onClick={() => setActiveView("articles")}>Artículos</Button>
-                  <Button variant={activeView === "planning" ? "default" : "outline"} onClick={() => setActiveView("planning")} className="gap-2"><CalendarDays className="w-4 h-4" /> 📅 Planificación</Button>
+                  <Button
+                    variant={activeView === "planning" ? "default" : "outline"}
+                    onClick={() => setActiveView("planning")}
+                    className={`gap-2 ${activeView === "planning" ? "" : "border-primary bg-primary text-primary-foreground hover:bg-primary/90"}`}
+                  >
+                    <CalendarDays className="w-4 h-4" /> 📅 Planificación
+                  </Button>
                 </div>
                 <Button onClick={startCreate} className="gap-2"><Plus className="w-4 h-4" /> Nuevo artículo</Button>
               </div>
