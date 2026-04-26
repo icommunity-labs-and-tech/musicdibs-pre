@@ -10,6 +10,7 @@ import loQueQuedaDeTi from "@/assets/covers/lo-que-queda-de-ti.png";
 import cityLights from "@/assets/covers/city-lights.png";
 import brillaSinMiedo from "@/assets/covers/brilla-sin-miedo.png";
 import brokenThunder from "@/assets/covers/broken-thunder.png";
+import midnightDjAriaFlux from "@/assets/covers/midnight-dj-aria-flux.png";
 import reelMidnight from "@/assets/promo/reel-midnight-drop.jpg";
 import tiktokFuego from "@/assets/promo/tiktok-fuego-viral.jpg";
 import canvasLiquid from "@/assets/promo/canvas-liquid-dreams.jpg";
@@ -38,6 +39,7 @@ type PromoCard = {
 };
 
 const COVER_CARDS: CoverCard[] = [
+  { title: "Midnight", artist: "DJ Aria Flux", genre: "Electrónica", image: midnightDjAriaFlux },
   { title: "Brilla Sin Miedo", artist: "Valeria Cruz", genre: "Pop latino", image: brillaSinMiedo },
   { title: "Broken Thunder", artist: "Stonefield Rebels", genre: "Rock alternativo", image: brokenThunder },
   { title: "Neon Pulse", artist: "Vera Nova", genre: "EDM / Electrónica", image: neonPulse },
