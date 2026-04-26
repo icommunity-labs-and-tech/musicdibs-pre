@@ -23,6 +23,7 @@ type CoverCard = {
   artist: string;
   genre: string;
   image: string;
+  imagePosition?: string;
 };
 
 type PromoCard = {
@@ -36,13 +37,13 @@ type PromoCard = {
 };
 
 const COVER_CARDS: CoverCard[] = [
-  { title: "Midnight", artist: "DJ Aria Flux", genre: "Electrónica", image: midnightDjAriaFlux },
-  { title: "Brilla Sin Miedo", artist: "Valeria Cruz", genre: "Pop latino", image: brillaSinMiedo },
+  { title: "Midnight", artist: "DJ Aria Flux", genre: "Electrónica", image: midnightDjAriaFlux, imagePosition: "center 12%" },
+  { title: "Brilla Sin Miedo", artist: "Valeria Cruz", genre: "Pop latino", image: brillaSinMiedo, imagePosition: "center 12%" },
   { title: "Broken Thunder", artist: "Stonefield Rebels", genre: "Rock alternativo", image: brokenThunder },
-  { title: "Neon Pulse", artist: "Vera Nova", genre: "EDM / Electrónica", image: neonPulse },
+  { title: "Neon Pulse", artist: "Vera Nova", genre: "EDM / Electrónica", image: neonPulse, imagePosition: "center 12%" },
   { title: "Fuego Lento", artist: "Milo Reyes", genre: "Reggaeton / Urbano", image: fuegoLento },
   { title: "Camino de Abril", artist: "Luna Ártica", genre: "Indie / Folk", image: caminoDeAbril },
-  { title: "Distrito 9", artist: "Kairo Beats", genre: "Hip Hop / Trap", image: distrito9 },
+  { title: "Distrito 9", artist: "Kairo Beats", genre: "Hip Hop / Trap", image: distrito9, imagePosition: "center 10%" },
   { title: "Lo Que Queda de Ti", artist: "Sira Vale", genre: "Pop / Balada", image: loQueQuedaDeTi },
   { title: "City Lights", artist: "Noah Grey", genre: "R&B / Soul", image: cityLights },
 ];
@@ -61,7 +62,8 @@ const CoverCardItem = ({ card }: { card: CoverCard }) => (
       src={card.image}
       alt={`Portada ${card.title} de ${card.artist}`}
       loading="lazy"
-      className="absolute inset-0 h-full w-full object-cover object-[center_18%] transition-transform duration-500 group-hover:scale-[1.06]"
+      style={{ objectPosition: card.imagePosition ?? "center 18%" }}
+      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
     />
     <div className="absolute inset-0 bg-black/0 group-hover:bg-white/5 transition-colors duration-300" />
     <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white text-[11px] font-medium">
