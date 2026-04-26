@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,73 +12,85 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2, Briefcase, ArrowRight, Check, X, Sparkles } from "lucide-react";
 
-// Annual capacity packs — connected to real Stripe prices via the
-// `create-credit-checkout` edge function. The frontend sends `planId` AND
-// `expectedPriceId`; the edge function resolves `planId → priceId` and validates
-// that the expected price matches, preventing silent UI/Stripe mismatches.
-//
-// All five prices belong to the same Stripe product `prod_U7jGiCV4Uj76rt`
-// (annual subscription), which lets users switch capacity as a plan change.
-//
-// To rotate a price ID:
-//   1) Update the priceId here.
-//   2) Update the same priceId in `supabase/functions/create-credit-checkout/index.ts`
-//      (PLANS map). Both must stay in sync.
-type AnnualOption = {
-  planId: 'annual_100' | 'annual_200' | 'annual_300' | 'annual_500' | 'annual_1000';
-  credits: number;
-  priceEur: number;
-  pricePerCreditEur: number;
-  /** Stripe Price ID — kept in sync with create-credit-checkout edge function */
+type AnnualPlanId = 'annual_100' | 'annual_200' | 'annual_300' | 'annual_500' | 'annual_1000';
+
+type StripePlan = {
+  planId: string;
   priceId: string;
+  credits: number;
+  mode: 'subscription' | 'payment';
+  productType: 'annual' | 'monthly' | 'single' | 'topup';
+  billingInterval: 'yearly' | 'monthly' | null;
+  label: string;
+  currency: string;
+  unitAmount: number;
+  amount: number;
+  formattedPrice: string;
+  pricePerCredit: number | null;
+  formattedPricePerCredit: string | null;
+  sortOrder: number;
 };
 
-const ANNUAL_OPTIONS: AnnualOption[] = [
-  { planId: 'annual_100',  credits: 100,  priceEur: 59.90,  pricePerCreditEur: 0.60, priceId: 'price_1THT7cF9ZCIiqrz6sWS67Q4V' },
-  { planId: 'annual_200',  credits: 200,  priceEur: 109.90, pricePerCreditEur: 0.55, priceId: 'price_1THT7gF9ZCIiqrz6Acb2CkDC' },
-  { planId: 'annual_300',  credits: 300,  priceEur: 149.90, pricePerCreditEur: 0.50, priceId: 'price_1THT7jF9ZCIiqrz6i02J4bj4' },
-  { planId: 'annual_500',  credits: 500,  priceEur: 229.90, pricePerCreditEur: 0.46, priceId: 'price_1THT7nF9ZCIiqrz6r1ZcqH8L' },
-  { planId: 'annual_1000', credits: 1000, priceEur: 399.90, pricePerCreditEur: 0.40, priceId: 'price_1THT7rF9ZCIiqrz6UmJDkBNZ' },
-];
-
-
-// Base prices in EUR
-const BASE_PRICES = {
-  annual: 59.90,
-  monthly: 6.90,
-  individual: 7.00,
-  signupFee: 6.90,
+type PricingCatalogResponse = {
+  plans?: StripePlan[];
+  error?: string;
 };
 
-// Approximate exchange rates from EUR
-const CURRENCY_CONFIG: Record<string, { symbol: string; rate: number; position: 'before' | 'after'; decimal: string }> = {
-  es: { symbol: '€', rate: 1, position: 'after', decimal: ',' },
-  en: { symbol: '$', rate: 1.08, position: 'before', decimal: '.' },
-  'pt-BR': { symbol: 'R$', rate: 5.50, position: 'before', decimal: ',' },
-  fr: { symbol: '€', rate: 1, position: 'after', decimal: ',' },
-  it: { symbol: '€', rate: 1, position: 'after', decimal: ',' },
-  de: { symbol: '€', rate: 1, position: 'after', decimal: ',' },
-};
-
-function formatPrice(amount: number, lang: string): string {
-  const config = CURRENCY_CONFIG[lang] || CURRENCY_CONFIG['es'];
-  const converted = amount * config.rate;
-  const [whole, dec] = converted.toFixed(2).split('.');
-  const formatted = whole + config.decimal + dec;
-  return config.position === 'before'
-    ? `${config.symbol}${formatted}`
-    : `${formatted} ${config.symbol}`;
-}
+const isAnnualPlanId = (planId: string): planId is AnnualPlanId => planId.startsWith('annual_');
 
 export const PricingSection = () => {
   const [isAnnual, setIsAnnual] = useState(true);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-  const [selectedAnnualPlanId, setSelectedAnnualPlanId] = useState<AnnualOption['planId']>('annual_100');
+  const [selectedAnnualPlanId, setSelectedAnnualPlanId] = useState<AnnualPlanId>('annual_100');
+  const [stripePlans, setStripePlans] = useState<StripePlan[]>([]);
+  const [pricingLoading, setPricingLoading] = useState(true);
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const lang = i18n.resolvedLanguage || i18n.language;
   const links = getFooterLinks(lang);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPricingLoading(true);
+
+    supabase.functions.invoke<PricingCatalogResponse>('stripe-pricing-catalog', {
+      body: { locale: lang },
+    }).then(({ data, error }) => {
+      if (cancelled) return;
+      if (error || data?.error) {
+        toast.error(data?.error || error?.message || 'No se pudieron cargar los precios de Stripe');
+        setStripePlans([]);
+        return;
+      }
+      setStripePlans(data?.plans ?? []);
+    }).finally(() => {
+      if (!cancelled) setPricingLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lang]);
+
+  const annualOptions = useMemo(
+    () => stripePlans.filter((plan): plan is StripePlan & { planId: AnnualPlanId } => isAnnualPlanId(plan.planId)).sort((a, b) => a.sortOrder - b.sortOrder),
+    [stripePlans]
+  );
+
+  useEffect(() => {
+    if (annualOptions.length > 0 && !annualOptions.some((option) => option.planId === selectedAnnualPlanId)) {
+      setSelectedAnnualPlanId(annualOptions[0].planId);
+    }
+  }, [annualOptions, selectedAnnualPlanId]);
+
+  const selectedAnnual = useMemo(
+    () => annualOptions.find(o => o.planId === selectedAnnualPlanId) ?? annualOptions[0],
+    [annualOptions, selectedAnnualPlanId]
+  );
+
+  const monthlyPlan = useMemo(() => stripePlans.find((plan) => plan.planId === 'monthly'), [stripePlans]);
+  const individualPlan = useMemo(() => stripePlans.find((plan) => plan.planId === 'individual'), [stripePlans]);
 
   const handleCheckout = useCallback(async (planId: string) => {
     if (!user) {
@@ -87,12 +99,8 @@ export const PricingSection = () => {
     }
     setLoadingPlan(planId);
     try {
-      // For annual plans we also send the expected Stripe price ID so the
-      // backend can validate UI ↔ Stripe alignment and refuse the session if
-      // they drift. For other plans (monthly / individual) we omit it.
-      const expectedPriceId = ANNUAL_OPTIONS.find(o => o.planId === planId)?.priceId;
       const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
-        body: expectedPriceId ? { planId, expectedPriceId } : { planId },
+        body: { planId },
       });
       if (error) throw error;
       if (data?.already_subscribed) {
@@ -102,8 +110,8 @@ export const PricingSection = () => {
       if (data?.url) {
         window.open(data.url, '_blank');
       }
-    } catch (err: any) {
-      toast.error(err.message || 'Error al iniciar el pago');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al iniciar el pago');
     } finally {
       setLoadingPlan(null);
     }
@@ -118,28 +126,19 @@ export const PricingSection = () => {
     ],
   });
 
-  const selectedAnnual = useMemo(
-    () => ANNUAL_OPTIONS.find(o => o.planId === selectedAnnualPlanId) ?? ANNUAL_OPTIONS[0],
-    [selectedAnnualPlanId]
-  );
-
   const prices = useMemo(() => ({
-    annual: formatPrice(selectedAnnual.priceEur, lang),
-    annualPerCredit: formatPrice(selectedAnnual.pricePerCreditEur, lang),
-    monthly: formatPrice(BASE_PRICES.monthly, lang),
-    individual: formatPrice(BASE_PRICES.individual, lang),
-    signupFee: formatPrice(BASE_PRICES.signupFee, lang),
-  }), [lang, selectedAnnual]);
+    annual: selectedAnnual?.formattedPrice ?? '—',
+    annualPerCredit: selectedAnnual?.formattedPricePerCredit ?? '—',
+    monthly: monthlyPlan?.formattedPrice ?? '—',
+    individual: individualPlan?.formattedPrice ?? '—',
+  }), [selectedAnnual, monthlyPlan, individualPlan]);
 
-  // Format the option label per language using the converted currency
-  const annualOptionLabel = useCallback((opt: AnnualOption) => {
-    const price = formatPrice(opt.priceEur, lang);
-    const perCredit = formatPrice(opt.pricePerCreditEur, lang);
+  const annualOptionLabel = useCallback((opt: StripePlan) => {
     const yearSuffix = t('pricing.priceAnnualSuffix').trim() || '/ year';
     const creditsWord = t('pricing.creditsWord', { defaultValue: 'créditos' });
     const perCreditWord = t('pricing.perCreditShort', { defaultValue: '/cr.' });
-    return `${opt.credits} ${creditsWord} — ${price} ${yearSuffix} (${perCredit} ${perCreditWord})`;
-  }, [lang, t]);
+    return `${opt.credits} ${creditsWord} — ${opt.formattedPrice} ${yearSuffix} (${opt.formattedPricePerCredit ?? '—'} ${perCreditWord})`;
+  }, [t]);
 
   return (
     <section id="pricing-section" className="py-20 px-4 bg-gradient-to-b from-primary/60 via-primary to-purple-600">
@@ -205,16 +204,17 @@ export const PricingSection = () => {
                     </p>
                     <Select
                       value={selectedAnnualPlanId}
-                      onValueChange={(v) => setSelectedAnnualPlanId(v as AnnualOption['planId'])}
+                      onValueChange={(v) => setSelectedAnnualPlanId(v as AnnualPlanId)}
+                      disabled={pricingLoading || annualOptions.length === 0}
                     >
                       <SelectTrigger
                         aria-label={t('pricing.annualSelectorAria', { defaultValue: 'Selecciona pack anual' })}
                         className="w-full bg-white/15 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-semibold h-12 text-sm md:text-base"
                       >
-                        <SelectValue>{annualOptionLabel(selectedAnnual)}</SelectValue>
+                        <SelectValue>{selectedAnnual ? annualOptionLabel(selectedAnnual) : '—'}</SelectValue>
                       </SelectTrigger>
                       <SelectContent className="z-50">
-                        {ANNUAL_OPTIONS.map(opt => (
+                        {annualOptions.map(opt => (
                           <SelectItem key={opt.planId} value={opt.planId}>
                             {annualOptionLabel(opt)}
                           </SelectItem>
