@@ -393,22 +393,22 @@ const AdminBlog = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <Label>Publicaciones por semana</Label>
+                <Label className="text-foreground">Publicaciones por semana</Label>
                 <select value={postsPerWeek} onChange={(event) => setPostsPerWeek(event.target.value)} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
                   {[1, 2, 3, 5].map((value) => <option key={value} value={value}>{value}</option>)}
                 </select>
               </div>
               <div>
-                <Label>Meses a planificar</Label>
+                <Label className="text-foreground">Meses a planificar</Label>
                 <select value={monthsToPlan} onChange={(event) => setMonthsToPlan(event.target.value)} className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
                   {[1, 2, 3, 6].map((value) => <option key={value} value={value}>{value}</option>)}
                 </select>
               </div>
               <div className="md:col-span-2">
-                <Label>Idiomas</Label>
+                <Label className="text-foreground">Idiomas</Label>
                 <div className="flex gap-4 pt-2">
                   {[{ code: "es", label: "ES" }, { code: "en", label: "EN" }, { code: "pt", label: "PT" }].map((lang) => (
-                    <label key={lang.code} className="flex items-center gap-2 text-sm">
+                    <label key={lang.code} className="flex items-center gap-2 text-sm text-foreground">
                       <input
                         type="checkbox"
                         checked={languages.includes(lang.code)}
