@@ -384,7 +384,7 @@ const AdminBlog = () => {
 
       {plannerOpen && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm px-4 py-6 overflow-y-auto">
-          <div className="max-w-6xl mx-auto bg-background border border-border rounded-lg p-6 space-y-6 shadow-xl">
+          <div className="max-w-6xl mx-auto bg-card border border-border rounded-lg p-6 space-y-6 shadow-xl">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">Planificación de contenido IA</h2>
@@ -393,7 +393,7 @@ const AdminBlog = () => {
               <Button variant="ghost" onClick={() => setPlannerOpen(false)}>Cerrar</Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 rounded-lg border border-border bg-muted/30 p-4">
               <div>
                 <Label className="text-foreground">Publicaciones por semana</Label>
                 <select value={postsPerWeek} onChange={(event) => setPostsPerWeek(event.target.value)} className="w-full h-10 rounded-md border border-input bg-card px-3 text-sm text-black">
@@ -440,7 +440,7 @@ const AdminBlog = () => {
             {generatingContent && <Progress value={(contentProgress.done / Math.max(contentProgress.total, 1)) * 100} />}
 
             {ideas.length > 0 && (
-              <div className="overflow-x-auto border border-border rounded-lg bg-card text-black">
+              <div className="overflow-x-auto border border-border rounded-lg bg-card text-black shadow-sm">
                 <table className="w-full text-sm text-black">
                   <thead className="bg-muted/50 text-black">
                     <tr>
