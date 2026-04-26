@@ -267,7 +267,7 @@ const AdminBlog = () => {
     setGenerationErrors([]);
     try {
       const { data, error } = await supabase.functions.invoke("generate-blog-article", {
-        body: { action: "generate_ideas", count: plannedPublicationCount, languages },
+        body: { action: "generate_ideas", count: plannedPublicationCount, languages: ["es"] },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
@@ -276,7 +276,7 @@ const AdminBlog = () => {
         id: `${Date.now()}-${index}`,
       }));
       setIdeas(generatedIdeas);
-      toast({ title: "Ideas generadas", description: `${plannedPublicationCount} publicaciones y ${generatedIdeas.length} artículos listos para revisar.` });
+      toast({ title: "Ideas generadas", description: `${generatedIdeas.length} publicaciones base listas para revisar.` });
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudieron generar ideas.";
       toast({ title: "Error", description: message, variant: "destructive" });
@@ -434,7 +434,7 @@ const AdminBlog = () => {
               </Button>
               {generatingContent && <span className="text-sm text-muted-foreground">{contentProgress.done} de {contentProgress.total} artículos generados</span>}
               <span className="text-sm text-muted-foreground">
-                {plannedPublicationCount} publicaciones · {plannedArticleCount} artículos en {languages.length} idioma(s)
+                {plannedPublicationCount} publicaciones base · {plannedArticleCount} artículos finales en {languages.length} idioma(s)
               </span>
             </div>
             {generatingContent && <Progress value={(contentProgress.done / Math.max(contentProgress.total, 1)) * 100} />}
