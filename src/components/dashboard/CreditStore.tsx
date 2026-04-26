@@ -37,6 +37,8 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
   const [currentPlanId, setCurrentPlanId] = useState<string | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(externalCancel ?? false);
   const [selectedAnnual, setSelectedAnnual] = useState('annual_100');
+  const [stripePlans, setStripePlans] = useState<StripePlan[]>([]);
+  const [pricingLoading, setPricingLoading] = useState(true);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const { user } = useAuth();
 
@@ -46,6 +48,29 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
   useEffect(() => {
     if (externalCancel !== undefined) setCancelAtPeriodEnd(externalCancel);
   }, [externalCancel]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setPricingLoading(true);
+
+    supabase.functions.invoke<PricingCatalogResponse>('stripe-pricing-catalog', {
+      body: { locale: 'es-ES' },
+    }).then(({ data, error: fnError }) => {
+      if (cancelled) return;
+      if (fnError || data?.error) {
+        setError(data?.error || fnError?.message || t(`${cs}.paymentError`));
+        setStripePlans([]);
+        return;
+      }
+      setStripePlans(data?.plans ?? []);
+    }).finally(() => {
+      if (!cancelled) setPricingLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
 
   useEffect(() => {
     if (paymentStatus !== 'success' || !sessionId || !user) return;
