@@ -127,11 +127,14 @@ export const PricingSection = () => {
   });
 
   const prices = useMemo(() => ({
-    annual: selectedAnnual?.formattedPrice ?? '—',
-    annualPerCredit: selectedAnnual?.formattedPricePerCredit ?? '—',
-    monthly: monthlyPlan?.formattedPrice ?? '—',
-    individual: individualPlan?.formattedPrice ?? '—',
-  }), [selectedAnnual, monthlyPlan, individualPlan]);
+    annual: selectedAnnual?.formattedPrice ?? (pricingLoading ? '...' : '—'),
+    annualPerCredit: selectedAnnual?.formattedPricePerCredit ?? (pricingLoading ? '...' : '—'),
+    monthly: monthlyPlan?.formattedPrice ?? (pricingLoading ? '...' : '—'),
+    individual: individualPlan?.formattedPrice ?? (pricingLoading ? '...' : '—'),
+  }), [selectedAnnual, monthlyPlan, individualPlan, pricingLoading]);
+
+  const selectedAnnualCredits = selectedAnnual?.credits ?? 0;
+  const hasActiveDisplayPlan = isAnnual ? Boolean(selectedAnnual) : Boolean(monthlyPlan);
 
   const annualOptionLabel = useCallback((opt: StripePlan) => {
     const yearSuffix = t('pricing.priceAnnualSuffix').trim() || '/ year';
@@ -243,8 +246,8 @@ export const PricingSection = () => {
                 >
                   {isAnnual
                     ? t('pricing.creditsAnnualDynamic', {
-                        count: selectedAnnual.credits,
-                        defaultValue: `${selectedAnnual.credits} créditos incluidos`,
+                        count: selectedAnnualCredits,
+                        defaultValue: selectedAnnualCredits > 0 ? `${selectedAnnualCredits} créditos incluidos` : 'Cargando créditos...',
                       })
                     : t('pricing.creditsMonthly')}
                 </div>
@@ -302,7 +305,7 @@ export const PricingSection = () => {
               })()}
 
               {(() => {
-                const targetPlanId = isAnnual ? selectedAnnualPlanId : 'monthly';
+                const targetPlanId = isAnnual ? selectedAnnual?.planId : monthlyPlan?.planId;
                 return (
                   <Button
                     className={`w-full font-semibold rounded-full ${
@@ -310,13 +313,15 @@ export const PricingSection = () => {
                         ? 'bg-white hover:bg-white/95 text-pink-600 py-4 text-base md:text-lg shadow-xl'
                         : 'bg-white/10 hover:bg-white/20 text-white border border-white/30 py-3 text-sm'
                     } ${ctaBuy.className}`}
-                    disabled={loadingPlan !== null}
+                    disabled={loadingPlan !== null || pricingLoading || !hasActiveDisplayPlan || !targetPlanId}
                     onClick={() => {
+                      if (!targetPlanId) return;
                       trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
                       handleCheckout(targetPlanId);
                     }}
                   >
                     {loadingPlan === targetPlanId ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+                    {pricingLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
                     {isAnnual ? t("pricing.ctaAnnual") : t("pricing.ctaMonthly")}
                     {isAnnual && <ArrowRight className="ml-2 w-5 h-5" />}
                   </Button>
@@ -338,10 +343,11 @@ export const PricingSection = () => {
             variant="outline"
             size="sm"
             className="bg-transparent border border-white/40 text-white/90 hover:bg-white/10 hover:text-white px-6 py-2 rounded-full font-medium text-sm"
-            disabled={loadingPlan !== null}
-            onClick={() => handleCheckout('individual')}
+            disabled={loadingPlan !== null || pricingLoading || !individualPlan}
+            onClick={() => individualPlan && handleCheckout(individualPlan.planId)}
           >
-            {loadingPlan === 'individual' ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+            {loadingPlan === individualPlan?.planId ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+            {pricingLoading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
             {t("pricing.indivButton")}
           </Button>
         </div>
