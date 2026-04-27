@@ -32,6 +32,7 @@ export const LanguageSelector = () => {
         className="flex items-center gap-2 px-3 py-2"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-label={`Seleccionar idioma. Idioma actual: ${currentLanguage.name}`}
       >
         <span className="text-lg" aria-hidden>
           {currentLanguage?.flag}
