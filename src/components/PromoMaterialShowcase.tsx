@@ -43,7 +43,7 @@ export const PromoMaterialShowcase = () => {
               Crea también la imagen de tu lanzamiento
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-primary-foreground/80 md:text-lg">
-              Genera portadas, posts, flyers y vídeos cortos para promocionar tu música en redes. Todo desde MusicDibs.
+              Genera portadas, posts, flyers y vídeos cortos para promocionar tu música en redes. Todo desde Musicdibs.
             </p>
           </div>
         </ScrollReveal>

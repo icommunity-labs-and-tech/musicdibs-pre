@@ -170,7 +170,7 @@ export const ChatWidget = () => {
             <div className="flex items-center gap-2">
               <MessageCircle className="w-5 h-5" />
               <span className="font-semibold text-sm">
-                {t("chat.title", "Soporte MusicDibs")}
+                {t("chat.title", "Soporte Musicdibs")}
               </span>
             </div>
             <button onClick={() => setOpen(false)} className="hover:bg-white/20 rounded-full p-1 transition-colors">
