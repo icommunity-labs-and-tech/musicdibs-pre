@@ -159,6 +159,7 @@ export const PricingSection = () => {
           <button
             onClick={() => setIsAnnual(!isAnnual)}
             className="relative inline-flex h-8 w-16 items-center rounded-full bg-white/20 transition-colors"
+            aria-label={`${t("pricing.toggleBasic")} / ${t("pricing.togglePlus")}`}
           >
             <span
               className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
