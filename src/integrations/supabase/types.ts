@@ -1099,13 +1099,20 @@ export type Database = {
           cost: number
           coupon_code: string | null
           created_at: string
+          current_ltv_cac: number | null
+          current_roi: number | null
           end_date: string | null
           id: string
           is_active: boolean
+          last_metrics_update: string | null
           name: string
           notes: string | null
           owner: string | null
           start_date: string | null
+          target_country: string | null
+          total_clients: number | null
+          total_registrations: number | null
+          total_views: number | null
           type: string | null
           updated_at: string
           utm_campaign: string | null
@@ -1116,13 +1123,20 @@ export type Database = {
           cost?: number
           coupon_code?: string | null
           created_at?: string
+          current_ltv_cac?: number | null
+          current_roi?: number | null
           end_date?: string | null
           id?: string
           is_active?: boolean
+          last_metrics_update?: string | null
           name: string
           notes?: string | null
           owner?: string | null
           start_date?: string | null
+          target_country?: string | null
+          total_clients?: number | null
+          total_registrations?: number | null
+          total_views?: number | null
           type?: string | null
           updated_at?: string
           utm_campaign?: string | null
@@ -1133,13 +1147,20 @@ export type Database = {
           cost?: number
           coupon_code?: string | null
           created_at?: string
+          current_ltv_cac?: number | null
+          current_roi?: number | null
           end_date?: string | null
           id?: string
           is_active?: boolean
+          last_metrics_update?: string | null
           name?: string
           notes?: string | null
           owner?: string | null
           start_date?: string | null
+          target_country?: string | null
+          total_clients?: number | null
+          total_registrations?: number | null
+          total_views?: number | null
           type?: string | null
           updated_at?: string
           utm_campaign?: string | null
