@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { adminApi } from '@/services/adminApi';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
   Megaphone, RefreshCw, Plus, TrendingUp, DollarSign,
@@ -64,6 +65,9 @@ export default function AdminCampaignMetricsPage() {
   const [detailData, setDetailData] = useState<any>(null);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
   const [newCampaign, setNewCampaign] = useState({ name: '', type: '', owner: '', cost: '0', coupon_code: '', utm_source: '', utm_medium: '', utm_campaign: '', notes: '' });
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
+  const [loadingCoupons, setLoadingCoupons] = useState(true);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -86,6 +90,23 @@ export default function AdminCampaignMetricsPage() {
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const loadCoupons = useCallback(async () => {
+    setLoadingCoupons(true);
+    try {
+      const { data } = await supabase
+        .from('marketing_campaigns')
+        .select('*')
+        .not('coupon_code', 'is', null)
+        .order('current_roi', { ascending: false });
+      setCoupons(data || []);
+    } catch (e: any) {
+      toast.error('Error cargando cupones');
+    }
+    setLoadingCoupons(false);
+  }, []);
+
+  useEffect(() => { loadCoupons(); }, [loadCoupons]);
 
   const loadDetail = async (campaignName: string) => {
     if (!campaignName) { toast.error('Campaña sin nombre'); return; }
