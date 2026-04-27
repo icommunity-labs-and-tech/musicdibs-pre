@@ -121,6 +121,11 @@ export const AIStudioShowcase = () => {
 
   useEffect(() => {
     return () => {
+      if (audioRef.current) {
+        audioRef.current.onplay = null;
+        audioRef.current.onpause = null;
+        audioRef.current.onended = null;
+      }
       audioRef.current?.pause();
     };
   }, []);
@@ -136,10 +141,17 @@ export const AIStudioShowcase = () => {
 
     audioRef.current?.pause();
     const audio = new Audio(song.audioSrc);
-    audio.onended = () => setPlayingDemo(null);
+    audio.onplay = () => setPlayingDemo(song.title);
+    audio.onpause = () => {
+      if (audioRef.current === audio) setPlayingDemo(null);
+    };
+    audio.onended = () => {
+      if (audioRef.current === audio) setPlayingDemo(null);
+    };
     audioRef.current = audio;
-    setPlayingDemo(song.title);
-    void audio.play().catch(() => undefined);
+    void audio.play().catch(() => {
+      if (audioRef.current === audio) setPlayingDemo(null);
+    });
   };
 
   return (
