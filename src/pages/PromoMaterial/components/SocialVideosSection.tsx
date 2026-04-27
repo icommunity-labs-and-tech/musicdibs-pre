@@ -180,6 +180,27 @@ export const SocialVideosSection = () => {
           if (statusData.status === 'SUCCEEDED' && statusData.video_url) {
             setVideoUrl(statusData.video_url);
             setProgressStatus(null);
+            const { error: libraryError } = await supabase
+              .from('video_generations')
+              .insert({
+                user_id: user.id,
+                task_id: reqId,
+                status: 'COMPLETED',
+                prompt: description.trim(),
+                mode: 'promo_material',
+                style: format,
+                aspect_ratio: config.aspectRatio,
+                duration: 10,
+                video_url: statusData.video_url,
+              });
+
+            if (libraryError) {
+              console.error('Error saving generated video to library:', libraryError);
+              toast({ title: tr('error'), description: 'El vídeo se ha generado, pero no se ha podido guardar en la biblioteca.', variant: 'destructive' });
+            } else {
+              sessionStorage.removeItem(`media_library_cache_${user.id}`);
+            }
+
             toast({ title: tr('success'), description: tr('successDesc') });
             track('social_video_generated', { feature: 'social_video' });
             break;
