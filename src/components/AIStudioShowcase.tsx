@@ -29,7 +29,7 @@ const DEMO_SONGS: DemoSong[] = [
     glow: "shadow-pink-500/30",
   },
   {
-    title: "Neon Pulse",
+    title: "Turn It Up",
     tag: "EDM",
     subtitle: "Dance electrónico · oscuro e hipnótico",
     colors: ["from-cyan-400", "to-blue-500"],
@@ -43,7 +43,7 @@ const DEMO_SONGS: DemoSong[] = [
     glow: "shadow-amber-400/30",
   },
   {
-    title: "City Lights",
+    title: "No Sleep Tonight",
     tag: "R&B",
     subtitle: "R&B pop · suave y sensual",
     colors: ["from-fuchsia-500", "to-violet-600"],
