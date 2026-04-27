@@ -232,7 +232,7 @@ export const AIStudioShowcase = () => {
             <h2 className="text-4xl md:text-6xl font-bold text-white leading-[1.1] mb-5">
               Crea o mejora tu música con IA.{" "}
               <span className="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-300 bg-clip-text text-transparent">
-                De la idea a Spotify
+                Tu canción al mundo.
               </span>{" "}
               en minutos 🎵
             </h2>
@@ -315,9 +315,9 @@ export const AIStudioShowcase = () => {
               </span>
             </div>
             <h3 className="text-3xl md:text-5xl font-bold text-white leading-[1.1] mb-4">
-              De una idea a una canción{" "}
+              En menos de 10 minutos.{" "}
               <span className="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-300 bg-clip-text text-transparent">
-                publicada en minutos
+                Tu canción al mundo.
               </span>
             </h3>
             <p className="text-base md:text-lg text-white/70 leading-relaxed">
