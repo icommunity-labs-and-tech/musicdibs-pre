@@ -417,14 +417,13 @@ export default function AdminCampaignMetricsPage() {
         })()}
 
         {/* Gráfico ROI por cupón */}
-        {!loadingCoupons && coupons.filter(c => couponFilter === 'all' || c.type === couponFilter).length > 0 && (
+        {!loadingCoupons && filteredCoupons.length > 0 && (
           <Card className="border-border/40">
             <CardHeader><CardTitle className="text-base">📈 ROI acumulado por cupón</CardTitle></CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart
-                  data={coupons
-                    .filter(c => couponFilter === 'all' || c.type === couponFilter)
+                  data={filteredCoupons
                     .map(c => ({
                       name: c.coupon_code,
                       roi: parseFloat((c.current_roi * 100).toFixed(0)),
@@ -462,23 +461,32 @@ export default function AdminCampaignMetricsPage() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Influencer / Canal</TableHead>
                     <TableHead>País</TableHead>
-                    <TableHead className="text-right">Coste</TableHead>
+                    <TableHead className="text-right">
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => handleCouponSort('cost')}>
+                        Coste <ArrowUpDown className="ml-1 h-3 w-3" />
+                      </Button>
+                    </TableHead>
                     <TableHead className="text-right">Registros</TableHead>
                     <TableHead className="text-right">Clientes</TableHead>
-                    <TableHead className="text-right">Conv. %</TableHead>
-                    <TableHead className="text-right">ROI</TableHead>
+                    <TableHead className="text-right">
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => handleCouponSort('conversion')}>
+                        Conv. % <ArrowUpDown className="ml-1 h-3 w-3" />
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => handleCouponSort('roi')}>
+                        ROI <ArrowUpDown className="ml-1 h-3 w-3" />
+                      </Button>
+                    </TableHead>
                     <TableHead className="text-right">LTV/CAC</TableHead>
                     <TableHead>Estado</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {coupons
-                    .filter(c => couponFilter === 'all' || c.type === couponFilter)
+                  {sortedCoupons
                     .map((c: any) => {
                       const roi = parseFloat(c.current_roi) || 0;
-                      const conv = c.total_registrations > 0
-                        ? ((c.total_clients / c.total_registrations) * 100).toFixed(1)
-                        : '0.0';
+                      const conv = getCouponConversion(c).toFixed(1);
                       return (
                         <TableRow key={c.id}>
                           <TableCell>
@@ -509,7 +517,7 @@ export default function AdminCampaignMetricsPage() {
                         </TableRow>
                       );
                     })}
-                  {coupons.filter(c => couponFilter === 'all' || c.type === couponFilter).length === 0 && (
+                  {filteredCoupons.length === 0 && (
                     <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground py-8">Sin cupones para este filtro</TableCell></TableRow>
                   )}
                 </TableBody>
