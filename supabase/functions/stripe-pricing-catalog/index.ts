@@ -88,7 +88,7 @@ function metadataMatchesPlan(price: Stripe.Price, planId: string) {
     productMetadata.plan_id === planId ||
     productMetadata.planId === planId ||
     productMetadata.musicdibs_plan_id === planId ||
-    searchableValues.some((value) => value === normalizedPlanId || value.includes(normalizedPlanId))
+    searchableValues.some((value) => value === normalizedPlanId)
   );
 }
 
