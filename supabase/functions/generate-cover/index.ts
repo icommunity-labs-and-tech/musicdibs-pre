@@ -33,6 +33,7 @@ serve(async (req) => {
   let supabaseAdmin: ReturnType<typeof createClient> | null = null
   let chargedUserId: string | null = null
   let chargedTrackTitle = "Sin título"
+  let chargedCreditsCost = DEFAULT_CREDITS_COST
   let creditsCharged = false
   let refundIssued = false
 
@@ -84,6 +85,7 @@ serve(async (req) => {
     chargedUserId = user.id
     chargedTrackTitle = trackTitle || "Sin título"
     const creditsCost = await getCreditCost(supabaseAdmin)
+    chargedCreditsCost = creditsCost
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -296,14 +298,14 @@ serve(async (req) => {
           await supabaseAdmin
             .from("profiles")
             .update({
-              available_credits: latestProfile.available_credits + CREDITS_COST,
+              available_credits: latestProfile.available_credits + chargedCreditsCost,
               updated_at: new Date().toISOString(),
             })
             .eq("user_id", chargedUserId)
 
           await supabaseAdmin.from("credit_transactions").insert({
             user_id: chargedUserId,
-            amount: CREDITS_COST,
+            amount: chargedCreditsCost,
             type: "refund",
             description: `Reembolso portada IA: ${chargedTrackTitle}`.slice(0, 200),
           })
