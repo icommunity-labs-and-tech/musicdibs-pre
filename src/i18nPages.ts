@@ -3,7 +3,7 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
     translation: {
       verify: {
         seoTitle: 'Verificar obra',
-        seoDesc: 'Comprueba si una obra ha sido registrada en MusicDibs. Verifica su certificación blockchain al instante.',
+        seoDesc: 'Comprueba si una obra ha sido registrada en Musicdibs. Verifica su certificación blockchain al instante.',
         badge: 'Verificación de registros',
         title1: 'Verifica la autenticidad',
         title2: 'de cualquier obra',
@@ -78,7 +78,7 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
     translation: {
       verify: {
         seoTitle: 'Verify work',
-        seoDesc: 'Check if a work has been registered on MusicDibs. Verify its blockchain certification instantly.',
+        seoDesc: 'Check if a work has been registered on Musicdibs. Verify its blockchain certification instantly.',
         badge: 'Registration verification',
         title1: 'Verify the authenticity',
         title2: 'of any work',
@@ -153,7 +153,7 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
     translation: {
       verify: {
         seoTitle: 'Verificar obra',
-        seoDesc: 'Verifique se uma obra foi registrada no MusicDibs. Verifique sua certificação blockchain instantaneamente.',
+        seoDesc: 'Verifique se uma obra foi registrada no Musicdibs. Verifique sua certificação blockchain instantaneamente.',
         badge: 'Verificação de registros',
         title1: 'Verifique a autenticidade',
         title2: 'de qualquer obra',
