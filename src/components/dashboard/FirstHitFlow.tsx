@@ -16,7 +16,7 @@ import {
   Loader2, CheckCircle2, Play, Pause,
   Music2, FileUp, AlertTriangle, Rocket,
   ArrowRight, Key, RefreshCw, Link as LinkIcon,
-  Share2, Plus, Trash2, Download,
+  Share2, Plus, Trash2, Download, Lock,
   Crown, Video, Users, Clock, Instagram, Music,
   Upload, FileText, X, Import,
 } from 'lucide-react'
@@ -119,13 +119,17 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
   const { hasEnough } = useCredits()
   const creatorRoleLabels = useCreatorRoleLabels()
   const workTypeLabels = useWorkTypeLabels()
+  const [isAnnual, setIsAnnual] = useState<boolean | null>(null)
 
   // KYC guard
   const [kycStatus, setKycStatus] = useState<string | null>(null)
   useEffect(() => {
     if (!user) return
-    supabase.from('profiles').select('kyc_status').eq('user_id', user.id).single()
-      .then(({ data }) => setKycStatus(data?.kyc_status || 'unverified'))
+    supabase.from('profiles').select('kyc_status, subscription_plan').eq('user_id', user.id).single()
+      .then(({ data }) => {
+        setKycStatus(data?.kyc_status || 'unverified')
+        setIsAnnual(data?.subscription_plan === 'Annual')
+      })
   }, [user])
 
   // Paso activo: 1 | 2 | 3 | 'done'
@@ -421,6 +425,41 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
   const ACCEPTED_AUDIO = '.mp3,.aac'
   const ACCEPTED_VISUAL = '.mp4,.mov,.jpg,.jpeg,.png'
   const VIDEO_EXTS = ['.mp4', '.mov']
+  const IMAGE_EXTS = ['.jpg', '.jpeg', '.png']
+
+  const getFileExt = (file: File) => `.${file.name.split('.').pop()?.toLowerCase() || ''}`
+  const isNineBySixteen = (width: number, height: number) => Math.abs(width / height - 9 / 16) < 0.01
+  const validateVisualFile = (file: File): Promise<string | null> => {
+    const ext = getFileExt(file)
+    if (![...VIDEO_EXTS, ...IMAGE_EXTS].includes(ext)) {
+      return Promise.resolve(t('dashboard.premium.invalidVisualFormat', 'Formato no válido. Sube un vídeo MP4/MOV o una imagen JPG/PNG.'))
+    }
+
+    if (IMAGE_EXTS.includes(ext)) {
+      return new Promise(resolve => {
+        const url = URL.createObjectURL(file)
+        const img = new Image()
+        img.onload = () => {
+          URL.revokeObjectURL(url)
+          resolve(isNineBySixteen(img.naturalWidth, img.naturalHeight) ? null : t('dashboard.premium.invalidImageRatio', 'La imagen debe tener formato vertical 9:16.'))
+        }
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(t('dashboard.premium.invalidVisualFile', 'No se pudo leer el archivo visual.')) }
+        img.src = url
+      })
+    }
+
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(file)
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.onloadedmetadata = () => {
+        URL.revokeObjectURL(url)
+        resolve(video.videoWidth === 1080 && video.videoHeight === 1920 ? null : t('dashboard.premium.invalidVideoSize', 'El vídeo debe ser MP4 o MOV en 1080×1920px (9:16).'))
+      }
+      video.onerror = () => { URL.revokeObjectURL(url); resolve(t('dashboard.premium.invalidVisualFile', 'No se pudo leer el archivo visual.')) }
+      video.src = url
+    })
+  }
 
   const [promoArtist,    setPromoArtist]    = useState('')
   const [promoSongTitle, setPromoSongTitle] = useState('')
@@ -465,11 +504,18 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
     setPromoAudioFile(file)
   }
 
-  const handlePromoMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePromoMediaChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > 50 * 1024 * 1024) {
       toast.error(t('dashboard.premium.fileTooLarge', 'Archivo demasiado grande (máx. 50 MB)'))
+      e.currentTarget.value = ''
+      return
+    }
+    const validationError = await validateVisualFile(file)
+    if (validationError) {
+      toast.error(validationError)
+      e.currentTarget.value = ''
       return
     }
     setPromoMediaFile(file)
