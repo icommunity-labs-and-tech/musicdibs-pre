@@ -24,6 +24,18 @@ const LOCALE_MAP: Record<string, string> = {
 
 const ALL_LOCALES = Object.values(LOCALE_MAP);
 
+const BRAND_NAME = "Musicdibs";
+const BRAND_NAME_PATTERN = /MusicDibs|Musicdibs/gi;
+
+const normalizeBrandName = (text: string) => text.replace(BRAND_NAME_PATTERN, BRAND_NAME);
+
+const withBrandInDescription = (description: string) => {
+  const normalizedDescription = normalizeBrandName(description);
+  return normalizedDescription.includes(BRAND_NAME)
+    ? normalizedDescription
+    : `${BRAND_NAME}: ${normalizedDescription}`;
+};
+
 export const SEO = ({
   title,
   description,
@@ -34,7 +46,13 @@ export const SEO = ({
   jsonLd,
 }: SEOProps) => {
   const url = `${BASE_URL}${path}`;
-  const fullTitle = path === "/" ? title : `${title} | Musicdibs`;
+  const normalizedTitle = normalizeBrandName(title);
+  const fullTitle = path === "/"
+    ? normalizedTitle
+    : normalizedTitle.includes(BRAND_NAME)
+      ? normalizedTitle
+      : `${normalizedTitle} | ${BRAND_NAME}`;
+  const fullDescription = withBrandInDescription(description);
   const imageUrl = image
     ? (image.startsWith("http") ? image : `${BASE_URL}${image}`)
     : `${BASE_URL}${DEFAULT_OG_IMAGE}`;
@@ -47,18 +65,18 @@ export const SEO = ({
   return (
     <Helmet>
       <title>{fullTitle}</title>
-      <meta name="description" content={description} />
+      <meta name="description" content={fullDescription} />
       <link rel="canonical" href={url} />
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />
       <meta property="og:url" content={url} />
       <meta property="og:title" content={fullTitle} />
-      <meta property="og:description" content={description} />
+      <meta property="og:description" content={fullDescription} />
       <meta property="og:image" content={imageUrl} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
-      <meta property="og:site_name" content="Musicdibs" />
+      <meta property="og:site_name" content={BRAND_NAME} />
       <meta property="og:locale" content={ogLocale} />
       {alternateLocales.map((alt) => (
         <meta key={alt} property="og:locale:alternate" content={alt} />
@@ -69,7 +87,7 @@ export const SEO = ({
       <meta name="twitter:site" content="@musicdibs" />
       <meta name="twitter:url" content={url} />
       <meta name="twitter:title" content={fullTitle} />
-      <meta name="twitter:description" content={description} />
+      <meta name="twitter:description" content={fullDescription} />
       <meta name="twitter:image" content={imageUrl} />
 
       {schemas.map((schema, i) => (
