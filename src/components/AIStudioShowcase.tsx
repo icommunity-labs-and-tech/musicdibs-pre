@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Play, Sparkles, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal, StaggerGrid } from "@/components/ScrollReveal";
@@ -8,6 +9,7 @@ interface DemoSong {
   subtitle: string;
   colors: [string, string]; // tailwind from / to
   glow: string; // tailwind shadow color class
+  audioSrc?: string;
 }
 
 const DEMO_SONGS: DemoSong[] = [
@@ -17,6 +19,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Lo-fi hip hop · nostálgico y soñador",
     colors: ["from-purple-500", "to-fuchsia-500"],
     glow: "shadow-purple-500/30",
+    audioSrc: "/audio/midnight-drive.mpeg",
   },
   {
     title: "Fuego Latino",
@@ -113,6 +116,17 @@ const Waveform = ({ from, to }: { from: string; to: string }) => {
 };
 
 export const AIStudioShowcase = () => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handlePlayDemo = (song: DemoSong) => {
+    if (!song.audioSrc) return;
+
+    audioRef.current?.pause();
+    const audio = new Audio(song.audioSrc);
+    audioRef.current = audio;
+    void audio.play().catch(() => undefined);
+  };
+
   return (
     <section
       className="relative overflow-hidden py-24"
@@ -220,6 +234,7 @@ export const AIStudioShowcase = () => {
                   <button
                     type="button"
                     aria-label={`Reproducir demo ${song.title}`}
+                    onClick={() => handlePlayDemo(song)}
                     className={`shrink-0 w-11 h-11 rounded-full bg-gradient-to-br ${song.colors[0]} ${song.colors[1]} flex items-center justify-center text-white shadow-lg ${song.glow} hover:scale-110 active:scale-95 transition-transform`}
                   >
                     <Play className="w-4 h-4 fill-current ml-0.5" />
