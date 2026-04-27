@@ -17,7 +17,7 @@ const DEFAULT_COSTS: Record<string, number> = {
   generate_audio_song: 3,
   edit_audio: 2,
   enhance_audio: 3,
-  generate_cover: 1,
+  generate_cover: 2,
   generate_vocal_track: 1,
   one_click_create: 3,
   generate_video: 3,
