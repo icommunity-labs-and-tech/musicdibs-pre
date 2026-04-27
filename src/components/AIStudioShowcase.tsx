@@ -1,5 +1,5 @@
-import { useRef } from "react";
-import { Play, Sparkles, Music } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Pause, Play, Sparkles, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal, StaggerGrid } from "@/components/ScrollReveal";
 
@@ -117,13 +117,28 @@ const Waveform = ({ from, to }: { from: string; to: string }) => {
 
 export const AIStudioShowcase = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [playingDemo, setPlayingDemo] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+    };
+  }, []);
 
   const handlePlayDemo = (song: DemoSong) => {
     if (!song.audioSrc) return;
 
+    if (playingDemo === song.title) {
+      audioRef.current?.pause();
+      setPlayingDemo(null);
+      return;
+    }
+
     audioRef.current?.pause();
     const audio = new Audio(song.audioSrc);
+    audio.onended = () => setPlayingDemo(null);
     audioRef.current = audio;
+    setPlayingDemo(song.title);
     void audio.play().catch(() => undefined);
   };
 
@@ -233,11 +248,15 @@ export const AIStudioShowcase = () => {
                   </div>
                   <button
                     type="button"
-                    aria-label={`Reproducir demo ${song.title}`}
+                    aria-label={`${playingDemo === song.title ? "Pausar" : "Reproducir"} demo ${song.title}`}
                     onClick={() => handlePlayDemo(song)}
                     className={`shrink-0 w-11 h-11 rounded-full bg-gradient-to-br ${song.colors[0]} ${song.colors[1]} flex items-center justify-center text-white shadow-lg ${song.glow} hover:scale-110 active:scale-95 transition-transform`}
                   >
-                    <Play className="w-4 h-4 fill-current ml-0.5" />
+                    {playingDemo === song.title ? (
+                      <Pause className="w-4 h-4 fill-current" />
+                    ) : (
+                      <Play className="w-4 h-4 fill-current ml-0.5" />
+                    )}
                   </button>
                 </div>
               </div>
