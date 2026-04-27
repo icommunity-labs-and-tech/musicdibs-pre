@@ -146,7 +146,7 @@ export const promoMaterialTranslations: Record<string, Record<string, any>> = {
         referenceStrengthDesc: 'Creatividad vs. similitud',
         strengthInspiration: 'Solo inspiración',
         strengthSimilar: 'Muy similar',
-        copyrightWarningTitle: 'Sobre derechos de autor',
+        copyrightWarningTitle: 'Sobre propiedad intelectual',
         copyrightWarning1: 'La portada de referencia solo se usa como inspiración estética. La IA generará una imagen completamente nueva y original.',
         copyrightWarning2: 'No copies elementos protegidos (logos, marcas, personajes específicos). Solo úsalo para inspirarte en el estilo visual general.',
         promptLabelArtist: 'Describe cómo quieres la portada con tu foto',
