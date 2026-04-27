@@ -27,6 +27,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Reggaeton urbano · energético & bailable",
     colors: ["from-orange-400", "to-pink-500"],
     glow: "shadow-pink-500/30",
+    audioSrc: "/audio/fuego-latino.mpeg",
   },
   {
     title: "Turn It Up",
@@ -34,7 +35,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Dance electrónico · oscuro e hipnótico",
     colors: ["from-cyan-400", "to-blue-500"],
     glow: "shadow-cyan-500/30",
-    audioSrc: "/audio/dance-electronico.mpeg",
+    audioSrc: "/audio/turn-it-up.mpeg",
   },
   {
     title: "Alma Libre",
@@ -42,6 +43,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Indie folk · acústico y emotivo",
     colors: ["from-amber-300", "to-rose-400"],
     glow: "shadow-amber-400/30",
+    audioSrc: "/audio/alma-libre.mp3",
   },
   {
     title: "No Sleep Tonight",
@@ -49,6 +51,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "R&B pop · suave y sensual",
     colors: ["from-fuchsia-500", "to-violet-600"],
     glow: "shadow-fuchsia-500/30",
+    audioSrc: "/audio/no-sleep-tonight.mp3",
   },
   {
     title: "Trap God",
@@ -56,6 +59,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Hip hop trap · duro y cinematográfico",
     colors: ["from-blue-500", "to-purple-700"],
     glow: "shadow-blue-500/30",
+    audioSrc: "/audio/trap-god.mp3",
   },
 ];
 
