@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
   Megaphone, RefreshCw, Plus, TrendingUp, DollarSign,
-  Users, ShoppingBag, BarChart3, Eye, Calendar, Loader2,
+  Users, ShoppingBag, BarChart3, Eye, Calendar, Loader2, ArrowUpDown,
 } from 'lucide-react';
 import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/HistoricalDataNotice';
 import {
@@ -21,6 +21,7 @@ import {
 } from 'recharts';
 
 type PeriodType = 'week' | 'month' | 'year';
+type CouponSortKey = 'roi' | 'cost' | 'conversion';
 
 function getWeekMonday(date: Date): string {
   const d = new Date(date);
@@ -68,6 +69,7 @@ export default function AdminCampaignMetricsPage() {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
   const [loadingCoupons, setLoadingCoupons] = useState(true);
+  const [couponSort, setCouponSort] = useState<{ key: CouponSortKey; direction: 'asc' | 'desc' }>({ key: 'roi', direction: 'desc' });
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -147,6 +149,19 @@ export default function AdminCampaignMetricsPage() {
   const campaignRows = (metrics?.campaigns || []).map((c: any) => ({ ...c, campaign_name: normalizeAttribution(c.campaign_name) }));
   const topByRevenue = [...campaignRows].sort((a: any, b: any) => b.revenue - a.revenue).slice(0, 5);
   const topByCustomers = [...campaignRows].sort((a: any, b: any) => b.new_customers - a.new_customers).slice(0, 5);
+  const getCouponConversion = (coupon: any) => coupon.total_registrations > 0 ? (coupon.total_clients / coupon.total_registrations) * 100 : 0;
+  const filteredCoupons = coupons.filter(c => couponFilter === 'all' || c.type === couponFilter);
+  const sortedCoupons = [...filteredCoupons].sort((a: any, b: any) => {
+    const values = {
+      roi: [parseFloat(a.current_roi) || 0, parseFloat(b.current_roi) || 0],
+      cost: [parseFloat(a.cost) || 0, parseFloat(b.cost) || 0],
+      conversion: [getCouponConversion(a), getCouponConversion(b)],
+    }[couponSort.key];
+    return couponSort.direction === 'asc' ? values[0] - values[1] : values[1] - values[0];
+  });
+  const handleCouponSort = (key: CouponSortKey) => {
+    setCouponSort(prev => ({ key, direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc' }));
+  };
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando campañas...</div>;
 
