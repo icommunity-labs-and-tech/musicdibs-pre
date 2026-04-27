@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
 import { ArtistsBanner } from "@/components/ArtistsBanner";
@@ -21,36 +21,41 @@ const Footer = lazyWithRetry(() => import("@/components/Footer").then(m => ({ de
 
 const DeferredHomeSections = () => {
   const [shouldRender, setShouldRender] = useState(false);
+  const triggerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (shouldRender) return;
 
-    let idleId: number | undefined;
+    const trigger = triggerRef.current;
+    let observer: IntersectionObserver | undefined;
     let timeoutId: number | undefined;
     const render = () => setShouldRender(true);
-    const scheduleRender = () => {
-      if (typeof window.requestIdleCallback === "function") {
-        idleId = window.requestIdleCallback(render, { timeout: 1800 });
-      } else {
-        timeoutId = window.setTimeout(render, 800);
-      }
-    };
+
+    if (trigger && "IntersectionObserver" in window) {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) render();
+        },
+        { rootMargin: "1200px 0px" }
+      );
+      observer.observe(trigger);
+    }
 
     window.addEventListener("scroll", render, { once: true, passive: true });
     window.addEventListener("pointerdown", render, { once: true, passive: true });
     window.addEventListener("keydown", render, { once: true });
-    scheduleRender();
+    timeoutId = window.setTimeout(render, 7000);
 
     return () => {
-      if (idleId !== undefined) window.cancelIdleCallback(idleId);
       if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+      observer?.disconnect();
       window.removeEventListener("scroll", render);
       window.removeEventListener("pointerdown", render);
       window.removeEventListener("keydown", render);
     };
   }, [shouldRender]);
 
-  if (!shouldRender) return null;
+  if (!shouldRender) return <div ref={triggerRef} aria-hidden="true" className="h-px w-full" />;
 
   return (
     <Suspense fallback={null}>
