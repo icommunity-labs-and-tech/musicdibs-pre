@@ -84,7 +84,7 @@ interface Labels {
 const labelsMap: Record<string, Labels> = {
   es: {
     headerTitle: 'Comprobante de compra certificada',
-    headerIntro: 'MusicDibs certifica que la siguiente operación ha sido registrada y sellada como evidencia digital verificable',
+    headerIntro: 'Musicdibs certifica que la siguiente operación ha sido registrada y sellada como evidencia digital verificable',
     sectionBuyer: 'Datos del comprador',
     sectionPayment: 'Datos de la operación',
     sectionLegal: 'Datos legales',
@@ -101,7 +101,7 @@ const labelsMap: Record<string, Labels> = {
   },
   en: {
     headerTitle: 'Certified purchase receipt',
-    headerIntro: 'MusicDibs certifies that the following transaction has been registered and sealed as verifiable digital evidence',
+    headerIntro: 'Musicdibs certifies that the following transaction has been registered and sealed as verifiable digital evidence',
     sectionBuyer: 'Buyer data',
     sectionPayment: 'Transaction data',
     sectionLegal: 'Legal data',
@@ -118,7 +118,7 @@ const labelsMap: Record<string, Labels> = {
   },
   'pt-BR': {
     headerTitle: 'Comprovante de compra certificada',
-    headerIntro: 'MusicDibs certifica que a seguinte operação foi registrada e selada como evidência digital verificável',
+    headerIntro: 'Musicdibs certifica que a seguinte operação foi registrada e selada como evidência digital verificável',
     sectionBuyer: 'Dados do comprador',
     sectionPayment: 'Dados da operação',
     sectionLegal: 'Dados legais',

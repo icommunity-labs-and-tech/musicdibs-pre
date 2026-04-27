@@ -398,7 +398,7 @@ export default function AdminProductMetrics() {
                   {fmt(totals.worksAfterGen)} registros tras generación de {fmt(totals.generationsCompleted)} generaciones completadas
                 </p>
                 <p className="text-xs text-muted-foreground/70 max-w-lg mx-auto">
-                  Mide cuántos usuarios que generan música dan el siguiente paso y la protegen con blockchain. Es el KPI principal del diferencial competitivo de MusicDibs.
+                  Mide cuántos usuarios que generan música dan el siguiente paso y la protegen con blockchain. Es el KPI principal del diferencial competitivo de Musicdibs.
                 </p>
               </CardContent>
             </Card>

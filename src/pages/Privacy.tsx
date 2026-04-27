@@ -8,7 +8,7 @@ const Privacy = () => {
 
   return (
     <div className="min-h-screen page-bg">
-      <SEO title="Política de Privacidad" description="Política de privacidad de MusicDibs. Cómo protegemos y tratamos tus datos personales." path="/privacy" />
+      <SEO title="Política de Privacidad" description="Política de privacidad de Musicdibs. Cómo protegemos y tratamos tus datos personales." path="/privacy" />
       <Navbar />
 
       <div className="pt-32 pb-20 px-6">

@@ -119,7 +119,7 @@ export default function ManagerLanding() {
   return (
     <div className="min-h-screen page-bg">
       <SEO
-        title="Managers y Agencias Musicales | MusicDibs"
+        title="Managers y Agencias Musicales | Musicdibs"
         description="Gestiona la propiedad intelectual de toda tu cartera de artistas. Registro en blockchain, distribución y panel de control para managers y agencias."
         path="/manager"
       />

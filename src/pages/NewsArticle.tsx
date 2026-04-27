@@ -47,11 +47,11 @@ const NewsArticle = () => {
           image: post.image_url || "https://musicdibs.com/og-image.png",
           author: {
             "@type": "Organization",
-            name: post.author || "MusicDibs",
+            name: post.author || "Musicdibs",
           },
           publisher: {
             "@type": "Organization",
-            name: "MusicDibs",
+            name: "Musicdibs",
             logo: {
               "@type": "ImageObject",
               url: "https://musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",

@@ -8,7 +8,7 @@ const SLA = () => {
 
   return (
     <div className="min-h-screen page-bg">
-      <SEO title="Acuerdo de Nivel de Servicio" description="Consulta el SLA de MusicDibs: compromisos de disponibilidad, soporte y calidad del servicio." path="/sla" />
+      <SEO title="Acuerdo de Nivel de Servicio" description="Consulta el SLA de Musicdibs: compromisos de disponibilidad, soporte y calidad del servicio." path="/sla" />
       <Navbar />
 
       <div className="pt-32 pb-20 px-6">

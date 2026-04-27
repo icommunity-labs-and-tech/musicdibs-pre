@@ -262,11 +262,11 @@ export default function ManagerRegisterWork() {
                   <div className="border border-border rounded-lg p-4 space-y-3">
                     <Label className="text-sm font-medium flex items-center gap-2">
                       <Link2 className="h-4 w-4" />
-                      Vincular cuenta de MusicDibs
+                      Vincular cuenta de Musicdibs
                     </Label>
                     <div className="flex gap-2">
                       <Input
-                        placeholder="Email del artista en MusicDibs"
+                        placeholder="Email del artista en Musicdibs"
                         value={linkEmail}
                         onChange={(e) => setLinkEmail(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearchUser()}

@@ -6,7 +6,7 @@ export const faqTranslations: Record<string, Record<string, any>> = {
     faq: {
       title: 'Preguntas Frecuentes',
       subtitle: 'Encuentra respuestas a las preguntas más comunes sobre Musicdibs',
-      seo_description: 'Preguntas frecuentes sobre MusicDibs: registro blockchain, distribución musical, certificados y más.',
+      seo_description: 'Preguntas frecuentes sobre Musicdibs: registro blockchain, distribución musical, certificados y más.',
       items: [
         {
           q: '¿Los créditos de suscripción no utilizados son acumulativos al renovar anualmente?',
@@ -107,7 +107,7 @@ export const faqTranslations: Record<string, Record<string, any>> = {
     faq: {
       title: 'Frequently Asked Questions',
       subtitle: 'Find answers to the most common questions about Musicdibs',
-      seo_description: 'Frequently asked questions about MusicDibs: blockchain registration, music distribution, certificates and more.',
+      seo_description: 'Frequently asked questions about Musicdibs: blockchain registration, music distribution, certificates and more.',
       items: [
         {
           q: 'Are unspent subscription credits cumulative when renewed annually?',
@@ -208,7 +208,7 @@ export const faqTranslations: Record<string, Record<string, any>> = {
     faq: {
       title: 'Perguntas Frequentes',
       subtitle: 'Encontre respostas para as perguntas mais comuns sobre a Musicdibs',
-      seo_description: 'Perguntas frequentes sobre MusicDibs: registro em blockchain, distribuição musical, certificados e mais.',
+      seo_description: 'Perguntas frequentes sobre Musicdibs: registro em blockchain, distribuição musical, certificados e mais.',
       items: [
         {
           q: 'Os créditos de assinatura não utilizados são cumulativos ao renovar anualmente?',

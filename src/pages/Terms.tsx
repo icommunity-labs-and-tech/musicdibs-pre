@@ -8,7 +8,7 @@ const Terms = () => {
 
   return (
     <div className="min-h-screen page-bg">
-      <SEO title="Términos y Condiciones" description="Términos y condiciones de uso de MusicDibs. Lee nuestras condiciones antes de usar el servicio." path="/terms" />
+      <SEO title="Términos y Condiciones" description="Términos y condiciones de uso de Musicdibs. Lee nuestras condiciones antes de usar el servicio." path="/terms" />
       <Navbar />
 
       <div className="pt-32 pb-20 px-6">

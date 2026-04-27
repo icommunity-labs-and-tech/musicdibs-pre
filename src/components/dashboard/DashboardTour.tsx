@@ -16,14 +16,14 @@ function useSteps(): Step[] {
     {
       target: 'body',
       placement: 'center' as const,
-      title: t('dashboard.tour.welcome', 'Bienvenido a MusicDibs'),
+      title: t('dashboard.tour.welcome', 'Bienvenido a Musicdibs'),
       content: t('dashboard.tour.welcomeContent', 'Este es tu panel de control. Desde aquí tienes una visión general y puedes acceder a todas las herramientas para músicos.\n\nTe mostramos rápidamente cómo funciona.'),
       disableBeacon: true,
     },
     {
       target: '[data-tour="account-summary"]',
       title: t('dashboard.tour.accountTitle', 'Resumen de la cuenta'),
-      content: t('dashboard.tour.accountContent', 'Aquí puedes ver un resumen de tu actividad:\n• Obras registradas\n• Registros pendientes\n• Créditos disponibles\n\nLos créditos son los que utilizas para usar cada herramienta: registros, promociones, distribución, creación con IA MusicDibs Studio.'),
+      content: t('dashboard.tour.accountContent', 'Aquí puedes ver un resumen de tu actividad:\n• Obras registradas\n• Registros pendientes\n• Créditos disponibles\n\nLos créditos son los que utilizas para usar cada herramienta: registros, promociones, distribución, creación con IA Musicdibs Studio.'),
       disableBeacon: true,
     },
     {

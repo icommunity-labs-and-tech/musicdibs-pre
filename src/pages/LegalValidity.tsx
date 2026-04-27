@@ -9,7 +9,7 @@ const LegalValidity = () => {
 
   return (
     <div className="min-h-screen page-bg">
-      <SEO title="Validez Legal" description="Conoce la validez legal de los certificados blockchain de MusicDibs para proteger tus derechos de autor." path="/legal-validity" />
+      <SEO title="Validez Legal" description="Conoce la validez legal de los certificados blockchain de Musicdibs para proteger tus derechos de autor." path="/legal-validity" />
       <Navbar />
 
       <div className="pt-32 pb-20 px-6">

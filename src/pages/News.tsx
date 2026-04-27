@@ -105,7 +105,7 @@ const News = () => {
     <div className="min-h-screen page-bg">
       <SEO
         title={t("blog.title", "Noticias")}
-        description={t("blog.seo_description", "Últimas noticias y artículos de MusicDibs sobre distribución musical, blockchain y derechos de autor.")}
+        description={t("blog.seo_description", "Últimas noticias y artículos de Musicdibs sobre distribución musical, blockchain y derechos de autor.")}
         path="/news"
         locale={i18n.language}
         jsonLd={[
@@ -113,9 +113,9 @@ const News = () => {
             "@context": "https://schema.org",
             "@type": "CollectionPage",
             name: t("blog.title", "Blog & Novedades"),
-            description: t("blog.seo_description", "Últimas noticias y artículos de MusicDibs sobre distribución musical, blockchain y derechos de autor."),
+            description: t("blog.seo_description", "Últimas noticias y artículos de Musicdibs sobre distribución musical, blockchain y derechos de autor."),
             url: "https://musicdibs.com/news",
-            isPartOf: { "@type": "WebSite", name: "MusicDibs", url: "https://musicdibs.com" },
+            isPartOf: { "@type": "WebSite", name: "Musicdibs", url: "https://musicdibs.com" },
           },
           {
             "@context": "https://schema.org",
