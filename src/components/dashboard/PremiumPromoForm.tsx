@@ -55,6 +55,52 @@ const ACCEPTED_VISUAL = '.mp4,.mov,.jpg,.jpeg,.png';
 const VIDEO_EXTS = ['.mp4', '.mov'];
 const IMAGE_EXTS = ['.jpg', '.jpeg', '.png'];
 
+const getFileExt = (file: File) => `.${file.name.split('.').pop()?.toLowerCase() || ''}`;
+
+const isNineBySixteen = (width: number, height: number) => Math.abs(width / height - 9 / 16) < 0.01;
+
+const validateVisualFile = (file: File, t: (key: string, fallback?: string) => string): Promise<string | null> => {
+  const ext = getFileExt(file);
+  if (![...VIDEO_EXTS, ...IMAGE_EXTS].includes(ext)) {
+    return Promise.resolve(t('dashboard.premium.invalidVisualFormat', 'Formato no válido. Sube un vídeo MP4/MOV o una imagen JPG/PNG.'));
+  }
+
+  if (IMAGE_EXTS.includes(ext)) {
+    return new Promise(resolve => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(isNineBySixteen(img.naturalWidth, img.naturalHeight)
+          ? null
+          : t('dashboard.premium.invalidImageRatio', 'La imagen debe tener formato vertical 9:16.'));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(t('dashboard.premium.invalidVisualFile', 'No se pudo leer el archivo visual.'));
+      };
+      img.src = url;
+    });
+  }
+
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      resolve(video.videoWidth === 1080 && video.videoHeight === 1920
+        ? null
+        : t('dashboard.premium.invalidVideoSize', 'El vídeo debe ser MP4 o MOV en 1080×1920px (9:16).'));
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(t('dashboard.premium.invalidVisualFile', 'No se pudo leer el archivo visual.'));
+    };
+    video.src = url;
+  });
+};
+
 export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -113,11 +159,18 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
     setAudioFile(file);
   };
 
-  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 50 * 1024 * 1024) {
       toast.error(t('dashboard.premium.fileTooLarge', 'Archivo demasiado grande (máx. 50 MB)'));
+      e.currentTarget.value = '';
+      return;
+    }
+    const validationError = await validateVisualFile(file, t as any);
+    if (validationError) {
+      toast.error(validationError);
+      e.currentTarget.value = '';
       return;
     }
     setMediaFile(file);
