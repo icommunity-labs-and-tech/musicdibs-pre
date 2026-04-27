@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { adminApi } from '@/services/adminApi';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
   Megaphone, RefreshCw, Plus, TrendingUp, DollarSign,
@@ -64,6 +65,9 @@ export default function AdminCampaignMetricsPage() {
   const [detailData, setDetailData] = useState<any>(null);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
   const [newCampaign, setNewCampaign] = useState({ name: '', type: '', owner: '', cost: '0', coupon_code: '', utm_source: '', utm_medium: '', utm_campaign: '', notes: '' });
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
+  const [loadingCoupons, setLoadingCoupons] = useState(true);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -86,6 +90,23 @@ export default function AdminCampaignMetricsPage() {
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const loadCoupons = useCallback(async () => {
+    setLoadingCoupons(true);
+    try {
+      const { data } = await supabase
+        .from('marketing_campaigns')
+        .select('*')
+        .not('coupon_code', 'is', null)
+        .order('current_roi', { ascending: false });
+      setCoupons(data || []);
+    } catch (e: any) {
+      toast.error('Error cargando cupones');
+    }
+    setLoadingCoupons(false);
+  }, []);
+
+  useEffect(() => { loadCoupons(); }, [loadCoupons]);
 
   const loadDetail = async (campaignName: string) => {
     if (!campaignName) { toast.error('Campaña sin nombre'); return; }
@@ -346,6 +367,142 @@ export default function AdminCampaignMetricsPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      {/* ── Sección Cupones e Influencers ── */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-bold">🎟️ Cupones e Influencers</h2>
+            <p className="text-sm text-muted-foreground">Histórico acumulado</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(['all', 'influencer', 'rrss'] as const).map(f => (
+              <Button key={f} variant={couponFilter === f ? 'default' : 'outline'} className="h-7 text-xs" onClick={() => setCouponFilter(f)}>
+                {f === 'all' ? 'Todos' : f === 'influencer' ? '🎥 Influencers' : '📱 RRSS'}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* KPI cards resumen */}
+        {!loadingCoupons && coupons.length > 0 && (() => {
+          const influencers = coupons.filter(c => c.type === 'influencer');
+          const totalSpend = influencers.reduce((s, c) => s + (parseFloat(c.cost) || 0), 0);
+          const totalClients = coupons.reduce((s, c) => s + (c.total_clients || 0), 0);
+          const totalReg = coupons.reduce((s, c) => s + (c.total_registrations || 0), 0);
+          const bestRoi = coupons.filter(c => c.current_roi > 0).sort((a, b) => b.current_roi - a.current_roi)[0];
+          return (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <KpiCard label="Gasto influencers" value={`€${totalSpend.toLocaleString('es-ES', { minimumFractionDigits: 0 })}`} icon={DollarSign} />
+              <KpiCard label="Registros con cupón" value={totalReg} icon={Users} />
+              <KpiCard label="Clientes con cupón" value={totalClients} icon={ShoppingBag} />
+              <KpiCard label="Mejor ROI" value={bestRoi ? `${bestRoi.coupon_code} · ${(bestRoi.current_roi * 100).toFixed(0)}%` : '—'} icon={TrendingUp} />
+            </div>
+          );
+        })()}
+
+        {/* Gráfico ROI por cupón */}
+        {!loadingCoupons && coupons.filter(c => couponFilter === 'all' || c.type === couponFilter).length > 0 && (
+          <Card className="border-border/40">
+            <CardHeader><CardTitle className="text-base">📈 ROI acumulado por cupón</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart
+                  data={coupons
+                    .filter(c => couponFilter === 'all' || c.type === couponFilter)
+                    .map(c => ({
+                      name: c.coupon_code,
+                      roi: parseFloat((c.current_roi * 100).toFixed(0)),
+                    }))}
+                  layout="vertical"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <Tooltip
+                    contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                    formatter={(v: any) => [`${v}%`, 'ROI']}
+                  />
+                  <Bar dataKey="roi" fill="hsl(var(--primary))" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tabla de cupones */}
+        <Card className="border-border/40">
+          <CardHeader>
+            <CardTitle className="text-base">Detalle por cupón</CardTitle>
+            <CardDescription>Datos históricos acumulados desde el inicio de cada campaña</CardDescription>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            {loadingCoupons ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cupón</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Influencer / Canal</TableHead>
+                    <TableHead>País</TableHead>
+                    <TableHead className="text-right">Coste</TableHead>
+                    <TableHead className="text-right">Registros</TableHead>
+                    <TableHead className="text-right">Clientes</TableHead>
+                    <TableHead className="text-right">Conv. %</TableHead>
+                    <TableHead className="text-right">ROI</TableHead>
+                    <TableHead className="text-right">LTV/CAC</TableHead>
+                    <TableHead>Estado</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {coupons
+                    .filter(c => couponFilter === 'all' || c.type === couponFilter)
+                    .map((c: any) => {
+                      const roi = parseFloat(c.current_roi) || 0;
+                      const conv = c.total_registrations > 0
+                        ? ((c.total_clients / c.total_registrations) * 100).toFixed(1)
+                        : '0.0';
+                      return (
+                        <TableRow key={c.id}>
+                          <TableCell>
+                            <Badge className={c.type === 'influencer'
+                              ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
+                              : 'bg-blue-500/20 text-blue-400 border-blue-500/30'}>
+                              {c.coupon_code}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{c.type}</TableCell>
+                          <TableCell>{c.owner}</TableCell>
+                          <TableCell>{c.target_country || '—'}</TableCell>
+                          <TableCell className="text-right">€{parseFloat(c.cost).toLocaleString('es-ES', { minimumFractionDigits: 0 })}</TableCell>
+                          <TableCell className="text-right">{c.total_registrations || 0}</TableCell>
+                          <TableCell className="text-right">{c.total_clients || 0}</TableCell>
+                          <TableCell className="text-right">{conv}%</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant={roi > 0 ? 'default' : 'destructive'} className="text-[10px]">
+                              {roi > 0 ? '+' : ''}{(roi * 100).toFixed(0)}%
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">{parseFloat(c.current_ltv_cac)?.toFixed(2) || '—'}x</TableCell>
+                          <TableCell>
+                            <Badge variant={c.is_active ? 'default' : 'secondary'}>
+                              {c.is_active ? 'Activo' : 'Inactivo'}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  {coupons.filter(c => couponFilter === 'all' || c.type === couponFilter).length === 0 && (
+                    <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground py-8">Sin cupones para este filtro</TableCell></TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
