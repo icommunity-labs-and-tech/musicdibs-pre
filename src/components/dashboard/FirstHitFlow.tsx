@@ -648,14 +648,26 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
               ⏱ La aprobación puede tardar hasta 7 días.
               Sin sorpresas.
             </p>
-            <Button
-              variant="hero"
-              className="w-full"
-              onClick={() => window.open('https://dist.musicdibs.com/', '_blank', 'noopener')}
-            >
-              {t('dashboard.firstHit.distributeBtn')}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            {isAnnual ? (
+              <Button
+                variant="hero"
+                className="w-full"
+                onClick={() => window.open('https://dist.musicdibs.com/', '_blank', 'noopener')}
+              >
+                {t('dashboard.firstHit.distributeBtn')}
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <div className="space-y-2">
+                <Button variant="outline" className="w-full gap-2 opacity-60" disabled>
+                  <Lock className="h-4 w-4" />
+                  {t('dashboard.firstHit.distributeBtn')}
+                </Button>
+                <p className="text-[11px] text-muted-foreground">
+                  {t('dashboard.distribute.annualOnly', { defaultValue: 'Disponible solo con suscripción anual' })}
+                </p>
+              </div>
+            )}
           </div>
 
           <Button
