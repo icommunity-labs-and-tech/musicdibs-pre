@@ -7,7 +7,23 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 }
 
-const CREDITS_COST = 1
+const FEATURE_KEY = "generate_cover"
+const DEFAULT_CREDITS_COST = 2
+
+async function getCreditCost(supabaseAdmin: ReturnType<typeof createClient>) {
+  const { data, error } = await supabaseAdmin
+    .from("feature_costs")
+    .select("credit_cost")
+    .eq("feature_key", FEATURE_KEY)
+    .single() as { data: { credit_cost: number } | null; error: { message: string } | null }
+
+  if (error || typeof data?.credit_cost !== "number") {
+    console.warn(`[COVER] Using default credit cost (${DEFAULT_CREDITS_COST}):`, error?.message)
+    return DEFAULT_CREDITS_COST
+  }
+
+  return data.credit_cost
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -67,6 +83,7 @@ serve(async (req) => {
 
     chargedUserId = user.id
     chargedTrackTitle = trackTitle || "Sin título"
+    const creditsCost = await getCreditCost(supabaseAdmin)
 
     const { data: profile } = await supabaseAdmin
       .from("profiles")
@@ -74,12 +91,12 @@ serve(async (req) => {
       .eq("user_id", user.id)
       .single() as { data: { available_credits: number } | null }
 
-    if (!profile || profile.available_credits < CREDITS_COST) {
+    if (!profile || profile.available_credits < creditsCost) {
       return new Response(
         JSON.stringify({
           error: "insufficient_credits",
           available: profile?.available_credits ?? 0,
-          required: CREDITS_COST,
+          required: creditsCost,
         }),
         { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
@@ -218,7 +235,7 @@ serve(async (req) => {
     const { data: deductedRows, error: deductError } = await supabaseAdmin
       .from("profiles")
       .update({
-        available_credits: profile.available_credits - CREDITS_COST,
+        available_credits: profile.available_credits - creditsCost,
         updated_at: new Date().toISOString(),
       })
       .eq("user_id", user.id)
@@ -240,7 +257,7 @@ serve(async (req) => {
         JSON.stringify({
           error: "insufficient_credits",
           available: latestProfile?.available_credits ?? 0,
-          required: CREDITS_COST,
+          required: creditsCost,
         }),
         { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
@@ -250,7 +267,7 @@ serve(async (req) => {
 
     const { error: txError } = await supabaseAdmin.from("credit_transactions").insert({
       user_id: user.id,
-      amount: -CREDITS_COST,
+      amount: -creditsCost,
       type: "usage",
       description: `Portada IA: ${trackTitle || "Sin título"}`.slice(0, 200),
     })
@@ -259,10 +276,10 @@ serve(async (req) => {
       throw txError
     }
 
-    console.log(`[COVER] Success for ${user.id}, ${CREDITS_COST} credit charged`)
+    console.log(`[COVER] Success for ${user.id}, ${creditsCost} credits charged`)
 
     return new Response(
-      JSON.stringify({ success: true, imageUrl: storedUrl, credits_used: CREDITS_COST }),
+      JSON.stringify({ success: true, imageUrl: storedUrl, credits_used: creditsCost }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     )
   } catch (e) {
