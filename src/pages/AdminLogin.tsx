@@ -54,7 +54,7 @@ const AdminLogin = () => {
               <Lock className="w-7 h-7 text-primary" />
             </div>
             <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-            <p className="text-white/50 text-sm mt-1">MusicDibs CMS</p>
+            <p className="text-white/50 text-sm mt-1">Musicdibs CMS</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

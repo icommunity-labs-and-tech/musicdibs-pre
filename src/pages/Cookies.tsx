@@ -8,7 +8,7 @@ const Cookies = () => {
 
   return (
     <div className="min-h-screen page-bg">
-      <SEO title="Política de Cookies" description="Política de cookies de MusicDibs. Información sobre las cookies que utilizamos en nuestra web." path="/cookies" />
+      <SEO title="Política de Cookies" description="Política de cookies de Musicdibs. Información sobre las cookies que utilizamos en nuestra web." path="/cookies" />
       <Navbar />
 
       <div className="pt-32 pb-20 px-6">

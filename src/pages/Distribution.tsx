@@ -15,7 +15,7 @@ const Distribution = () => {
 
   return (
     <div className="min-h-screen page-bg">
-      <SEO title="Distribución Musical" description="Distribuye tu música en Spotify, Apple Music, YouTube Music y más de 150 plataformas con MusicDibs. 95% de royalties." path="/distribution" />
+      <SEO title="Distribución Musical" description="Distribuye tu música en Spotify, Apple Music, YouTube Music y más de 150 plataformas con Musicdibs. 95% de royalties." path="/distribution" />
       <Navbar />
 
       {/* Hero Section */}

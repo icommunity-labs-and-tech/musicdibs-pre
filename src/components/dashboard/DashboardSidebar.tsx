@@ -246,7 +246,7 @@ export function DashboardSidebar() {
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
             <Music className="h-4 w-4 text-primary" />
           </div>
-          {!collapsed && <span className="font-bold text-base">MusicDibs</span>}
+          {!collapsed && <span className="font-bold text-base">Musicdibs</span>}
         </div>
       </SidebarHeader>
 

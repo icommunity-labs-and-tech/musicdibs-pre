@@ -502,7 +502,7 @@ export default function PromotionPage() {
                 )}
                 <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
                   <p className="font-medium mb-1">📊 Analytics avanzados — Próximamente</p>
-                  <p>En la siguiente versión podrás ver tus reproducciones, seguidores y tendencias directamente desde MusicDibs gracias a la integración con Chartmetric.</p>
+                  <p>En la siguiente versión podrás ver tus reproducciones, seguidores y tendencias directamente desde Musicdibs gracias a la integración con Chartmetric.</p>
                 </div>
               </CardContent>
             </Card>

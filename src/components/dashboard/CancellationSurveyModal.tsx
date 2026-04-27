@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 
 const REASONS = [
-  { value: 'probando', label: 'Solo estaba probando MusicDibs' },
+  { value: 'probando', label: 'Solo estaba probando Musicdibs' },
   { value: 'terminado', label: 'Ya he creado lo que necesitaba' },
   { value: 'no_uso', label: 'No la uso lo suficiente' },
   { value: 'pocos_creditos', label: 'Se me queda corto de créditos' },

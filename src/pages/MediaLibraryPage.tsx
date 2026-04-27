@@ -357,7 +357,7 @@ export default function MediaLibraryPage() {
       const content = await zip.generateAsync({ type: "blob" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(content);
-      a.download = `MusicDibs_assets_${new Date().toISOString().slice(0, 10)}.zip`;
+      a.download = `Musicdibs_assets_${new Date().toISOString().slice(0, 10)}.zip`;
       a.click();
       URL.revokeObjectURL(a.href);
       toast({ title: `${items.length} archivos descargados` });

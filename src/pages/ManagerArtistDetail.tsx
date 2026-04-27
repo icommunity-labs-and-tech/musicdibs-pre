@@ -162,7 +162,7 @@ export default function ManagerArtistDetail() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Link2 className="h-4 w-4" />
-            Cuenta de MusicDibs vinculada
+            Cuenta de Musicdibs vinculada
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -182,7 +182,7 @@ export default function ManagerArtistDetail() {
           ) : (
             <>
               <p className="text-sm text-muted-foreground">
-                Vincula este artista con su cuenta de MusicDibs para que las obras se registren directamente a su nombre.
+                Vincula este artista con su cuenta de Musicdibs para que las obras se registren directamente a su nombre.
               </p>
               <div className="flex gap-2">
                 <Input
