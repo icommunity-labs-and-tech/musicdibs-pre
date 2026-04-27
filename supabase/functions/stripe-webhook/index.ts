@@ -462,6 +462,7 @@ serve(async (req) => {
         // Check for discount/coupon
         let couponCode: string | undefined;
         let promotionCode: string | undefined;
+        let promotionCodeStr: string | undefined;
         try {
           if (session.total_details && (session.total_details as any).breakdown?.discounts?.length > 0) {
             const discount = (session.total_details as any).breakdown.discounts[0];
@@ -469,6 +470,26 @@ serve(async (req) => {
             promotionCode = discount?.discount?.promotion_code;
           }
         } catch { /* ignore */ }
+
+        // Obtener promotion code real (ej: FAEL20) desde la sesión expandida
+        try {
+          const expandedSession = await stripe.checkout.sessions.retrieve(session.id, {
+            expand: ["total_details.breakdown.discounts"],
+          });
+          const discounts = (expandedSession.total_details as any)?.breakdown?.discounts;
+          if (discounts?.length > 0) {
+            const discount = discounts[0];
+            couponCode = discount?.discount?.coupon?.id;
+            const promoCodeId = discount?.discount?.promotion_code;
+            if (promoCodeId) {
+              promotionCode = promoCodeId as string;
+              const promoCode = await stripe.promotionCodes.retrieve(promoCodeId as string);
+              promotionCodeStr = promoCode.code;
+            }
+          }
+        } catch (e) {
+          console.warn("[WEBHOOK] Could not expand session discounts:", e);
+        }
 
         const order = await createOrderRecord(supabase, {
           userId,
@@ -484,7 +505,7 @@ serve(async (req) => {
           isSubscription: !!stripeSubId,
           isRenewal: false,
           couponCode: couponCode || sessionMeta.coupon_code,
-          promotionCode,
+          promotionCode: promotionCodeStr || promotionCode,
           metadata: sessionMeta,
         });
 
