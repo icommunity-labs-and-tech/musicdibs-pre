@@ -25,7 +25,7 @@ interface HowItWorksDemoModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const STEP_DURATION_MS = 8333; // ~8.3s por paso → ~25s total
+const STEP_DURATION_MS = 11333; // ~11.3s por paso → ~34s total
 const FINAL_INDEX = 3;
 
 export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalProps) => {
@@ -80,7 +80,7 @@ export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalP
   const goPlans = () => {
     onOpenChange(false);
     setTimeout(() => {
-      document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
+      document.getElementById("pricing-section")?.scrollIntoView({ behavior: "smooth" });
     }, 200);
   };
 
@@ -483,7 +483,7 @@ function getCopy(lang: string) {
         alreadyHave: "¿Ya tienes tu canción? Súbela y salta este paso.",
       },
       step2: {
-        title: "2. Registra tu canción",
+        title: "2. Registro legal con blockchain. Antiplagio.",
         text: "",
         fTitle: "Título",
         fAuthor: "Autor",
@@ -531,7 +531,7 @@ function getCopy(lang: string) {
         alreadyHave: "Already have your song? Upload it and skip this step.",
       },
       step2: {
-        title: "2. Register your song",
+        title: "2. Legal registration with blockchain. Anti-plagiarism.",
         text: "",
         fTitle: "Title",
         fAuthor: "Author",
@@ -579,7 +579,7 @@ function getCopy(lang: string) {
         alreadyHave: "Já tem sua canção? Envie e pule este passo.",
       },
       step2: {
-        title: "2. Registre sua canção",
+        title: "2. Registro legal com blockchain. Antiplágio.",
         text: "",
         fTitle: "Título",
         fAuthor: "Autor",

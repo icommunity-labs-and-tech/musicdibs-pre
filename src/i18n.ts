@@ -94,7 +94,7 @@ const resources = {
       hero: {
         title: 'Crea. Protege. Distribuye.',
         highlight: 'Promociona.',
-        subtitle_prefix: 'La plataforma todo-en-uno para artistas: genera o mejora tu música con IA, regístrala con validez legal y',
+        subtitle_prefix: 'La plataforma completa para artistas: crea o mejora tu música con IA, regístrala con validez legal y',
         subtitle_strong: 'lánzala al mundo en minutos.',
         legal_more: '+info',
         cta_start: '🚀 Crear cuenta gratis',
@@ -102,7 +102,7 @@ const resources = {
       },
       why: {
         heading: 'La plataforma todo-en-uno para artistas independientes',
-        subheading: 'Crea con IA, registra tu propiedad intelectual, distribuye tu música en 220+ plataformas y promociónala ante una comunidad de más de 200k seguidores.\nTodo desde un solo lugar.',
+        subheading: 'MusicDibs te ayuda a lanzar tu música al mundo: regístrala, distribúyela y promociónala.\nCrea con IA o sube tu canción y mejórala con masterización profesional.',
         features: {
           legal: {
             title: 'AI Music Studio',
@@ -110,8 +110,8 @@ const resources = {
             popup: `El AI Music Studio es el corazón creativo de MusicDibs: un entorno completo para llevar tu música de la idea al lanzamiento.\n\nCon una sola plataforma puedes:\n\n• Crear canciones originales con IA (instrumentales o con voz)\n• Editar, masterizar y mejorar tus producciones\n• Generar portadas profesionales de álbum y single\n• Diseñar creatividades para Instagram, TikTok y YouTube\n• Producir vídeos promocionales cortos para tus lanzamientos\n• Crear carteles para eventos y cabeceras para redes sociales\n\nLa IA actúa como tu asistente creativo, manteniéndote siempre en el centro del proceso. Cuando tu obra esté lista, podrás registrarla, distribuirla y promocionarla sin salir de MusicDibs.`,
           },
           instant: {
-            title: 'Registro de PI',
-            desc: 'Protege tus obras y su contenido en segundos con certificación blockchain y validez legal internacional.',
+            title: 'Registro Copyright',
+            desc: 'Registro legal inmediato de canciones con certificación blockchain. Barato. Sin papeleo. Sin esperas. Antiplagio.',
             popup: `Protección al instante, sin complicaciones. Olvídate del papeleo y de los procesos lentos y costosos. Con Musicdibs, registrar tu música es <strong1>tan fácil como subir tu archivo: en solo segundos generamos una huella digital única</strong1> y la registramos en blockchain <strong2>con validez legal internacional</strong2>. Sin intermediarios y por una fracción del coste de un registro tradicional.\n\nCada registro en Musicdibs genera un certificado digital inmutable respaldado por tecnología Blockchain, válido como prueba legal de autoría. Este certificado cumple con normativas internacionales y nacionales, incluyendo el <a1>Convenio de Berna</a1>, el <a2>Tratado de la OMPI</a2>, la <a3>Directiva sobre Derechos de Autor en la Era Digital</a3> y regulaciones sobre Blockchain aplicadas a la propiedad intelectual.`,
           },
           distribution: {
@@ -132,7 +132,7 @@ const resources = {
         subtext: 'Impulsando el futuro de la música urbana',
         join_now: 'ÚNETE AHORA',
         view_testimonials: 'VER TESTIMONIOS',
-        stats: { artists: 'Artistas registrados', works: 'Obras protegidas', countries: 'Países' },
+        stats: { artists: 'Artistas registrados', works: 'Obras registradas y distribuidas', countries: 'Países' },
       },
       testimonials: {
         heading: 'Artistas que ya confían en Musicdibs',
@@ -697,7 +697,7 @@ const resources = {
         },
       },
       artists: {
-        heading1: '100,000+ ARTISTS ALREADY', heading2: 'USE MUSICDIBS!', subtext: 'Powering the future of urban music', join_now: 'JOIN NOW', view_testimonials: 'VIEW TESTIMONIALS', stats: { artists: 'Registered artists', works: 'Protected works', countries: 'Countries' },
+        heading1: '100,000+ ARTISTS ALREADY', heading2: 'USE MUSICDIBS!', subtext: 'Powering the future of urban music', join_now: 'JOIN NOW', view_testimonials: 'VIEW TESTIMONIALS', stats: { artists: 'Registered artists', works: 'Registered & distributed works', countries: 'Countries' },
       },
       testimonials: { heading: 'Artists who already trust Musicdibs', videoTitle: 'Testimonial from {{name}}' },
       pricing: {
@@ -1214,7 +1214,7 @@ const resources = {
       footer: { corporate: 'Corporativo', socialMedia: 'Redes Sociais', sla: 'Acordo de nível de serviço', privacy: 'Política de privacidade e proteção de dados', cookies: 'Política de cookies', terms: 'Termos e condições' },
       hero: { title: 'Crie. Proteja. Distribua.', highlight: 'Promova.', subtitle_prefix: 'A plataforma tudo-em-um para artistas: gere sua música com IA, registre-a com validade legal e', subtitle_strong: 'lance-a ao mundo em minutos.', legal_more: '+info', cta_start: '🚀 Criar conta grátis', cta_how: '▶ Veja como funciona em 20s' },
       why: { heading: 'A plataforma tudo-em-um para artistas independentes', subheading: 'Crie com IA, registre sua propriedade intelectual, distribua sua música em 220+ plataformas e promova-a para uma comunidade de mais de 200k seguidores.\nTudo em um só lugar.', features: { legal: { title: 'AI Music Studio', desc: 'Crie músicas com IA, masterize-as e gere capas, vídeos e materiais promocionais para seus lançamentos em um só lugar.', popup: `O AI Music Studio é o coração criativo da MusicDibs: um ambiente completo para levar sua música da ideia ao lançamento.\n\nA partir de uma única plataforma você pode:\n\n• Criar músicas originais com IA (instrumentais ou com voz)\n• Editar, masterizar e melhorar suas produções\n• Gerar capas profissionais de álbum e single\n• Desenhar criativos para Instagram, TikTok e YouTube\n• Produzir vídeos promocionais curtos para seus lançamentos\n• Criar cartazes para eventos e cabeçalhos para redes sociais\n\nA IA atua como seu assistente criativo, mantendo você sempre no centro do processo. Quando sua obra estiver pronta, registre, distribua e promova sem sair da MusicDibs.` }, instant: { title: 'Registro de PI', desc: 'Proteja suas obras e seu conteúdo em segundos com certificação blockchain e validade jurídica internacional.', popup: `Proteção imediata, sem complicações. Esqueça a papelada e os processos lentos e caros. Com a Musicdibs, registrar sua música é <strong1>tão fácil quanto enviar seu arquivo: em segundos geramos uma impressão digital única</strong1> e a registramos na blockchain <strong2>com validade jurídica internacional</strong2>. Sem intermediários e por uma fração do custo do registro tradicional.` }, distribution: { title: 'Distribuição Global', desc: 'Lance sua música no Spotify, Apple Music, YouTube e mais de 200 plataformas digitais a partir de uma única integração.', popup: `Distribuição global. Lance sua música nas <strong1>principais plataformas digitais do mundo: Spotify, Apple Music, Amazon Music, YouTube Music</strong1> e muitas outras, até 220. <strong2>Ganhe royalties desde o primeiro stream</strong2> e leve seu talento além de fronteiras, sem intermediários nem taxas ocultas. Gerencie tudo em uma única plataforma, com estatísticas em tempo real e suporte dedicado.` }, promo: { title: 'Promoção em RRSS', desc: 'Impulsione seus lançamentos em nossas redes sociais e ganhe visibilidade para uma comunidade de mais de 200k seguidores.', popup: `Amplifique o alcance da sua música através das nossas redes sociais oficiais:\n\n• Comunidade combinada de mais de 200.000 seguidores no TikTok e Instagram\n• Promoções destacadas em nossos perfis para impulsionar seus lançamentos\n• Visibilidade para uma audiência altamente segmentada de fãs de música urbana e independente\n• Estratégias de promoção adaptadas a cada single ou álbum\n• Material promocional otimizado para cada rede social\n\nNossa rede de seguidores se torna seu trampolim para ganhar tração real desde o dia um do lançamento.` } } },
-      artists: { heading1: '100.000+ ARTISTAS JÁ', heading2: 'USAM A MUSICDIBS!', subtext: 'Impulsionando o futuro da música urbana', join_now: 'ENTRE AGORA', view_testimonials: 'VER DEPOIMENTOS', stats: { artists: 'Artistas registrados', works: 'Obras protegidas', countries: 'Países' } },
+      artists: { heading1: '100.000+ ARTISTAS JÁ', heading2: 'USAM A MUSICDIBS!', subtext: 'Impulsionando o futuro da música urbana', join_now: 'ENTRE AGORA', view_testimonials: 'VER DEPOIMENTOS', stats: { artists: 'Artistas registrados', works: 'Obras registradas e distribuídas', countries: 'Países' } },
       testimonials: { heading: 'Artistas que já confiam na Musicdibs', videoTitle: 'Depoimento de {{name}}' },
       pricing: {
         title: 'Preços',
