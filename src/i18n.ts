@@ -102,7 +102,7 @@ const resources = {
       },
       why: {
         heading: 'La plataforma todo-en-uno para artistas independientes',
-        subheading: 'Musicdibs te ayuda a lanzar tu música al mundo: regístrala, distribúyela y promociónala.\nCrea con IA o sube tu canción y mejórala con masterización profesional.',
+        subheading: 'Musicdibs te ayuda a lanzar tu música al mundo: regístra, distribuye y promociona.\nCrea con IA o sube tu canción y mejórala con masterización profesional.',
         features: {
           legal: {
             title: 'AI Music Studio',
@@ -110,9 +110,9 @@ const resources = {
             popup: `El AI Music Studio es el corazón creativo de Musicdibs: un entorno completo para llevar tu música de la idea al lanzamiento.\n\nCon una sola plataforma puedes:\n\n• Crear canciones originales con IA (instrumentales o con voz)\n• Editar, masterizar y mejorar tus producciones\n• Generar portadas profesionales de álbum y single\n• Diseñar creatividades para Instagram, TikTok y YouTube\n• Producir vídeos promocionales cortos para tus lanzamientos\n• Crear carteles para eventos y cabeceras para redes sociales\n\nLa IA actúa como tu asistente creativo, manteniéndote siempre en el centro del proceso. Cuando tu obra esté lista, podrás registrarla, distribuirla y promocionarla sin salir de Musicdibs.`,
           },
           instant: {
-            title: 'Registro Propiedad Intelectual',
+            title: 'Registro Copyright',
             desc: 'Registro legal inmediato de canciones con certificación blockchain. Barato. Sin papeleo. Sin esperas. Antiplagio.',
-            popup: `Protección al instante, sin complicaciones. Olvídate del papeleo y de los procesos lentos y costosos. Con Musicdibs, registrar tu música es <strong1>tan fácil como subir tu archivo: en solo segundos generamos una huella digital única</strong1> y la registramos en blockchain <strong2>con validez legal internacional</strong2>. Sin intermediarios y por una fracción del coste de un registro tradicional.\n\nCada registro en Musicdibs genera un certificado digital inmutable respaldado por tecnología Blockchain, válido como prueba legal de autoría. Este certificado cumple con normativas internacionales y nacionales, incluyendo el <a1>Convenio de Berna</a1>, el <a2>Tratado de la OMPI</a2>, la <a3>Directiva sobre Propiedad Intelectual en la Era Digital</a3> y regulaciones sobre Blockchain aplicadas a la propiedad intelectual.`,
+            popup: `Protección al instante, sin complicaciones. Olvídate del papeleo y de los procesos lentos y costosos. Con Musicdibs, registrar tu música es <strong1>tan fácil como subir tu archivo: en solo segundos generamos una huella digital única</strong1> y la registramos en blockchain <strong2>con validez legal internacional</strong2>. Sin intermediarios y por una fracción del coste de un registro tradicional.\n\nCada registro en Musicdibs genera un certificado digital inmutable respaldado por tecnología Blockchain, válido como prueba legal de autoría. Este certificado cumple con normativas internacionales y nacionales, incluyendo el <a1>Convenio de Berna</a1>, el <a2>Tratado de la OMPI</a2>, la <a3>Directiva sobre Derechos de Autor en la Era Digital</a3> y regulaciones sobre Blockchain aplicadas a la propiedad intelectual.`,
           },
           distribution: {
             title: 'Distribución Global',
@@ -151,8 +151,8 @@ const resources = {
         buyNow: 'Contratar plan anual',
         ctaAnnual: 'Contratar plan anual',
         ctaMonthly: 'Empezar mensual',
-        nameAnnual: 'Plan Plus+',
-        nameMonthly: 'Plan Basic',
+        nameAnnual: 'Plan Plus+ Anual',
+        nameMonthly: 'Plan Basic Mensual',
         creditsAnnual: '100 créditos incluidos',
         creditsAnnualDynamic: '{{count}} créditos incluidos',
         creditsWord: 'créditos',
@@ -713,8 +713,8 @@ const resources = {
         buyNow: 'Get the annual plan',
         ctaAnnual: 'Get the annual plan',
         ctaMonthly: 'Start monthly',
-        nameAnnual: 'Plus+ Plan',
-        nameMonthly: 'Basic Plan',
+        nameAnnual: 'Plus+ Annual Plan',
+        nameMonthly: 'Basic Monthly Plan',
         creditsAnnual: '100 credits included',
         creditsAnnualDynamic: '{{count}} credits included',
         creditsWord: 'credits',
@@ -1229,8 +1229,8 @@ const resources = {
         buyNow: 'Contratar plano anual',
         ctaAnnual: 'Contratar plano anual',
         ctaMonthly: 'Começar mensal',
-        nameAnnual: 'Plano Plus+',
-        nameMonthly: 'Plano Basic',
+        nameAnnual: 'Plano Plus+ Anual',
+        nameMonthly: 'Plano Basic Mensal',
         creditsAnnual: '100 créditos incluídos',
         creditsAnnualDynamic: '{{count}} créditos incluídos',
         creditsWord: 'créditos',

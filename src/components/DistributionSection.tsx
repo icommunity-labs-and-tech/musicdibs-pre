@@ -2,7 +2,7 @@ import { Music, Users, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal, StaggerGrid } from "@/components/ScrollReveal";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+
 
 export const DistributionSection = () => {
   const { t } = useTranslation();
@@ -37,7 +37,7 @@ export const DistributionSection = () => {
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           <StaggerGrid baseDelay={100} staggerDelay={150} scale>
             {/* Distribución Mundial */}
-            <Link to="/distribution" className="block">
+            <a href="#pricing-section" className="block">
               <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer hover:scale-105">
                 <div className="flex items-center mb-6">
                   <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mr-4">
@@ -71,10 +71,10 @@ export const DistributionSection = () => {
                   </Button>
                 </div>
               </div>
-            </Link>
+            </a>
 
             {/* Promoción en Redes Sociales */}
-            <Link to="/marketing" className="block">
+            <a href="#pricing-section" className="block">
               <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer hover:scale-105">
                 <div className="flex items-center mb-6">
                   <div className="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center mr-4">
@@ -85,12 +85,26 @@ export const DistributionSection = () => {
                 <p className="text-white/80 mb-6 text-lg">{t("distro.social.desc")}</p>
                 
                 <div className="flex justify-center space-x-6">
-                  <div className="w-32 h-40 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300">
+                  <a
+                    href="https://www.instagram.com/musicdibs/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-32 h-40 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300 block"
+                    aria-label="Instagram @musicdibs"
+                  >
                     <img src="/lovable-uploads/ff17291e-4f59-4201-8e1b-8964a98b22f6.png" alt="Instagram Promotion" className="w-full h-full object-cover" width={122} height={152} loading="lazy" />
-                  </div>
-                  <div className="w-32 h-40 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300">
+                  </a>
+                  <a
+                    href="https://www.tiktok.com/@musicdibs_"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-32 h-40 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300 block"
+                    aria-label="TikTok @musicdibs_"
+                  >
                     <img src="/lovable-uploads/6a1dd10b-22a7-4382-990a-94d322fcae13.png" alt="TikTok Promotion" className="w-full h-full object-cover" width={122} height={152} loading="lazy" />
-                  </div>
+                  </a>
                 </div>
 
                 <div className="flex justify-center mt-6">
@@ -102,7 +116,8 @@ export const DistributionSection = () => {
                   </Button>
                 </div>
               </div>
-            </Link>
+            </a>
+
           </StaggerGrid>
         </div>
       </div>
