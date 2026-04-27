@@ -200,6 +200,11 @@ async function createOrderRecord(
         const { data: camp } = await supabase.from("marketing_campaigns").select("id, name").eq("coupon_code", params.couponCode).limit(1).maybeSingle();
         if (camp) { campaignId = camp.id; attributedCampaignName = camp.name; }
       }
+      // Fallback: readable promotion code match (e.g. FAEL20, GREGO20)
+      if (!campaignId && params.promotionCode) {
+        const { data: camp } = await supabase.from("marketing_campaigns").select("id, name").eq("coupon_code", params.promotionCode).limit(1).maybeSingle();
+        if (camp) { campaignId = camp.id; attributedCampaignName = camp.name; }
+      }
     }
 
     const orderData = {
@@ -251,7 +256,7 @@ async function createOrderRecord(
         medium: meta.utm_medium || null,
         campaign: meta.utm_campaign || null,
         content: meta.utm_content || null,
-        coupon_code: params.couponCode || null,
+        coupon_code: params.promotionCode || params.couponCode || null,
       });
     }
 
