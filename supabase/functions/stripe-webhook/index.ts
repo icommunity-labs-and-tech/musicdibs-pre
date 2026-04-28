@@ -709,7 +709,8 @@ serve(async (req) => {
             }
           }
 
-          const credits = priceId ? (PRICE_CREDITS[priceId] || 0) : 0;
+          const priceData = priceId ? await resolvePriceData(stripe, priceId) : null;
+          const credits = priceData?.credits || 0;
 
           if (credits > 0) {
             await supabase.from("profiles").update({ available_credits: credits }).eq("user_id", profile.user_id);
@@ -721,8 +722,8 @@ serve(async (req) => {
           }
 
           // ── Create renewal order ──
-          const resolvedPlanId = priceId ? (PRICE_TO_PLAN_ID[priceId] || "unknown") : "unknown";
-          const productType = getProductType(resolvedPlanId);
+          const resolvedPlanId = priceData?.planId || "unknown";
+          const productType = priceData?.productType || "unknown";
           const planLabel = PLAN_ID_TO_PLAN_NAME[resolvedPlanId] ? `Renovación ${resolvedPlanId}` : `Renovación ${resolvedPlanId}`;
 
           const renewalOrder = await createOrderRecord(supabase, {
@@ -732,7 +733,7 @@ serve(async (req) => {
             productType,
             productCode: resolvedPlanId,
             productLabel: planLabel,
-            billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
+            billingInterval: priceData?.billingInterval || null,
             amountGross: invoiceAmount,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -777,7 +778,8 @@ serve(async (req) => {
             }
           }
 
-          const credits = actualPriceId ? (PRICE_CREDITS[actualPriceId] || 0) : 0;
+          const priceData = actualPriceId ? await resolvePriceData(stripe, actualPriceId) : null;
+          const credits = priceData?.credits || 0;
 
           if (credits > 0) {
             await addCredits(supabase, profile.user_id, credits, `Cambio de plan: +${credits} créditos acumulados`);
@@ -787,8 +789,8 @@ serve(async (req) => {
           }
 
           // Update plan name
-          const resolvedPlanId = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
-          const planName = resolvedPlanId ? (PLAN_ID_TO_PLAN_NAME[resolvedPlanId] || null) : null;
+          const resolvedPlanId = priceData?.planId || null;
+          const planName = priceData?.plan !== "Free" ? priceData?.plan : null;
           if (planName) {
             await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", profile.user_id);
             console.log(`[WEBHOOK] Plan change: updated plan to ${planName} for user ${profile.user_id}`);
@@ -807,7 +809,7 @@ serve(async (req) => {
 
           // ── Create order record for plan change ──
           const planId = resolvedPlanId || "unknown";
-          const productType = getProductType(planId);
+          const productType = priceData?.productType || "unknown";
           const changeOrder = await createOrderRecord(supabase, {
             userId: profile.user_id,
             stripeInvoiceId: invoiceId,
@@ -815,7 +817,7 @@ serve(async (req) => {
             productType,
             productCode: planId,
             productLabel: `Cambio a ${planName || planId}`,
-            billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
+            billingInterval: priceData?.billingInterval || null,
             amountGross: invoiceAmount,
             currency: invoiceCurrency,
             isSubscription: true,
