@@ -473,7 +473,10 @@ function getCopy(lang: string) {
       step1: {
         title: "1. Crea tu canción. Si tienes ya, pasa al siguiente paso.",
         text: "",
+        subtitle: "",
         fieldLabel: "Describe tu canción",
+        placeholder: "Canción pop latina de amor. Con voz masculina.",
+        studioPill: "AI Music Studio",
         promptExample: "Canción pop latina sobre empezar de nuevo…",
         voicePop: "Voz Pop Latina",
         voiceUrban: "Urbano",
@@ -521,7 +524,10 @@ function getCopy(lang: string) {
       step1: {
         title: "1. Create your song. If you already have one, skip to the next step.",
         text: "",
+        subtitle: "",
         fieldLabel: "Describe your song",
+        placeholder: "Latin pop love song. With male vocals.",
+        studioPill: "AI Music Studio",
         promptExample: "Latin pop song about starting over…",
         voicePop: "Latin Pop Voice",
         voiceUrban: "Urban",
@@ -569,7 +575,10 @@ function getCopy(lang: string) {
       step1: {
         title: "1. Crie sua canção. Se já tiver uma, passe ao próximo passo.",
         text: "",
+        subtitle: "",
         fieldLabel: "Descreva sua canção",
+        placeholder: "Canção pop latina de amor…",
+        studioPill: "AI Music Studio",
         promptExample: "Canção pop latina sobre recomeçar…",
         voicePop: "Voz Pop Latina",
         voiceUrban: "Urbano",
