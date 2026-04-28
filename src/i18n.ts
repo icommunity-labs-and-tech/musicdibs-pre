@@ -110,7 +110,7 @@ const resources = {
             popup: `El AI Music Studio es el corazón creativo de Musicdibs: un entorno completo para llevar tu música de la idea al lanzamiento.\n\nCon una sola plataforma puedes:\n\n• Crear canciones originales con IA (instrumentales o con voz)\n• Editar, masterizar y mejorar tus producciones\n• Generar portadas profesionales de álbum y single\n• Diseñar creatividades para Instagram, TikTok y YouTube\n• Producir vídeos promocionales cortos para tus lanzamientos\n• Crear carteles para eventos y cabeceras para redes sociales\n\nLa IA actúa como tu asistente creativo, manteniéndote siempre en el centro del proceso. Cuando tu obra esté lista, podrás registrarla, distribuirla y promocionarla sin salir de Musicdibs.`,
           },
           instant: {
-            title: 'Registro Copyright',
+            title: 'Registro de derechos de autor',
             desc: 'Registro legal inmediato de canciones con certificación blockchain. Barato. Sin papeleo. Sin esperas. Antiplagio.',
             popup: `Protección al instante, sin complicaciones. Olvídate del papeleo y de los procesos lentos y costosos. Con Musicdibs, registrar tu música es <strong1>tan fácil como subir tu archivo: en solo segundos generamos una huella digital única</strong1> y la registramos en blockchain <strong2>con validez legal internacional</strong2>. Sin intermediarios y por una fracción del coste de un registro tradicional.\n\nCada registro en Musicdibs genera un certificado digital inmutable respaldado por tecnología Blockchain, válido como prueba legal de autoría. Este certificado cumple con normativas internacionales y nacionales, incluyendo el <a1>Convenio de Berna</a1>, el <a2>Tratado de la OMPI</a2>, la <a3>Directiva sobre Derechos de Autor en la Era Digital</a3> y regulaciones sobre Blockchain aplicadas a la propiedad intelectual.`,
           },
@@ -852,7 +852,7 @@ const resources = {
         show: 'Show',
         articles: 'articles',
         noPosts: 'No articles available.',
-        seo_description: 'Latest news and articles from Musicdibs about music distribution, blockchain and copyright.',
+        seo_description: 'Latest news and articles from Musicdibs about music distribution, blockchain and authorship rights.',
       },
       contact: {
         heading: 'Contact Us',
@@ -989,7 +989,7 @@ const resources = {
         ip_4: 'All intellectual and industrial property rights over the contents of the website are reserved and, in particular, the reproduction, distribution and public communication of all or part of the contents of this website, for commercial purposes, are expressly prohibited.',
         ip_5: 'The User undertakes to respect the Intellectual and Industrial Property rights owned by iCommunity.',
         ip_6: 'You can view the elements of the portal and print, copy and store them on your computer\'s hard drive or on any other physical medium as long as it is solely and exclusively for your personal and private use.',
-        ip_7: 'The User must refrain from deleting, altering or manipulating copyright indications or other elements that serve to identify the rights holders.',
+        ip_7: 'The User must refrain from deleting, altering or manipulating authorship rights indications or other elements that serve to identify the rights holders.',
         registration_title: 'Registration and contents',
         registration_1: 'The user accesses the website under their sole responsibility, which extends to the registration that is necessary to access certain services or content.',
         registration_2: 'In the event that the user sends any type of information to Musicdibs, he/she declares and guarantees that he/she sends it freely and that said information does not infringe intellectual property rights, industrial rights, trade secrets or any other rights.',

@@ -455,7 +455,7 @@ export const promoMaterialTranslations: Record<string, Record<string, any>> = {
         referenceStrengthDesc: 'Creativity vs. similarity',
         strengthInspiration: 'Just inspiration',
         strengthSimilar: 'Very similar',
-        copyrightWarningTitle: 'About copyright',
+        copyrightWarningTitle: 'About authorship rights',
         copyrightWarning1: 'The reference cover is only used as aesthetic inspiration. The AI will generate a completely new and original image.',
         copyrightWarning2: 'Do not copy protected elements (logos, brands, specific characters). Only use it for inspiration on the general visual style.',
         promptLabelArtist: 'Describe how you want the cover with your photo',

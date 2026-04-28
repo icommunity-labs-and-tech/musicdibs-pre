@@ -115,7 +115,7 @@ export const faqTranslations: Record<string, Record<string, any>> = {
         },
         {
           q: 'Can an underage register their productions?',
-          a: 'Underages can request the registration of their copyright through their parents or legal representatives, who must prove their relationship with the minor through the appropriate document (family book or legal document that proves the guardianship or legal representation of the minor).',
+          a: 'Underages can request the registration of their authorship rights through their parents or legal representatives, who must prove their relationship with the minor through the appropriate document (family book or legal document that proves the guardianship or legal representation of the minor).',
         },
         {
           q: 'Can I check in Musicdibs songs that have been registered with other platforms?',
@@ -159,11 +159,11 @@ export const faqTranslations: Record<string, Record<string, any>> = {
         },
         {
           q: 'How long does the registration of my piece last?',
-          a: 'Blockchain registers are permanent, and the duration of copyright protection is subject to the legislation of each country.',
+          a: 'Blockchain registers are permanent, and the duration of authorship rights protection is subject to the legislation of each country.',
         },
         {
           q: 'How to reduce the size of my file to be able to upload it?',
-          a: 'We only accept files with a weight of less than 30MB. Therefore, in case your file is larger, you will have to compress it.\n\nWe remind you that for the registration of copyright property the important thing is the content and not its audiovisual quality, so there is no problem if the content is inferior when compressed.',
+          a: 'We only accept files with a weight of less than 30MB. Therefore, in case your file is larger, you will have to compress it.\n\nWe remind you that for the registration of authorship rights the important thing is the content and not its audiovisual quality, so there is no problem if the content is inferior when compressed.',
         },
         {
           q: 'How would a creation be registered when it belongs to two or more authors?',
@@ -199,7 +199,7 @@ export const faqTranslations: Record<string, Record<string, any>> = {
         },
         {
           q: 'What type of works and files can I register?',
-          a: "With Musicdibs you can register the copyright of any creative and artistic work:\n\n– Music: songs, lyrics, sheet music, sound recordings.\n– Audiovisual: scripts, treatments, ideas/synopsis, video pieces, storyboards.\n– Literary work: manuscripts and drafts, titles and names, translations, adaptations and derivatives.\n\nAnd you can register all kinds of files, both finished works in any digital audio or video format (mp3, WAV, AIFF, WMA, mp4, etc.) and text files (PDF, DOC) if they are scores, lyrics or scripts. Just remember that the maximum allowed file size is 30Mb.",
+          a: "With Musicdibs you can register the authorship rights of any creative and artistic work:\n\n– Music: songs, lyrics, sheet music, sound recordings.\n– Audiovisual: scripts, treatments, ideas/synopsis, video pieces, storyboards.\n– Literary work: manuscripts and drafts, titles and names, translations, adaptations and derivatives.\n\nAnd you can register all kinds of files, both finished works in any digital audio or video format (mp3, WAV, AIFF, WMA, mp4, etc.) and text files (PDF, DOC) if they are scores, lyrics or scripts. Just remember that the maximum allowed file size is 30Mb.",
         },
       ],
     },
