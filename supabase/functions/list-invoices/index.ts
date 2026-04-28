@@ -47,7 +47,26 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Fallback: search by email
+    if (customerId) {
+      try {
+        const customer = await stripe.customers.retrieve(customerId);
+        if ((customer as Stripe.DeletedCustomer).deleted) {
+          customerId = null;
+        }
+      } catch (stripeError: any) {
+        if (stripeError?.code === "resource_missing" && stripeError?.param === "customer") {
+          console.warn("[LIST-INVOICES] Stored Stripe customer no longer exists, falling back to email", {
+            userId: user.id,
+            customerId,
+          });
+          customerId = null;
+        } else {
+          throw stripeError;
+        }
+      }
+    }
+
+    // Fallback: search by email when the stored customer is missing or stale.
     if (!customerId) {
       const customers = await stripe.customers.list({ email: user.email!, limit: 1 });
       if (customers.data.length > 0) {
