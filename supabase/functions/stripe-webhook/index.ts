@@ -41,57 +41,63 @@ function planToMailerLiteType(plan: string | undefined): string {
   return "single";
 }
 
-const PRICE_CREDITS: Record<string, number> = {
-  "price_1TMDVwFULeu7PzK6laW4n6wu": 100,
-  "price_1TMDVwFULeu7PzK6ZnMqrW1c": 200,
-  "price_1TMDVwFULeu7PzK6S22WkY3w": 300,
-  "price_1TMDVwFULeu7PzK6mSwmx29Z": 500,
-  "price_1TMDVwFULeu7PzK68TlUbof2": 1000,
-  "price_1TMDW3FULeu7PzK6468wsXJt": 8,
-  "price_1TMDVkFULeu7PzK6aNdFYW91": 1,
-  "price_1TMDVkFULeu7PzK6YxaKfBiJ": 10,
-  "price_1TMDVkFULeu7PzK62A2zwaDO": 25,
-  "price_1TMDVkFULeu7PzK6PcMnQkWZ": 50,
-  "price_1TMDVkFULeu7PzK6AJC3o4lZ": 100,
-  "price_1TMDVkFULeu7PzK6e9omPpoB": 200,
-};
+// Cache en memoria para evitar consultas repetidas a Stripe en el mismo invocation
+const priceCache: Record<string, { credits: number; plan: string; planId: string; productType: string; billingInterval: string | null }> = {};
 
-const PRICE_PLAN: Record<string, string> = {
-  "price_1TMDVwFULeu7PzK6laW4n6wu": "Annual",
-  "price_1TMDVwFULeu7PzK6ZnMqrW1c": "Annual",
-  "price_1TMDVwFULeu7PzK6S22WkY3w": "Annual",
-  "price_1TMDVwFULeu7PzK6mSwmx29Z": "Annual",
-  "price_1TMDVwFULeu7PzK68TlUbof2": "Annual",
-  "price_1TMDW3FULeu7PzK6468wsXJt": "Monthly",
-};
+async function resolvePriceData(stripe: Stripe, priceId: string): Promise<{ credits: number; plan: string; planId: string; productType: string; billingInterval: string | null }> {
+  if (priceCache[priceId]) return priceCache[priceId];
 
-const PRICE_TO_PLAN_ID: Record<string, string> = {
-  "price_1TMDVwFULeu7PzK6laW4n6wu": "annual_100",
-  "price_1TMDVwFULeu7PzK6ZnMqrW1c": "annual_200",
-  "price_1TMDVwFULeu7PzK6S22WkY3w": "annual_300",
-  "price_1TMDVwFULeu7PzK6mSwmx29Z": "annual_500",
-  "price_1TMDVwFULeu7PzK68TlUbof2": "annual_1000",
-  "price_1TMDW3FULeu7PzK6468wsXJt": "monthly",
-  "price_1TMDVkFULeu7PzK6aNdFYW91": "individual",
-  "price_1TMDVkFULeu7PzK6YxaKfBiJ": "topup_10",
-  "price_1TMDVkFULeu7PzK62A2zwaDO": "topup_25",
-  "price_1TMDVkFULeu7PzK6PcMnQkWZ": "topup_50",
-  "price_1TMDVkFULeu7PzK6AJC3o4lZ": "topup_100",
-  "price_1TMDVkFULeu7PzK6e9omPpoB": "topup_200",
-};
+  try {
+    const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
+    const product = price.product as Stripe.Product;
+    const meta = { ...price.metadata, ...(product.metadata || {}) };
+
+    // Resolver créditos: metadata > inferir del nombre del producto
+    let credits = parseInt(meta.credits || "0", 10);
+    if (!credits) {
+      const nameMatch = (price.nickname || product.name || "").match(/(\d+)\s*cr[eé]ditos?/i);
+      if (nameMatch) credits = parseInt(nameMatch[1], 10);
+    }
+
+    // Resolver tipo de plan
+    const isRecurring = price.type === "recurring";
+    const interval = price.recurring?.interval || null;
+    const isAnnual = isRecurring && interval === "year";
+    const isMonthly = isRecurring && interval === "month";
+    const isTopup = !isRecurring && credits > 1 && credits !== 1;
+    const isIndividual = !isRecurring && credits === 1;
+
+    let planId = meta.plan_id || meta.planId || meta.musicdibs_plan_id || price.lookup_key || "";
+    if (!planId) {
+      if (isAnnual) planId = `annual_${credits}`;
+      else if (isMonthly) planId = "monthly";
+      else if (isTopup) planId = `topup_${credits}`;
+      else if (isIndividual) planId = "individual";
+    }
+
+    let plan = "Free";
+    if (isAnnual) plan = "Annual";
+    else if (isMonthly) plan = "Monthly";
+
+    let productType = "unknown";
+    if (isAnnual) productType = "annual";
+    else if (isMonthly) productType = "monthly";
+    else if (isTopup) productType = "topup";
+    else if (isIndividual) productType = "single";
+
+    const result = { credits, plan, planId, productType, billingInterval: isAnnual ? "yearly" : isMonthly ? "monthly" : null };
+    priceCache[priceId] = result;
+    return result;
+  } catch (e) {
+    console.warn(`[WEBHOOK] Could not resolve price ${priceId}:`, e);
+    return { credits: 0, plan: "Free", planId: "unknown", productType: "unknown", billingInterval: null };
+  }
+}
 
 const PLAN_ID_TO_PLAN_NAME: Record<string, string> = {
   annual_100: "Annual", annual_200: "Annual", annual_300: "Annual",
   annual_500: "Annual", annual_1000: "Annual", monthly: "Monthly",
 };
-
-function getProductType(planId: string): string {
-  if (planId.startsWith("annual")) return "annual";
-  if (planId === "monthly") return "monthly";
-  if (planId === "individual") return "single";
-  if (planId.startsWith("topup_")) return "topup";
-  return "unknown";
-}
 
 function mapStripeStatus(stripeStatus: string): string {
   if (["active", "trialing"].includes(stripeStatus)) return "active";
@@ -409,8 +415,17 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId   = session.metadata?.user_id;
-      const credits  = parseInt(session.metadata?.credits || "0", 10);
-      const planId   = session.metadata?.plan_id || "unknown";
+      const sessionMeta = session.metadata || {};
+      let checkoutPriceId: string | undefined;
+      try {
+        const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
+        checkoutPriceId = lineItems.data[0]?.price?.id;
+      } catch (e) {
+        console.warn("[WEBHOOK] Could not retrieve checkout line items:", e);
+      }
+      const checkoutPriceData = checkoutPriceId ? await resolvePriceData(stripe, checkoutPriceId) : null;
+      const credits  = checkoutPriceData?.credits || parseInt(sessionMeta.credits || "0", 10);
+      const planId   = checkoutPriceData?.planId || sessionMeta.plan_id || "unknown";
 
       if (userId && credits > 0) {
         // ── Idempotency guard: skip if this checkout session was already processed ──
@@ -434,7 +449,7 @@ serve(async (req) => {
 
         await addCredits(supabase, userId, credits, `Compra plan ${planId}: +${credits} créditos`);
 
-        const planName = PLAN_ID_TO_PLAN_NAME[planId];
+        const planName = checkoutPriceData?.plan !== "Free" ? checkoutPriceData?.plan : PLAN_ID_TO_PLAN_NAME[planId];
         if (planName) {
           await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", userId);
           console.log(`[WEBHOOK] Updated subscription_plan to ${planName} for user ${userId}`);
@@ -449,7 +464,6 @@ serve(async (req) => {
         }
 
         // ── Create order record ──
-        const sessionMeta = session.metadata || {};
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
         const stripeSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
         const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
@@ -491,10 +505,10 @@ serve(async (req) => {
           stripeCheckoutSessionId: session.id,
           stripeSubscriptionId: stripeSubId,
           stripePaymentIntentId: paymentIntentId,
-          productType: sessionMeta.product_type || getProductType(planId),
+          productType: sessionMeta.product_type || checkoutPriceData?.productType || "unknown",
           productCode: sessionMeta.product_code || planId,
           productLabel: sessionMeta.product_label || planId,
-          billingInterval: sessionMeta.billing_interval || null,
+          billingInterval: sessionMeta.billing_interval || checkoutPriceData?.billingInterval || null,
           amountGross: amountTotal,
           currency: session.currency || "eur",
           isSubscription: !!stripeSubId,
@@ -513,7 +527,7 @@ serve(async (req) => {
             orderId: order?.id,
             email: evUser?.email,
             displayName: evProfile?.display_name || evUser?.email,
-            productType: sessionMeta.product_type || getProductType(planId),
+            productType: sessionMeta.product_type || checkoutPriceData?.productType || "unknown",
             productName: sessionMeta.product_label || planId,
             amount: amountTotal,
             currency: session.currency || "eur",
@@ -695,7 +709,8 @@ serve(async (req) => {
             }
           }
 
-          const credits = priceId ? (PRICE_CREDITS[priceId] || 0) : 0;
+          const priceData = priceId ? await resolvePriceData(stripe, priceId) : null;
+          const credits = priceData?.credits || 0;
 
           if (credits > 0) {
             await supabase.from("profiles").update({ available_credits: credits }).eq("user_id", profile.user_id);
@@ -707,8 +722,8 @@ serve(async (req) => {
           }
 
           // ── Create renewal order ──
-          const resolvedPlanId = priceId ? (PRICE_TO_PLAN_ID[priceId] || "unknown") : "unknown";
-          const productType = getProductType(resolvedPlanId);
+          const resolvedPlanId = priceData?.planId || "unknown";
+          const productType = priceData?.productType || "unknown";
           const planLabel = PLAN_ID_TO_PLAN_NAME[resolvedPlanId] ? `Renovación ${resolvedPlanId}` : `Renovación ${resolvedPlanId}`;
 
           const renewalOrder = await createOrderRecord(supabase, {
@@ -718,7 +733,7 @@ serve(async (req) => {
             productType,
             productCode: resolvedPlanId,
             productLabel: planLabel,
-            billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
+            billingInterval: priceData?.billingInterval || null,
             amountGross: invoiceAmount,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -763,7 +778,8 @@ serve(async (req) => {
             }
           }
 
-          const credits = actualPriceId ? (PRICE_CREDITS[actualPriceId] || 0) : 0;
+          const priceData = actualPriceId ? await resolvePriceData(stripe, actualPriceId) : null;
+          const credits = priceData?.credits || 0;
 
           if (credits > 0) {
             await addCredits(supabase, profile.user_id, credits, `Cambio de plan: +${credits} créditos acumulados`);
@@ -773,8 +789,8 @@ serve(async (req) => {
           }
 
           // Update plan name
-          const resolvedPlanId = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
-          const planName = resolvedPlanId ? (PLAN_ID_TO_PLAN_NAME[resolvedPlanId] || null) : null;
+          const resolvedPlanId = priceData?.planId || null;
+          const planName = priceData?.plan !== "Free" ? priceData?.plan : null;
           if (planName) {
             await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", profile.user_id);
             console.log(`[WEBHOOK] Plan change: updated plan to ${planName} for user ${profile.user_id}`);
@@ -793,7 +809,7 @@ serve(async (req) => {
 
           // ── Create order record for plan change ──
           const planId = resolvedPlanId || "unknown";
-          const productType = getProductType(planId);
+          const productType = priceData?.productType || "unknown";
           const changeOrder = await createOrderRecord(supabase, {
             userId: profile.user_id,
             stripeInvoiceId: invoiceId,
@@ -801,7 +817,7 @@ serve(async (req) => {
             productType,
             productCode: planId,
             productLabel: `Cambio a ${planName || planId}`,
-            billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
+            billingInterval: priceData?.billingInterval || null,
             amountGross: invoiceAmount,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -908,7 +924,8 @@ serve(async (req) => {
 
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
       if (profile) {
-        const planName = priceId ? (PRICE_PLAN[priceId] || null) : null;
+        const priceData = priceId ? await resolvePriceData(stripe, priceId) : null;
+        const planName = priceData?.plan !== "Free" ? priceData?.plan : null;
         if (status === "active" && planName) {
           await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", profile.user_id);
           console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} for user ${profile.user_id}`);
