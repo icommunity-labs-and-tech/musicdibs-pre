@@ -96,7 +96,7 @@ const AIStudioVideo = () => {
     setIsImprovingPrompt(true);
     try {
       const { data, error } = await supabase.functions.invoke("improve-prompt", {
-        body: { prompt, genre: "", mood: "", mode: "instrumental" },
+        body: { prompt, mode: "video_scene" },
       });
       if (error || data?.error) throw new Error(data?.error || error?.message);
       if (data?.improved) {
