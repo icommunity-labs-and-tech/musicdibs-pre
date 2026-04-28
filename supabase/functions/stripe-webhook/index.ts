@@ -42,47 +42,37 @@ function planToMailerLiteType(plan: string | undefined): string {
 }
 
 const PRICE_CREDITS: Record<string, number> = {
-  "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": 120,
-  "price_1THT7cF9ZCIiqrz6sWS67Q4V": 100,
-  "price_1THT7gF9ZCIiqrz6Acb2CkDC": 200,
-  "price_1THT7jF9ZCIiqrz6i02J4bj4": 300,
-  "price_1THT7nF9ZCIiqrz6r1ZcqH8L": 500,
-  "price_1THT7rF9ZCIiqrz6UmJDkBNZ": 1000,
-  "price_1T9SZvF9ZCIiqrz6TWLtfMBs": 8,
-  "price_1THULsF9ZCIiqrz64SbA3AK6": 1,   // individual legacy (test)
-  "price_1TMDVkFULeu7PzK6aNdFYW91": 1,   // individual producción
-  "price_1THT7xF9ZCIiqrz60FfiGbfv": 10,
-  "price_1THT80F9ZCIiqrz6H31dYDMG": 25,
-  "price_1THT83F9ZCIiqrz6BD2wmUaO": 50,
-  "price_1THT86F9ZCIiqrz6C548DJnT": 100,
-  "price_1THT8AF9ZCIiqrz626wSH9Rz": 200,
+  "price_1TMDVwFULeu7PzK6laW4n6wu": 100,   // Annual 100 créditos
+  "price_1TMDVwFULeu7PzK6ZnMqrW1c": 200,   // Annual 200 créditos
+  "price_1TMDVwFULeu7PzK6S22WkY3w": 300,   // Annual 300 créditos
+  "price_1TMDVwFULeu7PzK6mSwmx29Z": 500,   // Annual 500 créditos
+  "price_1TMDVwFULeu7PzK68TlUbof2": 1000,  // Annual 1000 créditos
+  "price_1TMDW3FULeu7PzK6468wsXJt": 8,     // Mensual
+  "price_1TMDVkFULeu7PzK6aNdFYW91": 1,     // Individual
+  "price_1TMDVkFULeu7PzK6topup10": 10,     // Top-up 10 (verificar ID real)
+  "price_1TMDVkFULeu7PzK6topup25": 25,     // Top-up 25 (verificar ID real)
+  "price_1TMDVkFULeu7PzK6topup50": 50,     // Top-up 50 (verificar ID real)
+  "price_1TMDVkFULeu7PzK6topup100": 100,   // Top-up 100 (verificar ID real)
+  "price_1TMDVkFULeu7PzK6topup200": 200,   // Top-up 200 (verificar ID real)
 };
 
 const PRICE_PLAN: Record<string, string> = {
-  "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": "Annual",
-  "price_1THT7cF9ZCIiqrz6sWS67Q4V": "Annual",
-  "price_1THT7gF9ZCIiqrz6Acb2CkDC": "Annual",
-  "price_1THT7jF9ZCIiqrz6i02J4bj4": "Annual",
-  "price_1THT7nF9ZCIiqrz6r1ZcqH8L": "Annual",
-  "price_1THT7rF9ZCIiqrz6UmJDkBNZ": "Annual",
-  "price_1T9SZvF9ZCIiqrz6TWLtfMBs": "Monthly",
+  "price_1TMDVwFULeu7PzK6laW4n6wu": "Annual",
+  "price_1TMDVwFULeu7PzK6ZnMqrW1c": "Annual",
+  "price_1TMDVwFULeu7PzK6S22WkY3w": "Annual",
+  "price_1TMDVwFULeu7PzK6mSwmx29Z": "Annual",
+  "price_1TMDVwFULeu7PzK68TlUbof2": "Annual",
+  "price_1TMDW3FULeu7PzK6468wsXJt": "Monthly",
 };
 
 const PRICE_TO_PLAN_ID: Record<string, string> = {
-  "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": "annual_legacy",
-  "price_1THT7cF9ZCIiqrz6sWS67Q4V": "annual_100",
-  "price_1THT7gF9ZCIiqrz6Acb2CkDC": "annual_200",
-  "price_1THT7jF9ZCIiqrz6i02J4bj4": "annual_300",
-  "price_1THT7nF9ZCIiqrz6r1ZcqH8L": "annual_500",
-  "price_1THT7rF9ZCIiqrz6UmJDkBNZ": "annual_1000",
-  "price_1T9SZvF9ZCIiqrz6TWLtfMBs": "monthly",
-  "price_1THULsF9ZCIiqrz64SbA3AK6": "individual",   // individual legacy (test)
-  "price_1TMDVkFULeu7PzK6aNdFYW91": "individual",   // individual producción
-  "price_1THT7xF9ZCIiqrz60FfiGbfv": "topup_10",
-  "price_1THT80F9ZCIiqrz6H31dYDMG": "topup_25",
-  "price_1THT83F9ZCIiqrz6BD2wmUaO": "topup_50",
-  "price_1THT86F9ZCIiqrz6C548DJnT": "topup_100",
-  "price_1THT8AF9ZCIiqrz626wSH9Rz": "topup_200",
+  "price_1TMDVwFULeu7PzK6laW4n6wu": "annual_100",
+  "price_1TMDVwFULeu7PzK6ZnMqrW1c": "annual_200",
+  "price_1TMDVwFULeu7PzK6S22WkY3w": "annual_300",
+  "price_1TMDVwFULeu7PzK6mSwmx29Z": "annual_500",
+  "price_1TMDVwFULeu7PzK68TlUbof2": "annual_1000",
+  "price_1TMDW3FULeu7PzK6468wsXJt": "monthly",
+  "price_1TMDVkFULeu7PzK6aNdFYW91": "individual",
 };
 
 const PLAN_ID_TO_PLAN_NAME: Record<string, string> = {
