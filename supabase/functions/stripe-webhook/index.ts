@@ -41,57 +41,63 @@ function planToMailerLiteType(plan: string | undefined): string {
   return "single";
 }
 
-const PRICE_CREDITS: Record<string, number> = {
-  "price_1TMDVwFULeu7PzK6laW4n6wu": 100,
-  "price_1TMDVwFULeu7PzK6ZnMqrW1c": 200,
-  "price_1TMDVwFULeu7PzK6S22WkY3w": 300,
-  "price_1TMDVwFULeu7PzK6mSwmx29Z": 500,
-  "price_1TMDVwFULeu7PzK68TlUbof2": 1000,
-  "price_1TMDW3FULeu7PzK6468wsXJt": 8,
-  "price_1TMDVkFULeu7PzK6aNdFYW91": 1,
-  "price_1TMDVkFULeu7PzK6YxaKfBiJ": 10,
-  "price_1TMDVkFULeu7PzK62A2zwaDO": 25,
-  "price_1TMDVkFULeu7PzK6PcMnQkWZ": 50,
-  "price_1TMDVkFULeu7PzK6AJC3o4lZ": 100,
-  "price_1TMDVkFULeu7PzK6e9omPpoB": 200,
-};
+// Cache en memoria para evitar consultas repetidas a Stripe en el mismo invocation
+const priceCache: Record<string, { credits: number; plan: string; planId: string; productType: string; billingInterval: string | null }> = {};
 
-const PRICE_PLAN: Record<string, string> = {
-  "price_1TMDVwFULeu7PzK6laW4n6wu": "Annual",
-  "price_1TMDVwFULeu7PzK6ZnMqrW1c": "Annual",
-  "price_1TMDVwFULeu7PzK6S22WkY3w": "Annual",
-  "price_1TMDVwFULeu7PzK6mSwmx29Z": "Annual",
-  "price_1TMDVwFULeu7PzK68TlUbof2": "Annual",
-  "price_1TMDW3FULeu7PzK6468wsXJt": "Monthly",
-};
+async function resolvePriceData(stripe: Stripe, priceId: string): Promise<{ credits: number; plan: string; planId: string; productType: string; billingInterval: string | null }> {
+  if (priceCache[priceId]) return priceCache[priceId];
 
-const PRICE_TO_PLAN_ID: Record<string, string> = {
-  "price_1TMDVwFULeu7PzK6laW4n6wu": "annual_100",
-  "price_1TMDVwFULeu7PzK6ZnMqrW1c": "annual_200",
-  "price_1TMDVwFULeu7PzK6S22WkY3w": "annual_300",
-  "price_1TMDVwFULeu7PzK6mSwmx29Z": "annual_500",
-  "price_1TMDVwFULeu7PzK68TlUbof2": "annual_1000",
-  "price_1TMDW3FULeu7PzK6468wsXJt": "monthly",
-  "price_1TMDVkFULeu7PzK6aNdFYW91": "individual",
-  "price_1TMDVkFULeu7PzK6YxaKfBiJ": "topup_10",
-  "price_1TMDVkFULeu7PzK62A2zwaDO": "topup_25",
-  "price_1TMDVkFULeu7PzK6PcMnQkWZ": "topup_50",
-  "price_1TMDVkFULeu7PzK6AJC3o4lZ": "topup_100",
-  "price_1TMDVkFULeu7PzK6e9omPpoB": "topup_200",
-};
+  try {
+    const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
+    const product = price.product as Stripe.Product;
+    const meta = { ...price.metadata, ...(product.metadata || {}) };
+
+    // Resolver créditos: metadata > inferir del nombre del producto
+    let credits = parseInt(meta.credits || "0", 10);
+    if (!credits) {
+      const nameMatch = (price.nickname || product.name || "").match(/(\d+)\s*cr[eé]ditos?/i);
+      if (nameMatch) credits = parseInt(nameMatch[1], 10);
+    }
+
+    // Resolver tipo de plan
+    const isRecurring = price.type === "recurring";
+    const interval = price.recurring?.interval || null;
+    const isAnnual = isRecurring && interval === "year";
+    const isMonthly = isRecurring && interval === "month";
+    const isTopup = !isRecurring && credits > 1 && credits !== 1;
+    const isIndividual = !isRecurring && credits === 1;
+
+    let planId = meta.plan_id || meta.planId || meta.musicdibs_plan_id || price.lookup_key || "";
+    if (!planId) {
+      if (isAnnual) planId = `annual_${credits}`;
+      else if (isMonthly) planId = "monthly";
+      else if (isTopup) planId = `topup_${credits}`;
+      else if (isIndividual) planId = "individual";
+    }
+
+    let plan = "Free";
+    if (isAnnual) plan = "Annual";
+    else if (isMonthly) plan = "Monthly";
+
+    let productType = "unknown";
+    if (isAnnual) productType = "annual";
+    else if (isMonthly) productType = "monthly";
+    else if (isTopup) productType = "topup";
+    else if (isIndividual) productType = "single";
+
+    const result = { credits, plan, planId, productType, billingInterval: isAnnual ? "yearly" : isMonthly ? "monthly" : null };
+    priceCache[priceId] = result;
+    return result;
+  } catch (e) {
+    console.warn(`[WEBHOOK] Could not resolve price ${priceId}:`, e);
+    return { credits: 0, plan: "Free", planId: "unknown", productType: "unknown", billingInterval: null };
+  }
+}
 
 const PLAN_ID_TO_PLAN_NAME: Record<string, string> = {
   annual_100: "Annual", annual_200: "Annual", annual_300: "Annual",
   annual_500: "Annual", annual_1000: "Annual", monthly: "Monthly",
 };
-
-function getProductType(planId: string): string {
-  if (planId.startsWith("annual")) return "annual";
-  if (planId === "monthly") return "monthly";
-  if (planId === "individual") return "single";
-  if (planId.startsWith("topup_")) return "topup";
-  return "unknown";
-}
 
 function mapStripeStatus(stripeStatus: string): string {
   if (["active", "trialing"].includes(stripeStatus)) return "active";
