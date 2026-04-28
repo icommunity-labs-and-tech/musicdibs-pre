@@ -415,8 +415,17 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId   = session.metadata?.user_id;
-      const credits  = parseInt(session.metadata?.credits || "0", 10);
-      const planId   = session.metadata?.plan_id || "unknown";
+      const sessionMeta = session.metadata || {};
+      let checkoutPriceId: string | undefined;
+      try {
+        const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
+        checkoutPriceId = lineItems.data[0]?.price?.id;
+      } catch (e) {
+        console.warn("[WEBHOOK] Could not retrieve checkout line items:", e);
+      }
+      const checkoutPriceData = checkoutPriceId ? await resolvePriceData(stripe, checkoutPriceId) : null;
+      const credits  = checkoutPriceData?.credits || parseInt(sessionMeta.credits || "0", 10);
+      const planId   = checkoutPriceData?.planId || sessionMeta.plan_id || "unknown";
 
       if (userId && credits > 0) {
         // ── Idempotency guard: skip if this checkout session was already processed ──
@@ -440,7 +449,7 @@ serve(async (req) => {
 
         await addCredits(supabase, userId, credits, `Compra plan ${planId}: +${credits} créditos`);
 
-        const planName = PLAN_ID_TO_PLAN_NAME[planId];
+        const planName = checkoutPriceData?.plan !== "Free" ? checkoutPriceData?.plan : PLAN_ID_TO_PLAN_NAME[planId];
         if (planName) {
           await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", userId);
           console.log(`[WEBHOOK] Updated subscription_plan to ${planName} for user ${userId}`);
@@ -455,7 +464,6 @@ serve(async (req) => {
         }
 
         // ── Create order record ──
-        const sessionMeta = session.metadata || {};
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
         const stripeSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
         const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
@@ -497,10 +505,10 @@ serve(async (req) => {
           stripeCheckoutSessionId: session.id,
           stripeSubscriptionId: stripeSubId,
           stripePaymentIntentId: paymentIntentId,
-          productType: sessionMeta.product_type || getProductType(planId),
+          productType: sessionMeta.product_type || checkoutPriceData?.productType || "unknown",
           productCode: sessionMeta.product_code || planId,
           productLabel: sessionMeta.product_label || planId,
-          billingInterval: sessionMeta.billing_interval || null,
+          billingInterval: sessionMeta.billing_interval || checkoutPriceData?.billingInterval || null,
           amountGross: amountTotal,
           currency: session.currency || "eur",
           isSubscription: !!stripeSubId,
@@ -519,7 +527,7 @@ serve(async (req) => {
             orderId: order?.id,
             email: evUser?.email,
             displayName: evProfile?.display_name || evUser?.email,
-            productType: sessionMeta.product_type || getProductType(planId),
+            productType: sessionMeta.product_type || checkoutPriceData?.productType || "unknown",
             productName: sessionMeta.product_label || planId,
             amount: amountTotal,
             currency: session.currency || "eur",
