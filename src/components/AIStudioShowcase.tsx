@@ -20,7 +20,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Lo-fi hip hop · nostálgico y soñador",
     colors: ["from-purple-500", "to-fuchsia-500"],
     glow: "shadow-purple-500/30",
-    audioUrl: "/audio/midnight-drive.mp3",
+    audioUrl: "/audio/midnight-drive.mpeg",
   },
   {
     title: "Fuego Latino",
@@ -28,7 +28,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Reggaeton urbano · energético & bailable",
     colors: ["from-orange-400", "to-pink-500"],
     glow: "shadow-pink-500/30",
-    audioUrl: "/audio/fuego-latino.mp3",
+    audioUrl: "/audio/fuego-latino.mpeg",
   },
   {
     title: "Turn It Up",
@@ -36,7 +36,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Dance electrónico · oscuro e hipnótico",
     colors: ["from-cyan-400", "to-blue-500"],
     glow: "shadow-cyan-500/30",
-    audioUrl: "/audio/turn-it-up.mp3",
+    audioUrl: "/audio/turn-it-up.mpeg",
   },
   {
     title: "Alma Libre",
