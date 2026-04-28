@@ -18,6 +18,7 @@ import {
   Users,
   ChevronRight,
   SkipForward,
+  SlidersHorizontal,
 } from "lucide-react";
 
 interface HowItWorksDemoModalProps {
@@ -211,7 +212,7 @@ const StepCreate = ({ copy }: { copy: any }) => {
         </div>
         <div>
           <h3 className="text-lg font-bold">{copy.title}</h3>
-          <p className="text-xs text-white/60">{copy.text}</p>
+          {copy.subtitle && (<p className="text-sm md:text-base text-white/70 mt-1">{copy.subtitle}</p>)}
         </div>
       </div>
 
@@ -220,7 +221,7 @@ const StepCreate = ({ copy }: { copy: any }) => {
           {copy.fieldLabel}
         </div>
         <div className="min-h-[60px] rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
-          {typed}
+          {typed ? typed : <span className="text-slate-400">{copy.placeholder}</span>}
           <span className="inline-block w-1 h-4 align-middle bg-slate-700 ml-0.5 animate-pulse" />
         </div>
 
