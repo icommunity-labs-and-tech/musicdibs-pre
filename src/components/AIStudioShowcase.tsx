@@ -28,13 +28,15 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Reggaeton urbano · energético & bailable",
     colors: ["from-orange-400", "to-pink-500"],
     glow: "shadow-pink-500/30",
+    audioUrl: "/audio/fuego-latino.mp3",
   },
   {
-    title: "Neon Pulse",
+    title: "Turn It Up",
     tag: "EDM",
     subtitle: "Dance electrónico · oscuro e hipnótico",
     colors: ["from-cyan-400", "to-blue-500"],
     glow: "shadow-cyan-500/30",
+    audioUrl: "/audio/turn-it-up.mp3",
   },
   {
     title: "Alma Libre",
@@ -42,13 +44,15 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Indie folk · acústico y emotivo",
     colors: ["from-amber-300", "to-rose-400"],
     glow: "shadow-amber-400/30",
+    audioUrl: "/audio/alma-libre.mp3",
   },
   {
-    title: "City Lights",
+    title: "No Sleep Tonight",
     tag: "R&B",
     subtitle: "R&B pop · suave y sensual",
     colors: ["from-fuchsia-500", "to-violet-600"],
     glow: "shadow-fuchsia-500/30",
+    audioUrl: "/audio/no-sleep-tonight.mp3",
   },
   {
     title: "Trap God",
@@ -56,6 +60,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Hip hop trap · duro y cinematográfico",
     colors: ["from-blue-500", "to-purple-700"],
     glow: "shadow-blue-500/30",
+    audioUrl: "/audio/trap-god.mp3",
   },
 ];
 
@@ -308,12 +313,14 @@ export const AIStudioShowcase = () => {
         {/* Steps block */}
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h3 className="text-2xl md:text-4xl font-bold text-white leading-[1.1] mb-4">
+            <h3 className="text-2xl md:text-3xl font-bold text-white leading-[1.1] mb-4">
               En menos de 10 minutos.{" "}
               <span className="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-300 bg-clip-text text-transparent">
                 Tu canción al mundo.
               </span>
             </h3>
+            <p className="text-base md:text-lg text-white/70 leading-relaxed">
+            </p>
           </div>
         </ScrollReveal>
 
