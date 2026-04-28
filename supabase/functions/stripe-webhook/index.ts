@@ -924,7 +924,8 @@ serve(async (req) => {
 
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
       if (profile) {
-        const planName = priceId ? (PRICE_PLAN[priceId] || null) : null;
+        const priceData = priceId ? await resolvePriceData(stripe, priceId) : null;
+        const planName = priceData?.plan !== "Free" ? priceData?.plan : null;
         if (status === "active" && planName) {
           await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", profile.user_id);
           console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} for user ${profile.user_id}`);
