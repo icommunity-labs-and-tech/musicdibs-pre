@@ -18,6 +18,7 @@ import {
   Users,
   ChevronRight,
   SkipForward,
+  SlidersHorizontal,
 } from "lucide-react";
 
 interface HowItWorksDemoModalProps {
@@ -211,7 +212,7 @@ const StepCreate = ({ copy }: { copy: any }) => {
         </div>
         <div>
           <h3 className="text-lg font-bold">{copy.title}</h3>
-          <p className="text-xs text-white/60">{copy.text}</p>
+          {copy.subtitle && (<p className="text-sm md:text-base text-white/70 mt-1">{copy.subtitle}</p>)}
         </div>
       </div>
 
@@ -220,7 +221,7 @@ const StepCreate = ({ copy }: { copy: any }) => {
           {copy.fieldLabel}
         </div>
         <div className="min-h-[60px] rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
-          {typed}
+          {typed ? typed : <span className="text-slate-400">{copy.placeholder}</span>}
           <span className="inline-block w-1 h-4 align-middle bg-slate-700 ml-0.5 animate-pulse" />
         </div>
 
@@ -472,7 +473,10 @@ function getCopy(lang: string) {
       step1: {
         title: "1. Crea tu canción. Si tienes ya, pasa al siguiente paso.",
         text: "",
+        subtitle: "",
         fieldLabel: "Describe tu canción",
+        placeholder: "Canción pop latina de amor. Con voz masculina.",
+        studioPill: "AI Music Studio",
         promptExample: "Canción pop latina sobre empezar de nuevo…",
         voicePop: "Voz Pop Latina",
         voiceUrban: "Urbano",
@@ -520,7 +524,10 @@ function getCopy(lang: string) {
       step1: {
         title: "1. Create your song. If you already have one, skip to the next step.",
         text: "",
+        subtitle: "",
         fieldLabel: "Describe your song",
+        placeholder: "Latin pop love song. With male vocals.",
+        studioPill: "AI Music Studio",
         promptExample: "Latin pop song about starting over…",
         voicePop: "Latin Pop Voice",
         voiceUrban: "Urban",
@@ -568,7 +575,10 @@ function getCopy(lang: string) {
       step1: {
         title: "1. Crie sua canção. Se já tiver uma, passe ao próximo passo.",
         text: "",
+        subtitle: "",
         fieldLabel: "Descreva sua canção",
+        placeholder: "Canção pop latina de amor…",
+        studioPill: "AI Music Studio",
         promptExample: "Canção pop latina sobre recomeçar…",
         voicePop: "Voz Pop Latina",
         voiceUrban: "Urbano",
