@@ -42,18 +42,18 @@ function planToMailerLiteType(plan: string | undefined): string {
 }
 
 const PRICE_CREDITS: Record<string, number> = {
-  "price_1TMDVwFULeu7PzK6laW4n6wu": 100,   // Annual 100 créditos
-  "price_1TMDVwFULeu7PzK6ZnMqrW1c": 200,   // Annual 200 créditos
-  "price_1TMDVwFULeu7PzK6S22WkY3w": 300,   // Annual 300 créditos
-  "price_1TMDVwFULeu7PzK6mSwmx29Z": 500,   // Annual 500 créditos
-  "price_1TMDVwFULeu7PzK68TlUbof2": 1000,  // Annual 1000 créditos
-  "price_1TMDW3FULeu7PzK6468wsXJt": 8,     // Mensual
-  "price_1TMDVkFULeu7PzK6aNdFYW91": 1,     // Individual
-  "price_1TMDVkFULeu7PzK6topup10": 10,     // Top-up 10 (verificar ID real)
-  "price_1TMDVkFULeu7PzK6topup25": 25,     // Top-up 25 (verificar ID real)
-  "price_1TMDVkFULeu7PzK6topup50": 50,     // Top-up 50 (verificar ID real)
-  "price_1TMDVkFULeu7PzK6topup100": 100,   // Top-up 100 (verificar ID real)
-  "price_1TMDVkFULeu7PzK6topup200": 200,   // Top-up 200 (verificar ID real)
+  "price_1TMDVwFULeu7PzK6laW4n6wu": 100,
+  "price_1TMDVwFULeu7PzK6ZnMqrW1c": 200,
+  "price_1TMDVwFULeu7PzK6S22WkY3w": 300,
+  "price_1TMDVwFULeu7PzK6mSwmx29Z": 500,
+  "price_1TMDVwFULeu7PzK68TlUbof2": 1000,
+  "price_1TMDW3FULeu7PzK6468wsXJt": 8,
+  "price_1TMDVkFULeu7PzK6aNdFYW91": 1,
+  "price_1TMDVkFULeu7PzK6YxaKfBiJ": 10,
+  "price_1TMDVkFULeu7PzK62A2zwaDO": 25,
+  "price_1TMDVkFULeu7PzK6PcMnQkWZ": 50,
+  "price_1TMDVkFULeu7PzK6AJC3o4lZ": 100,
+  "price_1TMDVkFULeu7PzK6e9omPpoB": 200,
 };
 
 const PRICE_PLAN: Record<string, string> = {
@@ -73,6 +73,11 @@ const PRICE_TO_PLAN_ID: Record<string, string> = {
   "price_1TMDVwFULeu7PzK68TlUbof2": "annual_1000",
   "price_1TMDW3FULeu7PzK6468wsXJt": "monthly",
   "price_1TMDVkFULeu7PzK6aNdFYW91": "individual",
+  "price_1TMDVkFULeu7PzK6YxaKfBiJ": "topup_10",
+  "price_1TMDVkFULeu7PzK62A2zwaDO": "topup_25",
+  "price_1TMDVkFULeu7PzK6PcMnQkWZ": "topup_50",
+  "price_1TMDVkFULeu7PzK6AJC3o4lZ": "topup_100",
+  "price_1TMDVkFULeu7PzK6e9omPpoB": "topup_200",
 };
 
 const PLAN_ID_TO_PLAN_NAME: Record<string, string> = {
