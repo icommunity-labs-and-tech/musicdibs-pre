@@ -2109,10 +2109,10 @@ allLangs.forEach((lang) => {
 
   const misplacedDashboard = translation?.privacy?.dashboard;
   if (misplacedDashboard) {
-    const existingDashboard = (translation.dashboard || {}) as Record<string, any>;
-    const fixedDashboard: Record<string, any> = { ...existingDashboard };
+    const existingDashboard = (translation.dashboard || {}) as Record<string, unknown>;
+    const fixedDashboard: Record<string, unknown> = { ...existingDashboard };
 
-    Object.entries(misplacedDashboard as Record<string, any>).forEach(([key, value]) => {
+    Object.entries(misplacedDashboard as Record<string, unknown>).forEach(([key, value]) => {
       fixedDashboard[key] = {
         ...(typeof existingDashboard[key] === 'object' ? existingDashboard[key] : {}),
         ...(typeof value === 'object' ? value : {}),
