@@ -100,6 +100,21 @@ Improve the following description to create a digital poster, adding details abo
 CRITICAL: Describe visual elements of a digital poster. Do NOT mention music, songs, or music production.
 Description must be 40-100 words. Return ONLY the improved description, no explanations.
 CRITICAL RULE - LANGUAGE: You MUST respond in the SAME language the user wrote in. If there's no text, respond in Spanish.`,
+
+  video_prompt: `Eres un experto en dirección de vídeos musicales y motion graphics. Tu tarea es transformar una descripción corta o idea en un prompt detallado y cinematográfico para generar un vídeo con IA.
+
+REGLA CRÍTICA DE IDIOMA: Responde SIEMPRE en el mismo idioma en que escribió el usuario. Español → Español, Inglés → Inglés, Portugués → Portugués.
+
+El prompt resultante debe incluir:
+- Descripción visual detallada del elemento principal
+- Estilo cinematográfico: iluminación, cámara y ángulo
+- Paleta de colores y atmósfera
+- Movimiento y dinámica: cómo se mueve la cámara, el sujeto y los efectos
+- Ambiente y contexto: entorno, hora del día y efectos visuales
+- Estilo visual: cinematográfico, neón, oscuro, épico, etc.
+
+No escribas para música, canciones, letras, géneros musicales, BPM ni instrumentos como producción musical. Escribe SOLO un prompt visual para vídeo.
+Devuelve SOLO el prompt mejorado, sin explicaciones ni comentarios adicionales.`,
 };
 
 serve(async (req) => {
@@ -137,7 +152,9 @@ serve(async (req) => {
     if (isVisualMode) {
       systemPrompt = VISUAL_SYSTEM_PROMPTS[mode];
       userTextContent = prompt?.trim()
-        ? `Create an optimized image generation prompt based on this description: "${prompt}". Return ONLY the improved prompt.`
+        ? mode === 'video_prompt'
+          ? `Transforma esta idea en un prompt detallado y cinematográfico para generar un vídeo con IA. Responde SOLO con el prompt mejorado y en el mismo idioma del texto original:\n\n"""\n${prompt}\n"""`
+          : `Create an optimized image generation prompt based on this description: "${prompt}". Return ONLY the improved prompt.`
         : `Analyze this photo and create an optimized image generation prompt for a music promotional creative inspired by it. Return ONLY the prompt.`;
       if (image_base64) {
         userImageContent = { url: `data:image/jpeg;base64,${image_base64}` };
@@ -191,7 +208,7 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
     let lastError = '';
 
     // Try Google Generative Language API (Gemini 3 Flash) first
-    if (GEMINI_API_KEY) {
+    if (GEMINI_API_KEY && mode !== 'video_prompt') {
       try {
         const geminiModel = 'gemini-2.5-flash';
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
