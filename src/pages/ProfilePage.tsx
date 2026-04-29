@@ -81,10 +81,16 @@ export default function ProfilePage() {
     if (user?.id) {
       supabase.from('profiles').select('language' as any).eq('user_id', user.id).single()
         .then(({ data }) => {
-          if ((data as any)?.language) setUserLang((data as any).language);
+          if ((data as any)?.language) {
+            const profileLanguage = (data as any).language === 'pt' ? 'pt-BR' : (data as any).language;
+            setUserLang(profileLanguage);
+            if (i18n.resolvedLanguage !== profileLanguage) {
+              i18n.changeLanguage(profileLanguage);
+            }
+          }
         });
     }
-  }, [user]);
+  }, [user, i18n]);
 
   const handleSaveProfile = async () => {
     setSaving(true);
@@ -317,10 +323,11 @@ export default function ProfilePage() {
           <Select
             value={userLang}
             onValueChange={async (val) => {
-              setUserLang(val);
+              const language = val === 'pt' ? 'pt-BR' : val;
+              setUserLang(language);
               setLangSaving(true);
-              i18n.changeLanguage(val);
-              await supabase.from('profiles').update({ language: val } as any).eq('user_id', user!.id);
+              await i18n.changeLanguage(language);
+              await supabase.from('profiles').update({ language } as any).eq('user_id', user!.id);
               setLangSaving(false);
             }}
           >
@@ -330,7 +337,7 @@ export default function ProfilePage() {
             <SelectContent>
               <SelectItem value="es">🇪🇸 Español</SelectItem>
               <SelectItem value="en">🇬🇧 English</SelectItem>
-              <SelectItem value="pt">🇧🇷 Português</SelectItem>
+              <SelectItem value="pt-BR">🇧🇷 Português</SelectItem>
             </SelectContent>
           </Select>
           {langSaving && (
