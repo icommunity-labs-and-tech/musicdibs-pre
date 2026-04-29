@@ -52,23 +52,8 @@ export function DashboardSidebar() {
   const [kycStatus, setKycStatus] = useState<string | null>(null);
   const [showDistributionModal, setShowDistributionModal] = useState(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>('Free');
-  const { t, i18n } = useTranslation();
-  const [sidebarLanguage, setSidebarLanguage] = useState(() => i18n.resolvedLanguage || i18n.language || 'es');
-  const fixedT = i18n.getFixedT(sidebarLanguage);
-  const tr = (key: string, fallback: string) => String(fixedT(key, { defaultValue: fallback }));
-
-  useEffect(() => {
-    const syncSidebarLanguage = (language?: string) => {
-      setSidebarLanguage(i18n.resolvedLanguage || language || i18n.language || 'es');
-    };
-
-    syncSidebarLanguage();
-    i18n.on('languageChanged', syncSidebarLanguage);
-
-    return () => {
-      i18n.off('languageChanged', syncSidebarLanguage);
-    };
-  }, [i18n]);
+  const { t } = useTranslation();
+  const tr = (key: string, fallback: string) => String(t(key, { defaultValue: fallback }));
 
   const managerItems: SidebarItem[] = [
     { title: tr('dashboard.sidebar.managerPanel', 'Panel Manager'), url: '/dashboard/manager', icon: Briefcase },
@@ -274,7 +259,7 @@ export function DashboardSidebar() {
 
   return (
     <>
-    <Sidebar key={sidebarLanguage} collapsible="icon" className="border-r border-border/40">
+    <Sidebar collapsible="icon" className="border-r border-border/40">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
