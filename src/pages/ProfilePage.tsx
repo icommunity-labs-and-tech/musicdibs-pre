@@ -19,6 +19,12 @@ import {
 import { fetchDashboardSummary } from '@/services/dashboardApi';
 import type { DashboardSummary } from '@/types/dashboard';
 
+type ProfileLanguageRow = {
+  language?: string | null;
+};
+
+const normalizeLanguage = (language: string) => language === 'pt' ? 'pt-BR' : language;
+
 function NotifSoundToggle() {
   const { t } = useTranslation();
   const [enabled, setEnabled] = useState(() => localStorage.getItem('notif_sound') !== 'off');
@@ -79,10 +85,10 @@ export default function ProfilePage() {
       .finally(() => setKycLoading(false));
     // Load language from profile
     if (user?.id) {
-      supabase.from('profiles').select('language' as any).eq('user_id', user.id).single()
+      supabase.from('profiles').select('language').eq('user_id', user.id).single<ProfileLanguageRow>()
         .then(({ data }) => {
-          if ((data as any)?.language) {
-            const profileLanguage = (data as any).language === 'pt' ? 'pt-BR' : (data as any).language;
+          if (data?.language) {
+            const profileLanguage = normalizeLanguage(data.language);
             setUserLang(profileLanguage);
             if (i18n.resolvedLanguage !== profileLanguage) {
               i18n.changeLanguage(profileLanguage);
@@ -323,11 +329,11 @@ export default function ProfilePage() {
           <Select
             value={userLang}
             onValueChange={async (val) => {
-              const language = val === 'pt' ? 'pt-BR' : val;
+              const language = normalizeLanguage(val);
               setUserLang(language);
               setLangSaving(true);
               await i18n.changeLanguage(language);
-              await supabase.from('profiles').update({ language } as any).eq('user_id', user!.id);
+              await supabase.from('profiles').update({ language }).eq('user_id', user!.id);
               setLangSaving(false);
             }}
           >
