@@ -217,6 +217,31 @@ export const SocialVideosSection = () => {
     }
   };
 
+  const handleDownload = async () => {
+    if (!videoUrl) return;
+    const filename = `musicdibs-video-${format}-${Date.now()}.mp4`;
+
+    try {
+      const response = await fetch(videoUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(blobUrl);
+    } catch {
+      const a = document.createElement('a');
+      a.href = videoUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
   const config = FORMAT_CONFIG[format];
 
   const renderForm = () => (
@@ -354,11 +379,9 @@ export const SocialVideosSection = () => {
             </div>
 
             <div className="flex gap-2">
-              <Button asChild variant="default" className="flex-1">
-                <a href={videoUrl} download target="_blank" rel="noopener noreferrer">
-                  <Download className="w-4 h-4 mr-2" />
-                  {tr('downloadVideo')}
-                </a>
+              <Button variant="default" className="flex-1" onClick={handleDownload}>
+                <Download className="w-4 h-4 mr-2" />
+                {tr('downloadVideo')}
               </Button>
               <Button
                 variant="ghost"

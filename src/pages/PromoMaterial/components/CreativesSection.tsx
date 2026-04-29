@@ -98,19 +98,26 @@ export const CreativesSection = () => {
 
   const handleDownload = async () => {
     if (!generatedImage) return;
+    const filename = `creative-${resultFormat}-${Date.now()}.png`;
+
     try {
       const res = await fetch(generatedImage);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `creative-${resultFormat}-${Date.now()}.png`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
-      toast.error('Error al descargar');
+      const a = document.createElement('a');
+      a.href = generatedImage;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
