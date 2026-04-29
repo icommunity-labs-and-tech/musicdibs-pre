@@ -52,13 +52,14 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: authHeader } } }
     );
-    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(authHeader.replace('Bearer ', ''));
-    if (!claimsErr && claimsData?.claims?.sub) {
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userErr } = await userClient.auth.getUser(token);
+    if (!userErr && user?.id) {
       const adminCheck = createClient(Deno.env.get('SUPABASE_URL')!, serviceKey!);
       const { data: roles } = await adminCheck
         .from('user_roles')
         .select('role')
-        .eq('user_id', claimsData.claims.sub)
+        .eq('user_id', user.id)
         .eq('role', 'admin')
         .limit(1);
       if (roles && roles.length > 0) isAuthorized = true;
