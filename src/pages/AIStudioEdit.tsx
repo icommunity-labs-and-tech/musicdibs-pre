@@ -596,7 +596,7 @@ const AIStudioEdit = () => {
                 )}
 
                 {!hasEnough(FEATURE_COSTS.enhance_audio) ? (
-                  <NoCreditsAlert message={tr('ctaButton')} />
+                  <NoCreditsAlert cost={FEATURE_COSTS.enhance_audio} actionLabel={tr('ctaButton')} />
                 ) : (
                   <Button
                     onClick={handleMasterize}

@@ -68,7 +68,7 @@ export const CreativesSection = () => {
       return;
     }
     if (!hasEnough(creditCost)) {
-      toast.error('No tienes créditos suficientes');
+      toast.error(t('dashboard.noCredits.costMessage', { action: 'Generar creatividad', cost: creditCost }));
       return;
     }
 
@@ -174,7 +174,7 @@ export const CreativesSection = () => {
         </div>
 
         {!hasEnough(creditCost) ? (
-          <NoCreditsAlert message="Generar creatividad (1 crédito)" />
+          <NoCreditsAlert cost={creditCost} actionLabel="Generar creatividad" />
         ) : (
           <Button className="w-full gap-2" size="lg" onClick={handleGenerate} disabled={generating || !canGenerate}>
             {generating ? (

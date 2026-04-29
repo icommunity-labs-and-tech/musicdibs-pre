@@ -71,6 +71,14 @@ export function preloadFeatureCosts(): void {
   }
 }
 
+export async function getFeatureCostAsync(key: string): Promise<number> {
+  if (!cachedCosts) {
+    if (!fetchPromise) preloadFeatureCosts();
+    await fetchPromise;
+  }
+  return getFeatureCost(key);
+}
+
 /** Get cost for a feature. Returns default immediately if cache not ready. */
 export function getFeatureCost(key: string): number {
   if (cachedCosts) return cachedCosts[key] ?? 0;
@@ -78,6 +86,10 @@ export function getFeatureCost(key: string): number {
 }
 
 // ── Legacy export (backwards-compatible) ───────────────────
-export const FEATURE_COSTS = DEFAULT_COSTS;
+export const FEATURE_COSTS = new Proxy(DEFAULT_COSTS, {
+  get(target, prop: string) {
+    return cachedCosts?.[prop] ?? target[prop];
+  },
+}) as typeof DEFAULT_COSTS;
 
 export type FeatureKey = keyof typeof DEFAULT_COSTS;

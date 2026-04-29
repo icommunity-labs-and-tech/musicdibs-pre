@@ -297,7 +297,7 @@ const AIStudioCovers = () => {
                 {genError && <p className="text-xs text-destructive">{genError}</p>}
 
                 {!hasEnough(FEATURE_COSTS.generate_cover) ? (
-                  <NoCreditsAlert message="Generar portada (1 crédito)" />
+                  <NoCreditsAlert cost={FEATURE_COSTS.generate_cover} actionLabel={t('aiCovers.title')} />
                 ) : (
                   <Button className="w-full gap-2" size="lg" onClick={handleGenerate} disabled={isGenerating || !canGenerate}>
                     {isGenerating ? (

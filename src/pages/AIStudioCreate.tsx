@@ -1410,7 +1410,7 @@ const AIStudioCreate = () => {
 
                       {/* CTA */}
                       {!hasEnough(currentCost) ? (
-                        <NoCreditsAlert message={`Necesitas ${currentCost} créditos para generar ${mode === 'song' ? 'una canción' : 'un instrumental'}.`} />
+                        <NoCreditsAlert cost={currentCost} actionLabel={mode === 'song' ? t('aiCreate.songWithVoice') : t('aiCreate.instrumentalBase')} />
                       ) : (
                         <>
                         <Button

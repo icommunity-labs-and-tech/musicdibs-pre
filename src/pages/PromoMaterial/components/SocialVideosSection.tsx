@@ -106,7 +106,7 @@ export const SocialVideosSection = () => {
     if (!hasEnough(VIDEO_COST)) {
       toast({
         title: tr('insufficientCredits'),
-        description: tr('insufficientCreditsDesc', { current: credits }),
+        description: tr('insufficientCreditsDesc', { cost: VIDEO_COST, current: credits }),
         variant: 'destructive',
       });
       return;

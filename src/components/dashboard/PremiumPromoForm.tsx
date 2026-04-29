@@ -391,7 +391,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
             </p>
           </div>
 
-          {noCredits && <NoCreditsAlert message={t('dashboard.premium.insufficientCredits')} />}
+          {noCredits && <NoCreditsAlert cost={PREMIUM_COST} actionLabel={t('dashboard.premium.submit')} />}
 
           {/* Form fields */}
           <div className="space-y-4">
@@ -507,7 +507,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
               <PromoProgressIndicator step={progressStep} />
             )}
             {noCredits ? (
-              <NoCreditsAlert message={t('dashboard.premium.submit', { defaultValue: 'Enviar promoción' }) + ` (${PREMIUM_COST} créditos)`} />
+              <NoCreditsAlert cost={PREMIUM_COST} actionLabel={t('dashboard.premium.submit', { defaultValue: 'Enviar promoción' })} />
             ) : (
               <div className="flex items-center justify-between">
                 <PricingLink />

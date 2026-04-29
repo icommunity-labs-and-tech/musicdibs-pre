@@ -1706,6 +1706,8 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
       },
       noCredits: {
         message: 'No tienes créditos suficientes para esta acción.',
+        costMessage: 'No tienes créditos suficientes para {{action}}. Necesitas {{cost}} créditos.',
+        thisAction: 'esta acción',
         buyCredits: 'Comprar créditos',
       },
     },
@@ -1740,6 +1742,8 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
       },
       noCredits: {
         message: 'You do not have enough credits for this action.',
+        costMessage: 'You do not have enough credits for {{action}}. You need {{cost}} credits.',
+        thisAction: 'this action',
         buyCredits: 'Buy credits',
       },
     },
@@ -1774,6 +1778,8 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
       },
       noCredits: {
         message: 'Você não tem créditos suficientes para esta ação.',
+        costMessage: 'Você não tem créditos suficientes para {{action}}. Você precisa de {{cost}} créditos.',
+        thisAction: 'esta ação',
         buyCredits: 'Comprar créditos',
       },
     },
