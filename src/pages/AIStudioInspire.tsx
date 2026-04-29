@@ -9,9 +9,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
-import { useCredits } from "@/hooks/useCredits";
-import { getFeatureCost } from "@/lib/featureCosts";
-import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
 import { ArrowLeft, Sparkles, Dice5, Loader2, Download, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 
 const GENEROS = ["pop", "pop urbano", "reggaeton", "trap", "indie pop", "electrónica", "balada"];
@@ -110,9 +107,6 @@ const AIStudioInspire = () => {
   const { track } = useProductTracking();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { credits, isLoading: creditsLoading } = useCredits();
-  const cost = getFeatureCost("one_click_create");
-  const hasEnoughCredits = credits !== null && credits >= cost;
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<InspireResult | null>(null);
@@ -147,7 +141,7 @@ const AIStudioInspire = () => {
     try {
       // Spend credits — use the same feature key as the music creator (song mode)
       const { data: spendResult, error: spendError } = await supabase.functions.invoke("spend-credits", {
-        body: { feature: "one_click_create", description: `Canción 1-click: ${prompt.slice(0, 80)}` },
+        body: { feature: "generate_audio_song", description: `Canción: ${prompt.slice(0, 80)}` },
       });
       if (spendError) throw new Error(spendError.message || "Error al descontar créditos");
       if (spendResult?.error) throw new Error(spendResult.error);
@@ -248,7 +242,7 @@ const AIStudioInspire = () => {
 
           <Button
             onClick={handleSurprise}
-            disabled={isGenerating || creditsLoading || !hasEnoughCredits}
+            disabled={isGenerating}
             size="xl"
             className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg min-w-[260px]"
           >
@@ -264,12 +258,6 @@ const AIStudioInspire = () => {
               </>
             )}
           </Button>
-
-          {!creditsLoading && !hasEnoughCredits && user && (
-            <div className="mt-6 max-w-md mx-auto">
-              <NoCreditsAlert message={`Necesitas ${cost} créditos para generar una canción.`} />
-            </div>
-          )}
 
           {/* Loading state */}
           {isGenerating && (
@@ -354,7 +342,7 @@ const AIStudioInspire = () => {
                 <button
                   key={idea.label}
                   onClick={() => generateInline(idea.prompt)}
-                  disabled={isGenerating || creditsLoading || !hasEnoughCredits}
+                  disabled={isGenerating}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card hover:bg-accent hover:border-primary/40 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-border"
                 >
                   <span aria-hidden>{idea.emoji}</span>

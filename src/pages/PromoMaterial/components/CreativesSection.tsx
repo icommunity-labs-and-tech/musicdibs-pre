@@ -45,7 +45,7 @@ const fileToBase64 = (file: File): Promise<string> =>
 
 export const CreativesSection = () => {
   const { t } = useTranslation();
-  const { hasEnough, isLoading } = useCredits();
+  const { hasEnough } = useCredits();
 
   const [platform, setPlatform] = useState<'instagram' | 'youtube'>('instagram');
   const [instagramFormat, setInstagramFormat] = useState<'feed' | 'story'>('feed');
@@ -60,7 +60,7 @@ export const CreativesSection = () => {
 
   const currentFormat: Format = platform === 'youtube' ? 'youtube' : instagramFormat;
   const creditCost = FEATURE_COSTS.generate_cover ?? 1;
-  const canGenerate = description.trim().length > 0 && !isLoading && hasEnough(creditCost);
+  const canGenerate = description.trim().length > 0 && hasEnough(creditCost);
 
   const handleGenerate = async () => {
     if (!description.trim()) {
@@ -166,10 +166,10 @@ export const CreativesSection = () => {
           />
         </div>
 
-        {!isLoading && !hasEnough(creditCost) ? (
+        {!hasEnough(creditCost) ? (
           <NoCreditsAlert message="Generar creatividad (1 crédito)" />
         ) : (
-          <Button className="w-full gap-2" size="lg" onClick={handleGenerate} disabled={generating || !canGenerate || isLoading}>
+          <Button className="w-full gap-2" size="lg" onClick={handleGenerate} disabled={generating || !canGenerate}>
             {generating ? (
               <><Loader2 className="h-4 w-4 animate-spin" />{FORMAT_LOADING[currentFormat]}</>
             ) : (

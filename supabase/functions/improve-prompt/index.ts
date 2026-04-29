@@ -72,6 +72,22 @@ CRITICAL: Describe poster design elements. Do NOT mention specific songs, musica
 Description must be 40-100 words. Return ONLY the improved description, no explanations.
 CRITICAL RULE - LANGUAGE: You MUST respond in the SAME language the user wrote in. If there's no text, respond in Spanish.`,
 
+  lyrics_description: `Eres un compositor profesional y poeta especializado en escribir letras de canciones.
+Tu tarea es tomar la descripción temática del usuario y reescribirla como una guía lírica rica y evocadora que inspire la creación de una letra de canción.
+
+REGLA CRÍTICA DE IDIOMA: Responde SIEMPRE en el mismo idioma en que escribió el usuario. Español → Español, Inglés → Inglés, Portugués → Portugués.
+
+ESTRUCTURA DE LA RESPUESTA (OBLIGATORIA):
+Escribe un párrafo fluido de 80-150 palabras que incluya:
+1. Tema central y narrativa: qué historia cuenta la canción, desde qué punto de vista
+2. Arco emocional: cómo evoluciona el sentimiento a lo largo de la canción
+3. Imágenes y metáforas: elementos visuales, sensoriales o poéticos que evocar
+4. Tono y voz: si es confesional, épico, irónico, tierno, melancólico, combativo...
+5. Estructura sugerida: qué transmite el verso, el estribillo, el puente (sin escribir la letra, solo la intención)
+
+NO incluyas BPM, instrumentos, técnicas de producción ni referencias técnicas musicales.
+Devuelve SOLO la descripción lírica mejorada, sin explicaciones ni encabezados.`,
+
   social_poster: `You are a designer of graphics for social media (Facebook/Twitter).
 Improve the following description to create a digital poster, adding details about:
 - Optimized square format
@@ -84,19 +100,6 @@ Improve the following description to create a digital poster, adding details abo
 CRITICAL: Describe visual elements of a digital poster. Do NOT mention music, songs, or music production.
 Description must be 40-100 words. Return ONLY the improved description, no explanations.
 CRITICAL RULE - LANGUAGE: You MUST respond in the SAME language the user wrote in. If there's no text, respond in Spanish.`,
-
-  video_scene: `You are an expert video prompt engineer for AI video generation systems.
-Your task is to rewrite the user's scene idea as a professional prompt for a short, continuous video shot.
-
-CRITICAL RULE - LANGUAGE: You MUST respond in the SAME language the user wrote in. If there's no text, respond in Spanish.
-
-Rules:
-1. Describe ONLY what should be visible in the video: subject, action, setting, camera movement, lighting, atmosphere, colors and visual style.
-2. Write it as one continuous shot suitable for text-to-video or image-to-video generation.
-3. Include clear motion cues: camera slowly pushes in, tracking shot, handheld movement, drone movement, static camera with subject motion, etc.
-4. Do NOT write a song prompt. Do NOT include BPM, key, instruments, vocals, lyrics, verse, chorus, drop, bridge, mix, mastering or music production terms.
-5. Avoid editing instructions such as cuts, split-screen, montage or multiple scenes. Keep it as one coherent scene.
-6. Description must be 40-100 words. Return ONLY the improved video prompt, no explanations.`,
 };
 
 serve(async (req) => {
@@ -133,11 +136,9 @@ serve(async (req) => {
 
     if (isVisualMode) {
       systemPrompt = VISUAL_SYSTEM_PROMPTS[mode];
-      userTextContent = mode === 'video_scene'
-        ? `Create an optimized AI video generation prompt based on this scene description: "${prompt}". Return ONLY the improved video prompt.`
-        : prompt?.trim()
-          ? `Create an optimized image generation prompt based on this description: "${prompt}". Return ONLY the improved prompt.`
-          : `Analyze this photo and create an optimized image generation prompt for a music promotional creative inspired by it. Return ONLY the prompt.`;
+      userTextContent = prompt?.trim()
+        ? `Create an optimized image generation prompt based on this description: "${prompt}". Return ONLY the improved prompt.`
+        : `Analyze this photo and create an optimized image generation prompt for a music promotional creative inspired by it. Return ONLY the prompt.`;
       if (image_base64) {
         userImageContent = { url: `data:image/jpeg;base64,${image_base64}` };
       }
@@ -189,7 +190,7 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
     let improved: string | null = null;
     let lastError = '';
 
-    // Try Google Generative Language API (Gemini 2.5 Flash) first
+    // Try Google Generative Language API (Gemini 3 Flash) first
     if (GEMINI_API_KEY) {
       try {
         const geminiModel = 'gemini-2.5-flash';
@@ -208,10 +209,7 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [{ role: 'user', parts }],
-            generationConfig: {
-              maxOutputTokens: 8192,
-              temperature: 0.8,
-            },
+            generationConfig: { maxOutputTokens: 8192, temperature: 0.8 },
           }),
         });
 
@@ -223,19 +221,10 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
 
         if (gResp.ok) {
           const data = await gResp.json();
-          let text = data?.candidates?.[0]?.content?.parts
+          const text = data?.candidates?.[0]?.content?.parts
             ?.map((p: any) => p?.text || '')
             .join('')
-            .trim() || '';
-
-          // Clean up: strip markdown code fences, internal "thinking" markers, leading critique lines
-          text = text.replace(/^```[a-z]*\n?/gi, '').replace(/\n?```$/g, '').trim();
-          // Remove lines that look like internal reasoning (e.g. "*Critique:*", "*Refined Paragraph:*")
-          text = text.split('\n')
-            .filter((line: string) => !/^\s*\*+\s*(critique|refined|thinking|reasoning|note|step \d+)/i.test(line))
-            .join('\n')
             .trim();
-
           improved = text || null;
         } else {
           lastError = `Gemini ${gResp.status}: ${await gResp.text()}`;
