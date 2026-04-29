@@ -308,7 +308,7 @@ export default function MediaLibraryPage() {
     setDownloading(asset.id);
     try {
       const url = await resolveAssetUrl(asset);
-      if (!url) throw new Error("URL no disponible");
+      if (!url) throw new Error(tr("dashboard.mediaLibrary.urlUnavailable", "URL no disponible"));
       if (libraryAccess.tier === 'warning' && user) {
         await registerFreeDownload(user.id);
       }
@@ -323,7 +323,7 @@ export default function MediaLibraryPage() {
       a.click();
       URL.revokeObjectURL(a.href);
     } catch {
-      toast({ title: "Error al descargar", variant: "destructive" });
+      toast({ title: tr("dashboard.mediaLibrary.downloadError", "Error al descargar"), variant: "destructive" });
     }
     setDownloading(null);
   };
@@ -336,10 +336,10 @@ export default function MediaLibraryPage() {
     try {
       const zip = new JSZip();
       const folders: Record<string, JSZip> = {
-        song: zip.folder("canciones")!,
-        video: zip.folder("videos")!,
-        cover: zip.folder("portadas")!,
-        vocal: zip.folder("voces")!,
+        song: zip.folder(tr("dashboard.mediaLibrary.zipFolders.songs", "canciones"))!,
+        video: zip.folder(tr("dashboard.mediaLibrary.zipFolders.videos", "videos"))!,
+        cover: zip.folder(tr("dashboard.mediaLibrary.zipFolders.covers", "portadas"))!,
+        vocal: zip.folder(tr("dashboard.mediaLibrary.zipFolders.voices", "voces"))!,
       };
       const extMap: Record<string, string> = { song: "mp3", video: "mp4", cover: "png", vocal: "mp3" };
 
@@ -363,10 +363,10 @@ export default function MediaLibraryPage() {
       a.download = `Musicdibs_assets_${new Date().toISOString().slice(0, 10)}.zip`;
       a.click();
       URL.revokeObjectURL(a.href);
-      toast({ title: `${items.length} archivos descargados` });
+      toast({ title: tr("dashboard.mediaLibrary.filesDownloaded", "{{count}} archivos descargados", { count: items.length }) });
       setSelected(new Set());
     } catch {
-      toast({ title: "Error al crear ZIP", variant: "destructive" });
+      toast({ title: tr("dashboard.mediaLibrary.zipError", "Error al crear ZIP"), variant: "destructive" });
     }
     setDownloadingZip(false);
   };
@@ -383,9 +383,9 @@ export default function MediaLibraryPage() {
       setSelected((prev) => { const n = new Set(prev); n.delete(asset.id); return n; });
       // Invalidate cache
       if (cacheKey) sessionStorage.removeItem(cacheKey);
-      toast({ title: "Asset eliminado" });
+      toast({ title: tr("dashboard.mediaLibrary.assetDeleted", "Asset eliminado") });
     } catch {
-      toast({ title: "Error al eliminar", variant: "destructive" });
+      toast({ title: tr("dashboard.mediaLibrary.deleteError", "Error al eliminar"), variant: "destructive" });
     }
     setDeleting(null);
   };
@@ -414,7 +414,7 @@ export default function MediaLibraryPage() {
     setAssets((prev) => prev.filter((a) => !selected.has(a.id)));
     setSelected(new Set());
     if (cacheKey) sessionStorage.removeItem(cacheKey);
-    toast({ title: `${deleted} assets eliminados` });
+    toast({ title: tr("dashboard.mediaLibrary.assetsDeleted", "{{count}} assets eliminados", { count: deleted }) });
     setDeletingBulk(false);
   };
 
@@ -427,7 +427,7 @@ export default function MediaLibraryPage() {
     }
     const url = await resolveAssetUrl(asset);
     if (!url) {
-      toast({ title: "Audio no disponible", variant: "destructive" });
+      toast({ title: tr("dashboard.mediaLibrary.audioUnavailable", "Audio no disponible"), variant: "destructive" });
       return;
     }
     if (audioRef.current) audioRef.current.pause();
@@ -451,7 +451,7 @@ export default function MediaLibraryPage() {
       const updated = { ...customNames, [id]: trimmed };
       setCustomNames(updated);
       localStorage.setItem("media_library_names", JSON.stringify(updated));
-      toast({ title: "Nombre actualizado" });
+      toast({ title: tr("dashboard.mediaLibrary.nameUpdated", "Nombre actualizado") });
     }
     setEditingId(null);
   };
