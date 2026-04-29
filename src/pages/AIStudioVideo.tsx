@@ -802,7 +802,7 @@ const AIStudioVideo = () => {
             </Card>
 
                 {!hasEnough(FEATURE_COSTS.generate_video) ? (
-                  <NoCreditsAlert message={t('aiVideo.generateBtn')} />
+                  <NoCreditsAlert cost={FEATURE_COSTS.generate_video} actionLabel={t('aiVideo.title')} />
                 ) : (
                 <Button
                   onClick={handleGenerate}
