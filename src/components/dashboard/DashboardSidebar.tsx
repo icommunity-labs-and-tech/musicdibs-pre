@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink } from '@/components/NavLink';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -36,14 +36,14 @@ export function DashboardSidebar() {
   const { t, i18n } = useTranslation();
   const tr = (key: string, fallback: string) => t(key, { defaultValue: fallback });
 
-  const managerItems = useMemo(() => [
+  const managerItems = [
     { title: tr('dashboard.sidebar.managerPanel', 'Panel Manager'), url: '/dashboard/manager', icon: Briefcase },
     { title: tr('dashboard.sidebar.myArtists', 'Mis Artistas'), url: '/dashboard/manager/artists', icon: Users },
     { title: tr('dashboard.sidebar.registerWorkNav', 'Registrar Obra'), url: '/dashboard/manager/register', icon: Upload, kycGuarded: true },
     { title: tr('dashboard.sidebar.registeredWorks', 'Obras Registradas'), url: '/dashboard/manager/works', icon: ClipboardList },
-  ], [i18n.resolvedLanguage, t]);
+  ];
 
-  const mainItems = useMemo(() => [
+  const mainItems = [
     { title: tr('dashboard.sidebar.launchHit', 'Lanza tu primer hit 🚀'), url: '/dashboard/launch', icon: Rocket, highlight: true, launchOnly: true },
     { title: tr('dashboard.sidebar.controlPanel', 'Panel de control'), url: '/dashboard', icon: LayoutDashboard },
     { title: tr('dashboard.sidebar.createMusic', 'Crea tu música'), url: '/ai-studio', icon: Sparkles },
@@ -52,18 +52,18 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.promotion', 'Promoción RRSS'), url: '/dashboard/promotion', icon: Megaphone, hideForManager: true, tourId: 'promotion' },
     
     { title: tr('dashboard.sidebar.mediaLibrary', 'Biblioteca multimedia'), url: '/dashboard/media-library', icon: FolderOpen },
-  ], [i18n.resolvedLanguage, t]);
+  ];
 
-  const accountItems = useMemo(() => [
+  const accountItems = [
     { title: tr('dashboard.sidebar.profile', 'Perfil'), url: '/dashboard/profile', icon: User },
     { title: tr('dashboard.sidebar.verifyIdentity', 'Verificar identidad'), url: '/dashboard/verify-identity', icon: User, kycOnly: true },
     { title: tr('dashboard.sidebar.verifyRegistrations', 'Verificar registros'), url: '/dashboard/verify', icon: Search },
     { title: tr('dashboard.sidebar.plansCredits', 'Planes y créditos'), url: '/dashboard/credits', icon: ShoppingBag },
     { title: tr('dashboard.sidebar.billing', 'Facturación'), url: '/dashboard/billing', icon: CreditCard },
     { title: tr('dashboard.sidebar.support', 'Soporte'), url: '/dashboard/support', icon: LifeBuoy },
-  ], [i18n.resolvedLanguage, t]);
+  ];
 
-  const adminItems = useMemo(() => [
+  const adminItems = [
     { title: tr('dashboard.sidebar.users', 'Usuarios'), url: '/dashboard/admin/users', icon: Users },
     { title: tr('dashboard.sidebar.credits', 'Créditos'), url: '/dashboard/admin/credits', icon: CreditCard },
     { title: tr('dashboard.sidebar.works', 'Obras'), url: '/dashboard/admin/works', icon: Music },
@@ -75,16 +75,16 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.apiProfitability', 'Rentabilidad APIs'), url: '/dashboard/admin/api-costs', icon: BarChart3 },
     { title: tr('dashboard.sidebar.productMetrics', 'Métricas producto'), url: '/dashboard/admin/product-metrics', icon: BarChart3 },
     { title: tr('dashboard.sidebar.userChurn', 'Bajas usuarios'), url: '/dashboard/admin/churn', icon: UserX },
-  ], [i18n.resolvedLanguage, t]);
+  ];
 
   // Determine which group is active based on current route
-  const activeGroup = useMemo<GroupId>(() => {
+  const activeGroup: GroupId = (() => {
     const p = location.pathname;
     if (isManager && managerItems.some(i => p === i.url || p.startsWith(i.url + '/'))) return 'manager';
     if (isAdmin && adminItems.some(i => p === i.url || p.startsWith(i.url + '/'))) return 'admin';
     if (accountItems.some(i => p === i.url || p.startsWith(i.url + '/'))) return 'cuenta';
     return 'principal';
-  }, [location.pathname, isAdmin, isManager]);
+  })();
 
   const [openGroup, setOpenGroup] = useState<GroupId>(activeGroup);
 
