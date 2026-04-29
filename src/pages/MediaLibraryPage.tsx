@@ -17,6 +17,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLibraryAccess, registerFreeDownload } from "@/hooks/useLibraryAccess";
 import LibraryAccessBanner from "@/components/library/LibraryAccessBanner";
+import { useTranslation } from "react-i18next";
 import JSZip from "jszip";
 
 // ── Types ──
@@ -37,18 +38,20 @@ const PAGE_LIMIT = 100;
 
 type TabType = "all" | "song" | "video" | "cover" | "vocal";
 
-const TAB_CONFIG: { value: TabType; label: string; icon: React.ElementType }[] = [
-  { value: "all", label: "Todo", icon: FolderOpen },
-  { value: "song", label: "Canciones", icon: Music },
-  { value: "video", label: "Vídeos", icon: Film },
-  { value: "cover", label: "Portadas", icon: ImageIcon },
-  { value: "vocal", label: "Voces", icon: Mic },
+const TAB_CONFIG: { value: TabType; labelKey: string; fallback: string; icon: React.ElementType }[] = [
+  { value: "all", labelKey: "dashboard.mediaLibrary.tabs.all", fallback: "Todo", icon: FolderOpen },
+  { value: "song", labelKey: "dashboard.mediaLibrary.tabs.song", fallback: "Canciones", icon: Music },
+  { value: "video", labelKey: "dashboard.mediaLibrary.tabs.video", fallback: "Vídeos", icon: Film },
+  { value: "cover", labelKey: "dashboard.mediaLibrary.tabs.cover", fallback: "Portadas", icon: ImageIcon },
+  { value: "vocal", labelKey: "dashboard.mediaLibrary.tabs.vocal", fallback: "Voces", icon: Mic },
 ];
 
 export default function MediaLibraryPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const libraryAccess = useLibraryAccess();
+  const { t, i18n } = useTranslation();
+  const tr = (key: string, fallback: string, options?: Record<string, unknown>) => String(t(key, { defaultValue: fallback, ...options }));
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -70,7 +73,7 @@ export default function MediaLibraryPage() {
   const editInputRef = useRef<HTMLInputElement | null>(null);
 
   // ── Cache key ──
-  const cacheKey = user ? `media_library_cache_${user.id}` : '';
+  const cacheKey = user ? `media_library_cache_${user.id}_${i18n.resolvedLanguage || i18n.language}` : '';
 
   // ── Fetch all assets (parallel + cached) ──
   useEffect(() => {
@@ -94,7 +97,7 @@ export default function MediaLibraryPage() {
 
     loadAssets(user.id, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, cacheKey]);
 
   const loadAssets = async (userId: string, showSpinner: boolean) => {
     if (showSpinner) setLoading(true);
@@ -141,7 +144,7 @@ export default function MediaLibraryPage() {
       for (const s of songsRes.data as any[]) {
         allAssets.push({
           id: s.id, type: "song",
-          title: s.prompt?.substring(0, 80) || "Canción sin título",
+          title: s.prompt?.substring(0, 80) || tr("dashboard.mediaLibrary.untitledSong", "Canción sin título"),
           url: null, createdAt: s.created_at,
           meta: { genre: s.genre || "", mood: s.mood || "" },
           source: "ai_generations",
@@ -154,7 +157,7 @@ export default function MediaLibraryPage() {
       for (const v of videosRes.data as any[]) {
         allAssets.push({
           id: v.id, type: "video",
-          title: v.prompt?.substring(0, 80) || "Vídeo sin título",
+          title: v.prompt?.substring(0, 80) || tr("dashboard.mediaLibrary.untitledVideo", "Vídeo sin título"),
           url: null, createdAt: v.created_at,
           meta: { style: v.style || "" },
           source: "video_generations",
@@ -169,7 +172,7 @@ export default function MediaLibraryPage() {
         if (p.image_url) promoUrls.add(p.image_url);
         allAssets.push({
           id: p.id, type: "cover",
-          title: "Portada promocional",
+          title: tr("dashboard.mediaLibrary.promoCover", "Portada promocional"),
           url: p.image_url, createdAt: p.created_at,
           source: "social_promotions",
         });
@@ -195,7 +198,7 @@ export default function MediaLibraryPage() {
         if (!url) continue;
         allAssets.push({
           id: `cover-file-${f.id || f.name}`, type: "cover",
-          title: "Portada IA",
+           title: tr("dashboard.mediaLibrary.aiCover", "Portada IA"),
           url, createdAt: f.created_at || new Date().toISOString(),
           source: "storage",
         });
@@ -207,7 +210,7 @@ export default function MediaLibraryPage() {
       for (const c of clonesRes.data as any[]) {
         allAssets.push({
           id: c.id, type: "vocal",
-          title: c.name || "Voz clonada",
+          title: c.name || tr("dashboard.mediaLibrary.clonedVoice", "Voz clonada"),
           url: null,
           createdAt: c.created_at,
           source: "voice_clones",
