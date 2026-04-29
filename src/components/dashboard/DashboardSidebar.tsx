@@ -46,7 +46,7 @@ export function DashboardSidebar() {
   const mainItems = useMemo(() => [
     { title: tr('dashboard.sidebar.launchHit', 'Lanza tu primer hit 🚀'), url: '/dashboard/launch', icon: Rocket, highlight: true, launchOnly: true },
     { title: tr('dashboard.sidebar.controlPanel', 'Panel de control'), url: '/dashboard', icon: LayoutDashboard },
-    { title: 'AI Music Studio', url: '/ai-studio', icon: Sparkles },
+    { title: tr('dashboard.sidebar.createMusic', 'Crea tu música'), url: '/ai-studio', icon: Sparkles },
     { title: tr('dashboard.sidebar.registerWork', 'Registrar obra'), url: '/dashboard/register', icon: Upload, hideForManager: true, kycGuarded: true },
     { title: tr('dashboard.sidebar.distributeMusic', 'Distribuir tu música'), url: '#distribute', icon: Palette, hideForManager: true, isDistribute: true },
     { title: tr('dashboard.sidebar.promotion', 'Promoción RRSS'), url: '/dashboard/promotion', icon: Megaphone, hideForManager: true, tourId: 'promotion' },
@@ -68,13 +68,13 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.credits', 'Créditos'), url: '/dashboard/admin/credits', icon: CreditCard },
     { title: tr('dashboard.sidebar.works', 'Obras'), url: '/dashboard/admin/works', icon: Music },
     { title: tr('dashboard.sidebar.metrics', 'Métricas'), url: '/dashboard/admin/metrics', icon: BarChart3 },
-    { title: 'Campañas', url: '/dashboard/admin/campaigns', icon: Megaphone },
+    { title: tr('dashboard.sidebar.campaigns', 'Campañas'), url: '/dashboard/admin/campaigns', icon: Megaphone },
     { title: tr('dashboard.sidebar.system', 'Sistema'), url: '/dashboard/admin/system', icon: Settings2 },
     { title: tr('dashboard.sidebar.premiumPromos', 'Promos Premium'), url: '/dashboard/admin/premium-promos', icon: Megaphone },
-    { title: 'Costes Features', url: '/dashboard/admin/feature-costs', icon: Settings2 },
-    { title: 'Rentabilidad APIs', url: '/dashboard/admin/api-costs', icon: BarChart3 },
-    { title: '📊 Métricas Producto', url: '/dashboard/admin/product-metrics', icon: BarChart3 },
-    { title: 'Bajas usuarios', url: '/dashboard/admin/churn', icon: UserX },
+    { title: tr('dashboard.sidebar.featureCosts', 'Costes de operaciones'), url: '/dashboard/admin/feature-costs', icon: Settings2 },
+    { title: tr('dashboard.sidebar.apiProfitability', 'Rentabilidad APIs'), url: '/dashboard/admin/api-costs', icon: BarChart3 },
+    { title: tr('dashboard.sidebar.productMetrics', 'Métricas producto'), url: '/dashboard/admin/product-metrics', icon: BarChart3 },
+    { title: tr('dashboard.sidebar.userChurn', 'Bajas usuarios'), url: '/dashboard/admin/churn', icon: UserX },
   ], [i18n.resolvedLanguage, t]);
 
   // Determine which group is active based on current route
