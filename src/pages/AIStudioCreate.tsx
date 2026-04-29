@@ -1120,8 +1120,8 @@ const AIStudioCreate = () => {
                             type="button"
                             onClick={() => {
                               setMode('instrumental');
-                              setSelectedVoice('');
-                              setSelectedArtistId('');
+                              setSelectedVoice(null);
+                              setSelectedArtistId(null);
                               setVoiceTab(instrumentalPresets.length > 0 ? 'my_presets' : 'preset');
                             }}
                             className={cn(
@@ -1151,7 +1151,7 @@ const AIStudioCreate = () => {
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
-                              onClick={() => { setVoiceTab('preset'); setSelectedArtistId(''); }}
+                              onClick={() => { setVoiceTab('preset'); setSelectedArtistId(null); }}
                               className={cn(
                                 "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
                                 voiceTab === 'preset'
@@ -1239,7 +1239,7 @@ const AIStudioCreate = () => {
                               <button
                                 key={v.id}
                                 type="button"
-                                onClick={() => { setSelectedVoice(v.id); setSelectedArtistId(''); }}
+                                onClick={() => { setSelectedVoice(prev => prev === v.id ? null : v.id); setSelectedArtistId(null); }}
                                 className={cn(
                                   "flex flex-col items-start p-2 px-3 rounded-lg border text-left w-full transition-all",
                                   selectedVoice === v.id && !selectedArtistId
