@@ -14,12 +14,14 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Plus } from 'lucide-react';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { useDashboardTheme } from '@/hooks/useDashboardTheme';
+import { useTranslation } from 'react-i18next';
 
 export default function DashboardLayout() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { guardRegister } = useKycGuard();
   const { theme, toggleTheme } = useDashboardTheme();
+  const { t } = useTranslation();
   useUsageTracking(); // auto-tracks login_after_purchase on mount
 
   useEffect(() => {
@@ -43,7 +45,7 @@ export default function DashboardLayout() {
             <header className="sticky top-0 z-50 h-12 flex items-center justify-between border-b border-border/40 bg-background/95 backdrop-blur-sm px-4">
               <div className="flex items-center">
                 <SidebarTrigger className="mr-3" />
-                <h1 className="text-sm font-semibold text-muted-foreground">Panel de control</h1>
+                <h1 className="text-sm font-semibold text-muted-foreground">{t('dashboard.sidebar.controlPanel')}</h1>
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -53,7 +55,7 @@ export default function DashboardLayout() {
                   onClick={() => guardRegister()}
                 >
                   <Plus className="h-3.5 w-3.5 mr-1" />
-                  Registrar obra
+                  {t('dashboard.sidebar.registerWork')}
                 </Button>
                 <DashboardThemeToggle theme={theme} onToggle={toggleTheme} />
                 <CreditBadge />
