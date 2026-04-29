@@ -479,10 +479,10 @@ export default function MediaLibraryPage() {
 
   const typeLabel = (type: MediaAsset["type"]) => {
     switch (type) {
-      case "song": return "Canción";
-      case "video": return "Vídeo";
-      case "cover": return "Portada";
-      case "vocal": return "Voz";
+      case "song": return tr("dashboard.mediaLibrary.types.song", "Canción");
+      case "video": return tr("dashboard.mediaLibrary.types.video", "Vídeo");
+      case "cover": return tr("dashboard.mediaLibrary.types.cover", "Portada");
+      case "vocal": return tr("dashboard.mediaLibrary.types.vocal", "Voz");
     }
   };
 
@@ -491,38 +491,38 @@ export default function MediaLibraryPage() {
       <LibraryAccessBanner />
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">📂 Biblioteca multimedia</h1>
+          <h1 className="text-2xl font-bold">📂 {tr("dashboard.mediaLibrary.title", "Biblioteca multimedia")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Todos tus assets creados con AI Studio en un solo lugar
+            {tr("dashboard.mediaLibrary.subtitle", "Todos tus assets creados con AI Studio en un solo lugar")}
           </p>
         </div>
         {selected.size > 0 && (
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
-              {selected.size} seleccionados
+              {tr("dashboard.mediaLibrary.selected", "{{count}} seleccionados", { count: selected.size })}
             </Badge>
             <Button size="sm" onClick={downloadZip} disabled={downloadingZip} className="rounded-full">
               {downloadingZip ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Package className="h-4 w-4 mr-1" />}
-              Descargar ZIP
+              {tr("dashboard.mediaLibrary.downloadZip", "Descargar ZIP")}
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button size="sm" variant="destructive" disabled={deletingBulk} className="rounded-full">
                   {deletingBulk ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Trash2 className="h-4 w-4 mr-1" />}
-                  Eliminar
+                  {tr("dashboard.mediaLibrary.delete", "Eliminar")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>¿Eliminar {selected.size} assets?</AlertDialogTitle>
+                  <AlertDialogTitle>{tr("dashboard.mediaLibrary.deleteSelectedTitle", "¿Eliminar {{count}} assets?", { count: selected.size })}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta acción no se puede deshacer. Los archivos seleccionados se eliminarán permanentemente.
+                    {tr("dashboard.mediaLibrary.deleteSelectedDesc", "Esta acción no se puede deshacer. Los archivos seleccionados se eliminarán permanentemente.")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogCancel>{tr("dashboard.mediaLibrary.cancel", "Cancelar")}</AlertDialogCancel>
                   <AlertDialogAction onClick={deleteBulk} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Eliminar {selected.size} assets
+                    {tr("dashboard.mediaLibrary.deleteSelectedAction", "Eliminar {{count}} assets", { count: selected.size })}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -538,11 +538,11 @@ export default function MediaLibraryPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nombre, género, mood..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder={tr("dashboard.mediaLibrary.searchPlaceholder", "Buscar por nombre, género, mood...")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Button variant="outline" size="sm" onClick={selectAll} className="shrink-0">
           {selected.size === filtered.length && filtered.length > 0 ? <CheckSquare className="h-4 w-4 mr-1" /> : <Square className="h-4 w-4 mr-1" />}
-          {selected.size === filtered.length && filtered.length > 0 ? "Deseleccionar todo" : "Seleccionar todo"}
+          {selected.size === filtered.length && filtered.length > 0 ? tr("dashboard.mediaLibrary.deselectAll", "Deseleccionar todo") : tr("dashboard.mediaLibrary.selectAll", "Seleccionar todo")}
         </Button>
       </div>
 
@@ -551,7 +551,7 @@ export default function MediaLibraryPage() {
           {TAB_CONFIG.map((t) => (
             <TabsTrigger key={t.value} value={t.value} className="text-xs sm:text-sm">
               <t.icon className="h-3.5 w-3.5 mr-1" />
-              {t.label}
+              {tr(t.labelKey, t.fallback)}
               {t.value !== "all" && (
                 <span className="ml-1 text-muted-foreground">
                   ({assets.filter((a) => a.type === t.value).length})
@@ -570,8 +570,8 @@ export default function MediaLibraryPage() {
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <FolderOpen className="h-12 w-12 mb-3 opacity-40" />
-                <p className="text-sm">No hay assets{t.value !== "all" ? ` de tipo "${t.label}"` : ""}</p>
-                <p className="text-xs mt-1">Crea contenido en AI Studio para verlo aquí</p>
+                <p className="text-sm">{t.value !== "all" ? tr("dashboard.mediaLibrary.emptyByType", "No hay assets de tipo \"{{type}}\"", { type: tr(t.labelKey, t.fallback) }) : tr("dashboard.mediaLibrary.empty", "No hay assets")}</p>
+                <p className="text-xs mt-1">{tr("dashboard.mediaLibrary.emptyHint", "Crea contenido en AI Studio para verlo aquí")}</p>
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
