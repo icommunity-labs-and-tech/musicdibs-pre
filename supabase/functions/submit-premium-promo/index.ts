@@ -55,7 +55,7 @@ serve(async (req) => {
       .select('credit_cost')
       .eq('feature_key', 'promote_premium')
       .maybeSingle();
-    const creditCost = costRow?.credit_cost ?? 30;
+    const creditCost = costRow?.credit_cost ?? 25;
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
