@@ -684,7 +684,7 @@ const AIStudioCreate = () => {
     if (artistGenType === 'instrumental') {
       setSelectedVoice(null);
     } else {
-      setSelectedVoice(artist.voice_profile_id || '');
+      setSelectedVoice(artist.voice_profile_id || null);
     }
     if (artist.default_duration) setDuration(artist.default_duration);
     if (artist.style_notes) setPrompt(artist.style_notes);
