@@ -26,7 +26,7 @@ export default function DashboardLayout() {
 
   useEffect(() => {
     if (!loading && !user) navigate('/login');
-  }, [user, loading]);
+  }, [user, loading, navigate]);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
