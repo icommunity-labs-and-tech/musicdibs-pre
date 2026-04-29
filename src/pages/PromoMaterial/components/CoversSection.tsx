@@ -204,19 +204,26 @@ export const CoversSection = () => {
 
   const handleDownload = async () => {
     if (!imageUrl) return;
+    const filename = `portada-${(trackTitle || 'musicdibs').replace(/\s+/g, '-').toLowerCase()}.png`;
+
     try {
       const res = await fetch(imageUrl);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `portada-${(trackTitle || 'musicdibs').replace(/\s+/g, '-').toLowerCase()}.png`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
-      toast.error(t('aiShared.error'));
+      const a = document.createElement('a');
+      a.href = imageUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     }
   };
 
