@@ -169,7 +169,7 @@ const AIStudioCreate = () => {
   const [improvedLyricsDesc, setImprovedLyricsDesc] = useState(false);
 
   // ── Voice selector state ──
-  const [selectedVoice, setSelectedVoice] = useState<string>('');
+  const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
   const [voiceProfiles, setVoiceProfiles] = useState<any[]>([]);
   const [playingVoice, setPlayingVoice] = useState<string>('');
   const [audioRef] = useState<Record<string, HTMLAudioElement>>({});
@@ -178,7 +178,7 @@ const AIStudioCreate = () => {
   const [voiceTab, setVoiceTab] = useState<'preset' | 'my_artists' | 'my_presets'>('preset');
   const [virtualArtists, setVirtualArtists] = useState<any[]>([]);
   const [virtualArtistsCount, setVirtualArtistsCount] = useState(0);
-  const [selectedArtistId, setSelectedArtistId] = useState<string>('');
+  const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
 
   // Derived counts by generation_type
   const vocalArtists = useMemo(() => virtualArtists.filter(a => (a.generation_type || 'vocal') === 'vocal'), [virtualArtists]);
@@ -673,8 +673,8 @@ const AIStudioCreate = () => {
   // ── Select virtual artist ──
   const handleSelectArtist = (artist: any) => {
     if (selectedArtistId === artist.id) {
-      setSelectedArtistId('');
-      setSelectedVoice('');
+      setSelectedArtistId(null);
+      setSelectedVoice(null);
       return;
     }
     setSelectedArtistId(artist.id);
@@ -682,9 +682,9 @@ const AIStudioCreate = () => {
     const artistGenType = artist.generation_type || 'vocal';
     setMode(artistGenType === 'instrumental' ? 'instrumental' : 'song');
     if (artistGenType === 'instrumental') {
-      setSelectedVoice('');
+      setSelectedVoice(null);
     } else {
-      setSelectedVoice(artist.voice_profile_id || '');
+      setSelectedVoice(artist.voice_profile_id || null);
     }
     if (artist.default_duration) setDuration(artist.default_duration);
     if (artist.style_notes) setPrompt(artist.style_notes);
@@ -1120,8 +1120,8 @@ const AIStudioCreate = () => {
                             type="button"
                             onClick={() => {
                               setMode('instrumental');
-                              setSelectedVoice('');
-                              setSelectedArtistId('');
+                              setSelectedVoice(null);
+                              setSelectedArtistId(null);
                               setVoiceTab(instrumentalPresets.length > 0 ? 'my_presets' : 'preset');
                             }}
                             className={cn(
@@ -1151,7 +1151,7 @@ const AIStudioCreate = () => {
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
-                              onClick={() => { setVoiceTab('preset'); setSelectedArtistId(''); }}
+                              onClick={() => { setVoiceTab('preset'); setSelectedArtistId(null); }}
                               className={cn(
                                 "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
                                 voiceTab === 'preset'
@@ -1239,7 +1239,7 @@ const AIStudioCreate = () => {
                               <button
                                 key={v.id}
                                 type="button"
-                                onClick={() => { setSelectedVoice(v.id); setSelectedArtistId(''); }}
+                                onClick={() => { setSelectedVoice(prev => prev === v.id ? null : v.id); setSelectedArtistId(null); }}
                                 className={cn(
                                   "flex flex-col items-start p-2 px-3 rounded-lg border text-left w-full transition-all",
                                   selectedVoice === v.id && !selectedArtistId
