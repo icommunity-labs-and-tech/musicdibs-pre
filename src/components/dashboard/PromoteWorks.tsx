@@ -92,7 +92,7 @@ export function PromoteWorks() {
   const { user } = useAuth();
   const { credits, hasEnough } = useCredits();
   const { track } = useProductTracking();
-  const noCredits = !hasEnough(FEATURE_COSTS.promote_work);
+  const noCredits = !hasEnough(FEATURE_COSTS.promote_premium);
   const navigate = useNavigate();
 
   const [works, setWorks] = useState<Work[]>([]);
