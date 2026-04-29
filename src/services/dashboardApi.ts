@@ -62,7 +62,7 @@ export async function submitPromotionRequest(data: PromotionRequest): Promise<{ 
 
   // Spend credits via secure edge function BEFORE processing
   const { data: spendResult, error: spendError } = await supabase.functions.invoke('spend-credits', {
-    body: { feature: 'promote_work', description: `Promoción: ${data.workTitle}` },
+    body: { feature: 'promote_premium', description: `Promoción: ${data.workTitle}` },
   });
   if (spendError) throw new Error(spendError.message || 'Error al descontar créditos');
   if (spendResult?.error) throw new Error(spendResult.error);

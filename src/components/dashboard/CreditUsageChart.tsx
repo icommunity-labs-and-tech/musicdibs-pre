@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 const FEATURE_MAP: Record<string, { labelKey: string; color: string }> = {
   register_work:  { labelKey: 'dashboard.creditChart.registerWork', color: '#431884' },
-  promote_work:   { labelKey: 'dashboard.creditChart.promotion', color: '#3A50B0' },
+  promote_premium: { labelKey: 'dashboard.creditChart.promotion', color: '#3A50B0' },
   generate_audio: { labelKey: 'dashboard.creditChart.generateAudio', color: '#5972C2' },
   edit_audio:     { labelKey: 'dashboard.creditChart.editAudio', color: '#7BB3F0' },
   generate_video: { labelKey: 'dashboard.creditChart.generateVideo', color: '#8090D0' },
@@ -20,7 +20,7 @@ function parseFeature(description: string | null): string {
   if (!description) return 'other';
   const d = description.toLowerCase();
   if (d.includes('register_work') || d.includes('registro'))  return 'register_work';
-  if (d.includes('promote_work')  || d.includes('promoción') || d.includes('promocion')) return 'promote_work';
+  if (d.includes('promote_premium') || d.includes('promote_work') || d.includes('promoción') || d.includes('promocion')) return 'promote_premium';
   if (d.includes('generate_audio') || d.includes('audio'))    return 'generate_audio';
   if (d.includes('edit_audio'))                               return 'edit_audio';
   if (d.includes('generate_video') || d.includes('vídeo') || d.includes('video')) return 'generate_video';

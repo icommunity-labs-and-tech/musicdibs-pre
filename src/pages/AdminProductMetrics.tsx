@@ -249,7 +249,7 @@ export default function AdminProductMetrics() {
       { label: "Clonación de voz", trackingKey: "voice_cloning", costKeys: ["voice_translation_per_min"] },
       { label: "Portadas con IA", trackingKey: "cover", costKeys: ["generate_cover"] },
       { label: "Videoclips IA", trackingKey: "video", costKeys: ["generate_video"] },
-      { label: "Promoción RRSS", trackingKey: "promotion", costKeys: ["promote_work"] },
+      { label: "Promoción RRSS", trackingKey: "promotion", costKeys: ["promote_premium"] },
       { label: "Promo Premium", trackingKey: "premium_promotion", costKeys: ["promote_premium"] },
       { label: "Prensa & visibilidad", trackingKey: "press", costKeys: ["generate_press_release"] },
       { label: "Registro blockchain", trackingKey: "register", costKeys: ["register_work"] },

@@ -11,8 +11,7 @@
 // ── Static defaults (kept in sync with DB seed) ────────────
 const DEFAULT_COSTS: Record<string, number> = {
   register_work: 1,
-  promote_work: 30,
-  promote_premium: 30,
+  promote_premium: 25,
   generate_audio: 3,
   generate_audio_song: 3,
   edit_audio: 2,

@@ -30,7 +30,7 @@ const REVENUE_COST_KEYS: Record<string, string[]> = {
   cover: ["generate_cover"],
   video: ["generate_video"],
   social_video: ["social_video"],
-  promotion: ["promote_work"],
+  promotion: ["promote_premium"],
   premium_promotion: ["promote_premium"],
   press: ["generate_press_release"],
   register: ["register_work"],

@@ -10,8 +10,7 @@ const corsHeaders = {
 // ── Fallback costs (used only if DB query fails) ───────────
 const FALLBACK_COSTS: Record<string, number> = {
   register_work: 1,
-  promote_work: 15,
-  promote_premium: 30,
+  promote_premium: 25,
   generate_audio: 2,
   generate_audio_song: 3,
   edit_audio: 2,
@@ -80,6 +79,16 @@ serve(async (req) => {
 
     let amount: number | null = null;
 
+    const { data: pricingRow, error: pricingError } = await supabaseAdmin
+      .from("operation_pricing")
+      .select("credits_cost")
+      .eq("operation_key", feature)
+      .maybeSingle();
+
+    if (pricingError) {
+      console.warn("[SPEND-CREDITS] operation_pricing lookup failed:", pricingError.message);
+    }
+
     const { data: costRow, error: costError } = await supabaseAdmin
       .from("feature_costs")
       .select("credit_cost")
@@ -90,7 +99,9 @@ serve(async (req) => {
       console.warn("[SPEND-CREDITS] DB lookup failed, using fallback:", costError.message);
     }
 
-    if (costRow) {
+    if (pricingRow) {
+      amount = pricingRow.credits_cost;
+    } else if (costRow) {
       amount = costRow.credit_cost;
     } else if (feature in FALLBACK_COSTS) {
       amount = FALLBACK_COSTS[feature];

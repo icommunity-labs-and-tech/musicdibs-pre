@@ -50,12 +50,17 @@ serve(async (req) => {
     }
 
     // ─── Server-side credit enforcement ───────────────────────
+    const { data: pricingRow } = await supabase
+      .from('operation_pricing')
+      .select('credits_cost')
+      .eq('operation_key', 'promote_premium')
+      .maybeSingle();
     const { data: costRow } = await supabase
       .from('feature_costs')
       .select('credit_cost')
       .eq('feature_key', 'promote_premium')
       .maybeSingle();
-    const creditCost = costRow?.credit_cost ?? 30;
+    const creditCost = pricingRow?.credits_cost ?? costRow?.credit_cost ?? 25;
 
     const { data: profile, error: profileError } = await supabase
       .from('profiles')

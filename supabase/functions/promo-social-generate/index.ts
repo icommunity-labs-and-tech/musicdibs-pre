@@ -153,7 +153,17 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'work_id or ai_generation_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const CREDITS_COST = 15;
+    const { data: pricingRow } = await supabase
+      .from('operation_pricing')
+      .select('credits_cost')
+      .eq('operation_key', 'promote_premium')
+      .maybeSingle();
+    const { data: costRow } = await supabase
+      .from('feature_costs')
+      .select('credit_cost')
+      .eq('feature_key', 'promote_premium')
+      .maybeSingle();
+    const CREDITS_COST = pricingRow?.credits_cost ?? costRow?.credit_cost ?? 25;
     const { data: profile } = await supabase.from('profiles').select('available_credits, display_name').eq('user_id', user.id).single();
     if (!profile || profile.available_credits < CREDITS_COST) {
       return new Response(JSON.stringify({ error: 'insufficient_credits' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
