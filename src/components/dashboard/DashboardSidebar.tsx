@@ -137,7 +137,7 @@ export function DashboardSidebar() {
         schema: 'public',
         table: 'profiles',
         filter: `user_id=eq.${user.id}`,
-      }, (payload: any) => {
+      }, (payload: SidebarProfilePayload) => {
         if (payload.new?.kyc_status) setKycStatus(payload.new.kyc_status);
         if (payload.new?.subscription_plan) setSubscriptionPlan(payload.new.subscription_plan);
       });
@@ -162,16 +162,16 @@ export function DashboardSidebar() {
       : location.pathname.startsWith(path);
 
   const filteredMainItems = mainItems.filter(item => {
-    if ((item as any).kycOnly && kycStatus === 'verified') return false;
-    if ((item as any).launchOnly && isManager) return false;
-    if ((item as any).hideForManager && isManager) return false;
+    if (item.kycOnly && kycStatus === 'verified') return false;
+    if (item.launchOnly && isManager) return false;
+    if (item.hideForManager && isManager) return false;
     return true;
   });
 
-  const renderMenuItem = (item: typeof mainItems[0], activeClass = 'bg-primary/10 text-primary font-medium') => {
-    const isHighlight = !!(item as any).highlight && !isManager;
-    const isDistribute = !!(item as any).isDistribute;
-    const isKycGuarded = !!(item as any).kycGuarded;
+  const renderMenuItem = (item: SidebarItem, activeClass = 'bg-primary/10 text-primary font-medium') => {
+    const isHighlight = !!item.highlight && !isManager;
+    const isDistribute = !!item.isDistribute;
+    const isKycGuarded = !!item.kycGuarded;
 
     if (isDistribute) {
       const isAnnual = subscriptionPlan === 'Annual';
@@ -196,7 +196,7 @@ export function DashboardSidebar() {
     if (isKycGuarded) {
       return (
         <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton asChild isActive={isActive(item.url)} data-tour={(item as any).tourId || undefined}>
+          <SidebarMenuButton asChild isActive={isActive(item.url)} data-tour={item.tourId || undefined}>
             <button
               onClick={() => guardRegister(item.url)}
               className="flex items-center w-full rounded-md px-2 py-1.5 text-sm hover:bg-muted/50"
@@ -211,7 +211,7 @@ export function DashboardSidebar() {
 
     return (
       <SidebarMenuItem key={item.title}>
-        <SidebarMenuButton asChild isActive={isActive(item.url)} data-tour={(item as any).tourId || undefined}>
+        <SidebarMenuButton asChild isActive={isActive(item.url)} data-tour={item.tourId || undefined}>
           <NavLink
             to={item.url}
             end={item.url === '/dashboard'}
@@ -235,7 +235,7 @@ export function DashboardSidebar() {
     );
   };
 
-  const renderCollapsibleGroup = (id: GroupId, label: string, items: any[], activeClass?: string) => (
+  const renderCollapsibleGroup = (id: GroupId, label: string, items: SidebarItem[], activeClass?: string) => (
     <Collapsible open={openGroup === id} onOpenChange={() => toggleGroup(id)}>
       <SidebarGroup>
         <CollapsibleTrigger asChild>
