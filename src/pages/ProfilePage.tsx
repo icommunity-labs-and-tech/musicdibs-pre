@@ -19,6 +19,12 @@ import {
 import { fetchDashboardSummary } from '@/services/dashboardApi';
 import type { DashboardSummary } from '@/types/dashboard';
 
+type ProfileLanguageRow = {
+  language?: string | null;
+};
+
+const normalizeLanguage = (language: string) => language === 'pt' ? 'pt-BR' : language;
+
 function NotifSoundToggle() {
   const { t } = useTranslation();
   const [enabled, setEnabled] = useState(() => localStorage.getItem('notif_sound') !== 'off');
@@ -79,12 +85,18 @@ export default function ProfilePage() {
       .finally(() => setKycLoading(false));
     // Load language from profile
     if (user?.id) {
-      supabase.from('profiles').select('language' as any).eq('user_id', user.id).single()
+      supabase.from('profiles').select('language').eq('user_id', user.id).single<ProfileLanguageRow>()
         .then(({ data }) => {
-          if ((data as any)?.language) setUserLang((data as any).language);
+          if (data?.language) {
+            const profileLanguage = normalizeLanguage(data.language);
+            setUserLang(profileLanguage);
+            if (i18n.resolvedLanguage !== profileLanguage) {
+              i18n.changeLanguage(profileLanguage);
+            }
+          }
         });
     }
-  }, [user]);
+  }, [user, i18n]);
 
   const handleSaveProfile = async () => {
     setSaving(true);
@@ -317,10 +329,11 @@ export default function ProfilePage() {
           <Select
             value={userLang}
             onValueChange={async (val) => {
-              setUserLang(val);
+              const language = normalizeLanguage(val);
+              setUserLang(language);
               setLangSaving(true);
-              i18n.changeLanguage(val);
-              await supabase.from('profiles').update({ language: val } as any).eq('user_id', user!.id);
+              await i18n.changeLanguage(language);
+              await supabase.from('profiles').update({ language }).eq('user_id', user!.id);
               setLangSaving(false);
             }}
           >
@@ -330,7 +343,7 @@ export default function ProfilePage() {
             <SelectContent>
               <SelectItem value="es">🇪🇸 Español</SelectItem>
               <SelectItem value="en">🇬🇧 English</SelectItem>
-              <SelectItem value="pt">🇧🇷 Português</SelectItem>
+              <SelectItem value="pt-BR">🇧🇷 Português</SelectItem>
             </SelectContent>
           </Select>
           {langSaving && (
