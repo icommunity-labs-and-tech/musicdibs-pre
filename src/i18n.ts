@@ -2106,6 +2106,22 @@ allLangs.forEach((lang) => {
     translation.aiStudio = misplacedAiStudio;
     delete translation.privacy.aiStudio;
   }
+
+  const misplacedDashboard = translation?.privacy?.dashboard;
+  if (misplacedDashboard) {
+    const existingDashboard = (translation.dashboard || {}) as Record<string, any>;
+    const fixedDashboard: Record<string, any> = { ...existingDashboard };
+
+    Object.entries(misplacedDashboard as Record<string, any>).forEach(([key, value]) => {
+      fixedDashboard[key] = {
+        ...(typeof existingDashboard[key] === 'object' ? existingDashboard[key] : {}),
+        ...(typeof value === 'object' ? value : {}),
+      };
+    });
+
+    translation.dashboard = fixedDashboard;
+    delete translation.privacy.dashboard;
+  }
 });
 
 i18n
