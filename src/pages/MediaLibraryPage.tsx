@@ -17,6 +17,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLibraryAccess, registerFreeDownload } from "@/hooks/useLibraryAccess";
 import LibraryAccessBanner from "@/components/library/LibraryAccessBanner";
+import { useTranslation } from "react-i18next";
 import JSZip from "jszip";
 
 // ── Types ──
@@ -37,18 +38,20 @@ const PAGE_LIMIT = 100;
 
 type TabType = "all" | "song" | "video" | "cover" | "vocal";
 
-const TAB_CONFIG: { value: TabType; label: string; icon: React.ElementType }[] = [
-  { value: "all", label: "Todo", icon: FolderOpen },
-  { value: "song", label: "Canciones", icon: Music },
-  { value: "video", label: "Vídeos", icon: Film },
-  { value: "cover", label: "Portadas", icon: ImageIcon },
-  { value: "vocal", label: "Voces", icon: Mic },
+const TAB_CONFIG: { value: TabType; labelKey: string; fallback: string; icon: React.ElementType }[] = [
+  { value: "all", labelKey: "dashboard.mediaLibrary.tabs.all", fallback: "Todo", icon: FolderOpen },
+  { value: "song", labelKey: "dashboard.mediaLibrary.tabs.song", fallback: "Canciones", icon: Music },
+  { value: "video", labelKey: "dashboard.mediaLibrary.tabs.video", fallback: "Vídeos", icon: Film },
+  { value: "cover", labelKey: "dashboard.mediaLibrary.tabs.cover", fallback: "Portadas", icon: ImageIcon },
+  { value: "vocal", labelKey: "dashboard.mediaLibrary.tabs.vocal", fallback: "Voces", icon: Mic },
 ];
 
 export default function MediaLibraryPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const libraryAccess = useLibraryAccess();
+  const { t, i18n } = useTranslation();
+  const tr = (key: string, fallback: string, options?: Record<string, unknown>) => String(t(key, { defaultValue: fallback, ...options }));
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -70,7 +73,7 @@ export default function MediaLibraryPage() {
   const editInputRef = useRef<HTMLInputElement | null>(null);
 
   // ── Cache key ──
-  const cacheKey = user ? `media_library_cache_${user.id}` : '';
+  const cacheKey = user ? `media_library_cache_${user.id}_${i18n.resolvedLanguage || i18n.language}` : '';
 
   // ── Fetch all assets (parallel + cached) ──
   useEffect(() => {
@@ -94,7 +97,7 @@ export default function MediaLibraryPage() {
 
     loadAssets(user.id, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, cacheKey]);
 
   const loadAssets = async (userId: string, showSpinner: boolean) => {
     if (showSpinner) setLoading(true);
@@ -141,7 +144,7 @@ export default function MediaLibraryPage() {
       for (const s of songsRes.data as any[]) {
         allAssets.push({
           id: s.id, type: "song",
-          title: s.prompt?.substring(0, 80) || "Canción sin título",
+          title: s.prompt?.substring(0, 80) || tr("dashboard.mediaLibrary.untitledSong", "Canción sin título"),
           url: null, createdAt: s.created_at,
           meta: { genre: s.genre || "", mood: s.mood || "" },
           source: "ai_generations",
@@ -154,7 +157,7 @@ export default function MediaLibraryPage() {
       for (const v of videosRes.data as any[]) {
         allAssets.push({
           id: v.id, type: "video",
-          title: v.prompt?.substring(0, 80) || "Vídeo sin título",
+          title: v.prompt?.substring(0, 80) || tr("dashboard.mediaLibrary.untitledVideo", "Vídeo sin título"),
           url: null, createdAt: v.created_at,
           meta: { style: v.style || "" },
           source: "video_generations",
@@ -169,7 +172,7 @@ export default function MediaLibraryPage() {
         if (p.image_url) promoUrls.add(p.image_url);
         allAssets.push({
           id: p.id, type: "cover",
-          title: "Portada promocional",
+          title: tr("dashboard.mediaLibrary.promoCover", "Portada promocional"),
           url: p.image_url, createdAt: p.created_at,
           source: "social_promotions",
         });
@@ -195,7 +198,7 @@ export default function MediaLibraryPage() {
         if (!url) continue;
         allAssets.push({
           id: `cover-file-${f.id || f.name}`, type: "cover",
-          title: "Portada IA",
+           title: tr("dashboard.mediaLibrary.aiCover", "Portada IA"),
           url, createdAt: f.created_at || new Date().toISOString(),
           source: "storage",
         });
@@ -207,7 +210,7 @@ export default function MediaLibraryPage() {
       for (const c of clonesRes.data as any[]) {
         allAssets.push({
           id: c.id, type: "vocal",
-          title: c.name || "Voz clonada",
+          title: c.name || tr("dashboard.mediaLibrary.clonedVoice", "Voz clonada"),
           url: null,
           createdAt: c.created_at,
           source: "voice_clones",
@@ -305,7 +308,7 @@ export default function MediaLibraryPage() {
     setDownloading(asset.id);
     try {
       const url = await resolveAssetUrl(asset);
-      if (!url) throw new Error("URL no disponible");
+      if (!url) throw new Error(tr("dashboard.mediaLibrary.urlUnavailable", "URL no disponible"));
       if (libraryAccess.tier === 'warning' && user) {
         await registerFreeDownload(user.id);
       }
@@ -320,7 +323,7 @@ export default function MediaLibraryPage() {
       a.click();
       URL.revokeObjectURL(a.href);
     } catch {
-      toast({ title: "Error al descargar", variant: "destructive" });
+      toast({ title: tr("dashboard.mediaLibrary.downloadError", "Error al descargar"), variant: "destructive" });
     }
     setDownloading(null);
   };
@@ -333,10 +336,10 @@ export default function MediaLibraryPage() {
     try {
       const zip = new JSZip();
       const folders: Record<string, JSZip> = {
-        song: zip.folder("canciones")!,
-        video: zip.folder("videos")!,
-        cover: zip.folder("portadas")!,
-        vocal: zip.folder("voces")!,
+        song: zip.folder(tr("dashboard.mediaLibrary.zipFolders.songs", "canciones"))!,
+        video: zip.folder(tr("dashboard.mediaLibrary.zipFolders.videos", "videos"))!,
+        cover: zip.folder(tr("dashboard.mediaLibrary.zipFolders.covers", "portadas"))!,
+        vocal: zip.folder(tr("dashboard.mediaLibrary.zipFolders.voices", "voces"))!,
       };
       const extMap: Record<string, string> = { song: "mp3", video: "mp4", cover: "png", vocal: "mp3" };
 
@@ -360,10 +363,10 @@ export default function MediaLibraryPage() {
       a.download = `Musicdibs_assets_${new Date().toISOString().slice(0, 10)}.zip`;
       a.click();
       URL.revokeObjectURL(a.href);
-      toast({ title: `${items.length} archivos descargados` });
+      toast({ title: tr("dashboard.mediaLibrary.filesDownloaded", "{{count}} archivos descargados", { count: items.length }) });
       setSelected(new Set());
     } catch {
-      toast({ title: "Error al crear ZIP", variant: "destructive" });
+      toast({ title: tr("dashboard.mediaLibrary.zipError", "Error al crear ZIP"), variant: "destructive" });
     }
     setDownloadingZip(false);
   };
@@ -380,9 +383,9 @@ export default function MediaLibraryPage() {
       setSelected((prev) => { const n = new Set(prev); n.delete(asset.id); return n; });
       // Invalidate cache
       if (cacheKey) sessionStorage.removeItem(cacheKey);
-      toast({ title: "Asset eliminado" });
+      toast({ title: tr("dashboard.mediaLibrary.assetDeleted", "Asset eliminado") });
     } catch {
-      toast({ title: "Error al eliminar", variant: "destructive" });
+      toast({ title: tr("dashboard.mediaLibrary.deleteError", "Error al eliminar"), variant: "destructive" });
     }
     setDeleting(null);
   };
@@ -411,7 +414,7 @@ export default function MediaLibraryPage() {
     setAssets((prev) => prev.filter((a) => !selected.has(a.id)));
     setSelected(new Set());
     if (cacheKey) sessionStorage.removeItem(cacheKey);
-    toast({ title: `${deleted} assets eliminados` });
+    toast({ title: tr("dashboard.mediaLibrary.assetsDeleted", "{{count}} assets eliminados", { count: deleted }) });
     setDeletingBulk(false);
   };
 
@@ -424,7 +427,7 @@ export default function MediaLibraryPage() {
     }
     const url = await resolveAssetUrl(asset);
     if (!url) {
-      toast({ title: "Audio no disponible", variant: "destructive" });
+      toast({ title: tr("dashboard.mediaLibrary.audioUnavailable", "Audio no disponible"), variant: "destructive" });
       return;
     }
     if (audioRef.current) audioRef.current.pause();
@@ -448,7 +451,7 @@ export default function MediaLibraryPage() {
       const updated = { ...customNames, [id]: trimmed };
       setCustomNames(updated);
       localStorage.setItem("media_library_names", JSON.stringify(updated));
-      toast({ title: "Nombre actualizado" });
+      toast({ title: tr("dashboard.mediaLibrary.nameUpdated", "Nombre actualizado") });
     }
     setEditingId(null);
   };
@@ -476,10 +479,10 @@ export default function MediaLibraryPage() {
 
   const typeLabel = (type: MediaAsset["type"]) => {
     switch (type) {
-      case "song": return "Canción";
-      case "video": return "Vídeo";
-      case "cover": return "Portada";
-      case "vocal": return "Voz";
+      case "song": return tr("dashboard.mediaLibrary.types.song", "Canción");
+      case "video": return tr("dashboard.mediaLibrary.types.video", "Vídeo");
+      case "cover": return tr("dashboard.mediaLibrary.types.cover", "Portada");
+      case "vocal": return tr("dashboard.mediaLibrary.types.vocal", "Voz");
     }
   };
 
@@ -488,38 +491,38 @@ export default function MediaLibraryPage() {
       <LibraryAccessBanner />
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">📂 Biblioteca multimedia</h1>
+          <h1 className="text-2xl font-bold">📂 {tr("dashboard.mediaLibrary.title", "Biblioteca multimedia")}</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Todos tus assets creados con AI Studio en un solo lugar
+            {tr("dashboard.mediaLibrary.subtitle", "Todos tus assets creados con AI Studio en un solo lugar")}
           </p>
         </div>
         {selected.size > 0 && (
           <div className="flex items-center gap-2">
             <Badge variant="secondary" className="text-xs">
-              {selected.size} seleccionados
+              {tr("dashboard.mediaLibrary.selected", "{{count}} seleccionados", { count: selected.size })}
             </Badge>
             <Button size="sm" onClick={downloadZip} disabled={downloadingZip} className="rounded-full">
               {downloadingZip ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Package className="h-4 w-4 mr-1" />}
-              Descargar ZIP
+              {tr("dashboard.mediaLibrary.downloadZip", "Descargar ZIP")}
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button size="sm" variant="destructive" disabled={deletingBulk} className="rounded-full">
                   {deletingBulk ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Trash2 className="h-4 w-4 mr-1" />}
-                  Eliminar
+                  {tr("dashboard.mediaLibrary.delete", "Eliminar")}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>¿Eliminar {selected.size} assets?</AlertDialogTitle>
+                  <AlertDialogTitle>{tr("dashboard.mediaLibrary.deleteSelectedTitle", "¿Eliminar {{count}} assets?", { count: selected.size })}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta acción no se puede deshacer. Los archivos seleccionados se eliminarán permanentemente.
+                    {tr("dashboard.mediaLibrary.deleteSelectedDesc", "Esta acción no se puede deshacer. Los archivos seleccionados se eliminarán permanentemente.")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogCancel>{tr("dashboard.mediaLibrary.cancel", "Cancelar")}</AlertDialogCancel>
                   <AlertDialogAction onClick={deleteBulk} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                    Eliminar {selected.size} assets
+                    {tr("dashboard.mediaLibrary.deleteSelectedAction", "Eliminar {{count}} assets", { count: selected.size })}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -535,11 +538,11 @@ export default function MediaLibraryPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar por nombre, género, mood..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder={tr("dashboard.mediaLibrary.searchPlaceholder", "Buscar por nombre, género, mood...")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Button variant="outline" size="sm" onClick={selectAll} className="shrink-0">
           {selected.size === filtered.length && filtered.length > 0 ? <CheckSquare className="h-4 w-4 mr-1" /> : <Square className="h-4 w-4 mr-1" />}
-          {selected.size === filtered.length && filtered.length > 0 ? "Deseleccionar todo" : "Seleccionar todo"}
+          {selected.size === filtered.length && filtered.length > 0 ? tr("dashboard.mediaLibrary.deselectAll", "Deseleccionar todo") : tr("dashboard.mediaLibrary.selectAll", "Seleccionar todo")}
         </Button>
       </div>
 
@@ -548,7 +551,7 @@ export default function MediaLibraryPage() {
           {TAB_CONFIG.map((t) => (
             <TabsTrigger key={t.value} value={t.value} className="text-xs sm:text-sm">
               <t.icon className="h-3.5 w-3.5 mr-1" />
-              {t.label}
+              {tr(t.labelKey, t.fallback)}
               {t.value !== "all" && (
                 <span className="ml-1 text-muted-foreground">
                   ({assets.filter((a) => a.type === t.value).length})
@@ -567,8 +570,8 @@ export default function MediaLibraryPage() {
             ) : filtered.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                 <FolderOpen className="h-12 w-12 mb-3 opacity-40" />
-                <p className="text-sm">No hay assets{t.value !== "all" ? ` de tipo "${t.label}"` : ""}</p>
-                <p className="text-xs mt-1">Crea contenido en AI Studio para verlo aquí</p>
+                <p className="text-sm">{t.value !== "all" ? tr("dashboard.mediaLibrary.emptyByType", "No hay assets de tipo \"{{type}}\"", { type: tr(t.labelKey, t.fallback) }) : tr("dashboard.mediaLibrary.empty", "No hay assets")}</p>
+                <p className="text-xs mt-1">{tr("dashboard.mediaLibrary.emptyHint", "Crea contenido en AI Studio para verlo aquí")}</p>
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -624,7 +627,7 @@ export default function MediaLibraryPage() {
                             <p
                               className="text-sm font-medium truncate cursor-pointer hover:text-primary transition-colors"
                               onDoubleClick={() => startEditing(asset)}
-                              title="Doble clic para renombrar"
+                              title={tr("dashboard.mediaLibrary.renameHint", "Doble clic para renombrar")}
                             >
                               {getDisplayName(asset)}
                             </p>
@@ -634,7 +637,7 @@ export default function MediaLibraryPage() {
                               {typeLabel(asset.type)}
                             </Badge>
                             <span className="text-[10px] text-muted-foreground">
-                              {new Date(asset.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                              {new Date(asset.createdAt).toLocaleDateString(i18n.resolvedLanguage || i18n.language, { day: "2-digit", month: "short", year: "numeric" })}
                             </span>
                           </div>
                           {asset.meta && Object.values(asset.meta).filter(Boolean).length > 0 && (
@@ -650,26 +653,26 @@ export default function MediaLibraryPage() {
                         {(asset.type === "song" || asset.type === "vocal") && (
                           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => togglePlay(asset)}>
                             {playingId === asset.id ? <Pause className="h-3.5 w-3.5 mr-1" /> : <Play className="h-3.5 w-3.5 mr-1" />}
-                            {playingId === asset.id ? "Parar" : "Escuchar"}
+                            {playingId === asset.id ? tr("dashboard.mediaLibrary.stop", "Parar") : tr("dashboard.mediaLibrary.listen", "Escuchar")}
                           </Button>
                         )}
                         {asset.type === "video" && (
                           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={async () => {
                             const url = await resolveAssetUrl(asset);
                             if (url) window.open(url, "_blank");
-                            else toast({ title: "Vídeo no disponible", variant: "destructive" });
+                            else toast({ title: tr("dashboard.mediaLibrary.videoUnavailable", "Vídeo no disponible"), variant: "destructive" });
                           }}>
                             <Play className="h-3.5 w-3.5 mr-1" />
-                            Ver
+                            {tr("dashboard.mediaLibrary.view", "Ver")}
                           </Button>
                         )}
                         {asset.type === "cover" && asset.url && (
                           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => window.open(asset.url!, "_blank")}>
                             <ImageIcon className="h-3.5 w-3.5 mr-1" />
-                            Ver
+                            {tr("dashboard.mediaLibrary.view", "Ver")}
                           </Button>
                         )}
-                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => startEditing(asset)} title="Renombrar">
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => startEditing(asset)} title={tr("dashboard.mediaLibrary.rename", "Renombrar")}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <div className="flex-1" />
@@ -681,15 +684,15 @@ export default function MediaLibraryPage() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>¿Eliminar este asset?</AlertDialogTitle>
+                              <AlertDialogTitle>{tr("dashboard.mediaLibrary.deleteAssetTitle", "¿Eliminar este asset?")}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                "{getDisplayName(asset).substring(0, 60)}" se eliminará permanentemente.
+                                {tr("dashboard.mediaLibrary.deleteAssetDesc", "\"{{name}}\" se eliminará permanentemente.", { name: getDisplayName(asset).substring(0, 60) })}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogCancel>{tr("dashboard.mediaLibrary.cancel", "Cancelar")}</AlertDialogCancel>
                               <AlertDialogAction onClick={() => deleteAsset(asset)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                Eliminar
+                                {tr("dashboard.mediaLibrary.delete", "Eliminar")}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -707,7 +710,7 @@ export default function MediaLibraryPage() {
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Reactiva tu plan para descargar</p>
+                                <p>{tr("dashboard.mediaLibrary.reactivateToDownload", "Reactiva tu plan para descargar")}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
