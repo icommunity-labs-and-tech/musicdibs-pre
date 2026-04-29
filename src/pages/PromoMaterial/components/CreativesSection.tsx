@@ -68,7 +68,7 @@ export const CreativesSection = () => {
       return;
     }
     if (!hasEnough(creditCost)) {
-      toast.error('No tienes créditos suficientes');
+      toast.error(t('dashboard.noCredits.costMessage', { action: 'Generar creatividad', cost: creditCost }));
       return;
     }
 
