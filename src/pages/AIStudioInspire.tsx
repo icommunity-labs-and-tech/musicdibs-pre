@@ -112,6 +112,7 @@ const AIStudioInspire = () => {
   const [result, setResult] = useState<InspireResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [lastPrompt, setLastPrompt] = useState<string>("");
+  const [selectedChip, setSelectedChip] = useState<string | null>(null);
 
   useEffect(() => {
     track("ai_studio_entered", { feature: "inspire" });
@@ -184,7 +185,12 @@ const AIStudioInspire = () => {
   };
 
   const handleSurprise = () => {
-    generateInline(buildSurprisePrompt());
+    const selectedIdea = PRESET_IDEAS.find((idea) => idea.label === selectedChip);
+    generateInline(selectedIdea?.prompt || buildSurprisePrompt());
+  };
+
+  const handleChipClick = (chip: string) => {
+    setSelectedChip((prev) => (prev === chip ? null : chip));
   };
 
   const handleDownload = async () => {
@@ -254,7 +260,7 @@ const AIStudioInspire = () => {
             ) : (
               <>
                 <Dice5 className="w-5 h-5 mr-2" />
-                🎲 Sorpréndeme
+                {selectedChip ? `🎲 Generar ${selectedChip}` : '🎲 Sorpréndeme'}
               </>
             )}
           </Button>
@@ -341,9 +347,15 @@ const AIStudioInspire = () => {
               {PRESET_IDEAS.map((idea) => (
                 <button
                   key={idea.label}
-                  onClick={() => generateInline(idea.prompt)}
+                  type="button"
+                  onClick={() => handleChipClick(idea.label)}
                   disabled={isGenerating}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-card hover:bg-accent hover:border-primary/40 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-card disabled:hover:border-border"
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+                    selectedChip === idea.label
+                      ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'border-border bg-card hover:bg-accent hover:border-primary/40 disabled:hover:bg-card disabled:hover:border-border'
+                  }`}
+                  aria-pressed={selectedChip === idea.label}
                 >
                   <span aria-hidden>{idea.emoji}</span>
                   {idea.label}
