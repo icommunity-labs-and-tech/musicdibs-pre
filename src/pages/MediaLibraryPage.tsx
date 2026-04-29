@@ -637,7 +637,7 @@ export default function MediaLibraryPage() {
                               {typeLabel(asset.type)}
                             </Badge>
                             <span className="text-[10px] text-muted-foreground">
-                              {new Date(asset.createdAt).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                              {new Date(asset.createdAt).toLocaleDateString(i18n.resolvedLanguage || i18n.language, { day: "2-digit", month: "short", year: "numeric" })}
                             </span>
                           </div>
                           {asset.meta && Object.values(asset.meta).filter(Boolean).length > 0 && (
