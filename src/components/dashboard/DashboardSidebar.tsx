@@ -7,6 +7,7 @@ import {
   CreditCard, LifeBuoy, Music, LogOut, Mic, Sparkles, Shield,
   HelpCircle, Users, BarChart3, Settings2, Rocket, Briefcase,
   ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX,
+  type LucideIcon,
 } from 'lucide-react';
 import { DistributionInfoModal } from '@/components/DistributionInfoModal';
 import {
@@ -22,6 +23,24 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 
 type GroupId = 'manager' | 'principal' | 'cuenta' | 'admin';
+type SidebarItem = {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  highlight?: boolean;
+  launchOnly?: boolean;
+  hideForManager?: boolean;
+  kycGuarded?: boolean;
+  kycOnly?: boolean;
+  isDistribute?: boolean;
+  tourId?: string;
+};
+type SidebarProfilePayload = {
+  new?: {
+    kyc_status?: string | null;
+    subscription_plan?: string | null;
+  };
+};
 
 export function DashboardSidebar() {
   const { state } = useSidebar();
@@ -36,14 +55,14 @@ export function DashboardSidebar() {
   const { t, i18n } = useTranslation();
   const tr = (key: string, fallback: string) => t(key, { defaultValue: fallback });
 
-  const managerItems = [
+  const managerItems: SidebarItem[] = [
     { title: tr('dashboard.sidebar.managerPanel', 'Panel Manager'), url: '/dashboard/manager', icon: Briefcase },
     { title: tr('dashboard.sidebar.myArtists', 'Mis Artistas'), url: '/dashboard/manager/artists', icon: Users },
     { title: tr('dashboard.sidebar.registerWorkNav', 'Registrar Obra'), url: '/dashboard/manager/register', icon: Upload, kycGuarded: true },
     { title: tr('dashboard.sidebar.registeredWorks', 'Obras Registradas'), url: '/dashboard/manager/works', icon: ClipboardList },
   ];
 
-  const mainItems = [
+  const mainItems: SidebarItem[] = [
     { title: tr('dashboard.sidebar.launchHit', 'Lanza tu primer hit 🚀'), url: '/dashboard/launch', icon: Rocket, highlight: true, launchOnly: true },
     { title: tr('dashboard.sidebar.controlPanel', 'Panel de control'), url: '/dashboard', icon: LayoutDashboard },
     { title: tr('dashboard.sidebar.createMusic', 'Crea tu música'), url: '/ai-studio', icon: Sparkles },
@@ -54,7 +73,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.mediaLibrary', 'Biblioteca multimedia'), url: '/dashboard/media-library', icon: FolderOpen },
   ];
 
-  const accountItems = [
+  const accountItems: SidebarItem[] = [
     { title: tr('dashboard.sidebar.profile', 'Perfil'), url: '/dashboard/profile', icon: User },
     { title: tr('dashboard.sidebar.verifyIdentity', 'Verificar identidad'), url: '/dashboard/verify-identity', icon: User, kycOnly: true },
     { title: tr('dashboard.sidebar.verifyRegistrations', 'Verificar registros'), url: '/dashboard/verify', icon: Search },
@@ -63,7 +82,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.support', 'Soporte'), url: '/dashboard/support', icon: LifeBuoy },
   ];
 
-  const adminItems = [
+  const adminItems: SidebarItem[] = [
     { title: tr('dashboard.sidebar.users', 'Usuarios'), url: '/dashboard/admin/users', icon: Users },
     { title: tr('dashboard.sidebar.credits', 'Créditos'), url: '/dashboard/admin/credits', icon: CreditCard },
     { title: tr('dashboard.sidebar.works', 'Obras'), url: '/dashboard/admin/works', icon: Music },
