@@ -5,14 +5,14 @@ import { useTranslation } from 'react-i18next';
 
 interface NoCreditsAlertProps {
   message?: string;
-  featureKey?: string;
+  cost?: number;
   actionLabel?: string;
 }
 
-export function NoCreditsAlert({ message, featureKey, actionLabel }: NoCreditsAlertProps) {
+export function NoCreditsAlert({ message, cost, actionLabel }: NoCreditsAlertProps) {
   const { t } = useTranslation();
-  const dynamicMessage = featureKey
-    ? t('dashboard.noCredits.costMessage', { action: actionLabel || t('dashboard.noCredits.thisAction'), cost: message })
+  const dynamicMessage = typeof cost === 'number'
+    ? t('dashboard.noCredits.costMessage', { action: actionLabel || t('dashboard.noCredits.thisAction'), cost })
     : message;
 
   return (
