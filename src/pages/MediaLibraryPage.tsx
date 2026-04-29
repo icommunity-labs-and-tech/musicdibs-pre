@@ -627,7 +627,7 @@ export default function MediaLibraryPage() {
                             <p
                               className="text-sm font-medium truncate cursor-pointer hover:text-primary transition-colors"
                               onDoubleClick={() => startEditing(asset)}
-                              title="Doble clic para renombrar"
+                              title={tr("dashboard.mediaLibrary.renameHint", "Doble clic para renombrar")}
                             >
                               {getDisplayName(asset)}
                             </p>
@@ -653,26 +653,26 @@ export default function MediaLibraryPage() {
                         {(asset.type === "song" || asset.type === "vocal") && (
                           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => togglePlay(asset)}>
                             {playingId === asset.id ? <Pause className="h-3.5 w-3.5 mr-1" /> : <Play className="h-3.5 w-3.5 mr-1" />}
-                            {playingId === asset.id ? "Parar" : "Escuchar"}
+                            {playingId === asset.id ? tr("dashboard.mediaLibrary.stop", "Parar") : tr("dashboard.mediaLibrary.listen", "Escuchar")}
                           </Button>
                         )}
                         {asset.type === "video" && (
                           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={async () => {
                             const url = await resolveAssetUrl(asset);
                             if (url) window.open(url, "_blank");
-                            else toast({ title: "Vídeo no disponible", variant: "destructive" });
+                            else toast({ title: tr("dashboard.mediaLibrary.videoUnavailable", "Vídeo no disponible"), variant: "destructive" });
                           }}>
                             <Play className="h-3.5 w-3.5 mr-1" />
-                            Ver
+                            {tr("dashboard.mediaLibrary.view", "Ver")}
                           </Button>
                         )}
                         {asset.type === "cover" && asset.url && (
                           <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => window.open(asset.url!, "_blank")}>
                             <ImageIcon className="h-3.5 w-3.5 mr-1" />
-                            Ver
+                            {tr("dashboard.mediaLibrary.view", "Ver")}
                           </Button>
                         )}
-                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => startEditing(asset)} title="Renombrar">
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => startEditing(asset)} title={tr("dashboard.mediaLibrary.rename", "Renombrar")}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         <div className="flex-1" />
@@ -684,15 +684,15 @@ export default function MediaLibraryPage() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>¿Eliminar este asset?</AlertDialogTitle>
+                              <AlertDialogTitle>{tr("dashboard.mediaLibrary.deleteAssetTitle", "¿Eliminar este asset?")}</AlertDialogTitle>
                               <AlertDialogDescription>
-                                "{getDisplayName(asset).substring(0, 60)}" se eliminará permanentemente.
+                                {tr("dashboard.mediaLibrary.deleteAssetDesc", "\"{{name}}\" se eliminará permanentemente.", { name: getDisplayName(asset).substring(0, 60) })}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogCancel>{tr("dashboard.mediaLibrary.cancel", "Cancelar")}</AlertDialogCancel>
                               <AlertDialogAction onClick={() => deleteAsset(asset)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                Eliminar
+                                {tr("dashboard.mediaLibrary.delete", "Eliminar")}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -710,7 +710,7 @@ export default function MediaLibraryPage() {
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Reactiva tu plan para descargar</p>
+                                <p>{tr("dashboard.mediaLibrary.reactivateToDownload", "Reactiva tu plan para descargar")}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
