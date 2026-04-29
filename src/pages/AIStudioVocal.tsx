@@ -246,7 +246,7 @@ export default function AIStudioVocal() {
           body: JSON.stringify({ lyrics, voice_id: selectedClone.elevenlabs_voice_id, voice_name: selectedClone.name }) });
       const data = await res.json();
       if (!res.ok) {
-        if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: tv('insufficientCreditsDesc'), variant: 'destructive' });
+        if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: t('dashboard.noCredits.costMessage', { action: tv('title'), cost: FEATURE_COSTS.generate_vocal_track }), variant: 'destructive' });
         else { const { userMessage } = parseAiError({ status: res.status }, data); toast({ title: s('aiShared.error'), description: userMessage, variant: 'destructive' }); }
         return;
       }
