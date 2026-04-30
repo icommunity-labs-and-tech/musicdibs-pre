@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const supabase = await getSupabaseClient();
 
-      // 1. Try standard Supabase auth first (bcrypt users — majority post-migration).
+      // 1. Try standard Supabase auth (bcrypt users — majority post-migration).
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (!error) return { error: null };
 
@@ -122,46 +122,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: { message: 'Tu cuenta ha sido bloqueada. Contacta con soporte.' } };
       }
 
-      // 3. Invalid credentials — try PHPass fallback for WordPress-migrated users.
-      // Supabase puede devolver distintos formatos: 'Invalid login credentials',
-      // 'invalid_credentials', o un 400 sin mensaje claro. Aceptamos todos.
-      const errStatus = (error as any)?.status;
-      const errMsg = error.message ?? '';
-      if (
-        errMsg.includes('Invalid login credentials') ||
-        errMsg.includes('invalid_credentials') ||
-        errMsg.includes('Unexpected failure') ||
-        errMsg.includes('unexpected_failure') ||
-        errStatus === 400 ||
-        errStatus === 500
-      ) {
-        try {
-          const { data: wpData, error: wpError } = await supabase.functions.invoke(
-            'wp-password-login',
-            { body: { email, password } },
-          );
+      // 3. Any other error → try PHPass fallback for WordPress-migrated users.
+      try {
+        const { data: wpData, error: wpError } = await supabase.functions.invoke(
+          'wp-password-login',
+          { body: { email, password } },
+        );
 
-          if (wpError || (wpData as any)?.error) {
-            // PHPass verification also failed — wrong password
-            return { error };
-          }
-
-          if ((wpData as any)?.upgraded) {
-            // Esperar 500ms para que Supabase propague el nuevo hash bcrypt
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            const { error: retryError } = await supabase.auth.signInWithPassword({ email, password });
-            if (!retryError) return { error: null };
-          }
-
-          return { error };
-        } catch (wpFallbackError) {
-          console.error('[auth] WP password fallback failed', wpFallbackError);
+        // wp-password-login failed or did not upgrade → surface original error
+        // so the UI can fall back to magic link flow.
+        if (wpError || (wpData as any)?.error || !(wpData as any)?.upgraded) {
           return { error };
         }
-      }
 
-      // 4. Other errors
-      return { error };
+        // Hash upgraded → retry standard sign-in (allow propagation).
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        const { error: retryError } = await supabase.auth.signInWithPassword({ email, password });
+        if (!retryError) return { error: null };
+
+        // Upgrade succeeded but retry failed → let UI fall back to magic link.
+        return { error: retryError };
+      } catch (wpFallbackError) {
+        console.error('[auth] WP password fallback failed', wpFallbackError);
+        return { error };
+      }
     } catch (error) {
       console.error('[auth] Sign in failed', error);
       return { error: { message: 'No se pudo conectar con el servicio de autenticación. Inténtalo de nuevo.' } };
