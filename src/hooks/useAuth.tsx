@@ -122,8 +122,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: { message: 'Tu cuenta ha sido bloqueada. Contacta con soporte.' } };
       }
 
-      // 3. Invalid credentials — try PHPass fallback for WordPress-migrated users
-      if (error.message?.includes('Invalid login credentials')) {
+      // 3. Invalid credentials — try PHPass fallback for WordPress-migrated users.
+      // Supabase puede devolver distintos formatos: 'Invalid login credentials',
+      // 'invalid_credentials', o un 400 sin mensaje claro. Aceptamos todos.
+      const errStatus = (error as any)?.status;
+      const errMsg = error.message ?? '';
+      if (
+        errMsg.includes('Invalid login credentials') ||
+        errMsg.includes('invalid_credentials') ||
+        errStatus === 400
+      ) {
         try {
           const { data: wpData, error: wpError } = await supabase.functions.invoke(
             'wp-password-login',
