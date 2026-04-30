@@ -130,7 +130,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (
         errMsg.includes('Invalid login credentials') ||
         errMsg.includes('invalid_credentials') ||
-        errStatus === 400
+        errMsg.includes('Unexpected failure') ||
+        errMsg.includes('unexpected_failure') ||
+        errStatus === 400 ||
+        errStatus === 500
       ) {
         try {
           const { data: wpData, error: wpError } = await supabase.functions.invoke(
