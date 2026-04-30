@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const supabase = await getSupabaseClient();
 
-      // 1. Try standard Supabase auth (works for bcrypt users — the majority post-migration)
+      // 1. Try standard Supabase auth first (bcrypt users — majority post-migration).
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (!error) return { error: null };
 
