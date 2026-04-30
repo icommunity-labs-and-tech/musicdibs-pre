@@ -2637,6 +2637,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      upgrade_user_password: {
+        Args: { p_new_password: string; p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "manager"
