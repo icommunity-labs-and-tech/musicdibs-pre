@@ -73,11 +73,61 @@ export default function UserLogin() {
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(''); setLoading(true);
-    const form = new FormData(e.currentTarget);
-    const { error } = await signIn(form.get('email') as string, form.get('password') as string);
+    setError(''); setSuccess(''); setLoading(true);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const { error } = await signIn(email, password);
+    if (!error) {
+      setLoading(false);
+      navigate('/dashboard');
+      return;
+    }
+
+    // Detect server-side errors that indicate the user needs to activate via magic link
+    // (typical for users migrated from the previous MusicDibs version with no password set).
+    const status = (error as any)?.status;
+    const msg = ((error as any)?.message ?? '').toLowerCase();
+    const isServerError =
+      status === 500 ||
+      msg.includes('unexpected') ||
+      msg.includes('server') ||
+      msg.includes('database');
+
+    if (isServerError && email) {
+      // Clear password field
+      const pwInput = form.querySelector('input[name="password"]') as HTMLInputElement | null;
+      if (pwInput) pwInput.value = '';
+
+      // Friendly trilingual message
+      const activateMsg = lang === 'en'
+        ? 'Your account needs to be activated. We sent you an access link to your email.'
+        : lang === 'pt-BR'
+          ? 'Sua conta precisa ser ativada. Enviamos um link de acesso para seu email.'
+          : 'Tu cuenta necesita activarse. Te enviamos un enlace de acceso a tu email.';
+
+      // Switch to magic link view and prefill email
+      setMagicEmail(email);
+      setMagicMode(true);
+      setError('');
+      setSuccess(activateMsg);
+
+      // Auto-trigger magic link
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+      });
+      setLoading(false);
+      if (otpError) {
+        setSuccess('');
+        setError(otpError.message);
+      }
+      return;
+    }
+
     setLoading(false);
-    if (error) setError(error.message); else navigate('/dashboard');
+    setError(error.message);
   };
 
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
