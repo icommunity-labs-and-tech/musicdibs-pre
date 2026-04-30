@@ -112,15 +112,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       const supabase = await getSupabaseClient();
+
+      // 1. Try standard Supabase auth (works for bcrypt users — the majority post-migration)
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        if (error.message?.includes('banned')) {
-          return { error: { message: 'Tu cuenta ha sido bloqueada. Contacta con soporte.' } };
-        }
-        return { error };
+      if (!error) return { error: null };
+
+      // 2. Banned users — don't attempt fallback
+      if (error.message?.includes('banned')) {
+        return { error: { message: 'Tu cuenta ha sido bloqueada. Contacta con soporte.' } };
       }
 
-      return { error: null };
+      // 3. Invalid credentials — try PHPass fallback for WordPress-migrated users
+      if (error.message?.includes('Invalid login credentials')) {
+        try {
+          const { data: wpData, error: wpError } = await supabase.functions.invoke(
+            'wp-password-login',
+            { body: { email, password } },
+          );
+
+          if (wpError || (wpData as any)?.error) {
+            // PHPass verification also failed — wrong password
+            return { error };
+          }
+
+          if ((wpData as any)?.upgraded) {
+            // Hash upgraded to bcrypt — retry native login immediately
+            const { error: retryError } = await supabase.auth.signInWithPassword({ email, password });
+            if (!retryError) return { error: null };
+          }
+
+          return { error };
+        } catch (wpFallbackError) {
+          console.error('[auth] WP password fallback failed', wpFallbackError);
+          return { error };
+        }
+      }
+
+      // 4. Other errors
+      return { error };
     } catch (error) {
       console.error('[auth] Sign in failed', error);
       return { error: { message: 'No se pudo conectar con el servicio de autenticación. Inténtalo de nuevo.' } };

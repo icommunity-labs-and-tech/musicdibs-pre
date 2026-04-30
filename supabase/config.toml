@@ -1,1 +1,4 @@
 project_id = "kmwehyixenybegwhqljx"
+
+[functions.wp-password-login]
+verify_jwt = false
