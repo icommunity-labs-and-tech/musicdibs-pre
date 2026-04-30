@@ -1,22 +1,23 @@
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, Image as ImageIcon, Megaphone, Play, Film, Layers, FileImage, Instagram, Music2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import neonPulse from "@/assets/covers/neon-pulse.png";
-import fuegoLento from "@/assets/covers/fuego-lento.png";
-import caminoDeAbril from "@/assets/covers/camino-de-abril.png";
-import distrito9 from "@/assets/covers/distrito-9.png";
-import loQueQuedaDeTi from "@/assets/covers/lo-que-queda-de-ti.png";
-import cityLights from "@/assets/covers/city-lights.png";
-import midnightPulse from "@/assets/covers/midnight-pulse.png";
-import brokenThunder from "@/assets/covers/broken-thunder.png";
-import brillaSinMiedo from "@/assets/covers/brilla-sin-miedo.png";
-import reelMidnight from "@/assets/promo/reel-midnight-drop.jpg";
-import tiktokFuego from "@/assets/promo/tiktok-fuego-viral.jpg";
-import canvasLiquid from "@/assets/promo/canvas-liquid-dreams.jpg";
-import storyIndie from "@/assets/promo/story-indie-motion.jpg";
-import flyerUrban from "@/assets/promo/flyer-urban.jpg";
-import flyerMidnightPulse from "@/assets/promo/flyer-midnight-pulse.png";
-import postPop from "@/assets/promo/post-pop-release.jpg";
+import neonPulse from "@/assets/covers/neon-pulse.webp";
+import fuegoLento from "@/assets/covers/fuego-lento.webp";
+import caminoDeAbril from "@/assets/covers/camino-de-abril.webp";
+import distrito9 from "@/assets/covers/distrito-9.webp";
+import loQueQuedaDeTi from "@/assets/covers/lo-que-queda-de-ti.webp";
+import cityLights from "@/assets/covers/city-lights.webp";
+import midnightPulse from "@/assets/covers/midnight-pulse.webp";
+import brokenThunder from "@/assets/covers/broken-thunder.webp";
+import brillaSinMiedo from "@/assets/covers/brilla-sin-miedo.webp";
+import reelMidnight from "@/assets/promo/reel-midnight-drop.webp";
+import tiktokFuego from "@/assets/promo/tiktok-fuego-viral.webp";
+import canvasLiquid from "@/assets/promo/canvas-liquid-dreams.webp";
+import storyIndie from "@/assets/promo/story-indie-motion.webp";
+import flyerUrban from "@/assets/promo/flyer-urban.webp";
+import flyerMidnightPulse from "@/assets/promo/flyer-midnight-pulse.webp";
+import postPop from "@/assets/promo/post-pop-release.webp";
 import videoclipNocheDeFuego from "@/assets/promo/videoclip-noche-de-fuego.mp4";
 import videoclipUltimaLuz from "@/assets/promo/videoclip-ultima-luz.mp4";
 import reelNeonPulse from "@/assets/promo/reel-neon-pulse.mp4";
@@ -99,18 +100,48 @@ const CoverCardItem = ({ card }: { card: CoverCard }) => (
 const PromoCardItem = ({ card }: { card: PromoCard }) => {
   const Icon = card.Icon;
   const hasVideoSource = Boolean(card.video);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+
+  useEffect(() => {
+    if (!hasVideoSource || shouldLoadVideo) return;
+    const node = containerRef.current;
+    if (!node || !("IntersectionObserver" in window)) {
+      setShouldLoadVideo(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShouldLoadVideo(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasVideoSource, shouldLoadVideo]);
+
   return (
-    <div className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-xl shadow-purple-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-purple-500/40">
+    <div
+      ref={containerRef}
+      className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-xl shadow-purple-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-purple-500/40"
+    >
       {hasVideoSource ? (
-        <video
-          src={card.video}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-        />
+        shouldLoadVideo ? (
+          <video
+            src={card.video}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+          />
+        ) : (
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-900/60 to-fuchsia-900/60" aria-hidden="true" />
+        )
       ) : (
         <img
           src={card.image}
