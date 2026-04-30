@@ -147,7 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
 
           if ((wpData as any)?.upgraded) {
-            // Hash upgraded to bcrypt — retry native login immediately
+            // Esperar 500ms para que Supabase propague el nuevo hash bcrypt
+            await new Promise((resolve) => setTimeout(resolve, 500));
             const { error: retryError } = await supabase.auth.signInWithPassword({ email, password });
             if (!retryError) return { error: null };
           }
