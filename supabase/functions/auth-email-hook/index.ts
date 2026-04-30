@@ -105,11 +105,22 @@ Deno.serve(async (req) => {
     const emailType = body.email_data?.email_action_type
     const recipientEmail = body.user?.email
     const token = body.email_data?.token ?? ''
-    console.log('[AUTH-EMAIL-HOOK] Received', { emailType, email: recipientEmail })
 
     if (!emailType || !recipientEmail) {
       return new Response(JSON.stringify({ error: 'Invalid payload' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Allowlist explícito: solo procesamos eventos transaccionales conocidos.
+    // signInWithPassword NO dispara este hook, pero por seguridad ignoramos
+    // cualquier tipo no soportado devolviendo 200 (no bloquea al usuario).
+    const ALLOWED_TYPES = new Set([
+      'signup', 'magiclink', 'recovery', 'invite', 'email_change', 'reauthentication',
+    ])
+    if (!ALLOWED_TYPES.has(emailType)) {
+      return new Response(JSON.stringify({ success: true, skipped: emailType }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
