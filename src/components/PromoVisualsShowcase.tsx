@@ -100,18 +100,48 @@ const CoverCardItem = ({ card }: { card: CoverCard }) => (
 const PromoCardItem = ({ card }: { card: PromoCard }) => {
   const Icon = card.Icon;
   const hasVideoSource = Boolean(card.video);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
+
+  useEffect(() => {
+    if (!hasVideoSource || shouldLoadVideo) return;
+    const node = containerRef.current;
+    if (!node || !("IntersectionObserver" in window)) {
+      setShouldLoadVideo(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setShouldLoadVideo(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px 0px" }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasVideoSource, shouldLoadVideo]);
+
   return (
-    <div className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-xl shadow-purple-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-purple-500/40">
+    <div
+      ref={containerRef}
+      className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-xl shadow-purple-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-purple-500/40"
+    >
       {hasVideoSource ? (
-        <video
-          src={card.video}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="metadata"
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-        />
+        shouldLoadVideo ? (
+          <video
+            src={card.video}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
+          />
+        ) : (
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-900/60 to-fuchsia-900/60" aria-hidden="true" />
+        )
       ) : (
         <img
           src={card.image}
