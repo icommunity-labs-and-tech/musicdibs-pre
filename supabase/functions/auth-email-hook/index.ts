@@ -148,7 +148,6 @@ Deno.serve(async (req) => {
     }
 
     const resendData = await resendRes.json()
-    console.log('[AUTH-EMAIL-HOOK] Sent OK', { emailType, email: recipientEmail, id: resendData.id })
 
     // Log en BD (no crítico)
     try {
