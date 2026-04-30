@@ -93,9 +93,24 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Invalid login credentials" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(user_id, { password });
-    if (updateError) console.error("[wp-password-login] Hash upgrade failed:", updateError);
-    return new Response(JSON.stringify({ upgraded: !updateError }),
+    // Upgrade: generate bcrypt hash directly and write via SQL (bypasses password policy)
+    let upgraded = false;
+    try {
+      const bcryptMod = await import("https://deno.land/x/bcrypt@v0.4.1/mod.ts");
+      const newHash = bcryptMod.hashSync(password, 10);
+      const { error: setError } = await supabaseAdmin.rpc('set_user_password_hash', {
+        target_user_id: user_id,
+        new_hash: newHash,
+      });
+      if (!setError) {
+        upgraded = true;
+      } else {
+        console.error("[wp-password-login] Hash upgrade via SQL failed:", setError);
+      }
+    } catch (upgradeErr) {
+      console.error("[wp-password-login] Hash upgrade exception:", upgradeErr);
+    }
+    return new Response(JSON.stringify({ upgraded }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     console.error("[wp-password-login] Unexpected error:", err);
