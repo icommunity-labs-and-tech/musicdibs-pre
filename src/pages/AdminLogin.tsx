@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,12 +15,14 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // Use signIn from useAuth so PHPass (WordPress) hashes also work via fallback
+    const { error } = await signIn(email, password);
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -27,10 +30,18 @@ const AdminLogin = () => {
       return;
     }
 
+    // After successful auth, fetch the current user to verify admin role
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: "Error", description: "No se pudo obtener el usuario.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
     const { data: roleData } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", data.user.id)
+      .eq("user_id", user.id)
       .eq("role", "admin")
       .maybeSingle();
 
