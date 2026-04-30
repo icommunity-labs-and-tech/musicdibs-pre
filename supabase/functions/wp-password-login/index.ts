@@ -191,7 +191,18 @@ function verifyPhpass(password: string, storedHash: string): boolean {
 
   const encoded = phpassEncode64(hash, 16);
   const expected = storedHash.substring(12, 12 + encoded.length);
-  return encoded === expected;
+  const match = encoded === expected;
+
+  console.error('[wp-password-login] PHPass debug:', {
+    salt,
+    saltLen: salt.length,
+    iterations,
+    encodedResult: encoded,
+    expectedHash: expected,
+    match,
+  });
+
+  return match;
 }
 
 serve(async (req) => {
