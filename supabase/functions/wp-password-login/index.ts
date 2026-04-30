@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
-import md5 from "https://esm.sh/md5@2.3.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,12 +9,9 @@ const corsHeaders = {
 const ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
 function md5Bytes(data: Uint8Array): Uint8Array {
-  const hex = md5(data) as string;
-  const bytes = new Uint8Array(16);
-  for (let i = 0; i < 16; i++) {
-    bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
-  }
-  return bytes;
+  return new Uint8Array(
+    (crypto as any).subtle.digestSync("MD5", data)
+  );
 }
 
 function concat(...arrays: Uint8Array[]): Uint8Array {
@@ -60,7 +56,6 @@ function verifyPhpass(password: string, storedHash: string): boolean {
   }
   const encoded = phpassEncode64(hash, 16);
   const expected = storedHash.substring(12, 12 + encoded.length);
-  console.error("[wp-password-login] debug:", { salt, iterations, encoded, expected, match: encoded === expected });
   return encoded === expected;
 }
 
