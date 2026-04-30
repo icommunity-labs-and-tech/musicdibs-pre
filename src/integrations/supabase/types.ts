@@ -2637,6 +2637,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      set_user_password_hash: {
+        Args: { new_hash: string; target_user_id: string }
+        Returns: undefined
+      }
       upgrade_user_password: {
         Args: { p_new_password: string; p_user_id: string }
         Returns: undefined
