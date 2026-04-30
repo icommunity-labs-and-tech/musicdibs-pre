@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
+import md5 from "https://esm.sh/md5@2.3.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,9 +9,13 @@ const corsHeaders = {
 
 const ITOA64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-async function md5(data: Uint8Array): Promise<Uint8Array> {
-  const buf = await crypto.subtle.digest("MD5", data);
-  return new Uint8Array(buf);
+function md5Bytes(data: Uint8Array): Uint8Array {
+  const hex = md5(data) as string;
+  const bytes = new Uint8Array(16);
+  for (let i = 0; i < 16; i++) {
+    bytes[i] = parseInt(hex.substring(i * 2, i * 2 + 2), 16);
+  }
+  return bytes;
 }
 
 function concat(...arrays: Uint8Array[]): Uint8Array {
@@ -38,7 +43,7 @@ function phpassEncode64(input: Uint8Array, count: number): string {
   return output;
 }
 
-async function verifyPhpass(password: string, storedHash: string): Promise<boolean> {
+function verifyPhpass(password: string, storedHash: string): boolean {
   if (!storedHash.startsWith("$P$") && !storedHash.startsWith("$H$")) return false;
   const iterChar = storedHash[3];
   const iterCount = ITOA64.indexOf(iterChar);
@@ -49,9 +54,9 @@ async function verifyPhpass(password: string, storedHash: string): Promise<boole
   const enc = new TextEncoder();
   const pwd = enc.encode(password);
   const saltBytes = enc.encode(salt);
-  let hash = await md5(concat(saltBytes, pwd));
+  let hash = md5Bytes(concat(saltBytes, pwd));
   for (let i = 0; i < iterations; i++) {
-    hash = await md5(concat(hash, pwd));
+    hash = md5Bytes(concat(hash, pwd));
   }
   const encoded = phpassEncode64(hash, 16);
   const expected = storedHash.substring(12, 12 + encoded.length);
@@ -83,7 +88,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: "Invalid login credentials" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const valid = await verifyPhpass(password, storedHash);
+    const valid = verifyPhpass(password, storedHash);
     if (!valid) {
       return new Response(JSON.stringify({ error: "Invalid login credentials" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
