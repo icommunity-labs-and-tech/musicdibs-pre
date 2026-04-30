@@ -2589,6 +2589,13 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_user_auth_data: {
+        Args: { user_email: string }
+        Returns: {
+          hash: string
+          user_id: string
+        }[]
+      }
       get_user_library_tier: { Args: { p_user_id: string }; Returns: string }
       get_wp_password_hash: {
         Args: { user_email: string }
