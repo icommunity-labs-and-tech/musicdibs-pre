@@ -136,6 +136,7 @@ export type Database = {
           api_cost_eur: number
           api_cost_notes: string | null
           api_cost_unit: string
+          api_model: string | null
           api_provider: string
           created_at: string | null
           credits_charged: number
@@ -149,6 +150,7 @@ export type Database = {
           api_cost_eur: number
           api_cost_notes?: string | null
           api_cost_unit: string
+          api_model?: string | null
           api_provider: string
           created_at?: string | null
           credits_charged: number
@@ -162,6 +164,7 @@ export type Database = {
           api_cost_eur?: number
           api_cost_notes?: string | null
           api_cost_unit?: string
+          api_model?: string | null
           api_provider?: string
           created_at?: string | null
           credits_charged?: number
