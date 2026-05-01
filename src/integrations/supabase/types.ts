@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      _phpass_backup: {
+        Row: {
+          backed_up_at: string | null
+          email: string | null
+          phpass_hash: string | null
+          user_id: string
+        }
+        Insert: {
+          backed_up_at?: string | null
+          email?: string | null
+          phpass_hash?: string | null
+          user_id: string
+        }
+        Update: {
+          backed_up_at?: string | null
+          email?: string | null
+          phpass_hash?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ab_test_events: {
         Row: {
           created_at: string
@@ -2644,6 +2665,14 @@ export type Database = {
       upgrade_user_password: {
         Args: { p_new_password: string; p_user_id: string }
         Returns: undefined
+      }
+      verify_phpass: {
+        Args: { password: string; stored_hash: string }
+        Returns: boolean
+      }
+      wp_login_verify_and_upgrade: {
+        Args: { user_email: string; user_password: string }
+        Returns: Json
       }
     }
     Enums: {
