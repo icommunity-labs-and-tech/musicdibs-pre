@@ -244,7 +244,7 @@ export default function AdminApiCostsPage() {
                   <TableCell>{editingRow === c.feature_key
                     ? <Input defaultValue={c.api_model} className="w-36" onChange={e => setEditChanges(p => ({ ...p, api_model: e.target.value }))} />
                     : <span className="text-xs font-mono">{c.api_model || '—'}</span>}</TableCell>
-                  <TableCell>{c.credit_cost}</TableCell>
+                  <TableCell>{c.credits_charged}</TableCell>
                   <TableCell>{editingRow === c.feature_key
                     ? <Input type="number" step="0.01" defaultValue={c.price_per_credit_eur} className="w-24" onChange={e => setEditChanges(p => ({ ...p, price_per_credit_eur: parseFloat(e.target.value) }))} />
                     : c.price_per_credit_eur}</TableCell>
@@ -253,7 +253,7 @@ export default function AdminApiCostsPage() {
                     : c.api_cost_eur}</TableCell>
                   <TableCell className="font-medium">
                     {(() => {
-                      const revenue = c.credit_cost * Number(c.price_per_credit_eur);
+                      const revenue = c.credits_charged * Number(c.price_per_credit_eur);
                       const cost = Number(c.api_cost_eur);
                       const margin = revenue - cost;
                       const pct = revenue > 0 ? (margin / revenue) * 100 : 0;
@@ -261,8 +261,8 @@ export default function AdminApiCostsPage() {
                     })()}
                   </TableCell>
                   <TableCell>{editingRow === c.feature_key
-                    ? <Input defaultValue={c.notes || ''} className="w-40" onChange={e => setEditChanges(p => ({ ...p, notes: e.target.value }))} />
-                    : (c.notes || '—')}</TableCell>
+                    ? <Input defaultValue={c.api_cost_notes || ''} className="w-40" onChange={e => setEditChanges(p => ({ ...p, api_cost_notes: e.target.value }))} />
+                    : (c.api_cost_notes || '—')}</TableCell>
                   <TableCell>
                     {editingRow === c.feature_key ? (
                       <div className="flex gap-1">
