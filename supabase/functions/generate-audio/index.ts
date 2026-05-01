@@ -332,24 +332,30 @@ serve(async (req) => {
             if (!response.ok) {
               const retryErr = await response.text();
               console.error(`[GENERATE-AUDIO] Retry also failed: ${response.status} - ${retryErr}`);
-              await refundCredits(`Fallo generación audio (reintento): ${response.status}`);
+              await refundCredits(`Prompt rechazado por políticas (reintento): ${response.status}`);
               return new Response(
-                JSON.stringify({ error: `Generation failed on retry: ${response.status}`, details: retryErr }),
-                { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                JSON.stringify({
+                  error: 'bad_prompt',
+                  message: detail?.message || 'El prompt no cumple las políticas de contenido del proveedor.',
+                }),
+                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
             }
           } else {
             await refundCredits(`Prompt rechazado: ${errText.slice(0, 100)}`);
             return new Response(
-              JSON.stringify({ error: `Generation failed: 400`, details: errText }),
-              { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              JSON.stringify({
+                error: 'bad_prompt',
+                message: detail?.message || 'El prompt no cumple las políticas de contenido del proveedor.',
+              }),
+              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
           }
         } catch {
           await refundCredits(`Fallo generación audio: 400`);
           return new Response(
-            JSON.stringify({ error: `Generation failed: 400`, details: errText }),
-            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify({ error: 'bad_prompt', message: 'El prompt no cumple las políticas de contenido del proveedor.' }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
       }
