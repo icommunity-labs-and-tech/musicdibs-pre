@@ -21,11 +21,11 @@ interface ApiCostConfig {
   feature_key: string;
   feature_label: string;
   api_provider: string;
-  api_model: string;
-  credit_cost: number;
+  api_model: string | null;
+  credits_charged: number;
   price_per_credit_eur: number;
   api_cost_eur: number;
-  notes: string | null;
+  api_cost_notes: string | null;
 }
 
 interface ApiCostDaily {
