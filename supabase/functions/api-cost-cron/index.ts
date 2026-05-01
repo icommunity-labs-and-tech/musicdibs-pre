@@ -14,6 +14,8 @@ const DESCRIPTION_TO_FEATURE: Record<string, string> = {
   'Pista vocal':              'generate_vocal_track',
   'Auphonic':                 'enhance_audio',
   'Mejora audio':             'enhance_audio',
+  'Masterización ROEX':       'master_audio',
+  'Masterización':            'master_audio',
   'Portada IA':               'generate_cover',
   'Portada':                  'generate_cover',
   'Video AI':                 'generate_video',
