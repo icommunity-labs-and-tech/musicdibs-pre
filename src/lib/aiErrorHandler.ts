@@ -54,9 +54,12 @@ export function parseAiError(
   }
 
   const dataError = responseData?.error as string | undefined;
-  const rawMessage = dataError
-    || (error instanceof Error ? error.message : '')
-    || String(error ?? '');
+  const errObj = error as any;
+  const errMessage = error instanceof Error ? error.message : (errObj?.message ?? '');
+  const errDetails = typeof errObj?.details === 'string' ? errObj.details : '';
+  const rawMessage = [dataError, errMessage, errDetails, String(error ?? '')]
+    .filter(Boolean)
+    .join(' | ');
 
   for (const [pattern, key] of KNOWN_ERRORS) {
     if (pattern.test(rawMessage)) {
