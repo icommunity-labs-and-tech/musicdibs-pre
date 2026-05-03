@@ -186,6 +186,7 @@ export const CreativesSection = () => {
           </Button>
         )}
         <PricingLink className="block text-center mt-1" />
+        <GenerationWarning />
       </CardContent>
     </Card>
   );
