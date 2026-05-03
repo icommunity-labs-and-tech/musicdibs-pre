@@ -120,7 +120,6 @@ const AIStudioVideo = () => {
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const pollingRef = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map());
 
   // Audio merge state
   const [audioTracks, setAudioTracks] = useState<GenerationResult[]>([]);
@@ -149,11 +148,43 @@ const AIStudioVideo = () => {
       loadAudioTracks();
     }
     return () => {
-      pollingRef.current.forEach(interval => clearInterval(interval));
       audioElementsRef.current.forEach(audio => audio.pause());
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Realtime subscription for background video status updates
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel('video-generations-changes')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'video_generations',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const updated = payload.new as any;
+        setResults(prev => prev.map(r =>
+          r.id === updated.id ? {
+            ...r,
+            status: updated.status,
+            videoUrl: updated.video_url || updated.merged_url || r.videoUrl,
+            mergedUrl: updated.merged_url || r.mergedUrl,
+            progress: updated.status === 'SUCCEEDED' ? 100 : updated.status === 'RUNNING' ? 50 : r.progress,
+          } : r
+        ));
+        if (updated.status === 'SUCCEEDED') {
+          toast({ title: '🎬 ' + t('aiVideo.videoGenerated'), description: t('aiVideo.videoReady') });
+        } else if (updated.status === 'FAILED') {
+          toast({ title: t('aiShared.error'), description: updated.failure_reason || t('aiVideo.genFailed'), variant: 'destructive' });
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     if (user) {
@@ -212,11 +243,7 @@ const AIStudioVideo = () => {
         setResults(mapped);
       }
 
-      mapped.forEach(r => {
-        if (r.status === 'PENDING' || r.status === 'RUNNING') {
-          pollTaskStatus(r.taskId, r.id);
-        }
-      });
+      // Background cron updates pending/running statuses; UI gets updates via Realtime.
     } catch (err) {
       console.error('Error loading video history:', err);
     } finally {
@@ -333,78 +360,7 @@ const AIStudioVideo = () => {
     reader.readAsDataURL(file);
   };
 
-  const pollTaskStatus = (taskId: string, resultId: string) => {
-    const interval = setInterval(async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('generate-video', {
-          body: { action: 'status', taskId },
-        });
-
-        if (error) throw error;
-
-        const status = data.status;
-        
-        setResults(prev => prev.map(r =>
-          r.id === resultId
-            ? {
-                ...r,
-                status,
-                videoUrl: data.output?.[0] || r.videoUrl,
-                progress: status === 'RUNNING' ? (data.progress ?? 50) : (status === 'SUCCEEDED' ? 100 : r.progress),
-              }
-            : r
-        ));
-
-        if (status === 'SUCCEEDED') {
-          clearInterval(interval);
-          pollingRef.current.delete(resultId);
-
-          const videoUrl = data.output?.[0];
-          await supabase.from('video_generations').update({
-            status: 'SUCCEEDED',
-            video_url: videoUrl || null,
-            updated_at: new Date().toISOString(),
-          }).eq('id', resultId);
-
-          toast({ title: t('aiVideo.videoGenerated'), description: t('aiVideo.videoReady') });
-          track('video_generated', { feature: 'video' });
-
-          if (preSelectedAudioId) {
-            const audioTrack = audioTracks.find(t => t.id === preSelectedAudioId);
-            if (audioTrack && videoUrl) {
-              try {
-                const mergedUrl = await mergeAudioVideo(videoUrl, audioTrack.audioUrl);
-                setResults(prev => prev.map(r =>
-                  r.id === resultId ? { ...r, mergedUrl } : r
-                ));
-                await supabase.from('video_generations').update({
-                  merged_url: mergedUrl,
-                  merged_audio_id: audioTrack.id,
-                }).eq('id', resultId);
-                toast({ title: t('aiVideo.autoMerged'), description: t('aiVideo.autoMergedDesc') });
-              } catch (mergeErr) {
-                console.error('Auto-merge error:', mergeErr);
-                toast({ title: t('aiVideo.videoGenerated'), description: t('aiVideo.videoReadyMergeError', { defaultValue: 'Puedes añadir audio manualmente' }), variant: "destructive" });
-              }
-            }
-          }
-        } else if (status === 'FAILED') {
-          clearInterval(interval);
-          pollingRef.current.delete(resultId);
-          await supabase.from('video_generations').update({
-            status: 'FAILED',
-            failure_reason: data.failure || null,
-            updated_at: new Date().toISOString(),
-          }).eq('id', resultId);
-          toast({ title: t('aiShared.error'), description: data.failure || t('aiVideo.genFailed'), variant: "destructive" });
-        }
-      } catch (err) {
-        console.error('Polling error:', err);
-      }
-    }, 5000);
-
-    pollingRef.current.set(resultId, interval);
-  };
+  // Status polling moved to background cron (video-status-cron) + Realtime updates.
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -485,7 +441,6 @@ const AIStudioVideo = () => {
       };
 
       setResults(prev => [newResult, ...prev]);
-      pollTaskStatus(data.taskId, dbRow.id);
 
       toast({ title: t('aiVideo.genStarted'), description: t('aiVideo.genStartedDesc') });
     } catch (err: any) {
@@ -498,12 +453,6 @@ const AIStudioVideo = () => {
   };
 
   const handleDelete = async (resultId: string) => {
-    const interval = pollingRef.current.get(resultId);
-    if (interval) {
-      clearInterval(interval);
-      pollingRef.current.delete(resultId);
-    }
-
     try {
       const { error } = await supabase.from('video_generations').delete().eq('id', resultId);
       if (error) throw error;
