@@ -163,7 +163,22 @@ export const CreativesSection = () => {
       <CardContent className="space-y-4">
         {/* Description */}
         <div className="space-y-1.5">
-          <Label className="text-sm">Describe la imagen que quieres <span className="text-destructive">*</span></Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label className="text-sm">Describe la imagen que quieres <span className="text-destructive">*</span></Label>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleImproveDescription}
+              disabled={improving || generating || !description.trim()}
+              className="h-8 gap-1.5 px-3 text-xs hover:bg-accent"
+            >
+              {improving ? (
+                <><Loader2 className="h-3 w-3 animate-spin" />Mejorando...</>
+              ) : (
+                <><Sparkles className="h-3 w-3" />Mejorar con IA</>
+              )}
+            </Button>
+          </div>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value.slice(0, 1000))}
