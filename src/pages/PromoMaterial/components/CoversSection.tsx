@@ -14,6 +14,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { useProductTracking } from '@/hooks/useProductTracking';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
+import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { parseAiError } from '@/lib/aiErrorHandler';
