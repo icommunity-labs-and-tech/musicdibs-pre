@@ -249,14 +249,14 @@ export const SocialVideosSection = () => {
       <CardContent className="p-6 space-y-5">
         {/* Description */}
         <div className="space-y-2">
-          <Label>{tr('descriptionLabel')} <span className="text-destructive">*</span></Label>
-          <div className="relative">
+          <div className="flex items-center justify-between gap-2">
+            <Label>{tr('descriptionLabel')} <span className="text-destructive">*</span></Label>
             <Button
               variant="ghost"
               size="sm"
               onClick={handleImproveDescription}
               disabled={isImprovingDesc || generating || !description.trim()}
-              className="absolute right-2 top-2 z-10 h-8 gap-1.5 bg-background/90 px-3 text-xs shadow-sm backdrop-blur hover:bg-accent"
+              className="h-8 gap-1.5 px-3 text-xs hover:bg-accent"
             >
               {isImprovingDesc ? (
                 <><Loader2 className="h-3 w-3 animate-spin" />{tr('improving')}</>
@@ -264,15 +264,15 @@ export const SocialVideosSection = () => {
                 <><Sparkles className="h-3 w-3" />{tr('improveWithAI')}</>
               )}
             </Button>
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
-              placeholder={tr('descriptionPlaceholder')}
-              rows={5}
-              disabled={generating}
-              className="pt-12"
-            />
           </div>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value.slice(0, 2000))}
+            placeholder={tr('descriptionPlaceholder')}
+            rows={5}
+            disabled={generating}
+          />
+
           <p className="text-xs text-muted-foreground text-right">{description.length}/2000</p>
         </div>
 
