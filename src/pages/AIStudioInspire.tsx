@@ -266,6 +266,10 @@ const AIStudioInspire = () => {
             )}
           </Button>
 
+          <div className="mt-4 max-w-xl mx-auto">
+            <GenerationWarning />
+          </div>
+
           {/* Loading state */}
           {isGenerating && (
             <div className="mt-8 flex flex-col items-center gap-3 text-muted-foreground">
