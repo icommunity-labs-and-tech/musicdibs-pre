@@ -331,22 +331,29 @@ const AIStudioEdit = () => {
     try {
       const uploadedUrl = await uploadForProcessing(audioFile);
 
-      const { data, error } = await supabase.functions.invoke("auphonic-enhance", {
-        body: { action: "preview", mode: preset, audioUrl: uploadedUrl, filename: audioFile.name },
+      const { data, error } = await supabase.functions.invoke("roex-master", {
+        body: {
+          action: "preview",
+          audioUrl: uploadedUrl,
+          filename: audioFile.name,
+          musicalStyle: "POP",
+          desiredLoudness: "MEDIUM",
+        },
       });
       if (error || data?.error) throw new Error(data?.error || error?.message);
 
-      const uuid = data.productionUuid;
+      const taskId = data.taskId;
+      if (!taskId) throw new Error('roex_no_task_id');
 
       previewPollingRef.current = setInterval(async () => {
         try {
-          const { data: st, error: stErr } = await supabase.functions.invoke("auphonic-enhance", {
-            body: { action: "status", productionUuid: uuid, isPreview: true },
+          const { data: st, error: stErr } = await supabase.functions.invoke("roex-master", {
+            body: { action: "preview_status", taskId },
           });
           if (stErr) return;
-          if (st?.done) {
+          if (st?.status === 'done') {
             stopPreviewPolling();
-            const nextPreviewUrl = isPlayablePreviewUrl(st.outputUrl) ? st.outputUrl : null;
+            const nextPreviewUrl = isPlayablePreviewUrl(st.previewUrl) ? st.previewUrl : null;
 
             if (!nextPreviewUrl) {
               setPreviewError(tr('preview.unavailable', { defaultValue: 'No se ha podido cargar una preview válida. Inténtalo de nuevo.' }));
@@ -358,12 +365,12 @@ const AIStudioEdit = () => {
             setPreviewUrl(nextPreviewUrl);
             setIsPreviewing(false);
             toast({ title: tr('preview.ready') });
-          } else if (st?.errored) {
+          } else if (st?.status === 'error') {
             stopPreviewPolling();
             setIsPreviewing(false);
             const { userMessage } = parseAiError(
-              new Error(st.errorMessage || 'roex_error'),
-              { error: st.errorMessage } as any,
+              new Error(st.error || 'roex_error'),
+              { error: st.error } as any,
             );
             setPreviewError(userMessage);
           }
