@@ -655,6 +655,7 @@ const AIStudioEdit = () => {
                 </p>
               )}
               <PricingLink className="block text-center" />
+              <GenerationWarning />
             </>
           )}
 
