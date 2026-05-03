@@ -56,8 +56,32 @@ export const CreativesSection = () => {
   const [basePhotoPreview, setBasePhotoPreview] = useState<string | null>(null);
 
   const [generating, setGenerating] = useState(false);
+  const [improving, setImproving] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [resultFormat, setResultFormat] = useState<Format>('feed');
+
+  const handleImproveDescription = async () => {
+    if (!description.trim()) {
+      toast.error('Escribe una descripción antes de mejorarla');
+      return;
+    }
+    setImproving(true);
+    try {
+      const mode = platform === 'youtube' ? 'youtube_thumbnail' : 'instagram_creative';
+      const { data, error } = await supabase.functions.invoke('improve-prompt', {
+        body: { prompt: description, mode },
+      });
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      if (data?.improved) {
+        setDescription(data.improved.slice(0, 1000));
+        toast.success('Descripción mejorada');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'No se pudo mejorar la descripción');
+    } finally {
+      setImproving(false);
+    }
+  };
 
   const currentFormat: Format = platform === 'youtube' ? 'youtube' : instagramFormat;
   const creditCost = FEATURE_COSTS.generate_cover ?? 1;
