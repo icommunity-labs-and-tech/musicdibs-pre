@@ -7,6 +7,7 @@ import { useCredits } from '@/hooks/useCredits';
 import { useProductTracking } from '@/hooks/useProductTracking';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
+import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 import { FileDropzone } from '@/components/FileDropzone';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
