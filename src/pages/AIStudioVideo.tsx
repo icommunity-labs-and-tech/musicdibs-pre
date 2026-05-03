@@ -360,78 +360,7 @@ const AIStudioVideo = () => {
     reader.readAsDataURL(file);
   };
 
-  const pollTaskStatus = (taskId: string, resultId: string) => {
-    const interval = setInterval(async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('generate-video', {
-          body: { action: 'status', taskId },
-        });
-
-        if (error) throw error;
-
-        const status = data.status;
-        
-        setResults(prev => prev.map(r =>
-          r.id === resultId
-            ? {
-                ...r,
-                status,
-                videoUrl: data.output?.[0] || r.videoUrl,
-                progress: status === 'RUNNING' ? (data.progress ?? 50) : (status === 'SUCCEEDED' ? 100 : r.progress),
-              }
-            : r
-        ));
-
-        if (status === 'SUCCEEDED') {
-          clearInterval(interval);
-          pollingRef.current.delete(resultId);
-
-          const videoUrl = data.output?.[0];
-          await supabase.from('video_generations').update({
-            status: 'SUCCEEDED',
-            video_url: videoUrl || null,
-            updated_at: new Date().toISOString(),
-          }).eq('id', resultId);
-
-          toast({ title: t('aiVideo.videoGenerated'), description: t('aiVideo.videoReady') });
-          track('video_generated', { feature: 'video' });
-
-          if (preSelectedAudioId) {
-            const audioTrack = audioTracks.find(t => t.id === preSelectedAudioId);
-            if (audioTrack && videoUrl) {
-              try {
-                const mergedUrl = await mergeAudioVideo(videoUrl, audioTrack.audioUrl);
-                setResults(prev => prev.map(r =>
-                  r.id === resultId ? { ...r, mergedUrl } : r
-                ));
-                await supabase.from('video_generations').update({
-                  merged_url: mergedUrl,
-                  merged_audio_id: audioTrack.id,
-                }).eq('id', resultId);
-                toast({ title: t('aiVideo.autoMerged'), description: t('aiVideo.autoMergedDesc') });
-              } catch (mergeErr) {
-                console.error('Auto-merge error:', mergeErr);
-                toast({ title: t('aiVideo.videoGenerated'), description: t('aiVideo.videoReadyMergeError', { defaultValue: 'Puedes añadir audio manualmente' }), variant: "destructive" });
-              }
-            }
-          }
-        } else if (status === 'FAILED') {
-          clearInterval(interval);
-          pollingRef.current.delete(resultId);
-          await supabase.from('video_generations').update({
-            status: 'FAILED',
-            failure_reason: data.failure || null,
-            updated_at: new Date().toISOString(),
-          }).eq('id', resultId);
-          toast({ title: t('aiShared.error'), description: data.failure || t('aiVideo.genFailed'), variant: "destructive" });
-        }
-      } catch (err) {
-        console.error('Polling error:', err);
-      }
-    }, 5000);
-
-    pollingRef.current.set(resultId, interval);
-  };
+  // Status polling moved to background cron (video-status-cron) + Realtime updates.
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
