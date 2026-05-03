@@ -243,11 +243,7 @@ const AIStudioVideo = () => {
         setResults(mapped);
       }
 
-      mapped.forEach(r => {
-        if (r.status === 'PENDING' || r.status === 'RUNNING') {
-          pollTaskStatus(r.taskId, r.id);
-        }
-      });
+      // Background cron updates pending/running statuses; UI gets updates via Realtime.
     } catch (err) {
       console.error('Error loading video history:', err);
     } finally {
