@@ -298,6 +298,14 @@ const AIStudioEdit = () => {
   const handlePreview = async () => {
     if (!audioFile || !user) return;
 
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setProcessError(tr('errorSession', { defaultValue: 'Tu sesión ha expirado. Recarga la página e inicia sesión de nuevo.' }));
+      setIsProcessing(false);
+      setIsPreviewing(false);
+      return;
+    }
+
     setIsPreviewing(true);
     setPreviewError(null);
     setPreviewUrl(null);
