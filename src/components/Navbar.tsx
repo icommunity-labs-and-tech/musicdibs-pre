@@ -2,9 +2,9 @@ import { Button } from "@/components/ui/button";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
-import { useTheme } from "./ThemeProvider";
+
 import { getNavLinks } from "@/i18nLinks";
-import { Menu, X, ChevronDown, Sun, Moon } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export const Navbar = () => {
@@ -96,7 +96,7 @@ export const Navbar = () => {
     }
   };
 
-  const { theme, toggleTheme } = useTheme();
+  
 
   // Hide navbar on dashboard and AI Studio pages
   if (isDashboard || isAiStudio) return null;
@@ -150,13 +150,6 @@ export const Navbar = () => {
 
           {/* Language + CTA + Mobile toggle */}
           <div className="flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-full ${navIconColor} transition-all`}
-              aria-label="Toggle theme"
-            >
-              {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
-            </button>
             <LanguageSelector />
             <div
               className="relative hidden lg:block"
