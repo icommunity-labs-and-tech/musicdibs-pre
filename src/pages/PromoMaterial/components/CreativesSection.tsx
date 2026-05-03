@@ -14,6 +14,7 @@ import { NoCreditsAlert } from '@/components/dashboard/NoCreditsAlert';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
 import { Loader2, Download, Sparkles, RefreshCw, ImageIcon } from 'lucide-react';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
+import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 
 type Format = 'feed' | 'story' | 'youtube';
 
@@ -185,6 +186,7 @@ export const CreativesSection = () => {
           </Button>
         )}
         <PricingLink className="block text-center mt-1" />
+        <GenerationWarning />
       </CardContent>
     </Card>
   );

@@ -34,6 +34,7 @@ import { useCredits } from "@/hooks/useCredits";
 import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
+import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { useProductTracking } from "@/hooks/useProductTracking";
 
 const VIDEO_STYLE_KEYS = [
@@ -773,6 +774,7 @@ const AIStudioVideo = () => {
                 </Button>
                 )}
                 <PricingLink className="block text-center mt-1" />
+                <GenerationWarning />
 
                 {error && (
                   <Alert variant="destructive">

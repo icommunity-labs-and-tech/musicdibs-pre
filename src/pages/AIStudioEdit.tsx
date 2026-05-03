@@ -23,6 +23,7 @@ import { useCredits } from "@/hooks/useCredits";
 import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
+import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { GenerationPicker } from "@/components/ai-studio/GenerationPicker";
 
 const PROCESSING_STEPS = [
@@ -654,6 +655,7 @@ const AIStudioEdit = () => {
                 </p>
               )}
               <PricingLink className="block text-center" />
+              <GenerationWarning />
             </>
           )}
 

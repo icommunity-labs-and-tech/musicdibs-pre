@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
+import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { ArrowLeft, Sparkles, Dice5, Loader2, Download, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 
 const GENEROS = ["pop", "pop urbano", "reggaeton", "trap", "indie pop", "electrónica", "balada"];
@@ -264,6 +265,10 @@ const AIStudioInspire = () => {
               </>
             )}
           </Button>
+
+          <div className="mt-4 max-w-xl mx-auto">
+            <GenerationWarning />
+          </div>
 
           {/* Loading state */}
           {isGenerating && (

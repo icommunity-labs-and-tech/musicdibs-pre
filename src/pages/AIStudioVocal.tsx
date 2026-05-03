@@ -34,6 +34,7 @@ import { VoiceToolsTour } from '@/components/ai-studio/VoiceToolsTour';
 import { HelpCircle } from 'lucide-react';
 import { useProductTracking } from '@/hooks/useProductTracking';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
+import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 
 const THEMES = ["Amor", "Desamor", "Superación", "Fiesta", "Calle", "Familia", "Libertad", "Nostalgia", "Éxito", "Identidad"];
 const MUSIC_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Reggaeton', 'Flamenco', 'Electrónica', 'Jazz', 'Clásica', 'R&B', 'Latin'];
@@ -557,6 +558,7 @@ export default function AIStudioVocal() {
                 <Button className="w-full" size="lg" onClick={handleGenerate} disabled={isGenerating || !lyrics.trim() || !selectedCloneId}>
                   {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{tv('generatingVocal')}</> : <><Mic className="w-4 h-4 mr-2" />{tv('generateVocalBtn')}</>}
                 </Button>
+                <GenerationWarning />
               </div>
 
               {/* Right column */}
