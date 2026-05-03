@@ -217,57 +217,74 @@ const AIStudioEdit = () => {
       // Upload file
       const uploadedUrl = await uploadForProcessing(audioFile);
 
-      // Start RoEx processing with selected preset
-      const { data, error } = await supabase.functions.invoke("auphonic-enhance", {
+      // Start RoEx preview to obtain taskId
+      const { data, error } = await supabase.functions.invoke("roex-master", {
         body: {
-          action: "process",
-          mode: preset,
+          action: "preview",
           audioUrl: uploadedUrl,
           filename: audioFile.name,
+          musicalStyle: "POP",
+          desiredLoudness: "MEDIUM",
         },
       });
       if (error || data?.error) throw new Error(data?.error || error?.message);
 
-      const uuid = data.productionUuid;
+      const taskId = data.taskId;
+      if (!taskId) throw new Error('roex_no_task_id');
 
-      // Poll for result
+      // Poll preview_status, then call final when ready
       pollingRef.current = setInterval(async () => {
         try {
-          const { data: st, error: stErr } = await supabase.functions.invoke("auphonic-enhance", {
-            body: { action: "status", productionUuid: uuid },
+          const { data: st, error: stErr } = await supabase.functions.invoke("roex-master", {
+            body: { action: "preview_status", taskId },
           });
           if (stErr) {
-            console.warn('[Auphonic] status poll transient error', stErr);
-            return; // continue polling
+            console.warn('[RoEx] status poll transient error', stErr);
+            return;
           }
-          if (st?.done) {
+          if (st?.status === 'done') {
             stopPolling();
+
+            // Request final master with the same taskId
+            const { data: finalData, error: finalErr } = await supabase.functions.invoke("roex-master", {
+              body: { action: "final", taskId },
+            });
+            if (finalErr || finalData?.error || !finalData?.finalUrl) {
+              stopProgress();
+              setIsProcessing(false);
+              const { userMessage } = parseAiError(
+                finalErr || new Error(finalData?.error || 'roex_final_failed'),
+                finalData as any,
+              );
+              setProcessError(userMessage);
+              track('enhance_audio_failed', { feature: 'enhance_audio', metadata: { reason: finalData?.error || 'final_failed' } });
+              return;
+            }
+
             stopProgress();
             setProgressPercent(100);
             setActiveStep(PROCESSING_STEPS.length - 1);
 
             setTimeout(() => {
-              setProcessedUrl(st.outputUrl);
+              setProcessedUrl(finalData.finalUrl);
               setIsProcessing(false);
               toast({ title: tr('success.title') });
               track('enhance_audio_completed', { feature: 'enhance_audio' });
             }, 500);
-          } else if (st?.errored) {
+          } else if (st?.status === 'error') {
             stopPolling();
             stopProgress();
             setIsProcessing(false);
-            // Map upstream Auphonic error message via centralized handler
             const { userMessage } = parseAiError(
-              new Error(st.errorMessage || 'auphonic_error'),
-              { error: st.errorMessage } as any,
+              new Error(st.error || 'roex_error'),
+              { error: st.error } as any,
             );
             setProcessError(userMessage);
-            console.error('[Auphonic] processing failed:', st.errorMessage);
-            track('enhance_audio_failed', { feature: 'enhance_audio', metadata: { reason: st.errorMessage || 'unknown' } });
+            console.error('[RoEx] processing failed:', st.error);
+            track('enhance_audio_failed', { feature: 'enhance_audio', metadata: { reason: st.error || 'unknown' } });
           }
         } catch (e) {
-          console.warn('[Auphonic] status poll exception', e);
-          /* continue polling */
+          console.warn('[RoEx] status poll exception', e);
         }
       }, 8000);
 
