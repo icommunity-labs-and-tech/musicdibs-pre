@@ -250,8 +250,7 @@ const AIStudio = () => {
           <ArtistProfilesPage />
         ) : null}
       </main>
-
-      
+      <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
     </div>
   );
 };
