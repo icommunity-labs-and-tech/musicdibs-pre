@@ -453,12 +453,6 @@ const AIStudioVideo = () => {
   };
 
   const handleDelete = async (resultId: string) => {
-    const interval = pollingRef.current.get(resultId);
-    if (interval) {
-      clearInterval(interval);
-      pollingRef.current.delete(resultId);
-    }
-
     try {
       const { error } = await supabase.from('video_generations').delete().eq('id', resultId);
       if (error) throw error;
