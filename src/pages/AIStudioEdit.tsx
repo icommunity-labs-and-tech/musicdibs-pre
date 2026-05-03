@@ -173,6 +173,14 @@ const AIStudioEdit = () => {
   const handleMasterize = async () => {
     if (!audioFile || !user) return;
 
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setProcessError(tr('errorSession', { defaultValue: 'Tu sesión ha expirado. Recarga la página e inicia sesión de nuevo.' }));
+      setIsProcessing(false);
+      setIsPreviewing(false);
+      return;
+    }
+
     if (!hasEnough(FEATURE_COSTS.enhance_audio)) {
       toast({ title: t('aiShared.noCredits'), variant: "destructive" });
       return;
@@ -289,6 +297,14 @@ const AIStudioEdit = () => {
 
   const handlePreview = async () => {
     if (!audioFile || !user) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setProcessError(tr('errorSession', { defaultValue: 'Tu sesión ha expirado. Recarga la página e inicia sesión de nuevo.' }));
+      setIsProcessing(false);
+      setIsPreviewing(false);
+      return;
+    }
 
     setIsPreviewing(true);
     setPreviewError(null);
