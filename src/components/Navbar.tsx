@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
 import { useTheme } from "./ThemeProvider";
 import { getNavLinks } from "@/i18nLinks";
-import { Menu, X, ChevronDown, Sun, Moon } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
 export const Navbar = () => {
@@ -96,7 +96,7 @@ export const Navbar = () => {
     }
   };
 
-  const { theme, toggleTheme } = useTheme();
+  
 
   // Hide navbar on dashboard and AI Studio pages
   if (isDashboard || isAiStudio) return null;
