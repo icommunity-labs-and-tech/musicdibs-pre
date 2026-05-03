@@ -8,6 +8,8 @@ import { Wand2, Sparkles, Music, AlertTriangle, ArrowLeft, Zap, Edit3, Lightbulb
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { Navbar } from "@/components/Navbar";
 import { AIStudioThemeBar } from "@/components/ai-studio/AIStudioThemeBar";
+import { AIKnowledgeModal, useAIKnowledgeAutoShow } from "@/components/ai-studio/AIKnowledgeModal";
+import { BookOpen } from "lucide-react";
 
 import { useCredits } from "@/hooks/useCredits";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
@@ -21,6 +23,7 @@ const AIStudio = () => {
   const { t } = useTranslation();
   const { track } = useProductTracking();
   const [activeView, setActiveView] = useState<ActiveView>("grid");
+  const [knowledgeOpen, setKnowledgeOpen] = useAIKnowledgeAutoShow();
 
   useEffect(() => {
     track('ai_studio_entered', { feature: 'create_music' });
@@ -186,6 +189,20 @@ const AIStudio = () => {
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 {t('aiStudio.pageSubtitle')}
               </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-1.5 text-sm text-amber-700 dark:text-amber-300">
+                  <span aria-hidden>💡</span>
+                  <span>{t('aiStudio.variationNotice')}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setKnowledgeOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/5 hover:bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary transition-colors"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>👉 {t('aiStudio.knowledgeGuide')}</span>
+                </button>
+              </div>
             </div>
 
             {/* Row 1 */}
@@ -233,8 +250,7 @@ const AIStudio = () => {
           <ArtistProfilesPage />
         ) : null}
       </main>
-
-      
+      <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
     </div>
   );
 };
