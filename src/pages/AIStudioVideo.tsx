@@ -441,7 +441,6 @@ const AIStudioVideo = () => {
       };
 
       setResults(prev => [newResult, ...prev]);
-      pollTaskStatus(data.taskId, dbRow.id);
 
       toast({ title: t('aiVideo.genStarted'), description: t('aiVideo.genStartedDesc') });
     } catch (err: any) {
