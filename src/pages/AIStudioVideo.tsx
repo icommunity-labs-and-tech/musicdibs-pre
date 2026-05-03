@@ -148,11 +148,43 @@ const AIStudioVideo = () => {
       loadAudioTracks();
     }
     return () => {
-      pollingRef.current.forEach(interval => clearInterval(interval));
       audioElementsRef.current.forEach(audio => audio.pause());
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
+
+  // Realtime subscription for background video status updates
+  useEffect(() => {
+    if (!user?.id) return;
+    const channel = supabase
+      .channel('video-generations-changes')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'video_generations',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const updated = payload.new as any;
+        setResults(prev => prev.map(r =>
+          r.id === updated.id ? {
+            ...r,
+            status: updated.status,
+            videoUrl: updated.video_url || updated.merged_url || r.videoUrl,
+            mergedUrl: updated.merged_url || r.mergedUrl,
+            progress: updated.status === 'SUCCEEDED' ? 100 : updated.status === 'RUNNING' ? 50 : r.progress,
+          } : r
+        ));
+        if (updated.status === 'SUCCEEDED') {
+          toast({ title: '🎬 ' + t('aiVideo.videoGenerated'), description: t('aiVideo.videoReady') });
+        } else if (updated.status === 'FAILED') {
+          toast({ title: t('aiShared.error'), description: updated.failure_reason || t('aiVideo.genFailed'), variant: 'destructive' });
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   useEffect(() => {
     if (user) {
