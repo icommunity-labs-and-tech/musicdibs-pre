@@ -215,6 +215,19 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       info: 'Cada masterización utiliza 1 crédito',
       errorGeneric: 'Error al procesar el audio. Inténtalo de nuevo.',
       errorTimeout: 'El procesamiento ha tardado demasiado. Inténtalo de nuevo.',
+      presets: {
+        title: 'Elige un preset',
+        professional: { label: 'Profesional', desc: 'Equilibrio musical universal' },
+        spotify: { label: 'Streaming', desc: 'Volumen óptimo para Spotify' },
+        clarity: { label: 'Claridad', desc: 'Más definición y aire (rock/indie)' },
+        denoise: { label: 'Limpieza', desc: 'Reduce ruido de fondo' },
+        reverb: { label: 'Espacio', desc: 'Aire y profundidad estéreo' },
+      },
+      preview: {
+        cta: 'Escuchar preview gratis',
+        ready: 'Preview lista',
+        unavailable: 'No se ha podido cargar una preview válida. Inténtalo de nuevo.',
+      },
     },
     aiInspire: {
       backToStudio: 'Volver a AI Music Studio',
@@ -757,6 +770,19 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       info: 'Each mastering uses 1 credit',
       errorGeneric: 'Error processing audio. Please try again.',
       errorTimeout: 'Processing took too long. Please try again.',
+      presets: {
+        title: 'Choose a preset',
+        professional: { label: 'Professional', desc: 'Universal musical balance' },
+        spotify: { label: 'Streaming', desc: 'Optimal volume for Spotify' },
+        clarity: { label: 'Clarity', desc: 'More definition and air (rock/indie)' },
+        denoise: { label: 'Cleanup', desc: 'Reduces background noise' },
+        reverb: { label: 'Space', desc: 'Air and stereo depth' },
+      },
+      preview: {
+        cta: 'Listen to free preview',
+        ready: 'Preview ready',
+        unavailable: 'Could not load a valid preview. Please try again.',
+      },
     },
     aiInspire: {
       backToStudio: 'Back to AI Music Studio',
@@ -1296,6 +1322,19 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       info: 'Cada masterização usa 1 crédito',
       errorGeneric: 'Erro ao processar o áudio. Tente novamente.',
       errorTimeout: 'O processamento demorou demais. Tente novamente.',
+      presets: {
+        title: 'Escolha um preset',
+        professional: { label: 'Profissional', desc: 'Equilíbrio musical universal' },
+        spotify: { label: 'Streaming', desc: 'Volume ideal para Spotify' },
+        clarity: { label: 'Clareza', desc: 'Mais definição e ar (rock/indie)' },
+        denoise: { label: 'Limpeza', desc: 'Reduz ruído de fundo' },
+        reverb: { label: 'Espaço', desc: 'Ar e profundidade estéreo' },
+      },
+      preview: {
+        cta: 'Ouvir preview grátis',
+        ready: 'Preview pronta',
+        unavailable: 'Não foi possível carregar uma preview válida. Tente novamente.',
+      },
     },
     aiInspire: {
       backToStudio: 'Voltar ao AI Music Studio',
