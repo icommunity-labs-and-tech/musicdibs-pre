@@ -363,6 +363,7 @@ export const SocialVideosSection = () => {
         {!hasEnough(VIDEO_COST) && !generating && (
           <PricingLink className="block text-center mt-1" />
         )}
+        <GenerationWarning />
 
         {/* Video result */}
         {videoUrl && (
