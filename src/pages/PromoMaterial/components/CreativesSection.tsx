@@ -101,6 +101,18 @@ export const CreativesSection = () => {
     setGeneratedImage(null);
 
     try {
+      // Ensure we have a valid session before invoking (avoids opaque 401s)
+      let { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        sessionData = { session: refreshed.session } as any;
+      }
+      if (!sessionData.session) {
+        toast.error('Tu sesión ha caducado. Vuelve a iniciar sesión.');
+        setGenerating(false);
+        return;
+      }
+
       let photo_base64: string | null = null;
       if (basePhoto) photo_base64 = await fileToBase64(basePhoto);
 
