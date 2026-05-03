@@ -120,7 +120,6 @@ const AIStudioVideo = () => {
   const [hasMore, setHasMore] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const pollingRef = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map());
 
   // Audio merge state
   const [audioTracks, setAudioTracks] = useState<GenerationResult[]>([]);
