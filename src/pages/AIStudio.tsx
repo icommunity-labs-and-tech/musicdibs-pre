@@ -189,6 +189,20 @@ const AIStudio = () => {
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 {t('aiStudio.pageSubtitle')}
               </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-1.5 text-sm text-amber-700 dark:text-amber-300">
+                  <span aria-hidden>💡</span>
+                  <span>{t('aiStudio.variationNotice')}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setKnowledgeOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/5 hover:bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary transition-colors"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>👉 {t('aiStudio.knowledgeGuide')}</span>
+                </button>
+              </div>
             </div>
 
             {/* Row 1 */}
