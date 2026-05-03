@@ -411,6 +411,7 @@ export const CoversSection = () => {
               )}
 
               <PricingLink className="block text-center" />
+              <GenerationWarning />
             </CardContent>
           </Card>
         </div>
