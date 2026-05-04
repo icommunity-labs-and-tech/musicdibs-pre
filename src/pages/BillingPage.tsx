@@ -188,14 +188,17 @@ export default function BillingPage() {
   const handleConfirmCancel = async (reason: string) => {
     setCancelling(true);
     try {
-      const { data } = await supabase.functions.invoke('create-credit-checkout', {
+      const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
         body: { action: 'cancel_renewal', cancellation_reason: reason },
       });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       toast.success(data?.message || t('dashboard.billing.renewalCancelled', 'Renovación cancelada'));
       setCancelAtPeriodEnd(true);
-    } catch {
-      toast.error(t('dashboard.billing.cancelError', 'Error al cancelar'));
-      throw new Error('cancel failed');
+    } catch (err: any) {
+      console.error('[cancel_renewal] error:', err);
+      toast.error(err?.message || t('dashboard.billing.cancelError', 'Error al cancelar'));
+      throw err;
     } finally {
       setCancelling(false);
     }
