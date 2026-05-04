@@ -75,6 +75,8 @@ export type Database = {
           is_favorite: boolean | null
           mood: string | null
           prompt: string
+          provider: string | null
+          song_map: string | null
           user_id: string
           voice_id: string | null
           voice_name: string | null
@@ -89,6 +91,8 @@ export type Database = {
           is_favorite?: boolean | null
           mood?: string | null
           prompt: string
+          provider?: string | null
+          song_map?: string | null
           user_id: string
           voice_id?: string | null
           voice_name?: string | null
@@ -103,6 +107,8 @@ export type Database = {
           is_favorite?: boolean | null
           mood?: string | null
           prompt?: string
+          provider?: string | null
+          song_map?: string | null
           user_id?: string
           voice_id?: string | null
           voice_name?: string | null
@@ -2436,6 +2442,7 @@ export type Database = {
       }
       works: {
         Row: {
+          ai_generation_id: string | null
           author: string | null
           blockchain_hash: string | null
           blockchain_network: string | null
@@ -2461,6 +2468,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_generation_id?: string | null
           author?: string | null
           blockchain_hash?: string | null
           blockchain_network?: string | null
@@ -2486,6 +2494,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_generation_id?: string | null
           author?: string | null
           blockchain_hash?: string | null
           blockchain_network?: string | null
@@ -2510,7 +2519,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "works_ai_generation_id_fkey"
+            columns: ["ai_generation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_generations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
