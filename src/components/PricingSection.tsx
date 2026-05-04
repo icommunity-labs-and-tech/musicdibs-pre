@@ -116,14 +116,14 @@ export const PricingSection = () => {
     }
   }, [user, launchCheckout]);
 
-  const handleGuestConfirm = useCallback(async (email: string) => {
+  const handleGuestConfirm = useCallback(async (email: string, password: string, name: string) => {
     if (!pendingGuestPlanId) return;
     const planId = pendingGuestPlanId;
     setLoadingPlan(planId);
     try {
       // Pre-registrar lead (crea usuario + welcome email + MailerLite)
       const { data, error } = await supabase.functions.invoke('register-guest-lead', {
-        body: { email, language: (lang || 'es').slice(0, 2) },
+        body: { email, password, name, language: (lang || 'es').slice(0, 2) },
       });
       if (error || !data?.ok) {
         throw new Error(data?.error || 'Error al registrar el email');
