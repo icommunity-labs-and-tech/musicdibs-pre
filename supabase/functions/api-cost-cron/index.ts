@@ -6,35 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
-const DESCRIPTION_TO_FEATURE: Record<string, string> = {
-  'Audio AI':                 'generate_audio',
-  'Canción con voz':          'generate_audio_song',
-  'Generación audio (song)':  'generate_audio_song',
-  'Edición AI':               'edit_audio',
-  'Pista vocal':              'generate_vocal_track',
-  'Auphonic':                 'enhance_audio',
-  'Mejora audio':             'enhance_audio',
-  'Masterización ROEX':       'master_audio',
-  'Masterización':            'master_audio',
-  'Portada IA':               'generate_cover',
-  'Portada':                  'generate_cover',
-  'Video AI':                 'generate_video',
-  'Promoción RRSS':           'promote_premium',
-  'Promoción':                'promote_premium',
-  'Registro':                 'register_work',
-  'Nota de prensa':           'generate_press_release',
-  'Letras':                   'generate_lyrics',
-  'Letra':                    'generate_lyrics',
-};
-
-function detectFeature(description: string): string | null {
-  if (!description) return null;
-  for (const [prefix, featureKey] of Object.entries(DESCRIPTION_TO_FEATURE)) {
-    if (description.startsWith(prefix)) return featureKey;
-  }
-  return null;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -47,7 +18,6 @@ serve(async (req) => {
     (cronSecret && cronSecret === Deno.env.get('CRON_SECRET')) ||
     (authHeader === `Bearer ${serviceKey}`);
 
-  // If not cron/service-role, check if it's an admin user JWT
   if (!isAuthorized && authHeader?.startsWith('Bearer ')) {
     const userClient = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -87,54 +57,59 @@ serve(async (req) => {
     return d.toISOString().split('T')[0];
   })();
 
-  const { data: configs } = await supabase.from('api_cost_config').select('*');
-  if (!configs) {
-    return new Response(JSON.stringify({ error: 'Cannot load config' }), {
+  // ── Read pricing config from operation_pricing (única fuente de verdad) ──
+  const { data: configs, error: configErr } = await supabase
+    .from('operation_pricing')
+    .select('operation_key, price_per_credit_eur, api_cost_eur, credits_cost')
+    .eq('is_active', true);
+
+  if (configErr || !configs) {
+    return new Response(JSON.stringify({ error: 'Cannot load operation_pricing', detail: configErr?.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 
-  const configMap = Object.fromEntries(configs.map((c: any) => [c.feature_key, c]));
+  const configMap: Record<string, { price_per_credit_eur: number; api_cost_eur: number }> = {};
+  for (const c of configs as any[]) {
+    configMap[c.operation_key] = {
+      price_per_credit_eur: Number(c.price_per_credit_eur ?? 0.60),
+      api_cost_eur: Number(c.api_cost_eur ?? 0),
+    };
+  }
 
-  const { data: transactions } = await supabase
+  // ── Aggregate transactions by feature_key (already stored on row) ──
+  const { data: transactions, error: txErr } = await supabase
     .from('credit_transactions')
-    .select('description, amount')
+    .select('feature_key, amount')
     .eq('type', 'usage')
     .lt('amount', 0)
+    .not('feature_key', 'is', null)
     .gte('created_at', `${targetDate}T00:00:00Z`)
     .lt('created_at', `${targetDate}T23:59:59Z`);
 
+  if (txErr) {
+    return new Response(JSON.stringify({ error: 'Cannot load transactions', detail: txErr.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   const featureStats: Record<string, { uses: number; credits: number }> = {};
   for (const tx of transactions || []) {
-    const fk = detectFeature(tx.description || '');
+    const fk = (tx as any).feature_key as string;
     if (!fk) continue;
     if (!featureStats[fk]) featureStats[fk] = { uses: 0, credits: 0 };
     featureStats[fk].uses += 1;
     featureStats[fk].credits += Math.abs(tx.amount);
   }
 
-  // Supplement with direct table counts
-  const { data: prs } = await supabase
-    .from('press_releases')
-    .select('id')
-    .gte('created_at', `${targetDate}T00:00:00Z`)
-    .lt('created_at', `${targetDate}T23:59:59Z`);
-  if (prs?.length) featureStats['generate_press_release'] = { uses: prs.length, credits: featureStats['generate_press_release']?.credits || 0 };
-
-  const { data: lyr } = await supabase
-    .from('lyrics_generations')
-    .select('id')
-    .gte('created_at', `${targetDate}T00:00:00Z`)
-    .lt('created_at', `${targetDate}T23:59:59Z`);
-  if (lyr?.length) featureStats['generate_lyrics'] = { uses: lyr.length, credits: featureStats['generate_lyrics']?.credits || 0 };
-
   const results = [];
   for (const [featureKey, stats] of Object.entries(featureStats)) {
     const config = configMap[featureKey];
     if (!config) continue;
-    const totalRevenue = stats.credits * Number(config.price_per_credit_eur);
-    const totalApiCost = stats.uses * Number(config.api_cost_eur);
+    const totalRevenue = stats.credits * config.price_per_credit_eur;
+    const totalApiCost = stats.uses * config.api_cost_eur;
     const grossMargin = totalRevenue - totalApiCost;
     const marginPct = totalRevenue > 0 ? (grossMargin / totalRevenue) * 100 : 0;
     const row = {
