@@ -135,6 +135,11 @@ export const PricingSection = () => {
       if (error || !data?.ok) {
         throw new Error(data?.error || 'Error al registrar el email');
       }
+      // Guardar credenciales para auto-login tras el pago (mismo tab)
+      try {
+        sessionStorage.setItem('guest_checkout_email', email);
+        sessionStorage.setItem('guest_checkout_password', password);
+      } catch { /* sessionStorage puede fallar en modo privado */ }
       // Continuar al checkout independientemente de si userId es null (p.ej. usuario OAuth existente)
       await launchCheckout(planId, email);
       setGuestModalOpen(false);
