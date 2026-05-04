@@ -27,8 +27,18 @@ export default function DashboardLayout() {
   useUsageTracking(); // auto-tracks login_after_purchase on mount
 
   useEffect(() => {
-    if (!loading && !user) navigate('/login');
-  }, [user, loading, navigate]);
+    if (loading) return;
+    if (!user) {
+      const params = new URLSearchParams(window.location.search);
+      const isPaymentSuccess = params.get('payment') === 'success';
+      const sessionId = params.get('session_id');
+      if (isPaymentSuccess && sessionId) {
+        navigate(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}&payment_success=true`);
+      } else {
+        navigate('/login');
+      }
+    }
+  }, [loading, user, navigate]);
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
