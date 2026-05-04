@@ -111,29 +111,28 @@ const AIStudioEdit = () => {
   const MAX_FILE_SIZE_MB = 100;
   const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-  type AudioValidation = { ok: true } | { ok: false; titleKey: string; descKey: string; descOpts?: Record<string, unknown> };
+  type AudioValidationError = { titleKey: string; descKey: string; descOpts?: Record<string, unknown> };
 
-  const validateAudioFile = (file: File): AudioValidation => {
+  const validateAudioFile = (file: File): AudioValidationError | null => {
     if (!file || file.size === 0) {
-      return { ok: false as const, titleKey: 'masterize.emptyFile', descKey: 'masterize.emptyFileDesc' };
+      return { titleKey: 'masterize.emptyFile', descKey: 'masterize.emptyFileDesc' };
     }
     const hasValidExt = ACCEPTED_AUDIO_EXT.test(file.name);
     const hasValidMime = !file.type || ACCEPTED_AUDIO_MIME.test(file.type);
     if (!hasValidExt || !hasValidMime) {
-      return { ok: false as const, titleKey: 'masterize.invalidFormat', descKey: 'masterize.invalidFormatDesc' };
+      return { titleKey: 'masterize.invalidFormat', descKey: 'masterize.invalidFormatDesc' };
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
       return {
-        ok: false as const,
         titleKey: 'masterize.fileTooLarge',
         descKey: 'masterize.fileTooLargeDesc',
         descOpts: { max: MAX_FILE_SIZE_MB },
       };
     }
-    return { ok: true as const };
+    return null;
   };
 
-  const showValidationError = (result: { titleKey: string; descKey: string; descOpts?: Record<string, unknown> }) => {
+  const showValidationError = (result: AudioValidationError) => {
     toast({
       title: t(result.titleKey) as string,
       description: t(result.descKey, result.descOpts ?? {}) as string,
@@ -142,9 +141,9 @@ const AIStudioEdit = () => {
   };
 
   const handleFileSelect = (file: File) => {
-    const validation = validateAudioFile(file);
-    if (!validation.ok) {
-      showValidationError(validation);
+    const error = validateAudioFile(file);
+    if (error) {
+      showValidationError(error);
       return;
     }
     setAudioFile(file);
