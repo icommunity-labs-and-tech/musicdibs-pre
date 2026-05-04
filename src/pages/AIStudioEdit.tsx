@@ -134,6 +134,7 @@ const AIStudioEdit = () => {
       setAudioFile(file);
       setAudioUrl(url);
       setAudioName(name);
+      setLibraryAudioUrl(url);
       resetResults();
       setPlayingTrack(null);
     } catch {
