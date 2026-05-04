@@ -114,6 +114,42 @@ export default function AdminCampaignMetricsPage() {
 
   useEffect(() => { loadCoupons(); }, [loadCoupons]);
 
+  const loadReferral = useCallback(async () => {
+    setLoadingReferral(true);
+    try {
+      const { data: refData } = await supabase
+        .from('profiles')
+        .select('user_id, referral_source, referral_influencer, referral_detail')
+        .not('referral_source', 'is', null);
+      const rows = (refData || []) as any[];
+      setReferralRows(rows);
+
+      const { count } = await supabase
+        .from('profiles')
+        .select('user_id', { count: 'exact', head: true });
+      setTotalProfiles(count || 0);
+
+      const influencerIds = rows
+        .filter(r => r.referral_source === 'influencer')
+        .map(r => r.user_id);
+      if (influencerIds.length > 0) {
+        const { data: ordersData } = await supabase
+          .from('orders')
+          .select('user_id, promotion_code')
+          .in('user_id', influencerIds)
+          .not('promotion_code', 'is', null);
+        setInfluencerCouponUserIds(new Set((ordersData || []).map((o: any) => o.user_id)));
+      } else {
+        setInfluencerCouponUserIds(new Set());
+      }
+    } catch (e: any) {
+      toast.error('Error cargando atribución por canal');
+    }
+    setLoadingReferral(false);
+  }, []);
+
+  useEffect(() => { loadReferral(); }, [loadReferral]);
+
   const loadDetail = async (campaignName: string) => {
     if (!campaignName) { toast.error('Campaña sin nombre'); return; }
     setDetailCampaign(campaignName);
