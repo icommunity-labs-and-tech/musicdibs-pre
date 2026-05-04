@@ -81,16 +81,30 @@ export const PricingSection = () => {
   const links = getFooterLinks(lang);
 
   const handleCheckout = useCallback(async (planId: string) => {
-    if (!user) {
-      navigate('/login', { state: { returnTo: '/#pricing-section' } });
-      return;
-    }
     setLoadingPlan(planId);
     try {
       // For annual plans we also send the expected Stripe price ID so the
       // backend can validate UI ↔ Stripe alignment and refuse the session if
       // they drift. For other plans (monthly / individual) we omit it.
       const expectedPriceId = ANNUAL_OPTIONS.find(o => o.planId === planId)?.priceId;
+
+      if (!user) {
+        // Usuario no autenticado — llamar a create-credit-checkout como guest
+        // El backend creará o encontrará el customer de Stripe por email en el checkout
+        const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
+          body: {
+            ...(expectedPriceId ? { planId, expectedPriceId } : { planId }),
+            guest: true,
+          },
+        });
+        if (error) throw error;
+        if (data?.url) {
+          window.open(data.url, '_blank');
+        }
+        return;
+      }
+
+      // Usuario autenticado — flujo normal existente
       const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
         body: expectedPriceId ? { planId, expectedPriceId } : { planId },
       });
