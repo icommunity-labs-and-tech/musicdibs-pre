@@ -70,6 +70,10 @@ export default function AdminCampaignMetricsPage() {
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
   const [loadingCoupons, setLoadingCoupons] = useState(true);
   const [couponSort, setCouponSort] = useState<{ key: CouponSortKey; direction: 'asc' | 'desc' }>({ key: 'roi', direction: 'desc' });
+  const [referralRows, setReferralRows] = useState<Array<{ referral_source: string | null; referral_influencer: string | null; referral_detail: string | null; user_id: string }>>([]);
+  const [totalProfiles, setTotalProfiles] = useState<number>(0);
+  const [influencerCouponUserIds, setInfluencerCouponUserIds] = useState<Set<string>>(new Set());
+  const [loadingReferral, setLoadingReferral] = useState(true);
 
   const loadData = useCallback(async () => {
     setLoading(true);
