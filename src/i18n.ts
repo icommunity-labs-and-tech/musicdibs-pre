@@ -706,7 +706,7 @@ const resources = {
   en: {
     translation: {
       nav: {
-        pricing: 'Pricing', faq: 'FAQ', support: 'Support', news: 'News', services: 'Services', distribution: 'Works Distribution', access: 'Access', info: 'Info', market: 'Works Marketplace', dibs: 'DIBS Token', verifier: 'Works Verifier', login: 'Create, protect, launch, promote', contact: 'Contact', howItWorks: 'How it works?', accessServices: 'Log in or Sign up', marketing: 'Marketing & Promos', distributionPromo: 'Distribution & Promotion', partners: 'Become a Partner', legalValidity: 'Legal Validity',
+        pricing: 'Pricing', faq: 'FAQ', support: 'Support', news: 'News', services: 'Services', distribution: 'Works Distribution', access: 'Access', info: 'Info', market: 'Works Marketplace', dibs: 'DIBS Token', verifier: 'Works Verifier', login: 'Create, protect, launch, promote', contact: 'Contact', howItWorks: 'How it works?', accessServices: 'Log in or Sign up', hello: 'Hello', myAccount: 'My account', logout: 'Log out', marketing: 'Marketing & Promos', distributionPromo: 'Distribution & Promotion', partners: 'Become a Partner', legalValidity: 'Legal Validity',
       },
       footer: {
         corporate: 'Corporate',
