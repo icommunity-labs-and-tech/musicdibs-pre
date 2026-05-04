@@ -111,6 +111,8 @@ const es = {
     creditsPage: {
       title: 'Planes y créditos',
       description: 'Cada registro de obra consume 1 crédito. Elige el plan que mejor se adapte a ti. Los créditos de las suscripciones se reinician al acabar el periodo.',
+      welcomeTitle: '¡Bienvenido a MusicDibs!',
+      welcomeMessage: 'Tus créditos ya están disponibles 🎵',
     },
     support: {
       title: 'Soporte',
@@ -814,6 +816,8 @@ const en: typeof es = {
     creditsPage: {
       title: 'Plans & credits',
       description: 'Each work registration consumes 1 credit. Choose the plan that best suits you. Subscription credits reset at the end of each period.',
+      welcomeTitle: 'Welcome to MusicDibs!',
+      welcomeMessage: 'Your credits are now available 🎵',
     },
     support: {
       title: 'Support',
@@ -1517,6 +1521,8 @@ const pt: typeof es = {
     creditsPage: {
       title: 'Planos e créditos',
       description: 'Cada registro de obra consome 1 crédito. Escolha o plano que melhor se adapta a você. Os créditos das assinaturas são reiniciados ao final do período.',
+      welcomeTitle: 'Bem-vindo ao MusicDibs!',
+      welcomeMessage: 'Seus créditos já estão disponíveis 🎵',
     },
     support: {
       title: 'Suporte',
