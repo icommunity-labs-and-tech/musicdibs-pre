@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { RegistrationWizard } from '@/components/dashboard/register/RegistrationWizard';
+import { BlockchainHistory } from '@/components/dashboard/BlockchainHistory';
+import { Separator } from '@/components/ui/separator';
 import { AccountSummary } from '@/components/dashboard/AccountSummary';
 import { PricingPopup } from '@/components/dashboard/PricingPopup';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,6 +50,12 @@ export default function RegisterPage() {
         </div>
       </div>
       <PricingPopup open={pricingOpen} onOpenChange={setPricingOpen} />
+
+      <Separator className="my-8" />
+
+      <section aria-labelledby="blockchain-history-heading">
+        <BlockchainHistory />
+      </section>
     </div>
   );
 }
