@@ -1362,6 +1362,12 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
         resultHint: 'Ouça o resultado antes de processar a versão final.',
         unavailable: 'Não foi possível carregar uma preview válida. Tente novamente.',
       },
+      invalidFormat: 'Formato não suportado',
+      invalidFormatDesc: 'Envie um arquivo de áudio (MP3, WAV, FLAC, AAC, M4A ou OGG). Vídeos não são compatíveis.',
+      fileTooLarge: 'Arquivo muito grande',
+      fileTooLargeDesc: 'O arquivo excede o limite de {{max}} MB. Comprima o áudio ou envie outro arquivo.',
+      emptyFile: 'Arquivo vazio',
+      emptyFileDesc: 'O arquivo selecionado está vazio. Escolha outro áudio.',
     },
     aiInspire: {
       backToStudio: 'Voltar ao AI Music Studio',
