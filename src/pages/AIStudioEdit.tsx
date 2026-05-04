@@ -51,6 +51,7 @@ const AIStudioEdit = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioName, setAudioName] = useState<string | null>(null);
+  const [libraryAudioUrl, setLibraryAudioUrl] = useState<string | null>(null);
 
   // Preset (mastering style)
   type PresetKey = 'professional' | 'spotify' | 'clarity' | 'denoise' | 'reverb';
