@@ -120,6 +120,7 @@ const AIStudioEdit = () => {
     setAudioFile(file);
     setAudioUrl(URL.createObjectURL(file));
     setAudioName(file.name);
+    setLibraryAudioUrl(null);
     resetResults();
     setPlayingTrack(null);
   };
