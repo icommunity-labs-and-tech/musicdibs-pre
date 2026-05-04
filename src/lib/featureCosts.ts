@@ -36,7 +36,7 @@ let fetchPromise: Promise<void> | null = null;
 async function loadCosts(): Promise<void> {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/feature_costs?select=feature_key,credit_cost`,
+      `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/operation_pricing?select=operation_key,credits_cost&is_active=eq.true`,
       {
         headers: {
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
@@ -47,14 +47,14 @@ async function loadCosts(): Promise<void> {
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to load feature costs: ${response.status}`);
+      throw new Error(`Failed to load operation_pricing: ${response.status}`);
     }
 
     const data = await response.json();
 
     const map: Record<string, number> = { ...DEFAULT_COSTS };
     for (const row of data || []) {
-      map[row.feature_key] = row.credit_cost;
+      map[row.operation_key] = row.credits_cost;
     }
     cachedCosts = map;
   } catch {
