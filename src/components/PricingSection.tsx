@@ -170,6 +170,7 @@ export const PricingSection = () => {
   }, [lang, t]);
 
   return (
+    <>
     <section id="pricing-section" className="py-20 px-4 bg-gradient-to-b from-primary/60 via-primary to-purple-600">
       <div className="max-w-6xl mx-auto text-center">
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
