@@ -170,6 +170,11 @@ export default function UserLogin() {
           <CardDescription>{t('userLogin.desc')}</CardDescription>
         </CardHeader>
         <CardContent>
+          {new URLSearchParams(window.location.search).get('payment_success') === 'true' && (
+            <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm text-center">
+              ✅ Tu pago fue procesado correctamente. Inicia sesión para ver tus créditos.
+            </div>
+          )}
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">{t('userLogin.tabLogin')}</TabsTrigger>
