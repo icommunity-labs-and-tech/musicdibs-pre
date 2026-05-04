@@ -1774,6 +1774,10 @@ export type Database = {
           library_status_since: string | null
           managed_by_manager_id: string | null
           phone: string | null
+          referral_detail: string | null
+          referral_influencer: string | null
+          referral_set_at: string | null
+          referral_source: string | null
           stripe_customer_id: string | null
           subscription_plan: string
           updated_at: string
@@ -1795,6 +1799,10 @@ export type Database = {
           library_status_since?: string | null
           managed_by_manager_id?: string | null
           phone?: string | null
+          referral_detail?: string | null
+          referral_influencer?: string | null
+          referral_set_at?: string | null
+          referral_source?: string | null
           stripe_customer_id?: string | null
           subscription_plan?: string
           updated_at?: string
@@ -1816,6 +1824,10 @@ export type Database = {
           library_status_since?: string | null
           managed_by_manager_id?: string | null
           phone?: string | null
+          referral_detail?: string | null
+          referral_influencer?: string | null
+          referral_set_at?: string | null
+          referral_source?: string | null
           stripe_customer_id?: string | null
           subscription_plan?: string
           updated_at?: string
