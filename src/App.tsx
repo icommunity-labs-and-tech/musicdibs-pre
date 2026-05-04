@@ -34,6 +34,7 @@ const AdminBlog = lazyWithRetry(() => import("./pages/AdminBlog"));
 const AdminABTests = lazyWithRetry(() => import("./pages/AdminABTests"));
 const UserLogin = lazyWithRetry(() => import("./pages/UserLogin"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
+const PaymentSuccess = lazyWithRetry(() => import("./pages/PaymentSuccess"));
 const DashboardLayout = lazyWithRetry(() => import("./pages/DashboardLayout"));
 const DashboardHome = lazyWithRetry(() => import("./pages/DashboardHome"));
 const RegisterPage = lazyWithRetry(() => import("./pages/RegisterPage"));
