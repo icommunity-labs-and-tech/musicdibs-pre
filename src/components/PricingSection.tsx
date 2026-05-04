@@ -122,10 +122,13 @@ export const PricingSection = () => {
     setLoadingPlan(planId);
     try {
       // Pre-registrar lead (crea usuario + welcome email + MailerLite)
-      await supabase.functions.invoke('register-guest-lead', {
+      const { data, error } = await supabase.functions.invoke('register-guest-lead', {
         body: { email, language: (lang || 'es').slice(0, 2) },
       });
-      // Continuar al checkout con el email capturado
+      if (error || !data?.ok) {
+        throw new Error(data?.error || 'Error al registrar el email');
+      }
+      // Continuar al checkout independientemente de si userId es null (p.ej. usuario OAuth existente)
       await launchCheckout(planId, email);
       setGuestModalOpen(false);
       setPendingGuestPlanId(null);
