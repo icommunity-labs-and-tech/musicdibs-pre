@@ -21,7 +21,7 @@ import {
 } from 'recharts';
 
 type PeriodType = 'week' | 'month' | 'year';
-type CouponSortKey = 'roi' | 'cost' | 'conversion';
+
 
 function getWeekMonday(date: Date): string {
   const d = new Date(date);
@@ -69,7 +69,7 @@ export default function AdminCampaignMetricsPage() {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
   const [loadingCoupons, setLoadingCoupons] = useState(true);
-  const [couponSort, setCouponSort] = useState<{ key: CouponSortKey; direction: 'asc' | 'desc' }>({ key: 'roi', direction: 'desc' });
+  
   const [referralRows, setReferralRows] = useState<Array<{ referral_source: string | null; referral_influencer: string | null; referral_detail: string | null; user_id: string }>>([]);
   const [totalProfiles, setTotalProfiles] = useState<number>(0);
   const [influencerCouponUserIds, setInfluencerCouponUserIds] = useState<Set<string>>(new Set());
@@ -189,19 +189,7 @@ export default function AdminCampaignMetricsPage() {
   const campaignRows = (metrics?.campaigns || []).map((c: any) => ({ ...c, campaign_name: normalizeAttribution(c.campaign_name) }));
   const topByRevenue = [...campaignRows].sort((a: any, b: any) => b.revenue - a.revenue).slice(0, 5);
   const topByCustomers = [...campaignRows].sort((a: any, b: any) => b.new_customers - a.new_customers).slice(0, 5);
-  const getCouponConversion = (coupon: any) => coupon.total_registrations > 0 ? (coupon.total_clients / coupon.total_registrations) * 100 : 0;
   const filteredCoupons = coupons.filter(c => couponFilter === 'all' || c.type === couponFilter);
-  const sortedCoupons = [...filteredCoupons].sort((a: any, b: any) => {
-    const values = {
-      roi: [parseFloat(a.current_roi) || 0, parseFloat(b.current_roi) || 0],
-      cost: [parseFloat(a.cost) || 0, parseFloat(b.cost) || 0],
-      conversion: [getCouponConversion(a), getCouponConversion(b)],
-    }[couponSort.key];
-    return couponSort.direction === 'asc' ? values[0] - values[1] : values[1] - values[0];
-  });
-  const handleCouponSort = (key: CouponSortKey) => {
-    setCouponSort(prev => ({ key, direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc' }));
-  };
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando campañas...</div>;
 
@@ -484,209 +472,221 @@ export default function AdminCampaignMetricsPage() {
           </Card>
         )}
 
-        {/* Tabla de cupones */}
-        <Card className="border-border/40">
-          <CardHeader>
-            <CardTitle className="text-base">Detalle por cupón</CardTitle>
-            <CardDescription>Datos históricos acumulados desde el inicio de cada campaña</CardDescription>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            {loadingCoupons ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...</div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cupón</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Influencer / Canal</TableHead>
-                    <TableHead>País</TableHead>
-                    <TableHead className="text-right">
-                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => handleCouponSort('cost')}>
-                        Coste <ArrowUpDown className="ml-1 h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                    <TableHead className="text-right">Registros</TableHead>
-                    <TableHead className="text-right">Clientes</TableHead>
-                    <TableHead className="text-right">
-                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => handleCouponSort('conversion')}>
-                        Conv. % <ArrowUpDown className="ml-1 h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                    <TableHead className="text-right">
-                      <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => handleCouponSort('roi')}>
-                        ROI <ArrowUpDown className="ml-1 h-3 w-3" />
-                      </Button>
-                    </TableHead>
-                    <TableHead className="text-right">LTV/CAC</TableHead>
-                    <TableHead>Estado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedCoupons
-                    .map((c: any) => {
-                      const roi = parseFloat(c.current_roi) || 0;
-                      const conv = getCouponConversion(c).toFixed(1);
-                      return (
-                        <TableRow key={c.id}>
-                          <TableCell>
-                            <Badge className={c.type === 'influencer'
-                              ? 'bg-purple-500/20 text-purple-400 border-purple-500/30'
-                              : 'bg-blue-500/20 text-blue-400 border-blue-500/30'}>
-                              {c.coupon_code}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{c.type}</TableCell>
-                          <TableCell>{c.owner}</TableCell>
-                          <TableCell>{c.target_country || '—'}</TableCell>
-                          <TableCell className="text-right">€{parseFloat(c.cost).toLocaleString('es-ES', { minimumFractionDigits: 0 })}</TableCell>
-                          <TableCell className="text-right">{c.total_registrations || 0}</TableCell>
-                          <TableCell className="text-right">{c.total_clients || 0}</TableCell>
-                          <TableCell className="text-right">{conv}%</TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant={roi > 0 ? 'default' : 'destructive'} className="text-[10px]">
-                              {roi > 0 ? '+' : ''}{(roi * 100).toFixed(0)}%
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">{parseFloat(c.current_ltv_cac)?.toFixed(2) || '—'}x</TableCell>
-                          <TableCell>
-                            <Badge variant={c.is_active ? 'default' : 'secondary'}>
-                              {c.is_active ? 'Activo' : 'Inactivo'}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  {filteredCoupons.length === 0 && (
-                    <TableRow><TableCell colSpan={11} className="text-center text-muted-foreground py-8">Sin cupones para este filtro</TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        {/* ── Tabla 1: Influencers unificada (cupones + referral) ── */}
+        {(() => {
+          const INFLUENCER_MAP: Record<string, string> = {
+            fael: 'fael', gr3go: 'fael', grego: 'fael',
+            nico: 'nico', nicolas: 'nico', nicomusic: 'nico',
+            matzz: 'matzz', missao: 'missao', christian: 'christian', erika: 'erika',
+          };
+          const normalizeInfluencer = (s: string | null | undefined) => {
+            if (!s) return '';
+            const k = s.toLowerCase().replace(/[^a-z0-9]/g, '');
+            return INFLUENCER_MAP[k] || k;
+          };
+          const LABELS: Record<string, string> = {
+            fael: 'Fael', nico: 'Nicolas (NicoMusic)', matzz: 'Matzz',
+            missao: 'Missao', christian: 'Christian', erika: 'Erika',
+          };
 
-        {/* ── Atribución por canal (¿Cómo nos conociste?) ── */}
-        <div className="space-y-4 pt-4">
-          <div>
-            <h3 className="text-lg font-bold">📊 Atribución por canal (¿Cómo nos conociste?)</h3>
-            <p className="text-sm text-muted-foreground">Respuestas del modal de bienvenida — registros sin necesidad de cupón</p>
-          </div>
+          // Conteo de referral por influencer normalizado
+          const referralByInfluencer: Record<string, number> = {};
+          referralRows
+            .filter(r => r.referral_source === 'influencer')
+            .forEach(r => {
+              const k = normalizeInfluencer(r.referral_influencer);
+              if (!k) return;
+              referralByInfluencer[k] = (referralByInfluencer[k] || 0) + 1;
+            });
 
-          {loadingReferral ? (
-            <div className="flex items-center justify-center py-8 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando atribución...
-            </div>
-          ) : referralRows.length === 0 ? (
+          const influencerCoupons = coupons.filter(c => c.type === 'influencer');
+          const seenKeys = new Set<string>();
+
+          const unifiedRows = influencerCoupons.map((c: any) => {
+            const key = normalizeInfluencer(c.owner);
+            seenKeys.add(key);
+            const refCount = referralByInfluencer[key] || 0;
+            const couponReg = c.total_registrations || 0;
+            // Deduplicación aproximada: usar el mayor si hay solapamiento
+            const total = refCount + couponReg - Math.min(refCount, couponReg > 0 ? Math.floor(couponReg * 0.5) : 0);
+            return {
+              key: `coup-${c.id}`,
+              label: LABELS[key] || c.owner || c.coupon_code,
+              coupon_code: c.coupon_code,
+              referral: refCount,
+              coupon_reg: couponReg,
+              total: Math.max(refCount, couponReg, total),
+              clients: c.total_clients || 0,
+              roi: parseFloat(c.current_roi) || 0,
+              country: c.target_country,
+            };
+          });
+
+          // Influencers con referral pero sin cupón
+          Object.entries(referralByInfluencer).forEach(([k, v]) => {
+            if (seenKeys.has(k)) return;
+            unifiedRows.push({
+              key: `ref-${k}`,
+              label: LABELS[k] || k.charAt(0).toUpperCase() + k.slice(1),
+              coupon_code: null,
+              referral: v,
+              coupon_reg: 0,
+              total: v,
+              clients: 0,
+              roi: 0,
+              country: null,
+            });
+          });
+
+          unifiedRows.sort((a, b) => b.total - a.total);
+
+          return (
             <Card className="border-border/40">
-              <CardContent className="py-8 text-center text-muted-foreground text-sm">
-                Aún no hay respuestas del modal de bienvenida.
+              <CardHeader>
+                <CardTitle className="text-base">🎥 Influencers (cupones + referral unificado)</CardTitle>
+                <CardDescription>Fusión de datos de cupones de marketing y respuestas del modal de bienvenida</CardDescription>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                {loadingCoupons || loadingReferral ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
+                  </div>
+                ) : unifiedRows.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8 text-sm">Sin datos de influencers</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Influencer</TableHead>
+                        <TableHead>Cupón</TableHead>
+                        <TableHead className="text-right">Reg. referral</TableHead>
+                        <TableHead className="text-right">Reg. cupón</TableHead>
+                        <TableHead className="text-right">Total combinado</TableHead>
+                        <TableHead className="text-right">Clientes reales</TableHead>
+                        <TableHead className="text-right">ROI</TableHead>
+                        <TableHead>País</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {unifiedRows.map(row => (
+                        <TableRow key={row.key}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {row.label}
+                              {row.coupon_code && (
+                                <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-[10px]">
+                                  cupón
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {row.coupon_code ? (
+                              <Badge variant="outline" className="text-[10px]">{row.coupon_code}</Badge>
+                            ) : <span className="text-muted-foreground">—</span>}
+                          </TableCell>
+                          <TableCell className="text-right">{row.referral}</TableCell>
+                          <TableCell className="text-right">{row.coupon_reg}</TableCell>
+                          <TableCell className="text-right font-semibold">{row.total}</TableCell>
+                          <TableCell className="text-right">{row.clients}</TableCell>
+                          <TableCell className="text-right">
+                            {row.coupon_code ? (
+                              <Badge variant={row.roi > 0 ? 'default' : 'destructive'} className="text-[10px]">
+                                {row.roi > 0 ? '+' : ''}{(row.roi * 100).toFixed(0)}%
+                              </Badge>
+                            ) : <span className="text-muted-foreground">—</span>}
+                          </TableCell>
+                          <TableCell>{row.country || '—'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
-          ) : (() => {
-            const SOURCE_LABELS: Record<string, string> = {
-              influencer: '🎥 YouTube Creadores',
-              instagram: '📱 Instagram',
-              tiktok: '🎵 TikTok',
-              google: '🔍 Google',
-              friend: '👥 Amigos',
-              podcast: '🎙️ Podcast/Blog',
-              other: '🔵 Otro',
-            };
+          );
+        })()}
 
-            const sourceCounts: Record<string, number> = {};
-            referralRows.forEach(r => {
-              const k = r.referral_source || 'other';
-              sourceCounts[k] = (sourceCounts[k] || 0) + 1;
-            });
-            const chartData = Object.entries(sourceCounts)
-              .map(([k, v]) => ({ name: SOURCE_LABELS[k] || k, count: v }))
-              .sort((a, b) => b.count - a.count);
+        {/* ── Tabla 2: Canales propios (referral sin influencer) ── */}
+        {(() => {
+          const CHANNEL_LABELS: Record<string, string> = {
+            instagram: '📱 Instagram',
+            tiktok: '🎵 TikTok',
+            google: '🔍 Google',
+            friend: '👥 Amigo',
+            podcast: '🎙️ Podcast/Blog',
+            other: '🔵 Otro',
+          };
+          const CHANNELS = ['instagram', 'tiktok', 'google', 'friend', 'podcast', 'other'];
 
-            const totalResponded = referralRows.length;
-            const respondedPct = totalProfiles > 0 ? (totalResponded / totalProfiles) * 100 : 0;
-            const topSourceKey = chartData[0]?.name || '—';
+          const channelCounts: Record<string, number> = {};
+          referralRows.forEach(r => {
+            const k = r.referral_source || '';
+            if (CHANNELS.includes(k)) {
+              channelCounts[k] = (channelCounts[k] || 0) + 1;
+            }
+          });
 
-            const influencerRows = referralRows.filter(r => r.referral_source === 'influencer');
-            const influencerCounts: Record<string, { count: number; withCoupon: number }> = {};
-            influencerRows.forEach(r => {
-              const key = r.referral_influencer || 'unknown';
-              if (!influencerCounts[key]) influencerCounts[key] = { count: 0, withCoupon: 0 };
-              influencerCounts[key].count += 1;
-              if (influencerCouponUserIds.has(r.user_id)) influencerCounts[key].withCoupon += 1;
-            });
-            const influencerTable = Object.entries(influencerCounts)
-              .map(([k, v]) => ({
-                key: k,
-                label: k.charAt(0).toUpperCase() + k.slice(1),
-                count: v.count,
-                withCoupon: v.withCoupon,
-              }))
-              .sort((a, b) => b.count - a.count);
+          const rrssCoupons = coupons.filter(c => c.type === 'rrss');
+          const couponByChannel: Record<string, any> = {};
+          rrssCoupons.forEach(c => {
+            const src = (c.utm_source || '').toLowerCase();
+            if (CHANNELS.includes(src)) couponByChannel[src] = c;
+          });
 
-            return (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <KpiCard label="Usuarios que respondieron" value={totalResponded} icon={Users} />
-                  <KpiCard label="% respuesta vs total registrados" value={`${respondedPct.toFixed(1)}%`} icon={BarChart3} />
-                  <KpiCard label="Canal más popular" value={topSourceKey} icon={TrendingUp} />
-                </div>
+          const channelRows = CHANNELS
+            .map(ch => ({
+              key: ch,
+              label: CHANNEL_LABELS[ch],
+              count: channelCounts[ch] || 0,
+              coupon: couponByChannel[ch] || null,
+            }))
+            .filter(r => r.count > 0 || r.coupon)
+            .sort((a, b) => b.count - a.count);
 
-                <Card className="border-border/40">
-                  <CardHeader><CardTitle className="text-base">📊 Registros por canal</CardTitle></CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={260}>
-                      <BarChart data={chartData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                        <YAxis dataKey="name" type="category" width={160} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                        <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                        <Bar dataKey="count" fill="hsl(var(--primary))" name="Registros" />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </CardContent>
-                </Card>
-
-                {influencerTable.length > 0 && (
-                  <Card className="border-border/40">
-                    <CardHeader>
-                      <CardTitle className="text-base">🎥 Influencers vía referral</CardTitle>
-                      <CardDescription>Usuarios que indicaron haber visto el vídeo de un creador</CardDescription>
-                    </CardHeader>
-                    <CardContent className="overflow-x-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Influencer</TableHead>
-                            <TableHead className="text-right">Registros vía referral</TableHead>
-                            <TableHead>Origen</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {influencerTable.map(row => (
-                            <TableRow key={row.key}>
-                              <TableCell className="font-medium">{row.label}</TableCell>
-                              <TableCell className="text-right">{row.count}</TableCell>
-                              <TableCell>
-                                {row.withCoupon > 0 ? (
-                                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
-                                    Con cupón ({row.withCoupon}/{row.count})
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="secondary">Solo referral</Badge>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
+          return (
+            <Card className="border-border/40">
+              <CardHeader>
+                <CardTitle className="text-base">📱 Canales propios (referral sin influencer)</CardTitle>
+                <CardDescription>Registros del modal de bienvenida agrupados por canal</CardDescription>
+              </CardHeader>
+              <CardContent className="overflow-x-auto">
+                {loadingReferral ? (
+                  <div className="flex items-center justify-center py-8 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
+                  </div>
+                ) : channelRows.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8 text-sm">Sin registros por canales propios</div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Canal</TableHead>
+                        <TableHead className="text-right">Registros vía referral</TableHead>
+                        <TableHead>Cupón RRSS asociado</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {channelRows.map(row => (
+                        <TableRow key={row.key}>
+                          <TableCell className="font-medium">{row.label}</TableCell>
+                          <TableCell className="text-right">{row.count}</TableCell>
+                          <TableCell>
+                            {row.coupon ? (
+                              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">
+                                {row.coupon.coupon_code}
+                              </Badge>
+                            ) : <span className="text-muted-foreground">—</span>}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 )}
-              </>
-            );
-          })()}
-        </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
       </div>
     </div>
   );
