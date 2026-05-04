@@ -146,6 +146,7 @@ const AIStudioEdit = () => {
     setAudioFile(null);
     setAudioUrl(null);
     setAudioName(null);
+    setLibraryAudioUrl(null);
     resetResults();
     stopAllAudio();
   };
