@@ -268,13 +268,26 @@ export const Navbar = () => {
               onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
               className={`flex items-center justify-between w-full font-semibold ${navTextStrong} py-2 transition-colors`}
             >
-              {t('nav.accessServices')}
-              <ChevronDown className={`w-4 h-4 transition-transform ${mobileServicesOpen ? 'rotate-180' : ''}`} />
+              <span className="truncate text-left">
+                {user ? `${t('nav.hello', 'Hola')}, ${greetingName}` : t('nav.accessServices')}
+              </span>
+              <ChevronDown className={`w-4 h-4 transition-transform shrink-0 ${mobileServicesOpen ? 'rotate-180' : ''}`} />
             </button>
             {mobileServicesOpen && (
               <div className="pl-4 space-y-2 mt-1">
-                <Link to="/login" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors font-medium`}>{t('nav.login')}</Link>
-                
+                {user ? (
+                  <>
+                    <Link to="/dashboard" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors font-medium`}>{t('nav.myAccount', 'Mi cuenta')}</Link>
+                    <button
+                      onClick={async () => { setMobileOpen(false); await signOut(); navigate('/'); }}
+                      className={`block w-full text-left ${navTextMuted} py-1 transition-colors`}
+                    >
+                      {t('nav.logout', 'Cerrar sesión')}
+                    </button>
+                  </>
+                ) : (
+                  <Link to="/login" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors font-medium`}>{t('nav.login')}</Link>
+                )}
                 <a href={links.market} target="_blank" rel="noopener noreferrer" className={`block ${navTextMuted} py-1 transition-colors`}>{t('nav.market')}</a>
                 <Link to="/verify" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors`}>{t('nav.verifier')}</Link>
               </div>
