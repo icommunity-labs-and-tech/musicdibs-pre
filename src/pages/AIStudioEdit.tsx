@@ -107,14 +107,43 @@ const AIStudioEdit = () => {
   };
 
   const ACCEPTED_AUDIO_EXT = /\.(mp3|wav|flac|aac|m4a|ogg)$/i;
+  const ACCEPTED_AUDIO_MIME = /^audio\//i;
+  const MAX_FILE_SIZE_MB = 100;
+  const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+  type AudioValidationError = { titleKey: string; descKey: string; descOpts?: Record<string, unknown> };
+
+  const validateAudioFile = (file: File): AudioValidationError | null => {
+    if (!file || file.size === 0) {
+      return { titleKey: 'masterize.emptyFile', descKey: 'masterize.emptyFileDesc' };
+    }
+    const hasValidExt = ACCEPTED_AUDIO_EXT.test(file.name);
+    const hasValidMime = !file.type || ACCEPTED_AUDIO_MIME.test(file.type);
+    if (!hasValidExt || !hasValidMime) {
+      return { titleKey: 'masterize.invalidFormat', descKey: 'masterize.invalidFormatDesc' };
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return {
+        titleKey: 'masterize.fileTooLarge',
+        descKey: 'masterize.fileTooLargeDesc',
+        descOpts: { max: MAX_FILE_SIZE_MB },
+      };
+    }
+    return null;
+  };
+
+  const showValidationError = (result: AudioValidationError) => {
+    toast({
+      title: t(result.titleKey) as string,
+      description: t(result.descKey, result.descOpts ?? {}) as string,
+      variant: 'destructive',
+    });
+  };
 
   const handleFileSelect = (file: File) => {
-    if (!ACCEPTED_AUDIO_EXT.test(file.name)) {
-      toast({
-        title: t('masterize.invalidFormat', 'Formato no soportado'),
-        description: t('masterize.invalidFormatDesc', 'Sube un archivo de audio (MP3, WAV, FLAC, AAC, M4A u OGG). Los vídeos no son compatibles.'),
-        variant: "destructive",
-      });
+    const error = validateAudioFile(file);
+    if (error) {
+      showValidationError(error);
       return;
     }
     setAudioFile(file);
@@ -160,6 +189,11 @@ const AIStudioEdit = () => {
 
   // Upload to auphonic-temp bucket
   const uploadForProcessing = async (file: File): Promise<string> => {
+    const validationError = validateAudioFile(file);
+    if (validationError) {
+      showValidationError(validationError);
+      throw new Error(validationError.titleKey);
+    }
     const safeName = file.name
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
