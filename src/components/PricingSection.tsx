@@ -89,10 +89,15 @@ export const PricingSection = () => {
       const expectedPriceId = ANNUAL_OPTIONS.find(o => o.planId === planId)?.priceId;
 
       if (!user) {
-        // Guest: el checkout requiere autenticación. Redirigir a registro
-        // conservando el plan elegido para retomar el flujo tras login.
-        toast.info(t('pricing.loginRequired', 'Inicia sesión para continuar con la compra') as string);
-        navigate(`/register?plan=${encodeURIComponent(planId)}`);
+        // Usuario no autenticado — ir directo a Stripe como guest
+        const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
+          body: {
+            ...(expectedPriceId ? { planId, expectedPriceId } : { planId }),
+            guest: true,
+          },
+        });
+        if (error) throw error;
+        if (data?.url) window.open(data.url, '_blank');
         return;
       }
 
