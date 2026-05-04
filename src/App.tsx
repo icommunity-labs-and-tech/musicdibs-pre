@@ -181,6 +181,7 @@ const App = () => (
               <Route path="/manager" element={<ManagerLanding />} />
               <Route path="/login" element={<UserLogin />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/payment-success" element={<PaymentSuccess />} />
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<DashboardHome />} />
                 <Route path="launch" element={<LaunchPage />} />
