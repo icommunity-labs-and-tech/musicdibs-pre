@@ -21,7 +21,7 @@ import {
 } from 'recharts';
 
 type PeriodType = 'week' | 'month' | 'year';
-type CouponSortKey = 'roi' | 'cost' | 'conversion';
+
 
 function getWeekMonday(date: Date): string {
   const d = new Date(date);
