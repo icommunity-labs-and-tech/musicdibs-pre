@@ -11,15 +11,15 @@
 // ── Static defaults (kept in sync with DB seed) ────────────
 const DEFAULT_COSTS: Record<string, number> = {
   register_work: 1,
-  promote_premium: 25,
+  promote_work: 30,
+  promote_premium: 30,
   generate_audio: 3,
   generate_audio_song: 3,
+  generate_audio_elevenlabs: 5,
   edit_audio: 2,
-  enhance_audio: 6,
-  master_audio: 6,
-  generate_cover: 2,
-  generate_vocal_track: 1,
-  one_click_create: 3,
+  enhance_audio: 2,
+  generate_cover: 1,
+  inspiration: 2,
   generate_video: 3,
   voice_translation_per_min: 2,
   instagram_creative: 1,
@@ -36,7 +36,7 @@ let fetchPromise: Promise<void> | null = null;
 async function loadCosts(): Promise<void> {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/operation_pricing?select=operation_key,credits_cost&is_active=eq.true`,
+      `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/feature_costs?select=feature_key,credit_cost`,
       {
         headers: {
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
@@ -47,14 +47,14 @@ async function loadCosts(): Promise<void> {
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to load operation_pricing: ${response.status}`);
+      throw new Error(`Failed to load feature costs: ${response.status}`);
     }
 
     const data = await response.json();
 
     const map: Record<string, number> = { ...DEFAULT_COSTS };
     for (const row of data || []) {
-      map[row.operation_key] = row.credits_cost;
+      map[row.feature_key] = row.credit_cost;
     }
     cachedCosts = map;
   } catch {
@@ -72,14 +72,6 @@ export function preloadFeatureCosts(): void {
   }
 }
 
-export async function getFeatureCostAsync(key: string): Promise<number> {
-  if (!cachedCosts) {
-    if (!fetchPromise) preloadFeatureCosts();
-    await fetchPromise;
-  }
-  return getFeatureCost(key);
-}
-
 /** Get cost for a feature. Returns default immediately if cache not ready. */
 export function getFeatureCost(key: string): number {
   if (cachedCosts) return cachedCosts[key] ?? 0;
@@ -87,10 +79,6 @@ export function getFeatureCost(key: string): number {
 }
 
 // ── Legacy export (backwards-compatible) ───────────────────
-export const FEATURE_COSTS = new Proxy(DEFAULT_COSTS, {
-  get(target, prop: string) {
-    return cachedCosts?.[prop] ?? target[prop];
-  },
-}) as typeof DEFAULT_COSTS;
+export const FEATURE_COSTS = DEFAULT_COSTS;
 
 export type FeatureKey = keyof typeof DEFAULT_COSTS;
