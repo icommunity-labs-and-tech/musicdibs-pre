@@ -82,7 +82,8 @@ export default function UserLogin() {
     const { error } = await signIn(email, password);
     if (!error) {
       setLoading(false);
-      navigate('/dashboard');
+      const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+      navigate(redirectTo ? decodeURIComponent(redirectTo) : '/dashboard');
       return;
     }
 
