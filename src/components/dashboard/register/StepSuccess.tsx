@@ -52,7 +52,7 @@ export function StepSuccess({ data, registrationId, fileHash, onRegisterAnother 
       </div>
 
       <div className="flex flex-wrap gap-3 justify-center">
-        <Button variant="outline" onClick={() => navigate('/dashboard/blockchain')}>
+        <Button variant="outline" onClick={() => navigate('/dashboard/register')}>
           <Eye className="h-4 w-4 mr-1.5" />
           {t('wizard.success.viewReg')}
         </Button>

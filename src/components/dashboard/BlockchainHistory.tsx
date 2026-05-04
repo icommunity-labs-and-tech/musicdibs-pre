@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,9 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { DistributeButton } from '@/components/dashboard/DistributeButton';
-import { CertificateButton } from '@/components/dashboard/CertificateButton';
-import { WorkTimeline } from '@/components/dashboard/WorkTimeline';
+import { DistributeButton } from './DistributeButton';
+import { CertificateButton } from './CertificateButton';
+import { WorkTimeline } from './WorkTimeline';
 
 interface WorkEvidence {
   id: string;
@@ -65,7 +65,7 @@ const typeLabels: Record<string, string> = {
   other: '📁 Otro',
 };
 
-export default function BlockchainEvidencePage() {
+export function BlockchainHistory() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [works, setWorks] = useState<WorkEvidence[]>([]);
