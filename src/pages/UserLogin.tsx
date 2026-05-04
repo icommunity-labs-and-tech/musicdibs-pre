@@ -19,7 +19,8 @@ export default function UserLogin() {
 
   useEffect(() => {
     if (!authLoading && user) {
-      navigate('/dashboard', { replace: true });
+      const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+      navigate(redirectTo ? decodeURIComponent(redirectTo) : '/dashboard', { replace: true });
     }
   }, [user, authLoading, navigate]);
 
@@ -81,7 +82,8 @@ export default function UserLogin() {
     const { error } = await signIn(email, password);
     if (!error) {
       setLoading(false);
-      navigate('/dashboard');
+      const redirectTo = new URLSearchParams(window.location.search).get('redirect');
+      navigate(redirectTo ? decodeURIComponent(redirectTo) : '/dashboard');
       return;
     }
 
