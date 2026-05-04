@@ -96,7 +96,14 @@ export const PricingSection = () => {
       toast.info(data.message || 'Ya estás suscrito a este plan.');
       return;
     }
-    if (data?.url) window.open(data.url, '_blank');
+    if (data?.url) {
+      // Guests deben ir en la misma pestaña para preservar sessionStorage tras volver de Stripe
+      if (guestEmail) {
+        window.location.href = data.url;
+      } else {
+        window.open(data.url, '_blank');
+      }
+    }
   }, []);
 
   const handleCheckout = useCallback(async (planId: string) => {
@@ -128,6 +135,11 @@ export const PricingSection = () => {
       if (error || !data?.ok) {
         throw new Error(data?.error || 'Error al registrar el email');
       }
+      // Guardar credenciales para auto-login tras el pago (mismo tab)
+      try {
+        sessionStorage.setItem('guest_checkout_email', email);
+        sessionStorage.setItem('guest_checkout_password', password);
+      } catch { /* sessionStorage puede fallar en modo privado */ }
       // Continuar al checkout independientemente de si userId es null (p.ej. usuario OAuth existente)
       await launchCheckout(planId, email);
       setGuestModalOpen(false);
