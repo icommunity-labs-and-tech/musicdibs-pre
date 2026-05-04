@@ -149,24 +149,30 @@ serve(async (req) => {
   const supabaseAdmin = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "", { auth: { persistSession: false } });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Missing Authorization header");
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated");
-
     const body = await req.json();
     const planId = typeof body.planId === "string" ? body.planId : "";
     const action = typeof body.action === "string" ? body.action : undefined;
+    const isGuest = body.guest === true;
     const attribution = typeof body.attribution === "object" && body.attribution !== null ? body.attribution as Record<string, unknown> : {};
+
+    let user: { id: string; email: string } | null = null;
+
+    if (!isGuest) {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) throw new Error("Missing Authorization header");
+      const token = authHeader.replace("Bearer ", "");
+      const { data } = await supabaseClient.auth.getUser(token);
+      const authUser = data.user;
+      if (!authUser?.email) throw new Error("User not authenticated");
+      user = { id: authUser.id, email: authUser.email };
+    }
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     if (action === "cancel_renewal") {
+      if (!user) throw new Error("Authentication required");
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
       if (!customers.data.length) throw new Error("No Stripe customer found");
       const subs = await stripe.subscriptions.list({ customer: customers.data[0].id, status: "all", limit: 10 });
@@ -180,6 +186,7 @@ serve(async (req) => {
     const plan = await resolvePlan(stripe, planId);
 
     if (TOPUP_PLANS.includes(planId)) {
+      if (!user) throw new Error("Top-ups require an active subscription. Please log in first.");
       const customers2 = await stripe.customers.list({ email: user.email, limit: 1 });
       if (!customers2.data.length) throw new Error("Top-ups require an active subscription. Please subscribe first.");
 
@@ -188,14 +195,17 @@ serve(async (req) => {
       if (!activeSub) throw new Error("Top-ups require an active subscription. Please subscribe first.");
     }
 
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    let customerId = customers.data[0]?.id;
-    if (!customerId) {
-      const customer = await stripe.customers.create({ email: user.email, metadata: { supabase_user_id: user.id } });
-      customerId = customer.id;
+    let customerId: string | undefined;
+    if (user) {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      customerId = customers.data[0]?.id;
+      if (!customerId) {
+        const customer = await stripe.customers.create({ email: user.email, metadata: { supabase_user_id: user.id } });
+        customerId = customer.id;
+      }
     }
 
-    if (plan.mode === "subscription") {
+    if (plan.mode === "subscription" && customerId && user) {
       const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 });
       const activeSub = subs.data.find((subscription: Stripe.Subscription) => isSubscriptionActive(subscription));
 
@@ -238,12 +248,12 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://musicdibs.com";
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      customer: customerId,
       mode: plan.mode,
       success_url: `${origin}/dashboard/credits?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/dashboard/credits?payment=cancelled`,
       metadata: {
-        user_id: user.id,
+        user_id: user?.id ?? "",
+        guest: user ? "false" : "true",
         plan_id: planId,
         credits: String(plan.credits),
         product_type: plan.productType,
@@ -257,7 +267,6 @@ serve(async (req) => {
       billing_address_collection: "required",
       tax_id_collection: { enabled: true },
       consent_collection: { terms_of_service: "required" },
-      customer_update: { name: "auto", address: "auto" },
       custom_text: {
         terms_of_service_acceptance: {
           message: "Acepto los [Términos y Condiciones](https://musicdibs.com/terms) y la [Política de Privacidad](https://musicdibs.com/privacy) de MusicDibs.",
@@ -265,16 +274,23 @@ serve(async (req) => {
       },
     };
 
+    if (customerId) {
+      sessionParams.customer = customerId;
+      sessionParams.customer_update = { name: "auto", address: "auto" };
+    } else {
+      sessionParams.customer_creation = "always";
+    }
+
     if (plan.mode === "payment") {
       sessionParams.invoice_creation = { enabled: true };
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
-    console.log(`[CHECKOUT] Created session for ${planId}: ${session.id}`);
+    console.log(`[CHECKOUT] Created session for ${planId} (guest=${!user}): ${session.id}`);
 
     const checkoutUrl = session.url?.replace("https://checkout.musicdibs.com", "https://checkout.stripe.com") ?? session.url;
     const resolvedCustomerId = session.customer as string | undefined;
-    if (resolvedCustomerId && user.id) {
+    if (resolvedCustomerId && user?.id) {
       await supabaseAdmin
         .from("profiles")
         .update({ stripe_customer_id: resolvedCustomerId })
