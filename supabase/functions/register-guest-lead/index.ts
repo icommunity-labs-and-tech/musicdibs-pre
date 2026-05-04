@@ -95,13 +95,17 @@ serve(async (req) => {
       isNewUser = true;
       log(`Created user ${userId} (${normalizedEmail})`);
     } else if (createErr) {
-      // Already registered → look it up
+      // Email ya existe — buscar el usuario existente
       log(`createUser error (likely existing): ${createErr.message}`);
-      const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
-      const existing = list?.users?.find(
-        (u) => (u.email || "").toLowerCase() === normalizedEmail
-      );
-      if (existing) userId = existing.id;
+      try {
+        const { data: existingData } = await (supabaseAdmin.auth.admin as any).getUserByEmail(normalizedEmail);
+        if (existingData?.user) {
+          userId = existingData.user.id;
+          // No enviar welcome email ni añadir a MailerLite — ya es usuario registrado
+        }
+      } catch (lookupErr) {
+        console.warn("[GUEST-LEAD] Could not find existing user:", lookupErr);
+      }
     }
 
     // Send welcome email + add to MailerLite ONLY for newly created leads
