@@ -394,6 +394,7 @@ const AIStudioEdit = () => {
         }
       }, 180_000);
     } catch (err: any) {
+      console.error('[MASTERIZE] handlePreview error:', err?.message, err);
       setIsPreviewing(false);
       const responseData =
         (err?.context?.body && typeof err.context.body === 'object') ? err.context.body :
