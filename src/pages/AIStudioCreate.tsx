@@ -204,12 +204,8 @@ const AIStudioCreate = () => {
   // ── Derived values ──
   const selectedGenre: string | null = null;
   const selectedMood: string | null = null;
-  // Routing mirrors backend: ElevenLabs when user provides lyrics OR duration > 180s
-  const usesElevenLabs = (mode === 'song' && lyrics.trim().length > 0) || (duration !== null && duration > 180);
-  const currentCost = usesElevenLabs
-    ? FEATURE_COSTS.generate_audio_elevenlabs
-    : FEATURE_COSTS.generate_audio;
-  const currentFeature = usesElevenLabs ? 'generate_audio_elevenlabs' : 'generate_audio';
+  const currentCost = mode === 'song' ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio;
+  const currentFeature = mode === 'song' ? 'generate_audio_song' : 'generate_audio';
   const modeLabel = mode === 'song' ? t('aiCreate.songWithVoice') : t('aiCreate.instrumentalBase');
   const canSaveAsVirtualArtist = (_result: GenerationResult) => {
     // Allow saving any generation (vocal or instrumental) as a virtual artist
@@ -375,6 +371,15 @@ const AIStudioCreate = () => {
       if (data?.error) {
         if (data.error === 'insufficient_credits') {
           throw { message: data.message || 'Créditos del proveedor insuficientes', details: data.details };
+        }
+        if (data.error === 'prompt_rejected') {
+          toast({
+            title: 'Descripción musical no compatible',
+            description: data.message || 'Tu descripción contiene referencias que el generador no puede procesar. Intenta describir el sonido sin mencionar artistas, bandas ni marcas específicas.',
+            variant: 'destructive',
+            duration: 8000,
+          });
+          return;
         }
         throw { message: data.error, details: data.details };
       }
