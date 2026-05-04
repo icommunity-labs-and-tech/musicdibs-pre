@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 import { getNavLinks } from "@/i18nLinks";
 import { Menu, X, ChevronDown } from "lucide-react";
@@ -19,6 +21,26 @@ export const Navbar = () => {
   const ticking = useRef(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) { setDisplayName(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const name = (data?.display_name || '').trim();
+      setDisplayName(name && name !== user.email ? name : (user.email ?? null));
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const greetingName = displayName || user?.email || '';
 
   const isDashboard = location.pathname.startsWith('/dashboard');
   const isAiStudio = location.pathname.startsWith('/ai-studio');
@@ -158,10 +180,12 @@ export const Navbar = () => {
             >
               <Button 
                 variant="glass" 
-                className="font-semibold flex items-center gap-1.5"
+                className="font-semibold flex items-center gap-1.5 max-w-[220px]"
               >
-                {t('nav.accessServices')}
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${servicesOpen ? 'rotate-180' : ''}`} />
+                <span className="truncate">
+                  {user ? `${t('nav.hello', 'Hola')}, ${greetingName}` : t('nav.accessServices')}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${servicesOpen ? 'rotate-180' : ''}`} />
               </Button>
               <div
                 onMouseEnter={openServices}
@@ -169,11 +193,29 @@ export const Navbar = () => {
                 className={`absolute right-0 top-full mt-1 w-56 rounded-md bg-white shadow-lg ring-1 ring-black/10 z-50 ${servicesOpen ? "block" : "hidden"}`}
               >
                 <ul className="py-2 text-sm text-gray-700">
-                  <li>
-                    <Link to="/login" className="block px-4 py-2 hover:bg-gray-100 font-medium" onClick={() => setServicesOpen(false)}>
-                      {t('nav.login')}
-                    </Link>
-                  </li>
+                  {user ? (
+                    <>
+                      <li>
+                        <Link to="/dashboard" className="block px-4 py-2 hover:bg-gray-100 font-medium" onClick={() => setServicesOpen(false)}>
+                          {t('nav.myAccount', 'Mi cuenta')}
+                        </Link>
+                      </li>
+                      <li>
+                        <button
+                          onClick={async () => { setServicesOpen(false); await signOut(); navigate('/'); }}
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                        >
+                          {t('nav.logout', 'Cerrar sesión')}
+                        </button>
+                      </li>
+                    </>
+                  ) : (
+                    <li>
+                      <Link to="/login" className="block px-4 py-2 hover:bg-gray-100 font-medium" onClick={() => setServicesOpen(false)}>
+                        {t('nav.login')}
+                      </Link>
+                    </li>
+                  )}
                   <li className="border-t border-gray-100 my-1" />
                   <li>
                     <a href={links.market} target="_blank" rel="noopener noreferrer" className="block px-4 py-2 hover:bg-gray-100">
@@ -226,13 +268,26 @@ export const Navbar = () => {
               onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
               className={`flex items-center justify-between w-full font-semibold ${navTextStrong} py-2 transition-colors`}
             >
-              {t('nav.accessServices')}
-              <ChevronDown className={`w-4 h-4 transition-transform ${mobileServicesOpen ? 'rotate-180' : ''}`} />
+              <span className="truncate text-left">
+                {user ? `${t('nav.hello', 'Hola')}, ${greetingName}` : t('nav.accessServices')}
+              </span>
+              <ChevronDown className={`w-4 h-4 transition-transform shrink-0 ${mobileServicesOpen ? 'rotate-180' : ''}`} />
             </button>
             {mobileServicesOpen && (
               <div className="pl-4 space-y-2 mt-1">
-                <Link to="/login" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors font-medium`}>{t('nav.login')}</Link>
-                
+                {user ? (
+                  <>
+                    <Link to="/dashboard" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors font-medium`}>{t('nav.myAccount', 'Mi cuenta')}</Link>
+                    <button
+                      onClick={async () => { setMobileOpen(false); await signOut(); navigate('/'); }}
+                      className={`block w-full text-left ${navTextMuted} py-1 transition-colors`}
+                    >
+                      {t('nav.logout', 'Cerrar sesión')}
+                    </button>
+                  </>
+                ) : (
+                  <Link to="/login" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors font-medium`}>{t('nav.login')}</Link>
+                )}
                 <a href={links.market} target="_blank" rel="noopener noreferrer" className={`block ${navTextMuted} py-1 transition-colors`}>{t('nav.market')}</a>
                 <Link to="/verify" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors`}>{t('nav.verifier')}</Link>
               </div>
