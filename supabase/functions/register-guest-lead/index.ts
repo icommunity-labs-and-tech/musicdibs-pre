@@ -57,7 +57,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { email, language, attribution } = await req.json();
+    const { email, password, name, language, attribution } = await req.json();
 
     if (!email || typeof email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return new Response(
@@ -69,6 +69,10 @@ serve(async (req) => {
     const normalizedEmail = email.trim().toLowerCase();
     const lang = detectLang(language);
     const langCode = lang === "BR" ? "pt" : lang === "EN" ? "en" : "es";
+    const displayName = (typeof name === "string" && name.trim())
+      ? name.trim()
+      : normalizedEmail.split("@")[0];
+    const hasPassword = typeof password === "string" && password.length >= 8;
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -79,11 +83,13 @@ serve(async (req) => {
     let userId: string | null = null;
     let isNewUser = false;
 
-    // Try to create user (passwordless, email_confirm true)
+    // Try to create user
     const { data: created, error: createErr } = await supabaseAdmin.auth.admin.createUser({
       email: normalizedEmail,
+      password: hasPassword ? password : undefined,
       email_confirm: true,
       user_metadata: {
+        display_name: displayName,
         language: langCode,
         signup_source: "guest_checkout",
         attribution: attribution || {},
@@ -101,26 +107,39 @@ serve(async (req) => {
         const { data: existingData } = await (supabaseAdmin.auth.admin as any).getUserByEmail(normalizedEmail);
         if (existingData?.user) {
           userId = existingData.user.id;
-          // No enviar welcome email ni añadir a MailerLite — ya es usuario registrado
         }
       } catch (lookupErr) {
         console.warn("[GUEST-LEAD] Could not find existing user:", lookupErr);
       }
     }
 
-    // Send welcome email + add to MailerLite ONLY for newly created leads
+    // For newly created leads: update profile name + add to MailerLite
     if (isNewUser && userId) {
-      try {
-        await supabaseAdmin.functions.invoke("send-welcome-email", {
-          body: {
-            userId,
-            email: normalizedEmail,
-            displayName: normalizedEmail.split("@")[0],
-            language: langCode,
-          },
-        });
-      } catch (e) {
-        log("welcome email failed", String(e));
+      if (name && typeof name === "string" && name.trim()) {
+        try {
+          await supabaseAdmin
+            .from("profiles")
+            .update({ display_name: displayName })
+            .eq("user_id", userId);
+        } catch (e) {
+          log("profile update failed", String(e));
+        }
+      }
+
+      // Only send welcome (magic-link style) email when user has NO password
+      if (!hasPassword) {
+        try {
+          await supabaseAdmin.functions.invoke("send-welcome-email", {
+            body: {
+              userId,
+              email: normalizedEmail,
+              displayName,
+              language: langCode,
+            },
+          });
+        } catch (e) {
+          log("welcome email failed", String(e));
+        }
       }
 
       await addToMailerLite(normalizedEmail, lang);
