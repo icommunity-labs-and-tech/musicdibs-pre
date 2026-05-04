@@ -21,6 +21,26 @@ export const Navbar = () => {
   const ticking = useRef(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { user, signOut } = useAuth();
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) { setDisplayName(null); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const name = (data?.display_name || '').trim();
+      setDisplayName(name && name !== user.email ? name : (user.email ?? null));
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const greetingName = displayName || user?.email || '';
 
   const isDashboard = location.pathname.startsWith('/dashboard');
   const isAiStudio = location.pathname.startsWith('/ai-studio');
