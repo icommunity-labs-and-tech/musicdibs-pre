@@ -9,6 +9,7 @@ import { NotificationBell } from '@/components/dashboard/NotificationBell';
 import { NotificationToaster } from '@/components/dashboard/NotificationToaster';
 import { CreditBadge } from '@/components/dashboard/CreditBadge';
 import { DashboardTour } from '@/components/dashboard/DashboardTour';
+import { ReferralSourceModal } from '@/components/dashboard/ReferralSourceModal';
 import { DashboardThemeToggle } from '@/components/dashboard/DashboardThemeToggle';
 import { Button } from '@/components/ui/button';
 import { Loader2, Plus } from 'lucide-react';
@@ -69,6 +70,7 @@ export default function DashboardLayout() {
           </div>
         </div>
         <DashboardTour />
+        <ReferralSourceModal />
         <NotificationToaster />
       </SidebarProvider>
     </NotificationsProvider>
