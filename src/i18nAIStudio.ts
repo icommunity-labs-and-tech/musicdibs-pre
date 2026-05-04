@@ -1342,7 +1342,12 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       },
       preview: {
         cta: 'Ouvir preview grátis',
+        loading: 'Gerando preview…',
         ready: 'Preview pronta',
+        regenerate: 'Regenerar preview',
+        hint: 'A preview é grátis. Os créditos só são descontados ao masterizar a versão final.',
+        resultTitle: 'Preview do seu master',
+        resultHint: 'Ouça o resultado antes de processar a versão final.',
         unavailable: 'Não foi possível carregar uma preview válida. Tente novamente.',
       },
     },
