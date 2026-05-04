@@ -133,7 +133,7 @@ const AIStudioEdit = () => {
     return { ok: true as const };
   };
 
-  const showValidationError = (result: Extract<AudioValidation, { ok: false }>) => {
+  const showValidationError = (result: { titleKey: string; descKey: string; descOpts?: Record<string, unknown> }) => {
     toast({
       title: t(result.titleKey) as string,
       description: t(result.descKey, result.descOpts ?? {}) as string,
