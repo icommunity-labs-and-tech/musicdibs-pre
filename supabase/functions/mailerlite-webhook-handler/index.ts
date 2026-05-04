@@ -188,6 +188,7 @@ async function handleActivityUpdate(p: any) {
 async function handleCartAbandoned(p: any) {
   const locale = normalizeLocale(p.locale);
   const cartGroup = MAILERLITE_GROUPS[locale].cart_abandoned;
+  const noPurchaseGroup = MAILERLITE_GROUPS[locale].registrados;
   console.log(`[ML:cart_abandoned] ${p.email} → plan=${p.plan_type}, amount=${p.amount}, locale=${locale}`);
 
   const cartFields = {
@@ -198,11 +199,28 @@ async function handleCartAbandoned(p: any) {
     cart_date: new Date().toISOString().slice(0, 10),
   };
 
+  // Check if subscriber is already in any buyer group (mensuales/anuales/single) for this locale
+  let isBuyer = false;
+  try {
+    const emailEnc = encodeURIComponent(p.email);
+    const existing = await callMailerLite("GET", `/subscribers/${emailEnc}`);
+    const existingGroupIds: string[] = (existing?.data?.groups || []).map((g: any) => String(g.id));
+    const buyerGroupIds = ["mensuales", "anuales", "single"].map(
+      (k) => MAILERLITE_GROUPS[locale][k],
+    );
+    isBuyer = existingGroupIds.some((id) => buyerGroupIds.includes(id));
+  } catch (_) {
+    // Subscriber doesn't exist yet → not a buyer
+  }
+
+  const groupsToAdd = [cartGroup];
+  if (!isBuyer) groupsToAdd.push(noPurchaseGroup);
+
   // Try upsert via POST first
   const sub = await callMailerLite("POST", `/subscribers`, {
     email: p.email,
     fields: cartFields,
-    groups: [cartGroup],
+    groups: groupsToAdd,
   });
 
   // If subscriber is unsubscribed (422), try PUT to update fields only
