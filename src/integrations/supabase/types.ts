@@ -131,51 +131,6 @@ export type Database = {
         }
         Relationships: []
       }
-      api_cost_config: {
-        Row: {
-          api_cost_eur: number
-          api_cost_notes: string | null
-          api_cost_unit: string
-          api_model: string | null
-          api_provider: string
-          created_at: string | null
-          credits_charged: number
-          feature_key: string
-          feature_label: string
-          id: string
-          price_per_credit_eur: number
-          updated_at: string | null
-        }
-        Insert: {
-          api_cost_eur: number
-          api_cost_notes?: string | null
-          api_cost_unit: string
-          api_model?: string | null
-          api_provider: string
-          created_at?: string | null
-          credits_charged: number
-          feature_key: string
-          feature_label: string
-          id?: string
-          price_per_credit_eur: number
-          updated_at?: string | null
-        }
-        Update: {
-          api_cost_eur?: number
-          api_cost_notes?: string | null
-          api_cost_unit?: string
-          api_model?: string | null
-          api_provider?: string
-          created_at?: string | null
-          credits_charged?: number
-          feature_key?: string
-          feature_label?: string
-          id?: string
-          price_per_credit_eur?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       api_cost_daily: {
         Row: {
           created_at: string | null
@@ -547,6 +502,7 @@ export type Database = {
           amount: number
           created_at: string
           description: string | null
+          feature_key: string | null
           id: string
           type: string
           user_id: string
@@ -555,6 +511,7 @@ export type Database = {
           amount: number
           created_at?: string
           description?: string | null
+          feature_key?: string | null
           id?: string
           type: string
           user_id: string
@@ -563,6 +520,7 @@ export type Database = {
           amount?: number
           created_at?: string
           description?: string | null
+          feature_key?: string | null
           id?: string
           type?: string
           user_id?: string
@@ -653,24 +611,6 @@ export type Database = {
           id?: string
           token?: string
           used_at?: string | null
-        }
-        Relationships: []
-      }
-      feature_costs: {
-        Row: {
-          credit_cost: number
-          feature_key: string
-          label: string
-        }
-        Insert: {
-          credit_cost?: number
-          feature_key: string
-          label?: string
-        }
-        Update: {
-          credit_cost?: number
-          feature_key?: string
-          label?: string
         }
         Relationships: []
       }
@@ -1289,6 +1229,7 @@ export type Database = {
       operation_pricing: {
         Row: {
           api_cost_eur: number | null
+          api_cost_notes: string | null
           category: string
           created_at: string | null
           credits_cost: number
@@ -1308,10 +1249,12 @@ export type Database = {
           operation_key: string
           operation_label: string
           operation_name: string
+          price_per_credit_eur: number | null
           updated_at: string | null
         }
         Insert: {
           api_cost_eur?: number | null
+          api_cost_notes?: string | null
           category?: string
           created_at?: string | null
           credits_cost?: number
@@ -1331,10 +1274,12 @@ export type Database = {
           operation_key: string
           operation_label: string
           operation_name?: string
+          price_per_credit_eur?: number | null
           updated_at?: string | null
         }
         Update: {
           api_cost_eur?: number | null
+          api_cost_notes?: string | null
           category?: string
           created_at?: string | null
           credits_cost?: number
@@ -1354,6 +1299,7 @@ export type Database = {
           operation_key?: string
           operation_label?: string
           operation_name?: string
+          price_per_credit_eur?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -2568,6 +2514,51 @@ export type Database = {
       }
     }
     Views: {
+      api_cost_config: {
+        Row: {
+          api_cost_eur: number | null
+          api_cost_notes: string | null
+          api_cost_unit: string | null
+          api_model: string | null
+          api_provider: string | null
+          created_at: string | null
+          credits_charged: number | null
+          feature_key: string | null
+          feature_label: string | null
+          id: string | null
+          price_per_credit_eur: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_cost_eur?: never
+          api_cost_notes?: string | null
+          api_cost_unit?: never
+          api_model?: string | null
+          api_provider?: string | null
+          created_at?: string | null
+          credits_charged?: number | null
+          feature_key?: string | null
+          feature_label?: never
+          id?: string | null
+          price_per_credit_eur?: never
+          updated_at?: string | null
+        }
+        Update: {
+          api_cost_eur?: never
+          api_cost_notes?: string | null
+          api_cost_unit?: never
+          api_model?: string | null
+          api_provider?: string | null
+          created_at?: string | null
+          credits_charged?: number | null
+          feature_key?: string | null
+          feature_label?: never
+          id?: string | null
+          price_per_credit_eur?: never
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cancellation_stats: {
         Row: {
           avg_creditos_restantes: number | null
@@ -2576,6 +2567,24 @@ export type Database = {
           fecha: string | null
           plan_type: string | null
           total_cancelaciones: number | null
+        }
+        Relationships: []
+      }
+      feature_costs: {
+        Row: {
+          credit_cost: number | null
+          feature_key: string | null
+          label: string | null
+        }
+        Insert: {
+          credit_cost?: number | null
+          feature_key?: string | null
+          label?: never
+        }
+        Update: {
+          credit_cost?: number | null
+          feature_key?: string | null
+          label?: never
         }
         Relationships: []
       }
