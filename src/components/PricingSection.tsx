@@ -96,7 +96,14 @@ export const PricingSection = () => {
       toast.info(data.message || 'Ya estás suscrito a este plan.');
       return;
     }
-    if (data?.url) window.open(data.url, '_blank');
+    if (data?.url) {
+      // Guests deben ir en la misma pestaña para preservar sessionStorage tras volver de Stripe
+      if (guestEmail) {
+        window.location.href = data.url;
+      } else {
+        window.open(data.url, '_blank');
+      }
+    }
   }, []);
 
   const handleCheckout = useCallback(async (planId: string) => {
