@@ -61,7 +61,7 @@ export function PricingPopup({ open, onOpenChange }: { open: boolean; onOpenChan
     .map(cat => ({
       cat,
       label: CATEGORY_LABELS[cat] ?? cat,
-      items: rows.filter(r => r.category === cat),
+      items: rows.filter(r => r.category === cat).sort((a, b) => a.credits_cost - b.credits_cost),
     }))
     .filter(g => g.items.length > 0);
 
