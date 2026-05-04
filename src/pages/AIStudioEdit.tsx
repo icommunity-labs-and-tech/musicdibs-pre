@@ -337,7 +337,7 @@ const AIStudioEdit = () => {
     stopAllAudio();
 
     try {
-      const uploadedUrl = await uploadForProcessing(audioFile);
+      const uploadedUrl = libraryAudioUrl || await uploadForProcessing(audioFile);
 
       const { data, error } = await supabase.functions.invoke("roex-master", {
         body: {
