@@ -107,14 +107,44 @@ const AIStudioEdit = () => {
   };
 
   const ACCEPTED_AUDIO_EXT = /\.(mp3|wav|flac|aac|m4a|ogg)$/i;
+  const ACCEPTED_AUDIO_MIME = /^audio\//i;
+  const MAX_FILE_SIZE_MB = 100;
+  const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+  type AudioValidation = { ok: true } | { ok: false; titleKey: string; descKey: string; descOpts?: Record<string, unknown> };
+
+  const validateAudioFile = (file: File): AudioValidation => {
+    if (!file || file.size === 0) {
+      return { ok: false, titleKey: 'masterize.emptyFile', descKey: 'masterize.emptyFileDesc' };
+    }
+    const hasValidExt = ACCEPTED_AUDIO_EXT.test(file.name);
+    const hasValidMime = !file.type || ACCEPTED_AUDIO_MIME.test(file.type);
+    if (!hasValidExt || !hasValidMime) {
+      return { ok: false, titleKey: 'masterize.invalidFormat', descKey: 'masterize.invalidFormatDesc' };
+    }
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return {
+        ok: false,
+        titleKey: 'masterize.fileTooLarge',
+        descKey: 'masterize.fileTooLargeDesc',
+        descOpts: { max: MAX_FILE_SIZE_MB },
+      };
+    }
+    return { ok: true };
+  };
+
+  const showValidationError = (result: Extract<AudioValidation, { ok: false }>) => {
+    toast({
+      title: t(result.titleKey) as string,
+      description: t(result.descKey, result.descOpts ?? {}) as string,
+      variant: 'destructive',
+    });
+  };
 
   const handleFileSelect = (file: File) => {
-    if (!ACCEPTED_AUDIO_EXT.test(file.name)) {
-      toast({
-        title: t('masterize.invalidFormat', 'Formato no soportado'),
-        description: t('masterize.invalidFormatDesc', 'Sube un archivo de audio (MP3, WAV, FLAC, AAC, M4A u OGG). Los vídeos no son compatibles.'),
-        variant: "destructive",
-      });
+    const validation = validateAudioFile(file);
+    if (!validation.ok) {
+      showValidationError(validation);
       return;
     }
     setAudioFile(file);
