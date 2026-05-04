@@ -430,5 +430,11 @@ export const PricingSection = () => {
         <ComparisonTable />
       </div>
     </section>
+    <GuestEmailModal
+      open={guestModalOpen}
+      onOpenChange={(o) => { if (!o) { setGuestModalOpen(false); setPendingGuestPlanId(null); setLoadingPlan(null); } }}
+      onConfirm={handleGuestConfirm}
+    />
+    </>
   );
 };
