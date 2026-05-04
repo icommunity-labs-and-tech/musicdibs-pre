@@ -170,7 +170,10 @@ const AIStudioEdit = () => {
     const { error } = await supabase.storage
       .from("auphonic-temp")
       .upload(path, file, { upsert: true });
-    if (error) throw new Error(`Upload error: ${error.message}`);
+    if (error) {
+      console.error('[MASTERIZE] Upload error:', error.message, error);
+      throw new Error(`Upload error: ${error.message}`);
+    }
     const { data } = supabase.storage.from("auphonic-temp").getPublicUrl(path);
     return data.publicUrl;
   };
