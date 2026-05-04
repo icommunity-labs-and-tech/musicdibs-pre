@@ -18,11 +18,11 @@ const fmtPct = (n: number, decimals = 1) =>
 const PAGE_SIZE = 10;
 
 interface ApiCostConfig {
-  feature_key: string;
-  feature_label: string;
-  api_provider: string;
-  api_model: string | null;
-  credits_charged: number;
+  feature_key: string;        // operation_key
+  feature_label: string;      // operation_name
+  api_provider: string;       // llm_provider
+  api_model: string | null;   // llm_model
+  credits_charged: number;    // credits_cost
   price_per_credit_eur: number;
   api_cost_eur: number;
   api_cost_notes: string | null;
@@ -70,11 +70,27 @@ export default function AdminApiCostsPage() {
     const { from, to } = getDateRange();
 
     const [configRes, dailyRes] = await Promise.all([
-      supabase.from('api_cost_config').select('*').order('feature_key'),
+      supabase
+        .from('operation_pricing')
+        .select('operation_key, operation_name, operation_label, llm_provider, llm_model, credits_cost, price_per_credit_eur, api_cost_eur, api_cost_notes, is_active')
+        .eq('is_active', true)
+        .order('operation_key'),
       supabase.from('api_cost_daily').select('*').gte('date', from).lte('date', to).order('date', { ascending: false }),
     ]);
 
-    if (configRes.data) setConfigs(configRes.data as unknown as ApiCostConfig[]);
+    if (configRes.data) {
+      const mapped: ApiCostConfig[] = (configRes.data as any[]).map(r => ({
+        feature_key: r.operation_key,
+        feature_label: r.operation_label || r.operation_name,
+        api_provider: r.llm_provider || '',
+        api_model: r.llm_model,
+        credits_charged: r.credits_cost,
+        price_per_credit_eur: Number(r.price_per_credit_eur ?? 0.60),
+        api_cost_eur: Number(r.api_cost_eur ?? 0),
+        api_cost_notes: r.api_cost_notes,
+      }));
+      setConfigs(mapped);
+    }
     if (dailyRes.data) setDailyData(dailyRes.data as unknown as ApiCostDaily[]);
     setDailyPage(1);
     setLoading(false);
@@ -83,11 +99,19 @@ export default function AdminApiCostsPage() {
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleSaveConfig = async (key: string) => {
+    // Mapeo inverso a columnas de operation_pricing
+    const payload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if (editChanges.api_provider !== undefined) payload.llm_provider = editChanges.api_provider;
+    if (editChanges.api_model !== undefined) payload.llm_model = editChanges.api_model;
+    if (editChanges.price_per_credit_eur !== undefined) payload.price_per_credit_eur = editChanges.price_per_credit_eur;
+    if (editChanges.api_cost_eur !== undefined) payload.api_cost_eur = editChanges.api_cost_eur;
+    if (editChanges.api_cost_notes !== undefined) payload.api_cost_notes = editChanges.api_cost_notes;
+
     const { error } = await supabase
-      .from('api_cost_config')
-      .update({ ...editChanges, updated_at: new Date().toISOString() } as any)
-      .eq('feature_key', key);
-    if (error) { toast.error('Error al guardar'); return; }
+      .from('operation_pricing')
+      .update(payload as any)
+      .eq('operation_key', key);
+    if (error) { toast.error('Error al guardar: ' + error.message); return; }
     toast.success('Configuración guardada');
     setEditingRow(null);
     setEditChanges({});

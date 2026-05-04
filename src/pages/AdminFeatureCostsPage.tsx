@@ -138,16 +138,6 @@ export default function AdminFeatureCostsPage() {
     if (error) {
       toast.error(`Error: ${error.message}`);
     } else {
-      if (changes.credits_cost !== undefined) {
-        const { error: syncError } = await supabase
-          .from('feature_costs')
-          .upsert({
-            feature_key: row.operation_key,
-            label: changes.operation_name ?? row.operation_name,
-            credit_cost: changes.credits_cost,
-          } as never, { onConflict: 'feature_key' });
-        if (syncError) toast.error(`Precio guardado, pero no se pudo sincronizar feature_costs: ${syncError.message}`);
-      }
       toast.success(`"${row.operation_key}" actualizado`);
       setEditing(prev => {
         const next = { ...prev };
