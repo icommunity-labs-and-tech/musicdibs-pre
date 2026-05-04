@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2, Briefcase, ArrowRight, Check, X, Sparkles } from "lucide-react";
+import { GuestEmailModal } from "@/components/GuestEmailModal";
 
 // Annual capacity packs — connected to real Stripe prices via the
 // `create-credit-checkout` edge function. The frontend sends `planId` AND
@@ -74,51 +75,67 @@ export const PricingSection = () => {
   const [isAnnual, setIsAnnual] = useState(true);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [selectedAnnualPlanId, setSelectedAnnualPlanId] = useState<AnnualOption['planId']>('annual_100');
+  const [guestModalOpen, setGuestModalOpen] = useState(false);
+  const [pendingGuestPlanId, setPendingGuestPlanId] = useState<string | null>(null);
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const lang = i18n.resolvedLanguage || i18n.language;
   const links = getFooterLinks(lang);
 
+  const launchCheckout = useCallback(async (planId: string, guestEmail?: string) => {
+    const expectedPriceId = ANNUAL_OPTIONS.find(o => o.planId === planId)?.priceId;
+    const body: Record<string, unknown> = expectedPriceId ? { planId, expectedPriceId } : { planId };
+    if (guestEmail) {
+      body.guest = true;
+      body.guestEmail = guestEmail;
+    }
+    const { data, error } = await supabase.functions.invoke('create-credit-checkout', { body });
+    if (error) throw error;
+    if (data?.already_subscribed) {
+      toast.info(data.message || 'Ya estás suscrito a este plan.');
+      return;
+    }
+    if (data?.url) window.open(data.url, '_blank');
+  }, []);
+
   const handleCheckout = useCallback(async (planId: string) => {
+    if (!user) {
+      // Guest → pedir email primero
+      setPendingGuestPlanId(planId);
+      setGuestModalOpen(true);
+      return;
+    }
     setLoadingPlan(planId);
     try {
-      // For annual plans we also send the expected Stripe price ID so the
-      // backend can validate UI ↔ Stripe alignment and refuse the session if
-      // they drift. For other plans (monthly / individual) we omit it.
-      const expectedPriceId = ANNUAL_OPTIONS.find(o => o.planId === planId)?.priceId;
-
-      if (!user) {
-        // Usuario no autenticado — ir directo a Stripe como guest
-        const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
-          body: {
-            ...(expectedPriceId ? { planId, expectedPriceId } : { planId }),
-            guest: true,
-          },
-        });
-        if (error) throw error;
-        if (data?.url) window.open(data.url, '_blank');
-        return;
-      }
-
-      // Usuario autenticado — flujo normal existente
-      const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
-        body: expectedPriceId ? { planId, expectedPriceId } : { planId },
-      });
-      if (error) throw error;
-      if (data?.already_subscribed) {
-        toast.info(data.message || 'Ya estás suscrito a este plan.');
-        return;
-      }
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      }
+      await launchCheckout(planId);
     } catch (err: any) {
       toast.error(err.message || 'Error al iniciar el pago');
     } finally {
       setLoadingPlan(null);
     }
-  }, [user, navigate]);
+  }, [user, launchCheckout]);
+
+  const handleGuestConfirm = useCallback(async (email: string) => {
+    if (!pendingGuestPlanId) return;
+    const planId = pendingGuestPlanId;
+    setLoadingPlan(planId);
+    try {
+      // Pre-registrar lead (crea usuario + welcome email + MailerLite)
+      await supabase.functions.invoke('register-guest-lead', {
+        body: { email, language: (lang || 'es').slice(0, 2) },
+      });
+      // Continuar al checkout con el email capturado
+      await launchCheckout(planId, email);
+      setGuestModalOpen(false);
+      setPendingGuestPlanId(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Error al continuar');
+      throw err;
+    } finally {
+      setLoadingPlan(null);
+    }
+  }, [pendingGuestPlanId, lang, launchCheckout]);
 
   const ctaBuy = useABTest({
     id: 'pricing_cta_buy',
@@ -153,6 +170,7 @@ export const PricingSection = () => {
   }, [lang, t]);
 
   return (
+    <>
     <section id="pricing-section" className="py-20 px-4 bg-gradient-to-b from-primary/60 via-primary to-purple-600">
       <div className="max-w-6xl mx-auto text-center">
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
@@ -413,5 +431,11 @@ export const PricingSection = () => {
         <ComparisonTable />
       </div>
     </section>
+    <GuestEmailModal
+      open={guestModalOpen}
+      onOpenChange={(o) => { if (!o) { setGuestModalOpen(false); setPendingGuestPlanId(null); setLoadingPlan(null); } }}
+      onConfirm={handleGuestConfirm}
+    />
+    </>
   );
 };

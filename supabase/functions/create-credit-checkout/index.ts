@@ -153,6 +153,7 @@ serve(async (req) => {
     const planId = typeof body.planId === "string" ? body.planId : "";
     const action = typeof body.action === "string" ? body.action : undefined;
     const isGuest = body.guest === true;
+    const guestEmail = typeof body.guestEmail === "string" ? body.guestEmail.trim().toLowerCase() : "";
     const attribution = typeof body.attribution === "object" && body.attribution !== null ? body.attribution as Record<string, unknown> : {};
 
     let user: { id: string; email: string } | null = null;
@@ -279,6 +280,10 @@ serve(async (req) => {
       sessionParams.customer_update = { name: "auto", address: "auto" };
     } else {
       sessionParams.customer_creation = "always";
+      if (isGuest && guestEmail) {
+        sessionParams.customer_email = guestEmail;
+        sessionParams.metadata!.guest_email = guestEmail;
+      }
     }
 
     if (plan.mode === "payment") {
