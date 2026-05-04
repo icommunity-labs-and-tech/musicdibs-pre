@@ -51,6 +51,7 @@ const AIStudioEdit = () => {
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioName, setAudioName] = useState<string | null>(null);
+  const [libraryAudioUrl, setLibraryAudioUrl] = useState<string | null>(null);
 
   // Preset (mastering style)
   type PresetKey = 'professional' | 'spotify' | 'clarity' | 'denoise' | 'reverb';
@@ -119,6 +120,7 @@ const AIStudioEdit = () => {
     setAudioFile(file);
     setAudioUrl(URL.createObjectURL(file));
     setAudioName(file.name);
+    setLibraryAudioUrl(null);
     resetResults();
     setPlayingTrack(null);
   };
@@ -132,6 +134,7 @@ const AIStudioEdit = () => {
       setAudioFile(file);
       setAudioUrl(url);
       setAudioName(name);
+      setLibraryAudioUrl(url);
       resetResults();
       setPlayingTrack(null);
     } catch {
@@ -143,6 +146,7 @@ const AIStudioEdit = () => {
     setAudioFile(null);
     setAudioUrl(null);
     setAudioName(null);
+    setLibraryAudioUrl(null);
     resetResults();
     stopAllAudio();
   };
@@ -166,7 +170,10 @@ const AIStudioEdit = () => {
     const { error } = await supabase.storage
       .from("auphonic-temp")
       .upload(path, file, { upsert: true });
-    if (error) throw new Error(`Upload error: ${error.message}`);
+    if (error) {
+      console.error('[MASTERIZE] Upload error:', error.message, error);
+      throw new Error(`Upload error: ${error.message}`);
+    }
     const { data } = supabase.storage.from("auphonic-temp").getPublicUrl(path);
     return data.publicUrl;
   };
@@ -216,7 +223,7 @@ const AIStudioEdit = () => {
       if (spendErr || spend?.error) throw new Error(spend?.error || "Error de créditos");
 
       // Upload file
-      const uploadedUrl = await uploadForProcessing(audioFile);
+      const uploadedUrl = libraryAudioUrl || await uploadForProcessing(audioFile);
 
       // Start RoEx preview to obtain taskId
       const { data, error } = await supabase.functions.invoke("roex-master", {
@@ -330,7 +337,7 @@ const AIStudioEdit = () => {
     stopAllAudio();
 
     try {
-      const uploadedUrl = await uploadForProcessing(audioFile);
+      const uploadedUrl = libraryAudioUrl || await uploadForProcessing(audioFile);
 
       const { data, error } = await supabase.functions.invoke("roex-master", {
         body: {
@@ -387,6 +394,7 @@ const AIStudioEdit = () => {
         }
       }, 180_000);
     } catch (err: any) {
+      console.error('[MASTERIZE] handlePreview error:', err?.message, err);
       setIsPreviewing(false);
       const responseData =
         (err?.context?.body && typeof err.context.body === 'object') ? err.context.body :
