@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -87,43 +87,37 @@ export default function BillingPage() {
     Annual: t('dashboard.billing.planAnnual'),
   };
 
-  useEffect(() => {
+  const loadBillingState = useCallback(async () => {
     if (!user) return;
-    let mounted = true;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('subscription_plan')
+      .eq('user_id', user.id)
+      .single();
 
-    const loadBillingState = async () => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('subscription_plan')
-        .eq('user_id', user.id)
-        .single();
+    setPlan(profile?.subscription_plan ?? 'Free');
 
-      if (mounted) {
-        setPlan(profile?.subscription_plan ?? 'Free');
-      }
+    const { data: subRow } = await supabase
+      .from('subscriptions')
+      .select('tier')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (subRow?.tier) setTier(subRow.tier);
 
-      // Load tier from subscriptions table for annual plan detail
-      const { data: subRow } = await supabase
-        .from('subscriptions')
-        .select('tier')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (mounted && subRow?.tier) setTier(subRow.tier);
+    const { data, error } = await supabase.functions.invoke('check-subscription');
+    if (error) return;
 
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-      if (error || !mounted) return;
-
-      setPlan(data?.plan ?? profile?.subscription_plan ?? 'Free');
-      setCancelAtPeriodEnd(data?.cancel_at_period_end ?? false);
-      setSubscriptionEnd(data?.subscription_end ?? null);
-    };
-
-    loadBillingState();
-    return () => { mounted = false; };
+    setPlan(data?.plan ?? profile?.subscription_plan ?? 'Free');
+    setCancelAtPeriodEnd(data?.cancel_at_period_end ?? false);
+    setSubscriptionEnd(data?.subscription_end ?? null);
   }, [user]);
+
+  useEffect(() => {
+    loadBillingState();
+  }, [loadBillingState]);
 
   useEffect(() => {
     if (!user) return;
@@ -195,6 +189,7 @@ export default function BillingPage() {
       if (data?.error) throw new Error(data.error);
       toast.success(data?.message || t('dashboard.billing.renewalCancelled', 'Renovación cancelada'));
       setCancelAtPeriodEnd(true);
+      await loadBillingState();
     } catch (err: any) {
       console.error('[cancel_renewal] error:', err);
       toast.error(err?.message || t('dashboard.billing.cancelError', 'Error al cancelar'));
