@@ -223,7 +223,7 @@ const AIStudioEdit = () => {
       if (spendErr || spend?.error) throw new Error(spend?.error || "Error de créditos");
 
       // Upload file
-      const uploadedUrl = await uploadForProcessing(audioFile);
+      const uploadedUrl = libraryAudioUrl || await uploadForProcessing(audioFile);
 
       // Start RoEx preview to obtain taskId
       const { data, error } = await supabase.functions.invoke("roex-master", {
