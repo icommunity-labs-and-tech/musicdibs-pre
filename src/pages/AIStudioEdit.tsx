@@ -115,22 +115,22 @@ const AIStudioEdit = () => {
 
   const validateAudioFile = (file: File): AudioValidation => {
     if (!file || file.size === 0) {
-      return { ok: false, titleKey: 'masterize.emptyFile', descKey: 'masterize.emptyFileDesc' };
+      return { ok: false as const, titleKey: 'masterize.emptyFile', descKey: 'masterize.emptyFileDesc' };
     }
     const hasValidExt = ACCEPTED_AUDIO_EXT.test(file.name);
     const hasValidMime = !file.type || ACCEPTED_AUDIO_MIME.test(file.type);
     if (!hasValidExt || !hasValidMime) {
-      return { ok: false, titleKey: 'masterize.invalidFormat', descKey: 'masterize.invalidFormatDesc' };
+      return { ok: false as const, titleKey: 'masterize.invalidFormat', descKey: 'masterize.invalidFormatDesc' };
     }
     if (file.size > MAX_FILE_SIZE_BYTES) {
       return {
-        ok: false,
+        ok: false as const,
         titleKey: 'masterize.fileTooLarge',
         descKey: 'masterize.fileTooLargeDesc',
         descOpts: { max: MAX_FILE_SIZE_MB },
       };
     }
-    return { ok: true };
+    return { ok: true as const };
   };
 
   const showValidationError = (result: Extract<AudioValidation, { ok: false }>) => {
