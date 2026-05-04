@@ -2,6 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "./LanguageSelector";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 import { getNavLinks } from "@/i18nLinks";
 import { Menu, X, ChevronDown } from "lucide-react";
