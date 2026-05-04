@@ -172,7 +172,7 @@ export default function UserLogin() {
         <CardContent>
           {new URLSearchParams(window.location.search).get('payment_success') === 'true' && (
             <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm text-center">
-              ✅ Tu pago fue procesado correctamente. Inicia sesión para ver tus créditos.
+              ✅ Tu pago fue procesado. Inicia sesión con el email y contraseña que acabas de crear.
             </div>
           )}
           <Tabs defaultValue="login" className="w-full">
