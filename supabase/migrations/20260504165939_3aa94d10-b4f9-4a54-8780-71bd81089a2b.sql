@@ -1,0 +1,25 @@
+UPDATE credit_transactions SET feature_key = CASE
+  WHEN description ILIKE 'Pista vocal:%'              THEN 'generate_vocal'
+  WHEN description ILIKE 'Clonar voz%' 
+    OR description ILIKE '%clone_voice%'              THEN 'clone_voice'
+  WHEN description ILIKE 'Generación audio%'          THEN 'generate_audio'
+  WHEN description ILIKE 'Portada IA%' 
+    OR description ILIKE '%cover%'                    THEN 'generate_cover'
+  WHEN description ILIKE 'Video AI%' 
+    OR description ILIKE 'Vídeo%'                     THEN 'generate_video'
+  WHEN description ILIKE 'Masteriz%' 
+    OR description ILIKE '%ROEX%'
+    OR description ILIKE 'Mejora audio%'
+    OR description ILIKE '%Sonar%'                    THEN 'roex_master'
+  WHEN description ILIKE 'Letra%' 
+    OR description ILIKE '%lyrics%'                   THEN 'lyrics_generator'
+  WHEN description ILIKE 'Creatividad%'               THEN 'generate_creative'
+  WHEN description ILIKE 'Thumbnail%' 
+    OR description ILIKE '%youtube%'                  THEN 'generate_thumbnail'
+  WHEN description ILIKE 'Mejorar%' 
+    OR description ILIKE '%improve%'                  THEN 'improve_prompt'
+  WHEN description ILIKE 'Registro:%'
+    OR description ILIKE 'Registro blockchain%'       THEN 'register_work'
+  ELSE NULL
+END
+WHERE feature_key IS NULL AND type = 'usage' AND amount < 0;
