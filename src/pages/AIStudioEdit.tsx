@@ -189,6 +189,11 @@ const AIStudioEdit = () => {
 
   // Upload to auphonic-temp bucket
   const uploadForProcessing = async (file: File): Promise<string> => {
+    const validationError = validateAudioFile(file);
+    if (validationError) {
+      showValidationError(validationError);
+      throw new Error(validationError.titleKey);
+    }
     const safeName = file.name
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
