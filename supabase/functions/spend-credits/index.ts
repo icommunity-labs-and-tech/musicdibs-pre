@@ -77,11 +77,12 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // ✅ operation_pricing es la única fuente de verdad
     let amount: number | null = null;
 
     const { data: pricingRow, error: pricingError } = await supabaseAdmin
       .from("operation_pricing")
-      .select("credits_cost")
+      .select("credits_cost, is_active")
       .eq("operation_key", feature)
       .maybeSingle();
 
@@ -89,23 +90,11 @@ serve(async (req) => {
       console.warn("[SPEND-CREDITS] operation_pricing lookup failed:", pricingError.message);
     }
 
-    const { data: costRow, error: costError } = await supabaseAdmin
-      .from("feature_costs")
-      .select("credit_cost")
-      .eq("feature_key", feature)
-      .maybeSingle();
-
-    if (costError) {
-      console.warn("[SPEND-CREDITS] DB lookup failed, using fallback:", costError.message);
-    }
-
-    if (pricingRow) {
+    if (pricingRow && pricingRow.is_active !== false) {
       amount = pricingRow.credits_cost;
-    } else if (costRow) {
-      amount = costRow.credit_cost;
     } else if (feature in FALLBACK_COSTS) {
       amount = FALLBACK_COSTS[feature];
-      console.warn(`[SPEND-CREDITS] Feature "${feature}" not in DB, using fallback: ${amount}`);
+      console.warn(`[SPEND-CREDITS] Feature "${feature}" not in operation_pricing, using fallback: ${amount}`);
     } else {
       return new Response(
         JSON.stringify({ error: "Unknown feature", feature }),
