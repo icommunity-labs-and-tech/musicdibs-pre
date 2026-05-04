@@ -344,7 +344,7 @@ const AIStudioCreate = () => {
       //  1. Lyrics field (if provided) defines the song content — description must NOT add narrative.
       //  2. Voice selection (preset or virtual artist) overrides any voice/gender hint in description.
       //  3. Free description only fully prevails when neither lyrics nor voice are selected.
-      const userLyrics = mode === 'song' ? lyrics.trim() : '';
+      const userLyrics = mode === 'song' ? lyricsText.trim() : '';
       const hasLyrics = userLyrics.length > 0;
 
       const selectedVoiceProfile = voiceProfiles.find(v => v.id === selectedVoice);
