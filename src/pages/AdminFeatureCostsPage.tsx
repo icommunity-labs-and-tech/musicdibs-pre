@@ -6,9 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { toast } from 'sonner';
-import { Save, Loader2, Crown, ArrowUp, ArrowDown, ArrowUpDown } from 'lucide-react';
+import { Save, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Trash2 } from 'lucide-react';
 
 const PAGE_SIZE = 10;
 
@@ -21,24 +27,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   visual: 'Imagen y vídeo',
   promo: 'Promoción',
 };
-
-const PROVIDER_BADGE: Record<string, string> = {
-  anthropic: 'bg-orange-500/15 text-orange-600 border-orange-500/30 dark:text-orange-400',
-  google: 'bg-blue-500/15 text-blue-600 border-blue-500/30 dark:text-blue-400',
-  openai: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:text-emerald-400',
-  elevenlabs: 'bg-purple-500/15 text-purple-600 border-purple-500/30 dark:text-purple-400',
-  'fal.ai': 'bg-pink-500/15 text-pink-600 border-pink-500/30 dark:text-pink-400',
-  fal: 'bg-pink-500/15 text-pink-600 border-pink-500/30 dark:text-pink-400',
-  roex: 'bg-cyan-500/15 text-cyan-600 border-cyan-500/30 dark:text-cyan-400',
-  mureka: 'bg-indigo-500/15 text-indigo-600 border-indigo-500/30 dark:text-indigo-400',
-  auphonic: 'bg-teal-500/15 text-teal-600 border-teal-500/30 dark:text-teal-400',
-  manual: 'bg-muted text-muted-foreground border-border',
-};
-
-const getProviderBadgeClass = (provider: string | null | undefined) => {
-  if (!provider) return 'bg-muted text-muted-foreground border-border';
-  return PROVIDER_BADGE[provider.toLowerCase().trim()] || 'bg-slate-500/15 text-slate-600 border-slate-500/30 dark:text-slate-400';
-};
+const CATEGORY_KEYS = Object.keys(CATEGORY_LABELS);
 
 interface OperationRow {
   operation_key: string;
@@ -64,6 +53,7 @@ export default function AdminFeatureCostsPage() {
   const [editing, setEditing] = useState<Record<string, Partial<OperationRow>>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>('display_order');
   const [sortDir, setSortDir] = useState<SortDir>('asc');
@@ -84,19 +74,14 @@ export default function AdminFeatureCostsPage() {
   useEffect(() => { load(); }, []);
 
   const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDir('asc');
-    }
+    if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortField(field); setSortDir('asc'); }
     setPage(1);
   };
 
   const sortedRows = [...rows].sort((a, b) => {
     const dir = sortDir === 'asc' ? 1 : -1;
-    const av = a[sortField];
-    const bv = b[sortField];
+    const av = a[sortField]; const bv = b[sortField];
     if (av == null && bv == null) return 0;
     if (av == null) return 1;
     if (bv == null) return -1;
@@ -106,7 +91,7 @@ export default function AdminFeatureCostsPage() {
     return 0;
   });
 
-  const handleChange = (key: string, field: keyof OperationRow, value: string | number) => {
+  const handleChange = (key: string, field: keyof OperationRow, value: string | number | boolean) => {
     setEditing(prev => ({
       ...prev,
       [key]: {
@@ -122,13 +107,13 @@ export default function AdminFeatureCostsPage() {
 
     setSaving(row.operation_key);
     const updatePayload: Record<string, unknown> = {};
-    if (changes.operation_name !== undefined) updatePayload.operation_name = changes.operation_name;
-    if (changes.credits_cost !== undefined) updatePayload.credits_cost = changes.credits_cost;
-    if (changes.description !== undefined) updatePayload.description = changes.description;
-    if (changes.operation_icon !== undefined) updatePayload.operation_icon = changes.operation_icon;
-    if (changes.model_name !== undefined) updatePayload.model_name = changes.model_name;
-    if (changes.llm_provider !== undefined) updatePayload.llm_provider = changes.llm_provider;
-    if (changes.llm_model !== undefined) updatePayload.llm_model = changes.llm_model;
+    const fields: (keyof OperationRow)[] = [
+      'operation_name', 'credits_cost', 'description', 'operation_icon',
+      'model_name', 'llm_provider', 'llm_model', 'category', 'is_annual_only',
+    ];
+    for (const f of fields) {
+      if (changes[f] !== undefined) updatePayload[f] = changes[f];
+    }
 
     const { error } = await supabase
       .from('operation_pricing')
@@ -139,14 +124,25 @@ export default function AdminFeatureCostsPage() {
       toast.error(`Error: ${error.message}`);
     } else {
       toast.success(`"${row.operation_key}" actualizado`);
-      setEditing(prev => {
-        const next = { ...prev };
-        delete next[row.operation_key];
-        return next;
-      });
+      setEditing(prev => { const next = { ...prev }; delete next[row.operation_key]; return next; });
       await load();
     }
     setSaving(null);
+  };
+
+  const handleDelete = async (row: OperationRow) => {
+    setDeleting(row.operation_key);
+    const { error } = await supabase
+      .from('operation_pricing')
+      .delete()
+      .eq('operation_key', row.operation_key);
+    if (error) {
+      toast.error(`Error: ${error.message}`);
+    } else {
+      toast.success(`"${row.operation_key}" eliminado`);
+      await load();
+    }
+    setDeleting(null);
   };
 
   const getValue = <K extends keyof OperationRow>(row: OperationRow, field: K): OperationRow[K] => {
@@ -160,18 +156,12 @@ export default function AdminFeatureCostsPage() {
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
-    return sortDir === 'asc'
-      ? <ArrowUp className="h-3 w-3 ml-1" />
-      : <ArrowDown className="h-3 w-3 ml-1" />;
+    return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
   };
 
   const SortableHead = ({ field, children, className }: { field: SortField; children: React.ReactNode; className?: string }) => (
     <TableHead className={className}>
-      <button
-        type="button"
-        className="flex items-center gap-0.5 hover:text-foreground transition-colors"
-        onClick={() => handleSort(field)}
-      >
+      <button type="button" className="flex items-center gap-0.5 hover:text-foreground transition-colors" onClick={() => handleSort(field)}>
         {children}
         <SortIcon field={field} />
       </button>
@@ -190,7 +180,7 @@ export default function AdminFeatureCostsPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Precios por Operación</h1>
       <p className="text-sm text-muted-foreground">
-        Gestiona los precios de cada operación. Los cambios se reflejan en el popup de precios y en la web. El campo €/operación se calcula automáticamente (créditos × 0,60€).
+        Gestiona los precios de cada operación. Todos los campos son editables. El campo €/operación se calcula automáticamente (créditos × 0,60€).
       </p>
 
       <Card>
@@ -204,71 +194,62 @@ export default function AdminFeatureCostsPage() {
                   <SortableHead field="operation_key" className="w-[150px]">Clave</SortableHead>
                   <TableHead className="w-[220px]">Modelo IA (proveedor · modelo)</TableHead>
                   <SortableHead field="operation_name" className="w-[180px]">Nombre</SortableHead>
-                  <SortableHead field="category" className="w-[100px]">Categoría</SortableHead>
+                  <SortableHead field="category" className="w-[140px]">Categoría</SortableHead>
                   <SortableHead field="credits_cost" className="w-[80px]">Créditos</SortableHead>
                   <TableHead className="w-[80px]">€/op</TableHead>
                   <TableHead className="w-[200px]">Descripción (tooltip)</TableHead>
-                  <SortableHead field="is_annual_only" className="w-[60px]">Anual</SortableHead>
-                  <TableHead className="w-[60px]">Acción</TableHead>
+                  <SortableHead field="is_annual_only" className="w-[70px]">Anual</SortableHead>
+                  <TableHead className="w-[100px]">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedRows.map(row => (
                   <TableRow key={row.operation_key} className={!row.is_active ? 'opacity-40' : ''}>
                     <TableCell>
-                      {isDirty(row.operation_key) ? (
-                        <Input
-                          value={String(getValue(row, 'operation_icon') || '')}
-                          onChange={e => handleChange(row.operation_key, 'operation_icon', e.target.value)}
-                          className="h-8 w-12 text-center"
-                        />
-                      ) : (
-                        <span className="text-lg">{row.operation_icon}</span>
-                      )}
+                      <Input
+                        value={String(getValue(row, 'operation_icon') || '')}
+                        onChange={e => handleChange(row.operation_key, 'operation_icon', e.target.value)}
+                        className="h-8 w-12 text-center"
+                      />
                     </TableCell>
                     <TableCell className="font-mono text-xs">{row.operation_key}</TableCell>
                     <TableCell>
-                      {isDirty(row.operation_key) ? (
-                        <div className="space-y-1">
-                          <Input
-                            value={String(getValue(row, 'llm_provider') || '')}
-                            onChange={e => handleChange(row.operation_key, 'llm_provider', e.target.value)}
-                            placeholder="Proveedor (ej. Anthropic)"
-                            className="h-7 text-xs"
-                          />
-                          <Input
-                            value={String(getValue(row, 'llm_model') || getValue(row, 'model_name') || '')}
-                            onChange={e => handleChange(row.operation_key, 'llm_model', e.target.value)}
-                            placeholder="Modelo (ej. claude-haiku-4-5)"
-                            className="h-7 text-xs font-mono"
-                          />
-                        </div>
-                      ) : (
-                        <div className="space-y-1">
-                          <Badge variant="outline" className={`text-[10px] font-medium ${getProviderBadgeClass(row.llm_provider)}`}>
-                            {row.llm_provider || '—'}
-                          </Badge>
-                          <div className="font-mono text-[11px] text-muted-foreground break-words leading-tight">
-                            {row.llm_model || row.model_name || '—'}
-                          </div>
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell title={row.description || ''}>
-                      {isDirty(row.operation_key) ? (
+                      <div className="space-y-1">
                         <Input
-                          value={String(getValue(row, 'operation_name'))}
-                          onChange={e => handleChange(row.operation_key, 'operation_name', e.target.value)}
-                          className="h-8"
+                          value={String(getValue(row, 'llm_provider') || '')}
+                          onChange={e => handleChange(row.operation_key, 'llm_provider', e.target.value)}
+                          placeholder="Proveedor"
+                          className="h-7 text-xs"
                         />
-                      ) : (
-                        <span title={row.description || ''}>{row.operation_name}</span>
-                      )}
+                        <Input
+                          value={String(getValue(row, 'llm_model') || '')}
+                          onChange={e => handleChange(row.operation_key, 'llm_model', e.target.value)}
+                          placeholder="Modelo"
+                          className="h-7 text-xs font-mono"
+                        />
+                      </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {CATEGORY_LABELS[row.category] || row.category}
-                      </Badge>
+                      <Input
+                        value={String(getValue(row, 'operation_name') || '')}
+                        onChange={e => handleChange(row.operation_key, 'operation_name', e.target.value)}
+                        className="h-8"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={String(getValue(row, 'category') || '')}
+                        onValueChange={v => handleChange(row.operation_key, 'category', v)}
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CATEGORY_KEYS.map(k => (
+                            <SelectItem key={k} value={k}>{CATEGORY_LABELS[k]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell>
                       <Input
@@ -291,25 +272,62 @@ export default function AdminFeatureCostsPage() {
                       />
                     </TableCell>
                     <TableCell className="text-center">
-                      {row.is_annual_only ? (
-                        <Crown className="h-4 w-4 text-amber-500 inline-block" />
-                      ) : (
-                        <span className="text-muted-foreground text-xs">—</span>
-                      )}
+                      <Switch
+                        checked={!!getValue(row, 'is_annual_only')}
+                        onCheckedChange={(v) => handleChange(row.operation_key, 'is_annual_only', v)}
+                      />
                     </TableCell>
                     <TableCell>
-                      <Button
-                        size="sm"
-                        variant={isDirty(row.operation_key) ? 'default' : 'ghost'}
-                        disabled={!isDirty(row.operation_key) || saving === row.operation_key}
-                        onClick={() => handleSave(row)}
-                      >
-                        {saving === row.operation_key ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Save className="h-4 w-4" />
-                        )}
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant={isDirty(row.operation_key) ? 'default' : 'ghost'}
+                          disabled={!isDirty(row.operation_key) || saving === row.operation_key}
+                          onClick={() => handleSave(row)}
+                          title="Guardar cambios"
+                        >
+                          {saving === row.operation_key ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={deleting === row.operation_key}
+                              title="Eliminar fila"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              {deleting === row.operation_key ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Trash2 className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Eliminar operación?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Vas a eliminar <span className="font-mono font-semibold">{row.operation_key}</span> ({row.operation_name}).
+                                Esta acción no se puede deshacer.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(row)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
