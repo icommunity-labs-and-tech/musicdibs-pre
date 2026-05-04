@@ -76,6 +76,8 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
     if (paymentStatus !== 'success' || !sessionId || !user) return;
     supabase.functions.invoke('verify-payment', { body: { sessionId } }).then(({ data }) => {
       if (data?.fulfilled && !data?.already) toast.success(t(`${cs}.creditsAdded`, { n: data.credits }));
+      // Limpiar params de Stripe de la URL sin recargar la página
+      window.history.replaceState({}, '', window.location.pathname);
     });
   }, [paymentStatus, sessionId, user]);
 
