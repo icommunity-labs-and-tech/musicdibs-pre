@@ -41,7 +41,6 @@ import { useCredits } from "@/hooks/useCredits";
 import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
-import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { useProductTracking } from "@/hooks/useProductTracking";
 
@@ -170,7 +169,7 @@ const AIStudioCreate = () => {
   const [improvedLyricsDesc, setImprovedLyricsDesc] = useState(false);
 
   // ── Voice selector state ──
-  const [selectedVoice, setSelectedVoice] = useState<string | null>(null);
+  const [selectedVoice, setSelectedVoice] = useState<string>('');
   const [voiceProfiles, setVoiceProfiles] = useState<any[]>([]);
   const [playingVoice, setPlayingVoice] = useState<string>('');
   const [audioRef] = useState<Record<string, HTMLAudioElement>>({});
@@ -179,7 +178,7 @@ const AIStudioCreate = () => {
   const [voiceTab, setVoiceTab] = useState<'preset' | 'my_artists' | 'my_presets'>('preset');
   const [virtualArtists, setVirtualArtists] = useState<any[]>([]);
   const [virtualArtistsCount, setVirtualArtistsCount] = useState(0);
-  const [selectedArtistId, setSelectedArtistId] = useState<string | null>(null);
+  const [selectedArtistId, setSelectedArtistId] = useState<string>('');
 
   // Derived counts by generation_type
   const vocalArtists = useMemo(() => virtualArtists.filter(a => (a.generation_type || 'vocal') === 'vocal'), [virtualArtists]);
@@ -205,8 +204,12 @@ const AIStudioCreate = () => {
   // ── Derived values ──
   const selectedGenre: string | null = null;
   const selectedMood: string | null = null;
-  const currentCost = mode === 'song' ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio;
-  const currentFeature = mode === 'song' ? 'generate_audio_song' : 'generate_audio';
+  // Routing mirrors backend: ElevenLabs when user provides lyrics OR duration > 180s
+  const usesElevenLabs = (mode === 'song' && lyrics.trim().length > 0) || (duration !== null && duration > 180);
+  const currentCost = usesElevenLabs
+    ? FEATURE_COSTS.generate_audio_elevenlabs
+    : FEATURE_COSTS.generate_audio;
+  const currentFeature = usesElevenLabs ? 'generate_audio_elevenlabs' : 'generate_audio';
   const modeLabel = mode === 'song' ? t('aiCreate.songWithVoice') : t('aiCreate.instrumentalBase');
   const canSaveAsVirtualArtist = (_result: GenerationResult) => {
     // Allow saving any generation (vocal or instrumental) as a virtual artist
@@ -340,52 +343,18 @@ const AIStudioCreate = () => {
       if (spendError) throw { message: spendError.message || 'Error al descontar créditos' };
       if (spendResult?.error) throw { message: spendResult.error };
 
-      // Build prompt with strict precedence:
-      //  1. Lyrics field (if provided) defines the song content — description must NOT add narrative.
-      //  2. Voice selection (preset or virtual artist) overrides any voice/gender hint in description.
-      //  3. Free description only fully prevails when neither lyrics nor voice are selected.
-      const userLyrics = mode === 'song' ? lyricsText.trim() : '';
-      const hasLyrics = userLyrics.length > 0;
-
-      const selectedVoiceProfile = voiceProfiles.find(v => v.id === selectedVoice);
-      const selectedArtist = selectedArtistId ? virtualArtists.find(a => a.id === selectedArtistId) : null;
-      const artistVoiceProfile = selectedArtist
-        ? voiceProfiles.find(v => v.id === selectedArtist.voice_profile_id)
-        : null;
-      const effectiveVoiceProfile = selectedVoiceProfile || artistVoiceProfile;
-      const hasVoice = mode === 'song' && !!effectiveVoiceProfile;
-
-      // Strip voice/gender/lyrics-content hints from the description when an explicit
-      // voice or lyrics block is provided, so the explicit choice wins.
-      const stripVoiceHints = (text: string) => text
-        .replace(/\b(voz|cantad[ao]|cantante|vocalist[ao]?|singer|vocals?)\s+(de\s+)?(mujer|hombre|chica|chico|femenina?|masculina?|female|male|woman|man|girl|boy)\b/gi, '')
-        .replace(/\b(female|male|woman|man|girl|boy)\s+(voice|vocal|vocals|singer|vocalist)\b/gi, '')
-        .replace(/\b(que\s+(la\s+)?cante|sung\s+by)\s+(una\s+)?(mujer|hombre|chica|chico|female|male|woman|man)\b/gi, '')
-        .replace(/\s{2,}/g, ' ')
-        .replace(/\s+([,.;:])/g, '$1')
-        .trim();
-      const stripLyricsHints = (text: string) => text
-        .replace(/\b(letra|lyrics?|que\s+habl[ae]\s+de|que\s+diga|talks?\s+about|about\s+how)[\s\S]*?(?=[.!?\n]|$)/gi, '')
-        .replace(/\s{2,}/g, ' ')
-        .trim();
-
-      let basePrompt = prompt.trim();
-      if (hasVoice) basePrompt = stripVoiceHints(basePrompt);
-      if (hasLyrics) basePrompt = stripLyricsHints(basePrompt);
-
-      // If after stripping the description is empty but we have voice/lyrics, fall back
-      // to a neutral musical descriptor so the API still receives a valid prompt.
-      if (!basePrompt && (hasVoice || hasLyrics)) {
-        basePrompt = mode === 'song' ? 'modern song' : 'instrumental track';
+      // Enrich prompt with voice tag (only for song mode)
+      let enrichedPrompt = prompt.trim();
+      if (mode === 'song') {
+        const selectedVoiceProfile = voiceProfiles.find(v => v.id === selectedVoice);
+        const voiceTag = selectedVoiceProfile ? `, ${selectedVoiceProfile.prompt_tag}` : '';
+        enrichedPrompt = `${enrichedPrompt}${voiceTag}`;
       }
-
-      const voiceTag = effectiveVoiceProfile?.prompt_tag ? `, ${effectiveVoiceProfile.prompt_tag}` : '';
-      const enrichedPrompt = `${basePrompt}${voiceTag}`.trim().slice(0, 2500);
 
       const { data, error } = await supabase.functions.invoke('generate-audio', {
         body: {
           prompt: enrichedPrompt,
-          lyrics: userLyrics,
+          lyrics: mode === 'song' ? lyrics.trim() : '',
           mode,
           ...(duration ? { duration } : {}),
         }
@@ -674,8 +643,8 @@ const AIStudioCreate = () => {
   // ── Select virtual artist ──
   const handleSelectArtist = (artist: any) => {
     if (selectedArtistId === artist.id) {
-      setSelectedArtistId(null);
-      setSelectedVoice(null);
+      setSelectedArtistId('');
+      setSelectedVoice('');
       return;
     }
     setSelectedArtistId(artist.id);
@@ -683,9 +652,9 @@ const AIStudioCreate = () => {
     const artistGenType = artist.generation_type || 'vocal';
     setMode(artistGenType === 'instrumental' ? 'instrumental' : 'song');
     if (artistGenType === 'instrumental') {
-      setSelectedVoice(null);
+      setSelectedVoice('');
     } else {
-      setSelectedVoice(artist.voice_profile_id || null);
+      setSelectedVoice(artist.voice_profile_id || '');
     }
     if (artist.default_duration) setDuration(artist.default_duration);
     if (artist.style_notes) setPrompt(artist.style_notes);
@@ -720,7 +689,16 @@ const AIStudioCreate = () => {
     descParts.push(`Duración: ${result.duration}s`);
     descParts.push(`Descripción: ${result.prompt}`);
     navigate('/dashboard/register', {
-      state: { prefill: { title: result.prompt.slice(0, 80), type: 'audio', description: descParts.join('\n'), audioUrl: result.audioUrl, generationId: result.id } }
+      state: {
+        prefill: {
+          title: result.prompt.slice(0, 80),
+          type: 'audio',
+          description: descParts.join('\n'),
+          audioUrl: result.audioUrl,
+          generationId: result.id,
+          aiGenerationId: result.id,  // Link to ai_generations for song_map on blockchain
+        }
+      }
     });
   };
 
@@ -1121,8 +1099,8 @@ const AIStudioCreate = () => {
                             type="button"
                             onClick={() => {
                               setMode('instrumental');
-                              setSelectedVoice(null);
-                              setSelectedArtistId(null);
+                              setSelectedVoice('');
+                              setSelectedArtistId('');
                               setVoiceTab(instrumentalPresets.length > 0 ? 'my_presets' : 'preset');
                             }}
                             className={cn(
@@ -1152,7 +1130,7 @@ const AIStudioCreate = () => {
                           <div className="flex items-center gap-1">
                             <button
                               type="button"
-                              onClick={() => { setVoiceTab('preset'); setSelectedArtistId(null); }}
+                              onClick={() => { setVoiceTab('preset'); setSelectedArtistId(''); }}
                               className={cn(
                                 "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
                                 voiceTab === 'preset'
@@ -1240,7 +1218,7 @@ const AIStudioCreate = () => {
                               <button
                                 key={v.id}
                                 type="button"
-                                onClick={() => { setSelectedVoice(prev => prev === v.id ? null : v.id); setSelectedArtistId(null); }}
+                                onClick={() => { setSelectedVoice(prev => prev === v.id ? '' : v.id); setSelectedArtistId(''); }}
                                 className={cn(
                                   "flex flex-col items-start p-2 px-3 rounded-lg border text-left w-full transition-all",
                                   selectedVoice === v.id && !selectedArtistId
@@ -1411,7 +1389,7 @@ const AIStudioCreate = () => {
 
                       {/* CTA */}
                       {!hasEnough(currentCost) ? (
-                        <NoCreditsAlert cost={currentCost} actionLabel={mode === 'song' ? t('aiCreate.songWithVoice') : t('aiCreate.instrumentalBase')} />
+                        <NoCreditsAlert message={`Necesitas ${currentCost} créditos para generar ${mode === 'song' ? 'una canción' : 'un instrumental'}.`} />
                       ) : (
                         <>
                         <Button
@@ -1425,7 +1403,6 @@ const AIStudioCreate = () => {
                           {t('aiCreate.generateBtn')} {mode === 'song' ? 'canción' : 'instrumental'} con IA
                         </Button>
                         <PricingLink className="mt-1 block text-center" />
-                        <GenerationWarning />
                         </>
                       )}
                     </CardContent>
@@ -2020,16 +1997,13 @@ const AIStudioCreate = () => {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="save-artist-style">{t('aiCreate.saveArtistStyleLabel')}</Label>
-              <Textarea
+              <Input
                 id="save-artist-style"
                 placeholder={t('aiCreate.saveArtistStylePlaceholder')}
                 value={saveArtistStyle}
                 onChange={(e) => setSaveArtistStyle(e.target.value)}
-                maxLength={2500}
-                rows={4}
-                className="resize-none"
+                maxLength={100}
               />
-              <p className="text-xs text-muted-foreground text-right">{saveArtistStyle.length}/2500</p>
             </div>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
