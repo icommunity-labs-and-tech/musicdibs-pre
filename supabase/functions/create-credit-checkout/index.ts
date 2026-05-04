@@ -205,7 +205,7 @@ serve(async (req) => {
       }
     }
 
-    if (plan.mode === "subscription") {
+    if (plan.mode === "subscription" && customerId && user) {
       const subs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 });
       const activeSub = subs.data.find((subscription: Stripe.Subscription) => isSubscriptionActive(subscription));
 
@@ -248,12 +248,12 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://musicdibs.com";
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      customer: customerId,
       mode: plan.mode,
       success_url: `${origin}/dashboard/credits?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/dashboard/credits?payment=cancelled`,
       metadata: {
-        user_id: user.id,
+        user_id: user?.id ?? "",
+        guest: user ? "false" : "true",
         plan_id: planId,
         credits: String(plan.credits),
         product_type: plan.productType,
@@ -267,7 +267,6 @@ serve(async (req) => {
       billing_address_collection: "required",
       tax_id_collection: { enabled: true },
       consent_collection: { terms_of_service: "required" },
-      customer_update: { name: "auto", address: "auto" },
       custom_text: {
         terms_of_service_acceptance: {
           message: "Acepto los [Términos y Condiciones](https://musicdibs.com/terms) y la [Política de Privacidad](https://musicdibs.com/privacy) de MusicDibs.",
@@ -275,16 +274,23 @@ serve(async (req) => {
       },
     };
 
+    if (customerId) {
+      sessionParams.customer = customerId;
+      sessionParams.customer_update = { name: "auto", address: "auto" };
+    } else {
+      sessionParams.customer_creation = "always";
+    }
+
     if (plan.mode === "payment") {
       sessionParams.invoice_creation = { enabled: true };
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
-    console.log(`[CHECKOUT] Created session for ${planId}: ${session.id}`);
+    console.log(`[CHECKOUT] Created session for ${planId} (guest=${!user}): ${session.id}`);
 
     const checkoutUrl = session.url?.replace("https://checkout.musicdibs.com", "https://checkout.stripe.com") ?? session.url;
     const resolvedCustomerId = session.customer as string | undefined;
-    if (resolvedCustomerId && user.id) {
+    if (resolvedCustomerId && user?.id) {
       await supabaseAdmin
         .from("profiles")
         .update({ stripe_customer_id: resolvedCustomerId })
