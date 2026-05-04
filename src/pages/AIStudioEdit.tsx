@@ -200,7 +200,7 @@ const AIStudioEdit = () => {
       .replace(/[^a-zA-Z0-9._-]/g, "_")
       .replace(/_+/g, "_")
       .toLowerCase();
-    const path = `auphonic/${user!.id}/${Date.now()}_${safeName}`;
+    const path = `${user!.id}/${Date.now()}_${safeName}`;
     const { error } = await supabase.storage
       .from("auphonic-temp")
       .upload(path, file, { upsert: true });
