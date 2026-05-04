@@ -174,13 +174,49 @@ serve(async (req) => {
 
     if (action === "cancel_renewal") {
       if (!user) throw new Error("Authentication required");
+
+      // 1) Intentar cancelar en Stripe si existe el cliente y una sub activa
       const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-      if (!customers.data.length) throw new Error("No Stripe customer found");
-      const subs = await stripe.subscriptions.list({ customer: customers.data[0].id, status: "all", limit: 10 });
-      const activeSub = subs.data.find((subscription: Stripe.Subscription) => isSubscriptionActive(subscription));
-      if (!activeSub) throw new Error("No active subscription");
-      if (activeSub.cancel_at_period_end) return json({ message: "La renovación ya está cancelada." });
-      await stripe.subscriptions.update(activeSub.id, { cancel_at_period_end: true });
+      if (customers.data.length) {
+        const subs = await stripe.subscriptions.list({ customer: customers.data[0].id, status: "all", limit: 10 });
+        const activeSub = subs.data.find((subscription: Stripe.Subscription) => isSubscriptionActive(subscription));
+        if (activeSub) {
+          if (activeSub.cancel_at_period_end) {
+            // Reflejar también localmente por si está desincronizado
+            await supabaseAdmin.from("subscriptions")
+              .update({ cancel_at_period_end: true, updated_at: new Date().toISOString() })
+              .eq("user_id", user.id).eq("status", "active");
+            return json({ message: "La renovación ya está cancelada." });
+          }
+          await stripe.subscriptions.update(activeSub.id, { cancel_at_period_end: true });
+          await supabaseAdmin.from("subscriptions")
+            .update({ cancel_at_period_end: true, canceled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+            .eq("user_id", user.id).eq("status", "active");
+          return json({ message: "Renovación cancelada. Tu plan seguirá activo hasta fin de periodo." });
+        }
+      }
+
+      // 2) Sin sub activa en Stripe → buscar suscripción local vigente (usuarios migrados)
+      const { data: localSub } = await supabaseAdmin
+        .from("subscriptions")
+        .select("id, cancel_at_period_end, current_period_end")
+        .eq("user_id", user.id)
+        .eq("status", "active")
+        .gte("current_period_end", new Date().toISOString())
+        .maybeSingle();
+
+      if (!localSub) throw new Error("No active subscription");
+
+      if (localSub.cancel_at_period_end) {
+        return json({ message: "La renovación ya está cancelada." });
+      }
+
+      const { error: updErr } = await supabaseAdmin
+        .from("subscriptions")
+        .update({ cancel_at_period_end: true, canceled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq("id", localSub.id);
+      if (updErr) throw new Error(`Failed to cancel local subscription: ${updErr.message}`);
+
       return json({ message: "Renovación cancelada. Tu plan seguirá activo hasta fin de periodo." });
     }
 

@@ -117,7 +117,7 @@ serve(async (req) => {
       // ── Buscar suscripción local vigente (usuarios migrados sin Stripe Sub object) ──
       const { data: localSub } = await supabaseClient
         .from("subscriptions")
-        .select("id, user_id, plan, status, current_period_end, tier")
+        .select("id, user_id, plan, status, current_period_end, tier, cancel_at_period_end")
         .eq("user_id", userId)
         .eq("status", "active")
         .gte("current_period_end", new Date().toISOString())
@@ -127,6 +127,7 @@ serve(async (req) => {
         logStep("Found valid local subscription", {
           plan: localSub.plan,
           current_period_end: localSub.current_period_end,
+          cancel_at_period_end: localSub.cancel_at_period_end,
         });
 
         // Sincronizar profiles por si acaso
@@ -141,7 +142,7 @@ serve(async (req) => {
             subscribed: true,
             plan: localSub.plan,
             subscription_end: localSub.current_period_end,
-            cancel_at_period_end: false,
+            cancel_at_period_end: localSub.cancel_at_period_end ?? false,
             source: "local_subscription",
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } },
