@@ -1,0 +1,1 @@
+UPDATE operation_pricing SET operation_name='Creatividad para Instagram' WHERE operation_key='instagram_creative';
