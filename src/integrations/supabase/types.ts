@@ -2594,6 +2594,26 @@ export type Database = {
         }
         Relationships: []
       }
+      v_campaign_attribution: {
+        Row: {
+          campaign_id: string | null
+          campaign_name: string | null
+          cost: number | null
+          coupon_code: string | null
+          coupon_orders: number | null
+          coupon_revenue: number | null
+          current_roi: number | null
+          historic_clients: number | null
+          historic_registrations: number | null
+          is_active: boolean | null
+          owner: string | null
+          referral_registrations: number | null
+          target_country: string | null
+          type: string | null
+          utm_source: string | null
+        }
+        Relationships: []
+      }
       v_orders_evidences_consistency: {
         Row: {
           amount_gross: number | null

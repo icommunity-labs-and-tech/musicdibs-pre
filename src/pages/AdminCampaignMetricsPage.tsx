@@ -70,6 +70,10 @@ export default function AdminCampaignMetricsPage() {
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
   const [loadingCoupons, setLoadingCoupons] = useState(true);
   const [couponSort, setCouponSort] = useState<{ key: CouponSortKey; direction: 'asc' | 'desc' }>({ key: 'roi', direction: 'desc' });
+  const [referralRows, setReferralRows] = useState<Array<{ referral_source: string | null; referral_influencer: string | null; referral_detail: string | null; user_id: string }>>([]);
+  const [totalProfiles, setTotalProfiles] = useState<number>(0);
+  const [influencerCouponUserIds, setInfluencerCouponUserIds] = useState<Set<string>>(new Set());
+  const [loadingReferral, setLoadingReferral] = useState(true);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -109,6 +113,42 @@ export default function AdminCampaignMetricsPage() {
   }, []);
 
   useEffect(() => { loadCoupons(); }, [loadCoupons]);
+
+  const loadReferral = useCallback(async () => {
+    setLoadingReferral(true);
+    try {
+      const { data: refData } = await supabase
+        .from('profiles')
+        .select('user_id, referral_source, referral_influencer, referral_detail')
+        .not('referral_source', 'is', null);
+      const rows = (refData || []) as any[];
+      setReferralRows(rows);
+
+      const { count } = await supabase
+        .from('profiles')
+        .select('user_id', { count: 'exact', head: true });
+      setTotalProfiles(count || 0);
+
+      const influencerIds = rows
+        .filter(r => r.referral_source === 'influencer')
+        .map(r => r.user_id);
+      if (influencerIds.length > 0) {
+        const { data: ordersData } = await supabase
+          .from('orders')
+          .select('user_id, promotion_code')
+          .in('user_id', influencerIds)
+          .not('promotion_code', 'is', null);
+        setInfluencerCouponUserIds(new Set((ordersData || []).map((o: any) => o.user_id)));
+      } else {
+        setInfluencerCouponUserIds(new Set());
+      }
+    } catch (e: any) {
+      toast.error('Error cargando atribución por canal');
+    }
+    setLoadingReferral(false);
+  }, []);
+
+  useEffect(() => { loadReferral(); }, [loadReferral]);
 
   const loadDetail = async (campaignName: string) => {
     if (!campaignName) { toast.error('Campaña sin nombre'); return; }
@@ -525,6 +565,128 @@ export default function AdminCampaignMetricsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* ── Atribución por canal (¿Cómo nos conociste?) ── */}
+        <div className="space-y-4 pt-4">
+          <div>
+            <h3 className="text-lg font-bold">📊 Atribución por canal (¿Cómo nos conociste?)</h3>
+            <p className="text-sm text-muted-foreground">Respuestas del modal de bienvenida — registros sin necesidad de cupón</p>
+          </div>
+
+          {loadingReferral ? (
+            <div className="flex items-center justify-center py-8 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando atribución...
+            </div>
+          ) : referralRows.length === 0 ? (
+            <Card className="border-border/40">
+              <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                Aún no hay respuestas del modal de bienvenida.
+              </CardContent>
+            </Card>
+          ) : (() => {
+            const SOURCE_LABELS: Record<string, string> = {
+              influencer: '🎥 YouTube Creadores',
+              instagram: '📱 Instagram',
+              tiktok: '🎵 TikTok',
+              google: '🔍 Google',
+              friend: '👥 Amigos',
+              podcast: '🎙️ Podcast/Blog',
+              other: '🔵 Otro',
+            };
+
+            const sourceCounts: Record<string, number> = {};
+            referralRows.forEach(r => {
+              const k = r.referral_source || 'other';
+              sourceCounts[k] = (sourceCounts[k] || 0) + 1;
+            });
+            const chartData = Object.entries(sourceCounts)
+              .map(([k, v]) => ({ name: SOURCE_LABELS[k] || k, count: v }))
+              .sort((a, b) => b.count - a.count);
+
+            const totalResponded = referralRows.length;
+            const respondedPct = totalProfiles > 0 ? (totalResponded / totalProfiles) * 100 : 0;
+            const topSourceKey = chartData[0]?.name || '—';
+
+            const influencerRows = referralRows.filter(r => r.referral_source === 'influencer');
+            const influencerCounts: Record<string, { count: number; withCoupon: number }> = {};
+            influencerRows.forEach(r => {
+              const key = r.referral_influencer || 'unknown';
+              if (!influencerCounts[key]) influencerCounts[key] = { count: 0, withCoupon: 0 };
+              influencerCounts[key].count += 1;
+              if (influencerCouponUserIds.has(r.user_id)) influencerCounts[key].withCoupon += 1;
+            });
+            const influencerTable = Object.entries(influencerCounts)
+              .map(([k, v]) => ({
+                key: k,
+                label: k.charAt(0).toUpperCase() + k.slice(1),
+                count: v.count,
+                withCoupon: v.withCoupon,
+              }))
+              .sort((a, b) => b.count - a.count);
+
+            return (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <KpiCard label="Usuarios que respondieron" value={totalResponded} icon={Users} />
+                  <KpiCard label="% respuesta vs total registrados" value={`${respondedPct.toFixed(1)}%`} icon={BarChart3} />
+                  <KpiCard label="Canal más popular" value={topSourceKey} icon={TrendingUp} />
+                </div>
+
+                <Card className="border-border/40">
+                  <CardHeader><CardTitle className="text-base">📊 Registros por canal</CardTitle></CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={260}>
+                      <BarChart data={chartData} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                        <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                        <YAxis dataKey="name" type="category" width={160} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                        <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                        <Bar dataKey="count" fill="hsl(var(--primary))" name="Registros" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {influencerTable.length > 0 && (
+                  <Card className="border-border/40">
+                    <CardHeader>
+                      <CardTitle className="text-base">🎥 Influencers vía referral</CardTitle>
+                      <CardDescription>Usuarios que indicaron haber visto el vídeo de un creador</CardDescription>
+                    </CardHeader>
+                    <CardContent className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Influencer</TableHead>
+                            <TableHead className="text-right">Registros vía referral</TableHead>
+                            <TableHead>Origen</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {influencerTable.map(row => (
+                            <TableRow key={row.key}>
+                              <TableCell className="font-medium">{row.label}</TableCell>
+                              <TableCell className="text-right">{row.count}</TableCell>
+                              <TableCell>
+                                {row.withCoupon > 0 ? (
+                                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30">
+                                    Con cupón ({row.withCoupon}/{row.count})
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary">Solo referral</Badge>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            );
+          })()}
+        </div>
       </div>
     </div>
   );
