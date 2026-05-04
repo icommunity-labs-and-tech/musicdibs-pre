@@ -1,0 +1,1 @@
+UPDATE operation_pricing SET is_active=false WHERE operation_key='generate_vocal_track';
