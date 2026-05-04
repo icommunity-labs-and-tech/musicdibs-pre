@@ -189,6 +189,7 @@ export default function BillingPage() {
       if (data?.error) throw new Error(data.error);
       toast.success(data?.message || t('dashboard.billing.renewalCancelled', 'Renovación cancelada'));
       setCancelAtPeriodEnd(true);
+      await loadBillingState();
     } catch (err: any) {
       console.error('[cancel_renewal] error:', err);
       toast.error(err?.message || t('dashboard.billing.cancelError', 'Error al cancelar'));
