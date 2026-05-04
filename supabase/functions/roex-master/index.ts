@@ -152,7 +152,30 @@ serve(async (req) => {
       const { taskId } = body;
       if (!taskId) return new Response(JSON.stringify({ error: 'taskId required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-      const CREDITS_COST = 3;
+      // ── Read cost from DB (single source of truth) ─────────────
+      // Priority: operation_pricing → feature_costs → fallback (6)
+      let CREDITS_COST = 6;
+      try {
+        const { data: pricingRow } = await supabase
+          .from('operation_pricing')
+          .select('credits_cost')
+          .eq('operation_key', 'enhance_audio')
+          .maybeSingle();
+        if (pricingRow?.credits_cost != null) {
+          CREDITS_COST = pricingRow.credits_cost;
+        } else {
+          const { data: costRow } = await supabase
+            .from('feature_costs')
+            .select('credit_cost')
+            .eq('feature_key', 'enhance_audio')
+            .maybeSingle();
+          if (costRow?.credit_cost != null) CREDITS_COST = costRow.credit_cost;
+        }
+      } catch (e) {
+        console.warn('[ROEX] cost lookup failed, using fallback', e);
+      }
+      console.log(`[ROEX] enhance_audio cost resolved to ${CREDITS_COST} credits`);
+
       const { data: profile } = await supabase.from('profiles').select('available_credits').eq('user_id', user.id).single();
       if (!profile || profile.available_credits < CREDITS_COST) {
         return new Response(JSON.stringify({ error: 'insufficient_credits' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
