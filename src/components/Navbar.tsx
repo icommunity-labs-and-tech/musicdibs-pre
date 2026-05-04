@@ -180,10 +180,12 @@ export const Navbar = () => {
             >
               <Button 
                 variant="glass" 
-                className="font-semibold flex items-center gap-1.5"
+                className="font-semibold flex items-center gap-1.5 max-w-[220px]"
               >
-                {t('nav.accessServices')}
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${servicesOpen ? 'rotate-180' : ''}`} />
+                <span className="truncate">
+                  {user ? `${t('nav.hello', 'Hola')}, ${greetingName}` : t('nav.accessServices')}
+                </span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${servicesOpen ? 'rotate-180' : ''}`} />
               </Button>
               <div
                 onMouseEnter={openServices}
@@ -191,11 +193,29 @@ export const Navbar = () => {
                 className={`absolute right-0 top-full mt-1 w-56 rounded-md bg-white shadow-lg ring-1 ring-black/10 z-50 ${servicesOpen ? "block" : "hidden"}`}
               >
                 <ul className="py-2 text-sm text-gray-700">
-                  <li>
-                    <Link to="/login" className="block px-4 py-2 hover:bg-gray-100 font-medium" onClick={() => setServicesOpen(false)}>
-                      {t('nav.login')}
-                    </Link>
-                  </li>
+                  {user ? (
+                    <>
+                      <li>
+                        <Link to="/dashboard" className="block px-4 py-2 hover:bg-gray-100 font-medium" onClick={() => setServicesOpen(false)}>
+                          {t('nav.myAccount', 'Mi cuenta')}
+                        </Link>
+                      </li>
+                      <li>
+                        <button
+                          onClick={async () => { setServicesOpen(false); await signOut(); navigate('/'); }}
+                          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                        >
+                          {t('nav.logout', 'Cerrar sesión')}
+                        </button>
+                      </li>
+                    </>
+                  ) : (
+                    <li>
+                      <Link to="/login" className="block px-4 py-2 hover:bg-gray-100 font-medium" onClick={() => setServicesOpen(false)}>
+                        {t('nav.login')}
+                      </Link>
+                    </li>
+                  )}
                   <li className="border-t border-gray-100 my-1" />
                   <li>
                     <a href={links.market} target="_blank" rel="noopener noreferrer" className="block px-4 py-2 hover:bg-gray-100">
