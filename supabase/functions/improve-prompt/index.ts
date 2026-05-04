@@ -160,48 +160,30 @@ serve(async (req) => {
         userImageContent = { url: `data:image/jpeg;base64,${image_base64}` };
       }
     } else {
-      const modeContext = mode === 'instrumental'
-        ? 'an instrumental track (no lyrics, no voice)'
-        : 'a full song with vocals and lyrics';
-
       const contextParts = [];
-      if (genre) contextParts.push(`Genre: ${genre}`);
+      if (genre) contextParts.push(`Género: ${genre}`);
       if (mood) contextParts.push(`Mood: ${mood}`);
-      const contextStr = contextParts.length > 0 ? `\nUser-selected context: ${contextParts.join(', ')}` : '';
+      const contextStr = contextParts.length > 0 ? `\nContexto seleccionado por el usuario: ${contextParts.join(', ')}` : '';
 
-      systemPrompt = `You are a world-class music producer and AI prompt engineer specialized in writing ultra-detailed prompts for AI music generation systems (Suno, ElevenLabs Music, Udio, Mureka).
+      systemPrompt = `Eres un experto en producción musical. Tu tarea es mejorar y enriquecer una descripción técnica de una canción para que los modelos de IA generativa produzcan mejores resultados.
 
-Your task: take the user's rough description and rewrite it as a PROFESSIONAL, PRODUCTION-READY prompt that maximizes audio quality and musical coherence.
+IMPORTANTE: NO generes letra de canción. NO incluyas versos, coros ni estrofas.
 
-═══ CRITICAL LANGUAGE RULE ═══
-Detect the language the user wrote in and respond in that EXACT same language. Spanish → Spanish, English → English, Portuguese → Portuguese, French → French, etc. NEVER translate. Keep technical music terms (BPM, verse, drop, sidechain, reverb, etc.) in English even when responding in other languages — that's industry standard.
+La descripción mejorada debe incluir únicamente:
+- Género musical específico y subgénero
+- Estado emocional y atmósfera
+- Tempo aproximado (lento, medio, rápido o BPM)
+- Tipo de voz (masculina, femenina, mixta, sin voz)
+- Instrumentos principales
+- Referencias a artistas o estilos similares si aplica
 
-═══ STRUCTURE OF THE OUTPUT (MANDATORY) ═══
-Write a single flowing paragraph (no bullet points, no headers, no markdown) of 180–350 words that includes ALL of these elements naturally woven together:
+Ejemplo: "Hip hop urbano melancólico, voz masculina con flow pausado, tempo medio 85BPM, piano melódico de fondo con 808s suaves, influencias de Drake y J. Cole, atmósfera nocturna e introspectiva."
 
-1. **Genre & subgenre**: be specific (e.g. "synthwave with vaporwave influences" instead of just "electronic"; "neo-soul with trap drums" instead of just "R&B").
-2. **BPM range**: give a precise tempo (e.g. "92 BPM", "128 BPM", "65–70 BPM").
-3. **Key & mode**: suggest a musical key (e.g. "C minor", "F# major", "A Dorian") that fits the mood.
-4. **Song structure**: describe sections in order (intro → verse → pre-chorus → chorus → bridge → outro) with bar counts when relevant.
-5. **Instrumentation**: name specific instruments and synths (e.g. "Juno-60 pads", "808 sub-bass", "Rhodes electric piano", "muted Strat guitar", "analog tape drums", "TR-909 hi-hats").
-6. **Production techniques**: include mixing/mastering cues (e.g. "warm analog saturation", "wide stereo reverb", "sidechain compression on the pads", "tape hiss", "lo-fi vinyl crackle", "punchy mastering").
-7. **Vocal direction** (only for full songs): voice type, gender, range, vocal style, FX (e.g. "breathy female alto with light autotune and slap delay", "raspy male tenor with doubled harmonies"), vocal placement (lead + backing).
-8. **Mood & atmosphere**: emotional arc, dynamics, energy curve.
-9. **Reference artists or tracks**: 2–4 reference artists in the same vein (e.g. "in the vein of The Weeknd, Daft Punk and Tame Impala") to anchor the style.
-10. **Lyrical theme** (full songs): topic, point of view, imagery — and PRESERVE any lyrics the user already wrote, embedding them verbatim with section tags like [Verse 1], [Chorus], [Bridge].
+REGLA DE IDIOMA: Responde SIEMPRE en el mismo idioma en que escribió el usuario. Español → Español, Inglés → Inglés, Portugués → Portugués.
 
-═══ CONTENT SAFETY (STRICT) ═══
-Replace any unsafe terminology with creative musical equivalents:
-- violence/war → "inner conflict", "struggle", "adversity"
-- kill/death → "overcome", "transform", "let go"
-- drugs → "nightlife", "altered states", "excess"
-- explicit sexual content → "intimacy", "passion", "desire"
-Never include weapons, slurs, hate speech, or illegal activity.
+Responde SOLO con la descripción mejorada en una o dos frases. Sin explicaciones, sin letra, sin versos.`;
 
-═══ OUTPUT FORMAT ═══
-Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanation, no quotes around the response, no markdown headers. Length: 180–350 words.`;
-
-      userTextContent = `Rewrite this song description for ${modeContext}.${contextStr}\n\nOriginal description from the user:\n"""\n${prompt}\n"""\n\nProduce the final professional prompt now, in the SAME language as the original. Return ONLY the rewritten prompt as a single flowing paragraph.`;
+      userTextContent = `Mejora esta descripción técnica de canción.${contextStr}\n\nDescripción original del usuario:\n"""\n${prompt}\n"""\n\nDevuelve SOLO la descripción mejorada en una o dos frases, en el mismo idioma del original. Sin letra, sin versos.`;
     }
 
     let improved: string | null = null;
