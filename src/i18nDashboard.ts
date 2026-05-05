@@ -529,6 +529,7 @@ const es = {
       kycRequiredError: 'Debes verificar tu identidad antes de registrar una obra.',
     },
     kyc: {
+      title: 'Verificación de identidad',
       stepDataLabel: 'Datos de identidad',
       stepBiometricLabel: 'Verificación biométrica',
       verifiedTitle: 'Identidad verificada',
