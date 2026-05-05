@@ -489,6 +489,7 @@ const AIStudioCreate = () => {
       track('generation_failed', { feature: 'create_music', metadata: { error: (error as any)?.message } });
     } finally {
       setIsGenerating(false);
+      setRetryStatus(null);
     }
   };
 
