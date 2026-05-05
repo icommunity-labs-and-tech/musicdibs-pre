@@ -95,9 +95,9 @@ export const FileDropzone = ({
   };
 
   const formatHints = () => {
-    if (fileType === 'image') return `JPG, PNG o WEBP (máx. ${maxSize}MB)`;
-    if (fileType === 'audio') return `MP3, WAV o FLAC (máx. ${maxSize}MB)`;
-    return `máx. ${maxSize}MB`;
+    if (fileType === 'image') return tk('hintImage', { size: maxSize });
+    if (fileType === 'audio') return tk('hintAudio', { size: maxSize });
+    return tk('hintAny', { size: maxSize });
   };
 
   return (
