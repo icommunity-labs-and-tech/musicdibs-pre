@@ -1500,7 +1500,7 @@ const AIStudioCreate = () => {
                           <Select value={lyricsPov} onValueChange={setLyricsPov}>
                             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {POVS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                              {POV_KEYS.map(k => <SelectItem key={k} value={k}>{t(`aiCreate.povs.${k}`)}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
