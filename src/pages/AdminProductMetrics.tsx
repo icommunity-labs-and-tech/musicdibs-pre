@@ -128,6 +128,23 @@ export default function AdminProductMetrics() {
     }
     setLiveFeatureCounts(counts);
 
+    // Split create_music by mode (song vs instrumental) using product_events.metadata.mode
+    const { data: cmEvents } = await supabase
+      .from("product_events")
+      .select("metadata")
+      .eq("feature", "create_music")
+      .eq("event_name", "generation_completed")
+      .gte("created_at", `${fromStr}T00:00:00.000Z`)
+      .limit(10000);
+    const split = { song: 0, instrumental: 0, unknown: 0 };
+    for (const ev of cmEvents || []) {
+      const m = (ev.metadata as any)?.mode;
+      if (m === "song") split.song++;
+      else if (m === "instrumental") split.instrumental++;
+      else split.unknown++;
+    }
+    setCreateMusicSplit(split);
+
     // Load cost config (credits_charged + price_per_credit) from api_cost_config
     const { data: costs } = await supabase
       .from("api_cost_config")
