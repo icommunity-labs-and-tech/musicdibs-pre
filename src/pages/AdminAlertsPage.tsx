@@ -46,6 +46,29 @@ export default function AdminAlertsPage() {
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [showResolved, setShowResolved] = useState(false);
+  const [dryRunOpen, setDryRunOpen] = useState(false);
+  const [dryRunLoading, setDryRunLoading] = useState(false);
+  const [dryRunData, setDryRunData] = useState<any | null>(null);
+
+  const runDryRun = async () => {
+    setDryRunLoading(true);
+    setDryRunData(null);
+    setDryRunOpen(true);
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "process-subscription-renewals",
+        { body: { dry_run: true } },
+      );
+      if (error) throw error;
+      setDryRunData(data);
+      toast.success("Dry-run completado");
+    } catch (err: any) {
+      toast.error("Error en dry-run: " + (err?.message ?? String(err)));
+      setDryRunData({ error: err?.message ?? String(err) });
+    } finally {
+      setDryRunLoading(false);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
