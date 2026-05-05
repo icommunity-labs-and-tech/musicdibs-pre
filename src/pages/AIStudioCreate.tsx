@@ -107,6 +107,7 @@ const AIStudioCreate = () => {
   const [lyricsExpanded, setLyricsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<{ message: string; details?: string } | null>(null);
+  const [retryStatus, setRetryStatus] = useState<{ attempt: number; max: number } | null>(null);
   const [lastResult, setLastResult] = useState<GenerationResult | null>(null);
 
   // ── History & playback state ──
@@ -335,14 +336,44 @@ const AIStudioCreate = () => {
         enrichedPrompt = `${enrichedPrompt}${voiceTag}`;
       }
 
-      const { data, error } = await supabase.functions.invoke('generate-audio', {
-        body: {
-          prompt: enrichedPrompt,
-          lyrics: mode === 'song' ? lyrics.trim() : '',
-          mode,
-          ...(duration ? { duration } : {}),
+      // Retry with exponential backoff for transient provider failures (timeout / provider_unavailable)
+      const MAX_ATTEMPTS = 3;
+      const RETRYABLE_CODES = new Set(['provider_timeout', 'provider_unavailable', 'provider_rate_limit']);
+      const isTransientMessage = (msg?: string) =>
+        !!msg && /(timeout|timed?\s*out|fetch|network|503|504|gateway|unavailable)/i.test(msg);
+
+      let data: any = null;
+      let error: any = null;
+      let attempt = 0;
+      setRetryStatus(null);
+
+      while (attempt < MAX_ATTEMPTS) {
+        attempt += 1;
+        if (attempt > 1) {
+          setRetryStatus({ attempt, max: MAX_ATTEMPTS });
+          await new Promise((r) => setTimeout(r, 1500 * Math.pow(2, attempt - 2))); // 1.5s, 3s
         }
-      });
+
+        const resp = await supabase.functions.invoke('generate-audio', {
+          body: {
+            prompt: enrichedPrompt,
+            lyrics: mode === 'song' ? lyrics.trim() : '',
+            mode,
+            ...(duration ? { duration } : {}),
+          }
+        });
+        data = resp.data;
+        error = resp.error;
+
+        const transient =
+          (data?.error && RETRYABLE_CODES.has(data.error)) ||
+          (!data && error && isTransientMessage(error?.message));
+
+        if (!transient) break;
+        if (attempt >= MAX_ATTEMPTS) break;
+        console.warn(`[AIStudioCreate] generate-audio transient failure (attempt ${attempt}/${MAX_ATTEMPTS})`, data?.error || error?.message);
+      }
+      setRetryStatus(null);
 
       if (error) {
         if (data?.error === 'rate_limit_exceeded') {
@@ -458,6 +489,7 @@ const AIStudioCreate = () => {
       track('generation_failed', { feature: 'create_music', metadata: { error: (error as any)?.message } });
     } finally {
       setIsGenerating(false);
+      setRetryStatus(null);
     }
   };
 
@@ -1393,7 +1425,9 @@ const AIStudioCreate = () => {
                           data-tour="mc-generate"
                         >
                           <Wand2 className="w-4 h-4 mr-2" />
-                          {t('aiCreate.generateBtn')} {mode === 'song' ? t('aiCreate.genCtaSong') : t('aiCreate.genCtaInstrumental')} {t('aiCreate.genCtaSuffix')}
+                          {retryStatus
+                            ? t('aiShared.aiRetrying', { attempt: retryStatus.attempt, max: retryStatus.max })
+                            : <>{t('aiCreate.generateBtn')} {mode === 'song' ? t('aiCreate.genCtaSong') : t('aiCreate.genCtaInstrumental')} {t('aiCreate.genCtaSuffix')}</>}
                         </Button>
                         <PricingLink className="mt-1 block text-center" />
                         </>
