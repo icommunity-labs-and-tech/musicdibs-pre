@@ -319,7 +319,11 @@ serve(async (req) => {
       sessionParams.customer = customerId;
       sessionParams.customer_update = { name: "auto", address: "auto" };
     } else {
-      sessionParams.customer_creation = "always";
+      // `customer_creation` is only valid in `payment` mode. In `subscription` mode
+      // Stripe always creates a customer automatically.
+      if (plan.mode === "payment") {
+        sessionParams.customer_creation = "always";
+      }
       if (isGuest && guestEmail) {
         sessionParams.customer_email = guestEmail;
         sessionParams.metadata!.guest_email = guestEmail;
