@@ -437,7 +437,7 @@ export const CoversSection = () => {
               <div className="relative rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-square">
                 <img
                   src={imageUrl}
-                  alt={`Portada: ${trackTitle || 'Sin título'}`}
+                  alt={`${t('aiCovers.title')}: ${trackTitle || t('aiCovers.trackTitlePlaceholder')}`}
                   className="w-full h-full object-cover"
                 />
               </div>
