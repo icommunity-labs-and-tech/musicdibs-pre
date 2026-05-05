@@ -27,12 +27,31 @@ export default function ResetPassword() {
   const allPwValid = password.length > 0 && pwRules.every(r => r.test(password));
 
   useEffect(() => {
+    // Detectar recovery por URL (hash o query) por si el evento PASSWORD_RECOVERY
+    // se dispara antes de que el listener se suscriba.
+    const hash = window.location.hash || '';
+    const search = window.location.search || '';
+    if (hash.includes('type=recovery') || search.includes('type=recovery')) {
+      setIsRecovery(true);
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setIsRecovery(true);
       }
     });
-    return () => subscription.unsubscribe();
+
+    // Fallback: si tras 1.5s no se ha detectado recovery pero hay sesión activa,
+    // asumimos que el usuario llegó aquí desde el enlace de recuperación.
+    const fallback = setTimeout(async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) setIsRecovery(true);
+    }, 1500);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(fallback);
+    };
   }, []);
 
   const handleReset = async (e: React.FormEvent<HTMLFormElement>) => {
