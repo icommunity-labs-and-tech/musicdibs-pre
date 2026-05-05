@@ -83,6 +83,7 @@ export default function AdminProductMetrics() {
   const [range, setRange] = useState<Range>("30d");
   const [metrics, setMetrics] = useState<MetricRow[]>([]);
   const [liveFeatureCounts, setLiveFeatureCounts] = useState<Record<string, number>>({});
+  const [createMusicSplit, setCreateMusicSplit] = useState<{ song: number; instrumental: number; unknown: number }>({ song: 0, instrumental: 0, unknown: 0 });
   const [costConfig, setCostConfig] = useState<Record<string, { credit_cost: number; price_per_credit_eur: number }>>({});
   const [cancellationData, setCancellationData] = useState<{ plan_type: string; reason: string }[]>([]);
   const [loading, setLoading] = useState(true);
