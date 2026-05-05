@@ -317,10 +317,10 @@ serve(async (req) => {
     // ── ElevenLabs call (mutually exclusive: plan OR prompt) ──
     const callElevenLabs = async (planOrPrompt: { plan?: any; promptText?: string }) => {
       const body: Record<string, unknown> = {};
-      body.music_length_ms = durationMs;
       if (planOrPrompt.plan) {
         body.composition_plan = planOrPrompt.plan;
       } else {
+        body.music_length_ms = durationMs;
         body.prompt = planOrPrompt.promptText;
       }
       return fetchWithTimeout('https://api.elevenlabs.io/v1/music', {
@@ -348,18 +348,14 @@ serve(async (req) => {
       const errText = await response.text();
       console.warn(`[GENERATE-AUDIO] Request rejected (400): ${errText.substring(0, 200)}`);
 
-      // If the failure came from composition_plan, retry once in prompt-only mode
+      // If the failure came from composition_plan, do not fall back to prompt-only:
+      // prompt-only can ignore user lyrics, which is worse than a clear failure.
       if (compositionPlan) {
-        console.log('[GENERATE-AUDIO] Retrying without composition plan (prompt-only fallback)');
-        response = await callElevenLabs({ promptText: enrichedPrompt });
-        if (!response.ok) {
-          const retryErr = await response.text();
-          await refundCredits(`Fallo plan + prompt: ${response.status}`);
-          return new Response(
-            JSON.stringify({ error: `Generation failed: ${response.status}`, details: retryErr }),
-            { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
+        await refundCredits(`Composition plan rechazado: ${response.status}`);
+        return new Response(
+          JSON.stringify({ error: 'bad_prompt', message: 'La letra no se pudo procesar con el plan musical del proveedor.' }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       } else {
         try {
           const errJson = JSON.parse(errText);

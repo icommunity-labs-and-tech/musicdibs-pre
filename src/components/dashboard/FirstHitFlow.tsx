@@ -197,14 +197,6 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
     setGenerating(true)
     setGenError(null)
     try {
-      // Gastar crédito
-      const featureKey = genMode === 'song' ? 'generate_audio_song' : 'generate_audio'
-      const { data: spend, error: spendErr } = await supabase.functions.invoke(
-        'spend-credits',
-        { body: { feature: featureKey, description: `${genMode === 'song' ? t('dashboard.premium.genTypeSongLog', 'Canción') : t('dashboard.premium.genTypeInstrumentalLog', 'Instrumental')} AI: ${prompt.slice(0, 80)}` } }
-      )
-      if (spendErr || spend?.error) throw new Error(spend?.message || t('dashboard.firstHit.creditSpendError'))
-
       // Enrich prompt with voice tag (only for song mode)
       let fullPrompt = prompt
       if (genMode === 'song') {
