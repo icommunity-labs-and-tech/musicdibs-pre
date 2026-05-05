@@ -267,15 +267,19 @@ serve(async (req) => {
     if (cleanPrompt) parts.push(cleanPrompt);
     const enrichedPrompt = parts.join('. ');
 
-    const durationSecs = duration || 60;
-    const durationMs = durationSecs * 1000;
+    // Auto-duration: if user didn't specify, let ElevenLabs/Lyria decide
+    const autoDuration = duration === undefined || duration === null || duration === 0;
+    const durationSecs: number | null = autoDuration ? null : Number(duration);
+    const durationMs: number | null = autoDuration ? null : (durationSecs as number) * 1000;
     const hasUserLyrics = typeof lyrics === 'string' && lyrics.trim().length > 0 && mode === 'song';
 
     // Pre-build composition plan if user provided lyrics
+    // Composition plan REQUIRES a duration → use a sensible default (90s) only for plan building
     let compositionPlan: any | null = null;
     if (hasUserLyrics) {
-      console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars)`);
-      compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), durationMs, ELEVENLABS_API_KEY);
+      const planDurationMs = durationMs ?? 90000;
+      console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars, ${planDurationMs}ms${autoDuration ? ' auto' : ''})`);
+      compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), planDurationMs, ELEVENLABS_API_KEY);
       if (!compositionPlan) {
         console.warn('[GENERATE-AUDIO] composition plan unavailable — falling back to prompt-only mode');
       }
