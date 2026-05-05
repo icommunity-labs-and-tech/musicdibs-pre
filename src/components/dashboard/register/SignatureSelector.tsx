@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
 import { listIbsSignatures, createIbsSignature, syncIbsSignatures } from '@/services/dashboardApi';
+import { supabase } from '@/integrations/supabase/client';
 import type { IbsSignature } from '@/types/dashboard';
 
 interface SignatureSelectorProps {
