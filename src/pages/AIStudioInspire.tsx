@@ -257,10 +257,10 @@ const AIStudioInspire = () => {
       track("generation_completed", { feature: "create_music", metadata: { mode: "song", source: "inspire" } });
     } catch (e: any) {
       console.error("[Inspire] Generation error:", e);
-      const msg = e?.message || "No se pudo generar la canción";
+      const msg = e?.message || t("aiInspire.genericError");
       setError(msg);
       track("generation_failed", { feature: "create_music", metadata: { mode: "song", source: "inspire", error: msg } });
-      toast({ title: "Error al generar", description: msg, variant: "destructive" });
+      toast({ title: t("aiInspire.errorToastTitle"), description: msg, variant: "destructive" });
     } finally {
       setIsGenerating(false);
     }
