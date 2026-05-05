@@ -215,10 +215,37 @@ export async function syncIbsSignatures(): Promise<void> {
 }
 
 export async function pollEvidenceStatus(evidenceId: string): Promise<any> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  console.log('[pollEvidenceStatus] invoking', {
+    evidenceId,
+    hasSession: !!sessionData.session,
+    userId: sessionData.session?.user?.id,
+  });
+
   const { data, error } = await supabase.functions.invoke('ibs-signatures', {
     body: { action: 'poll_evidence', evidenceId },
   });
-  if (error) throw new Error(error.message || 'Error polling evidence');
+
+  if (error) {
+    // Try to extract the underlying response body for better diagnosis
+    let detail: string | undefined;
+    try {
+      const ctx: any = (error as any).context;
+      if (ctx?.json) detail = JSON.stringify(await ctx.json());
+      else if (ctx?.text) detail = await ctx.text();
+    } catch { /* ignore */ }
+    console.error('[pollEvidenceStatus] edge error', {
+      message: error.message,
+      name: error.name,
+      detail,
+    });
+    throw new Error(detail ? `${error.message} — ${detail}` : (error.message || 'Error polling evidence'));
+  }
+
+  if (data?.error) {
+    console.error('[pollEvidenceStatus] data error', data.error);
+    throw new Error(data.error);
+  }
   return data;
 }
 
