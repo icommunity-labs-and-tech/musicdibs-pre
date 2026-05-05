@@ -55,24 +55,12 @@ const DURATION_OPTIONS: { value: number; label: string }[] = [
 const DEFAULT_DURATION: number | null = null;
 const INSTRUMENTAL_PROMPT_REGEX = /\b(instrumental|karaoke|sin voz|sin voces|base instrumental)\b/i;
 
-// ── Lyrics tab constants ──
-const LYRIC_STYLES = ["Narrativa", "Abstracta", "Descriptiva", "Reivindicativa", "Introspectiva", "Poética"];
-const LYRIC_LANGUAGES = ["Español", "Inglés", "Spanglish", "Portugués", "Francés"];
-const RHYME_SCHEMES = [
-  { value: "ABAB", label: "ABAB — Alterna" },
-  { value: "AABB", label: "AABB — Pareados" },
-  { value: "ABCB", label: "ABCB — Balada" },
-  { value: "libre", label: "Libre — Sin rima" },
-];
-const STRUCTURES = [
-  { value: "V+C+V+C+P+C", label: "Verso · Coro · Verso · Coro · Puente · Coro" },
-  { value: "V+C+V+C", label: "Verso · Coro · Verso · Coro" },
-  { value: "V+V+C+V+C", label: "Verso · Verso · Coro · Verso · Coro" },
-  { value: "V+C+P+C", label: "Verso · Coro · Puente · Coro" },
-];
+// ── Lyrics tab constants (stable keys; UI labels via i18n) ──
+const LYRIC_STYLE_KEYS = ["narrativa", "abstracta", "descriptiva", "reivindicativa", "introspectiva", "poetica"] as const;
+const RHYME_SCHEME_KEYS = ["ABAB", "AABB", "ABCB", "libre"] as const;
+const STRUCTURE_KEYS = ["V+C+V+C+P+C", "V+C+V+C", "V+V+C+V+C", "V+C+P+C"] as const;
 // Artist presets removed — users can type freely in description
-const THEMES = ["Amor", "Desamor", "Superación", "Fiesta", "Calle", "Familia", "Libertad", "Nostalgia", "Éxito", "Identidad"];
-const POVS = ["Primera persona", "Segunda persona", "Tercera persona"];
+const POV_KEYS = ["first", "second", "third"] as const;
 
 interface LyricsGeneration {
   id: string;
