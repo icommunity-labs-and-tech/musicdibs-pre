@@ -175,12 +175,12 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
       if (error) throw error;
       if (data?.improved_text) {
         setPrompt(data.improved_text);
-        toast.success('Descripción mejorada ✨');
+        toast.success(t('dashboard.firstHit.descImproved'));
       } else {
-        toast.error('Error al mejorar. Inténtalo de nuevo.');
+        toast.error(t('dashboard.firstHit.improveError'));
       }
     } catch {
-      toast.error('Error al mejorar. Inténtalo de nuevo.');
+      toast.error(t('dashboard.firstHit.improveError'));
     }
     setIsImproving(false);
   };
