@@ -129,6 +129,20 @@ export default function UserLogin() {
     }
 
     setLoading(false);
+    const rawMsg = ((error as any)?.message ?? '').toLowerCase();
+    const isInvalidCreds =
+      rawMsg.includes('invalid login credentials') ||
+      rawMsg.includes('invalid_credentials') ||
+      rawMsg.includes('invalid email or password');
+    if (isInvalidCreds) {
+      const friendly = lang === 'en'
+        ? 'Incorrect email or password. If you forgot it, use "Forgot password".'
+        : lang === 'pt-BR'
+          ? 'Email ou senha incorretos. Se esqueceu, use "Esqueceu a senha".'
+          : 'Email o contraseña incorrectos. Si la olvidaste, usa "¿Olvidaste tu contraseña?".';
+      setError(friendly);
+      return;
+    }
     setError(error.message);
   };
 
