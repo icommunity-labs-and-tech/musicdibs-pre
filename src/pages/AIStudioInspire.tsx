@@ -206,8 +206,8 @@ const AIStudioInspire = () => {
   const generateInline = async (basePrompt: string) => {
     if (!user) {
       toast({
-        title: "Inicia sesión",
-        description: "Necesitas iniciar sesión para generar canciones",
+        title: t("aiInspire.loginRequiredTitle"),
+        description: t("aiInspire.loginRequiredDesc"),
         variant: "destructive",
       });
       return;
