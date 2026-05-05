@@ -186,7 +186,7 @@ export const FileDropzone = ({
           </div>
           <div className="text-center">
             <p className="text-sm font-medium">
-              {isDragging ? 'Suelta el archivo aquí' : 'Haz clic o arrastra un archivo'}
+              {isDragging ? tk('dropHere') : tk('clickOrDrag')}
             </p>
             <p className="text-xs text-muted-foreground mt-1">{formatHints()}</p>
           </div>
