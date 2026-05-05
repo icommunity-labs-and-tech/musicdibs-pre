@@ -442,7 +442,7 @@ const AIStudioCreate = () => {
         setResults(prev => [newResult, ...prev]);
         setLastResult(newResult);
         toast({ title: t('aiCreate.musicGenerated'), description: t('aiCreate.songReady') });
-        track('generation_completed', { feature: 'create_music' });
+        track('generation_completed', { feature: 'create_music', metadata: { mode } });
         sessionStorage.setItem('md_last_generation', Date.now().toString());
 
         // Show onboarding tip for first vocal generation
