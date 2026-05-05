@@ -1769,14 +1769,45 @@ serve(async (req) => {
       const { error: delErr } = await admin.from("works").delete().eq("id", work_id);
       if (delErr) return json({ error: delErr.message }, 500);
 
+      // Refund credits if work never reached 'registered' (i.e. cancelled while stuck)
+      let refunded = 0;
+      if (work.status !== "registered") {
+        let creditCost = 1;
+        const { data: costRow } = await admin
+          .from("feature_costs")
+          .select("credit_cost")
+          .eq("feature_key", "register_work")
+          .maybeSingle();
+        if (costRow?.credit_cost) creditCost = costRow.credit_cost;
+
+        const { data: prof } = await admin
+          .from("profiles")
+          .select("available_credits")
+          .eq("user_id", work.user_id)
+          .single();
+        if (prof) {
+          await admin
+            .from("profiles")
+            .update({ available_credits: (prof.available_credits || 0) + creditCost, updated_at: new Date().toISOString() })
+            .eq("user_id", work.user_id);
+          await admin.from("credit_transactions").insert({
+            user_id: work.user_id,
+            amount: creditCost,
+            type: "refund",
+            description: `Reembolso admin: obra "${work.title}" cancelada (estado ${work.status})`,
+          });
+          refunded = creditCost;
+        }
+      }
+
       await audit({
         action: "delete_work",
         target_user_id: work.user_id,
         target_email: targetEmail,
-        details: { work_id, title: work.title, type: work.type, status: work.status },
+        details: { work_id, title: work.title, type: work.type, status: work.status, refunded },
       });
 
-      return json({ success: true });
+      return json({ success: true, refunded });
     }
 
     // ── get_campaigns_catalog ─────────────────────────────────────
