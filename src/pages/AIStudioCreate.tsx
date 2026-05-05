@@ -1489,7 +1489,7 @@ const AIStudioCreate = () => {
                             <Select value={lyricsRhyme} onValueChange={setLyricsRhyme}>
                               <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                {RHYME_SCHEMES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                                {RHYME_SCHEME_KEYS.map(k => <SelectItem key={k} value={k}>{t(`aiCreate.rhymes.${k}`)}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
