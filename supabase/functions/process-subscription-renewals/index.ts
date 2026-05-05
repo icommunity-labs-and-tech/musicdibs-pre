@@ -294,6 +294,14 @@ Deno.serve(async (req) => {
     );
   } catch (err: any) {
     console.error("[renewals] Fatal error:", err);
+    try {
+      await supabase.from("admin_alerts").insert({
+        source: "renewals_fatal",
+        severity: "critical",
+        message: "Fallo fatal en process-subscription-renewals",
+        context: { error: String(err?.message ?? err).slice(0, 1000) },
+      });
+    } catch (_) { /* swallow */ }
     return new Response(JSON.stringify({ error: String(err?.message ?? err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
