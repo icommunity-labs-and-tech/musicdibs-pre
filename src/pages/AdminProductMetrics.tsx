@@ -231,21 +231,34 @@ export default function AdminProductMetrics() {
   // Feature usage data
   const featureUsage = useMemo(() => {
     const lc = liveFeatureCounts;
+    const cmTotal = lc["create_music"] || 0;
+    // If we have split metadata, use it; otherwise dump everything as "unknown" so totals match
+    const split = createMusicSplit;
+    const splitTotal = split.song + split.instrumental + split.unknown;
+    // Reconcile: if split total < cmTotal, the difference is legacy events without metadata.mode
+    const legacy = Math.max(0, cmTotal - splitTotal);
+    const songCount = split.song;
+    const instrumentalCount = split.instrumental;
+    const unknownCount = split.unknown + legacy;
+
     const items = [
-      { label: "Crear música", icon: "🎵", uses: lc["create_music"] || 0 },
+      { label: "Crear música — Cantada", icon: "🎤", uses: songCount },
+      { label: "Crear música — Instrumental", icon: "🎹", uses: instrumentalCount },
+      ...(unknownCount > 0 ? [{ label: "Crear música — Sin clasificar", icon: "🎵", uses: unknownCount }] : []),
       { label: "Compositor letras", icon: "📝", uses: lc["lyrics"] || 0 },
-      { label: "Canta tu canción", icon: "🎤", uses: lc["vocal"] || 0 },
-      { label: "Clonación de voz", icon: "🎙️", uses: lc["voice_cloning"] || 0 },
+      { label: "Canta tu canción", icon: "🎙️", uses: lc["vocal"] || 0 },
       { label: "Portadas con IA", icon: "🖼️", uses: lc["cover"] || 0 },
-      { label: "Videoclips IA", icon: "🎬", uses: lc["video"] || 0 },
+      { label: "Creativo Instagram", icon: "📸", uses: lc["instagram_creative"] || 0 },
+      { label: "Miniatura YouTube", icon: "▶️", uses: lc["youtube_thumbnail"] || 0 },
+      { label: "Vídeo social", icon: "🎬", uses: lc["social_video"] || 0 },
+      { label: "Videoclips IA", icon: "🎞️", uses: lc["video"] || 0 },
       { label: "Promoción RRSS", icon: "📱", uses: lc["promotion"] || 0 },
       { label: "Promo Premium", icon: "💎", uses: lc["premium_promotion"] || 0 },
       { label: "Prensa & visibilidad", icon: "📰", uses: lc["press"] || 0 },
       { label: "Registro blockchain", icon: "🔐", uses: lc["register"] || 0 },
-      { label: "Masterizado profesional", icon: "🎛️", uses: lc["enhance_audio"] || 0 },
-      { label: "Edición de audio", icon: "✂️", uses: lc["edit_audio"] || 0 },
+      { label: "Masterización (ROEX)", icon: "🎛️", uses: lc["enhance_audio"] || 0 },
       { label: "Distribución", icon: "🌍", uses: lc["distribution"] || 0 },
-      { label: "Inspiración", icon: "💡", uses: lc["inspire"] || 0 },
+      { label: "Inspiración (entradas)", icon: "💡", uses: lc["inspire"] || 0 },
     ];
     const total = items.reduce((s, i) => s + i.uses, 0);
     const maxUses = Math.max(...items.map((i) => i.uses));
@@ -256,43 +269,45 @@ export default function AdminProductMetrics() {
       isTop: i.uses === maxUses && maxUses > 0,
       isLow: i.uses === minUses && total > 0 && minUses < maxUses,
     }));
-  }, [liveFeatureCounts]);
+  }, [liveFeatureCounts, createMusicSplit]);
 
   // Revenue by feature — estimated from live usage × credit_cost × price_per_credit_eur
-  // Mapping: tracking feature name → api_cost_config feature_key
   const revenueFeatures = useMemo(() => {
     const lc = liveFeatureCounts;
-    const featureMap: { label: string; trackingKey: string; costKeys: string[] }[] = [
-      { label: "Crear música", trackingKey: "create_music", costKeys: ["generate_audio", "generate_audio_song"] },
-      { label: "Compositor letras", trackingKey: "lyrics", costKeys: ["generate_lyrics"] },
-      { label: "Canta tu canción", trackingKey: "vocal", costKeys: ["generate_vocal_track"] },
-      { label: "Clonación de voz", trackingKey: "voice_cloning", costKeys: ["voice_translation_per_min"] },
-      { label: "Portadas con IA", trackingKey: "cover", costKeys: ["generate_cover"] },
-      { label: "Videoclips IA", trackingKey: "video", costKeys: ["generate_video"] },
-      { label: "Promoción RRSS", trackingKey: "promotion", costKeys: ["promote_premium"] },
-      { label: "Promo Premium", trackingKey: "premium_promotion", costKeys: ["promote_premium"] },
-      { label: "Prensa & visibilidad", trackingKey: "press", costKeys: ["generate_press_release"] },
-      { label: "Registro blockchain", trackingKey: "register", costKeys: ["register_work"] },
-      { label: "Masterizado profesional", trackingKey: "enhance_audio", costKeys: ["enhance_audio"] },
-      { label: "Edición de audio", trackingKey: "edit_audio", costKeys: ["edit_audio"] },
-      { label: "Social Video", trackingKey: "social_video", costKeys: ["social_video"] },
+    const cmTotal = lc["create_music"] || 0;
+    const split = createMusicSplit;
+    const splitTotal = split.song + split.instrumental + split.unknown;
+    const legacy = Math.max(0, cmTotal - splitTotal);
+    // Legacy + unknown distributed equally (best-effort) — assume same cost (3 cr)
+    const songUses = split.song;
+    const instrumentalUses = split.instrumental + split.unknown + legacy;
+
+    const featureMap: { label: string; uses: number; costKeys: string[] }[] = [
+      { label: "Crear música — Cantada", uses: songUses, costKeys: ["generate_audio_song", "generate_audio_elevenlabs"] },
+      { label: "Crear música — Instrumental", uses: instrumentalUses, costKeys: ["generate_audio"] },
+      { label: "Portadas con IA", uses: lc["cover"] || 0, costKeys: ["generate_cover"] },
+      { label: "Creativo Instagram", uses: lc["instagram_creative"] || 0, costKeys: ["instagram_creative"] },
+      { label: "Miniatura YouTube", uses: lc["youtube_thumbnail"] || 0, costKeys: ["youtube_thumbnail"] },
+      { label: "Vídeo social", uses: lc["social_video"] || 0, costKeys: ["social_video"] },
+      { label: "Videoclips IA", uses: lc["video"] || 0, costKeys: ["generate_video"] },
+      { label: "Promo Premium", uses: lc["premium_promotion"] || 0, costKeys: ["promote_premium"] },
+      { label: "Registro blockchain", uses: lc["register"] || 0, costKeys: ["register_work"] },
+      { label: "Masterización (ROEX)", uses: lc["enhance_audio"] || 0, costKeys: ["enhance_audio"] },
     ];
 
     const items = featureMap.map((f) => {
-      const uses = lc[f.trackingKey] || 0;
-      // Average credit cost across matching configs (e.g. instrumental + song)
       const cfgs = f.costKeys.map((k) => costConfig[k]).filter(Boolean);
       const creditCost = cfgs.length > 0 ? Math.round(cfgs.reduce((s, c) => s + c.credit_cost, 0) / cfgs.length) : 0;
       const pricePerCredit = cfgs.length > 0 ? cfgs.reduce((s, c) => s + c.price_per_credit_eur, 0) / cfgs.length : 0.60;
-      const revenue = uses * creditCost * pricePerCredit;
-      return { label: f.label, uses, creditCost, revenue };
-    }).filter((f) => f.creditCost > 0); // Solo features de pago
+      const revenue = f.uses * creditCost * pricePerCredit;
+      return { label: f.label, uses: f.uses, creditCost, revenue };
+    }).filter((f) => f.creditCost > 0);
 
     items.sort((a, b) => b.revenue - a.revenue);
 
     const totalRevEst = items.reduce((s, f) => s + f.revenue, 0);
     return { items, totalRevEst };
-  }, [liveFeatureCounts, costConfig]);
+  }, [liveFeatureCounts, createMusicSplit, costConfig]);
 
   // Cancellation reasons by plan type
   const cancellationCharts = useMemo(() => {
