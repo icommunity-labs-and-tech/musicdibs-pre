@@ -24,16 +24,6 @@ interface OperationRow {
   description: string | null;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  gratis: '🆓 Gratis',
-  registro: '🛡️ Registro',
-  distribucion: '🌍 Distribución',
-  musica: '🎵 Creación musical',
-  audio: '🎧 Audio y voz',
-  visual: '🎨 Imagen y vídeo',
-  promo: '📣 Promoción',
-};
-
 const CATEGORY_ORDER = ['gratis', 'registro', 'distribucion', 'musica', 'audio', 'visual', 'promo'];
 
 
@@ -56,11 +46,19 @@ export function PricingPopup({ open, onOpenChange }: { open: boolean; onOpenChan
       });
   }, [open]);
 
+  // Translate via i18n with fallback to DB value
+  const tName = (row: OperationRow) =>
+    t(`creditPricing.features.${row.operation_key}`, { defaultValue: row.operation_name });
+  const tDesc = (row: OperationRow) =>
+    t(`creditPricing.descriptions.${row.operation_key}`, { defaultValue: row.description ?? '' });
+  const tCategory = (cat: string) =>
+    t(`creditPricing.categories.${cat}`, { defaultValue: cat });
+
   // Group by category
   const grouped = CATEGORY_ORDER
     .map(cat => ({
       cat,
-      label: CATEGORY_LABELS[cat] ?? cat,
+      label: tCategory(cat),
       items: rows.filter(r => r.category === cat).sort((a, b) => a.credits_cost - b.credits_cost),
     }))
     .filter(g => g.items.length > 0);
@@ -91,12 +89,12 @@ export function PricingPopup({ open, onOpenChange }: { open: boolean; onOpenChan
                     </p>
                     <div className="divide-y divide-border/40">
                       {items.map((row) => {
-                        const desc = row.description;
+                        const desc = tDesc(row);
                         return (
                           <div key={row.operation_key} className="flex items-center justify-between py-2 px-1">
                             <div className="flex items-center gap-2 min-w-0">
                               <span className="text-base shrink-0">{row.operation_icon ?? '•'}</span>
-                              <span className="text-sm truncate">{row.operation_name}</span>
+                              <span className="text-sm truncate">{tName(row)}</span>
                               {desc && (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -110,7 +108,7 @@ export function PricingPopup({ open, onOpenChange }: { open: boolean; onOpenChan
                               {row.is_annual_only && (
                                 <Badge variant="outline" className="text-[10px] px-1.5 py-0 shrink-0 border-primary/40 text-primary">
                                   <Crown className="h-3 w-3 mr-0.5" />
-                                  Anual
+                                  {t('creditPricing.annualBadge', 'Anual')}
                                 </Badge>
                               )}
                             </div>
