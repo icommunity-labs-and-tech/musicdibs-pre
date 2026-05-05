@@ -55,24 +55,12 @@ const DURATION_OPTIONS: { value: number; label: string }[] = [
 const DEFAULT_DURATION: number | null = null;
 const INSTRUMENTAL_PROMPT_REGEX = /\b(instrumental|karaoke|sin voz|sin voces|base instrumental)\b/i;
 
-// ── Lyrics tab constants ──
-const LYRIC_STYLES = ["Narrativa", "Abstracta", "Descriptiva", "Reivindicativa", "Introspectiva", "Poética"];
-const LYRIC_LANGUAGES = ["Español", "Inglés", "Spanglish", "Portugués", "Francés"];
-const RHYME_SCHEMES = [
-  { value: "ABAB", label: "ABAB — Alterna" },
-  { value: "AABB", label: "AABB — Pareados" },
-  { value: "ABCB", label: "ABCB — Balada" },
-  { value: "libre", label: "Libre — Sin rima" },
-];
-const STRUCTURES = [
-  { value: "V+C+V+C+P+C", label: "Verso · Coro · Verso · Coro · Puente · Coro" },
-  { value: "V+C+V+C", label: "Verso · Coro · Verso · Coro" },
-  { value: "V+V+C+V+C", label: "Verso · Verso · Coro · Verso · Coro" },
-  { value: "V+C+P+C", label: "Verso · Coro · Puente · Coro" },
-];
+// ── Lyrics tab constants (stable keys; UI labels via i18n) ──
+const LYRIC_STYLE_KEYS = ["narrativa", "abstracta", "descriptiva", "reivindicativa", "introspectiva", "poetica"] as const;
+const RHYME_SCHEME_KEYS = ["ABAB", "AABB", "ABCB", "libre"] as const;
+const STRUCTURE_KEYS = ["V+C+V+C+P+C", "V+C+V+C", "V+V+C+V+C", "V+C+P+C"] as const;
 // Artist presets removed — users can type freely in description
-const THEMES = ["Amor", "Desamor", "Superación", "Fiesta", "Calle", "Familia", "Libertad", "Nostalgia", "Éxito", "Identidad"];
-const POVS = ["Primera persona", "Segunda persona", "Tercera persona"];
+const POV_KEYS = ["first", "second", "third"] as const;
 
 interface LyricsGeneration {
   id: string;
@@ -148,7 +136,7 @@ const AIStudioCreate = () => {
   const [lyricsRhyme, setLyricsRhyme] = useState("ABAB");
   const [lyricsStructure, setLyricsStructure] = useState("V+C+V+C+P+C");
   const [lyricsArtistRefs, setLyricsArtistRefs] = useState<string[]>([]);
-  const [lyricsPov, setLyricsPov] = useState("Primera persona");
+  const [lyricsPov, setLyricsPov] = useState<string>("first");
   const [_lyricsTheme] = useState(""); // kept for type compat
   const [generatedLyrics, setGeneratedLyrics] = useState("");
   const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
@@ -1230,10 +1218,10 @@ const AIStudioCreate = () => {
                                     ? "border-2 border-primary bg-primary/5"
                                     : "border-border hover:border-primary/30"
                                 )}
-                                title={v.description}
+                                title={t(`aiCreate.voicePresets.${v.id}.description`, { defaultValue: v.description })}
                               >
                                 <span className="text-base mb-0.5">{v.emoji}</span>
-                                <span className="text-xs font-medium text-foreground">{v.label}</span>
+                                <span className="text-xs font-medium text-foreground">{t(`aiCreate.voicePresets.${v.id}.label`, { defaultValue: v.label })}</span>
                                 {v.sample_url && (
                                   <span
                                     onClick={(e) => handlePreviewVoice(e, v.id, v.sample_url)}
@@ -1276,7 +1264,7 @@ const AIStudioCreate = () => {
                                       <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{artist.style_notes}</span>
                                     )}
                                     {artist.voice_profiles?.label && (
-                                      <Badge variant="outline" className="text-[9px] h-4 mt-1">{artist.voice_profiles.label}</Badge>
+                                      <Badge variant="outline" className="text-[9px] h-4 mt-1">{t(`aiCreate.voicePresets.${artist.voice_profile_id}.label`, { defaultValue: artist.voice_profiles.label })}</Badge>
                                     )}
                                   </button>
                                 ))}
@@ -1492,7 +1480,7 @@ const AIStudioCreate = () => {
                             <Select value={lyricsStructure} onValueChange={setLyricsStructure}>
                               <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                {STRUCTURES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                                {STRUCTURE_KEYS.map(k => <SelectItem key={k} value={k}>{t(`aiCreate.structures.${k}`)}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
@@ -1501,7 +1489,7 @@ const AIStudioCreate = () => {
                             <Select value={lyricsRhyme} onValueChange={setLyricsRhyme}>
                               <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                {RHYME_SCHEMES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
+                                {RHYME_SCHEME_KEYS.map(k => <SelectItem key={k} value={k}>{t(`aiCreate.rhymes.${k}`)}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
@@ -1512,7 +1500,7 @@ const AIStudioCreate = () => {
                           <Select value={lyricsPov} onValueChange={setLyricsPov}>
                             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {POVS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                              {POV_KEYS.map(k => <SelectItem key={k} value={k}>{t(`aiCreate.povs.${k}`)}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
@@ -1520,8 +1508,8 @@ const AIStudioCreate = () => {
                         <div className="space-y-1.5">
                           <Label className="text-sm">{t('aiCreate.writingStyleLabel')}</Label>
                           <div className="flex flex-wrap gap-1.5">
-                            {LYRIC_STYLES.map(s => (
-                              <Badge key={s} variant={lyricsStyle === s ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => setLyricsStyle(lyricsStyle === s ? "" : s)}>{s}</Badge>
+                            {LYRIC_STYLE_KEYS.map(k => (
+                              <Badge key={k} variant={lyricsStyle === k ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => setLyricsStyle(lyricsStyle === k ? "" : k)}>{t(`aiCreate.lyricStyles.${k}`)}</Badge>
                             ))}
                           </div>
                         </div>
