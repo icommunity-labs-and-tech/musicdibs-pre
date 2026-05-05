@@ -293,7 +293,7 @@ const AIStudioInspire = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e) {
-      toast({ title: "Error al descargar", description: "No se pudo descargar el archivo", variant: "destructive" });
+      toast({ title: t("aiInspire.downloadErrorTitle"), description: t("aiInspire.downloadErrorDesc"), variant: "destructive" });
     }
   };
 
@@ -304,6 +304,8 @@ const AIStudioInspire = () => {
   };
 
   const truncate = (s: string, n = 90) => (s.length > n ? `${s.slice(0, n).trim()}…` : s);
+
+  const selectedChipLabel = selectedChip ? t(`aiInspire.presets.${selectedChip}`) : "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -316,20 +318,20 @@ const AIStudioInspire = () => {
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          {t("aiInspire.backToStudio", "Volver al estudio")}
+          {t("aiInspire.backToStudio")}
         </Link>
 
         <div className="max-w-2xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
             <Sparkles className="w-4 h-4" />
-            <span className="text-sm font-medium">Crear en 1 click</span>
+            <span className="text-sm font-medium">{t("aiInspire.badge")}</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Crear en 1 click <span aria-hidden>🎵</span>
+            {t("aiInspire.title")} <span aria-hidden>🎵</span>
           </h1>
           <p className="text-lg text-muted-foreground mb-10">
-            ¿No sabes por dónde empezar? Genera una canción automáticamente y empieza a crear al instante.
+            {t("aiInspire.subtitle")}
           </p>
 
           <Button
@@ -341,12 +343,14 @@ const AIStudioInspire = () => {
             {isGenerating ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Generando...
+                {t("aiInspire.generatingShort")}
               </>
             ) : (
               <>
                 <Dice5 className="w-5 h-5 mr-2" />
-                {selectedChip ? `🎲 Generar ${selectedChip}` : "🎲 Sorpréndeme"}
+                {selectedChip
+                  ? t("aiInspire.generateChip", { label: selectedChipLabel })
+                  : t("aiInspire.surpriseMe")}
               </>
             )}
           </Button>
@@ -355,8 +359,8 @@ const AIStudioInspire = () => {
           {isGenerating && (
             <div className="mt-8 flex flex-col items-center gap-3 text-muted-foreground">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-sm font-medium">Generando tu canción... ⚡</p>
-              <p className="text-xs">Esto puede tardar entre 30 y 60 segundos</p>
+              <p className="text-sm font-medium">{t("aiInspire.generating")}</p>
+              <p className="text-xs">{t("aiInspire.generatingHint")}</p>
             </div>
           )}
 
@@ -366,7 +370,7 @@ const AIStudioInspire = () => {
               <div className="flex items-start gap-3 mb-4">
                 <AlertCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground mb-1">No se pudo generar la canción</p>
+                  <p className="font-medium text-foreground mb-1">{t("aiInspire.errorTitle")}</p>
                   <p className="text-sm text-muted-foreground">{error}</p>
                 </div>
               </div>
@@ -376,7 +380,7 @@ const AIStudioInspire = () => {
                 size="sm"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Intentar de nuevo
+                {t("aiInspire.tryAgain")}
               </Button>
             </div>
           )}
@@ -386,7 +390,7 @@ const AIStudioInspire = () => {
             <div className="mt-8 rounded-xl border border-border bg-card shadow-sm p-6 text-left">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Canción generada</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{t("aiInspire.generatedSong")}</p>
                   <h3 className="font-semibold text-foreground leading-snug">
                     {truncate(result.prompt)}
                   </h3>
@@ -408,18 +412,18 @@ const AIStudioInspire = () => {
               <div className="flex flex-wrap gap-2">
                 <Button onClick={handleDownload} variant="outline" size="sm">
                   <Download className="w-4 h-4 mr-2" />
-                  Descargar
+                  {t("aiInspire.download")}
                 </Button>
                 <Button onClick={handleReset} variant="outline" size="sm">
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Otra canción
+                  {t("aiInspire.anotherSong")}
                 </Button>
                 <Button
                   onClick={() => goToCreator(result.prompt)}
                   size="sm"
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
-                  Ir al estudio
+                  {t("aiInspire.goToStudio")}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
@@ -428,14 +432,14 @@ const AIStudioInspire = () => {
 
           {/* Preset chips */}
           <div className="mt-12">
-            <p className="text-sm text-muted-foreground mb-4">O prueba con estas ideas:</p>
+            <p className="text-sm text-muted-foreground mb-4">{t("aiInspire.ideasTitle")}</p>
             <div className="flex flex-wrap justify-center gap-2">
               {PRESET_IDEAS.map((idea) => {
-                const isSelected = selectedChip === idea.label;
+                const isSelected = selectedChip === idea.key;
                 return (
                   <button
-                    key={idea.label}
-                    onClick={() => handleChipClick(idea.label)}
+                    key={idea.key}
+                    onClick={() => handleChipClick(idea.key)}
                     disabled={isGenerating}
                     aria-pressed={isSelected}
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -445,7 +449,7 @@ const AIStudioInspire = () => {
                     }`}
                   >
                     <span aria-hidden>{idea.emoji}</span>
-                    {idea.label}
+                    {t(`aiInspire.presets.${idea.key}`)}
                   </button>
                 );
               })}
