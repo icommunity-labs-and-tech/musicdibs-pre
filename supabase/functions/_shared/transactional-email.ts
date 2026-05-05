@@ -541,3 +541,72 @@ export function metricAlertEmail(data: { alerts: Array<{ title: string; descript
     text: `Se han detectado ${summary} en las métricas de MusicDibs. Revisa el dashboard: https://musicdibs.com/dashboard/admin/metrics`,
   };
 }
+
+// ─── 11. Distribution Welcome (Annual subscribers) ───────────────────────────
+
+const tDist: Record<Lang, { subject: string; title: string; greeting: string; intro: string; whatNext: string; bullet1: string; bullet2: string; bullet3: string; cta: string; thanks: string; text: (name: string) => string }> = {
+  es: {
+    subject: "🎵 Bienvenido a la Distribución Musical de MusicDibs",
+    title: "¡Tu plan anual está activo!",
+    greeting: "Hola",
+    intro: "Gracias por contratar tu suscripción anual. Ya tienes acceso a la <strong>plataforma de distribución musical</strong> de MusicDibs.",
+    whatNext: "Próximos pasos:",
+    bullet1: "Nuestro equipo te dará de alta en la plataforma de distribución en las próximas 24-48h.",
+    bullet2: "Recibirás un correo separado con tus credenciales de acceso a dist.musicdibs.com.",
+    bullet3: "Mientras tanto, puedes empezar a registrar tus obras y usar el AI Studio.",
+    cta: "Ir a mi panel →",
+    thanks: "Si tienes alguna duda, escríbenos a info@musicdibs.com.",
+    text: (name) => `Hola ${name}, tu plan anual está activo. Te daremos de alta en la plataforma de distribución en 24-48h. Panel: https://musicdibs.com/dashboard`,
+  },
+  en: {
+    subject: "🎵 Welcome to MusicDibs Music Distribution",
+    title: "Your annual plan is active!",
+    greeting: "Hi",
+    intro: "Thanks for subscribing to our annual plan. You now have access to the <strong>MusicDibs music distribution platform</strong>.",
+    whatNext: "Next steps:",
+    bullet1: "Our team will set up your distribution account within the next 24-48h.",
+    bullet2: "You'll receive a separate email with your credentials for dist.musicdibs.com.",
+    bullet3: "Meanwhile, you can start registering your works and using the AI Studio.",
+    cta: "Go to my dashboard →",
+    thanks: "If you have any questions, write to us at info@musicdibs.com.",
+    text: (name) => `Hi ${name}, your annual plan is active. We'll set up your distribution account in 24-48h. Dashboard: https://musicdibs.com/dashboard`,
+  },
+  pt: {
+    subject: "🎵 Bem-vindo à Distribuição Musical da MusicDibs",
+    title: "Seu plano anual está ativo!",
+    greeting: "Olá",
+    intro: "Obrigado por contratar sua assinatura anual. Você já tem acesso à <strong>plataforma de distribuição musical</strong> da MusicDibs.",
+    whatNext: "Próximos passos:",
+    bullet1: "Nossa equipe ativará sua conta de distribuição nas próximas 24-48h.",
+    bullet2: "Você receberá um email separado com suas credenciais de dist.musicdibs.com.",
+    bullet3: "Enquanto isso, você pode começar a registrar suas obras e usar o AI Studio.",
+    cta: "Ir ao meu painel →",
+    thanks: "Se tiver alguma dúvida, escreva para info@musicdibs.com.",
+    text: (name) => `Olá ${name}, seu plano anual está ativo. Ativaremos sua conta de distribuição em 24-48h. Painel: https://musicdibs.com/dashboard`,
+  },
+};
+
+export function distributionWelcomeEmail(data: { name: string; email: string; planId: string; lang?: string }) {
+  const lang = normLang(data.lang);
+  const i = tDist[lang];
+  const safeName = escapeHtml(data.name);
+
+  const body = `
+    <p style="margin:0 0 16px;color:#d1d5db;font-size:15px;line-height:1.7;text-align:center;">${i.greeting} <strong style="color:#f3f4f6;">${safeName}</strong>,</p>
+    <p style="margin:0 0 24px;color:#d1d5db;font-size:14px;line-height:1.7;">${i.intro}</p>
+    <p style="margin:24px 0 8px;color:#f3f4f6;font-size:14px;font-weight:600;">${i.whatNext}</p>
+    <ul style="margin:0;padding-left:20px;color:#d1d5db;font-size:14px;line-height:1.8;">
+      <li>${i.bullet1}</li>
+      <li>${i.bullet2}</li>
+      <li>${i.bullet3}</li>
+    </ul>
+    ${cta("https://musicdibs.com/dashboard", i.cta)}
+    <p style="margin:24px 0 0;color:#9ca3af;font-size:12px;text-align:center;line-height:1.6;">${i.thanks}</p>`;
+
+  return {
+    subject: i.subject,
+    html: wrap("🎵", i.title, body, lang),
+    text: i.text(data.name),
+  };
+}
+
