@@ -104,9 +104,16 @@ serve(async (req) => {
       // Email ya existe — buscar el usuario existente
       log(`createUser error (likely existing): ${createErr.message}`);
       try {
-        const { data: existingData } = await (supabaseAdmin.auth.admin as any).getUserByEmail(normalizedEmail);
-        if (existingData?.user) {
-          userId = existingData.user.id;
+        // Search auth users by email via listUsers (paginated). Fallback to profiles lookup.
+        let page = 1;
+        const perPage = 200;
+        while (!userId && page <= 50) {
+          const { data: list, error: listErr } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+          if (listErr || !list?.users?.length) break;
+          const found = list.users.find((u: any) => (u.email || "").toLowerCase() === normalizedEmail);
+          if (found) { userId = found.id; break; }
+          if (list.users.length < perPage) break;
+          page++;
         }
       } catch (lookupErr) {
         console.warn("[GUEST-LEAD] Could not find existing user:", lookupErr);
