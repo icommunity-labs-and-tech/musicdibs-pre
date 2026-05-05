@@ -43,6 +43,16 @@ Deno.serve(async (req) => {
     await supabase.from("renewal_log").insert(entry);
   };
 
+  // Parse optional body for dry_run flag
+  let dryRun = false;
+  try {
+    const bodyText = await req.text();
+    const bodyJson = bodyText ? JSON.parse(bodyText) : {};
+    dryRun = bodyJson.dry_run === true;
+  } catch (_) { /* ignore body parse errors */ }
+  if (dryRun) console.log('[renewals] *** DRY RUN MODE — no changes will be made ***');
+  const dryRunResults: any[] = [];
+
   try {
     // ─────────────────────────────────────────────────────────────
     // 1. SAFETY FLAG CHECK — must run before ANY Stripe call
