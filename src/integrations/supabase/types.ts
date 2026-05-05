@@ -2844,6 +2844,26 @@ export type Database = {
       }
     }
     Functions: {
+      admin_get_user_credit_audit: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          coupon_code: string
+          created_at: string
+          credits_delta: number
+          description: string
+          display_name: string
+          email: string
+          event_type: string
+          feature_key: string
+          outcome: string
+          record_id: string
+          record_type: string
+          reference_id: string
+          stripe_customer_id: string
+          stripe_session_id: string
+          user_id: string
+        }[]
+      }
       check_renewals_cron_health: { Args: never; Returns: undefined }
       decrement_credits: {
         Args: { _amount: number; _user_id: string }
