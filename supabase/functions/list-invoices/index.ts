@@ -54,12 +54,13 @@ serve(async (req) => {
           customerId = null;
         }
       } catch (stripeError: any) {
-        if (stripeError?.code === "resource_missing" && stripeError?.param === "customer") {
+        if (stripeError?.code === "resource_missing" || stripeError?.statusCode === 404) {
           console.warn("[LIST-INVOICES] Stored Stripe customer no longer exists, falling back to email", {
             userId: user.id,
             customerId,
           });
           customerId = null;
+          await supabaseAdmin.from("profiles").update({ stripe_customer_id: null }).eq("user_id", user.id);
         } else {
           throw stripeError;
         }
