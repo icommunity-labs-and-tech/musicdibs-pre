@@ -252,8 +252,7 @@ export default function AdminProductMetrics() {
       { label: "Miniatura YouTube", icon: "▶️", uses: lc["youtube_thumbnail"] || 0 },
       { label: "Vídeo social", icon: "🎬", uses: lc["social_video"] || 0 },
       { label: "Videoclips IA", icon: "🎞️", uses: lc["video"] || 0 },
-      { label: "Promoción RRSS", icon: "📱", uses: lc["promotion"] || 0 },
-      { label: "Promo Premium", icon: "💎", uses: lc["premium_promotion"] || 0 },
+      { label: "Promoción RRSS", icon: "📱", uses: (lc["promotion"] || 0) + (lc["premium_promotion"] || 0) },
       { label: "Prensa & visibilidad", icon: "📰", uses: lc["press"] || 0 },
       { label: "Registro blockchain", icon: "🔐", uses: lc["register"] || 0 },
       { label: "Masterización (ROEX)", icon: "🎛️", uses: lc["enhance_audio"] || 0 },
@@ -290,7 +289,7 @@ export default function AdminProductMetrics() {
       { label: "Miniatura YouTube", uses: lc["youtube_thumbnail"] || 0, costKeys: ["youtube_thumbnail"] },
       { label: "Vídeo social", uses: lc["social_video"] || 0, costKeys: ["social_video"] },
       { label: "Videoclips IA", uses: lc["video"] || 0, costKeys: ["generate_video"] },
-      { label: "Promo Premium", uses: lc["premium_promotion"] || 0, costKeys: ["promote_premium"] },
+      { label: "Promoción RRSS", uses: (lc["promotion"] || 0) + (lc["premium_promotion"] || 0), costKeys: ["promote_premium"] },
       { label: "Registro blockchain", uses: lc["register"] || 0, costKeys: ["register_work"] },
       { label: "Masterización (ROEX)", uses: lc["enhance_audio"] || 0, costKeys: ["enhance_audio"] },
     ];
