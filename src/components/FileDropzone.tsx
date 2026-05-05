@@ -120,10 +120,10 @@ export const FileDropzone = ({
       {/* Image preview */}
       {fileType === 'image' && preview ? (
         <div className="relative group rounded-lg overflow-hidden border border-border">
-          <img src={preview} alt="Preview" className="w-full h-48 object-cover" />
+          <img src={preview} alt={tk('previewAlt')} className="w-full h-48 object-cover" />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <Button variant="secondary" size="sm" onClick={handleClick}>
-              Cambiar
+              {tk('change')}
             </Button>
             {onRemove && (
               <Button
