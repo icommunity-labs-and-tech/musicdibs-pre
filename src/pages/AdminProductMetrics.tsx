@@ -48,7 +48,7 @@ const ACTION_EVENTS_BY_FEATURE: Record<string, string[]> = {
   register: ["work_registered"],
   enhance_audio: ["enhance_audio_completed"],
   distribution: ["distribution_clicked"],
-  inspire: ["generation_completed"],
+  inspire: ["ai_studio_entered"],
 };
 
 interface MetricRow {
