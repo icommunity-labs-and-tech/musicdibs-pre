@@ -5,6 +5,7 @@ import { User, Mail, Phone, CreditCard, Shield, Calendar, Hash, FileText, Clock 
 import UserPurchasesPanel from './UserPurchasesPanel';
 import UserUsagePanel from './UserUsagePanel';
 import DisputeTimeline from './DisputeTimeline';
+import UserCreditAuditPanel from './UserCreditAuditPanel';
 
 interface UserDetailSheetProps {
   user: any | null;
@@ -133,6 +134,11 @@ export default function UserDetailSheet({ user, open, onOpenChange }: UserDetail
 
         {/* Dispute timeline */}
         <DisputeTimeline userId={user.user_id} />
+
+        <Separator className="my-4" />
+
+        {/* Credit audit & dispute evidence */}
+        <UserCreditAuditPanel userId={user.user_id} userEmail={user.email} />
       </SheetContent>
     </Sheet>
   );

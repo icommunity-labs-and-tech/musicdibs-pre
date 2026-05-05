@@ -552,10 +552,53 @@ export type Database = {
             foreignKeyName: "credit_transactions_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "credit_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "v_orders_evidences_consistency"
             referencedColumns: ["order_id"]
           },
         ]
+      }
+      credit_validation_log: {
+        Row: {
+          created_at: string
+          credits_before: number
+          credits_cost: number
+          error_detail: string | null
+          feature_key: string
+          id: string
+          ip_hint: string | null
+          outcome: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_before: number
+          credits_cost: number
+          error_detail?: string | null
+          feature_key: string
+          id?: string
+          ip_hint?: string | null
+          outcome: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_before?: number
+          credits_cost?: number
+          error_detail?: string | null
+          feature_key?: string
+          id?: string
+          ip_hint?: string | null
+          outcome?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       email_send_log: {
         Row: {
@@ -1386,6 +1429,13 @@ export type Database = {
             foreignKeyName: "order_attribution_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "order_attribution_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
             referencedRelation: "v_orders_evidences_consistency"
             referencedColumns: ["order_id"]
           },
@@ -2016,6 +2066,13 @@ export type Database = {
             foreignKeyName: "purchase_usage_evidences_purchase_evidence_id_fkey"
             columns: ["purchase_evidence_id"]
             isOneToOne: false
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["evidence_id"]
+          },
+          {
+            foreignKeyName: "purchase_usage_evidences_purchase_evidence_id_fkey"
+            columns: ["purchase_evidence_id"]
+            isOneToOne: false
             referencedRelation: "v_orders_evidences_consistency"
             referencedColumns: ["evidence_id"]
           },
@@ -2551,6 +2608,13 @@ export type Database = {
             referencedRelation: "ai_generations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "works_ai_generation_id_fkey"
+            columns: ["ai_generation_id"]
+            isOneToOne: false
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["generation_id"]
+          },
         ]
       }
     }
@@ -2664,6 +2728,47 @@ export type Database = {
         }
         Relationships: []
       }
+      v_dispute_evidence: {
+        Row: {
+          ai_duration_secs: number | null
+          ai_prompt: string | null
+          ai_provider: string | null
+          amount_gross: number | null
+          certification_status: string | null
+          credit_tx_at: string | null
+          credit_tx_description: string | null
+          credit_tx_id: string | null
+          credit_tx_type: string | null
+          credits_amount: number | null
+          ct_coupon: string | null
+          ct_stripe_session_id: string | null
+          currency: string | null
+          current_plan: string | null
+          display_name: string | null
+          email: string | null
+          evidence_amount: number | null
+          evidence_created_at: string | null
+          evidence_currency: string | null
+          evidence_hash: string | null
+          evidence_id: string | null
+          generation_at: string | null
+          generation_id: string | null
+          ibs_transaction_id: string | null
+          is_renewal: boolean | null
+          order_coupon: string | null
+          order_id: string | null
+          order_paid_at: string | null
+          product_code: string | null
+          product_label: string | null
+          product_type: string | null
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_invoice_id: string | null
+          stripe_payment_intent_id: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       v_orders_evidences_consistency: {
         Row: {
           amount_gross: number | null
@@ -2677,6 +2782,26 @@ export type Database = {
           paid_at: string | null
           payment_intent_id: string | null
           product_label: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_user_credit_audit: {
+        Row: {
+          coupon_code: string | null
+          created_at: string | null
+          credits_delta: number | null
+          description: string | null
+          display_name: string | null
+          email: string | null
+          event_type: string | null
+          feature_key: string | null
+          outcome: string | null
+          record_id: string | null
+          record_type: string | null
+          reference_id: string | null
+          stripe_customer_id: string | null
+          stripe_session_id: string | null
           user_id: string | null
         }
         Relationships: []
