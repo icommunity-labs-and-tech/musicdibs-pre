@@ -216,34 +216,24 @@ export const Navbar = () => {
           <Link to="/contact" onClick={() => setMobileOpen(false)} className={`block ${navText} py-2 transition-colors`}>{t('nav.contact')}</Link>
           <Link to="/partners" onClick={() => setMobileOpen(false)} className={`block ${navText} py-2 transition-colors`}>{t('nav.partners', 'Hazte Partner')}</Link>
 
-          {/* Access to services accordion */}
-          <div className={`border-t ${isLightBg ? 'border-border' : 'border-white/10'} pt-3 mt-2`}>
-            <button
-              onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
-              className={`flex items-center justify-between w-full font-semibold ${navTextStrong} py-2 transition-colors`}
-            >
-              <span className="truncate text-left">
-                {user ? `${t('nav.hello', 'Hola')}, ${greetingName}` : t('nav.accessServices')}
-              </span>
-              <ChevronDown className={`w-4 h-4 transition-transform shrink-0 ${mobileServicesOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {mobileServicesOpen && (
-              <div className="pl-4 space-y-2 mt-1">
-                {user ? (
-                  <>
-                    <Link to="/dashboard" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors font-medium`}>{t('nav.myAccount', 'Mi cuenta')}</Link>
-                    <button
-                      onClick={async () => { setMobileOpen(false); await signOut(); navigate('/'); }}
-                      className={`block w-full text-left ${navTextMuted} py-1 transition-colors`}
-                    >
-                      {t('nav.logout', 'Cerrar sesión')}
-                    </button>
-                  </>
-                ) : (
-                  <Link to="/login" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors font-medium`}>{t('nav.login')}</Link>
-                )}
-                <Link to="/verify" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors`}>{t('nav.verifier')}</Link>
-              </div>
+          {/* Access to services */}
+          <div className={`border-t ${isLightBg ? 'border-border' : 'border-white/10'} pt-3 mt-2 space-y-2`}>
+            {user ? (
+              <>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)} className={`block ${navTextStrong} py-2 transition-colors font-semibold`}>
+                  {`${t('nav.hello', 'Hola')}, ${greetingName}`}
+                </Link>
+                <button
+                  onClick={async () => { setMobileOpen(false); await signOut(); navigate('/'); }}
+                  className={`block w-full text-left ${navTextMuted} py-1 transition-colors`}
+                >
+                  {t('nav.logout', 'Cerrar sesión')}
+                </button>
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setMobileOpen(false)} className={`block ${navTextStrong} py-2 transition-colors font-semibold`}>
+                {t('nav.accessServices')}
+              </Link>
             )}
           </div>
         </div>
