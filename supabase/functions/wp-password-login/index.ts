@@ -29,14 +29,16 @@ serve(async (req) => {
 
     if (error) {
       console.error("[wp-password-login] RPC error:", error);
-      return new Response(JSON.stringify({ error: "Invalid login credentials" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // Return 200 with upgraded:false so frontend fallback doesn't log a runtime error
+      return new Response(JSON.stringify({ upgraded: false, reason: "rpc_error" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // data is jsonb: { upgraded: true, user_id: "..." } or { error: "..." }
     if (data?.error) {
-      return new Response(JSON.stringify({ error: data.error }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // Not a WP-migrated user or wrong password — return 200 so the caller can fall back gracefully
+      return new Response(JSON.stringify({ upgraded: false, reason: data.error }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     return new Response(JSON.stringify({ upgraded: data?.upgraded ?? false }),
