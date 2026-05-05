@@ -173,65 +173,16 @@ export const Navbar = () => {
           {/* Language + CTA + Mobile toggle */}
           <div className="flex items-center gap-2">
             <LanguageSelector />
-            <div
-              className="relative hidden lg:block"
-              onMouseEnter={openServices}
-              onMouseLeave={closeServicesWithDelay}
-            >
-              <Button 
-                variant="glass" 
-                className="font-semibold flex items-center gap-1.5 max-w-[220px]"
-                onClick={() => {
-                  if (user) {
-                    setServicesOpen(false);
-                    navigate('/dashboard');
-                  } else {
-                    navigate('/login');
-                  }
-                }}
+            <div className="hidden lg:block">
+              <Button
+                variant="glass"
+                className="font-semibold max-w-[220px]"
+                onClick={() => navigate(user ? '/dashboard' : '/login')}
               >
                 <span className="truncate">
                   {user ? `${t('nav.hello', 'Hola')}, ${greetingName}` : t('nav.accessServices')}
                 </span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform shrink-0 ${servicesOpen ? 'rotate-180' : ''}`} />
               </Button>
-              <div
-                onMouseEnter={openServices}
-                onMouseLeave={closeServicesWithDelay}
-                className={`absolute right-0 top-full mt-1 w-56 rounded-md bg-white shadow-lg ring-1 ring-black/10 z-50 ${servicesOpen ? "block" : "hidden"}`}
-              >
-                <ul className="py-2 text-sm text-gray-700">
-                  {user ? (
-                    <>
-                      <li>
-                        <Link to="/dashboard" className="block px-4 py-2 hover:bg-gray-100 font-medium" onClick={() => setServicesOpen(false)}>
-                          {t('nav.myAccount', 'Mi cuenta')}
-                        </Link>
-                      </li>
-                      <li>
-                        <button
-                          onClick={async () => { setServicesOpen(false); await signOut(); navigate('/'); }}
-                          className="block w-full text-left px-4 py-2 hover:bg-gray-100"
-                        >
-                          {t('nav.logout', 'Cerrar sesión')}
-                        </button>
-                      </li>
-                    </>
-                  ) : (
-                    <li>
-                      <Link to="/login" className="block px-4 py-2 hover:bg-gray-100 font-medium" onClick={() => setServicesOpen(false)}>
-                        {t('nav.login')}
-                      </Link>
-                    </li>
-                  )}
-                  <li className="border-t border-gray-100 my-1" />
-                  <li>
-                    <Link to="/verify" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setServicesOpen(false)}>
-                      {t('nav.verifier')}
-                    </Link>
-                  </li>
-                </ul>
-              </div>
             </div>
             <button
               className={`lg:hidden ${mobileToggleColor} p-2`}
