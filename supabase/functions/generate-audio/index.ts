@@ -454,7 +454,7 @@ serve(async (req) => {
           user_id: userId,
           prompt: description ? `${description.slice(0, MAX_LENGTH)}\n\n---\n\n${prompt}` : prompt,
           audio_url: savedAudioUrl,
-          duration: durationSecs,
+          duration: durationSecs ?? 0,
           genre: genre || null,
           mood: mood || null,
         }).select('id').single();
