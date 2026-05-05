@@ -303,6 +303,7 @@ serve(async (req) => {
         ...attrMetadata,
       },
       line_items: [{ price: plan.priceId, quantity: 1 }],
+      allow_promotion_codes: true,
       automatic_tax: { enabled: true },
       billing_address_collection: "required",
       tax_id_collection: { enabled: true },
