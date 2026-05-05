@@ -1,4 +1,5 @@
 import { useCallback, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, X, FileAudio, Image as ImageIcon, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
