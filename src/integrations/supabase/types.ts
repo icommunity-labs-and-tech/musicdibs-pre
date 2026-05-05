@@ -506,32 +506,56 @@ export type Database = {
       credit_transactions: {
         Row: {
           amount: number
+          coupon_code: string | null
           created_at: string
           description: string | null
           feature_key: string | null
           id: string
+          order_id: string | null
+          stripe_session_id: string | null
           type: string
           user_id: string
         }
         Insert: {
           amount: number
+          coupon_code?: string | null
           created_at?: string
           description?: string | null
           feature_key?: string | null
           id?: string
+          order_id?: string | null
+          stripe_session_id?: string | null
           type: string
           user_id: string
         }
         Update: {
           amount?: number
+          coupon_code?: string | null
           created_at?: string
           description?: string | null
           feature_key?: string | null
           id?: string
+          order_id?: string | null
+          stripe_session_id?: string | null
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders_evidences_consistency"
+            referencedColumns: ["order_id"]
+          },
+        ]
       }
       email_send_log: {
         Row: {
