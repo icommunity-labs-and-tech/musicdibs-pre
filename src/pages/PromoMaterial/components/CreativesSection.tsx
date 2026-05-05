@@ -48,6 +48,7 @@ const fileToBase64 = (file: File): Promise<string> =>
 export const CreativesSection = () => {
   const { t } = useTranslation();
   const { hasEnough } = useCredits();
+  const { track } = useProductTracking();
 
   const [platform, setPlatform] = useState<'instagram' | 'youtube'>('instagram');
   const [instagramFormat, setInstagramFormat] = useState<'feed' | 'story'>('feed');
