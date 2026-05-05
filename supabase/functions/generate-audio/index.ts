@@ -6,8 +6,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const DEFAULT_SONG_DURATION_SECS = 90;
-const DEFAULT_INSTRUMENTAL_DURATION_SECS = 60;
+// Used ONLY when "Auto" is selected AND user provided lyrics (composition plan REQUIRES a duration).
+// For Auto + no lyrics we omit music_length_ms entirely so ElevenLabs decides.
+const AUTO_PLAN_FALLBACK_SECS = 180;
+const MIN_DURATION_SECS = 30;
+const MAX_DURATION_SECS = 300; // ElevenLabs Music API allows up to 5 min
 const PROVIDER_TIMEOUT_MS = 110_000;
 const PLAN_TIMEOUT_MS = 30_000;
 
@@ -293,20 +296,24 @@ serve(async (req) => {
     if (cleanPrompt) parts.push(cleanPrompt);
     const enrichedPrompt = parts.join('. ');
 
-    // Avoid open-ended provider jobs: they are the main source of Edge Function timeouts.
+    // Duration handling:
+    // - If user passes a number → respect it (clamped to [30, 300] sec).
+    // - If user passes nothing/null ("Auto") → leave durationSecs = null and let ElevenLabs decide.
     const requestedDuration = Number(duration);
-    const durationSecs = Number.isFinite(requestedDuration) && requestedDuration > 0
-      ? Math.min(Math.max(Math.round(requestedDuration), 30), 120)
-      : (mode === 'song' ? DEFAULT_SONG_DURATION_SECS : DEFAULT_INSTRUMENTAL_DURATION_SECS);
-    const durationMs = durationSecs * 1000;
+    const userSpecifiedDuration = Number.isFinite(requestedDuration) && requestedDuration > 0;
+    const durationSecs: number | null = userSpecifiedDuration
+      ? Math.min(Math.max(Math.round(requestedDuration), MIN_DURATION_SECS), MAX_DURATION_SECS)
+      : null;
+    const durationMs: number | null = durationSecs !== null ? durationSecs * 1000 : null;
     const hasUserLyrics = typeof lyrics === 'string' && lyrics.trim().length > 0 && mode === 'song';
 
-    // Pre-build composition plan if user provided lyrics
-    // Composition plan REQUIRES a duration → use a sensible default (90s) only for plan building
+    // Pre-build composition plan if user provided lyrics.
+    // Composition plan REQUIRES a duration → if Auto, use AUTO_PLAN_FALLBACK_SECS just for the plan.
     let compositionPlan: any | null = null;
     if (hasUserLyrics) {
-      console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars, ${durationMs}ms)`);
-      compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), durationMs, ELEVENLABS_API_KEY);
+      const planDurationMs = durationMs ?? AUTO_PLAN_FALLBACK_SECS * 1000;
+      console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars, ${planDurationMs}ms${durationMs ? '' : ' [auto fallback]'})`);
+      compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), planDurationMs, ELEVENLABS_API_KEY);
       if (!compositionPlan) {
         console.warn('[GENERATE-AUDIO] composition plan unavailable — falling back to prompt-only mode');
       }
@@ -320,7 +327,8 @@ serve(async (req) => {
       if (planOrPrompt.plan) {
         body.composition_plan = planOrPrompt.plan;
       } else {
-        body.music_length_ms = durationMs;
+        // Only set duration if user specified one; otherwise let ElevenLabs decide.
+        if (durationMs !== null) body.music_length_ms = durationMs;
         body.prompt = planOrPrompt.promptText;
       }
       return fetchWithTimeout('https://api.elevenlabs.io/v1/music', {
