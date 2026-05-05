@@ -1,7 +1,27 @@
 import { supabase } from '@/integrations/supabase/client';
 
-async function adminAction(action: string, payload: Record<string, any> = {}) {
+type AdminActionPayload = Record<string, unknown>;
+
+async function getAdminAccessToken() {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw new Error('No se pudo verificar la sesión. Vuelve a iniciar sesión.');
+
+  let accessToken = sessionData.session?.access_token;
+
+  if (!accessToken) {
+    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión.');
+    accessToken = refreshData.session?.access_token;
+  }
+
+  if (!accessToken) throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión.');
+  return accessToken;
+}
+
+async function adminAction(action: string, payload: AdminActionPayload = {}) {
+  const accessToken = await getAdminAccessToken();
   const { data, error } = await supabase.functions.invoke('admin-action', {
+    headers: { Authorization: `Bearer ${accessToken}` },
     body: { action, payload },
   });
   if (error) throw new Error(error.message || 'Admin action failed');
@@ -28,12 +48,12 @@ export const adminApi = {
   exportCsv: (dataset: string) => adminAction('export_csv', { dataset }),
   getAdmins: () => adminAction('get_admins'),
   getAuditLog: (offset = 0, action_filter = '') => adminAction('get_audit_log', { offset, action_filter }),
-  callAction: (action: string, payload: Record<string, any> = {}) => adminAction(action, payload),
+  callAction: (action: string, payload: AdminActionPayload = {}) => adminAction(action, payload),
   getPremiumPromos: (offset = 0, status_filter = '') => adminAction('get_premium_promos', { offset, status_filter }),
   updatePremiumPromoStatus: (promo_id: string, new_status: string, rejection_reason?: string, ig_url?: string, tiktok_url?: string) => adminAction('update_premium_promo_status', { promo_id, new_status, ...(rejection_reason ? { rejection_reason } : {}), ...(ig_url ? { ig_url } : {}), ...(tiktok_url ? { tiktok_url } : {}) }),
   deleteWork: (work_id: string) => adminAction('delete_work', { work_id }),
   getCampaignsCatalog: () => adminAction('get_campaigns_catalog'),
-  saveCampaign: (campaign: Record<string, any>) => adminAction('save_campaign', campaign),
+  saveCampaign: (campaign: AdminActionPayload) => adminAction('save_campaign', campaign),
   getCampaignMetrics: (filters: { periodType?: string; weekStart?: string; month?: string; year?: string }) => adminAction('get_campaign_metrics', filters),
   getCampaignDetail: (campaign_name: string) => adminAction('get_campaign_detail', { campaign_name }),
   backfillOrdersFromStripe: (dry_run = false, limit?: number) => adminAction('backfill_orders_from_stripe', { dry_run, limit }),
