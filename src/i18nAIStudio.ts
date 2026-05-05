@@ -285,6 +285,8 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       fileTooLargeDesc: 'El archivo supera el límite de {{max}} MB. Comprime el audio o sube otro archivo.',
       emptyFile: 'Archivo vacío',
       emptyFileDesc: 'El archivo seleccionado está vacío. Elige otro audio.',
+      errorSession: 'Tu sesión ha expirado. Recarga la página e inicia sesión de nuevo.',
+      errorCredits: 'Error de créditos',
     },
     aiInspire: {
       backToStudio: 'Volver a AI Music Studio',
@@ -924,6 +926,8 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       fileTooLargeDesc: 'The file exceeds the {{max}} MB limit. Compress the audio or upload a different file.',
       emptyFile: 'Empty file',
       emptyFileDesc: 'The selected file is empty. Choose another audio file.',
+      errorSession: 'Your session has expired. Please reload the page and sign in again.',
+      errorCredits: 'Credit error',
     },
     aiInspire: {
       backToStudio: 'Back to AI Music Studio',
