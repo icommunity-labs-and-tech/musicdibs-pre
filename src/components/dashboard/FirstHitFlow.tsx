@@ -745,10 +745,10 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                     {isImproving ? (
                       <>
                         <Loader2 className="w-3 h-3 animate-spin inline mr-1" />
-                        Mejorando...
+                        {t('dashboard.firstHit.improving')}
                       </>
                     ) : (
-                      <>✨ Mejorar con IA</>
+                      <>{t('dashboard.firstHit.improveWithAI')}</>
                     )}
                   </button>
                 </div>
