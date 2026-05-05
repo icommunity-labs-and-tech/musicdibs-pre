@@ -1218,10 +1218,10 @@ const AIStudioCreate = () => {
                                     ? "border-2 border-primary bg-primary/5"
                                     : "border-border hover:border-primary/30"
                                 )}
-                                title={v.description}
+                                title={t(`aiCreate.voicePresets.${v.id}.description`, { defaultValue: v.description })}
                               >
                                 <span className="text-base mb-0.5">{v.emoji}</span>
-                                <span className="text-xs font-medium text-foreground">{v.label}</span>
+                                <span className="text-xs font-medium text-foreground">{t(`aiCreate.voicePresets.${v.id}.label`, { defaultValue: v.label })}</span>
                                 {v.sample_url && (
                                   <span
                                     onClick={(e) => handlePreviewVoice(e, v.id, v.sample_url)}
