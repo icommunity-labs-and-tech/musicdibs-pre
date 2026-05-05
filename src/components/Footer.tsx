@@ -84,6 +84,9 @@ const Footer = () => {
             <Link to="/contact" className="block text-white/80 hover:text-white transition-colors">
               {t('nav.contact')}
             </Link>
+            <Link to="/verify" className="block text-white/80 hover:text-white transition-colors">
+              {t('nav.verifier')}
+            </Link>
           </div>
 
           {/* Block 3 - Corporativo */}
