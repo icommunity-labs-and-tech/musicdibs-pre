@@ -175,12 +175,12 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
       if (error) throw error;
       if (data?.improved_text) {
         setPrompt(data.improved_text);
-        toast.success('Descripción mejorada ✨');
+        toast.success(t('dashboard.firstHit.descImproved'));
       } else {
-        toast.error('Error al mejorar. Inténtalo de nuevo.');
+        toast.error(t('dashboard.firstHit.improveError'));
       }
     } catch {
-      toast.error('Error al mejorar. Inténtalo de nuevo.');
+      toast.error(t('dashboard.firstHit.improveError'));
     }
     setIsImproving(false);
   };
@@ -262,7 +262,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
 
   const handleStep1Next = () => {
     if (kycStatus !== 'verified') {
-      toast.error('Debes verificar tu identidad antes de registrar una obra.')
+      toast.error(t('dashboard.firstHit.kycRequiredError'))
       navigate('/dashboard/verify-identity')
       return
     }
@@ -745,10 +745,10 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                     {isImproving ? (
                       <>
                         <Loader2 className="w-3 h-3 animate-spin inline mr-1" />
-                        Mejorando...
+                        {t('dashboard.firstHit.improving')}
                       </>
                     ) : (
-                      <>✨ Mejorar con IA</>
+                      <>{t('dashboard.firstHit.improveWithAI')}</>
                     )}
                   </button>
                 </div>
@@ -766,7 +766,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
 
               {/* Mode selector */}
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Tipo de generación</Label>
+                <Label className="text-xs text-muted-foreground">{t('dashboard.firstHit.genTypeLabel')}</Label>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -778,7 +778,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                         : "border-border text-muted-foreground hover:border-primary/50"
                     )}
                   >
-                    🎤 Canción con voz
+                    {t('dashboard.firstHit.genTypeSong')}
                   </button>
                   <button
                     type="button"
@@ -790,7 +790,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                         : "border-border text-muted-foreground hover:border-primary/50"
                     )}
                   >
-                    🎹 Instrumental / Base
+                    {t('dashboard.firstHit.genTypeInstrumental')}
                   </button>
                 </div>
               </div>
@@ -835,7 +835,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                           }}
                           className={cn("inline-flex items-center gap-1 mt-1 text-[11px] cursor-pointer", playingVoice === v.id ? "text-primary" : "text-muted-foreground")}
                         >
-                          {playingVoice === v.id ? '⏹ Detener' : '▶ Escuchar'}
+                          {playingVoice === v.id ? t('dashboard.firstHit.voiceStop') : t('dashboard.firstHit.voiceListen')}
                         </span>
                       )}
                     </button>
