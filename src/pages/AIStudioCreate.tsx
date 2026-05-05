@@ -136,7 +136,7 @@ const AIStudioCreate = () => {
   const [lyricsRhyme, setLyricsRhyme] = useState("ABAB");
   const [lyricsStructure, setLyricsStructure] = useState("V+C+V+C+P+C");
   const [lyricsArtistRefs, setLyricsArtistRefs] = useState<string[]>([]);
-  const [lyricsPov, setLyricsPov] = useState("Primera persona");
+  const [lyricsPov, setLyricsPov] = useState<string>("first");
   const [_lyricsTheme] = useState(""); // kept for type compat
   const [generatedLyrics, setGeneratedLyrics] = useState("");
   const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
