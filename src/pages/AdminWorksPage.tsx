@@ -59,7 +59,17 @@ export default function AdminWorksPage() {
       toast.success('Certificado descargado');
     } catch (e: any) {
       console.error(e);
-      toast.error('No se pudo generar el certificado');
+      const msg = String(e?.message || '');
+      const issueMatch = msg.match(/issue_id"\s*:\s*"([^"]+)"/);
+      if (msg.includes('iBS error') || issueMatch) {
+        toast.error(
+          issueMatch
+            ? `El servicio de blockchain (iBS) está fallando. Reintenta en unos minutos. Ref: ${issueMatch[1]}`
+            : 'El servicio de blockchain (iBS) no está disponible. Reintenta en unos minutos.'
+        );
+      } else {
+        toast.error('No se pudo generar el certificado');
+      }
     }
     setGeneratingCert(null);
   };
