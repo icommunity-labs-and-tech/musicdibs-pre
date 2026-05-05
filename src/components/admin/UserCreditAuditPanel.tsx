@@ -58,12 +58,10 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('v_user_credit_audit')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(100);
+    const { data, error } = await supabase.rpc('admin_get_user_credit_audit', {
+      p_user_id: userId,
+      p_limit: 100,
+    });
 
     if (error) { console.error('[CreditAudit] Error:', error); setLoadError(true); } else { setLoadError(false); }
     setRows((data || []) as CreditAuditRow[]);
