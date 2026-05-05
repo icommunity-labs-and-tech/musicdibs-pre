@@ -9,7 +9,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
-import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { ArrowLeft, Sparkles, Dice5, Loader2, Download, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 
 const GENEROS = ["pop", "pop urbano", "reggaeton", "trap", "indie pop", "electrónica", "balada"];
@@ -29,12 +28,12 @@ const VOCES = [
   "voz profunda y melancólica",
 ];
 const REFERENCIAS = [
-  "estilo Aitana",
-  "estilo Quevedo",
-  "estilo Bad Bunny",
-  "estilo Rosalía",
-  "estilo Mora",
-  "estilo The Weeknd",
+  "voces femeninas suaves con producción pop moderna",
+  "trap urbano con flow cadencioso y bases 808",
+  "reggaeton oscuro con melodías pegadizas",
+  "pop alternativo con armonías vocales ricas",
+  "r&b melódico con voz cálida y producción minimalista",
+  "pop electrónico con sintetizadores brillantes y voz etérea",
 ];
 const EMOCIONES = ["melancólica", "energética", "nostálgica", "intensa", "feliz", "oscura"];
 const TEMPOS = ["lento", "medio", "rápido"];
@@ -49,37 +48,37 @@ const PRESET_IDEAS = [
     emoji: "💔",
     label: "Ruptura emocional",
     prompt:
-      "Canción pop emocional sobre una ruptura reciente, con voz femenina suave, estilo Aitana, atmósfera melancólica, tempo lento, con estructura verso + estribillo + verso + estribillo, con alta calidad de producción y enfoque comercial.",
+      "Canción pop emocional sobre una ruptura reciente, voz femenina suave y melancólica con producción pop moderna, atmósfera íntima y nostálgica, tempo lento a 75 BPM, estructura verso + estribillo + verso + estribillo, producción limpia con piano y cuerdas sutiles.",
   },
   {
     emoji: "🌴",
     label: "Hit de verano",
     prompt:
-      "Canción pop urbano / reggaeton sobre una noche de verano, con voz juvenil energética, estilo Quevedo, atmósfera alegre y pegadiza, tempo rápido, con estructura simple enfocada en estribillo viral, con alta calidad de producción y enfoque comercial.",
+      "Canción pop urbano sobre una noche de verano, voz juvenil energética con flow cadencioso sobre bases electrónicas brillantes, atmósfera alegre y pegadiza, tempo rápido a 100 BPM, estructura simple con estribillo viral repetitivo, producción con sintetizadores brillantes y percusión electrónica.",
   },
   {
     emoji: "🔥",
     label: "Trap",
     prompt:
-      "Canción trap sobre una relación tóxica y ambición personal, con voz masculina grave, estilo Bad Bunny, atmósfera oscura e intensa, tempo medio, con estructura verso + estribillo con beat contundente, con alta calidad de producción y enfoque comercial.",
+      "Canción trap sobre una relación tóxica y ambición personal, voz masculina grave con flow cadencioso sobre bases 808 profundas, atmósfera oscura e intensa, tempo medio a 85 BPM, estructura verso + estribillo con beat contundente y hi-hats rápidos.",
   },
   {
     emoji: "🎤",
     label: "Pop romántico",
     prompt:
-      "Canción pop romántica sobre un amor profundo, con voz masculina emocional, estilo The Weeknd, atmósfera íntima y cálida, tempo medio, con estructura verso + pre-estribillo + estribillo, con alta calidad de producción y enfoque comercial.",
+      "Canción pop romántica sobre un amor profundo, voz masculina emocional con r&b melódico y producción minimalista cálida, atmósfera íntima, tempo medio a 90 BPM, estructura verso + pre-estribillo + estribillo con armonías vocales ricas y sintetizadores etéreos.",
   },
   {
     emoji: "🌴",
     label: "Reggaeton",
     prompt:
-      "Canción reggaeton sobre una historia de atracción y fiesta nocturna, con voz masculina sensual, estilo Bad Bunny, atmósfera caliente y pegadiza, tempo medio-rápido, con estructura verso + estribillo repetitivo enfocado en hook viral, con alta calidad de producción y enfoque comercial.",
+      "Canción reggaeton sobre una historia de atracción nocturna, voz masculina sensual con melodías pegadizas sobre dembow electrónico, atmósfera caliente y bailable, tempo medio-rápido a 95 BPM, estructura verso + estribillo repetitivo con hook viral y producción urbana moderna.",
   },
   {
     emoji: "🎸",
     label: "Rock",
     prompt:
-      "Canción rock sobre superación personal y lucha interna, con voz masculina rasgada, estilo Arctic Monkeys, atmósfera intensa y enérgica, tempo medio, con estructura intro + verso + estribillo + solo de guitarra + estribillo final, con alta calidad de producción y enfoque comercial.",
+      "Canción rock sobre superación personal y lucha interna, voz masculina intensa con guitarras distorsionadas y baterías contundentes, atmósfera enérgica y poderosa, tempo medio a 120 BPM, estructura intro + verso + estribillo + solo de guitarra + estribillo final.",
   },
 ];
 
@@ -143,7 +142,7 @@ const AIStudioInspire = () => {
     try {
       // Spend credits — use the same feature key as the music creator (song mode)
       const { data: spendResult, error: spendError } = await supabase.functions.invoke("spend-credits", {
-        body: { feature: "generate_audio_song", description: `Canción: ${prompt.slice(0, 80)}` },
+        body: { feature: "generate_audio", description: `Canción: ${prompt.slice(0, 80)}` },
       });
       if (spendError) throw new Error(spendError.message || "Error al descontar créditos");
       if (spendResult?.error) throw new Error(spendResult.error);
@@ -152,7 +151,6 @@ const AIStudioInspire = () => {
       const { data, error: invokeError } = await supabase.functions.invoke("generate-audio", {
         body: {
           prompt,
-          lyrics: "",
           mode: "song",
         },
       });
@@ -186,12 +184,16 @@ const AIStudioInspire = () => {
   };
 
   const handleSurprise = () => {
-    const selectedIdea = PRESET_IDEAS.find((idea) => idea.label === selectedChip);
-    generateInline(selectedIdea?.prompt || buildSurprisePrompt());
+    if (selectedChip) {
+      const preset = PRESET_IDEAS.find((idea) => idea.label === selectedChip);
+      generateInline(preset ? preset.prompt : buildSurprisePrompt());
+    } else {
+      generateInline(buildSurprisePrompt());
+    }
   };
 
-  const handleChipClick = (chip: string) => {
-    setSelectedChip((prev) => (prev === chip ? null : chip));
+  const handleChipClick = (label: string) => {
+    setSelectedChip((prev) => (prev === label ? null : label));
   };
 
   const handleDownload = async () => {
@@ -261,14 +263,10 @@ const AIStudioInspire = () => {
             ) : (
               <>
                 <Dice5 className="w-5 h-5 mr-2" />
-                {selectedChip ? `🎲 Generar ${selectedChip}` : '🎲 Sorpréndeme'}
+                {selectedChip ? `🎲 Generar ${selectedChip}` : "🎲 Sorpréndeme"}
               </>
             )}
           </Button>
-
-          <div className="mt-4 max-w-xl mx-auto">
-            <GenerationWarning />
-          </div>
 
           {/* Loading state */}
           {isGenerating && (
@@ -349,23 +347,25 @@ const AIStudioInspire = () => {
           <div className="mt-12">
             <p className="text-sm text-muted-foreground mb-4">O prueba con estas ideas:</p>
             <div className="flex flex-wrap justify-center gap-2">
-              {PRESET_IDEAS.map((idea) => (
-                <button
-                  key={idea.label}
-                  type="button"
-                  onClick={() => handleChipClick(idea.label)}
-                  disabled={isGenerating}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
-                    selectedChip === idea.label
-                      ? 'border-primary bg-primary text-primary-foreground hover:bg-primary/90'
-                      : 'border-border bg-card hover:bg-accent hover:border-primary/40 disabled:hover:bg-card disabled:hover:border-border'
-                  }`}
-                  aria-pressed={selectedChip === idea.label}
-                >
-                  <span aria-hidden>{idea.emoji}</span>
-                  {idea.label}
-                </button>
-              ))}
+              {PRESET_IDEAS.map((idea) => {
+                const isSelected = selectedChip === idea.label;
+                return (
+                  <button
+                    key={idea.label}
+                    onClick={() => handleChipClick(idea.label)}
+                    disabled={isGenerating}
+                    aria-pressed={isSelected}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
+                      isSelected
+                        ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
+                        : "border-border bg-card hover:bg-accent hover:border-primary/40"
+                    }`}
+                  >
+                    <span aria-hidden>{idea.emoji}</span>
+                    {idea.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
