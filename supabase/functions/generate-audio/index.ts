@@ -1,11 +1,28 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
-import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
+
+const DEFAULT_SONG_DURATION_SECS = 90;
+const DEFAULT_INSTRUMENTAL_DURATION_SECS = 60;
+const PROVIDER_TIMEOUT_MS = 110_000;
+const PLAN_TIMEOUT_MS = 30_000;
+
+const isAbortError = (error: unknown): boolean =>
+  error instanceof DOMException && error.name === 'AbortError';
+
+async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 // ── Composition plan helper ──────────────────────────────────
 // Calls ElevenLabs /v1/music/composition-plan to get a structural plan
@@ -18,14 +35,14 @@ async function buildCompositionPlan(
   apiKey: string,
 ): Promise<any | null> {
   try {
-    const planResp = await fetch('https://api.elevenlabs.io/v1/music/composition-plan', {
+    const planResp = await fetchWithTimeout('https://api.elevenlabs.io/v1/music/composition-plan', {
       method: 'POST',
       headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: stylePrompt,
         music_length_ms: durationMs,
       }),
-    });
+    }, PLAN_TIMEOUT_MS);
 
     if (!planResp.ok) {
       console.warn(`[GENERATE-AUDIO] composition-plan failed: ${planResp.status} ${await planResp.text().catch(() => '')}`);
@@ -120,6 +137,8 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  let refundOnUnhandled: ((reason: string) => Promise<void>) | null = null;
 
   try {
     const authHeader = req.headers.get('Authorization');
@@ -238,9 +257,11 @@ serve(async (req) => {
       type: 'usage',
       description: `Generación audio (${mode || 'instrumental'}): ${prompt.slice(0, 80)}`,
     });
+    let creditsDeducted = true;
 
     // ── Helper to refund on failure ──
     const refundCredits = async (reason: string) => {
+      if (!creditsDeducted) return;
       const { data: p } = await supabaseAdmin.from('profiles').select('available_credits').eq('user_id', userId).single();
       if (p) {
         await supabaseAdmin.from('profiles').update({
@@ -253,9 +274,11 @@ serve(async (req) => {
           type: 'refund',
           description: `Reembolso: ${reason}`.slice(0, 200),
         });
+        creditsDeducted = false;
         console.log(`[GENERATE-AUDIO] Refunded ${CREDITS_COST} credits to user ${userId}: ${reason}`);
       }
     };
+    refundOnUnhandled = refundCredits;
 
     // Build enriched prompt for ElevenLabs Music API
     const parts: string[] = [];
@@ -270,19 +293,20 @@ serve(async (req) => {
     if (cleanPrompt) parts.push(cleanPrompt);
     const enrichedPrompt = parts.join('. ');
 
-    // Auto-duration: if user didn't specify, let ElevenLabs/Lyria decide
-    const autoDuration = duration === undefined || duration === null || duration === 0;
-    const durationSecs: number | null = autoDuration ? null : Number(duration);
-    const durationMs: number | null = autoDuration ? null : (durationSecs as number) * 1000;
+    // Avoid open-ended provider jobs: they are the main source of Edge Function timeouts.
+    const requestedDuration = Number(duration);
+    const durationSecs = Number.isFinite(requestedDuration) && requestedDuration > 0
+      ? Math.min(Math.max(Math.round(requestedDuration), 30), 120)
+      : (mode === 'song' ? DEFAULT_SONG_DURATION_SECS : DEFAULT_INSTRUMENTAL_DURATION_SECS);
+    const durationMs = durationSecs * 1000;
     const hasUserLyrics = typeof lyrics === 'string' && lyrics.trim().length > 0 && mode === 'song';
 
     // Pre-build composition plan if user provided lyrics
     // Composition plan REQUIRES a duration → use a sensible default (90s) only for plan building
     let compositionPlan: any | null = null;
     if (hasUserLyrics) {
-      const planDurationMs = durationMs ?? 90000;
-      console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars, ${planDurationMs}ms${autoDuration ? ' auto' : ''})`);
-      compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), planDurationMs, ELEVENLABS_API_KEY);
+      console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars, ${durationMs}ms)`);
+      compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), durationMs, ELEVENLABS_API_KEY);
       if (!compositionPlan) {
         console.warn('[GENERATE-AUDIO] composition plan unavailable — falling back to prompt-only mode');
       }
@@ -293,24 +317,31 @@ serve(async (req) => {
     // ── ElevenLabs call (mutually exclusive: plan OR prompt) ──
     const callElevenLabs = async (planOrPrompt: { plan?: any; promptText?: string }) => {
       const body: Record<string, unknown> = {};
-      // Only include music_length_ms when user explicitly provided a duration.
-      // Omitting it lets Lyria/ElevenLabs auto-decide the optimal length.
-      if (durationMs !== null) body.music_length_ms = durationMs;
+      body.music_length_ms = durationMs;
       if (planOrPrompt.plan) {
         body.composition_plan = planOrPrompt.plan;
       } else {
         body.prompt = planOrPrompt.promptText;
       }
-      return fetch('https://api.elevenlabs.io/v1/music', {
+      return fetchWithTimeout('https://api.elevenlabs.io/v1/music', {
         method: 'POST',
         headers: { 'xi-api-key': ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-      });
+      }, PROVIDER_TIMEOUT_MS);
     };
 
-    let response = compositionPlan
-      ? await callElevenLabs({ plan: compositionPlan })
-      : await callElevenLabs({ promptText: enrichedPrompt });
+    let response: Response;
+    try {
+      response = compositionPlan
+        ? await callElevenLabs({ plan: compositionPlan })
+        : await callElevenLabs({ promptText: enrichedPrompt });
+    } catch (providerErr) {
+      await refundCredits(isAbortError(providerErr) ? 'Timeout ElevenLabs' : 'Error de conexión ElevenLabs');
+      return new Response(
+        JSON.stringify({ error: isAbortError(providerErr) ? 'provider_timeout' : 'provider_unavailable' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // If prompt was rejected (bad_prompt), retry with the suggested prompt
     if (!response.ok && response.status === 400) {
@@ -396,7 +427,6 @@ serve(async (req) => {
     }
 
     const audioBuffer = await response.arrayBuffer();
-    const base64Audio = base64Encode(audioBuffer);
     const audioBytes = new Uint8Array(audioBuffer);
 
     console.log(`[GENERATE-AUDIO] Success! Audio size: ${audioBuffer.byteLength} bytes, ${CREDITS_COST} credits charged${compositionPlan ? ' (with composition plan)' : ''}`);
@@ -432,9 +462,16 @@ serve(async (req) => {
       console.error('[GENERATE-AUDIO] Persist error (non-fatal):', persistErr);
     }
 
+    if (!savedAudioUrl) {
+      await refundCredits('No se pudo guardar el audio generado');
+      return new Response(
+        JSON.stringify({ error: 'storage_error' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
       JSON.stringify({
-        audio: base64Audio,
         format: 'audio/mpeg',
         duration: durationSecs,
         provider: 'elevenlabs',
@@ -448,9 +485,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('[GENERATE-AUDIO] Error:', error);
+    if (refundOnUnhandled) {
+      await refundOnUnhandled(isAbortError(error) ? 'Timeout generación audio' : 'Error inesperado generación audio');
+    }
     return new Response(
-      JSON.stringify({ error: (error as Error).message || 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: isAbortError(error) ? 'provider_timeout' : 'provider_unavailable' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

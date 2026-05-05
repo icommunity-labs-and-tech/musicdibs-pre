@@ -696,6 +696,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       aiNetworkError: 'Error de conexión con el proveedor de IA. Comprueba tu conexión e inténtalo de nuevo.',
       aiInvalidAudio: 'El archivo de audio no es válido o tiene un formato no compatible. Prueba con otro archivo (MP3, WAV).',
       aiUnavailable: 'El servicio no está disponible en este momento. Inténtalo de nuevo más tarde.',
+      aiRetryHint: 'Si vuelve a fallar, prueba con una duración más corta o una descripción menos extensa.',
       retry: 'Reintentar',
     },
     fileDropzone: {
@@ -1398,6 +1399,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       aiNetworkError: 'Connection error with the AI provider. Check your connection and try again.',
       aiInvalidAudio: 'The audio file is invalid or in an unsupported format. Try another file (MP3, WAV).',
       aiUnavailable: 'The service is not available right now. Please try again later.',
+      aiRetryHint: 'If it fails again, try a shorter duration or a less extensive description.',
       retry: 'Retry',
     },
     fileDropzone: {
@@ -2100,6 +2102,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       aiNetworkError: 'Erro de conexão com o provedor de IA. Verifique sua conexão e tente novamente.',
       aiInvalidAudio: 'O arquivo de áudio é inválido ou está em um formato não suportado. Tente outro arquivo (MP3, WAV).',
       aiUnavailable: 'O serviço não está disponível no momento. Tente novamente mais tarde.',
+      aiRetryHint: 'Se falhar novamente, tente uma duração menor ou uma descrição menos extensa.',
       retry: 'Tentar novamente',
     },
     fileDropzone: {

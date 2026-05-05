@@ -27,7 +27,8 @@ const KNOWN_ERRORS: Array<[RegExp, string]> = [
   [/bad_prompt|content.?policy|moderation/i, 'aiShared.aiContentPolicy'],
   [/network|fetch|ECONNREFUSED|ENOTFOUND/i, 'aiShared.aiNetworkError'],
   [/unauthorized|jwt/i, 'aiShared.aiSessionExpired'],
-  [/providers? failed|auphonic_service_unavailable/i, 'aiShared.aiServiceDown'],
+  [/providers? failed|provider_unavailable|storage_error|auphonic_service_unavailable/i, 'aiShared.aiServiceDown'],
+  [/provider_timeout/i, 'aiShared.aiTimeout'],
   [/auphonic_invalid_audio|invalid.?audio|unsupported.?format/i, 'aiShared.aiInvalidAudio'],
   [/auphonic_error/i, 'aiShared.aiServiceDown'],
 ];
