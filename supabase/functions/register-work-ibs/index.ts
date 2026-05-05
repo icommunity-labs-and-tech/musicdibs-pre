@@ -191,130 +191,64 @@ serve(async (req) => {
     let evidenceId: string;
     let evidenceLink: string | undefined;
 
-    // Always use presigned upload flow to avoid memory issues
-    console.log(`[IBS] Using presigned upload for work ${workId} (${fileSizeMB.toFixed(1)}MB), ${allFilePaths.length} file(s)`);
+    // Use POST /v2/evidences directly with inline base64 files (per iBS support)
+    console.log(`[IBS] Using POST /evidences (inline) for work ${workId} (${fileSizeMB.toFixed(1)}MB), ${allFilePaths.length} file(s)`);
 
-    // Build files metadata for upload session
-    const filesMetadata = [];
+    const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
+
+    const inlineFiles: Array<{ name: string; file: string }> = [];
     for (const fp of allFilePaths) {
       const name = (fp.split("/").pop() || "file").replace(/^\d+_/, "");
       const { data: fpUrl } = await supabaseAdmin.storage.from("works-files").createSignedUrl(fp, 600);
-      let fSize = fileSize; // default to primary file size
-      let fType = contentType;
-      const resolvedUrl = fpUrl?.signedUrl || signedUrlData.signedUrl;
-      if (fp !== work.file_path && fpUrl?.signedUrl) {
-        const h = await fetch(fpUrl.signedUrl, { method: "HEAD" });
-        fSize = parseInt(h.headers.get("content-length") || "0", 10);
-        fType = h.headers.get("content-type") || "application/octet-stream";
+      const url = fpUrl?.signedUrl;
+      if (!url) {
+        console.warn(`[IBS] Could not sign URL for "${fp}", skipping`);
+        continue;
       }
-      // If HEAD didn't return a valid size, fetch the file to measure it
-      if (!fSize || fSize <= 0) {
-        console.warn(`[IBS] HEAD returned no content-length for "${fp}", fetching to measure size`);
-        const probe = await fetch(resolvedUrl);
-        const probeBytes = await probe.arrayBuffer();
-        fSize = probeBytes.byteLength;
-        if (!fSize || fSize <= 0) {
-          console.error(`[IBS] File "${fp}" has zero size, skipping`);
-          continue;
-        }
+      const fr = await fetch(url);
+      if (!fr.ok) {
+        console.error(`[IBS] Failed to fetch "${fp}" from storage: ${fr.status}`);
+        continue;
       }
-      filesMetadata.push({ name, content_type: fType, size: fSize, _signedUrl: resolvedUrl });
+      const buf = await fr.arrayBuffer();
+      if (!buf.byteLength) {
+        console.warn(`[IBS] File "${fp}" is empty, skipping`);
+        continue;
+      }
+      inlineFiles.push({ name, file: base64Encode(new Uint8Array(buf) as any) });
     }
 
-    // Step 1: Create upload session with iBS
-    const uploadBody = {
-      title: work.title,
-      ...(work.description ? { description: work.description } : {}),
-      signatures: [{ id: signatureId }],
-      files: filesMetadata.map(f => ({ name: f.name, content_type: f.content_type, size: f.size })),
-    };
+    if (inlineFiles.length === 0) {
+      await handleIbsFailure(supabaseAdmin, workId, userId, work.title, "No valid files to upload", creditCost);
+      return new Response(
+        JSON.stringify({ success: false, error: "No valid files", workId, status: "failed", refunded: true }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    const uploadRes = await fetch(`${IBS_API_URL}/evidences/uploads`, {
+    const ibsPayload: Record<string, unknown> = {
+      title: work.title,
+      files: inlineFiles,
+    };
+    if (work.description) ibsPayload.description = work.description;
+
+    const ibsRes = await fetch(`${IBS_API_URL}/evidences`, {
       method: "POST",
       headers: ibsHeaders,
-      body: JSON.stringify(uploadBody),
+      body: JSON.stringify({ payload: ibsPayload, signatures: [{ id: signatureId }] }),
     });
 
-    if (!uploadRes.ok) {
-      const errBody = await uploadRes.text();
-      console.error(`[IBS] Upload session creation failed [${uploadRes.status}]:`, errBody);
-
-      // Fallback: try inline upload for small files only (< 5MB)
-      if (fileSizeMB <= 5 && allFilePaths.length === 1) {
-        console.log(`[IBS] Trying inline fallback for small file`);
-        return await handleInlineUpload(supabaseAdmin, work, signedUrlData.signedUrl, signatureId, ibsHeaders, workId, userId, fileHash, ibsPayloadChecksum, ibsPayloadAlgorithm, corsHeaders, creditCost);
-      }
-
-      await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `iBS upload error ${uploadRes.status}: ${errBody}`, creditCost);
+    if (!ibsRes.ok) {
+      const errBody = await ibsRes.text();
+      console.error(`[IBS] POST /evidences failed [${ibsRes.status}]:`, errBody);
+      await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `iBS error ${ibsRes.status}: ${errBody}`, creditCost);
       return new Response(
-        JSON.stringify({ success: false, error: `iBS upload session failed: ${errBody}`, workId, status: "failed", refunded: true }),
+        JSON.stringify({ success: false, error: `iBS registration failed: ${errBody}`, workId, status: "failed", refunded: true }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const uploadSession = await uploadRes.json();
-    const sessionFiles = uploadSession.files || [];
-
-    // Step 2: Stream each file from Supabase storage to iBS presigned URL
-    for (let i = 0; i < sessionFiles.length; i++) {
-      const fileUploadInfo = sessionFiles[i];
-      if (!fileUploadInfo?.upload?.url) {
-        console.warn(`[IBS] No upload URL for file index ${i}, skipping`);
-        continue;
-      }
-
-      // Stream file from storage directly to iBS without buffering in memory
-      const sourceUrl = filesMetadata[i]._signedUrl;
-      const sourceRes = await fetch(sourceUrl);
-      if (!sourceRes.ok || !sourceRes.body) {
-        console.error(`[IBS] Failed to fetch file ${i} from storage`);
-        continue;
-      }
-
-      const presignedHeaders: Record<string, string> = {};
-      if (fileUploadInfo.upload.headers) {
-        Object.assign(presignedHeaders, fileUploadInfo.upload.headers);
-      }
-      // Set content length for the upload
-      presignedHeaders["content-length"] = String(filesMetadata[i].size);
-
-      const putRes = await fetch(fileUploadInfo.upload.url, {
-        method: fileUploadInfo.upload.method || "PUT",
-        headers: presignedHeaders,
-        body: sourceRes.body, // Stream directly
-      });
-
-      if (!putRes.ok) {
-        const errBody = await putRes.text();
-        console.error(`[IBS] Presigned upload failed for file ${i} [${putRes.status}]:`, errBody);
-        await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `File upload failed: ${putRes.status}`, creditCost);
-        return new Response(
-          JSON.stringify({ success: false, error: "File upload to storage failed", workId, status: "failed", refunded: true }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      // Consume response body
-      await putRes.text();
-    }
-
-    // Step 3: Confirm upload
-    const completeUrl = uploadSession.complete?.url || `${IBS_API_URL}/evidences/uploads/${uploadSession.id}/complete`;
-    const completeRes = await fetch(completeUrl, {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${IBS_API_KEY}` },
-    });
-
-    if (!completeRes.ok) {
-      const errBody = await completeRes.text();
-      console.error(`[IBS] Upload confirmation failed [${completeRes.status}]:`, errBody);
-      await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `Upload confirmation failed: ${completeRes.status}`, creditCost);
-      return new Response(
-        JSON.stringify({ success: false, error: "Upload confirmation failed", workId, status: "failed", refunded: true }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const completeResult = await completeRes.json();
+    const completeResult = await ibsRes.json();
     evidenceId = completeResult.id;
     evidenceLink = completeResult.link;
 
