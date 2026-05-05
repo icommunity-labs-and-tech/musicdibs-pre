@@ -321,13 +321,6 @@ const AIStudioCreate = () => {
     track('generation_started', { feature: 'create_music', metadata: { mode } });
 
     try {
-      // Spend credits
-      const { data: spendResult, error: spendError } = await supabase.functions.invoke('spend-credits', {
-        body: { feature: currentFeature, description: `${mode === 'song' ? 'Canción' : 'Instrumental'}: ${prompt.slice(0, 80)}` },
-      });
-      if (spendError) throw { message: spendError.message || 'Error al descontar créditos' };
-      if (spendResult?.error) throw { message: spendResult.error };
-
       // Enrich prompt with voice tag (only for song mode)
       let enrichedPrompt = prompt.trim();
       if (mode === 'song') {
