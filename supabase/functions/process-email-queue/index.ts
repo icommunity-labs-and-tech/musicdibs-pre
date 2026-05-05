@@ -122,8 +122,12 @@ Deno.serve(async (req) => {
   }
 
   const token = authHeader.slice('Bearer '.length).trim()
-  const cronSecret = Deno.env.get('CRON_SECRET') ?? 'W4-WCTgtYjeNi1cHFYWvQ37wTaLHYw9oWXE9ifmmJ1E'
-  if (token !== cronSecret) {
+  const cronSecret = Deno.env.get('CRON_SECRET') ?? ''
+  if (!cronSecret) {
+    console.warn('[email-queue] CRON_SECRET not configured — only service role key accepted')
+  }
+  const isAuthorized = token === supabaseServiceKey || (cronSecret.length > 0 && token === cronSecret)
+  if (!isAuthorized) {
     return new Response(
       JSON.stringify({ error: 'Forbidden' }),
       { status: 403, headers: { 'Content-Type': 'application/json' } }
