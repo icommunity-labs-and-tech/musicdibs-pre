@@ -254,7 +254,7 @@ const AIStudioEdit = () => {
         "spend-credits",
         { body: { feature: "enhance_audio", description: `Masterización (${preset})` } }
       );
-      if (spendErr || spend?.error) throw new Error(spend?.error || "Error de créditos");
+      if (spendErr || spend?.error) throw new Error(spend?.error || tr('errorCredits'));
 
       // Upload file
       const uploadedUrl = libraryAudioUrl || await uploadForProcessing(audioFile);
