@@ -181,6 +181,14 @@ export const Navbar = () => {
               <Button 
                 variant="glass" 
                 className="font-semibold flex items-center gap-1.5 max-w-[220px]"
+                onClick={() => {
+                  if (user) {
+                    setServicesOpen(false);
+                    navigate('/dashboard');
+                  } else {
+                    navigate('/login');
+                  }
+                }}
               >
                 <span className="truncate">
                   {user ? `${t('nav.hello', 'Hola')}, ${greetingName}` : t('nav.accessServices')}
