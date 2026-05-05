@@ -53,6 +53,7 @@ function DeltaBadge({ delta }: { delta: number }) {
 export default function UserCreditAuditPanel({ userId, userEmail }: { userId: string; userEmail?: string }) {
   const [rows, setRows] = useState<CreditAuditRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [showValidations, setShowValidations] = useState(false);
 
   const load = async () => {
@@ -64,8 +65,8 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
       .order('created_at', { ascending: false })
       .limit(100);
 
-    if (error) console.error('[CreditAudit] Error:', error);
-    setRows(data || []);
+    if (error) { console.error('[CreditAudit] Error:', error); setLoadError(true); } else { setLoadError(false); }
+    setRows((data || []) as CreditAuditRow[]);
     setLoading(false);
   };
 
@@ -95,6 +96,18 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
     return (
       <div className="py-6 flex items-center justify-center gap-2 text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" /> Cargando auditoría de créditos…
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="py-4 flex flex-col items-center gap-2 text-muted-foreground">
+        <ShieldAlert className="h-5 w-5 text-red-400" />
+        <p className="text-xs">Error al cargar la auditoría de créditos.</p>
+        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={load}>
+          <RefreshCw className="h-3 w-3 mr-1" /> Reintentar
+        </Button>
       </div>
     );
   }
