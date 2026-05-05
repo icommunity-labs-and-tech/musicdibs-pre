@@ -166,7 +166,7 @@ Deno.serve(async (req) => {
         const createParams: any = {
           customer: customerId,
           items: [{ price: priceId }],
-          payment_behavior: "default_incomplete",
+          payment_behavior: "allow_incomplete",
           proration_behavior: "none",
           metadata: {
             user_id: sub.user_id,
@@ -181,20 +181,55 @@ Deno.serve(async (req) => {
 
         const newSub = await stripe.subscriptions.create(createParams);
 
+        // Map Stripe status to our status
+        let newStatus = "active";
+        if (newSub.status === "incomplete" || newSub.status === "past_due") {
+          newStatus = "past_due";
+        } else if (newSub.status === "active" || newSub.status === "trialing") {
+          newStatus = "active";
+        } else {
+          newStatus = "past_due";
+        }
+
+        // Calculate credits to add (only if payment succeeded)
+        const { credits } = getPriceId(tier);
+        const shouldAddCredits = newStatus === "active";
+
         await supabase
           .from("subscriptions")
           .update({
+            stripe_subscription_id: newSub.id,
+            stripe_customer_id: customerId,
             current_period_start: new Date((newSub as any).current_period_start * 1000).toISOString(),
             current_period_end: new Date((newSub as any).current_period_end * 1000).toISOString(),
+            status: newStatus,
             updated_at: new Date().toISOString(),
           })
           .eq("id", sub.id);
+
+        // Reset credits to plan value (no acumular) only if payment succeeded
+        if (shouldAddCredits && credits > 0) {
+          await supabase
+            .from("profiles")
+            .update({
+              available_credits: credits,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", sub.user_id);
+
+          await supabase.from("credit_transactions").insert({
+            user_id: sub.user_id,
+            amount: credits,
+            type: "renewal",
+            description: `Renovación: créditos reiniciados a ${credits} (${tier})`,
+          });
+        }
 
         await log({
           user_id: sub.user_id,
           email,
           action: "created",
-          detail: `stripe sub ${newSub.id} (tier=${tier})`,
+          detail: `stripe sub ${newSub.id} status=${newSub.status} credits_reset=${shouldAddCredits}`,
         });
         created++;
       } catch (err: any) {
