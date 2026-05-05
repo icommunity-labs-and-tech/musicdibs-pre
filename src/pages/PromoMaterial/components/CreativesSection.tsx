@@ -15,6 +15,7 @@ import { FEATURE_COSTS } from '@/lib/featureCosts';
 import { Loader2, Download, Sparkles, RefreshCw, ImageIcon } from 'lucide-react';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
 import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
+import { useProductTracking } from '@/hooks/useProductTracking';
 
 type Format = 'feed' | 'story' | 'youtube';
 
