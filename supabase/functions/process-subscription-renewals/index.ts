@@ -134,6 +134,18 @@ Deno.serve(async (req) => {
       const customerId = sub.stripe_customer_id ?? profileMap.get(sub.user_id);
 
       if (!customerId) {
+        if (dryRun) {
+          dryRunResults.push({
+            user_id: sub.user_id,
+            email,
+            tier: sub.tier ?? sub.plan ?? 'annual_100',
+            customer_id: 'MISSING',
+            credits_would_reset_to: getPriceId(sub.tier ?? sub.plan ?? 'annual_100').credits,
+            action: 'would_skip_no_customer',
+          });
+          skipped++;
+          continue;
+        }
         await log({
           user_id: sub.user_id,
           email,
@@ -145,7 +157,20 @@ Deno.serve(async (req) => {
       }
 
       const tier = sub.tier ?? sub.plan ?? "annual_100";
-      const { priceId } = getPriceId(tier);
+      const { priceId, credits: tierCredits } = getPriceId(tier);
+
+      if (dryRun) {
+        dryRunResults.push({
+          user_id: sub.user_id,
+          email,
+          tier,
+          customer_id: customerId,
+          credits_would_reset_to: tierCredits,
+          action: 'would_renew',
+        });
+        created++;
+        continue;
+      }
 
       try {
         // a) Already has an active Stripe subscription?
