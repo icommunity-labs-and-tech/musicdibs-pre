@@ -7,6 +7,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
+const DEFAULT_SONG_DURATION_SECS = 90;
+const DEFAULT_INSTRUMENTAL_DURATION_SECS = 60;
+const PROVIDER_TIMEOUT_MS = 110_000;
+const PLAN_TIMEOUT_MS = 30_000;
+
+const isAbortError = (error: unknown): boolean =>
+  error instanceof DOMException && error.name === 'AbortError';
+
+async function fetchWithTimeout(input: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 // ── Composition plan helper ──────────────────────────────────
 // Calls ElevenLabs /v1/music/composition-plan to get a structural plan
 // from a style prompt, then injects user-provided lyrics into vocal sections
@@ -18,14 +36,14 @@ async function buildCompositionPlan(
   apiKey: string,
 ): Promise<any | null> {
   try {
-    const planResp = await fetch('https://api.elevenlabs.io/v1/music/composition-plan', {
+    const planResp = await fetchWithTimeout('https://api.elevenlabs.io/v1/music/composition-plan', {
       method: 'POST',
       headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         prompt: stylePrompt,
         music_length_ms: durationMs,
       }),
-    });
+    }, PLAN_TIMEOUT_MS);
 
     if (!planResp.ok) {
       console.warn(`[GENERATE-AUDIO] composition-plan failed: ${planResp.status} ${await planResp.text().catch(() => '')}`);
