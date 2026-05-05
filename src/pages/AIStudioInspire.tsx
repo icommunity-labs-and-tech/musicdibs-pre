@@ -251,7 +251,7 @@ const AIStudioInspire = () => {
       const audioUrl = data.audioUrl || `data:${data.format};base64,${data.audio}`;
       setResult({
         audioUrl,
-        prompt,
+        prompt: basePrompt,
         duration: data.duration || 0,
       });
       track("generation_completed", { feature: "create_music", metadata: { mode: "song", source: "inspire" } });
