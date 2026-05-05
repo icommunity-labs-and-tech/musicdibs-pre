@@ -139,6 +139,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let refundOnUnhandled: ((reason: string) => Promise<void>) | null = null;
+
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
@@ -276,6 +278,7 @@ serve(async (req) => {
         console.log(`[GENERATE-AUDIO] Refunded ${CREDITS_COST} credits to user ${userId}: ${reason}`);
       }
     };
+    refundOnUnhandled = refundCredits;
 
     // Build enriched prompt for ElevenLabs Music API
     const parts: string[] = [];
