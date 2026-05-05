@@ -1425,7 +1425,9 @@ const AIStudioCreate = () => {
                           data-tour="mc-generate"
                         >
                           <Wand2 className="w-4 h-4 mr-2" />
-                          {t('aiCreate.generateBtn')} {mode === 'song' ? t('aiCreate.genCtaSong') : t('aiCreate.genCtaInstrumental')} {t('aiCreate.genCtaSuffix')}
+                          {retryStatus
+                            ? t('aiShared.aiRetrying', { attempt: retryStatus.attempt, max: retryStatus.max })
+                            : <>{t('aiCreate.generateBtn')} {mode === 'song' ? t('aiCreate.genCtaSong') : t('aiCreate.genCtaInstrumental')} {t('aiCreate.genCtaSuffix')}</>}
                         </Button>
                         <PricingLink className="mt-1 block text-center" />
                         </>
