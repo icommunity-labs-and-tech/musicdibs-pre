@@ -218,11 +218,6 @@ export const Navbar = () => {
                   )}
                   <li className="border-t border-gray-100 my-1" />
                   <li>
-                    <a href={links.market} target="_blank" rel="noopener noreferrer" className="block px-4 py-2 hover:bg-gray-100">
-                      {t('nav.market')}
-                    </a>
-                  </li>
-                  <li>
                     <Link to="/verify" className="block px-4 py-2 hover:bg-gray-100" onClick={() => setServicesOpen(false)}>
                       {t('nav.verifier')}
                     </Link>
@@ -288,7 +283,6 @@ export const Navbar = () => {
                 ) : (
                   <Link to="/login" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors font-medium`}>{t('nav.login')}</Link>
                 )}
-                <a href={links.market} target="_blank" rel="noopener noreferrer" className={`block ${navTextMuted} py-1 transition-colors`}>{t('nav.market')}</a>
                 <Link to="/verify" onClick={() => setMobileOpen(false)} className={`block ${navTextMuted} py-1 transition-colors`}>{t('nav.verifier')}</Link>
               </div>
             )}
