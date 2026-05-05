@@ -223,18 +223,20 @@ const AIStudioInspire = () => {
     track("generation_started", { feature: "create_music", metadata: { mode: "song", source: "inspire" } });
 
     try {
-      // Spend credits — use the same feature key as the music creator (song mode)
+      // Spend credits — 1-click create uses its own pricing key (one_click_create)
       const { data: spendResult, error: spendError } = await supabase.functions.invoke("spend-credits", {
-        body: { feature: "generate_audio", description: `Canción: ${basePrompt.slice(0, 80)}` },
+        body: { feature: "one_click_create", description: `1-click: ${basePrompt.slice(0, 80)}` },
       });
       if (spendError) throw new Error(spendError.message || "Error al descontar créditos");
       if (spendResult?.error) throw new Error(spendResult.error);
 
       // Identical payload to AIStudioCreate (song mode, no duration → IA decides)
+      // source: 'inspire' tells generate-audio to bill as one_click_create
       const { data, error: invokeError } = await supabase.functions.invoke("generate-audio", {
         body: {
           prompt,
           mode: "song",
+          source: "inspire",
         },
       });
 
