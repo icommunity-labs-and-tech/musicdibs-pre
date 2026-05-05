@@ -11,36 +11,36 @@ import { supabase } from "@/integrations/supabase/client";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { ArrowLeft, Sparkles, Dice5, Loader2, Download, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 
-const GENEROS = ["pop", "pop urbano", "reggaeton", "trap", "indie pop", "electrónica", "balada"];
-const TEMAS = [
-  "una ruptura reciente",
-  "un amor imposible",
-  "una noche de verano",
-  "superación personal",
-  "nostalgia del pasado",
-  "una relación tóxica",
-  "fiesta sin control",
+const GENRES = ["pop", "urban pop", "reggaeton", "trap", "indie pop", "electronic", "ballad"];
+const TOPICS = [
+  "a recent breakup",
+  "an impossible love",
+  "a summer night",
+  "personal growth",
+  "nostalgia for the past",
+  "a toxic relationship",
+  "a wild party",
 ];
-const VOCES = [
-  "voz femenina suave",
-  "voz masculina emocional",
-  "voz juvenil energética",
-  "voz profunda y melancólica",
+const VOICES = [
+  "soft female vocals",
+  "emotional male vocals",
+  "energetic youthful vocals",
+  "deep and melancholic vocals",
 ];
-const REFERENCIAS = [
-  "voces femeninas suaves con producción pop moderna",
-  "trap urbano con flow cadencioso y bases 808",
-  "reggaeton oscuro con melodías pegadizas",
-  "pop alternativo con armonías vocales ricas",
-  "r&b melódico con voz cálida y producción minimalista",
-  "pop electrónico con sintetizadores brillantes y voz etérea",
+const REFERENCES = [
+  "soft female vocals with modern pop production",
+  "urban trap with cadenced flow and 808 bass",
+  "dark reggaeton with catchy melodies",
+  "alternative pop with rich vocal harmonies",
+  "melodic R&B with warm vocals and minimalist production",
+  "electronic pop with bright synths and ethereal vocals",
 ];
-const EMOCIONES = ["melancólica", "energética", "nostálgica", "intensa", "feliz", "oscura"];
-const TEMPOS = ["lento", "medio", "rápido"];
-const ESTRUCTURAS = [
-  "verso + estribillo + verso + estribillo",
-  "intro + verso + pre-estribillo + estribillo + puente",
-  "estructura simple pegadiza",
+const MOODS = ["melancholic", "energetic", "nostalgic", "intense", "happy", "dark"];
+const TEMPOS = ["slow", "medium", "fast"];
+const STRUCTURES = [
+  "verse + chorus + verse + chorus",
+  "intro + verse + pre-chorus + chorus + bridge",
+  "simple catchy structure",
 ];
 
 const PRESET_IDEAS = [
@@ -48,111 +48,131 @@ const PRESET_IDEAS = [
     emoji: "💔",
     label: "Ruptura emocional",
     prompt:
-      "Canción pop emocional sobre una ruptura reciente, voz femenina suave y melancólica con producción pop moderna, atmósfera íntima y nostálgica, tempo lento a 75 BPM, estructura verso + estribillo + verso + estribillo, producción limpia con piano y cuerdas sutiles.",
+      "Emotional pop song about a recent breakup, soft and melancholic female vocals with modern pop production, intimate and nostalgic atmosphere, slow tempo at 75 BPM, structure verse + chorus + verse + chorus, clean production with piano and subtle strings.",
   },
   {
     emoji: "🌴",
     label: "Hit de verano",
     prompt:
-      "Canción pop urbano sobre una noche de verano, voz juvenil energética con flow cadencioso sobre bases electrónicas brillantes, atmósfera alegre y pegadiza, tempo rápido a 100 BPM, estructura simple con estribillo viral repetitivo, producción con sintetizadores brillantes y percusión electrónica.",
+      "Urban pop song about a summer night, energetic youthful vocals with cadenced flow over bright electronic beats, joyful and catchy atmosphere, fast tempo at 100 BPM, simple structure with viral repetitive chorus, production with bright synths and electronic percussion.",
   },
   {
     emoji: "🔥",
     label: "Trap",
     prompt:
-      "Canción trap sobre una relación tóxica y ambición personal, voz masculina grave con flow cadencioso sobre bases 808 profundas, atmósfera oscura e intensa, tempo medio a 85 BPM, estructura verso + estribillo con beat contundente y hi-hats rápidos.",
+      "Trap song about a toxic relationship and personal ambition, deep male vocals with cadenced flow over deep 808 bass, dark and intense atmosphere, medium tempo at 85 BPM, structure verse + chorus with hard-hitting beat and fast hi-hats.",
   },
   {
     emoji: "🎤",
     label: "Pop romántico",
     prompt:
-      "Canción pop romántica sobre un amor profundo, voz masculina emocional con r&b melódico y producción minimalista cálida, atmósfera íntima, tempo medio a 90 BPM, estructura verso + pre-estribillo + estribillo con armonías vocales ricas y sintetizadores etéreos.",
+      "Romantic pop song about a deep love, emotional male vocals with melodic R&B and warm minimalist production, intimate atmosphere, medium tempo at 90 BPM, structure verse + pre-chorus + chorus with rich vocal harmonies and ethereal synths.",
   },
   {
     emoji: "🌴",
     label: "Reggaeton",
     prompt:
-      "Canción reggaeton sobre una historia de atracción nocturna, voz masculina sensual con melodías pegadizas sobre dembow electrónico, atmósfera caliente y bailable, tempo medio-rápido a 95 BPM, estructura verso + estribillo repetitivo con hook viral y producción urbana moderna.",
+      "Reggaeton song about a story of nighttime attraction, sensual male vocals with catchy melodies over electronic dembow, hot and danceable atmosphere, medium-fast tempo at 95 BPM, structure verse + repetitive chorus with viral hook and modern urban production.",
   },
   {
     emoji: "🎸",
     label: "Rock",
     prompt:
-      "Canción rock sobre superación personal y lucha interna, voz masculina intensa con guitarras distorsionadas y baterías contundentes, atmósfera enérgica y poderosa, tempo medio a 120 BPM, estructura intro + verso + estribillo + solo de guitarra + estribillo final.",
+      "Rock song about personal growth and inner struggle, intense male vocals with distorted guitars and hard-hitting drums, energetic and powerful atmosphere, medium tempo at 120 BPM, structure intro + verse + chorus + guitar solo + final chorus.",
   },
   {
     emoji: "🎂",
     label: "Cumpleaños",
     prompt:
-      "Canción pop alegre y emotiva para celebrar un cumpleaños especial, voz mixta cálida y festiva con coros que invitan a cantar juntos, atmósfera de celebración y cariño, tempo animado a 105 BPM, estructura verso + estribillo contagioso + puente emotivo + estribillo final, producción con palmas, cuerdas festivas y percusión luminosa.",
+      "Joyful and emotional pop song to celebrate a special birthday, warm and festive mixed vocals with sing-along choruses, atmosphere of celebration and affection, lively tempo at 105 BPM, structure verse + contagious chorus + emotional bridge + final chorus, production with claps, festive strings and bright percussion.",
   },
   {
     emoji: "💍",
     label: "Aniversario",
     prompt:
-      "Canción pop romántica para celebrar un aniversario de pareja, voz femenina tierna y emotiva sobre producción orquestal suave con piano y cuerdas, atmósfera íntima y llena de gratitud, tempo lento-medio a 80 BPM, estructura verso + pre-estribillo + estribillo cargado de emoción + puente + estribillo final, producción elegante y atemporal.",
+      "Romantic pop song to celebrate a couple's anniversary, tender and emotional female vocals over soft orchestral production with piano and strings, intimate atmosphere full of gratitude, slow-medium tempo at 80 BPM, structure verse + pre-chorus + emotion-filled chorus + bridge + final chorus, elegant and timeless production.",
   },
   {
     emoji: "🙏",
     label: "Perdón",
     prompt:
-      "Canción pop soul sobre pedir perdón sincero por un error que lastimó a alguien querido, voz masculina vulnerable y arrepentida con producción acústica minimalista, piano y guitarra suave, atmósfera de humildad y esperanza de reconciliación, tempo lento a 70 BPM, estructura verso íntimo + estribillo sincero + puente emotivo con voz desnuda.",
+      "Pop soul song about sincerely asking forgiveness for an error that hurt someone dear, vulnerable and remorseful male vocals with minimalist acoustic production, piano and soft guitar, atmosphere of humility and hope for reconciliation, slow tempo at 70 BPM, structure intimate verse + sincere chorus + emotional bridge with bare vocals.",
   },
   {
     emoji: "😍",
     label: "Me he enamorado",
     prompt:
-      "Canción pop con euforia romántica sobre descubrir que te has enamorado inesperadamente, voz femenina luminosa y llena de energía sobre producción pop brillante con sintetizadores cálidos y guitarra acústica, atmósfera de alegría desbordante y mariposas en el estómago, tempo alegre a 110 BPM, estructura verso ilusionado + pre-estribillo que escala + estribillo explosivo.",
+      "Pop song with romantic euphoria about discovering you've fallen unexpectedly in love, luminous female vocals full of energy over bright pop production with warm synths and acoustic guitar, atmosphere of overflowing joy and butterflies in the stomach, cheerful tempo at 110 BPM, structure excited verse + escalating pre-chorus + explosive chorus.",
   },
   {
     emoji: "👶",
     label: "Bienvenido bebé",
     prompt:
-      "Canción pop tierna y emotiva para dar la bienvenida a un recién nacido, voces suaves y cálidas con armonías delicadas sobre producción con piano, caja de música y cuerdas suaves, atmósfera de ternura pura y amor incondicional, tempo lento a 72 BPM, estructura verso susurrado + estribillo luminoso + puente con promesas al bebé.",
+      "Tender and emotional pop song to welcome a newborn baby, soft warm vocals with delicate harmonies over production with piano, music box and soft strings, atmosphere of pure tenderness and unconditional love, slow tempo at 72 BPM, structure whispered verse + luminous chorus + bridge with promises to the baby.",
   },
   {
     emoji: "🌹",
     label: "Declaración de amor",
     prompt:
-      "Canción pop con soul sobre declarar el amor por primera vez con valentía y nervios, voz masculina emotiva y directa con producción cálida de piano, guitarra eléctrica suave y cuerdas que crecen, atmósfera de vulnerabilidad y esperanza, tempo medio a 88 BPM, estructura verso que construye tensión + pre-estribillo + estribillo que explota con la declaración.",
+      "Pop soul song about declaring love for the first time with bravery and nerves, emotional and direct male vocals with warm production of piano, soft electric guitar and growing strings, atmosphere of vulnerability and hope, medium tempo at 88 BPM, structure verse that builds tension + pre-chorus + chorus that explodes with the declaration.",
   },
   {
     emoji: "✈️",
     label: "Despedida",
     prompt:
-      "Canción pop melancólica pero esperanzadora sobre despedirse de alguien que parte lejos, voz femenina con emoción contenida sobre producción minimalista con piano, guitarra acústica y cuerdas que se abren en el estribillo, atmósfera agridulce de amor que trasciende la distancia, tempo lento-medio a 78 BPM, estructura verso nostálgico + estribillo emotivo + puente de promesas.",
+      "Melancholic yet hopeful pop song about saying goodbye to someone leaving far away, female vocals with restrained emotion over minimalist production with piano, acoustic guitar and strings that open in the chorus, bittersweet atmosphere of love that transcends distance, slow-medium tempo at 78 BPM, structure nostalgic verse + emotional chorus + bridge of promises.",
   },
   {
     emoji: "🏆",
     label: "Lo conseguí",
     prompt:
-      "Canción pop motivacional sobre alcanzar un sueño después de mucho esfuerzo y sacrificio, voz masculina poderosa y triunfal con producción épica que combina electrónica y cuerdas orquestales, atmósfera de orgullo, superación y celebración personal, tempo enérgico a 115 BPM, estructura verso que narra la lucha + pre-estribillo que escala + estribillo explosivo de victoria.",
+      "Motivational pop song about reaching a dream after much effort and sacrifice, powerful and triumphant male vocals with epic production combining electronic and orchestral strings, atmosphere of pride, achievement and personal celebration, energetic tempo at 115 BPM, structure verse narrating the struggle + escalating pre-chorus + explosive victory chorus.",
   },
   {
     emoji: "🌙",
     label: "Canción de cuna",
     prompt:
-      "Canción de cuna pop suave y amorosa para dormir a un ser querido, voz femenina susurrada y aterciopelada con producción muy minimalista de piano y pad de cuerdas etéreas, atmósfera de calma, seguridad y amor profundo, tempo muy lento a 58 BPM, estructura simple y repetitiva con melodía de fácil retención, dinámica suave de principio a fin.",
+      "Soft and loving pop lullaby to put a loved one to sleep, whispered velvety female vocals with very minimalist production of piano and ethereal string pad, atmosphere of calm, safety and deep love, very slow tempo at 58 BPM, simple repetitive structure with easy-to-remember melody, soft dynamics from beginning to end.",
   },
   {
     emoji: "💪",
     label: "Superar una pérdida",
     prompt:
-      "Canción pop emotiva sobre encontrar fuerza y seguir adelante tras perder a alguien importante, voz mixta con fragilidad que se transforma en fortaleza, producción que va del piano solitario inicial a cuerdas y percusión que crecen con la narrativa, atmósfera de duelo honesto y resiliencia, tempo lento que sube a medio a lo largo de la canción, estructura verso vulnerable + estribillo que encuentra la luz + puente de aceptación.",
+      "Emotional pop song about finding strength and moving forward after losing someone important, mixed vocals with fragility that transforms into strength, production that goes from initial solo piano to strings and percussion that grow with the narrative, atmosphere of honest grief and resilience, slow tempo rising to medium throughout the song, structure vulnerable verse + chorus that finds the light + bridge of acceptance.",
   },
 ];
 
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
+// Map i18n language code → English language name for the lyrics directive.
+const LYRIC_LANGUAGE_MAP: Record<string, string> = {
+  es: "Spanish",
+  en: "English",
+  "pt-BR": "Brazilian Portuguese",
+  pt: "Brazilian Portuguese",
+};
+
+const getLyricLanguage = (lng?: string): string => {
+  if (!lng) return "Spanish";
+  if (LYRIC_LANGUAGE_MAP[lng]) return LYRIC_LANGUAGE_MAP[lng];
+  const base = lng.split("-")[0];
+  return LYRIC_LANGUAGE_MAP[base] || "Spanish";
+};
+
+const withLanguageDirective = (prompt: string, lng?: string): string => {
+  const language = getLyricLanguage(lng);
+  return `${prompt} IMPORTANT: lyrics MUST be written and sung entirely in ${language}.`;
+};
+
 const buildSurprisePrompt = () => {
-  const genero = pick(GENEROS);
-  const tema = pick(TEMAS);
-  const voz = pick(VOCES);
-  const referencia = pick(REFERENCIAS);
-  const emocion = pick(EMOCIONES);
+  const genre = pick(GENRES);
+  const topic = pick(TOPICS);
+  const voice = pick(VOICES);
+  const reference = pick(REFERENCES);
+  const mood = pick(MOODS);
   const tempo = pick(TEMPOS);
-  const estructura = pick(ESTRUCTURAS);
-  return `Canción ${genero} sobre ${tema}, con ${voz}, ${referencia}, atmósfera ${emocion}, tempo ${tempo}, con ${estructura}, con alta calidad de producción y enfoque comercial.`;
+  const structure = pick(STRUCTURES);
+  return `${genre} song about ${topic}, with ${voice}, ${reference}, ${mood} atmosphere, ${tempo} tempo, with ${structure}, high production quality and commercial focus.`;
 };
 
 interface InspireResult {
