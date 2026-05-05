@@ -46,97 +46,97 @@ const STRUCTURES = [
 const PRESET_IDEAS = [
   {
     emoji: "💔",
-    label: "Ruptura emocional",
+    key: "heartbreak",
     prompt:
       "Emotional pop song about a recent breakup, soft and melancholic female vocals with modern pop production, intimate and nostalgic atmosphere, slow tempo at 75 BPM, structure verse + chorus + verse + chorus, clean production with piano and subtle strings.",
   },
   {
     emoji: "🌴",
-    label: "Hit de verano",
+    key: "summer",
     prompt:
       "Urban pop song about a summer night, energetic youthful vocals with cadenced flow over bright electronic beats, joyful and catchy atmosphere, fast tempo at 100 BPM, simple structure with viral repetitive chorus, production with bright synths and electronic percussion.",
   },
   {
     emoji: "🔥",
-    label: "Trap",
+    key: "trap",
     prompt:
       "Trap song about a toxic relationship and personal ambition, deep male vocals with cadenced flow over deep 808 bass, dark and intense atmosphere, medium tempo at 85 BPM, structure verse + chorus with hard-hitting beat and fast hi-hats.",
   },
   {
     emoji: "🎤",
-    label: "Pop romántico",
+    key: "romantic",
     prompt:
       "Romantic pop song about a deep love, emotional male vocals with melodic R&B and warm minimalist production, intimate atmosphere, medium tempo at 90 BPM, structure verse + pre-chorus + chorus with rich vocal harmonies and ethereal synths.",
   },
   {
     emoji: "🌴",
-    label: "Reggaeton",
+    key: "reggaeton",
     prompt:
       "Reggaeton song about a story of nighttime attraction, sensual male vocals with catchy melodies over electronic dembow, hot and danceable atmosphere, medium-fast tempo at 95 BPM, structure verse + repetitive chorus with viral hook and modern urban production.",
   },
   {
     emoji: "🎸",
-    label: "Rock",
+    key: "rock",
     prompt:
       "Rock song about personal growth and inner struggle, intense male vocals with distorted guitars and hard-hitting drums, energetic and powerful atmosphere, medium tempo at 120 BPM, structure intro + verse + chorus + guitar solo + final chorus.",
   },
   {
     emoji: "🎂",
-    label: "Cumpleaños",
+    key: "birthday",
     prompt:
       "Joyful and emotional pop song to celebrate a special birthday, warm and festive mixed vocals with sing-along choruses, atmosphere of celebration and affection, lively tempo at 105 BPM, structure verse + contagious chorus + emotional bridge + final chorus, production with claps, festive strings and bright percussion.",
   },
   {
     emoji: "💍",
-    label: "Aniversario",
+    key: "anniversary",
     prompt:
       "Romantic pop song to celebrate a couple's anniversary, tender and emotional female vocals over soft orchestral production with piano and strings, intimate atmosphere full of gratitude, slow-medium tempo at 80 BPM, structure verse + pre-chorus + emotion-filled chorus + bridge + final chorus, elegant and timeless production.",
   },
   {
     emoji: "🙏",
-    label: "Perdón",
+    key: "forgiveness",
     prompt:
       "Pop soul song about sincerely asking forgiveness for an error that hurt someone dear, vulnerable and remorseful male vocals with minimalist acoustic production, piano and soft guitar, atmosphere of humility and hope for reconciliation, slow tempo at 70 BPM, structure intimate verse + sincere chorus + emotional bridge with bare vocals.",
   },
   {
     emoji: "😍",
-    label: "Me he enamorado",
+    key: "fellInLove",
     prompt:
       "Pop song with romantic euphoria about discovering you've fallen unexpectedly in love, luminous female vocals full of energy over bright pop production with warm synths and acoustic guitar, atmosphere of overflowing joy and butterflies in the stomach, cheerful tempo at 110 BPM, structure excited verse + escalating pre-chorus + explosive chorus.",
   },
   {
     emoji: "👶",
-    label: "Bienvenido bebé",
+    key: "welcomeBaby",
     prompt:
       "Tender and emotional pop song to welcome a newborn baby, soft warm vocals with delicate harmonies over production with piano, music box and soft strings, atmosphere of pure tenderness and unconditional love, slow tempo at 72 BPM, structure whispered verse + luminous chorus + bridge with promises to the baby.",
   },
   {
     emoji: "🌹",
-    label: "Declaración de amor",
+    key: "loveDeclaration",
     prompt:
       "Pop soul song about declaring love for the first time with bravery and nerves, emotional and direct male vocals with warm production of piano, soft electric guitar and growing strings, atmosphere of vulnerability and hope, medium tempo at 88 BPM, structure verse that builds tension + pre-chorus + chorus that explodes with the declaration.",
   },
   {
     emoji: "✈️",
-    label: "Despedida",
+    key: "farewell",
     prompt:
       "Melancholic yet hopeful pop song about saying goodbye to someone leaving far away, female vocals with restrained emotion over minimalist production with piano, acoustic guitar and strings that open in the chorus, bittersweet atmosphere of love that transcends distance, slow-medium tempo at 78 BPM, structure nostalgic verse + emotional chorus + bridge of promises.",
   },
   {
     emoji: "🏆",
-    label: "Lo conseguí",
+    key: "achievement",
     prompt:
       "Motivational pop song about reaching a dream after much effort and sacrifice, powerful and triumphant male vocals with epic production combining electronic and orchestral strings, atmosphere of pride, achievement and personal celebration, energetic tempo at 115 BPM, structure verse narrating the struggle + escalating pre-chorus + explosive victory chorus.",
   },
   {
     emoji: "🌙",
-    label: "Canción de cuna",
+    key: "lullaby",
     prompt:
       "Soft and loving pop lullaby to put a loved one to sleep, whispered velvety female vocals with very minimalist production of piano and ethereal string pad, atmosphere of calm, safety and deep love, very slow tempo at 58 BPM, simple repetitive structure with easy-to-remember melody, soft dynamics from beginning to end.",
   },
   {
     emoji: "💪",
-    label: "Superar una pérdida",
+    key: "overcomeLoss",
     prompt:
       "Emotional pop song about finding strength and moving forward after losing someone important, mixed vocals with fragility that transforms into strength, production that goes from initial solo piano to strings and percussion that grow with the narrative, atmosphere of honest grief and resilience, slow tempo rising to medium throughout the song, structure vulnerable verse + chorus that finds the light + bridge of acceptance.",
   },
