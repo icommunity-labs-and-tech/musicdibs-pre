@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Upload, Search, Megaphone, ShoppingBag, User,
   CreditCard, LifeBuoy, Music, LogOut, Mic, Sparkles, Shield,
   HelpCircle, Users, BarChart3, Settings2, Rocket, Briefcase,
-  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX,
+  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell,
   type LucideIcon,
 } from 'lucide-react';
 import { DistributionInfoModal } from '@/components/DistributionInfoModal';
@@ -94,6 +94,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.apiProfitability', 'Rentabilidad APIs'), url: '/dashboard/admin/api-costs', icon: BarChart3 },
     { title: tr('dashboard.sidebar.productMetrics', 'Métricas producto'), url: '/dashboard/admin/product-metrics', icon: BarChart3 },
     { title: tr('dashboard.sidebar.userChurn', 'Bajas usuarios'), url: '/dashboard/admin/churn', icon: UserX },
+    { title: tr('dashboard.sidebar.alerts', 'Alertas sistema'), url: '/dashboard/admin/alerts', icon: Bell },
   ];
 
   // Determine which group is active based on current route
