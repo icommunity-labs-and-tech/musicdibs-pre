@@ -316,6 +316,20 @@ Deno.serve(async (req) => {
       }
     }
 
+    if (dryRun) {
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          dry_run: true,
+          total: subs.length,
+          would_renew: created,
+          would_skip: skipped,
+          results: dryRunResults,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     return new Response(
       JSON.stringify({
         ok: true,
