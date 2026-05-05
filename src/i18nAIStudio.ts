@@ -1400,6 +1400,16 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       aiUnavailable: 'The service is not available right now. Please try again later.',
       retry: 'Retry',
     },
+    fileDropzone: {
+      maxSizeError: 'File must be smaller than {{size}}MB',
+      change: 'Change',
+      clickOrDrag: 'Click or drag a file',
+      dropHere: 'Drop the file here',
+      hintImage: 'JPG, PNG or WEBP (max. {{size}}MB)',
+      hintAudio: 'MP3, WAV or FLAC (max. {{size}}MB)',
+      hintAny: 'max. {{size}}MB',
+      previewAlt: 'Preview',
+    },
   },
   'pt-BR': {
     aiCreate: {
