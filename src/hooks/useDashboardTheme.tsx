@@ -8,8 +8,8 @@ const getInitial = (): DashboardTheme => {
   if (typeof window === 'undefined') return 'light';
   const stored = localStorage.getItem(STORAGE_KEY) as DashboardTheme | null;
   if (stored === 'light' || stored === 'dark') return stored;
-  // Default to user's system preference
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  // Default to light (day) mode for new users, regardless of system preference
+  return 'light';
 };
 
 const applyToHtml = (theme: DashboardTheme) => {
