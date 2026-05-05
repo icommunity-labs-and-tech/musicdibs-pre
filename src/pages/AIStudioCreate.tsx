@@ -1480,7 +1480,7 @@ const AIStudioCreate = () => {
                             <Select value={lyricsStructure} onValueChange={setLyricsStructure}>
                               <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                {STRUCTURES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                                {STRUCTURE_KEYS.map(k => <SelectItem key={k} value={k}>{t(`aiCreate.structures.${k}`)}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
