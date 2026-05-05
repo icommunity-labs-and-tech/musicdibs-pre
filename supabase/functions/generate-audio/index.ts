@@ -35,7 +35,7 @@ async function buildCompositionPlan(
   apiKey: string,
 ): Promise<any | null> {
   try {
-    const planResp = await fetchWithTimeout('https://api.elevenlabs.io/v1/music/composition-plan', {
+    const planResp = await fetchWithTimeout('https://api.elevenlabs.io/v1/music/plan', {
       method: 'POST',
       headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({
