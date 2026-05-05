@@ -766,7 +766,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
 
               {/* Mode selector */}
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Tipo de generación</Label>
+                <Label className="text-xs text-muted-foreground">{t('dashboard.firstHit.genTypeLabel')}</Label>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -778,7 +778,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                         : "border-border text-muted-foreground hover:border-primary/50"
                     )}
                   >
-                    🎤 Canción con voz
+                    {t('dashboard.firstHit.genTypeSong')}
                   </button>
                   <button
                     type="button"
@@ -790,7 +790,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                         : "border-border text-muted-foreground hover:border-primary/50"
                     )}
                   >
-                    🎹 Instrumental / Base
+                    {t('dashboard.firstHit.genTypeInstrumental')}
                   </button>
                 </div>
               </div>
