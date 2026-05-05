@@ -427,7 +427,6 @@ serve(async (req) => {
     }
 
     const audioBuffer = await response.arrayBuffer();
-    const base64Audio = base64Encode(audioBuffer);
     const audioBytes = new Uint8Array(audioBuffer);
 
     console.log(`[GENERATE-AUDIO] Success! Audio size: ${audioBuffer.byteLength} bytes, ${CREDITS_COST} credits charged${compositionPlan ? ' (with composition plan)' : ''}`);
@@ -465,7 +464,6 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        audio: base64Audio,
         format: 'audio/mpeg',
         duration: durationSecs,
         provider: 'elevenlabs',
@@ -479,9 +477,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('[GENERATE-AUDIO] Error:', error);
+    if (refundOnUnhandled) {
+      await refundOnUnhandled(isAbortError(error) ? 'Timeout generación audio' : 'Error inesperado generación audio');
+    }
     return new Response(
-      JSON.stringify({ error: (error as Error).message || 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: isAbortError(error) ? 'provider_timeout' : 'provider_unavailable' }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
