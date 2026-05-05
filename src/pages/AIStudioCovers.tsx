@@ -304,7 +304,7 @@ const AIStudioCovers = () => {
                     {isGenerating ? (
                       <><Loader2 className="h-4 w-4 animate-spin" />Generando tu portada con IA...</>
                     ) : (
-                      <><Sparkles className="h-4 w-4" />Generar portada (1 crédito)</>
+                      <><Sparkles className="h-4 w-4" />Generar portada</>
                     )}
                   </Button>
                 )}
@@ -349,7 +349,7 @@ const AIStudioCovers = () => {
                     <Download className="h-4 w-4" />Descargar portada
                   </Button>
                   <Button variant="outline" className="gap-2" onClick={handleReset}>
-                    <RefreshCw className="h-4 w-4" />Generar otra (1 crédito)
+                    <RefreshCw className="h-4 w-4" />Generar otra
                   </Button>
                 </div>
               </div>
