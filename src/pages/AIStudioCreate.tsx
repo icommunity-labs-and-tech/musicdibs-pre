@@ -1264,7 +1264,7 @@ const AIStudioCreate = () => {
                                       <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{artist.style_notes}</span>
                                     )}
                                     {artist.voice_profiles?.label && (
-                                      <Badge variant="outline" className="text-[9px] h-4 mt-1">{artist.voice_profiles.label}</Badge>
+                                      <Badge variant="outline" className="text-[9px] h-4 mt-1">{t(`aiCreate.voicePresets.${artist.voice_profile_id}.label`, { defaultValue: artist.voice_profiles.label })}</Badge>
                                     )}
                                   </button>
                                 ))}
