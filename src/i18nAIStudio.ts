@@ -698,6 +698,16 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       aiUnavailable: 'El servicio no está disponible en este momento. Inténtalo de nuevo más tarde.',
       retry: 'Reintentar',
     },
+    fileDropzone: {
+      maxSizeError: 'El archivo debe ser menor a {{size}}MB',
+      change: 'Cambiar',
+      clickOrDrag: 'Haz clic o arrastra un archivo',
+      dropHere: 'Suelta el archivo aquí',
+      hintImage: 'JPG, PNG o WEBP (máx. {{size}}MB)',
+      hintAudio: 'MP3, WAV o FLAC (máx. {{size}}MB)',
+      hintAny: 'máx. {{size}}MB',
+      previewAlt: 'Vista previa',
+    },
   },
   en: {
     aiCreate: {
@@ -1390,6 +1400,16 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       aiUnavailable: 'The service is not available right now. Please try again later.',
       retry: 'Retry',
     },
+    fileDropzone: {
+      maxSizeError: 'File must be smaller than {{size}}MB',
+      change: 'Change',
+      clickOrDrag: 'Click or drag a file',
+      dropHere: 'Drop the file here',
+      hintImage: 'JPG, PNG or WEBP (max. {{size}}MB)',
+      hintAudio: 'MP3, WAV or FLAC (max. {{size}}MB)',
+      hintAny: 'max. {{size}}MB',
+      previewAlt: 'Preview',
+    },
   },
   'pt-BR': {
     aiCreate: {
@@ -2081,6 +2101,16 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       aiInvalidAudio: 'O arquivo de áudio é inválido ou está em um formato não suportado. Tente outro arquivo (MP3, WAV).',
       aiUnavailable: 'O serviço não está disponível no momento. Tente novamente mais tarde.',
       retry: 'Tentar novamente',
+    },
+    fileDropzone: {
+      maxSizeError: 'O arquivo deve ser menor que {{size}}MB',
+      change: 'Alterar',
+      clickOrDrag: 'Clique ou arraste um arquivo',
+      dropHere: 'Solte o arquivo aqui',
+      hintImage: 'JPG, PNG ou WEBP (máx. {{size}}MB)',
+      hintAudio: 'MP3, WAV ou FLAC (máx. {{size}}MB)',
+      hintAny: 'máx. {{size}}MB',
+      previewAlt: 'Pré-visualização',
     },
   },
 };

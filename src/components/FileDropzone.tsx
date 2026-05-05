@@ -1,4 +1,5 @@
 import { useCallback, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, X, FileAudio, Image as ImageIcon, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -37,13 +38,15 @@ export const FileDropzone = ({
   fileType = 'any',
   className,
 }: FileDropzoneProps) => {
+  const { t } = useTranslation();
+  const tk = (k: string, opts?: Record<string, unknown>) => t(`aiCreate.fileDropzone.${k}`, opts) as string;
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): string | null => {
     if (maxSize && file.size > maxSize * 1024 * 1024) {
-      return `El archivo debe ser menor a ${maxSize}MB`;
+      return tk('maxSizeError', { size: maxSize });
     }
     return null;
   };
@@ -92,9 +95,9 @@ export const FileDropzone = ({
   };
 
   const formatHints = () => {
-    if (fileType === 'image') return `JPG, PNG o WEBP (máx. ${maxSize}MB)`;
-    if (fileType === 'audio') return `MP3, WAV o FLAC (máx. ${maxSize}MB)`;
-    return `máx. ${maxSize}MB`;
+    if (fileType === 'image') return tk('hintImage', { size: maxSize });
+    if (fileType === 'audio') return tk('hintAudio', { size: maxSize });
+    return tk('hintAny', { size: maxSize });
   };
 
   return (
@@ -117,10 +120,10 @@ export const FileDropzone = ({
       {/* Image preview */}
       {fileType === 'image' && preview ? (
         <div className="relative group rounded-lg overflow-hidden border border-border">
-          <img src={preview} alt="Preview" className="w-full h-48 object-cover" />
+          <img src={preview} alt={tk('previewAlt')} className="w-full h-48 object-cover" />
           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <Button variant="secondary" size="sm" onClick={handleClick}>
-              Cambiar
+              {tk('change')}
             </Button>
             {onRemove && (
               <Button
@@ -149,7 +152,7 @@ export const FileDropzone = ({
           </div>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="sm" onClick={handleClick} className="text-xs">
-              Cambiar
+              {tk('change')}
             </Button>
             {onRemove && (
               <Button
@@ -183,7 +186,7 @@ export const FileDropzone = ({
           </div>
           <div className="text-center">
             <p className="text-sm font-medium">
-              {isDragging ? 'Suelta el archivo aquí' : 'Haz clic o arrastra un archivo'}
+              {isDragging ? tk('dropHere') : tk('clickOrDrag')}
             </p>
             <p className="text-xs text-muted-foreground mt-1">{formatHints()}</p>
           </div>
