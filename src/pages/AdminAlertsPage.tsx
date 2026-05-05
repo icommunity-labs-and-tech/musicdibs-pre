@@ -147,9 +147,15 @@ export default function AdminAlertsPage() {
             Avisos automáticos del backend (renovaciones, Stripe, crons…)
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Refrescar
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="default" size="sm" onClick={runDryRun} disabled={dryRunLoading}>
+            <PlayCircle className={`h-4 w-4 mr-2 ${dryRunLoading ? "animate-pulse" : ""}`} />
+            Simular renovaciones (dry-run)
+          </Button>
+          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Refrescar
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
