@@ -228,6 +228,8 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       uploadDescription: 'MP3, WAV o FLAC (máx. 50MB)',
       ctaButton: 'Masterizar mi canción',
       cost: 'crédito',
+      tabUpload: 'Subir archivo',
+      tabLibrary: 'Mis canciones',
       processing: {
         title: 'Procesando tu canción...',
         subtitle: 'Aplicando masterización profesional',
@@ -865,6 +867,8 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       uploadDescription: 'MP3, WAV or FLAC (max. 50MB)',
       ctaButton: 'Master my song',
       cost: 'credit',
+      tabUpload: 'Upload file',
+      tabLibrary: 'My songs',
       processing: {
         title: 'Processing your song...',
         subtitle: 'Applying professional mastering',
@@ -1499,6 +1503,8 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       uploadDescription: 'MP3, WAV ou FLAC (máx. 50MB)',
       ctaButton: 'Masterizar minha música',
       cost: 'crédito',
+      tabUpload: 'Enviar arquivo',
+      tabLibrary: 'Minhas músicas',
       processing: {
         title: 'Processando sua música...',
         subtitle: 'Aplicando masterização profissional',
