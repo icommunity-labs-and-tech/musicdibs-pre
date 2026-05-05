@@ -201,7 +201,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
       const featureKey = genMode === 'song' ? 'generate_audio_song' : 'generate_audio'
       const { data: spend, error: spendErr } = await supabase.functions.invoke(
         'spend-credits',
-        { body: { feature: featureKey, description: `${genMode === 'song' ? 'Canción' : 'Instrumental'} AI: ${prompt.slice(0, 80)}` } }
+        { body: { feature: featureKey, description: `${genMode === 'song' ? t('dashboard.premium.genTypeSongLog', 'Canción') : t('dashboard.premium.genTypeInstrumentalLog', 'Instrumental')} AI: ${prompt.slice(0, 80)}` } }
       )
       if (spendErr || spend?.error) throw new Error(spend?.message || t('dashboard.firstHit.creditSpendError'))
 
@@ -1152,7 +1152,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                                 onChange={e => updateCreator(c.id, {
                                   percentage: e.target.value ? Number(e.target.value) : null
                                 })}
-                                placeholder="Ej: 50"
+                                placeholder={t('dashboard.premium.examplePercent', 'Ej: 50')}
                                 className="h-9 text-sm w-28" />
                             </div>
                           </CardContent>
