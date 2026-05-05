@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "../_shared/supabase-client.ts";
 import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
-import { creditPurchaseEmail, paymentFailedEmail } from "../_shared/transactional-email.ts";
+import { creditPurchaseEmail, paymentFailedEmail, distributionWelcomeEmail } from "../_shared/transactional-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,63 +41,60 @@ function planToMailerLiteType(plan: string | undefined): string {
   return "single";
 }
 
-// Cache en memoria para evitar consultas repetidas a Stripe en el mismo invocation
-const priceCache: Record<string, { credits: number; plan: string; planId: string; productType: string; billingInterval: string | null }> = {};
+const PRICE_CREDITS: Record<string, number> = {
+  "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": 120,
+  "price_1THT7cF9ZCIiqrz6sWS67Q4V": 100,
+  "price_1THT7gF9ZCIiqrz6Acb2CkDC": 200,
+  "price_1THT7jF9ZCIiqrz6i02J4bj4": 300,
+  "price_1THT7nF9ZCIiqrz6r1ZcqH8L": 500,
+  "price_1THT7rF9ZCIiqrz6UmJDkBNZ": 1000,
+  "price_1T9SZvF9ZCIiqrz6TWLtfMBs": 8,
+  "price_1THULsF9ZCIiqrz64SbA3AK6": 1,
+  "price_1THT7xF9ZCIiqrz60FfiGbfv": 10,
+  "price_1THT80F9ZCIiqrz6H31dYDMG": 25,
+  "price_1THT83F9ZCIiqrz6BD2wmUaO": 50,
+  "price_1THT86F9ZCIiqrz6C548DJnT": 100,
+  "price_1THT8AF9ZCIiqrz626wSH9Rz": 200,
+};
 
-async function resolvePriceData(stripe: Stripe, priceId: string): Promise<{ credits: number; plan: string; planId: string; productType: string; billingInterval: string | null }> {
-  if (priceCache[priceId]) return priceCache[priceId];
+const PRICE_PLAN: Record<string, string> = {
+  "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": "Annual",
+  "price_1THT7cF9ZCIiqrz6sWS67Q4V": "Annual",
+  "price_1THT7gF9ZCIiqrz6Acb2CkDC": "Annual",
+  "price_1THT7jF9ZCIiqrz6i02J4bj4": "Annual",
+  "price_1THT7nF9ZCIiqrz6r1ZcqH8L": "Annual",
+  "price_1THT7rF9ZCIiqrz6UmJDkBNZ": "Annual",
+  "price_1T9SZvF9ZCIiqrz6TWLtfMBs": "Monthly",
+};
 
-  try {
-    const price = await stripe.prices.retrieve(priceId, { expand: ["product"] });
-    const product = price.product as Stripe.Product;
-    const meta = { ...price.metadata, ...(product.metadata || {}) };
-
-    // Resolver créditos: metadata > inferir del nombre del producto
-    let credits = parseInt(meta.credits || "0", 10);
-    if (!credits) {
-      const nameMatch = (price.nickname || product.name || "").match(/(\d+)\s*cr[eé]ditos?/i);
-      if (nameMatch) credits = parseInt(nameMatch[1], 10);
-    }
-
-    // Resolver tipo de plan
-    const isRecurring = price.type === "recurring";
-    const interval = price.recurring?.interval || null;
-    const isAnnual = isRecurring && interval === "year";
-    const isMonthly = isRecurring && interval === "month";
-    const isTopup = !isRecurring && credits > 1 && credits !== 1;
-    const isIndividual = !isRecurring && credits === 1;
-
-    let planId = meta.plan_id || meta.planId || meta.musicdibs_plan_id || price.lookup_key || "";
-    if (!planId) {
-      if (isAnnual) planId = `annual_${credits}`;
-      else if (isMonthly) planId = "monthly";
-      else if (isTopup) planId = `topup_${credits}`;
-      else if (isIndividual) planId = "individual";
-    }
-
-    let plan = "Free";
-    if (isAnnual) plan = "Annual";
-    else if (isMonthly) plan = "Monthly";
-
-    let productType = "unknown";
-    if (isAnnual) productType = "annual";
-    else if (isMonthly) productType = "monthly";
-    else if (isTopup) productType = "topup";
-    else if (isIndividual) productType = "single";
-
-    const result = { credits, plan, planId, productType, billingInterval: isAnnual ? "yearly" : isMonthly ? "monthly" : null };
-    priceCache[priceId] = result;
-    return result;
-  } catch (e) {
-    console.warn(`[WEBHOOK] Could not resolve price ${priceId}:`, e);
-    return { credits: 0, plan: "Free", planId: "unknown", productType: "unknown", billingInterval: null };
-  }
-}
+const PRICE_TO_PLAN_ID: Record<string, string> = {
+  "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": "annual_legacy",
+  "price_1THT7cF9ZCIiqrz6sWS67Q4V": "annual_100",
+  "price_1THT7gF9ZCIiqrz6Acb2CkDC": "annual_200",
+  "price_1THT7jF9ZCIiqrz6i02J4bj4": "annual_300",
+  "price_1THT7nF9ZCIiqrz6r1ZcqH8L": "annual_500",
+  "price_1THT7rF9ZCIiqrz6UmJDkBNZ": "annual_1000",
+  "price_1T9SZvF9ZCIiqrz6TWLtfMBs": "monthly",
+  "price_1THULsF9ZCIiqrz64SbA3AK6": "individual",
+  "price_1THT7xF9ZCIiqrz60FfiGbfv": "topup_10",
+  "price_1THT80F9ZCIiqrz6H31dYDMG": "topup_25",
+  "price_1THT83F9ZCIiqrz6BD2wmUaO": "topup_50",
+  "price_1THT86F9ZCIiqrz6C548DJnT": "topup_100",
+  "price_1THT8AF9ZCIiqrz626wSH9Rz": "topup_200",
+};
 
 const PLAN_ID_TO_PLAN_NAME: Record<string, string> = {
   annual_100: "Annual", annual_200: "Annual", annual_300: "Annual",
   annual_500: "Annual", annual_1000: "Annual", monthly: "Monthly",
 };
+
+function getProductType(planId: string): string {
+  if (planId.startsWith("annual")) return "annual";
+  if (planId === "monthly") return "monthly";
+  if (planId === "individual") return "single";
+  if (planId.startsWith("topup_")) return "topup";
+  return "unknown";
+}
 
 function mapStripeStatus(stripeStatus: string): string {
   if (["active", "trialing"].includes(stripeStatus)) return "active";
@@ -201,11 +198,6 @@ async function createOrderRecord(
         const { data: camp } = await supabase.from("marketing_campaigns").select("id, name").eq("coupon_code", params.couponCode).limit(1).maybeSingle();
         if (camp) { campaignId = camp.id; attributedCampaignName = camp.name; }
       }
-      // Fallback: readable promotion code match (e.g. FAEL20, GREGO20)
-      if (!campaignId && params.promotionCode) {
-        const { data: camp } = await supabase.from("marketing_campaigns").select("id, name").eq("coupon_code", params.promotionCode).limit(1).maybeSingle();
-        if (camp) { campaignId = camp.id; attributedCampaignName = camp.name; }
-      }
     }
 
     const orderData = {
@@ -257,7 +249,7 @@ async function createOrderRecord(
         medium: meta.utm_medium || null,
         campaign: meta.utm_campaign || null,
         content: meta.utm_content || null,
-        coupon_code: params.promotionCode || params.couponCode || null,
+        coupon_code: params.couponCode || null,
       });
     }
 
@@ -415,17 +407,8 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId   = session.metadata?.user_id;
-      const sessionMeta = session.metadata || {};
-      let checkoutPriceId: string | undefined;
-      try {
-        const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 1 });
-        checkoutPriceId = lineItems.data[0]?.price?.id;
-      } catch (e) {
-        console.warn("[WEBHOOK] Could not retrieve checkout line items:", e);
-      }
-      const checkoutPriceData = checkoutPriceId ? await resolvePriceData(stripe, checkoutPriceId) : null;
-      const credits  = checkoutPriceData?.credits || parseInt(sessionMeta.credits || "0", 10);
-      const planId   = checkoutPriceData?.planId || sessionMeta.plan_id || "unknown";
+      const credits  = parseInt(session.metadata?.credits || "0", 10);
+      const planId   = session.metadata?.plan_id || "unknown";
 
       if (userId && credits > 0) {
         // ── Idempotency guard: skip if this checkout session was already processed ──
@@ -447,9 +430,7 @@ serve(async (req) => {
           .from("profiles").select("subscription_plan").eq("user_id", userId).single();
         const previousPlan = prevProfile?.subscription_plan || "Free";
 
-        await addCredits(supabase, userId, credits, `Compra plan ${planId}: +${credits} créditos`);
-
-        const planName = checkoutPriceData?.plan !== "Free" ? checkoutPriceData?.plan : PLAN_ID_TO_PLAN_NAME[planId];
+        const planName = PLAN_ID_TO_PLAN_NAME[planId];
         if (planName) {
           await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", userId);
           console.log(`[WEBHOOK] Updated subscription_plan to ${planName} for user ${userId}`);
@@ -464,6 +445,7 @@ serve(async (req) => {
         }
 
         // ── Create order record ──
+        const sessionMeta = session.metadata || {};
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
         const stripeSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
         const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
@@ -471,7 +453,6 @@ serve(async (req) => {
         // Check for discount/coupon
         let couponCode: string | undefined;
         let promotionCode: string | undefined;
-        let promotionCodeStr: string | undefined;
         try {
           if (session.total_details && (session.total_details as any).breakdown?.discounts?.length > 0) {
             const discount = (session.total_details as any).breakdown.discounts[0];
@@ -480,42 +461,29 @@ serve(async (req) => {
           }
         } catch { /* ignore */ }
 
-        // Obtener promotion code real (ej: FAEL20) desde la sesión expandida
-        try {
-          const expandedSession = await stripe.checkout.sessions.retrieve(session.id, {
-            expand: ["total_details.breakdown.discounts"],
-          });
-          const discounts = (expandedSession.total_details as any)?.breakdown?.discounts;
-          if (discounts?.length > 0) {
-            const discount = discounts[0];
-            couponCode = discount?.discount?.coupon?.id;
-            const promoCodeId = discount?.discount?.promotion_code;
-            if (promoCodeId) {
-              promotionCode = promoCodeId as string;
-              const promoCode = await stripe.promotionCodes.retrieve(promoCodeId as string);
-              promotionCodeStr = promoCode.code;
-            }
-          }
-        } catch (e) {
-          console.warn("[WEBHOOK] Could not expand session discounts:", e);
-        }
-
         const order = await createOrderRecord(supabase, {
           userId,
           stripeCheckoutSessionId: session.id,
           stripeSubscriptionId: stripeSubId,
           stripePaymentIntentId: paymentIntentId,
-          productType: sessionMeta.product_type || checkoutPriceData?.productType || "unknown",
+          productType: sessionMeta.product_type || getProductType(planId),
           productCode: sessionMeta.product_code || planId,
           productLabel: sessionMeta.product_label || planId,
-          billingInterval: sessionMeta.billing_interval || checkoutPriceData?.billingInterval || null,
+          billingInterval: sessionMeta.billing_interval || null,
           amountGross: amountTotal,
           currency: session.currency || "eur",
           isSubscription: !!stripeSubId,
           isRenewal: false,
           couponCode: couponCode || sessionMeta.coupon_code,
-          promotionCode: promotionCodeStr || promotionCode,
+          promotionCode,
           metadata: sessionMeta,
+        });
+
+        // ── Add credits with full audit trail ──
+        await addCredits(supabase, userId, credits, `Compra plan ${planId}: +${credits} créditos`, {
+          stripeSessionId: session.id,
+          couponCode: couponCode || sessionMeta.coupon_code,
+          orderId: order?.id,
         });
 
         // ── Create purchase evidence ──
@@ -527,7 +495,7 @@ serve(async (req) => {
             orderId: order?.id,
             email: evUser?.email,
             displayName: evProfile?.display_name || evUser?.email,
-            productType: sessionMeta.product_type || checkoutPriceData?.productType || "unknown",
+            productType: sessionMeta.product_type || getProductType(planId),
             productName: sessionMeta.product_label || planId,
             amount: amountTotal,
             currency: session.currency || "eur",
@@ -617,29 +585,19 @@ serve(async (req) => {
             });
             console.log(`[WEBHOOK] ✅ Distribution onboarding email enqueued for user ${distEmail}`);
 
-            // User-facing email: distribution access within 72h
+            // User-facing email: distribution access info
             const userMsgId = crypto.randomUUID();
-            const lang = distUser?.user_metadata?.language || "es";
-            const userName = distName !== distEmail ? distName : "";
-            const subjectByLang: Record<string, string> = {
-              es: "Tu acceso a distribución está en camino 🎶", en: "Your distribution access is on its way 🎶", pt: "Seu acesso à distribuição está a caminho 🎶",
-            };
-            const greetingByLang: Record<string, string> = {
-              es: userName ? `¡Hola ${userName}!` : "¡Hola!", en: userName ? `Hi ${userName}!` : "Hi!", pt: userName ? `Olá ${userName}!` : "Olá!",
-            };
-            const bodyByLang: Record<string, string> = {
-              es: `<h2>${greetingByLang["es"]}</h2><p>¡Enhorabuena por activar tu suscripción anual! 🎉</p><p>Estamos preparando tu cuenta en nuestra plataforma de distribución para que puedas llevar tu música a todas las tiendas digitales (Spotify, Apple Music, Amazon Music, y muchas más).</p><p>El proceso de alta es un <strong>onboarding manual</strong> que tarda entre <strong>48 y 72 horas laborables</strong>. Durante este periodo, nuestro equipo configura y vincula tu cuenta correctamente.</p><p>Una vez completado, <strong>recibirás un correo electrónico con instrucciones para generar tu contraseña de acceso</strong> a la plataforma de distribución en <a href="https://dist.musicdibs.com/" style="color:#a855f7;">dist.musicdibs.com</a>.</p><p><strong>Importante:</strong> tu usuario de distribución será el mismo email que usas en MusicDibs (<strong>${distEmail}</strong>), pero la contraseña será distinta — la generarás desde el correo que te enviaremos.</p><p>Si tienes alguna pregunta mientras tanto, no dudes en escribirnos a <a href="mailto:info@musicdibs.com">info@musicdibs.com</a>.</p><p>¡Gracias por confiar en MusicDibs!</p><p>— El equipo de MusicDibs</p>`,
-              en: `<h2>${greetingByLang["en"]}</h2><p>Congratulations on activating your annual subscription! 🎉</p><p>We are setting up your account on our distribution platform so you can get your music on all major digital stores (Spotify, Apple Music, Amazon Music, and more).</p><p>The onboarding process is a <strong>manual setup</strong> that takes <strong>48 to 72 business hours</strong>. During this time, our team configures and links your account properly.</p><p>Once completed, <strong>you will receive an email with instructions to create your access password</strong> for the distribution platform at <a href="https://dist.musicdibs.com/" style="color:#a855f7;">dist.musicdibs.com</a>.</p><p><strong>Important:</strong> your distribution username will be the same email you use on MusicDibs (<strong>${distEmail}</strong>), but the password will be different — you will create it from the email we send you.</p><p>If you have any questions in the meantime, feel free to reach out at <a href="mailto:info@musicdibs.com">info@musicdibs.com</a>.</p><p>Thank you for trusting MusicDibs!</p><p>— The MusicDibs Team</p>`,
-              pt: `<h2>${greetingByLang["pt"]}</h2><p>Parabéns por ativar sua assinatura anual! 🎉</p><p>Estamos preparando sua conta em nossa plataforma de distribuição para que você possa levar sua música a todas as lojas digitais (Spotify, Apple Music, Amazon Music e muito mais).</p><p>O processo de integração é um <strong>onboarding manual</strong> que leva de <strong>48 a 72 horas úteis</strong>. Durante esse período, nossa equipe configura e vincula sua conta corretamente.</p><p>Assim que concluído, <strong>você receberá um e-mail com instruções para gerar sua senha de acesso</strong> à plataforma de distribuição em <a href="https://dist.musicdibs.com/" style="color:#a855f7;">dist.musicdibs.com</a>.</p><p><strong>Importante:</strong> seu usuário de distribuição será o mesmo email que você usa no MusicDibs (<strong>${distEmail}</strong>), mas a senha será diferente — você a criará a partir do email que enviaremos.</p><p>Se tiver alguma dúvida, não hesite em nos escrever em <a href="mailto:info@musicdibs.com">info@musicdibs.com</a>.</p><p>Obrigado por confiar na MusicDibs!</p><p>— A equipe MusicDibs</p>`,
-            };
-            const userHtml = bodyByLang[lang] || bodyByLang["es"];
+            const { data: distLangProfile } = await supabase.from("profiles").select("language").eq("user_id", userId).single();
+            const distLang = distLangProfile?.language || distUser?.user_metadata?.language || "es";
+            const distWelcome = distributionWelcomeEmail({ name: distName, email: distEmail, planId, lang: distLang });
+            await supabase.from("email_send_log").insert({ message_id: userMsgId, template_name: "distribution_welcome", recipient_email: distEmail, status: "pending" });
             await supabase.rpc("enqueue_email", {
               queue_name: "transactional_emails",
               payload: {
-                to: distEmail, subject: subjectByLang[lang] || subjectByLang["es"], html: userHtml,
-                from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
+                to: distEmail, from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
+                subject: distWelcome.subject, html: distWelcome.html, text: distWelcome.text,
                 purpose: "transactional", idempotency_key: `dist-welcome-${userId}-${planId}`, message_id: userMsgId,
-                queued_at: new Date().toISOString(),
+                label: "distribution_welcome", queued_at: new Date().toISOString(),
               },
             });
             console.log(`[WEBHOOK] ✅ Distribution welcome email enqueued for ${distEmail}`);
@@ -709,8 +667,7 @@ serve(async (req) => {
             }
           }
 
-          const priceData = priceId ? await resolvePriceData(stripe, priceId) : null;
-          const credits = priceData?.credits || 0;
+          const credits = priceId ? (PRICE_CREDITS[priceId] || 0) : 0;
 
           if (credits > 0) {
             await supabase.from("profiles").update({ available_credits: credits }).eq("user_id", profile.user_id);
@@ -722,8 +679,8 @@ serve(async (req) => {
           }
 
           // ── Create renewal order ──
-          const resolvedPlanId = priceData?.planId || "unknown";
-          const productType = priceData?.productType || "unknown";
+          const resolvedPlanId = priceId ? (PRICE_TO_PLAN_ID[priceId] || "unknown") : "unknown";
+          const productType = getProductType(resolvedPlanId);
           const planLabel = PLAN_ID_TO_PLAN_NAME[resolvedPlanId] ? `Renovación ${resolvedPlanId}` : `Renovación ${resolvedPlanId}`;
 
           const renewalOrder = await createOrderRecord(supabase, {
@@ -733,7 +690,7 @@ serve(async (req) => {
             productType,
             productCode: resolvedPlanId,
             productLabel: planLabel,
-            billingInterval: priceData?.billingInterval || null,
+            billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -778,8 +735,7 @@ serve(async (req) => {
             }
           }
 
-          const priceData = actualPriceId ? await resolvePriceData(stripe, actualPriceId) : null;
-          const credits = priceData?.credits || 0;
+          const credits = actualPriceId ? (PRICE_CREDITS[actualPriceId] || 0) : 0;
 
           if (credits > 0) {
             await addCredits(supabase, profile.user_id, credits, `Cambio de plan: +${credits} créditos acumulados`);
@@ -789,8 +745,8 @@ serve(async (req) => {
           }
 
           // Update plan name
-          const resolvedPlanId = priceData?.planId || null;
-          const planName = priceData?.plan !== "Free" ? priceData?.plan : null;
+          const resolvedPlanId = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
+          const planName = resolvedPlanId ? (PLAN_ID_TO_PLAN_NAME[resolvedPlanId] || null) : null;
           if (planName) {
             await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", profile.user_id);
             console.log(`[WEBHOOK] Plan change: updated plan to ${planName} for user ${profile.user_id}`);
@@ -809,7 +765,7 @@ serve(async (req) => {
 
           // ── Create order record for plan change ──
           const planId = resolvedPlanId || "unknown";
-          const productType = priceData?.productType || "unknown";
+          const productType = getProductType(planId);
           const changeOrder = await createOrderRecord(supabase, {
             userId: profile.user_id,
             stripeInvoiceId: invoiceId,
@@ -817,7 +773,7 @@ serve(async (req) => {
             productType,
             productCode: planId,
             productLabel: `Cambio a ${planName || planId}`,
-            billingInterval: priceData?.billingInterval || null,
+            billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -924,8 +880,7 @@ serve(async (req) => {
 
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
       if (profile) {
-        const priceData = priceId ? await resolvePriceData(stripe, priceId) : null;
-        const planName = priceData?.plan !== "Free" ? priceData?.plan : null;
+        const planName = priceId ? (PRICE_PLAN[priceId] || null) : null;
         if (status === "active" && planName) {
           await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", profile.user_id);
           console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} for user ${profile.user_id}`);
@@ -942,12 +897,10 @@ serve(async (req) => {
         const subStatus = mapStripeStatus(status);
         const itemPeriodStart = (subscription.items.data[0] as any)?.current_period_start;
         const itemPeriodEnd = (subscription.items.data[0] as any)?.current_period_end;
-        const periodStart = itemPeriodStart
-          ? new Date(itemPeriodStart * 1000).toISOString()
-          : new Date((subscription as any).current_period_start * 1000).toISOString();
-        const periodEnd = itemPeriodEnd
-          ? new Date(itemPeriodEnd * 1000).toISOString()
-          : new Date((subscription as any).current_period_end * 1000).toISOString();
+        const periodStartRaw = itemPeriodStart ?? (subscription as any).current_period_start;
+        const periodEndRaw = itemPeriodEnd ?? (subscription as any).current_period_end;
+        const periodStart = periodStartRaw ? new Date(periodStartRaw * 1000).toISOString() : null;
+        const periodEnd = periodEndRaw ? new Date(periodEndRaw * 1000).toISOString() : null;
 
         await supabase.from("subscriptions").upsert({
           user_id: profile.user_id,
@@ -959,7 +912,6 @@ serve(async (req) => {
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
 
-        // Sincronizar profiles según status
         if (subStatus === "active" && planName) {
           await supabase.from("profiles")
             .update({ subscription_plan: planName, updated_at: new Date().toISOString() })
@@ -1041,11 +993,25 @@ serve(async (req) => {
   }
 });
 
-async function addCredits(supabase: any, userId: string, credits: number, description: string) {
-  await supabase.from("credit_transactions").insert({ user_id: userId, amount: credits, type: "purchase", description });
+async function addCredits(
+  supabase: any,
+  userId: string,
+  credits: number,
+  description: string,
+  audit: { stripeSessionId?: string; couponCode?: string; orderId?: string } = {}
+) {
+  await supabase.from("credit_transactions").insert({
+    user_id: userId,
+    amount: credits,
+    type: "purchase",
+    description,
+    stripe_session_id: audit.stripeSessionId || null,
+    coupon_code: audit.couponCode || null,
+    order_id: audit.orderId || null,
+  });
   const { data: profile } = await supabase.from("profiles").select("available_credits").eq("user_id", userId).single();
   if (profile) {
     await supabase.from("profiles").update({ available_credits: profile.available_credits + credits }).eq("user_id", userId);
   }
-  console.log(`[WEBHOOK] Added ${credits} credits to user ${userId}`);
+  console.log(`[WEBHOOK] Added ${credits} credits to user ${userId} | session=${audit.stripeSessionId || 'n/a'} | coupon=${audit.couponCode || 'none'}`);
 }
