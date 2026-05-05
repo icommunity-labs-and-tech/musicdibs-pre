@@ -30,11 +30,19 @@ serve(async (req) => {
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user: callerUser }, error: userError } = await supabaseUser.auth.getUser(token);
-    if (userError || !callerUser) return json({ error: "Unauthorized" }, 401);
-
-    const callerUserId = callerUser.id;
-    const callerEmail = callerUser.email || "";
+    let callerUserId: string;
+    let callerEmail = "";
+    try {
+      const { data: claimsData, error: claimsError } = await (supabaseUser.auth as any).getClaims(token);
+      if (claimsError || !claimsData?.claims?.sub) throw claimsError || new Error("no claims");
+      callerUserId = claimsData.claims.sub;
+      callerEmail = claimsData.claims.email || "";
+    } catch (_e) {
+      const { data: { user: callerUser }, error: userError } = await supabaseUser.auth.getUser(token);
+      if (userError || !callerUser) return json({ error: "Unauthorized" }, 401);
+      callerUserId = callerUser.id;
+      callerEmail = callerUser.email || "";
+    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
