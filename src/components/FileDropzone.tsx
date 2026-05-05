@@ -38,13 +38,15 @@ export const FileDropzone = ({
   fileType = 'any',
   className,
 }: FileDropzoneProps) => {
+  const { t } = useTranslation();
+  const tk = (k: string, opts?: Record<string, unknown>) => t(`aiCreate.fileDropzone.${k}`, opts) as string;
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const validateFile = (file: File): string | null => {
     if (maxSize && file.size > maxSize * 1024 * 1024) {
-      return `El archivo debe ser menor a ${maxSize}MB`;
+      return tk('maxSizeError', { size: maxSize });
     }
     return null;
   };
