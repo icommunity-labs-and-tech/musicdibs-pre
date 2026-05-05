@@ -327,7 +327,8 @@ serve(async (req) => {
       if (planOrPrompt.plan) {
         body.composition_plan = planOrPrompt.plan;
       } else {
-        body.music_length_ms = durationMs;
+        // Only set duration if user specified one; otherwise let ElevenLabs decide.
+        if (durationMs !== null) body.music_length_ms = durationMs;
         body.prompt = planOrPrompt.promptText;
       }
       return fetchWithTimeout('https://api.elevenlabs.io/v1/music', {
