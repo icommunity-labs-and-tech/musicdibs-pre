@@ -256,6 +256,7 @@ serve(async (req) => {
       type: 'usage',
       description: `Generación audio (${mode || 'instrumental'}): ${prompt.slice(0, 80)}`,
     });
+    let creditsDeducted = true;
 
     // ── Helper to refund on failure ──
     const refundCredits = async (reason: string) => {
@@ -271,6 +272,7 @@ serve(async (req) => {
           type: 'refund',
           description: `Reembolso: ${reason}`.slice(0, 200),
         });
+        creditsDeducted = false;
         console.log(`[GENERATE-AUDIO] Refunded ${CREDITS_COST} credits to user ${userId}: ${reason}`);
       }
     };
@@ -325,9 +327,18 @@ serve(async (req) => {
       }, PROVIDER_TIMEOUT_MS);
     };
 
-    let response = compositionPlan
-      ? await callElevenLabs({ plan: compositionPlan })
-      : await callElevenLabs({ promptText: enrichedPrompt });
+    let response: Response;
+    try {
+      response = compositionPlan
+        ? await callElevenLabs({ plan: compositionPlan })
+        : await callElevenLabs({ promptText: enrichedPrompt });
+    } catch (providerErr) {
+      await refundCredits(isAbortError(providerErr) ? 'Timeout ElevenLabs' : 'Error de conexión ElevenLabs');
+      return new Response(
+        JSON.stringify({ error: isAbortError(providerErr) ? 'provider_timeout' : 'provider_unavailable' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // If prompt was rejected (bad_prompt), retry with the suggested prompt
     if (!response.ok && response.status === 400) {
