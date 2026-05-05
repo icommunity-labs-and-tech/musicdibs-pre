@@ -288,19 +288,20 @@ serve(async (req) => {
     if (cleanPrompt) parts.push(cleanPrompt);
     const enrichedPrompt = parts.join('. ');
 
-    // Auto-duration: if user didn't specify, let ElevenLabs/Lyria decide
-    const autoDuration = duration === undefined || duration === null || duration === 0;
-    const durationSecs: number | null = autoDuration ? null : Number(duration);
-    const durationMs: number | null = autoDuration ? null : (durationSecs as number) * 1000;
+    // Avoid open-ended provider jobs: they are the main source of Edge Function timeouts.
+    const requestedDuration = Number(duration);
+    const durationSecs = Number.isFinite(requestedDuration) && requestedDuration > 0
+      ? Math.min(Math.max(Math.round(requestedDuration), 30), 120)
+      : (mode === 'song' ? DEFAULT_SONG_DURATION_SECS : DEFAULT_INSTRUMENTAL_DURATION_SECS);
+    const durationMs = durationSecs * 1000;
     const hasUserLyrics = typeof lyrics === 'string' && lyrics.trim().length > 0 && mode === 'song';
 
     // Pre-build composition plan if user provided lyrics
     // Composition plan REQUIRES a duration → use a sensible default (90s) only for plan building
     let compositionPlan: any | null = null;
     if (hasUserLyrics) {
-      const planDurationMs = durationMs ?? 90000;
-      console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars, ${planDurationMs}ms${autoDuration ? ' auto' : ''})`);
-      compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), planDurationMs, ELEVENLABS_API_KEY);
+      console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars, ${durationMs}ms)`);
+      compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), durationMs, ELEVENLABS_API_KEY);
       if (!compositionPlan) {
         console.warn('[GENERATE-AUDIO] composition plan unavailable — falling back to prompt-only mode');
       }
@@ -311,19 +312,17 @@ serve(async (req) => {
     // ── ElevenLabs call (mutually exclusive: plan OR prompt) ──
     const callElevenLabs = async (planOrPrompt: { plan?: any; promptText?: string }) => {
       const body: Record<string, unknown> = {};
-      // Only include music_length_ms when user explicitly provided a duration.
-      // Omitting it lets Lyria/ElevenLabs auto-decide the optimal length.
-      if (durationMs !== null) body.music_length_ms = durationMs;
+      body.music_length_ms = durationMs;
       if (planOrPrompt.plan) {
         body.composition_plan = planOrPrompt.plan;
       } else {
         body.prompt = planOrPrompt.promptText;
       }
-      return fetch('https://api.elevenlabs.io/v1/music', {
+      return fetchWithTimeout('https://api.elevenlabs.io/v1/music', {
         method: 'POST',
         headers: { 'xi-api-key': ELEVENLABS_API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
-      });
+      }, PROVIDER_TIMEOUT_MS);
     };
 
     let response = compositionPlan
