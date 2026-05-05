@@ -462,6 +462,14 @@ serve(async (req) => {
       console.error('[GENERATE-AUDIO] Persist error (non-fatal):', persistErr);
     }
 
+    if (!savedAudioUrl) {
+      await refundCredits('No se pudo guardar el audio generado');
+      return new Response(
+        JSON.stringify({ error: 'storage_error' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         format: 'audio/mpeg',
