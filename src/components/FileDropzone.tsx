@@ -39,7 +39,7 @@ export const FileDropzone = ({
   className,
 }: FileDropzoneProps) => {
   const { t } = useTranslation();
-  const tk = (k: string, opts?: Record<string, unknown>) => t(`aiCreate.fileDropzone.${k}`, opts) as string;
+  const tk = (k: string, opts?: Record<string, unknown>) => t(`fileDropzone.${k}`, opts) as string;
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
