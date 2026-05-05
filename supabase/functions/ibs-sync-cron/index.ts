@@ -64,7 +64,7 @@ serve(async (req) => {
     for (const item of items) {
       try {
         const ibsRes = await fetch(`${IBS_API_URL}/evidences/${item.ibs_evidence_id}`, {
-          headers: { Authorization: `ApiKey ${IBS_API_KEY}` },
+          headers: { Authorization: `Bearer ${IBS_API_KEY}` },
         });
 
         if (ibsRes.ok) {
