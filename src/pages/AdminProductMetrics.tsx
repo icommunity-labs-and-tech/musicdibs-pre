@@ -40,13 +40,15 @@ const ACTION_EVENTS_BY_FEATURE: Record<string, string[]> = {
   cover: ["cover_generated"],
   video: ["video_generated"],
   social_video: ["social_video_generated"],
+  instagram_creative: ["instagram_creative_generated"],
+  youtube_thumbnail: ["youtube_thumbnail_generated"],
   promotion: ["promotion_generated"],
   premium_promotion: ["premium_promotion_submitted"],
   press: ["press_release_generated"],
   register: ["work_registered"],
   enhance_audio: ["enhance_audio_completed"],
   distribution: ["distribution_clicked"],
-  inspire: ["ai_studio_entered"],
+  inspire: ["generation_completed"],
 };
 
 interface MetricRow {
