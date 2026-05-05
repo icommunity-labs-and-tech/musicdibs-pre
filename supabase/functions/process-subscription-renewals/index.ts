@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
     await log({ action: "heartbeat", detail: `subs_due=${subs?.length ?? 0}` });
 
     if (!subs || subs.length === 0) {
-      return new Response(JSON.stringify({ ok: true, processed: 0 }), {
+      return new Response(JSON.stringify({ ok: true, dry_run: dryRun, processed: 0, results: dryRun ? [] : undefined }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
