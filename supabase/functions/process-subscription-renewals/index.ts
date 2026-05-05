@@ -89,6 +89,10 @@ Deno.serve(async (req) => {
       .lte("current_period_end", cutoffISO);
 
     if (subsErr) throw subsErr;
+
+    // Heartbeat: always log a run so watchdog can detect cron health, even with 0 subs
+    await log({ action: "heartbeat", detail: `subs_due=${subs?.length ?? 0}` });
+
     if (!subs || subs.length === 0) {
       return new Response(JSON.stringify({ ok: true, processed: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
