@@ -336,14 +336,44 @@ const AIStudioCreate = () => {
         enrichedPrompt = `${enrichedPrompt}${voiceTag}`;
       }
 
-      const { data, error } = await supabase.functions.invoke('generate-audio', {
-        body: {
-          prompt: enrichedPrompt,
-          lyrics: mode === 'song' ? lyrics.trim() : '',
-          mode,
-          ...(duration ? { duration } : {}),
+      // Retry with exponential backoff for transient provider failures (timeout / provider_unavailable)
+      const MAX_ATTEMPTS = 3;
+      const RETRYABLE_CODES = new Set(['provider_timeout', 'provider_unavailable', 'provider_rate_limit']);
+      const isTransientMessage = (msg?: string) =>
+        !!msg && /(timeout|timed?\s*out|fetch|network|503|504|gateway|unavailable)/i.test(msg);
+
+      let data: any = null;
+      let error: any = null;
+      let attempt = 0;
+      setRetryStatus(null);
+
+      while (attempt < MAX_ATTEMPTS) {
+        attempt += 1;
+        if (attempt > 1) {
+          setRetryStatus({ attempt, max: MAX_ATTEMPTS });
+          await new Promise((r) => setTimeout(r, 1500 * Math.pow(2, attempt - 2))); // 1.5s, 3s
         }
-      });
+
+        const resp = await supabase.functions.invoke('generate-audio', {
+          body: {
+            prompt: enrichedPrompt,
+            lyrics: mode === 'song' ? lyrics.trim() : '',
+            mode,
+            ...(duration ? { duration } : {}),
+          }
+        });
+        data = resp.data;
+        error = resp.error;
+
+        const transient =
+          (data?.error && RETRYABLE_CODES.has(data.error)) ||
+          (!data && error && isTransientMessage(error?.message));
+
+        if (!transient) break;
+        if (attempt >= MAX_ATTEMPTS) break;
+        console.warn(`[AIStudioCreate] generate-audio transient failure (attempt ${attempt}/${MAX_ATTEMPTS})`, data?.error || error?.message);
+      }
+      setRetryStatus(null);
 
       if (error) {
         if (data?.error === 'rate_limit_exceeded') {
