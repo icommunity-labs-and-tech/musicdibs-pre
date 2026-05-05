@@ -60,6 +60,7 @@ serve(async (req) => {
             customerId,
           });
           customerId = null;
+          await supabaseAdmin.from("profiles").update({ stripe_customer_id: null }).eq("user_id", user.id);
         } else {
           throw stripeError;
         }
