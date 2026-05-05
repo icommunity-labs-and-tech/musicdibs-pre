@@ -234,7 +234,9 @@ export async function pollEvidenceStatus(evidenceId: string): Promise<any> {
       if (ctx?.json) detail = JSON.stringify(await ctx.json());
       else if (ctx?.text) detail = await ctx.text();
     } catch { /* ignore */ }
-    console.error('[pollEvidenceStatus] edge error', {
+    // Use warn (not error) — caller handles fallback gracefully and we don't want
+    // transient external iBS outages to trigger the runtime-error monitor.
+    console.warn('[pollEvidenceStatus] edge error (non-fatal)', {
       message: error.message,
       name: error.name,
       detail,
@@ -243,7 +245,7 @@ export async function pollEvidenceStatus(evidenceId: string): Promise<any> {
   }
 
   if (data?.error) {
-    console.error('[pollEvidenceStatus] data error', data.error);
+    console.warn('[pollEvidenceStatus] data error (non-fatal)', data.error);
     throw new Error(data.error);
   }
   return data;
