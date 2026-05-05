@@ -528,8 +528,7 @@ const es = {
       voiceStop: '⏹ Detener',
       kycRequiredError: 'Debes verificar tu identidad antes de registrar una obra.',
     },
-    verify: {
-      title: 'Verificación de identidad',
+    kyc: {
       stepDataLabel: 'Datos de identidad',
       stepBiometricLabel: 'Verificación biométrica',
       verifiedTitle: 'Identidad verificada',
