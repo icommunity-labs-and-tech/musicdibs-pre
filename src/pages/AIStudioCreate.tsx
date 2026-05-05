@@ -1508,8 +1508,8 @@ const AIStudioCreate = () => {
                         <div className="space-y-1.5">
                           <Label className="text-sm">{t('aiCreate.writingStyleLabel')}</Label>
                           <div className="flex flex-wrap gap-1.5">
-                            {LYRIC_STYLES.map(s => (
-                              <Badge key={s} variant={lyricsStyle === s ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => setLyricsStyle(lyricsStyle === s ? "" : s)}>{s}</Badge>
+                            {LYRIC_STYLE_KEYS.map(k => (
+                              <Badge key={k} variant={lyricsStyle === k ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => setLyricsStyle(lyricsStyle === k ? "" : k)}>{t(`aiCreate.lyricStyles.${k}`)}</Badge>
                             ))}
                           </div>
                         </div>
