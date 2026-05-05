@@ -43,6 +43,16 @@ Deno.serve(async (req) => {
     await supabase.from("renewal_log").insert(entry);
   };
 
+  // Parse optional body for dry_run flag
+  let dryRun = false;
+  try {
+    const bodyText = await req.text();
+    const bodyJson = bodyText ? JSON.parse(bodyText) : {};
+    dryRun = bodyJson.dry_run === true;
+  } catch (_) { /* ignore body parse errors */ }
+  if (dryRun) console.log('[renewals] *** DRY RUN MODE — no changes will be made ***');
+  const dryRunResults: any[] = [];
+
   try {
     // ─────────────────────────────────────────────────────────────
     // 1. SAFETY FLAG CHECK — must run before ANY Stripe call
@@ -94,7 +104,7 @@ Deno.serve(async (req) => {
     await log({ action: "heartbeat", detail: `subs_due=${subs?.length ?? 0}` });
 
     if (!subs || subs.length === 0) {
-      return new Response(JSON.stringify({ ok: true, processed: 0 }), {
+      return new Response(JSON.stringify({ ok: true, dry_run: dryRun, processed: 0, results: dryRun ? [] : undefined }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -124,6 +134,18 @@ Deno.serve(async (req) => {
       const customerId = sub.stripe_customer_id ?? profileMap.get(sub.user_id);
 
       if (!customerId) {
+        if (dryRun) {
+          dryRunResults.push({
+            user_id: sub.user_id,
+            email,
+            tier: sub.tier ?? sub.plan ?? 'annual_100',
+            customer_id: 'MISSING',
+            credits_would_reset_to: getPriceId(sub.tier ?? sub.plan ?? 'annual_100').credits,
+            action: 'would_skip_no_customer',
+          });
+          skipped++;
+          continue;
+        }
         await log({
           user_id: sub.user_id,
           email,
@@ -135,7 +157,20 @@ Deno.serve(async (req) => {
       }
 
       const tier = sub.tier ?? sub.plan ?? "annual_100";
-      const { priceId } = getPriceId(tier);
+      const { priceId, credits: tierCredits } = getPriceId(tier);
+
+      if (dryRun) {
+        dryRunResults.push({
+          user_id: sub.user_id,
+          email,
+          tier,
+          customer_id: customerId,
+          credits_would_reset_to: tierCredits,
+          action: 'would_renew',
+        });
+        created++;
+        continue;
+      }
 
       try {
         // a) Already has an active Stripe subscription?
@@ -279,6 +314,20 @@ Deno.serve(async (req) => {
           failed++;
         }
       }
+    }
+
+    if (dryRun) {
+      return new Response(
+        JSON.stringify({
+          ok: true,
+          dry_run: true,
+          total: subs.length,
+          would_renew: created,
+          would_skip: skipped,
+          results: dryRunResults,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     return new Response(
