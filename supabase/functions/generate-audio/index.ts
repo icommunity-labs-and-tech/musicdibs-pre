@@ -6,8 +6,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-const DEFAULT_SONG_DURATION_SECS = 90;
-const DEFAULT_INSTRUMENTAL_DURATION_SECS = 60;
+// Used ONLY when "Auto" is selected AND user provided lyrics (composition plan REQUIRES a duration).
+// For Auto + no lyrics we omit music_length_ms entirely so ElevenLabs decides.
+const AUTO_PLAN_FALLBACK_SECS = 180;
+const MIN_DURATION_SECS = 30;
+const MAX_DURATION_SECS = 300; // ElevenLabs Music API allows up to 5 min
 const PROVIDER_TIMEOUT_MS = 110_000;
 const PLAN_TIMEOUT_MS = 30_000;
 
