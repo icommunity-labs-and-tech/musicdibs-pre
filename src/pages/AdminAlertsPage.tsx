@@ -246,6 +246,89 @@ export default function AdminAlertsPage() {
           ))}
         </CardContent>
       </Card>
+
+      <Dialog open={dryRunOpen} onOpenChange={setDryRunOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <PlayCircle className="h-5 w-5" /> Simulación de renovaciones (dry-run)
+            </DialogTitle>
+            <DialogDescription>
+              Esta simulación NO toca Stripe ni la base de datos. Solo muestra qué pasaría si el cron se ejecutara ahora.
+            </DialogDescription>
+          </DialogHeader>
+
+          {dryRunLoading && (
+            <div className="text-sm text-muted-foreground py-8 text-center">
+              Ejecutando simulación…
+            </div>
+          )}
+
+          {!dryRunLoading && dryRunData?.error && (
+            <div className="text-sm text-destructive bg-destructive/10 p-4 rounded">
+              {dryRunData.error}
+            </div>
+          )}
+
+          {!dryRunLoading && dryRunData && !dryRunData.error && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <Card><CardContent className="p-4">
+                  <div className="text-xs uppercase text-muted-foreground">Total</div>
+                  <div className="text-2xl font-bold">{dryRunData.total ?? dryRunData.processed ?? 0}</div>
+                </CardContent></Card>
+                <Card><CardContent className="p-4">
+                  <div className="text-xs uppercase text-muted-foreground">Se renovarían</div>
+                  <div className="text-2xl font-bold text-green-600">{dryRunData.would_renew ?? 0}</div>
+                </CardContent></Card>
+                <Card><CardContent className="p-4">
+                  <div className="text-xs uppercase text-muted-foreground">Se omitirían</div>
+                  <div className="text-2xl font-bold text-amber-600">{dryRunData.would_skip ?? 0}</div>
+                </CardContent></Card>
+              </div>
+
+              {Array.isArray(dryRunData.results) && dryRunData.results.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Tier</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Créditos</TableHead>
+                      <TableHead>Acción</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dryRunData.results.map((r: any, i: number) => (
+                      <TableRow key={i}>
+                        <TableCell className="text-xs">{r.email ?? "—"}</TableCell>
+                        <TableCell><Badge variant="outline">{r.tier}</Badge></TableCell>
+                        <TableCell className="text-xs font-mono">
+                          {r.customer_id === "MISSING" ? (
+                            <span className="text-destructive">MISSING</span>
+                          ) : r.customer_id?.slice(0, 18) + "…"}
+                        </TableCell>
+                        <TableCell className="font-bold">{r.credits_would_reset_to}</TableCell>
+                        <TableCell>
+                          <Badge className={r.action === "would_renew"
+                            ? "bg-green-500/15 text-green-700 dark:text-green-300"
+                            : "bg-amber-500/15 text-amber-700 dark:text-amber-300"}>
+                            {r.action}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-sm text-muted-foreground py-4 text-center">
+                  No hay suscripciones por renovar en los próximos 3 días.
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
