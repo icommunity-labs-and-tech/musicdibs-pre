@@ -65,6 +65,42 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_alerts: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          message: string
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source: string
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string
+        }
+        Relationships: []
+      }
       ai_generations: {
         Row: {
           audio_url: string
@@ -2808,6 +2844,7 @@ export type Database = {
       }
     }
     Functions: {
+      check_renewals_cron_health: { Args: never; Returns: undefined }
       decrement_credits: {
         Args: { _amount: number; _user_id: string }
         Returns: undefined

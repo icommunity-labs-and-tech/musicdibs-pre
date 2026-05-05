@@ -89,6 +89,10 @@ Deno.serve(async (req) => {
       .lte("current_period_end", cutoffISO);
 
     if (subsErr) throw subsErr;
+
+    // Heartbeat: always log a run so watchdog can detect cron health, even with 0 subs
+    await log({ action: "heartbeat", detail: `subs_due=${subs?.length ?? 0}` });
+
     if (!subs || subs.length === 0) {
       return new Response(JSON.stringify({ ok: true, processed: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -182,13 +186,29 @@ Deno.serve(async (req) => {
         const newSub = await stripe.subscriptions.create(createParams);
 
         // Map Stripe status to our status
+        const KNOWN_STATUSES = ["active","trialing","incomplete","past_due","incomplete_expired","canceled","unpaid","paused"];
         let newStatus = "active";
-        if (newSub.status === "incomplete" || newSub.status === "past_due") {
-          newStatus = "past_due";
-        } else if (newSub.status === "active" || newSub.status === "trialing") {
+        if (newSub.status === "active" || newSub.status === "trialing") {
           newStatus = "active";
+        } else if (newSub.status === "incomplete" || newSub.status === "past_due") {
+          newStatus = "past_due";
         } else {
           newStatus = "past_due";
+          // Unknown / unmapped Stripe status → raise admin alert
+          if (!KNOWN_STATUSES.includes(newSub.status)) {
+            await supabase.from("admin_alerts").insert({
+              source: "stripe_unmapped_status",
+              severity: "error",
+              message: `Estado Stripe no mapeado al renovar: "${newSub.status}"`,
+              context: {
+                stripe_subscription_id: newSub.id,
+                stripe_status: newSub.status,
+                user_id: sub.user_id,
+                email,
+                tier,
+              },
+            });
+          }
         }
 
         // Calculate credits to add (only if payment succeeded)
@@ -274,6 +294,14 @@ Deno.serve(async (req) => {
     );
   } catch (err: any) {
     console.error("[renewals] Fatal error:", err);
+    try {
+      await supabase.from("admin_alerts").insert({
+        source: "renewals_fatal",
+        severity: "critical",
+        message: "Fallo fatal en process-subscription-renewals",
+        context: { error: String(err?.message ?? err).slice(0, 1000) },
+      });
+    } catch (_) { /* swallow */ }
     return new Response(JSON.stringify({ error: String(err?.message ?? err) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
