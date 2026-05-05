@@ -835,7 +835,7 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
                           }}
                           className={cn("inline-flex items-center gap-1 mt-1 text-[11px] cursor-pointer", playingVoice === v.id ? "text-primary" : "text-muted-foreground")}
                         >
-                          {playingVoice === v.id ? '⏹ Detener' : '▶ Escuchar'}
+                          {playingVoice === v.id ? t('dashboard.firstHit.voiceStop') : t('dashboard.firstHit.voiceListen')}
                         </span>
                       )}
                     </button>
