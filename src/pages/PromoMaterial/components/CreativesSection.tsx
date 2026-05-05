@@ -237,7 +237,7 @@ export const CreativesSection = () => {
             {generating ? (
               <><Loader2 className="h-4 w-4 animate-spin" />{FORMAT_LOADING[currentFormat]}</>
             ) : (
-              <><Sparkles className="h-4 w-4" />Generar creatividad (1 crédito)</>
+              <><Sparkles className="h-4 w-4" />Generar creatividad</>
             )}
           </Button>
         )}
@@ -280,7 +280,7 @@ export const CreativesSection = () => {
               <Download className="h-4 w-4" />Descargar creatividad
             </Button>
             <Button variant="outline" className="gap-2" onClick={handleReset}>
-              <RefreshCw className="h-4 w-4" />Generar otra (1 crédito)
+              <RefreshCw className="h-4 w-4" />Generar otra
             </Button>
           </div>
         </div>
