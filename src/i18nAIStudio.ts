@@ -1564,6 +1564,8 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       fileTooLargeDesc: 'O arquivo excede o limite de {{max}} MB. Comprima o áudio ou envie outro arquivo.',
       emptyFile: 'Arquivo vazio',
       emptyFileDesc: 'O arquivo selecionado está vazio. Escolha outro áudio.',
+      errorSession: 'Sua sessão expirou. Recarregue a página e faça login novamente.',
+      errorCredits: 'Erro de créditos',
     },
     aiInspire: {
       backToStudio: 'Voltar ao AI Music Studio',
