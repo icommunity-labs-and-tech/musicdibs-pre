@@ -152,7 +152,7 @@ export const FileDropzone = ({
           </div>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="sm" onClick={handleClick} className="text-xs">
-              Cambiar
+              {tk('change')}
             </Button>
             {onRemove && (
               <Button
