@@ -697,6 +697,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       aiInvalidAudio: 'El archivo de audio no es válido o tiene un formato no compatible. Prueba con otro archivo (MP3, WAV).',
       aiUnavailable: 'El servicio no está disponible en este momento. Inténtalo de nuevo más tarde.',
       aiRetryHint: 'Si vuelve a fallar, prueba con una duración más corta o una descripción menos extensa.',
+      aiRetrying: 'Reintentando… (intento {{attempt}}/{{max}})',
       retry: 'Reintentar',
     },
     fileDropzone: {
