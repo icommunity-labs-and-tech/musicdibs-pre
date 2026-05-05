@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
-import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -262,6 +261,7 @@ serve(async (req) => {
 
     // ── Helper to refund on failure ──
     const refundCredits = async (reason: string) => {
+      if (!creditsDeducted) return;
       const { data: p } = await supabaseAdmin.from('profiles').select('available_credits').eq('user_id', userId).single();
       if (p) {
         await supabaseAdmin.from('profiles').update({
