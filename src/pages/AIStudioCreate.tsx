@@ -372,8 +372,8 @@ const AIStudioCreate = () => {
         throw { message: data.error, details: data.details };
       }
 
-      if (data?.audio) {
-        // Prefer the persisted signed URL from the edge function; fall back to inline data URL
+      if (data?.audioUrl || data?.audio) {
+        // Prefer the persisted signed URL from the edge function; fall back to inline data URL for legacy responses
         const audioUrl = data.audioUrl || `data:${data.format};base64,${data.audio}`;
 
         const selectedVoiceProfile = voiceProfiles.find(v => v.id === selectedVoice);
