@@ -289,7 +289,10 @@ serve(async (req) => {
 
     // ── ElevenLabs call (mutually exclusive: plan OR prompt) ──
     const callElevenLabs = async (planOrPrompt: { plan?: any; promptText?: string }) => {
-      const body: Record<string, unknown> = { music_length_ms: durationMs };
+      const body: Record<string, unknown> = {};
+      // Only include music_length_ms when user explicitly provided a duration.
+      // Omitting it lets Lyria/ElevenLabs auto-decide the optimal length.
+      if (durationMs !== null) body.music_length_ms = durationMs;
       if (planOrPrompt.plan) {
         body.composition_plan = planOrPrompt.plan;
       } else {
