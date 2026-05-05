@@ -348,7 +348,8 @@ serve(async (req) => {
       const errText = await response.text();
       console.warn(`[GENERATE-AUDIO] Request rejected (400): ${errText.substring(0, 200)}`);
 
-      // If the failure came from composition_plan, retry once in prompt-only mode
+      // If the failure came from composition_plan, do not fall back to prompt-only:
+      // prompt-only can ignore user lyrics, which is worse than a clear failure.
       if (compositionPlan) {
         await refundCredits(`Composition plan rechazado: ${response.status}`);
         return new Response(
