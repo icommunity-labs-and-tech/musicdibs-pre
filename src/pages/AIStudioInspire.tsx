@@ -203,7 +203,7 @@ const AIStudioInspire = () => {
     navigate(`/ai-studio/create?${params.toString()}`);
   };
 
-  const generateInline = async (prompt: string) => {
+  const generateInline = async (basePrompt: string) => {
     if (!user) {
       toast({
         title: "Inicia sesión",
@@ -213,16 +213,19 @@ const AIStudioInspire = () => {
       return;
     }
 
+    // Append the language directive so Lyria sings in the user's UI language.
+    const prompt = withLanguageDirective(basePrompt, i18n.resolvedLanguage || i18n.language);
+
     setIsGenerating(true);
     setError(null);
     setResult(null);
-    setLastPrompt(prompt);
+    setLastPrompt(basePrompt);
     track("generation_started", { feature: "create_music", metadata: { mode: "song", source: "inspire" } });
 
     try {
       // Spend credits — use the same feature key as the music creator (song mode)
       const { data: spendResult, error: spendError } = await supabase.functions.invoke("spend-credits", {
-        body: { feature: "generate_audio", description: `Canción: ${prompt.slice(0, 80)}` },
+        body: { feature: "generate_audio", description: `Canción: ${basePrompt.slice(0, 80)}` },
       });
       if (spendError) throw new Error(spendError.message || "Error al descontar créditos");
       if (spendResult?.error) throw new Error(spendResult.error);
