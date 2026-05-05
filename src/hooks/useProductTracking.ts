@@ -13,6 +13,8 @@ type EventName =
   | 'cover_generated'
   | 'video_generated'
   | 'social_video_generated'
+  | 'instagram_creative_generated'
+  | 'youtube_thumbnail_generated'
   | 'voice_cloned'
   | 'vocal_track_generated'
   | 'lyrics_generated'
@@ -28,7 +30,8 @@ type EventName =
 type Feature =
   | 'create_music' | 'lyrics' | 'vocal' | 'cover' | 'video'
   | 'social_video' | 'promotion' | 'press' | 'register' | 'voice_cloning'
-  | 'premium_promotion' | 'enhance_audio' | 'distribution' | 'inspire' | 'edit_audio';
+  | 'premium_promotion' | 'enhance_audio' | 'distribution' | 'inspire'
+  | 'instagram_creative' | 'youtube_thumbnail';
 
 interface TrackOptions {
   feature: Feature;
