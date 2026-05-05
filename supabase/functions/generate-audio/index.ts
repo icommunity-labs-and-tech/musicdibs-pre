@@ -182,7 +182,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, lyrics, genre, mood, duration, mode, description } = await req.json();
+    const { prompt, lyrics, genre, mood, duration, mode, description, source } = await req.json();
 
     // Server-side validation: prompt and description must not exceed 2500 characters
     const MAX_LENGTH = 2500;
@@ -203,13 +203,16 @@ serve(async (req) => {
     }
 
     // ── Credit deduction (cost from feature_costs table) ──────
-    const featureKey = mode === 'song' ? 'generate_audio_song' : 'generate_audio';
+    // 1-click create (Inspire) has its own pricing key
+    const featureKey = source === 'inspire'
+      ? 'one_click_create'
+      : (mode === 'song' ? 'generate_audio_song' : 'generate_audio');
     const { data: costRow } = await supabaseAdmin
       .from('feature_costs')
       .select('credit_cost')
       .eq('feature_key', featureKey)
       .maybeSingle();
-    const CREDITS_COST = costRow?.credit_cost ?? (mode === 'song' ? 3 : 2);
+    const CREDITS_COST = costRow?.credit_cost ?? (featureKey === 'one_click_create' ? 2 : (mode === 'song' ? 3 : 2));
 
     const { data: profile } = await supabaseAdmin
       .from('profiles')
