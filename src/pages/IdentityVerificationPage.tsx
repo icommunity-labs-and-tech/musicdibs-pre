@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,32 +19,31 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const DOC_TYPES = [
-  { value: 'dni', label: 'DNI (España)', placeholder: '12345678A' },
-  { value: 'nie', label: 'NIE (España - extranjeros)', placeholder: 'X1234567A' },
-  { value: 'passport', label: 'Pasaporte', placeholder: 'AAA000000' },
-  { value: 'id_card', label: 'Documento Nacional de Identidad', placeholder: 'Número del documento' },
-  { value: 'cedula', label: 'Cédula de identidad (LATAM)', placeholder: 'Número de cédula' },
-  { value: 'curp', label: 'CURP (México)', placeholder: 'AAAA000000AAAAAA00' },
-  { value: 'cpf', label: 'CPF (Brasil)', placeholder: '000.000.000-00' },
-  { value: 'rut', label: 'RUT (Chile)', placeholder: '12.345.678-9' },
-  { value: 'other', label: 'Otro documento oficial', placeholder: 'Número del documento' },
+const DOC_TYPE_KEYS = [
+  { value: 'dni', placeholder: '12345678A' },
+  { value: 'nie', placeholder: 'X1234567A' },
+  { value: 'passport', placeholder: 'AAA000000' },
+  { value: 'id_card', placeholder: '' },
+  { value: 'cedula', placeholder: '' },
+  { value: 'curp', placeholder: 'AAAA000000AAAAAA00' },
+  { value: 'cpf', placeholder: '000.000.000-00' },
+  { value: 'rut', placeholder: '12.345.678-9' },
+  { value: 'other', placeholder: '' },
 ];
 
 function StepIndicator({ current }: { current: 1 | 2 }) {
+  const { t } = useTranslation();
   return (
     <div className="flex items-center justify-center gap-2 mb-8">
       {[1, 2].map(step => (
         <div key={step} className="flex items-center gap-2">
           <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
-            current >= step
-              ? 'bg-emerald-500 text-white'
-              : 'bg-muted text-muted-foreground'
+            current >= step ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'
           }`}>
             {current > step ? <CheckCircle2 className="h-4 w-4" /> : step}
           </div>
           <span className={`text-xs font-medium hidden sm:inline ${current >= step ? 'text-foreground' : 'text-muted-foreground'}`}>
-            {step === 1 ? 'Datos de identidad' : 'Verificación biométrica'}
+            {step === 1 ? t('dashboard.kyc.stepDataLabel') : t('dashboard.kyc.stepBiometricLabel')}
           </span>
           {step < 2 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
         </div>
@@ -53,9 +53,12 @@ function StepIndicator({ current }: { current: 1 | 2 }) {
 }
 
 export default function IdentityVerificationPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const tk = (k: string) => t(`dashboard.kyc.${k}`) as string;
 
   const [kycStatus, setKycStatus] = useState('unverified');
   const [kycLoading, setKycLoading] = useState(true);
@@ -88,7 +91,6 @@ export default function IdentityVerificationPage() {
       });
   }, [user]);
 
-  // Polling
   useEffect(() => {
     if (!polling || !user) return;
     const interval = setInterval(async () => {
@@ -101,7 +103,7 @@ export default function IdentityVerificationPage() {
         setKycStatus('verified');
         setPolling(false);
         setKycUrl(null);
-        toast.success('¡Identidad verificada correctamente!');
+        toast.success(tk('verifiedToast'));
       } else if (data?.kyc_status === 'pending') {
         setKycStatus('pending');
       }
@@ -109,22 +111,19 @@ export default function IdentityVerificationPage() {
     return () => clearInterval(interval);
   }, [polling, user]);
 
-  // Realtime
   useEffect(() => {
     if (!user) return;
     const channel = supabase
       .channel('kyc-status-watch')
       .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'profiles',
+        event: 'UPDATE', schema: 'public', table: 'profiles',
         filter: `user_id=eq.${user.id}`,
       }, (payload: any) => {
         const newStatus = payload.new?.kyc_status;
         if (newStatus && newStatus !== kycStatus) {
           setKycStatus(newStatus);
           if (newStatus === 'verified') {
-            toast.success('¡Identidad verificada correctamente!');
+            toast.success(tk('verifiedToast'));
             setPolling(false);
             setKycUrl(null);
           }
@@ -134,34 +133,25 @@ export default function IdentityVerificationPage() {
     return () => { supabase.removeChannel(channel); };
   }, [user, kycStatus]);
 
-  // Listen for postMessage from iframe (iCommunity sends completion events)
   useEffect(() => {
     if (step !== 2 || !kycUrl) return;
     const handleMessage = async (event: MessageEvent) => {
       const msg = typeof event.data === 'string' ? event.data : event.data?.type || event.data?.status;
       const msgStr = JSON.stringify(event.data).toLowerCase();
       if (
-        msgStr.includes('completed') ||
-        msgStr.includes('success') ||
-        msgStr.includes('verified') ||
-        msgStr.includes('finish') ||
+        msgStr.includes('completed') || msgStr.includes('success') ||
+        msgStr.includes('verified') || msgStr.includes('finish') ||
         msg === 'verification_complete'
       ) {
-        console.log('[KYC] iframe postMessage received:', event.data);
         setKycUrl(null);
-        // Check actual status
         if (user) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('kyc_status')
-            .eq('user_id', user.id)
-            .single();
+          const { data } = await supabase.from('profiles').select('kyc_status').eq('user_id', user.id).single();
           if (data?.kyc_status === 'verified') {
             setKycStatus('verified');
             setPolling(false);
-            toast.success('¡Identidad verificada correctamente!');
+            toast.success(tk('verifiedToast'));
           } else {
-            toast.info('Verificación completada. Procesando resultado…');
+            toast.info(tk('verifyCompletedProcessing'));
           }
         }
       }
@@ -173,7 +163,7 @@ export default function IdentityVerificationPage() {
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || !docNumber.trim()) {
-      toast.error('Por favor completa todos los campos obligatorios');
+      toast.error(tk('step1FillRequired'));
       return;
     }
     setSubmitting(true);
@@ -185,15 +175,10 @@ export default function IdentityVerificationPage() {
       if (error || data?.error) throw new Error(error?.message || data?.error);
 
       setSignatureId(data.signatureId);
-
       const url = data.kycUrl
         ? `${data.kycUrl}?lang=es`
         : `https://identity.icommunitylabs.com/identification/${data.signatureId}?lang=es`;
 
-      // Mark KYC as started right BEFORE redirecting the user to the KYC URL.
-      // This sets profiles.kyc_status='pending' and triggers the "verification in process" email.
-      // Done here (not on signature creation, not on webhook) so it fires at the exact moment
-      // the user is sent off to complete the KYC flow.
       try {
         await supabase.functions.invoke('ibs-signatures', {
           body: { action: 'mark_kyc_started', signatureId: data.signatureId },
@@ -204,24 +189,22 @@ export default function IdentityVerificationPage() {
       }
 
       setKycUrl(url);
-
       setStep(2);
       setPolling(true);
-      toast.success('Datos enviados. Completa la verificación biométrica.');
+      toast.success(tk('step1Submitted'));
     } catch (err: any) {
-      toast.error('Error al iniciar verificación: ' + (err.message || 'Error desconocido'));
+      toast.error(tk('step1Error') + (err.message || tk('unknownError')));
     }
     setSubmitting(false);
   };
 
-  const selectedDocType = DOC_TYPES.find(d => d.value === docType);
+  const selectedDocType = DOC_TYPE_KEYS.find(d => d.value === docType);
 
-  // Verified state
   if (!kycLoading && kycStatus === 'verified') {
     return (
       <div className="max-w-2xl space-y-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
-          <Shield className="h-5 w-5 text-primary" /> Verificación de identidad
+          <Shield className="h-5 w-5 text-primary" /> {tk('title')}
         </h2>
         <Card className="border-border/40">
           <CardContent className="p-8 flex flex-col items-center text-center gap-4">
@@ -229,14 +212,11 @@ export default function IdentityVerificationPage() {
               <CheckCircle2 className="h-8 w-8 text-emerald-500" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-emerald-600">Identidad verificada</h3>
-              <p className="text-sm text-muted-foreground">
-                Tu identidad ha sido verificada correctamente.
-                Puedes registrar obras sin restricciones.
-              </p>
+              <h3 className="text-lg font-semibold text-emerald-600">{tk('verifiedTitle')}</h3>
+              <p className="text-sm text-muted-foreground">{tk('verifiedDesc')}</p>
             </div>
             <Button onClick={() => navigate('/dashboard/register')}>
-              Registrar una obra →
+              {tk('registerWorkCta')}
             </Button>
           </CardContent>
         </Card>
@@ -244,12 +224,11 @@ export default function IdentityVerificationPage() {
     );
   }
 
-  // Pending without URL (returning user)
   if (!kycLoading && kycStatus === 'pending' && !kycUrl) {
     return (
       <div className="max-w-2xl space-y-4">
         <h2 className="text-xl font-bold flex items-center gap-2">
-          <Shield className="h-5 w-5 text-primary" /> Verificación de identidad
+          <Shield className="h-5 w-5 text-primary" /> {tk('title')}
         </h2>
         <Card className="border-border/40">
           <CardContent className="p-8 flex flex-col items-center text-center gap-4">
@@ -257,11 +236,8 @@ export default function IdentityVerificationPage() {
               <Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-amber-600">Verificación en proceso</h3>
-              <p className="text-sm text-muted-foreground">
-                Tu solicitud está siendo revisada. Este proceso puede tardar
-                hasta 48 horas. Te notificaremos por email cuando esté lista.
-              </p>
+              <h3 className="text-lg font-semibold text-amber-600">{tk('pendingTitle')}</h3>
+              <p className="text-sm text-muted-foreground">{tk('pendingDesc')}</p>
             </div>
           </CardContent>
         </Card>
@@ -278,8 +254,8 @@ export default function IdentityVerificationPage() {
           <>
             <CheckCircle2 className="h-5 w-5 text-emerald-500 mt-0.5 shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-emerald-600">Identidad verificada</p>
-              <p className="text-xs text-muted-foreground">Puedes registrar obras sin restricciones.</p>
+              <p className="text-sm font-semibold text-emerald-600">{tk('verifiedTitle')}</p>
+              <p className="text-xs text-muted-foreground">{tk('bannerVerifiedShort')}</p>
             </div>
           </>
         )}
@@ -287,10 +263,8 @@ export default function IdentityVerificationPage() {
           <>
             <Loader2 className="h-5 w-5 text-amber-500 animate-spin mt-0.5 shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-amber-600">Verificación en proceso</p>
-              <p className="text-xs text-muted-foreground">
-                iCommunity Labs ha recibido tus documentos y los está revisando. Puede tardar hasta 48 horas. Te avisaremos por email cuando esté lista.
-              </p>
+              <p className="text-sm font-semibold text-amber-600">{tk('pendingTitle')}</p>
+              <p className="text-xs text-muted-foreground">{tk('bannerPendingShort')}</p>
             </div>
           </>
         )}
@@ -299,18 +273,14 @@ export default function IdentityVerificationPage() {
             <Clock className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
             <div className="flex-1 space-y-2">
               <div>
-                <p className="text-sm font-semibold text-amber-600">Verificación incompleta</p>
-                <p className="text-xs text-muted-foreground">
-                  Has iniciado el proceso pero no has llegado a enviar los documentos. Vuelve a empezar para completarlo.
-                </p>
+                <p className="text-sm font-semibold text-amber-600">{tk('bannerInitiatedTitle')}</p>
+                <p className="text-xs text-muted-foreground">{tk('bannerInitiatedDesc')}</p>
               </div>
               <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 h-8"
+                size="sm" variant="outline" className="gap-1.5 h-8"
                 onClick={() => { setStep(1); setKycUrl(null); setSignatureId(null); setIframeError(false); }}
               >
-                <RefreshCw className="h-3.5 w-3.5" /> Reintentar verificación
+                <RefreshCw className="h-3.5 w-3.5" /> {tk('retry')}
               </Button>
             </div>
           </>
@@ -319,10 +289,8 @@ export default function IdentityVerificationPage() {
           <>
             <ShieldAlert className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
             <div className="flex-1">
-              <p className="text-sm font-semibold">Identidad sin verificar</p>
-              <p className="text-xs text-muted-foreground">
-                Necesitas completar la verificación para poder registrar obras. El proceso es rápido y seguro, realizado por iCommunity Labs.
-              </p>
+              <p className="text-sm font-semibold">{tk('bannerUnverifiedTitle')}</p>
+              <p className="text-xs text-muted-foreground">{tk('bannerUnverifiedDesc')}</p>
             </div>
           </>
         )}
@@ -333,58 +301,49 @@ export default function IdentityVerificationPage() {
   return (
     <div className={`space-y-4 ${isIframeStep ? 'max-w-full' : 'max-w-2xl'}`}>
       <h2 className="text-xl font-bold flex items-center gap-2">
-        <Shield className="h-5 w-5 text-primary" /> Verificación de identidad
+        <Shield className="h-5 w-5 text-primary" /> {tk('title')}
       </h2>
 
       {statusBanner}
 
-
       {kycLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
-          <Loader2 className="h-4 w-4 animate-spin" /> Cargando…
+          <Loader2 className="h-4 w-4 animate-spin" /> {tk('loading')}
         </div>
       ) : (
         <Card className="border-border/40">
           <CardContent className="p-6 space-y-6">
             <StepIndicator current={step} />
 
-            {/* Step 1 */}
             {step === 1 && (
               <form onSubmit={handleStep1Submit} className="space-y-5">
                 <div className="rounded-lg bg-muted/30 border border-border/30 p-4 flex gap-3">
                   <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    Introduce los datos tal y como aparecen en tu documento oficial.
-                    Serán usados para generar tu firma digital y verificar tu identidad
-                    en el siguiente paso.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{tk('step1Intro')}</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-xs flex items-center gap-1.5">
-                    <User className="h-3.5 w-3.5" /> Nombre completo *
+                    <User className="h-3.5 w-3.5" /> {tk('fullName')}
                   </Label>
                   <Input
                     value={fullName}
                     onChange={e => setFullName(e.target.value)}
-                    placeholder="Tal y como aparece en tu documento oficial"
-                    required
-                    className="h-9"
+                    placeholder={tk('fullNamePlaceholder')}
+                    required className="h-9"
                   />
-                  <p className="text-[10px] text-muted-foreground">Ejemplo: María García López</p>
+                  <p className="text-[10px] text-muted-foreground">{tk('fullNameExample')}</p>
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-xs flex items-center gap-1.5">
-                    <FileText className="h-3.5 w-3.5" /> Tipo de documento *
+                    <FileText className="h-3.5 w-3.5" /> {tk('docType')}
                   </Label>
                   <Select value={docType} onValueChange={setDocType}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {DOC_TYPES.map(d => (
-                        <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>
+                      {DOC_TYPE_KEYS.map(d => (
+                        <SelectItem key={d.value} value={d.value}>{tk(`docTypes.${d.value}`)}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -392,36 +351,33 @@ export default function IdentityVerificationPage() {
 
                 <div className="space-y-2">
                   <Label className="text-xs flex items-center gap-1.5">
-                    <FileText className="h-3.5 w-3.5" /> Número de documento *
+                    <FileText className="h-3.5 w-3.5" /> {tk('docNumber')}
                   </Label>
                   <Input
                     value={docNumber}
                     onChange={e => setDocNumber(e.target.value.toUpperCase())}
-                    placeholder={selectedDocType?.placeholder || 'Número del documento'}
+                    placeholder={selectedDocType?.placeholder || tk('docNumberPlaceholder')}
                     required
                     className="h-9 font-mono tracking-wider uppercase"
                     maxLength={30}
                   />
                   <p className="text-[10px] text-muted-foreground">
-                    {docType === 'dni' && 'DNI español: 8 dígitos + letra. Ejemplo: 12345678A'}
-                    {docType === 'nie' && 'NIE: letra inicial (X, Y o Z) + 7 dígitos + letra. Ejemplo: X1234567A'}
-                    {docType === 'passport' && 'Número de pasaporte tal y como aparece en la página de datos.'}
-                    {docType === 'curp' && 'CURP mexicano: 18 caracteres alfanuméricos.'}
-                    {docType === 'cpf' && 'CPF brasileño: 11 dígitos. Ejemplo: 000.000.000-00'}
-                    {docType === 'rut' && 'RUT chileno incluyendo el dígito verificador.'}
-                    {(docType === 'id_card' || docType === 'cedula' || docType === 'other') &&
-                      'Introduce el número tal y como aparece en tu documento.'}
+                    {docType === 'dni' && tk('docHelpDni')}
+                    {docType === 'nie' && tk('docHelpNie')}
+                    {docType === 'passport' && tk('docHelpPassport')}
+                    {docType === 'curp' && tk('docHelpCurp')}
+                    {docType === 'cpf' && tk('docHelpCpf')}
+                    {docType === 'rut' && tk('docHelpRut')}
+                    {(docType === 'id_card' || docType === 'cedula' || docType === 'other') && tk('docHelpGeneric')}
                   </p>
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-xs flex items-center gap-1.5">
-                    <Globe className="h-3.5 w-3.5" /> País de emisión del documento
+                    <Globe className="h-3.5 w-3.5" /> {tk('countryLabel')}
                   </Label>
                   <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="ES">🇪🇸 España</SelectItem>
                       <SelectItem value="MX">🇲🇽 México</SelectItem>
@@ -433,67 +389,54 @@ export default function IdentityVerificationPage() {
                       <SelectItem value="VE">🇻🇪 Venezuela</SelectItem>
                       <SelectItem value="US">🇺🇸 Estados Unidos</SelectItem>
                       <SelectItem value="GB">🇬🇧 Reino Unido</SelectItem>
-                      <SelectItem value="OTHER">🌍 Otro país</SelectItem>
+                      <SelectItem value="OTHER">{tk('countryOther')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="rounded-lg bg-muted/30 border border-border/30 p-3 flex gap-2">
                   <Shield className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                  <p className="text-[10px] text-muted-foreground">
-                    Tus datos son procesados de forma segura por
-                    <strong> iCommunity Labs</strong> para la verificación de identidad.
-                    No almacenamos los datos de tu documento en nuestros servidores.
-                  </p>
+                  <p className="text-[10px] text-muted-foreground">{tk('privacyNote')}</p>
                 </div>
 
                 <Button type="submit" className="w-full gap-2" disabled={submitting}>
                   {submitting
-                    ? <><Loader2 className="h-4 w-4 animate-spin" /> Iniciando verificación…</>
-                    : <>Siguiente — Verificación biométrica <ChevronRight className="h-4 w-4" /></>
+                    ? <><Loader2 className="h-4 w-4 animate-spin" /> {tk('starting')}</>
+                    : <>{tk('nextBiometric')} <ChevronRight className="h-4 w-4" /></>
                   }
                 </Button>
               </form>
             )}
 
-            {/* Step 2 */}
             {step === 2 && kycUrl && (
               <div className="space-y-4">
                 <div className="rounded-lg bg-muted/30 border border-border/30 p-4 flex gap-3">
                   <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                  <p className="text-xs text-muted-foreground">
-                    Completa la verificación en el panel de abajo.
-                    Necesitarás tu documento de identidad y acceso a la cámara.
-                    <strong> No cierres esta página hasta finalizar.</strong>
-                  </p>
+                  <p className="text-xs text-muted-foreground">{tk('step2Intro')}</p>
                 </div>
 
                 {kycStatus === 'pending' && (
                   <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
                     <Badge variant="outline" className="gap-1.5 bg-amber-500/10 text-amber-600 border-amber-500/20">
                       <Loader2 className="h-3 w-3 animate-spin" />
-                      Verificación en proceso…
+                      {tk('pendingBadge')}
                     </Badge>
-                    <span className="text-[10px] text-muted-foreground">Actualizando automáticamente</span>
+                    <span className="text-[10px] text-muted-foreground">{tk('autoUpdating')}</span>
                   </div>
                 )}
 
-                {/* Always show open-in-new-tab option prominently */}
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 flex flex-col sm:flex-row items-center gap-3">
                   <div className="flex-1 text-center sm:text-left">
-                    <p className="text-sm font-medium">¿Problemas con la verificación?</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Si la cámara no funciona o el proceso no avanza, ábrelo en una nueva pestaña.
-                    </p>
+                    <p className="text-sm font-medium">{tk('iframeIssueTitle')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{tk('iframeIssueDesc')}</p>
                   </div>
                   <Button
-                    variant="outline"
-                    size="sm"
+                    variant="outline" size="sm"
                     onClick={() => window.open(kycUrl, '_blank', 'noopener,noreferrer')}
                     className="gap-2 shrink-0"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    Abrir en nueva pestaña
+                    {tk('openInNewTab')}
                   </Button>
                 </div>
 
@@ -505,24 +448,18 @@ export default function IdentityVerificationPage() {
                       className="w-full"
                       style={{ height: 'calc(100vh - 280px)', minHeight: '500px' }}
                       allow="camera; microphone; fullscreen"
-                      title="Verificación de identidad"
+                      title={tk('title')}
                       onError={() => setIframeError(true)}
-                      onLoad={() => console.log('[KYC] iframe loaded')}
                     />
                   </div>
                 ) : (
                   <div className="rounded-lg border border-border/40 bg-muted/20 p-8 text-center space-y-4">
                     <AlertCircle className="h-10 w-10 mx-auto text-amber-400" />
                     <div>
-                      <p className="font-medium">La verificación debe completarse en una ventana externa</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Haz clic en el botón de arriba para abrir el proceso.
-                        Una vez finalices, vuelve a esta página.
-                      </p>
+                      <p className="font-medium">{tk('iframeFallbackTitle')}</p>
+                      <p className="text-sm text-muted-foreground mt-1">{tk('iframeFallbackDesc')}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Esta página se actualizará automáticamente cuando termines.
-                    </p>
+                    <p className="text-xs text-muted-foreground">{tk('iframeFallbackHint')}</p>
                   </div>
                 )}
 
@@ -536,14 +473,14 @@ export default function IdentityVerificationPage() {
                       .single();
                     if (data?.kyc_status === 'verified') {
                       setKycStatus('verified');
-                      toast.success('¡Identidad verificada correctamente!');
+                      toast.success(tk('verifiedToast'));
                     } else {
-                      toast.info('La verificación aún está en proceso. Si ya la completaste, puede tardar unos minutos.');
+                      toast.info(tk('stillPendingInfo'));
                     }
                   }}
                 >
                   <CheckCircle2 className="h-4 w-4" />
-                  Ya completé la verificación — comprobar estado
+                  {tk('checkStatus')}
                 </Button>
               </div>
             )}
