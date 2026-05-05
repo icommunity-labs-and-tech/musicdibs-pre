@@ -218,8 +218,8 @@ export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
       if (error || data?.error === 'rate_limit_exceeded') {
         throw new Error(data?.message || error?.message || t('dashboard.firstHit.audioGenError'))
       }
-      if (data?.audio) {
-        const url = `data:${data.format || 'audio/mpeg'};base64,${data.audio}`
+      if (data?.audioUrl || data?.audio) {
+        const url = data.audioUrl || `data:${data.format || 'audio/mpeg'};base64,${data.audio}`
         setAudioUrl(url)
         setAudioTitle(prompt.slice(0, 50))
 
