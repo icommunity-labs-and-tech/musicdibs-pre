@@ -46,97 +46,97 @@ const STRUCTURES = [
 const PRESET_IDEAS = [
   {
     emoji: "💔",
-    label: "Ruptura emocional",
+    key: "heartbreak",
     prompt:
       "Emotional pop song about a recent breakup, soft and melancholic female vocals with modern pop production, intimate and nostalgic atmosphere, slow tempo at 75 BPM, structure verse + chorus + verse + chorus, clean production with piano and subtle strings.",
   },
   {
     emoji: "🌴",
-    label: "Hit de verano",
+    key: "summer",
     prompt:
       "Urban pop song about a summer night, energetic youthful vocals with cadenced flow over bright electronic beats, joyful and catchy atmosphere, fast tempo at 100 BPM, simple structure with viral repetitive chorus, production with bright synths and electronic percussion.",
   },
   {
     emoji: "🔥",
-    label: "Trap",
+    key: "trap",
     prompt:
       "Trap song about a toxic relationship and personal ambition, deep male vocals with cadenced flow over deep 808 bass, dark and intense atmosphere, medium tempo at 85 BPM, structure verse + chorus with hard-hitting beat and fast hi-hats.",
   },
   {
     emoji: "🎤",
-    label: "Pop romántico",
+    key: "romantic",
     prompt:
       "Romantic pop song about a deep love, emotional male vocals with melodic R&B and warm minimalist production, intimate atmosphere, medium tempo at 90 BPM, structure verse + pre-chorus + chorus with rich vocal harmonies and ethereal synths.",
   },
   {
     emoji: "🌴",
-    label: "Reggaeton",
+    key: "reggaeton",
     prompt:
       "Reggaeton song about a story of nighttime attraction, sensual male vocals with catchy melodies over electronic dembow, hot and danceable atmosphere, medium-fast tempo at 95 BPM, structure verse + repetitive chorus with viral hook and modern urban production.",
   },
   {
     emoji: "🎸",
-    label: "Rock",
+    key: "rock",
     prompt:
       "Rock song about personal growth and inner struggle, intense male vocals with distorted guitars and hard-hitting drums, energetic and powerful atmosphere, medium tempo at 120 BPM, structure intro + verse + chorus + guitar solo + final chorus.",
   },
   {
     emoji: "🎂",
-    label: "Cumpleaños",
+    key: "birthday",
     prompt:
       "Joyful and emotional pop song to celebrate a special birthday, warm and festive mixed vocals with sing-along choruses, atmosphere of celebration and affection, lively tempo at 105 BPM, structure verse + contagious chorus + emotional bridge + final chorus, production with claps, festive strings and bright percussion.",
   },
   {
     emoji: "💍",
-    label: "Aniversario",
+    key: "anniversary",
     prompt:
       "Romantic pop song to celebrate a couple's anniversary, tender and emotional female vocals over soft orchestral production with piano and strings, intimate atmosphere full of gratitude, slow-medium tempo at 80 BPM, structure verse + pre-chorus + emotion-filled chorus + bridge + final chorus, elegant and timeless production.",
   },
   {
     emoji: "🙏",
-    label: "Perdón",
+    key: "forgiveness",
     prompt:
       "Pop soul song about sincerely asking forgiveness for an error that hurt someone dear, vulnerable and remorseful male vocals with minimalist acoustic production, piano and soft guitar, atmosphere of humility and hope for reconciliation, slow tempo at 70 BPM, structure intimate verse + sincere chorus + emotional bridge with bare vocals.",
   },
   {
     emoji: "😍",
-    label: "Me he enamorado",
+    key: "fellInLove",
     prompt:
       "Pop song with romantic euphoria about discovering you've fallen unexpectedly in love, luminous female vocals full of energy over bright pop production with warm synths and acoustic guitar, atmosphere of overflowing joy and butterflies in the stomach, cheerful tempo at 110 BPM, structure excited verse + escalating pre-chorus + explosive chorus.",
   },
   {
     emoji: "👶",
-    label: "Bienvenido bebé",
+    key: "welcomeBaby",
     prompt:
       "Tender and emotional pop song to welcome a newborn baby, soft warm vocals with delicate harmonies over production with piano, music box and soft strings, atmosphere of pure tenderness and unconditional love, slow tempo at 72 BPM, structure whispered verse + luminous chorus + bridge with promises to the baby.",
   },
   {
     emoji: "🌹",
-    label: "Declaración de amor",
+    key: "loveDeclaration",
     prompt:
       "Pop soul song about declaring love for the first time with bravery and nerves, emotional and direct male vocals with warm production of piano, soft electric guitar and growing strings, atmosphere of vulnerability and hope, medium tempo at 88 BPM, structure verse that builds tension + pre-chorus + chorus that explodes with the declaration.",
   },
   {
     emoji: "✈️",
-    label: "Despedida",
+    key: "farewell",
     prompt:
       "Melancholic yet hopeful pop song about saying goodbye to someone leaving far away, female vocals with restrained emotion over minimalist production with piano, acoustic guitar and strings that open in the chorus, bittersweet atmosphere of love that transcends distance, slow-medium tempo at 78 BPM, structure nostalgic verse + emotional chorus + bridge of promises.",
   },
   {
     emoji: "🏆",
-    label: "Lo conseguí",
+    key: "achievement",
     prompt:
       "Motivational pop song about reaching a dream after much effort and sacrifice, powerful and triumphant male vocals with epic production combining electronic and orchestral strings, atmosphere of pride, achievement and personal celebration, energetic tempo at 115 BPM, structure verse narrating the struggle + escalating pre-chorus + explosive victory chorus.",
   },
   {
     emoji: "🌙",
-    label: "Canción de cuna",
+    key: "lullaby",
     prompt:
       "Soft and loving pop lullaby to put a loved one to sleep, whispered velvety female vocals with very minimalist production of piano and ethereal string pad, atmosphere of calm, safety and deep love, very slow tempo at 58 BPM, simple repetitive structure with easy-to-remember melody, soft dynamics from beginning to end.",
   },
   {
     emoji: "💪",
-    label: "Superar una pérdida",
+    key: "overcomeLoss",
     prompt:
       "Emotional pop song about finding strength and moving forward after losing someone important, mixed vocals with fragility that transforms into strength, production that goes from initial solo piano to strings and percussion that grow with the narrative, atmosphere of honest grief and resilience, slow tempo rising to medium throughout the song, structure vulnerable verse + chorus that finds the light + bridge of acceptance.",
   },
@@ -206,8 +206,8 @@ const AIStudioInspire = () => {
   const generateInline = async (basePrompt: string) => {
     if (!user) {
       toast({
-        title: "Inicia sesión",
-        description: "Necesitas iniciar sesión para generar canciones",
+        title: t("aiInspire.loginRequiredTitle"),
+        description: t("aiInspire.loginRequiredDesc"),
         variant: "destructive",
       });
       return;
@@ -257,10 +257,10 @@ const AIStudioInspire = () => {
       track("generation_completed", { feature: "create_music", metadata: { mode: "song", source: "inspire" } });
     } catch (e: any) {
       console.error("[Inspire] Generation error:", e);
-      const msg = e?.message || "No se pudo generar la canción";
+      const msg = e?.message || t("aiInspire.genericError");
       setError(msg);
       track("generation_failed", { feature: "create_music", metadata: { mode: "song", source: "inspire", error: msg } });
-      toast({ title: "Error al generar", description: msg, variant: "destructive" });
+      toast({ title: t("aiInspire.errorToastTitle"), description: msg, variant: "destructive" });
     } finally {
       setIsGenerating(false);
     }
@@ -268,15 +268,15 @@ const AIStudioInspire = () => {
 
   const handleSurprise = () => {
     if (selectedChip) {
-      const preset = PRESET_IDEAS.find((idea) => idea.label === selectedChip);
+      const preset = PRESET_IDEAS.find((idea) => idea.key === selectedChip);
       generateInline(preset ? preset.prompt : buildSurprisePrompt());
     } else {
       generateInline(buildSurprisePrompt());
     }
   };
 
-  const handleChipClick = (label: string) => {
-    setSelectedChip((prev) => (prev === label ? null : label));
+  const handleChipClick = (key: string) => {
+    setSelectedChip((prev) => (prev === key ? null : key));
   };
 
   const handleDownload = async () => {
@@ -293,7 +293,7 @@ const AIStudioInspire = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (e) {
-      toast({ title: "Error al descargar", description: "No se pudo descargar el archivo", variant: "destructive" });
+      toast({ title: t("aiInspire.downloadErrorTitle"), description: t("aiInspire.downloadErrorDesc"), variant: "destructive" });
     }
   };
 
@@ -304,6 +304,8 @@ const AIStudioInspire = () => {
   };
 
   const truncate = (s: string, n = 90) => (s.length > n ? `${s.slice(0, n).trim()}…` : s);
+
+  const selectedChipLabel = selectedChip ? t(`aiInspire.presets.${selectedChip}`) : "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -316,20 +318,20 @@ const AIStudioInspire = () => {
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
         >
           <ArrowLeft className="w-4 h-4" />
-          {t("aiInspire.backToStudio", "Volver al estudio")}
+          {t("aiInspire.backToStudio")}
         </Link>
 
         <div className="max-w-2xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
             <Sparkles className="w-4 h-4" />
-            <span className="text-sm font-medium">Crear en 1 click</span>
+            <span className="text-sm font-medium">{t("aiInspire.badge")}</span>
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            Crear en 1 click <span aria-hidden>🎵</span>
+            {t("aiInspire.title")} <span aria-hidden>🎵</span>
           </h1>
           <p className="text-lg text-muted-foreground mb-10">
-            ¿No sabes por dónde empezar? Genera una canción automáticamente y empieza a crear al instante.
+            {t("aiInspire.subtitle")}
           </p>
 
           <Button
@@ -341,12 +343,14 @@ const AIStudioInspire = () => {
             {isGenerating ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Generando...
+                {t("aiInspire.generatingShort")}
               </>
             ) : (
               <>
                 <Dice5 className="w-5 h-5 mr-2" />
-                {selectedChip ? `🎲 Generar ${selectedChip}` : "🎲 Sorpréndeme"}
+                {selectedChip
+                  ? t("aiInspire.generateChip", { label: selectedChipLabel })
+                  : t("aiInspire.surpriseMe")}
               </>
             )}
           </Button>
@@ -355,8 +359,8 @@ const AIStudioInspire = () => {
           {isGenerating && (
             <div className="mt-8 flex flex-col items-center gap-3 text-muted-foreground">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <p className="text-sm font-medium">Generando tu canción... ⚡</p>
-              <p className="text-xs">Esto puede tardar entre 30 y 60 segundos</p>
+              <p className="text-sm font-medium">{t("aiInspire.generating")}</p>
+              <p className="text-xs">{t("aiInspire.generatingHint")}</p>
             </div>
           )}
 
@@ -366,7 +370,7 @@ const AIStudioInspire = () => {
               <div className="flex items-start gap-3 mb-4">
                 <AlertCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground mb-1">No se pudo generar la canción</p>
+                  <p className="font-medium text-foreground mb-1">{t("aiInspire.errorTitle")}</p>
                   <p className="text-sm text-muted-foreground">{error}</p>
                 </div>
               </div>
@@ -376,7 +380,7 @@ const AIStudioInspire = () => {
                 size="sm"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Intentar de nuevo
+                {t("aiInspire.tryAgain")}
               </Button>
             </div>
           )}
@@ -386,7 +390,7 @@ const AIStudioInspire = () => {
             <div className="mt-8 rounded-xl border border-border bg-card shadow-sm p-6 text-left">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Canción generada</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{t("aiInspire.generatedSong")}</p>
                   <h3 className="font-semibold text-foreground leading-snug">
                     {truncate(result.prompt)}
                   </h3>
@@ -408,18 +412,18 @@ const AIStudioInspire = () => {
               <div className="flex flex-wrap gap-2">
                 <Button onClick={handleDownload} variant="outline" size="sm">
                   <Download className="w-4 h-4 mr-2" />
-                  Descargar
+                  {t("aiInspire.download")}
                 </Button>
                 <Button onClick={handleReset} variant="outline" size="sm">
                   <RefreshCw className="w-4 h-4 mr-2" />
-                  Otra canción
+                  {t("aiInspire.anotherSong")}
                 </Button>
                 <Button
                   onClick={() => goToCreator(result.prompt)}
                   size="sm"
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
-                  Ir al estudio
+                  {t("aiInspire.goToStudio")}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </div>
@@ -428,14 +432,14 @@ const AIStudioInspire = () => {
 
           {/* Preset chips */}
           <div className="mt-12">
-            <p className="text-sm text-muted-foreground mb-4">O prueba con estas ideas:</p>
+            <p className="text-sm text-muted-foreground mb-4">{t("aiInspire.ideasTitle")}</p>
             <div className="flex flex-wrap justify-center gap-2">
               {PRESET_IDEAS.map((idea) => {
-                const isSelected = selectedChip === idea.label;
+                const isSelected = selectedChip === idea.key;
                 return (
                   <button
-                    key={idea.label}
-                    onClick={() => handleChipClick(idea.label)}
+                    key={idea.key}
+                    onClick={() => handleChipClick(idea.key)}
                     disabled={isGenerating}
                     aria-pressed={isSelected}
                     className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -445,7 +449,7 @@ const AIStudioInspire = () => {
                     }`}
                   >
                     <span aria-hidden>{idea.emoji}</span>
-                    {idea.label}
+                    {t(`aiInspire.presets.${idea.key}`)}
                   </button>
                 );
               })}
