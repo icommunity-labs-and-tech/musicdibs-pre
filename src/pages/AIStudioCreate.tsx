@@ -1422,6 +1422,7 @@ const AIStudioCreate = () => {
                             : <>{t('aiCreate.generateBtn')} {mode === 'song' ? t('aiCreate.genCtaSong') : t('aiCreate.genCtaInstrumental')} {t('aiCreate.genCtaSuffix')}</>}
                         </Button>
                         <PricingLink className="mt-1 block text-center" />
+                        <GenerationWarning />
                         </>
                       )}
                     </CardContent>
