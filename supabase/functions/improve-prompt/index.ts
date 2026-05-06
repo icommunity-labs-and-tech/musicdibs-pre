@@ -182,12 +182,12 @@ El prompt mejorado DEBE incluir obligatoriamente:
 
 Responde SOLO con el prompt mejorado. Sin explicaciones, sin prefijos, sin comillas. Mínimo 1500 caracteres.
 
-IMPORTANTE: Si el usuario ha incluido letra de canción en su descripción o en un campo separado, el prompt mejorado NO debe generar ni sugerir letra. Solo debe describir los elementos musicales, instrumentales, de producción y de estilo. La letra será respetada tal cual la escribió el usuario por ElevenLabs en modo song+lyrics.
-
-Si el usuario NO ha incluido letra, puedes incluir una breve indicación del tipo de vocalización esperada (ej: "voz masculina melódica con melismas suaves"), pero nunca escribir versos, coros ni estrofas.`;
+REGLA SOBRE LA LETRA:
+- Si el usuario YA ha incluido letra (versos, estrofas, tags como [Verso]/[Estribillo], o el flag hasLyrics=true), NO generes ni reescribas la letra. Conserva la letra original tal cual y limítate a describir los elementos musicales, instrumentales, de producción y estilo alrededor de ella.
+- Si el usuario NO ha incluido letra, PUEDES (y se recomienda) escribir una letra completa adecuada al tema, en el mismo idioma que el usuario, usando tags de estructura [Verso 1] / [Estribillo] / [Verso 2] / [Puente] / [Estribillo]. Inclúyela al final del prompt mejorado.`;
 
       if (hasLyrics) {
-        systemPrompt += `\n\nATENCIÓN: El usuario tiene letra escrita. NO generes letra en el prompt mejorado. Solo describe elementos musicales e instrumentales.`;
+        systemPrompt += `\n\nATENCIÓN: hasLyrics=true → el usuario YA tiene letra. NO generes ni añadas letra. Respétala palabra por palabra. Solo describe elementos musicales, instrumentales y de producción.`;
       }
 
       userTextContent = `Mejora esta descripción técnica de canción.${contextStr}\n\nDescripción original del usuario:\n"""\n${prompt}\n"""\n\nDevuelve SOLO el prompt mejorado de entre 1500 y 2500 caracteres, en el mismo idioma del original. Sin letra, sin versos, sin explicaciones.`;
