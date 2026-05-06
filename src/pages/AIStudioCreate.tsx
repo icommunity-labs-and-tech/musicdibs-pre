@@ -761,6 +761,17 @@ const AIStudioCreate = () => {
         ? (detected.musicDescription || prompt).trim()
         : prompt.trim();
 
+      // Total budget for the final prompt (description + lyrics).
+      // Must respect the textarea/back-end cap and the ElevenLabs "prompt" limit (~2000).
+      const TOTAL_PROMPT_MAX = 2500;
+      const SEPARATOR_LEN = 2; // "\n\n"
+      const lyricsLen = detected.hasLyrics ? detected.lyricsBlock.length : 0;
+      // Available budget for the AI-improved description; floor at 400 so the model
+      // still has room to work even with very long lyrics.
+      const improvedBudget = detected.hasLyrics
+        ? Math.max(400, TOTAL_PROMPT_MAX - lyricsLen - SEPARATOR_LEN)
+        : TOTAL_PROMPT_MAX;
+
       const { data, error } = await supabase.functions.invoke('improve-prompt', {
         body: {
           prompt: promptToImprove,
@@ -768,14 +779,16 @@ const AIStudioCreate = () => {
           mood: selectedMood || undefined,
           mode,
           hasLyrics: detected.hasLyrics,
+          maxChars: improvedBudget,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.improved) {
-        const improved = data.improved as string;
+        // Hard-truncate just in case the model overshot the budget.
+        const improved = (data.improved as string).slice(0, improvedBudget);
         const finalPrompt = detected.hasLyrics
-          ? `${improved}\n\n${detected.lyricsBlock}`
+          ? `${improved}\n\n${detected.lyricsBlock}`.slice(0, TOTAL_PROMPT_MAX)
           : improved;
         setPrompt(finalPrompt);
         toast({ title: t('aiCreate.promptImproved'), description: t('aiCreate.promptImprovedDesc') });
