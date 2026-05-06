@@ -556,8 +556,16 @@ const AdminBlog = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-white/70">URL de imagen</Label>
+                  <Label className="text-white/70">URL de imagen (thumbnail)</Label>
                   <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="bg-white/5 border-white/10 text-white" placeholder="https://..." />
+                  {form.image_url && (
+                    <img
+                      src={form.image_url}
+                      alt="preview"
+                      className="mt-2 max-h-32 rounded border border-white/10 object-cover"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  )}
                 </div>
                 <div>
                   <Label className="text-white/70">Categoría</Label>
