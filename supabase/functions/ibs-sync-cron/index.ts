@@ -204,6 +204,23 @@ async function handleRetryOrExhaust(
       });
     }
 
+    // Raise admin alert: certification definitively failed and credit refunded
+    await supabaseAdmin.from("admin_alerts").insert({
+      source: "ibs_certification",
+      severity: "critical",
+      message: `Certificación iBS agotada para evidence ${item.ibs_evidence_id} (work ${item.work_id}). Crédito reembolsado.`,
+      context: {
+        ibs_evidence_id: item.ibs_evidence_id,
+        work_id: item.work_id,
+        queue_id: item.id,
+        user_id: item.user_id,
+        retry_count: item.retry_count,
+        max_retries: item.max_retries,
+        reason,
+        refunded: true,
+      },
+    });
+
     summary.exhausted++;
     console.log(`[IBS-SYNC] Exhausted ${item.work_id}: ${reason}`);
   }
