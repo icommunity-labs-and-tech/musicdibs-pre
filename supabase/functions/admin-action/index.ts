@@ -585,7 +585,9 @@ serve(async (req) => {
       const sortDir = payload.sort_dir === "asc" ? "asc" : "desc";
       const search = (payload.search || "").trim();
 
-      const emailsMap = await getAllEmailsMap();
+      // Only fetch the full email map when we need to search/sort by it
+      const needsAllEmails = !!search || sortBy === "user_email";
+      const emailsMap: Record<string, string> = needsAllEmails ? await getAllEmailsMap() : {};
 
       // If sorting/searching by email, we need to pre-resolve user_ids
       let userIdFilter: string[] | null = null;
@@ -660,13 +662,16 @@ serve(async (req) => {
       }
 
       const userIds = [...new Set(works.map((w: any) => w.user_id))];
-      const { data: profiles } = await admin.from("profiles").select("user_id, display_name").in("user_id", userIds);
+      const [{ data: profiles }, pageEmailsMap] = await Promise.all([
+        admin.from("profiles").select("user_id, display_name").in("user_id", userIds),
+        needsAllEmails ? Promise.resolve(emailsMap) : getEmailsForUserIds(userIds as string[]),
+      ]);
       const namesMap: Record<string, string> = {};
       (profiles || []).forEach((p: any) => { namesMap[p.user_id] = p.display_name; });
 
       const enriched = works.map((w: any) => ({
         ...w,
-        user_email: emailsMap[w.user_id] || "",
+        user_email: pageEmailsMap[w.user_id] || emailsMap[w.user_id] || "",
         user_display_name: namesMap[w.user_id] || "",
       }));
 
