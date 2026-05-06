@@ -762,7 +762,7 @@ const AIStudioCreate = () => {
           genre: selectedGenre || undefined,
           mood: selectedMood || undefined,
           mode,
-          hasLyrics: lyrics.trim().length > 0,
+          hasLyrics: detectLyrics(prompt).hasLyrics,
         },
       });
       if (error) throw error;
