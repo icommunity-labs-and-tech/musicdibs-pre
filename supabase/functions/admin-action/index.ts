@@ -891,6 +891,7 @@ serve(async (req) => {
       // ── Cache layer (5 min TTL per filter combination) ──
       const cacheKey = `saas_metrics_cache:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
+      const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
       if (!force_refresh) {
         try {
           const { data: cacheRow } = await admin
@@ -902,6 +903,9 @@ serve(async (req) => {
             const age = Date.now() - new Date(cacheRow.updated_at).getTime();
             if (age < CACHE_TTL_MS) {
               return json({ ...(cacheRow.value as any), _cached: true, _cache_age_ms: age });
+            }
+            if (age < STALE_CACHE_TTL_MS) {
+              return json({ ...(cacheRow.value as any), _cached: true, _stale: true, _cache_age_ms: age });
             }
           }
         } catch { /* cache miss is non-fatal */ }

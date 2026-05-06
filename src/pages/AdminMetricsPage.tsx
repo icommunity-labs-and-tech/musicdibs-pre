@@ -32,6 +32,17 @@ const MONTHS = [
   { value: '11', label: 'Noviembre' }, { value: '12', label: 'Diciembre' },
 ];
 
+const METRICS_TIMEOUT_MS = 25_000;
+const IBS_QUEUE_TIMEOUT_MS = 15_000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeoutId: number;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => window.clearTimeout(timeoutId));
+}
+
 // Get Monday of the current week
 function getCurrentMonday(): string {
   const d = new Date();
@@ -60,6 +71,7 @@ export default function AdminMetricsPage() {
   const [metrics, setMetrics] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Period filter state
   const [periodType, setPeriodType] = useState<'week' | 'month' | 'year'>('month');
@@ -76,11 +88,15 @@ export default function AdminMetricsPage() {
   const loadIbsQueue = async () => {
     setIbsLoading(true);
     try {
-      const res = await adminApi.callAction('get_ibs_queue', {});
+      const res = await withTimeout(
+        adminApi.callAction('get_ibs_queue', {}),
+        IBS_QUEUE_TIMEOUT_MS,
+        'La cola iBS está tardando demasiado en responder.'
+      );
       setIbsQueue(res);
       if ((res.exhausted_count || 0) + (res.stale_count || 0) > 0) setQueueExpanded(true);
     } catch (e: any) {
-      toast.error('Error cargando cola: ' + e.message);
+      console.error('[AdminMetricsPage] Error loading iBS queue:', e);
     }
     setIbsLoading(false);
   };
@@ -107,13 +123,17 @@ export default function AdminMetricsPage() {
   const loadMetrics = useCallback(async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true);
     else setLoading(true);
+    setErrorMessage(null);
+    void loadIbsQueue();
     try {
-      const [data] = await Promise.all([
+      const data = await withTimeout(
         adminApi.getSaasMetrics({ ...filters, force_refresh: showRefresh }),
-        loadIbsQueue(),
-      ]);
+        METRICS_TIMEOUT_MS,
+        'Las métricas están tardando demasiado en responder. Inténtalo de nuevo en unos segundos.'
+      );
       setMetrics(data);
     } catch (e: any) {
+      setErrorMessage(e.message);
       toast.error(e.message);
     } finally {
       setLoading(false);
@@ -147,8 +167,22 @@ export default function AdminMetricsPage() {
     return selectedYear;
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
-  if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground">Cargando métricas...</div>;
-  if (!metrics) return null;
+  if (loading && !metrics) return <div className="flex items-center justify-center py-20 text-muted-foreground">Cargando métricas...</div>;
+  if (!metrics) return (
+    <Card className="border-border/40">
+      <CardContent className="flex flex-col items-center justify-center gap-4 py-16 text-center">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <div>
+          <p className="font-medium">No se pudieron cargar las métricas.</p>
+          <p className="text-sm text-muted-foreground">{errorMessage || 'Vuelve a intentarlo en unos segundos.'}</p>
+        </div>
+        <Button variant="outline" onClick={() => loadMetrics(true)} disabled={refreshing}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          Reintentar
+        </Button>
+      </CardContent>
+    </Card>
+  );
 
   const hasQueueProblems = ibsQueue && (ibsQueue.exhausted_count > 0 || ibsQueue.stale_count > 0);
 
