@@ -2935,6 +2935,31 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_kyc_pending_users: {
+        Args: {
+          p_batch_size?: number
+          p_cutoff_date?: string
+          p_max_reminders?: number
+        }
+        Returns: {
+          language: string
+          reminder_count: number
+          user_id: string
+        }[]
+      }
+      get_kyc_pending_users_with_email: {
+        Args: {
+          p_batch_size?: number
+          p_cutoff_date?: string
+          p_max_reminders?: number
+        }
+        Returns: {
+          email: string
+          language: string
+          reminder_count: number
+          user_id: string
+        }[]
+      }
       get_user_auth_data: {
         Args: { user_email: string }
         Returns: {
