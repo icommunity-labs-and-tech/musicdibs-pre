@@ -102,6 +102,30 @@ const AdminBlog = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const initialFormRef = useRef<string>(JSON.stringify(emptyPost));
+  const isDirty = JSON.stringify(form) !== initialFormRef.current;
+
+  // Warn on browser tab close / refresh
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  const confirmDiscard = () => !isDirty || window.confirm('Tienes cambios sin guardar. ¿Descartarlos y salir?');
+
+  const closeForm = () => {
+    if (!confirmDiscard()) return;
+    setEditing(null);
+    setCreating(false);
+    setForm(emptyPost);
+    initialFormRef.current = JSON.stringify(emptyPost);
+  };
 
   useEffect(() => {
     const check = async () => {
