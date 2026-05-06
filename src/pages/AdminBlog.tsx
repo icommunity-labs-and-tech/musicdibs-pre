@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AIArticleGenerator from "@/components/AIArticleGenerator";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import BlogPreviewDialog from "@/components/admin/BlogPreviewDialog";
 import {
   Plus,
   Pencil,
@@ -26,6 +27,7 @@ import {
   CalendarDays,
   Sparkles,
   Loader2,
+  Languages,
 } from "lucide-react";
 
 type BlogPost = {
@@ -102,6 +104,9 @@ const AdminBlog = () => {
   const [regeneratingCovers, setRegeneratingCovers] = useState(false);
   const [coverProgress, setCoverProgress] = useState({ done: 0, total: 0, current: "" });
   const [coverResults, setCoverResults] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
+  const [previewPost, setPreviewPost] = useState<BlogPost | null>(null);
+  const [previewFromForm, setPreviewFromForm] = useState(false);
+  const [translatingOnSave, setTranslatingOnSave] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -190,7 +195,7 @@ const AdminBlog = () => {
     .sort((a, b) => new Date(a.published_at || a.created_at).getTime() - new Date(b.published_at || b.created_at).getTime());
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<{ id: string; isNew: boolean }> => {
       const payload = {
         title: form.title,
         slug: form.slug || slugify(form.title),
@@ -209,24 +214,101 @@ const AdminBlog = () => {
       if (editing) {
         const { error } = await supabase.from("blog_posts").update(payload).eq("id", editing);
         if (error) throw error;
+        return { id: editing, isNew: false };
       } else {
-        const { error } = await supabase.from("blog_posts").insert(payload);
+        const { data, error } = await supabase.from("blog_posts").insert(payload).select("id").single();
         if (error) throw error;
+        return { id: data.id as string, isNew: true };
       }
-    },
-    onSuccess: () => {
-      toast({ title: "Guardado", description: "Post guardado correctamente." });
-      queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
-      initialFormRef.current = JSON.stringify(form);
-      setEditing(null);
-      setCreating(false);
-      setForm(emptyPost);
-      initialFormRef.current = JSON.stringify(emptyPost);
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
+
+  const finalizeAfterSave = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
+    initialFormRef.current = JSON.stringify(form);
+    setEditing(null);
+    setCreating(false);
+    setForm(emptyPost);
+    initialFormRef.current = JSON.stringify(emptyPost);
+  };
+
+  const triggerTranslations = async (postId: string) => {
+    setTranslatingOnSave(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-blog-posts", {
+        body: { postId, sourceLanguage: "es", targetLanguages: ["en", "pt"] },
+      });
+      if (error) throw error;
+      const successCount = (data?.results || []).filter((r: { success: boolean }) => r.success).length;
+      toast({ title: "Traducciones procesadas", description: `${successCount} idioma(s) actualizado(s).` });
+    } catch (err) {
+      toast({
+        title: "Aviso: traducciones no completadas",
+        description: err instanceof Error ? err.message : "Error desconocido",
+        variant: "destructive",
+      });
+    } finally {
+      setTranslatingOnSave(false);
+    }
+  };
+
+  const handleSave = async () => {
+    const willPublishOrSchedule = form.published || Boolean(form.published_at);
+    const isSpanish = !editing
+      ? true
+      : (posts?.find((p) => p.id === editing)?.language || "es") === "es";
+
+    let shouldTranslate = false;
+
+    if (willPublishOrSchedule && isSpanish) {
+      // Check existing translations
+      const baseSlug = (form.slug || slugify(form.title)).replace(/-(es|en|pt)$/, "");
+      const { data: existing } = await supabase
+        .from("blog_posts")
+        .select("language")
+        .or(`slug.eq.${baseSlug}-en,slug.eq.${baseSlug}-pt`);
+      const langs = new Set((existing || []).map((p) => p.language));
+      const missing = ["en", "pt"].filter((l) => !langs.has(l));
+
+      if (missing.length > 0) {
+        const ok = window.confirm(
+          `Para publicar o planificar, faltan traducciones (${missing.join(", ").toUpperCase()}).\n\n` +
+          `¿Generar las traducciones automáticamente ahora?\n\n` +
+          `Cancelar = guardar como borrador sin traducciones.`
+        );
+        if (!ok) {
+          // Force draft mode
+          if (form.published || form.published_at) {
+            toast({ title: "Guardado como borrador", description: "Sin traducciones — no se publicará." });
+            setForm({ ...form, published: false, published_at: "" });
+            return;
+          }
+        } else {
+          shouldTranslate = true;
+        }
+      }
+    } else if (editing && isSpanish) {
+      // Editing existing ES post — offer to refresh translations
+      shouldTranslate = window.confirm(
+        "¿Actualizar también las traducciones (EN + PT) con los cambios?"
+      );
+    }
+
+    try {
+      const result = await saveMutation.mutateAsync();
+      toast({ title: "Guardado", description: "Post guardado correctamente." });
+
+      if (shouldTranslate && isSpanish) {
+        await triggerTranslations(result.id);
+      }
+      finalizeAfterSave();
+    } catch {
+      // already toasted
+    }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -691,10 +773,33 @@ const AdminBlog = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || !form.title} className="gap-2">
-                  <Save className="w-4 h-4" /> {saveMutation.isPending ? "Guardando..." : "Guardar"}
+              <div className="flex gap-3 pt-2 flex-wrap">
+                <Button onClick={handleSave} disabled={saveMutation.isPending || translatingOnSave || !form.title} className="gap-2">
+                  <Save className="w-4 h-4" />
+                  {translatingOnSave ? "Traduciendo..." : saveMutation.isPending ? "Guardando..." : "Guardar"}
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setPreviewFromForm(true); setPreviewPost(null); }}
+                  disabled={!form.title}
+                  className="gap-2 text-black"
+                >
+                  <Eye className="w-4 h-4" /> Vista previa
+                </Button>
+                {editing && (
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      if (!window.confirm("¿Regenerar las traducciones (EN + PT) de este artículo?")) return;
+                      await triggerTranslations(editing);
+                    }}
+                    disabled={translatingOnSave}
+                    className="gap-2 text-black"
+                  >
+                    {translatingOnSave ? <Loader2 className="w-4 h-4 animate-spin" /> : <Languages className="w-4 h-4" />}
+                    Actualizar traducciones
+                  </Button>
+                )}
                 <Button variant="ghost" onClick={closeForm}>Cancelar</Button>
                 {isDirty && <span className="text-xs text-amber-400 self-center">● Cambios sin guardar</span>}
               </div>
@@ -760,6 +865,7 @@ const AdminBlog = () => {
                           <td className="p-3"><span className="text-xs rounded bg-primary/20 text-primary px-2 py-1">{post.published_at ? "planificado" : "borrador"}</span></td>
                           <td className="p-3">
                             <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => { setPreviewFromForm(false); setPreviewPost(post); }} className="h-8 w-8 text-white/50 hover:text-white" title="Vista previa"><Eye className="w-4 h-4" /></Button>
                               <Button variant="ghost" size="icon" onClick={() => startEdit(post)} className="h-8 w-8 text-white/50 hover:text-white"><Pencil className="w-4 h-4" /></Button>
                               <Button variant="ghost" size="sm" onClick={() => publishNowMutation.mutate(post.id)} className="text-white/50 hover:text-white">Publicar ahora</Button>
                               <Button variant="ghost" size="icon" onClick={() => confirm("¿Eliminar este artículo?") && deleteMutation.mutate(post.id)} className="h-8 w-8 text-white/50 hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
@@ -787,6 +893,7 @@ const AdminBlog = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
+                      <Button variant="ghost" size="icon" onClick={() => { setPreviewFromForm(false); setPreviewPost(post); }} className="h-8 w-8 text-white/50 hover:text-white" title="Vista previa"><Eye className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => startEdit(post)} className="h-8 w-8 text-white/50 hover:text-white"><Pencil className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => confirm("¿Eliminar este artículo?") && deleteMutation.mutate(post.id)} className="h-8 w-8 text-white/50 hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
                     </div>
@@ -802,6 +909,25 @@ const AdminBlog = () => {
           </>
         )}
       </div>
+
+      <BlogPreviewDialog
+        open={Boolean(previewPost) || previewFromForm}
+        onOpenChange={(open) => { if (!open) { setPreviewPost(null); setPreviewFromForm(false); } }}
+        post={
+          previewFromForm
+            ? {
+                title: form.title,
+                excerpt: form.excerpt,
+                content: form.content,
+                image_url: form.image_url,
+                category: form.category,
+                tags: form.tags,
+                author: form.author,
+                published_at: form.published_at || new Date().toISOString(),
+              }
+            : previewPost
+        }
+      />
     </div>
   );
 };
