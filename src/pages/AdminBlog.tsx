@@ -475,6 +475,37 @@ const AdminBlog = () => {
         </div>
       </header>
 
+      {(regeneratingCovers || coverResults) && (
+        <div className="max-w-6xl mx-auto px-6 pt-4">
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2">
+            {regeneratingCovers ? (
+              <>
+                <p className="text-sm text-white/80">
+                  Regenerando portada {Math.min(coverProgress.done + 1, coverProgress.total)} de {coverProgress.total}
+                  {coverProgress.current && <> — <span className="text-white/60">{coverProgress.current}</span></>}
+                </p>
+                <Progress value={(coverProgress.done / Math.max(coverProgress.total, 1)) * 100} />
+              </>
+            ) : coverResults && (
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-sm">
+                  <p className="text-white/90">
+                    ✅ Regeneradas: <span className="text-green-400 font-semibold">{coverResults.ok}</span> ·
+                    {" "}❌ Fallidas: <span className="text-red-400 font-semibold">{coverResults.fail}</span>
+                  </p>
+                  {coverResults.errors.length > 0 && (
+                    <ul className="mt-2 list-disc pl-5 text-xs text-red-300/80 space-y-0.5 max-h-32 overflow-auto">
+                      {coverResults.errors.map((err, i) => <li key={i}>{err}</li>)}
+                    </ul>
+                  )}
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setCoverResults(null)} className="text-white/50">Cerrar</Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {plannerOpen && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm px-4 py-6 overflow-y-auto">
           <div className="max-w-6xl mx-auto bg-card border border-border rounded-lg p-6 space-y-6 shadow-xl">
