@@ -205,12 +205,17 @@ const News = () => {
                     className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
                   >
                     {post.image_url && (
-                      <div className="h-48 overflow-hidden">
+                      <div className="h-48 overflow-hidden bg-white/5">
                         <img
                           src={post.image_url}
                           alt={post.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           loading="lazy"
+                          onError={(e) => {
+                            const img = e.currentTarget as HTMLImageElement;
+                            img.style.display = 'none';
+                            (img.parentElement as HTMLElement).style.display = 'none';
+                          }}
                         />
                       </div>
                     )}

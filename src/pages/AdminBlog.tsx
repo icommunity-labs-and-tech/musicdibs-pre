@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -102,6 +102,30 @@ const AdminBlog = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const initialFormRef = useRef<string>(JSON.stringify(emptyPost));
+  const isDirty = JSON.stringify(form) !== initialFormRef.current;
+
+  // Warn on browser tab close / refresh
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isDirty]);
+
+  const confirmDiscard = () => !isDirty || window.confirm('Tienes cambios sin guardar. ¿Descartarlos y salir?');
+
+  const closeForm = () => {
+    if (!confirmDiscard()) return;
+    setEditing(null);
+    setCreating(false);
+    setForm(emptyPost);
+    initialFormRef.current = JSON.stringify(emptyPost);
+  };
 
   useEffect(() => {
     const check = async () => {
@@ -190,9 +214,11 @@ const AdminBlog = () => {
     onSuccess: () => {
       toast({ title: "Guardado", description: "Post guardado correctamente." });
       queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
+      initialFormRef.current = JSON.stringify(form);
       setEditing(null);
       setCreating(false);
       setForm(emptyPost);
+      initialFormRef.current = JSON.stringify(emptyPost);
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -225,9 +251,10 @@ const AdminBlog = () => {
   });
 
   const startEdit = (post: BlogPost) => {
+    if (!confirmDiscard()) return;
     setCreating(false);
     setEditing(post.id);
-    setForm({
+    const next: BlogForm = {
       title: post.title,
       slug: post.slug,
       excerpt: post.excerpt || "",
@@ -238,13 +265,17 @@ const AdminBlog = () => {
       author: post.author || "Musicdibs",
       published: post.published || false,
       published_at: post.published_at?.slice(0, 10) || "",
-    });
+    };
+    setForm(next);
+    initialFormRef.current = JSON.stringify(next);
   };
 
   const startCreate = () => {
+    if (!confirmDiscard()) return;
     setEditing(null);
     setCreating(true);
     setForm(emptyPost);
+    initialFormRef.current = JSON.stringify(emptyPost);
   };
 
   const handleLogout = async () => {
@@ -491,7 +522,7 @@ const AdminBlog = () => {
       <div className="max-w-6xl mx-auto px-6 py-8">
         {showForm ? (
           <div className="max-w-3xl mx-auto">
-            <button onClick={() => { setEditing(null); setCreating(false); setForm(emptyPost); }} className="flex items-center gap-2 text-white/50 hover:text-white text-sm mb-6">
+            <button onClick={closeForm} className="flex items-center gap-2 text-white/50 hover:text-white text-sm mb-6">
               <ArrowLeft className="w-4 h-4" /> Volver a la lista
             </button>
 
@@ -525,8 +556,16 @@ const AdminBlog = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-white/70">URL de imagen</Label>
+                  <Label className="text-white/70">URL de imagen (thumbnail)</Label>
                   <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="bg-white/5 border-white/10 text-white" placeholder="https://..." />
+                  {form.image_url && (
+                    <img
+                      src={form.image_url}
+                      alt="preview"
+                      className="mt-2 max-h-32 rounded border border-white/10 object-cover"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  )}
                 </div>
                 <div>
                   <Label className="text-white/70">Categoría</Label>
@@ -562,7 +601,8 @@ const AdminBlog = () => {
                 <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || !form.title} className="gap-2">
                   <Save className="w-4 h-4" /> {saveMutation.isPending ? "Guardando..." : "Guardar"}
                 </Button>
-                <Button variant="ghost" onClick={() => { setEditing(null); setCreating(false); setForm(emptyPost); }}>Cancelar</Button>
+                <Button variant="ghost" onClick={closeForm}>Cancelar</Button>
+                {isDirty && <span className="text-xs text-amber-400 self-center">● Cambios sin guardar</span>}
               </div>
             </div>
           </div>
