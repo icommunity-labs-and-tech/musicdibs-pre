@@ -756,19 +756,28 @@ const AIStudioCreate = () => {
     if (!prompt.trim()) return;
     setIsImprovingPrompt(true);
     try {
+      const detected = detectLyrics(prompt);
+      const promptToImprove = detected.hasLyrics
+        ? (detected.musicDescription || prompt).trim()
+        : prompt.trim();
+
       const { data, error } = await supabase.functions.invoke('improve-prompt', {
         body: {
-          prompt: prompt.trim(),
+          prompt: promptToImprove,
           genre: selectedGenre || undefined,
           mood: selectedMood || undefined,
           mode,
-          hasLyrics: detectLyrics(prompt).hasLyrics,
+          hasLyrics: detected.hasLyrics,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.improved) {
-        setPrompt(data.improved.slice(0, 2500));
+        const improved = data.improved as string;
+        const finalPrompt = detected.hasLyrics
+          ? `${improved}\n\n${detected.lyricsBlock}`
+          : improved;
+        setPrompt(finalPrompt);
         toast({ title: t('aiCreate.promptImproved'), description: t('aiCreate.promptImprovedDesc') });
       }
     } catch (e: any) {
