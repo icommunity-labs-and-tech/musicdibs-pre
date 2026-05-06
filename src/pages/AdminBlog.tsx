@@ -773,10 +773,33 @@ const AdminBlog = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || !form.title} className="gap-2">
-                  <Save className="w-4 h-4" /> {saveMutation.isPending ? "Guardando..." : "Guardar"}
+              <div className="flex gap-3 pt-2 flex-wrap">
+                <Button onClick={handleSave} disabled={saveMutation.isPending || translatingOnSave || !form.title} className="gap-2">
+                  <Save className="w-4 h-4" />
+                  {translatingOnSave ? "Traduciendo..." : saveMutation.isPending ? "Guardando..." : "Guardar"}
                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => { setPreviewFromForm(true); setPreviewPost(null); }}
+                  disabled={!form.title}
+                  className="gap-2 text-black"
+                >
+                  <Eye className="w-4 h-4" /> Vista previa
+                </Button>
+                {editing && (
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      if (!window.confirm("¿Regenerar las traducciones (EN + PT) de este artículo?")) return;
+                      await triggerTranslations(editing);
+                    }}
+                    disabled={translatingOnSave}
+                    className="gap-2 text-black"
+                  >
+                    {translatingOnSave ? <Loader2 className="w-4 h-4 animate-spin" /> : <Languages className="w-4 h-4" />}
+                    Actualizar traducciones
+                  </Button>
+                )}
                 <Button variant="ghost" onClick={closeForm}>Cancelar</Button>
                 {isDirty && <span className="text-xs text-amber-400 self-center">● Cambios sin guardar</span>}
               </div>
