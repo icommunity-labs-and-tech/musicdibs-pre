@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AIArticleGenerator from "@/components/AIArticleGenerator";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import {
   Plus,
   Pencil,
@@ -514,8 +515,12 @@ const AdminBlog = () => {
                 <Textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} rows={3} className="bg-white/5 border-white/10 text-white" />
               </div>
               <div>
-                <Label className="text-white/70">Contenido (HTML)</Label>
-                <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={12} className="bg-white/5 border-white/10 text-white font-mono text-sm" />
+                <Label className="text-white/70">Contenido</Label>
+                <RichTextEditor
+                  value={form.content}
+                  onChange={(html) => setForm({ ...form, content: html })}
+                  placeholder="Escribe el artículo: añade encabezados, listas, enlaces, imágenes…"
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
