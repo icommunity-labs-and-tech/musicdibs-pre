@@ -224,6 +224,17 @@ serve(async (req) => {
       });
     }
 
+    // Hard limit from ElevenLabs Music API for lyrics (~3000 chars). Reject BEFORE deducting credits.
+    const LYRICS_MAX_LENGTH = 3000;
+    if (mode === 'song' && typeof lyrics === 'string' && lyrics.length > LYRICS_MAX_LENGTH) {
+      return new Response(JSON.stringify({
+        error: 'lyrics_too_long',
+        message: `La letra excede el máximo de ${LYRICS_MAX_LENGTH} caracteres permitido por el proveedor.`,
+        max: LYRICS_MAX_LENGTH,
+        current: lyrics.length,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // ── Credit deduction (cost from feature_costs table) ──────
     // 1-click create (Inspire) has its own pricing key
     const featureKey = source === 'inspire'
@@ -283,6 +294,8 @@ serve(async (req) => {
     };
     refundOnUnhandled = refundCredits;
 
+    const hasUserLyrics = typeof lyrics === 'string' && lyrics.trim().length > 0 && mode === 'song';
+
     // Build enriched prompt for ElevenLabs Music API
     const parts: string[] = [];
     if (genre) parts.push(genre);
@@ -294,21 +307,36 @@ serve(async (req) => {
       .replace(/\b(estilo|style)\s+(de|of)\s+.{1,60}/gi, '')
       .trim();
     if (cleanPrompt) parts.push(cleanPrompt);
+    // When the user provides lyrics, force the model to sing them verbatim and
+    // override any conflicting instruction in the description (e.g. "instrumental").
+    if (hasUserLyrics) {
+      parts.push('Vocals must sing the provided lyrics verbatim, word-for-word, complete and in order, without improvisation, paraphrasing or omission. Lyrics are mandatory.');
+    }
     const enrichedPrompt = parts.join('. ');
 
     // Duration handling:
     // - If user passes a number → respect it (clamped to [30, 300] sec).
     // - If user passes nothing/null ("Auto") → leave durationSecs = null and let ElevenLabs decide.
+    // - If user provided lyrics, enforce a minimum based on line count (~2.8s per line)
+    //   so ElevenLabs has enough room to fit every verse.
     const requestedDuration = Number(duration);
     const userSpecifiedDuration = Number.isFinite(requestedDuration) && requestedDuration > 0;
-    const durationSecs: number | null = userSpecifiedDuration
+    let durationSecs: number | null = userSpecifiedDuration
       ? Math.min(Math.max(Math.round(requestedDuration), MIN_DURATION_SECS), MAX_DURATION_SECS)
       : null;
+
+    if (hasUserLyrics) {
+      const lineCount = lyrics.trim().split(/\r?\n/).filter((l: string) => l.trim().length > 0 && !/^\[.*\]$/.test(l.trim())).length;
+      const lyricsMinSecs = Math.min(MAX_DURATION_SECS, Math.max(MIN_DURATION_SECS, Math.ceil(lineCount * 2.8)));
+      if (durationSecs === null || durationSecs < lyricsMinSecs) {
+        console.log(`[GENERATE-AUDIO] Bumping duration to ${lyricsMinSecs}s to fit ${lineCount} lyric lines (was ${durationSecs ?? 'auto'})`);
+        durationSecs = lyricsMinSecs;
+      }
+    }
+
     const durationMs: number | null = durationSecs !== null ? durationSecs * 1000 : null;
-    const hasUserLyrics = typeof lyrics === 'string' && lyrics.trim().length > 0 && mode === 'song';
 
     // Pre-build composition plan if user provided lyrics.
-    // Composition plan REQUIRES a duration → if Auto, use AUTO_PLAN_FALLBACK_SECS just for the plan.
     let compositionPlan: any | null = null;
     if (hasUserLyrics) {
       const planDurationMs = durationMs ?? AUTO_PLAN_FALLBACK_SECS * 1000;
