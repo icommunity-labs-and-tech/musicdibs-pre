@@ -34,7 +34,7 @@ const BlogPreviewDialog = ({ open, onOpenChange, post }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-background">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-white text-slate-900 [&_*]:!text-slate-900 [&_a]:!text-blue-600 [&_h1]:!text-transparent [&_h1]:!bg-clip-text">
         <DialogHeader>
           <DialogTitle className="text-sm text-muted-foreground font-normal">
             Vista previa del artículo
