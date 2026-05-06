@@ -44,6 +44,7 @@ import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { useProductTracking } from "@/hooks/useProductTracking";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { detectLyrics, LYRICS_TEMPLATE } from "@/lib/lyricsDetector";
 
 // ── Music tab constants ──
 const DURATION_OPTIONS: { value: number; label: string }[] = [
