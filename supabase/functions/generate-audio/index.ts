@@ -205,7 +205,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, lyrics, genre, mood, duration, mode, description, source } = await req.json();
+    const { prompt, lyrics: legacyLyrics, genre, mood, duration, mode, description, source } = await req.json();
 
     // Server-side validation: prompt and description must not exceed 2500 characters
     const MAX_LENGTH = 2500;
@@ -225,9 +225,25 @@ serve(async (req) => {
       });
     }
 
+    // ── Lyrics extraction ──
+    // The user no longer has a separate lyrics field; lyrics live inside the prompt.
+    // We auto-detect them via structural tags or 4+ short consecutive lines.
+    // For backward compatibility we still accept a `lyrics` payload field.
+    const detected = detectLyrics(prompt);
+    let lyrics = '';
+    let promptForModel = prompt;
+    if (mode === 'song') {
+      if (typeof legacyLyrics === 'string' && legacyLyrics.trim().length > 0) {
+        lyrics = legacyLyrics.trim();
+      } else if (detected.hasLyrics) {
+        lyrics = detected.lyricsBlock;
+        promptForModel = detected.musicDescription || prompt;
+      }
+    }
+
     // Hard limit from ElevenLabs Music API for lyrics (~3000 chars). Reject BEFORE deducting credits.
     const LYRICS_MAX_LENGTH = 3000;
-    if (mode === 'song' && typeof lyrics === 'string' && lyrics.length > LYRICS_MAX_LENGTH) {
+    if (mode === 'song' && lyrics.length > LYRICS_MAX_LENGTH) {
       return new Response(JSON.stringify({
         error: 'lyrics_too_long',
         message: `La letra excede el máximo de ${LYRICS_MAX_LENGTH} caracteres permitido por el proveedor.`,
