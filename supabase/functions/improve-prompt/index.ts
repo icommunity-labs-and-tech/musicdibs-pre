@@ -165,7 +165,7 @@ serve(async (req) => {
       if (mood) contextParts.push(`Mood: ${mood}`);
       const contextStr = contextParts.length > 0 ? `\nContexto seleccionado por el usuario: ${contextParts.join(', ')}` : '';
 
-      systemPrompt = `Eres un experto en producción musical y prompt engineering para modelos de IA generativa de música (ElevenLabs Music, Suno, Udio). Tu tarea es transformar una descripción básica en un prompt ultra-detallado de entre 1500 y 2500 caracteres que maximice la calidad de la música generada.
+      systemPrompt = `Eres un experto en producción musical y prompt engineering para modelos de IA generativa de música (ElevenLabs Music, Suno, Udio). Tu tarea es transformar una descripción básica en un prompt ultra-detallado de entre 1500 y 4500 caracteres que maximice la calidad de la música generada.
 
 El prompt mejorado DEBE incluir obligatoriamente:
 - Género y subgénero específico (ej: "pop urbano latino con influencias de reggaeton romántico")
@@ -190,10 +190,18 @@ REGLA SOBRE LA LETRA:
         systemPrompt += `\n\nATENCIÓN: hasLyrics=true → el usuario YA tiene letra. NO generes ni añadas letra. Respétala palabra por palabra. Solo describe elementos musicales, instrumentales y de producción.`;
       }
 
+REGLA SOBRE LA LETRA:
+- Si el usuario YA ha incluido letra (versos, estrofas, tags como [Verso]/[Estribillo], o el flag hasLyrics=true), NO generes ni reescribas la letra. Conserva la letra original tal cual y limítate a describir los elementos musicales, instrumentales, de producción y estilo alrededor de ella.
+- Si el usuario NO ha incluido letra, ES OBLIGATORIO escribir una letra COMPLETA al final del prompt mejorado, en el mismo idioma que el usuario, usando tags de estructura: [Verso 1] / [Pre-Estribillo] / [Estribillo] / [Verso 2] / [Estribillo] / [Puente] / [Estribillo final]. La letra debe ser coherente con el tema y tener al menos 16 líneas. Sin letra el prompt se considera incompleto.`;
+
+      if (hasLyrics) {
+        systemPrompt += `\n\nATENCIÓN: hasLyrics=true → el usuario YA tiene letra. NO generes ni añadas letra. Respétala palabra por palabra. Solo describe elementos musicales, instrumentales y de producción.`;
+      }
+
       const lyricsRule = hasLyrics
         ? 'El usuario YA incluye letra: NO generes ni modifiques letra; respétala palabra por palabra y describe solo elementos musicales.'
-        : 'El usuario NO incluye letra: puedes (recomendado) escribir una letra completa con tags [Verso]/[Estribillo] al final del prompt, en el mismo idioma del original.';
-      userTextContent = `Mejora esta descripción técnica de canción.${contextStr}\n\nDescripción original del usuario:\n"""\n${prompt}\n"""\n\n${lyricsRule}\n\nDevuelve SOLO el prompt mejorado de entre 1500 y 2500 caracteres, en el mismo idioma del original, sin explicaciones.`;
+        : 'El usuario NO incluye letra: DEBES escribir OBLIGATORIAMENTE una letra completa (mín. 16 líneas) con tags [Verso 1]/[Pre-Estribillo]/[Estribillo]/[Verso 2]/[Estribillo]/[Puente]/[Estribillo final] al final del prompt, en el mismo idioma del original. Sin letra la respuesta es inválida.';
+      userTextContent = `Mejora esta descripción técnica de canción.${contextStr}\n\nDescripción original del usuario:\n"""\n${prompt}\n"""\n\n${lyricsRule}\n\nDevuelve SOLO el prompt mejorado de entre 1500 y 4500 caracteres, en el mismo idioma del original, sin explicaciones.`;
     }
 
     let improved: string | null = null;
