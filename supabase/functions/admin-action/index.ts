@@ -194,7 +194,13 @@ serve(async (req) => {
       query = query.order(sortBy, { ascending: sortDir }).range(offset, offset + limit - 1);
 
       const { data: profiles, error, count: profilesCount } = await query;
-      if (error) return json({ error: error.message }, 500);
+      if (error) {
+        // PostgREST returns "Requested range not satisfiable" when offset >= total rows
+        if ((error.message || "").toLowerCase().includes("range not satisfiable")) {
+          return json({ users: [], total: 0 });
+        }
+        return json({ error: error.message }, 500);
+      }
 
       const userIds = (profiles || []).map((p: any) => p.user_id);
       if (userIds.length === 0) return json({ users: [], total: 0 });
