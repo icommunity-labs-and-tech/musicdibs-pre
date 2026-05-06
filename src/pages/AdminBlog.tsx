@@ -893,6 +893,7 @@ const AdminBlog = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
+                      <Button variant="ghost" size="icon" onClick={() => { setPreviewFromForm(false); setPreviewPost(post); }} className="h-8 w-8 text-white/50 hover:text-white" title="Vista previa"><Eye className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => startEdit(post)} className="h-8 w-8 text-white/50 hover:text-white"><Pencil className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => confirm("¿Eliminar este artículo?") && deleteMutation.mutate(post.id)} className="h-8 w-8 text-white/50 hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
                     </div>
