@@ -1379,7 +1379,7 @@ const en: typeof es = {
       countryLabel: 'Document issuing country',
       countryOther: '🌍 Other country',
       privacyNote: 'Your data is securely processed by iCommunity Labs for identity verification. We do not store your document data on our servers.',
-      starting: 'Starting verification…',
+      starting: 'Starting...',
       nextBiometric: 'Next — Biometric verification',
       step2Intro: 'Complete the verification in the panel below. You will need your ID document and camera access. Do not close this page until you finish.',
       pendingBadge: 'Verification in progress…',
