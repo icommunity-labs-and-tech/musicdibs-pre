@@ -241,6 +241,22 @@ serve(async (req) => {
     if (!ibsRes.ok) {
       const errBody = await ibsRes.text();
       console.error(`[IBS] POST /evidences failed [${ibsRes.status}]:`, errBody);
+      // Raise admin alert on iBS server errors so issues are visible in /dashboard/admin/alerts
+      if (ibsRes.status >= 500) {
+        await supabaseAdmin.from("admin_alerts").insert({
+          source: "ibs_certification",
+          severity: "error",
+          message: `iBS devolvió HTTP ${ibsRes.status} al crear evidence para work ${workId}`,
+          context: {
+            http_status: ibsRes.status,
+            work_id: workId,
+            user_id: userId,
+            work_title: work.title,
+            signature_id: signatureId,
+            response: errBody.slice(0, 500),
+          },
+        });
+      }
       await handleIbsFailure(supabaseAdmin, workId, userId, work.title, `iBS error ${ibsRes.status}: ${errBody}`, creditCost);
       return new Response(
         JSON.stringify({ success: false, error: `iBS registration failed: ${errBody}`, workId, status: "failed", refunded: true }),
