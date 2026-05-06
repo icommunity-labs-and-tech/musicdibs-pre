@@ -1076,24 +1076,36 @@ const AIStudioCreate = () => {
                         </div>
                       </div>
 
-                      {/* Lyrics textarea — only visible in 'song' mode */}
-                      {mode === 'song' && (
-                        <div className="space-y-1.5" data-tour="mc-lyrics">
-                          <Label>{t('aiCreate.lyricsLabelOpt')}</Label>
-                          <Textarea
-                            placeholder={t('aiCreate.lyricsPlaceholderFull')}
-                            value={lyrics}
-                            onChange={(e) => setLyrics(e.target.value.slice(0, 3000))}
-                            rows={6}
-                            className="resize-none"
-                            maxLength={3000}
-                          />
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground">{t('aiCreate.lyricsHint')}</p>
-                            <p className="text-xs text-muted-foreground">{lyrics.length}/3000</p>
+                      {/* Lyrics auto-detection helper — only in 'song' mode */}
+                      {mode === 'song' && (() => {
+                        const det = detectLyrics(prompt);
+                        return (
+                          <div className="flex items-center justify-between gap-2 -mt-1" data-tour="mc-lyrics">
+                            <div className="flex items-center gap-2 text-xs">
+                              {det.hasLyrics ? (
+                                <Badge variant="secondary" className="gap-1">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  {t('aiCreate.lyricsDetected', 'Letra detectada en la descripción')}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground">
+                                  {t('aiCreate.lyricsHintInline', 'Puedes incluir tu letra dentro de la descripción usando [Verso] / [Estribillo].')}
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() => setPrompt((p) => (p + LYRICS_TEMPLATE).slice(0, 2500))}
+                            >
+                              <FileText className="h-3 w-3 mr-1" />
+                              {t('aiCreate.insertLyricsTemplate', 'Insertar plantilla de letra')}
+                            </Button>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Mode selector: Canción con voz / Instrumental */}
                       <div className="space-y-2">
