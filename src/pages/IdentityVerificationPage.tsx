@@ -75,21 +75,40 @@ export default function IdentityVerificationPage() {
   const [iframeError, setIframeError] = useState(false);
   const [polling, setPolling] = useState(false);
 
+  const [pendingSig, setPendingSig] = useState<any | null>(null);
+  const [resuming, setResuming] = useState(false);
+
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('profiles')
-      .select('kyc_status, display_name')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setKycStatus(data.kyc_status || 'unverified');
-          if (data.display_name) setFullName(data.display_name);
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('kyc_status, display_name')
+        .eq('user_id', user.id)
+        .single();
+      if (data) {
+        setKycStatus(data.kyc_status || 'unverified');
+        if (data.display_name) setFullName(data.display_name);
+      }
+
+      // Detect a signature already in progress to allow resuming instead of creating a new one
+      if (data?.kyc_status !== 'verified') {
+        try {
+          const { data: listData } = await supabase.functions.invoke('ibs-signatures', {
+            body: { action: 'list' },
+          });
+          const inProgress = listData?.signatures?.find(
+            (s: any) => ['initiated', 'created', 'pending', 'failed'].includes(s.status)
+          );
+          if (inProgress) setPendingSig(inProgress);
+        } catch (err) {
+          console.warn('[KYC] could not list signatures:', err);
         }
-        setKycLoading(false);
-      });
+      }
+      setKycLoading(false);
+    })();
   }, [user]);
+
 
   useEffect(() => {
     if (!polling || !user) return;
