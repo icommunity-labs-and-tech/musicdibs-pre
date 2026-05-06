@@ -190,7 +190,10 @@ REGLA SOBRE LA LETRA:
         systemPrompt += `\n\nATENCIÓN: hasLyrics=true → el usuario YA tiene letra. NO generes ni añadas letra. Respétala palabra por palabra. Solo describe elementos musicales, instrumentales y de producción.`;
       }
 
-      userTextContent = `Mejora esta descripción técnica de canción.${contextStr}\n\nDescripción original del usuario:\n"""\n${prompt}\n"""\n\nDevuelve SOLO el prompt mejorado de entre 1500 y 2500 caracteres, en el mismo idioma del original. Sin letra, sin versos, sin explicaciones.`;
+      const lyricsRule = hasLyrics
+        ? 'El usuario YA incluye letra: NO generes ni modifiques letra; respétala palabra por palabra y describe solo elementos musicales.'
+        : 'El usuario NO incluye letra: puedes (recomendado) escribir una letra completa con tags [Verso]/[Estribillo] al final del prompt, en el mismo idioma del original.';
+      userTextContent = `Mejora esta descripción técnica de canción.${contextStr}\n\nDescripción original del usuario:\n"""\n${prompt}\n"""\n\n${lyricsRule}\n\nDevuelve SOLO el prompt mejorado de entre 1500 y 2500 caracteres, en el mismo idioma del original, sin explicaciones.`;
     }
 
     let improved: string | null = null;
