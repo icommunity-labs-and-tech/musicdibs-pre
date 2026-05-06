@@ -106,6 +106,24 @@ serve(async (req) => {
         } else {
           // iBS error — retry or exhaust
           const errText = await ibsRes.text().catch(() => "unknown");
+          // Raise admin alert on 5xx errors from iBS
+          if (ibsRes.status >= 500) {
+            await supabaseAdmin.from("admin_alerts").insert({
+              source: "ibs_certification",
+              severity: "error",
+              message: `iBS devolvió HTTP ${ibsRes.status} al verificar evidence ${item.ibs_evidence_id}`,
+              context: {
+                http_status: ibsRes.status,
+                ibs_evidence_id: item.ibs_evidence_id,
+                work_id: item.work_id,
+                queue_id: item.id,
+                user_id: item.user_id,
+                retry_count: item.retry_count,
+                max_retries: item.max_retries,
+                response: errText.slice(0, 500),
+              },
+            });
+          }
           await handleRetryOrExhaust(supabaseAdmin, item, summary, `iBS ${ibsRes.status}: ${errText}`);
         }
       } catch (fetchErr) {
