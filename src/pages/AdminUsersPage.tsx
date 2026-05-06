@@ -364,8 +364,8 @@ export default function AdminUsersPage() {
                 </TableCell>
                 <TableCell>{kycBadge(u.kyc_status)}</TableCell>
                 <TableCell>{u.works_count}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">{new Date(u.updated_at).toLocaleDateString()}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{new Date(u.updated_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</TableCell>
                 <TableCell>
                   {u.stripe_customer_id
                     ? <Badge className="bg-primary/20 text-primary border-primary/30 text-xs">Vinculado</Badge>
