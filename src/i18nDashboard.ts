@@ -2178,7 +2178,7 @@ const pt: typeof es = {
       countryLabel: 'País de emissão do documento',
       countryOther: '🌍 Outro país',
       privacyNote: 'Seus dados são processados com segurança pela iCommunity Labs para a verificação de identidade. Não armazenamos os dados do seu documento em nossos servidores.',
-      starting: 'Iniciando verificação…',
+      starting: 'Iniciando...',
       nextBiometric: 'Próximo — Verificação biométrica',
       step2Intro: 'Conclua a verificação no painel abaixo. Você precisará do documento de identidade e acesso à câmera. Não feche esta página até finalizar.',
       pendingBadge: 'Verificação em andamento…',
