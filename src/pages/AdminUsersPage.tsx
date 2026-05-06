@@ -389,6 +389,24 @@ export default function AdminUsersPage() {
                       <DropdownMenuItem onClick={() => handleSetKyc(u.user_id, 'verified')}>KYC → Verificado</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleSetKyc(u.user_id, 'pending')}>KYC → Pendiente</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleSetKyc(u.user_id, 'rejected')}>KYC → Rechazado</DropdownMenuItem>
+                      {u.kyc_status !== 'verified' && (
+                        <DropdownMenuItem onClick={async () => {
+                          try {
+                            const { data, error } = await supabase.functions.invoke('kyc-reminder', {
+                              body: { user_id: u.user_id },
+                            });
+                            if (error || !data?.ok) {
+                              toast.error('No enviado', { description: data?.reason || error?.message });
+                            } else {
+                              toast.success('✅ Recordatorio enviado', { description: `Email #${data.reminder_number} enviado correctamente` });
+                            }
+                          } catch (e: any) {
+                            toast.error('No enviado', { description: e?.message });
+                          }
+                        }}>
+                          📧 Recordatorio KYC
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={async () => {
                         try {
