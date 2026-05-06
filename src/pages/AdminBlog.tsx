@@ -281,6 +281,56 @@ const AdminBlog = () => {
     initialFormRef.current = JSON.stringify(emptyPost);
   };
 
+  const regenerateWordPressCovers = async () => {
+    const targets = (posts || []).filter((p) => (p.image_url || "").toLowerCase().includes("wp-content"));
+    if (!targets.length) {
+      toast({ title: "Nada que regenerar", description: "No hay posts con imágenes de WordPress." });
+      return;
+    }
+    if (!window.confirm(`Se regenerarán las portadas de ${targets.length} artículo(s). ¿Continuar?`)) return;
+
+    setRegeneratingCovers(true);
+    setCoverResults(null);
+    setCoverProgress({ done: 0, total: targets.length, current: "" });
+
+    let ok = 0, fail = 0;
+    const errors: string[] = [];
+
+    for (const [i, post] of targets.entries()) {
+      setCoverProgress({ done: i, total: targets.length, current: post.title });
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-cover", {
+          body: {
+            prompt: `Blog cover for music article: ${post.title}, category: ${post.category || "Musicdibs"}, style: 'professional music blog'`,
+          },
+        });
+        if (error) throw error;
+        const newUrl = (data as any)?.imageUrl;
+        if (!newUrl) throw new Error("Sin imageUrl en la respuesta");
+
+        const { error: updErr } = await supabase
+          .from("blog_posts")
+          .update({ image_url: newUrl })
+          .eq("id", post.id);
+        if (updErr) throw updErr;
+        ok++;
+      } catch (e) {
+        fail++;
+        errors.push(`${post.title}: ${e instanceof Error ? e.message : "error"}`);
+      }
+    }
+
+    setCoverProgress({ done: targets.length, total: targets.length, current: "" });
+    setCoverResults({ ok, fail, errors });
+    setRegeneratingCovers(false);
+    queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
+    toast({
+      title: "Regeneración completada",
+      description: `${ok} OK · ${fail} con error`,
+      variant: fail > 0 ? "destructive" : "default",
+    });
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/admin");
