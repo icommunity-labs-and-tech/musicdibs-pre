@@ -350,7 +350,7 @@ export default function AdminWorksPage() {
                 <TableCell className="font-medium text-sm max-w-[200px] truncate">{w.title}</TableCell>
                 <TableCell><Badge variant="outline">{w.type}</Badge></TableCell>
                 <TableCell>{statusBadge(w.status, w.created_at)}</TableCell>
-                <TableCell className="text-xs text-muted-foreground">{new Date(w.created_at).toLocaleDateString()}</TableCell>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(w.created_at).toLocaleString([], { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</TableCell>
                 <TableCell>
                   {w.checker_url && w.status === 'registered' ? (
                     <a href={w.checker_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1 text-xs">
