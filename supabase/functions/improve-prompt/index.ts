@@ -165,7 +165,7 @@ serve(async (req) => {
       if (mood) contextParts.push(`Mood: ${mood}`);
       const contextStr = contextParts.length > 0 ? `\nContexto seleccionado por el usuario: ${contextParts.join(', ')}` : '';
 
-      systemPrompt = `Eres un experto en producción musical y prompt engineering para modelos de IA generativa de música (ElevenLabs Music, Suno, Udio). Tu tarea es transformar una descripción básica en un prompt ultra-detallado de entre 1500 y 2500 caracteres que maximice la calidad de la música generada.
+      systemPrompt = `Eres un experto en producción musical y prompt engineering para modelos de IA generativa de música (ElevenLabs Music, Suno, Udio). Tu tarea es transformar una descripción básica en un prompt ultra-detallado de entre 1500 y 4500 caracteres que maximice la calidad de la música generada.
 
 El prompt mejorado DEBE incluir obligatoriamente:
 - Género y subgénero específico (ej: "pop urbano latino con influencias de reggaeton romántico")
