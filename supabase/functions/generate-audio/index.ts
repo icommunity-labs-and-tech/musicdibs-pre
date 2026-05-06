@@ -207,21 +207,22 @@ serve(async (req) => {
 
     const { prompt, lyrics: legacyLyrics, genre, mood, duration, mode, description, source } = await req.json();
 
-    // Server-side validation: prompt and description must not exceed 6000 characters
-    // (improve-prompt can produce 1500-4500 chars + lyrics block reinjected at the end)
-    const MAX_LENGTH = 6000;
+    // ElevenLabs Music API limits: prompt ≤ 2000 chars, lyrics ≤ 3000 chars.
+    // We accept longer descriptions from the user (improve-prompt can produce ~4500 chars)
+    // and truncate the *prompt sent to ElevenLabs* below. Only reject obviously absurd payloads.
+    const HARD_INPUT_CAP = 20000;
     if (!prompt || typeof prompt !== 'string') {
       return new Response(JSON.stringify({ error: 'Prompt required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
-    if (prompt.length > MAX_LENGTH) {
-      return new Response(JSON.stringify({ error: `Prompt exceeds maximum length of ${MAX_LENGTH} characters` }), {
+    if (prompt.length > HARD_INPUT_CAP) {
+      return new Response(JSON.stringify({ error: `Prompt exceeds maximum length of ${HARD_INPUT_CAP} characters` }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
-    if (description && typeof description === 'string' && description.length > MAX_LENGTH) {
-      return new Response(JSON.stringify({ error: `Description exceeds maximum length of ${MAX_LENGTH} characters` }), {
+    if (description && typeof description === 'string' && description.length > HARD_INPUT_CAP) {
+      return new Response(JSON.stringify({ error: `Description exceeds maximum length of ${HARD_INPUT_CAP} characters` }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -332,7 +333,13 @@ serve(async (req) => {
     if (hasUserLyrics) {
       parts.push('Vocals must sing the provided lyrics verbatim, word-for-word, complete and in order, without improvisation, paraphrasing or omission. Lyrics are mandatory.');
     }
-    const enrichedPrompt = parts.join('. ');
+    // ElevenLabs Music API hard limit on `prompt` field is ~2000 chars. Truncate safely.
+    const ELEVENLABS_PROMPT_MAX = 1990;
+    let enrichedPrompt = parts.join('. ');
+    if (enrichedPrompt.length > ELEVENLABS_PROMPT_MAX) {
+      console.log(`[GENERATE-AUDIO] Truncating enrichedPrompt from ${enrichedPrompt.length} → ${ELEVENLABS_PROMPT_MAX} chars (ElevenLabs limit)`);
+      enrichedPrompt = enrichedPrompt.slice(0, ELEVENLABS_PROMPT_MAX);
+    }
 
     // Duration handling:
     // - If user passes a number → respect it (clamped to [30, 300] sec).
