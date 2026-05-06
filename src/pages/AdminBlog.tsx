@@ -522,7 +522,7 @@ const AdminBlog = () => {
       <div className="max-w-6xl mx-auto px-6 py-8">
         {showForm ? (
           <div className="max-w-3xl mx-auto">
-            <button onClick={() => { setEditing(null); setCreating(false); setForm(emptyPost); }} className="flex items-center gap-2 text-white/50 hover:text-white text-sm mb-6">
+            <button onClick={closeForm} className="flex items-center gap-2 text-white/50 hover:text-white text-sm mb-6">
               <ArrowLeft className="w-4 h-4" /> Volver a la lista
             </button>
 
