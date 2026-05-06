@@ -311,15 +311,17 @@ serve(async (req) => {
     };
     refundOnUnhandled = refundCredits;
 
-    const hasUserLyrics = typeof lyrics === 'string' && lyrics.trim().length > 0 && mode === 'song';
+    const hasUserLyrics = lyrics.length > 0 && mode === 'song';
 
-    // Build enriched prompt for ElevenLabs Music API
+    // Build enriched prompt for ElevenLabs Music API.
+    // Use the prompt with the lyrics block stripped out (promptForModel) so the
+    // description is not contaminated with verses that distort the music plan.
     const parts: string[] = [];
     if (genre) parts.push(genre);
     if (mood) parts.push(mood);
     if (mode === 'song') parts.push('song with vocals');
     if (mode === 'instrumental') parts.push('instrumental');
-    const cleanPrompt = prompt
+    const cleanPrompt = promptForModel
       .replace(/["«»""]/g, '')
       .replace(/\b(estilo|style)\s+(de|of)\s+.{1,60}/gi, '')
       .trim();
