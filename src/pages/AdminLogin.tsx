@@ -123,6 +123,14 @@ const AdminLogin = () => {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Entrando..." : "Entrar"}
             </Button>
+            <button
+              type="button"
+              onClick={handleResetPassword}
+              disabled={resetting}
+              className="w-full text-center text-sm text-white/60 hover:text-white transition mt-2 disabled:opacity-50"
+            >
+              {resetting ? "Enviando…" : "¿Has olvidado tu contraseña?"}
+            </button>
           </form>
         </div>
       </div>
