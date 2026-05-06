@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { adminApi } from '@/services/adminApi';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Users, MoreHorizontal, Search, Download, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUp, ArrowDown, ArrowUpDown, X, KeyRound, Lock, Copy, Check } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
