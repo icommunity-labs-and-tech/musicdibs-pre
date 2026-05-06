@@ -195,7 +195,7 @@ const AdminBlog = () => {
     .sort((a, b) => new Date(a.published_at || a.created_at).getTime() - new Date(b.published_at || b.created_at).getTime());
 
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<{ id: string; isNew: boolean }> => {
       const payload = {
         title: form.title,
         slug: form.slug || slugify(form.title),
@@ -214,24 +214,101 @@ const AdminBlog = () => {
       if (editing) {
         const { error } = await supabase.from("blog_posts").update(payload).eq("id", editing);
         if (error) throw error;
+        return { id: editing, isNew: false };
       } else {
-        const { error } = await supabase.from("blog_posts").insert(payload);
+        const { data, error } = await supabase.from("blog_posts").insert(payload).select("id").single();
         if (error) throw error;
+        return { id: data.id as string, isNew: true };
       }
-    },
-    onSuccess: () => {
-      toast({ title: "Guardado", description: "Post guardado correctamente." });
-      queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
-      initialFormRef.current = JSON.stringify(form);
-      setEditing(null);
-      setCreating(false);
-      setForm(emptyPost);
-      initialFormRef.current = JSON.stringify(emptyPost);
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     },
   });
+
+  const finalizeAfterSave = () => {
+    queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
+    initialFormRef.current = JSON.stringify(form);
+    setEditing(null);
+    setCreating(false);
+    setForm(emptyPost);
+    initialFormRef.current = JSON.stringify(emptyPost);
+  };
+
+  const triggerTranslations = async (postId: string) => {
+    setTranslatingOnSave(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("translate-blog-posts", {
+        body: { postId, sourceLanguage: "es", targetLanguages: ["en", "pt"] },
+      });
+      if (error) throw error;
+      const successCount = (data?.results || []).filter((r: { success: boolean }) => r.success).length;
+      toast({ title: "Traducciones procesadas", description: `${successCount} idioma(s) actualizado(s).` });
+    } catch (err) {
+      toast({
+        title: "Aviso: traducciones no completadas",
+        description: err instanceof Error ? err.message : "Error desconocido",
+        variant: "destructive",
+      });
+    } finally {
+      setTranslatingOnSave(false);
+    }
+  };
+
+  const handleSave = async () => {
+    const willPublishOrSchedule = form.published || Boolean(form.published_at);
+    const isSpanish = !editing
+      ? true
+      : (posts?.find((p) => p.id === editing)?.language || "es") === "es";
+
+    let shouldTranslate = false;
+
+    if (willPublishOrSchedule && isSpanish) {
+      // Check existing translations
+      const baseSlug = (form.slug || slugify(form.title)).replace(/-(es|en|pt)$/, "");
+      const { data: existing } = await supabase
+        .from("blog_posts")
+        .select("language")
+        .or(`slug.eq.${baseSlug}-en,slug.eq.${baseSlug}-pt`);
+      const langs = new Set((existing || []).map((p) => p.language));
+      const missing = ["en", "pt"].filter((l) => !langs.has(l));
+
+      if (missing.length > 0) {
+        const ok = window.confirm(
+          `Para publicar o planificar, faltan traducciones (${missing.join(", ").toUpperCase()}).\n\n` +
+          `¿Generar las traducciones automáticamente ahora?\n\n` +
+          `Cancelar = guardar como borrador sin traducciones.`
+        );
+        if (!ok) {
+          // Force draft mode
+          if (form.published || form.published_at) {
+            toast({ title: "Guardado como borrador", description: "Sin traducciones — no se publicará." });
+            setForm({ ...form, published: false, published_at: "" });
+            return;
+          }
+        } else {
+          shouldTranslate = true;
+        }
+      }
+    } else if (editing && isSpanish) {
+      // Editing existing ES post — offer to refresh translations
+      shouldTranslate = window.confirm(
+        "¿Actualizar también las traducciones (EN + PT) con los cambios?"
+      );
+    }
+
+    try {
+      const result = await saveMutation.mutateAsync();
+      toast({ title: "Guardado", description: "Post guardado correctamente." });
+
+      if (shouldTranslate && isSpanish) {
+        await triggerTranslations(result.id);
+      }
+      finalizeAfterSave();
+    } catch {
+      // already toasted
+    }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
