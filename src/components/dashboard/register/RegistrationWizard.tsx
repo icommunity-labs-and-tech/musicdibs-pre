@@ -81,12 +81,23 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
   const steps = isVersion ? STEPS_VERSION : STEPS_NEW;
 
   const convertAudioUrlToFile = async (url: string): Promise<File | null> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 45_000);
     try {
-      const res = await fetch(url);
+      console.log('[RegistrationWizard] Fetching audio from URL:', url);
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) {
+        console.error('[RegistrationWizard] Audio fetch failed:', res.status, res.statusText);
+        return null;
+      }
       const blob = await res.blob();
+      console.log('[RegistrationWizard] Audio downloaded, size:', blob.size);
       return new File([blob], `ai-generation-${Date.now()}.mp3`, { type: 'audio/mpeg' });
-    } catch {
+    } catch (err) {
+      console.error('[RegistrationWizard] Audio fetch error:', err);
       return null;
+    } finally {
+      clearTimeout(timeoutId);
     }
   };
 
