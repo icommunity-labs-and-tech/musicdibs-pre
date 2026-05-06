@@ -13,9 +13,27 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn } = useAuth();
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      toast({ title: "Introduce tu email", description: "Necesitamos tu email para enviarte el enlace de recuperación.", variant: "destructive" });
+      return;
+    }
+    setResetting(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setResetting(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Email enviado", description: "Revisa tu bandeja de entrada para restablecer la contraseña." });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
