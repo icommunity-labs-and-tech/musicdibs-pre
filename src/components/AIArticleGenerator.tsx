@@ -105,7 +105,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
 
       setProgress(95);
 
-      setForm({
+      const updatedForm = {
         ...form,
         title: data.title || form.title,
         slug: isEditing ? form.slug : slugify(data.title || form.title),
@@ -113,10 +113,30 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
         content: data.content || form.content,
         category: data.category || form.category,
         tags: data.tags?.join(", ") || form.tags,
-      });
+      };
+      setForm(updatedForm);
 
       setProgress(100);
-      toast({ title: "¡Artículo generado!", description: "Revisa y edita el contenido antes de publicar." });
+      toast({ title: "¡Artículo generado!", description: "Generando imagen de portada…" });
+
+      // Auto-generate cover image based on the article content
+      try {
+        setStep("generating-image");
+        setProgress(50);
+        const imgRes = await supabase.functions.invoke("generate-blog-image", {
+          body: {
+            title: updatedForm.title,
+            excerpt: updatedForm.excerpt,
+            style: imageStyle || "editorial, música, tecnología, profesional",
+          },
+        });
+        if (!imgRes.error && !imgRes.data?.error && imgRes.data?.imageUrl) {
+          setForm({ ...updatedForm, image_url: imgRes.data.imageUrl });
+          toast({ title: "Imagen generada", description: "Portada creada automáticamente." });
+        }
+      } catch (imgErr) {
+        console.warn("Auto image generation failed:", imgErr);
+      }
     } catch (e: any) {
       toast({ title: "Error al generar", description: e.message, variant: "destructive" });
     } finally {
