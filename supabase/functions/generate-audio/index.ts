@@ -326,10 +326,23 @@ serve(async (req) => {
       : null;
 
     if (hasUserLyrics) {
+      // Count actual sung lines (skip empty lines and section markers like [Verse], [Chorus])
       const lineCount = lyrics.trim().split(/\r?\n/).filter((l: string) => l.trim().length > 0 && !/^\[.*\]$/.test(l.trim())).length;
-      const lyricsMinSecs = Math.min(MAX_DURATION_SECS, Math.max(MIN_DURATION_SECS, Math.ceil(lineCount * 2.8)));
+      // Realistic estimate for sung vocals:
+      //   ~4.5s per line (singing pace + breaths + musical phrasing)
+      // + 30s fixed buffer (intro + outro + instrumental breaks)
+      // Minimum 90s when lyrics exist — anything shorter cuts off the song.
+      const SECS_PER_LINE = 4.5;
+      const STRUCTURE_BUFFER_SECS = 30;
+      const LYRICS_MIN_FLOOR = 90;
+      const rawEstimate = Math.ceil(lineCount * SECS_PER_LINE) + STRUCTURE_BUFFER_SECS;
+      const lyricsMinSecs = Math.min(
+        MAX_DURATION_SECS,
+        Math.max(LYRICS_MIN_FLOOR, rawEstimate),
+      );
+      console.log(`[GENERATE-AUDIO] Lyrics duration calc: ${lineCount} lines × ${SECS_PER_LINE}s + ${STRUCTURE_BUFFER_SECS}s buffer = ${rawEstimate}s → final min ${lyricsMinSecs}s (user requested: ${durationSecs ?? 'auto'})`);
       if (durationSecs === null || durationSecs < lyricsMinSecs) {
-        console.log(`[GENERATE-AUDIO] Bumping duration to ${lyricsMinSecs}s to fit ${lineCount} lyric lines (was ${durationSecs ?? 'auto'})`);
+        console.log(`[GENERATE-AUDIO] Bumping duration to ${lyricsMinSecs}s to fit ${lineCount} lyric lines`);
         durationSecs = lyricsMinSecs;
       }
     }
