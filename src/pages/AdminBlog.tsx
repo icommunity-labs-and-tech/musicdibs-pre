@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AIArticleGenerator from "@/components/AIArticleGenerator";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import {
   Plus,
   Pencil,
