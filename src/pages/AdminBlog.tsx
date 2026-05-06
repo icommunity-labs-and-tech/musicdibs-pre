@@ -865,6 +865,7 @@ const AdminBlog = () => {
                           <td className="p-3"><span className="text-xs rounded bg-primary/20 text-primary px-2 py-1">{post.published_at ? "planificado" : "borrador"}</span></td>
                           <td className="p-3">
                             <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => { setPreviewFromForm(false); setPreviewPost(post); }} className="h-8 w-8 text-white/50 hover:text-white" title="Vista previa"><Eye className="w-4 h-4" /></Button>
                               <Button variant="ghost" size="icon" onClick={() => startEdit(post)} className="h-8 w-8 text-white/50 hover:text-white"><Pencil className="w-4 h-4" /></Button>
                               <Button variant="ghost" size="sm" onClick={() => publishNowMutation.mutate(post.id)} className="text-white/50 hover:text-white">Publicar ahora</Button>
                               <Button variant="ghost" size="icon" onClick={() => confirm("¿Eliminar este artículo?") && deleteMutation.mutate(post.id)} className="h-8 w-8 text-white/50 hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
