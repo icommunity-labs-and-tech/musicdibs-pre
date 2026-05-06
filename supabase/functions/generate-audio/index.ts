@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
+import { detectLyrics } from "../_shared/lyrics-detector.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -204,7 +205,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, lyrics, genre, mood, duration, mode, description, source } = await req.json();
+    const { prompt, lyrics: legacyLyrics, genre, mood, duration, mode, description, source } = await req.json();
 
     // Server-side validation: prompt and description must not exceed 2500 characters
     const MAX_LENGTH = 2500;
@@ -224,9 +225,25 @@ serve(async (req) => {
       });
     }
 
+    // ── Lyrics extraction ──
+    // The user no longer has a separate lyrics field; lyrics live inside the prompt.
+    // We auto-detect them via structural tags or 4+ short consecutive lines.
+    // For backward compatibility we still accept a `lyrics` payload field.
+    const detected = detectLyrics(prompt);
+    let lyrics = '';
+    let promptForModel = prompt;
+    if (mode === 'song') {
+      if (typeof legacyLyrics === 'string' && legacyLyrics.trim().length > 0) {
+        lyrics = legacyLyrics.trim();
+      } else if (detected.hasLyrics) {
+        lyrics = detected.lyricsBlock;
+        promptForModel = detected.musicDescription || prompt;
+      }
+    }
+
     // Hard limit from ElevenLabs Music API for lyrics (~3000 chars). Reject BEFORE deducting credits.
     const LYRICS_MAX_LENGTH = 3000;
-    if (mode === 'song' && typeof lyrics === 'string' && lyrics.length > LYRICS_MAX_LENGTH) {
+    if (mode === 'song' && lyrics.length > LYRICS_MAX_LENGTH) {
       return new Response(JSON.stringify({
         error: 'lyrics_too_long',
         message: `La letra excede el máximo de ${LYRICS_MAX_LENGTH} caracteres permitido por el proveedor.`,
@@ -294,15 +311,17 @@ serve(async (req) => {
     };
     refundOnUnhandled = refundCredits;
 
-    const hasUserLyrics = typeof lyrics === 'string' && lyrics.trim().length > 0 && mode === 'song';
+    const hasUserLyrics = lyrics.length > 0 && mode === 'song';
 
-    // Build enriched prompt for ElevenLabs Music API
+    // Build enriched prompt for ElevenLabs Music API.
+    // Use the prompt with the lyrics block stripped out (promptForModel) so the
+    // description is not contaminated with verses that distort the music plan.
     const parts: string[] = [];
     if (genre) parts.push(genre);
     if (mood) parts.push(mood);
     if (mode === 'song') parts.push('song with vocals');
     if (mode === 'instrumental') parts.push('instrumental');
-    const cleanPrompt = prompt
+    const cleanPrompt = promptForModel
       .replace(/["«»""]/g, '')
       .replace(/\b(estilo|style)\s+(de|of)\s+.{1,60}/gi, '')
       .trim();

@@ -44,6 +44,7 @@ import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { useProductTracking } from "@/hooks/useProductTracking";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { detectLyrics, LYRICS_TEMPLATE } from "@/lib/lyricsDetector";
 
 // ── Music tab constants ──
 const DURATION_OPTIONS: { value: number; label: string }[] = [
@@ -102,7 +103,7 @@ const AIStudioCreate = () => {
   // ── Music tab state ──
   const [mode, setMode] = useState<'song' | 'instrumental'>('song');
   const [prompt, setPrompt] = useState("");
-  const [lyrics, setLyrics] = useState<string>('');
+  // Lyrics now live inside the prompt — auto-detected via detectLyrics().
   const [duration, setDuration] = useState<number | null>(DEFAULT_DURATION);
   const [lyricsText, setLyricsText] = useState("");
   const [lyricsExpanded, setLyricsExpanded] = useState(false);
@@ -350,7 +351,6 @@ const AIStudioCreate = () => {
         const resp = await supabase.functions.invoke('generate-audio', {
           body: {
             prompt: enrichedPrompt,
-            lyrics: mode === 'song' ? lyrics.trim() : '',
             mode,
             ...(duration ? { duration } : {}),
           }
@@ -762,7 +762,7 @@ const AIStudioCreate = () => {
           genre: selectedGenre || undefined,
           mood: selectedMood || undefined,
           mode,
-          hasLyrics: lyrics.trim().length > 0,
+          hasLyrics: detectLyrics(prompt).hasLyrics,
         },
       });
       if (error) throw error;
@@ -1075,24 +1075,36 @@ const AIStudioCreate = () => {
                         </div>
                       </div>
 
-                      {/* Lyrics textarea — only visible in 'song' mode */}
-                      {mode === 'song' && (
-                        <div className="space-y-1.5" data-tour="mc-lyrics">
-                          <Label>{t('aiCreate.lyricsLabelOpt')}</Label>
-                          <Textarea
-                            placeholder={t('aiCreate.lyricsPlaceholderFull')}
-                            value={lyrics}
-                            onChange={(e) => setLyrics(e.target.value.slice(0, 3000))}
-                            rows={6}
-                            className="resize-none"
-                            maxLength={3000}
-                          />
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground">{t('aiCreate.lyricsHint')}</p>
-                            <p className="text-xs text-muted-foreground">{lyrics.length}/3000</p>
+                      {/* Lyrics auto-detection helper — only in 'song' mode */}
+                      {mode === 'song' && (() => {
+                        const det = detectLyrics(prompt);
+                        return (
+                          <div className="flex items-center justify-between gap-2 -mt-1" data-tour="mc-lyrics">
+                            <div className="flex items-center gap-2 text-xs">
+                              {det.hasLyrics ? (
+                                <Badge variant="secondary" className="gap-1">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  {t('aiCreate.lyricsDetected', 'Letra detectada en la descripción')}
+                                </Badge>
+                              ) : (
+                                <span className="text-muted-foreground">
+                                  {t('aiCreate.lyricsHintInline', 'Puedes incluir tu letra dentro de la descripción usando [Verso] / [Estribillo].')}
+                                </span>
+                              )}
+                            </div>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() => setPrompt((p) => (p + LYRICS_TEMPLATE).slice(0, 2500))}
+                            >
+                              <FileText className="h-3 w-3 mr-1" />
+                              {t('aiCreate.insertLyricsTemplate', 'Insertar plantilla de letra')}
+                            </Button>
                           </div>
-                        </div>
-                      )}
+                        );
+                      })()}
 
                       {/* Mode selector: Canción con voz / Instrumental */}
                       <div className="space-y-2">
