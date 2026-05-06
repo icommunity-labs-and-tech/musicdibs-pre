@@ -165,25 +165,24 @@ serve(async (req) => {
       if (mood) contextParts.push(`Mood: ${mood}`);
       const contextStr = contextParts.length > 0 ? `\nContexto seleccionado por el usuario: ${contextParts.join(', ')}` : '';
 
-      systemPrompt = `Eres un experto en producción musical. Tu tarea es mejorar y enriquecer una descripción técnica de una canción para que los modelos de IA generativa produzcan mejores resultados.
+      systemPrompt = `Eres un experto en producción musical y prompt engineering para modelos de IA generativa de música (ElevenLabs Music, Suno, Udio). Tu tarea es transformar una descripción básica en un prompt ultra-detallado de entre 1500 y 2500 caracteres que maximice la calidad de la música generada.
 
-IMPORTANTE: NO generes letra de canción. NO incluyas versos, coros ni estrofas.
+El prompt mejorado DEBE incluir obligatoriamente:
+- Género y subgénero específico (ej: "pop urbano latino con influencias de reggaeton romántico")
+- Estado emocional y atmósfera detallada
+- Tempo exacto en BPM
+- Compás y estructura rítmica (ej: "4/4, patrón de batería con kick en tiempos 1 y 3")
+- Instrumentos principales con descripción de su rol (ej: "guitarra eléctrica con reverb haciendo riff melódico principal")
+- Instrumentos de acompañamiento y texturas
+- Tipo de voz con características detalladas (timbre, registro, técnica vocal)
+- Dinámica y evolución de la canción (intro, verso, coro, puente)
+- Efectos y producción (reverb, delay, compresión, filtros)
+- Referencias a artistas o producciones similares concretas
+- Calidad de producción objetivo (ej: "producción de estudio profesional nivel Billboard")
 
-La descripción mejorada debe incluir únicamente:
-- Género musical específico y subgénero
-- Estado emocional y atmósfera
-- Tempo aproximado (lento, medio, rápido o BPM)
-- Tipo de voz (masculina, femenina, mixta, sin voz)
-- Instrumentos principales
-- Referencias a artistas o estilos similares si aplica
+Responde SOLO con el prompt mejorado. Sin explicaciones, sin prefijos, sin comillas. Mínimo 1500 caracteres.`;
 
-Ejemplo: "Hip hop urbano melancólico, voz masculina con flow pausado, tempo medio 85BPM, piano melódico de fondo con 808s suaves, influencias de Drake y J. Cole, atmósfera nocturna e introspectiva."
-
-REGLA DE IDIOMA: Responde SIEMPRE en el mismo idioma en que escribió el usuario. Español → Español, Inglés → Inglés, Portugués → Portugués.
-
-Responde SOLO con la descripción mejorada en una o dos frases. Sin explicaciones, sin letra, sin versos.`;
-
-      userTextContent = `Mejora esta descripción técnica de canción.${contextStr}\n\nDescripción original del usuario:\n"""\n${prompt}\n"""\n\nDevuelve SOLO la descripción mejorada en una o dos frases, en el mismo idioma del original. Sin letra, sin versos.`;
+      userTextContent = `Mejora esta descripción técnica de canción.${contextStr}\n\nDescripción original del usuario:\n"""\n${prompt}\n"""\n\nDevuelve SOLO el prompt mejorado de entre 1500 y 2500 caracteres, en el mismo idioma del original. Sin letra, sin versos, sin explicaciones.`;
     }
 
     let improved: string | null = null;
