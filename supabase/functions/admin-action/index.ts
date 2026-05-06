@@ -115,6 +115,25 @@ serve(async (req) => {
       return map;
     }
 
+    // ── Helper: get emails only for a specific list of user_ids ──
+    async function getEmailsForUserIds(userIds: string[]): Promise<Record<string, string>> {
+      const map: Record<string, string> = {};
+      if (!userIds || userIds.length === 0) return map;
+      const unique = [...new Set(userIds)];
+      const results = await Promise.all(
+        unique.map(async (uid) => {
+          try {
+            const { data } = await admin.auth.admin.getUserById(uid);
+            return { uid, email: data?.user?.email || "" };
+          } catch {
+            return { uid, email: "" };
+          }
+        })
+      );
+      results.forEach((r) => { if (r.email) map[r.uid] = r.email; });
+      return map;
+    }
+
     // ── Helper: get display_name map from profiles ──────────
     async function getAllNamesMap(): Promise<Record<string, string>> {
       const map: Record<string, string> = {};
