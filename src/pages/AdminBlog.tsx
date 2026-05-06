@@ -99,6 +99,9 @@ const AdminBlog = () => {
   const [generatingContent, setGeneratingContent] = useState(false);
   const [contentProgress, setContentProgress] = useState({ done: 0, total: 0 });
   const [generationErrors, setGenerationErrors] = useState<string[]>([]);
+  const [regeneratingCovers, setRegeneratingCovers] = useState(false);
+  const [coverProgress, setCoverProgress] = useState({ done: 0, total: 0, current: "" });
+  const [coverResults, setCoverResults] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -278,6 +281,56 @@ const AdminBlog = () => {
     initialFormRef.current = JSON.stringify(emptyPost);
   };
 
+  const regenerateWordPressCovers = async () => {
+    const targets = (posts || []).filter((p) => (p.image_url || "").toLowerCase().includes("wp-content"));
+    if (!targets.length) {
+      toast({ title: "Nada que regenerar", description: "No hay posts con imágenes de WordPress." });
+      return;
+    }
+    if (!window.confirm(`Se regenerarán las portadas de ${targets.length} artículo(s). ¿Continuar?`)) return;
+
+    setRegeneratingCovers(true);
+    setCoverResults(null);
+    setCoverProgress({ done: 0, total: targets.length, current: "" });
+
+    let ok = 0, fail = 0;
+    const errors: string[] = [];
+
+    for (const [i, post] of targets.entries()) {
+      setCoverProgress({ done: i, total: targets.length, current: post.title });
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-cover", {
+          body: {
+            prompt: `Blog cover for music article: ${post.title}, category: ${post.category || "Musicdibs"}, style: 'professional music blog'`,
+          },
+        });
+        if (error) throw error;
+        const newUrl = (data as any)?.imageUrl;
+        if (!newUrl) throw new Error("Sin imageUrl en la respuesta");
+
+        const { error: updErr } = await supabase
+          .from("blog_posts")
+          .update({ image_url: newUrl })
+          .eq("id", post.id);
+        if (updErr) throw updErr;
+        ok++;
+      } catch (e) {
+        fail++;
+        errors.push(`${post.title}: ${e instanceof Error ? e.message : "error"}`);
+      }
+    }
+
+    setCoverProgress({ done: targets.length, total: targets.length, current: "" });
+    setCoverResults({ ok, fail, errors });
+    setRegeneratingCovers(false);
+    queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
+    toast({
+      title: "Regeneración completada",
+      description: `${ok} OK · ${fail} con error`,
+      variant: fail > 0 ? "destructive" : "default",
+    });
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/admin");
@@ -401,6 +454,14 @@ const AdminBlog = () => {
             <Button variant="outline" size="sm" onClick={() => setPlannerOpen(true)} className="gap-1 text-black border-white/20">
               <Sparkles className="w-4 h-4" /> 🤖 Generar plan de contenido
             </Button>
+            <Button
+              variant="outline" size="sm"
+              onClick={regenerateWordPressCovers}
+              disabled={regeneratingCovers}
+              className="gap-1 text-black border-white/20"
+            >
+              {regeneratingCovers ? <Loader2 className="w-4 h-4 animate-spin" /> : "🔄"} Regenerar portadas sin imagen
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/admin/ab-tests")} className="gap-1 text-black border-white/20">
               <BarChart3 className="w-4 h-4" /> A/B Tests
             </Button>
@@ -413,6 +474,37 @@ const AdminBlog = () => {
           </div>
         </div>
       </header>
+
+      {(regeneratingCovers || coverResults) && (
+        <div className="max-w-6xl mx-auto px-6 pt-4">
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2">
+            {regeneratingCovers ? (
+              <>
+                <p className="text-sm text-white/80">
+                  Regenerando portada {Math.min(coverProgress.done + 1, coverProgress.total)} de {coverProgress.total}
+                  {coverProgress.current && <> — <span className="text-white/60">{coverProgress.current}</span></>}
+                </p>
+                <Progress value={(coverProgress.done / Math.max(coverProgress.total, 1)) * 100} />
+              </>
+            ) : coverResults && (
+              <div className="flex items-start justify-between gap-4">
+                <div className="text-sm">
+                  <p className="text-white/90">
+                    ✅ Regeneradas: <span className="text-green-400 font-semibold">{coverResults.ok}</span> ·
+                    {" "}❌ Fallidas: <span className="text-red-400 font-semibold">{coverResults.fail}</span>
+                  </p>
+                  {coverResults.errors.length > 0 && (
+                    <ul className="mt-2 list-disc pl-5 text-xs text-red-300/80 space-y-0.5 max-h-32 overflow-auto">
+                      {coverResults.errors.map((err, i) => <li key={i}>{err}</li>)}
+                    </ul>
+                  )}
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setCoverResults(null)} className="text-white/50">Cerrar</Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {plannerOpen && (
         <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm px-4 py-6 overflow-y-auto">
