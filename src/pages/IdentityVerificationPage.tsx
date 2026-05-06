@@ -75,21 +75,40 @@ export default function IdentityVerificationPage() {
   const [iframeError, setIframeError] = useState(false);
   const [polling, setPolling] = useState(false);
 
+  const [pendingSig, setPendingSig] = useState<any | null>(null);
+  const [resuming, setResuming] = useState(false);
+
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('profiles')
-      .select('kyc_status, display_name')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setKycStatus(data.kyc_status || 'unverified');
-          if (data.display_name) setFullName(data.display_name);
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('kyc_status, display_name')
+        .eq('user_id', user.id)
+        .single();
+      if (data) {
+        setKycStatus(data.kyc_status || 'unverified');
+        if (data.display_name) setFullName(data.display_name);
+      }
+
+      // Detect a signature already in progress to allow resuming instead of creating a new one
+      if (data?.kyc_status !== 'verified') {
+        try {
+          const { data: listData } = await supabase.functions.invoke('ibs-signatures', {
+            body: { action: 'list' },
+          });
+          const inProgress = listData?.signatures?.find(
+            (s: any) => ['initiated', 'created', 'pending', 'failed'].includes(s.status)
+          );
+          if (inProgress) setPendingSig(inProgress);
+        } catch (err) {
+          console.warn('[KYC] could not list signatures:', err);
         }
-        setKycLoading(false);
-      });
+      }
+      setKycLoading(false);
+    })();
   }, [user]);
+
 
   useEffect(() => {
     if (!polling || !user) return;
@@ -196,6 +215,37 @@ export default function IdentityVerificationPage() {
       toast.error(tk('step1Error') + (err.message || tk('unknownError')));
     }
     setSubmitting(false);
+  };
+
+  const handleResume = async () => {
+    if (!pendingSig) return;
+    setResuming(true);
+    try {
+      let url: string | null = pendingSig.kyc_url || null;
+      if (!url) {
+        const { data, error } = await supabase.functions.invoke('ibs-signatures', {
+          body: { action: 'retry', signatureId: pendingSig.ibs_signature_id },
+        });
+        if (error || data?.error) throw new Error(error?.message || data?.error);
+        url = data.kycUrl;
+      }
+      if (!url) throw new Error('No KYC URL');
+      setSignatureId(pendingSig.ibs_signature_id);
+      setKycUrl(url.includes('?') ? url : `${url}?lang=es`);
+      try {
+        await supabase.functions.invoke('ibs-signatures', {
+          body: { action: 'mark_kyc_started', signatureId: pendingSig.ibs_signature_id },
+        });
+        setKycStatus('pending');
+      } catch (markErr) {
+        console.error('[KYC] mark_kyc_started failed (non-blocking):', markErr);
+      }
+      setStep(2);
+      setPolling(true);
+    } catch (err: any) {
+      toast.error(err.message || tk('unknownError'));
+    }
+    setResuming(false);
   };
 
   const selectedDocType = DOC_TYPE_KEYS.find(d => d.value === docType);
@@ -305,6 +355,26 @@ export default function IdentityVerificationPage() {
       </h2>
 
       {statusBanner}
+
+      {!kycLoading && pendingSig && step === 1 && !kycUrl && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <Clock className="h-5 w-5 text-amber-500 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                {tk('bannerInitiatedTitle')}
+              </p>
+              <p className="text-xs text-muted-foreground">{tk('bannerInitiatedDesc')}</p>
+            </div>
+            <Button size="sm" onClick={handleResume} disabled={resuming} className="gap-2 shrink-0">
+              {resuming
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> {tk('starting')}</>
+                : <><RefreshCw className="h-4 w-4" /> {tk('retry')}</>
+              }
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {kycLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
