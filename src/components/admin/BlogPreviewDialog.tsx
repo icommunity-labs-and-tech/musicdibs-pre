@@ -78,7 +78,7 @@ const BlogPreviewDialog = ({ open, onOpenChange, post }: Props) => {
 
           {post.content ? (
             <div
-              className="article-content article-content-lg prose prose-slate max-w-none [&_*]:text-slate-800 [&_a]:text-blue-600"
+              className="blog-preview-content max-w-none"
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
             />
           ) : (
