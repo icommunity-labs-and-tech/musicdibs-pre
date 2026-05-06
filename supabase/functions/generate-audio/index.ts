@@ -224,6 +224,17 @@ serve(async (req) => {
       });
     }
 
+    // Hard limit from ElevenLabs Music API for lyrics (~3000 chars). Reject BEFORE deducting credits.
+    const LYRICS_MAX_LENGTH = 3000;
+    if (mode === 'song' && typeof lyrics === 'string' && lyrics.length > LYRICS_MAX_LENGTH) {
+      return new Response(JSON.stringify({
+        error: 'lyrics_too_long',
+        message: `La letra excede el máximo de ${LYRICS_MAX_LENGTH} caracteres permitido por el proveedor.`,
+        max: LYRICS_MAX_LENGTH,
+        current: lyrics.length,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // ── Credit deduction (cost from feature_costs table) ──────
     // 1-click create (Inspire) has its own pricing key
     const featureKey = source === 'inspire'
