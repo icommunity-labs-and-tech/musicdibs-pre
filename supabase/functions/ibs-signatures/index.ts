@@ -477,6 +477,67 @@ serve(async (req) => {
       });
     }
 
+    // ── RETRY: resume KYC for signature in created/initiated/pending/failed ──
+    if (action === "retry") {
+      const { signatureId } = body;
+      if (!signatureId) {
+        return new Response(JSON.stringify({ error: "signatureId is required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: sigRow } = await supabaseAdmin
+        .from("ibs_signatures")
+        .select("id, user_id, status, ibs_signature_id")
+        .eq("ibs_signature_id", signatureId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!sigRow) {
+        return new Response(JSON.stringify({ error: "Signature not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!["created", "initiated", "failed", "pending"].includes(sigRow.status)) {
+        return new Response(JSON.stringify({ error: `Cannot retry signature in status: ${sigRow.status}` }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const ibsRes = await fetch(`${IBS_API_URL}/signatures/${signatureId}/retry`, {
+        method: "POST",
+        headers: ibsHeaders,
+      });
+
+      if (!ibsRes.ok) {
+        const errBody = await ibsRes.text();
+        return new Response(JSON.stringify({ error: `iBS error: ${errBody}` }), {
+          status: ibsRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const result = await ibsRes.json();
+      const newKycUrl = result.url || result.kyc_url;
+
+      await supabaseAdmin
+        .from("ibs_signatures")
+        .update({
+          kyc_url: newKycUrl,
+          status: "initiated",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", sigRow.id);
+
+      console.log(`[IBS-SIGNATURES] Retry successful for user ${user.id}, sig ${signatureId}`);
+
+      return new Response(JSON.stringify({
+        signatureId,
+        kycUrl: newKycUrl,
+        retried: true,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
