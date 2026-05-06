@@ -43,6 +43,7 @@ import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { useProductTracking } from "@/hooks/useProductTracking";
+import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 
 // ── Music tab constants ──
 const DURATION_OPTIONS: { value: number; label: string }[] = [
@@ -1422,6 +1423,7 @@ const AIStudioCreate = () => {
                             : <>{t('aiCreate.generateBtn')} {mode === 'song' ? t('aiCreate.genCtaSong') : t('aiCreate.genCtaInstrumental')} {t('aiCreate.genCtaSuffix')}</>}
                         </Button>
                         <PricingLink className="mt-1 block text-center" />
+                        <GenerationWarning />
                         </>
                       )}
                     </CardContent>
