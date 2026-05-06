@@ -99,6 +99,9 @@ const AdminBlog = () => {
   const [generatingContent, setGeneratingContent] = useState(false);
   const [contentProgress, setContentProgress] = useState({ done: 0, total: 0 });
   const [generationErrors, setGenerationErrors] = useState<string[]>([]);
+  const [regeneratingCovers, setRegeneratingCovers] = useState(false);
+  const [coverProgress, setCoverProgress] = useState({ done: 0, total: 0, current: "" });
+  const [coverResults, setCoverResults] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
