@@ -299,9 +299,11 @@ const AdminBlog = () => {
     for (const [i, post] of targets.entries()) {
       setCoverProgress({ done: i, total: targets.length, current: post.title });
       try {
-        const { data, error } = await supabase.functions.invoke("generate-cover", {
+        const { data, error } = await supabase.functions.invoke("generate-blog-image", {
           body: {
-            prompt: `Blog cover for music article: ${post.title}, category: ${post.category || "Musicdibs"}, style: 'professional music blog'`,
+            title: post.title,
+            excerpt: post.excerpt || `${post.category || "Musicdibs"} — música`,
+            style: "editorial, música, tecnología, profesional, professional music blog cover",
           },
         });
         if (error) throw error;
