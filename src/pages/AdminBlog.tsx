@@ -104,6 +104,9 @@ const AdminBlog = () => {
   const [regeneratingCovers, setRegeneratingCovers] = useState(false);
   const [coverProgress, setCoverProgress] = useState({ done: 0, total: 0, current: "" });
   const [coverResults, setCoverResults] = useState<{ ok: number; fail: number; errors: string[] } | null>(null);
+  const [previewPost, setPreviewPost] = useState<BlogPost | null>(null);
+  const [previewFromForm, setPreviewFromForm] = useState(false);
+  const [translatingOnSave, setTranslatingOnSave] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
