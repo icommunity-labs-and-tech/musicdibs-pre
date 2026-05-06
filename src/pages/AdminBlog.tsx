@@ -214,9 +214,11 @@ const AdminBlog = () => {
     onSuccess: () => {
       toast({ title: "Guardado", description: "Post guardado correctamente." });
       queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
+      initialFormRef.current = JSON.stringify(form);
       setEditing(null);
       setCreating(false);
       setForm(emptyPost);
+      initialFormRef.current = JSON.stringify(emptyPost);
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -249,9 +251,10 @@ const AdminBlog = () => {
   });
 
   const startEdit = (post: BlogPost) => {
+    if (!confirmDiscard()) return;
     setCreating(false);
     setEditing(post.id);
-    setForm({
+    const next: BlogForm = {
       title: post.title,
       slug: post.slug,
       excerpt: post.excerpt || "",
@@ -262,13 +265,17 @@ const AdminBlog = () => {
       author: post.author || "Musicdibs",
       published: post.published || false,
       published_at: post.published_at?.slice(0, 10) || "",
-    });
+    };
+    setForm(next);
+    initialFormRef.current = JSON.stringify(next);
   };
 
   const startCreate = () => {
+    if (!confirmDiscard()) return;
     setEditing(null);
     setCreating(true);
     setForm(emptyPost);
+    initialFormRef.current = JSON.stringify(emptyPost);
   };
 
   const handleLogout = async () => {
