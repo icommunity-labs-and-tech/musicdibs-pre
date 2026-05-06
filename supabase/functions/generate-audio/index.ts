@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
+import { detectLyrics } from "../_shared/lyrics-detector.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
