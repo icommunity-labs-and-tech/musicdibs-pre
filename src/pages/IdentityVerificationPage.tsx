@@ -356,6 +356,26 @@ export default function IdentityVerificationPage() {
 
       {statusBanner}
 
+      {!kycLoading && pendingSig && step === 1 && !kycUrl && (
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <Clock className="h-5 w-5 text-amber-500 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                {tk('bannerInitiatedTitle')}
+              </p>
+              <p className="text-xs text-muted-foreground">{tk('bannerInitiatedDesc')}</p>
+            </div>
+            <Button size="sm" onClick={handleResume} disabled={resuming} className="gap-2 shrink-0">
+              {resuming
+                ? <><Loader2 className="h-4 w-4 animate-spin" /> {tk('starting')}</>
+                : <><RefreshCw className="h-4 w-4" /> {tk('retry')}</>
+              }
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {kycLoading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
           <Loader2 className="h-4 w-4 animate-spin" /> {tk('loading')}
