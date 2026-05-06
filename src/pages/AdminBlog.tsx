@@ -462,6 +462,7 @@ const AdminBlog = () => {
             >
               {regeneratingCovers ? <Loader2 className="w-4 h-4 animate-spin" /> : "🔄"} Regenerar portadas sin imagen
             </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/ab-tests")} className="gap-1 text-black border-white/20">
               <BarChart3 className="w-4 h-4" /> A/B Tests
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/news")} className="gap-1 text-black border-white/20">
