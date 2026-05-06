@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AIArticleGenerator from "@/components/AIArticleGenerator";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import BlogPreviewDialog from "@/components/admin/BlogPreviewDialog";
 import {
   Plus,
   Pencil,
@@ -26,6 +27,7 @@ import {
   CalendarDays,
   Sparkles,
   Loader2,
+  Languages,
 } from "lucide-react";
 
 type BlogPost = {
