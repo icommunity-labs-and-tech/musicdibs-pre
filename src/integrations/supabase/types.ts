@@ -1950,6 +1950,8 @@ export type Database = {
           checkout_session_id: string | null
           created_at: string | null
           currency: string
+          display_name: string | null
+          email: string | null
           error_message: string | null
           evidence_hash: string | null
           evidence_payload_json: Json
@@ -1958,6 +1960,7 @@ export type Database = {
           id: string
           ip_address: string | null
           last_retry_at: string | null
+          order_id: string | null
           payment_intent_id: string | null
           payment_provider: string
           payment_status: string
@@ -1984,6 +1987,8 @@ export type Database = {
           checkout_session_id?: string | null
           created_at?: string | null
           currency?: string
+          display_name?: string | null
+          email?: string | null
           error_message?: string | null
           evidence_hash?: string | null
           evidence_payload_json?: Json
@@ -1992,6 +1997,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           last_retry_at?: string | null
+          order_id?: string | null
           payment_intent_id?: string | null
           payment_provider?: string
           payment_status: string
@@ -2018,6 +2024,8 @@ export type Database = {
           checkout_session_id?: string | null
           created_at?: string | null
           currency?: string
+          display_name?: string | null
+          email?: string | null
           error_message?: string | null
           evidence_hash?: string | null
           evidence_payload_json?: Json
@@ -2026,6 +2034,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           last_retry_at?: string | null
+          order_id?: string | null
           payment_intent_id?: string | null
           payment_provider?: string
           payment_status?: string
@@ -2039,7 +2048,29 @@ export type Database = {
           user_agent?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "purchase_evidences_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_evidences_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "purchase_evidences_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders_evidences_consistency"
+            referencedColumns: ["order_id"]
+          },
+        ]
       }
       purchase_usage_evidences: {
         Row: {
