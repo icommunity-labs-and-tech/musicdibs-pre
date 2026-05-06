@@ -123,6 +123,21 @@ serve(async (req) => {
           const emailData = kycVerifiedEmail({ name: userInfo.name, lang: userInfo.lang });
           await enqueueKycEmail(supabaseAdmin, userInfo.email, emailData, "kyc_verified");
         }
+
+        // Desuscribir de grupos KYC en MailerLite cuando se verifica
+        const ML_KEY = Deno.env.get("MAILERLITE_API_KEY");
+        const KYC_GROUPS = ["186736686730839787", "186736699734230889", "186736708193093233"];
+        if (ML_KEY && userInfo.email) {
+          for (const groupId of KYC_GROUPS) {
+            try {
+              await fetch(`https://connect.mailerlite.com/api/subscribers/${encodeURIComponent(userInfo.email)}/groups/${groupId}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${ML_KEY}` },
+              });
+            } catch (_) {}
+          }
+          console.log(`[KYC-WEBHOOK] Removed ${userInfo.email} from KYC MailerLite groups`);
+        }
       }
 
     } else {

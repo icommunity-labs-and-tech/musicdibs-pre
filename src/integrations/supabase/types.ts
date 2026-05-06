@@ -873,6 +873,33 @@ export type Database = {
         }
         Relationships: []
       }
+      kyc_reminder_log: {
+        Row: {
+          id: string
+          mailerlite_group_id: string | null
+          reminder_number: number | null
+          sent_at: string | null
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          mailerlite_group_id?: string | null
+          reminder_number?: number | null
+          sent_at?: string | null
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          mailerlite_group_id?: string | null
+          reminder_number?: number | null
+          sent_at?: string | null
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       library_deletion_queue: {
         Row: {
           asset_id: string
