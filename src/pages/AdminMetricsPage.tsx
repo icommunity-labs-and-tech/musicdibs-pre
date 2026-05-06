@@ -36,12 +36,11 @@ const METRICS_TIMEOUT_MS = 25_000;
 const IBS_QUEUE_TIMEOUT_MS = 15_000;
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => {
-      window.setTimeout(() => reject(new Error(message)), timeoutMs);
-    }),
-  ]);
+  let timeoutId: number;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => window.clearTimeout(timeoutId));
 }
 
 // Get Monday of the current week
