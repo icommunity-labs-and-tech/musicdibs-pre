@@ -129,7 +129,9 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, genre, mood, mode, image_base64, hasLyrics } = await req.json();
+    const { prompt, genre, mood, mode, image_base64, hasLyrics, maxChars } = await req.json();
+    const budget = Math.max(400, Math.min(Number(maxChars) || 4500, 4500));
+    const minChars = Math.min(Math.max(Math.floor(budget * 0.6), 300), Math.max(400, budget - 100));
 
     const isVisualMode = mode in VISUAL_SYSTEM_PROMPTS;
 
