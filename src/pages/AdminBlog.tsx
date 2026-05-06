@@ -909,6 +909,25 @@ const AdminBlog = () => {
           </>
         )}
       </div>
+
+      <BlogPreviewDialog
+        open={Boolean(previewPost) || previewFromForm}
+        onOpenChange={(open) => { if (!open) { setPreviewPost(null); setPreviewFromForm(false); } }}
+        post={
+          previewFromForm
+            ? {
+                title: form.title,
+                excerpt: form.excerpt,
+                content: form.content,
+                image_url: form.image_url,
+                category: form.category,
+                tags: form.tags,
+                author: form.author,
+                published_at: form.published_at || new Date().toISOString(),
+              }
+            : previewPost
+        }
+      />
     </div>
   );
 };
