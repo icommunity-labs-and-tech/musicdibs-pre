@@ -217,6 +217,37 @@ export default function IdentityVerificationPage() {
     setSubmitting(false);
   };
 
+  const handleResume = async () => {
+    if (!pendingSig) return;
+    setResuming(true);
+    try {
+      let url: string | null = pendingSig.kyc_url || null;
+      if (!url) {
+        const { data, error } = await supabase.functions.invoke('ibs-signatures', {
+          body: { action: 'retry', signatureId: pendingSig.ibs_signature_id },
+        });
+        if (error || data?.error) throw new Error(error?.message || data?.error);
+        url = data.kycUrl;
+      }
+      if (!url) throw new Error('No KYC URL');
+      setSignatureId(pendingSig.ibs_signature_id);
+      setKycUrl(url.includes('?') ? url : `${url}?lang=es`);
+      try {
+        await supabase.functions.invoke('ibs-signatures', {
+          body: { action: 'mark_kyc_started', signatureId: pendingSig.ibs_signature_id },
+        });
+        setKycStatus('pending');
+      } catch (markErr) {
+        console.error('[KYC] mark_kyc_started failed (non-blocking):', markErr);
+      }
+      setStep(2);
+      setPolling(true);
+    } catch (err: any) {
+      toast.error(err.message || tk('unknownError'));
+    }
+    setResuming(false);
+  };
+
   const selectedDocType = DOC_TYPE_KEYS.find(d => d.value === docType);
 
   if (!kycLoading && kycStatus === 'verified') {
