@@ -593,7 +593,8 @@ const AdminBlog = () => {
                 <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || !form.title} className="gap-2">
                   <Save className="w-4 h-4" /> {saveMutation.isPending ? "Guardando..." : "Guardar"}
                 </Button>
-                <Button variant="ghost" onClick={() => { setEditing(null); setCreating(false); setForm(emptyPost); }}>Cancelar</Button>
+                <Button variant="ghost" onClick={closeForm}>Cancelar</Button>
+                {isDirty && <span className="text-xs text-amber-400 self-center">● Cambios sin guardar</span>}
               </div>
             </div>
           </div>
