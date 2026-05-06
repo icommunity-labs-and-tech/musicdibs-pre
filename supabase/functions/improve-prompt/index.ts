@@ -190,14 +190,6 @@ REGLA SOBRE LA LETRA:
         systemPrompt += `\n\nATENCIÓN: hasLyrics=true → el usuario YA tiene letra. NO generes ni añadas letra. Respétala palabra por palabra. Solo describe elementos musicales, instrumentales y de producción.`;
       }
 
-REGLA SOBRE LA LETRA:
-- Si el usuario YA ha incluido letra (versos, estrofas, tags como [Verso]/[Estribillo], o el flag hasLyrics=true), NO generes ni reescribas la letra. Conserva la letra original tal cual y limítate a describir los elementos musicales, instrumentales, de producción y estilo alrededor de ella.
-- Si el usuario NO ha incluido letra, ES OBLIGATORIO escribir una letra COMPLETA al final del prompt mejorado, en el mismo idioma que el usuario, usando tags de estructura: [Verso 1] / [Pre-Estribillo] / [Estribillo] / [Verso 2] / [Estribillo] / [Puente] / [Estribillo final]. La letra debe ser coherente con el tema y tener al menos 16 líneas. Sin letra el prompt se considera incompleto.`;
-
-      if (hasLyrics) {
-        systemPrompt += `\n\nATENCIÓN: hasLyrics=true → el usuario YA tiene letra. NO generes ni añadas letra. Respétala palabra por palabra. Solo describe elementos musicales, instrumentales y de producción.`;
-      }
-
       const lyricsRule = hasLyrics
         ? 'El usuario YA incluye letra: NO generes ni modifiques letra; respétala palabra por palabra y describe solo elementos musicales.'
         : 'El usuario NO incluye letra: DEBES escribir OBLIGATORIAMENTE una letra completa (mín. 16 líneas) con tags [Verso 1]/[Pre-Estribillo]/[Estribillo]/[Verso 2]/[Estribillo]/[Puente]/[Estribillo final] al final del prompt, en el mismo idioma del original. Sin letra la respuesta es inválida.';
