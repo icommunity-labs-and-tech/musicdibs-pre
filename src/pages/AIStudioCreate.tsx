@@ -43,6 +43,7 @@ import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { useProductTracking } from "@/hooks/useProductTracking";
+import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 
 // ── Music tab constants ──
 const DURATION_OPTIONS: { value: number; label: string }[] = [
