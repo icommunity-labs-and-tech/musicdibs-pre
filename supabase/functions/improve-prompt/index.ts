@@ -129,7 +129,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, genre, mood, mode, image_base64 } = await req.json();
+    const { prompt, genre, mood, mode, image_base64, hasLyrics } = await req.json();
 
     const isVisualMode = mode in VISUAL_SYSTEM_PROMPTS;
 
@@ -180,7 +180,15 @@ El prompt mejorado DEBE incluir obligatoriamente:
 - Referencias a artistas o producciones similares concretas
 - Calidad de producción objetivo (ej: "producción de estudio profesional nivel Billboard")
 
-Responde SOLO con el prompt mejorado. Sin explicaciones, sin prefijos, sin comillas. Mínimo 1500 caracteres.`;
+Responde SOLO con el prompt mejorado. Sin explicaciones, sin prefijos, sin comillas. Mínimo 1500 caracteres.
+
+IMPORTANTE: Si el usuario ha incluido letra de canción en su descripción o en un campo separado, el prompt mejorado NO debe generar ni sugerir letra. Solo debe describir los elementos musicales, instrumentales, de producción y de estilo. La letra será respetada tal cual la escribió el usuario por ElevenLabs en modo song+lyrics.
+
+Si el usuario NO ha incluido letra, puedes incluir una breve indicación del tipo de vocalización esperada (ej: "voz masculina melódica con melismas suaves"), pero nunca escribir versos, coros ni estrofas.`;
+
+      if (hasLyrics) {
+        systemPrompt += `\n\nATENCIÓN: El usuario tiene letra escrita. NO generes letra en el prompt mejorado. Solo describe elementos musicales e instrumentales.`;
+      }
 
       userTextContent = `Mejora esta descripción técnica de canción.${contextStr}\n\nDescripción original del usuario:\n"""\n${prompt}\n"""\n\nDevuelve SOLO el prompt mejorado de entre 1500 y 2500 caracteres, en el mismo idioma del original. Sin letra, sin versos, sin explicaciones.`;
     }
