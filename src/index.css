@@ -342,3 +342,58 @@ All colors MUST be HSL.
 .article-content-lg strong {
   color: hsl(var(--page-text) / 0.8);
 }
+/* Blog admin preview — force dark legible text on white bg, regardless of theme */
+.blog-preview-content,
+.blog-preview-content * {
+  color: #1e293b !important; /* slate-800 */
+}
+.blog-preview-content {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+.blog-preview-content h1,
+.blog-preview-content h2,
+.blog-preview-content h3,
+.blog-preview-content h4 {
+  color: #0f172a !important; /* slate-900 */
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.25;
+}
+.blog-preview-content h1 { font-size: 2rem; }
+.blog-preview-content h2 { font-size: 1.6rem; }
+.blog-preview-content h3 { font-size: 1.3rem; }
+.blog-preview-content h4 { font-size: 1.1rem; }
+.blog-preview-content p { margin: 0.75em 0; }
+.blog-preview-content a,
+.blog-preview-content a * {
+  color: #2563eb !important; /* blue-600 */
+  text-decoration: underline;
+}
+.blog-preview-content strong { color: #0f172a !important; font-weight: 700; }
+.blog-preview-content em { font-style: italic; }
+.blog-preview-content ul,
+.blog-preview-content ol { padding-left: 1.5rem; margin: 0.75em 0; }
+.blog-preview-content ul { list-style: disc; }
+.blog-preview-content ol { list-style: decimal; }
+.blog-preview-content blockquote {
+  border-left: 3px solid #a855f7;
+  padding-left: 1rem;
+  color: #475569 !important;
+  font-style: italic;
+  margin: 1em 0;
+}
+.blog-preview-content img { max-width: 100%; border-radius: 0.5rem; margin: 1em 0; }
+.blog-preview-content code {
+  background: #f1f5f9;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  font-size: 0.9em;
+}
+.blog-preview-content pre {
+  background: #f1f5f9;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+}
