@@ -333,7 +333,13 @@ serve(async (req) => {
     if (hasUserLyrics) {
       parts.push('Vocals must sing the provided lyrics verbatim, word-for-word, complete and in order, without improvisation, paraphrasing or omission. Lyrics are mandatory.');
     }
-    const enrichedPrompt = parts.join('. ');
+    // ElevenLabs Music API hard limit on `prompt` field is ~2000 chars. Truncate safely.
+    const ELEVENLABS_PROMPT_MAX = 1990;
+    let enrichedPrompt = parts.join('. ');
+    if (enrichedPrompt.length > ELEVENLABS_PROMPT_MAX) {
+      console.log(`[GENERATE-AUDIO] Truncating enrichedPrompt from ${enrichedPrompt.length} → ${ELEVENLABS_PROMPT_MAX} chars (ElevenLabs limit)`);
+      enrichedPrompt = enrichedPrompt.slice(0, ELEVENLABS_PROMPT_MAX);
+    }
 
     // Duration handling:
     // - If user passes a number → respect it (clamped to [30, 300] sec).
