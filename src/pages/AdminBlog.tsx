@@ -454,7 +454,14 @@ const AdminBlog = () => {
             <Button variant="outline" size="sm" onClick={() => setPlannerOpen(true)} className="gap-1 text-black border-white/20">
               <Sparkles className="w-4 h-4" /> 🤖 Generar plan de contenido
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/admin/ab-tests")} className="gap-1 text-black border-white/20">
+            <Button
+              variant="outline" size="sm"
+              onClick={regenerateWordPressCovers}
+              disabled={regeneratingCovers}
+              className="gap-1 text-black border-white/20"
+            >
+              {regeneratingCovers ? <Loader2 className="w-4 h-4 animate-spin" /> : "🔄"} Regenerar portadas sin imagen
+            </Button>
               <BarChart3 className="w-4 h-4" /> A/B Tests
             </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/news")} className="gap-1 text-black border-white/20">
