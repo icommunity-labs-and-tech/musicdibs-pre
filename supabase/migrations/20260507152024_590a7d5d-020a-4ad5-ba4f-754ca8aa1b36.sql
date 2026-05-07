@@ -1,0 +1,2 @@
+UPDATE public.profiles SET kyc_status='unverified', ibs_signature_id=NULL, updated_at=now() WHERE user_id='f47612e3-e48f-487f-9a6f-9bec2ff35b22';
+UPDATE public.ibs_signatures SET status='cancelled', updated_at=now() WHERE user_id='f47612e3-e48f-487f-9a6f-9bec2ff35b22' AND status NOT IN ('success','verified');
