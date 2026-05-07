@@ -82,8 +82,10 @@ export default function IdentityVerificationPage() {
   // Real provider statuses that indicate the user has actually submitted documents.
   // ONLY these (set by the webhook) should display "En revisión".
   const PROVIDER_SUBMITTED_STATUSES = ['submitted', 'processing', 'under_review', 'pending'];
-  const PROVIDER_INCOMPLETE_STATUSES = ['created', 'initiated', 'started'];
-  const PROVIDER_RETRYABLE_STATUSES = ['failed', 'rejected', 'expired', 'cancelled'];
+  const PROVIDER_INCOMPLETE_STATUSES = ['initiated', 'started'];
+  // 'created' es retryable: el proveedor crea la firma pero el usuario aún no completó/envió docs.
+  // Debe seguir el mismo flujo de retry que 'failed'.
+  const PROVIDER_RETRYABLE_STATUSES = ['created', 'failed', 'rejected', 'expired', 'cancelled'];
 
   const refreshState = async () => {
     if (!user) return;
