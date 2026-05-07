@@ -477,7 +477,63 @@ serve(async (req) => {
       });
     }
 
-    // ── RETRY: resume KYC for signature in created/initiated/pending/failed ──
+    // ── PROVIDER STATUS: fetch real status from iBS API and sync local DB ──
+    // Returns { providerStatus, retryable, kycUrl } so the frontend can decide
+    // whether to show the "Continue / Restart" option without trusting stale local state.
+    // iBS only allows retry when signature status is 'created' or 'failed'.
+    if (action === "provider_status") {
+      const { signatureId } = body;
+      if (!signatureId) {
+        return new Response(JSON.stringify({ error: "signatureId is required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: sigRow } = await supabaseAdmin
+        .from("ibs_signatures")
+        .select("id, user_id, status, kyc_url, ibs_signature_id")
+        .eq("ibs_signature_id", signatureId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (!sigRow) {
+        return new Response(JSON.stringify({ error: "Signature not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const ibsRes = await fetch(`${IBS_API_URL}/signatures/${signatureId}`, {
+        headers: { "Authorization": `Bearer ${IBS_API_KEY}` },
+      });
+
+      if (!ibsRes.ok) {
+        const errBody = await ibsRes.text();
+        return new Response(JSON.stringify({ error: `iBS error: ${errBody}` }), {
+          status: ibsRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const ibsData = await ibsRes.json();
+      const providerStatus: string = ibsData.status || sigRow.status;
+
+      if (providerStatus !== sigRow.status) {
+        await supabaseAdmin
+          .from("ibs_signatures")
+          .update({ status: providerStatus, updated_at: new Date().toISOString() })
+          .eq("id", sigRow.id);
+      }
+
+      const retryable = ["created", "failed"].includes(providerStatus);
+
+      return new Response(JSON.stringify({
+        signatureId,
+        providerStatus,
+        retryable,
+        kycUrl: sigRow.kyc_url,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── RETRY: PUT /v2/signatures/{id} — only valid when provider status is 'created' or 'failed' ──
     if (action === "retry") {
       const { signatureId } = body;
       if (!signatureId) {
@@ -499,14 +555,42 @@ serve(async (req) => {
         });
       }
 
-      if (!["created", "initiated", "failed", "pending"].includes(sigRow.status)) {
-        return new Response(JSON.stringify({ error: `Cannot retry signature in status: ${sigRow.status}` }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      // Always verify the REAL provider status before attempting retry.
+      // iBS only accepts retries when status is 'created' or 'failed'.
+      const statusRes = await fetch(`${IBS_API_URL}/signatures/${signatureId}`, {
+        headers: { "Authorization": `Bearer ${IBS_API_KEY}` },
+      });
+
+      if (!statusRes.ok) {
+        const errBody = await statusRes.text();
+        return new Response(JSON.stringify({ error: `iBS error fetching status: ${errBody}` }), {
+          status: statusRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const ibsRes = await fetch(`${IBS_API_URL}/signatures/${signatureId}/retry`, {
-        method: "POST",
+      const statusData = await statusRes.json();
+      const providerStatus: string = statusData.status;
+
+      // Sync local DB with provider truth
+      if (providerStatus && providerStatus !== sigRow.status) {
+        await supabaseAdmin
+          .from("ibs_signatures")
+          .update({ status: providerStatus, updated_at: new Date().toISOString() })
+          .eq("id", sigRow.id);
+      }
+
+      if (!["created", "failed"].includes(providerStatus)) {
+        return new Response(JSON.stringify({
+          error: `Cannot retry signature in provider status '${providerStatus}'. iBS only allows retry for 'created' or 'failed'.`,
+          providerStatus,
+        }), {
+          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // PUT /v2/signatures/{id} — per iBS API spec
+      const ibsRes = await fetch(`${IBS_API_URL}/signatures/${signatureId}`, {
+        method: "PUT",
         headers: ibsHeaders,
       });
 
@@ -529,12 +613,13 @@ serve(async (req) => {
         })
         .eq("id", sigRow.id);
 
-      console.log(`[IBS-SIGNATURES] Retry successful for user ${user.id}, sig ${signatureId}`);
+      console.log(`[IBS-SIGNATURES] Retry (PUT) successful for user ${user.id}, sig ${signatureId}, prevStatus=${providerStatus}`);
 
       return new Response(JSON.stringify({
         signatureId,
         kycUrl: newKycUrl,
         retried: true,
+        previousProviderStatus: providerStatus,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
