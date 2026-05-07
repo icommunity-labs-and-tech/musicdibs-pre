@@ -1410,6 +1410,8 @@ const en: typeof es = {
       step1FillRequired: 'Please complete all required fields',
       step1Error: 'Error starting verification: ',
       unknownError: 'Unknown error',
+      verifyMyIdentity: 'Verify my identity',
+      directIntro: 'Clicking the button will open iCommunity Labs biometric verification. You will need your ID document and camera access.',
       docTypes: {
         dni: 'DNI (Spain)',
         nie: 'NIE (Spain - foreigners)',
