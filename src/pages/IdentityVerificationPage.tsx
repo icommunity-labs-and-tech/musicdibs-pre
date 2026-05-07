@@ -77,39 +77,57 @@ export default function IdentityVerificationPage() {
 
   const [pendingSig, setPendingSig] = useState<any | null>(null);
   const [resuming, setResuming] = useState(false);
+  const [restarting, setRestarting] = useState(false);
+
+  // Real provider statuses that indicate the user has actually submitted documents.
+  // ONLY these (set by the webhook) should display "En revisión".
+  const PROVIDER_SUBMITTED_STATUSES = ['submitted', 'processing', 'under_review', 'pending'];
+  const PROVIDER_INCOMPLETE_STATUSES = ['created', 'initiated', 'started'];
+  const PROVIDER_RETRYABLE_STATUSES = ['failed', 'rejected', 'expired', 'cancelled'];
+
+  const refreshState = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('kyc_status, display_name')
+      .eq('user_id', user.id)
+      .single();
+    if (data) {
+      setKycStatus(data.kyc_status || 'unverified');
+      if (data.display_name && !fullName) setFullName(data.display_name);
+    }
+
+    if (data?.kyc_status !== 'verified') {
+      try {
+        // Ask backend to sync provider status into our DB first
+        await supabase.functions.invoke('ibs-signatures', { body: { action: 'sync' } });
+        const { data: listData } = await supabase.functions.invoke('ibs-signatures', {
+          body: { action: 'list' },
+        });
+        const inProgress = listData?.signatures?.find((s: any) =>
+          [...PROVIDER_INCOMPLETE_STATUSES, ...PROVIDER_SUBMITTED_STATUSES, ...PROVIDER_RETRYABLE_STATUSES].includes(s.status)
+        );
+        setPendingSig(inProgress || null);
+      } catch (err) {
+        console.warn('[KYC] could not list signatures:', err);
+      }
+    } else {
+      setPendingSig(null);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('kyc_status, display_name')
-        .eq('user_id', user.id)
-        .single();
-      if (data) {
-        setKycStatus(data.kyc_status || 'unverified');
-        if (data.display_name) setFullName(data.display_name);
-      }
-
-      // Detect a signature already in progress to allow resuming instead of creating a new one
-      if (data?.kyc_status !== 'verified') {
-        try {
-          const { data: listData } = await supabase.functions.invoke('ibs-signatures', {
-            body: { action: 'list' },
-          });
-          const inProgress = listData?.signatures?.find(
-            (s: any) => ['initiated', 'created', 'pending', 'failed'].includes(s.status)
-          );
-          if (inProgress) setPendingSig(inProgress);
-        } catch (err) {
-          console.warn('[KYC] could not list signatures:', err);
-        }
-      }
+      await refreshState();
       setKycLoading(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
 
+  // Polling: only react to authoritative provider statuses arriving via webhook.
+  // We do NOT optimistically mark anything as 'pending' from the frontend.
   useEffect(() => {
     if (!polling || !user) return;
     const interval = setInterval(async () => {
@@ -118,12 +136,14 @@ export default function IdentityVerificationPage() {
         .select('kyc_status')
         .eq('user_id', user.id)
         .single();
-      if (data?.kyc_status === 'verified') {
+      if (!data) return;
+      if (data.kyc_status === 'verified') {
         setKycStatus('verified');
         setPolling(false);
         setKycUrl(null);
         toast.success(tk('verifiedToast'));
-      } else if (data?.kyc_status === 'pending') {
+      } else if (data.kyc_status === 'pending') {
+        // Real submission confirmed by webhook
         setKycStatus('pending');
       }
     }, 5000);
@@ -152,32 +172,10 @@ export default function IdentityVerificationPage() {
     return () => { supabase.removeChannel(channel); };
   }, [user, kycStatus]);
 
-  useEffect(() => {
-    if (step !== 2 || !kycUrl) return;
-    const handleMessage = async (event: MessageEvent) => {
-      const msg = typeof event.data === 'string' ? event.data : event.data?.type || event.data?.status;
-      const msgStr = JSON.stringify(event.data).toLowerCase();
-      if (
-        msgStr.includes('completed') || msgStr.includes('success') ||
-        msgStr.includes('verified') || msgStr.includes('finish') ||
-        msg === 'verification_complete'
-      ) {
-        setKycUrl(null);
-        if (user) {
-          const { data } = await supabase.from('profiles').select('kyc_status').eq('user_id', user.id).single();
-          if (data?.kyc_status === 'verified') {
-            setKycStatus('verified');
-            setPolling(false);
-            toast.success(tk('verifiedToast'));
-          } else {
-            toast.info(tk('verifyCompletedProcessing'));
-          }
-        }
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [step, kycUrl, user]);
+  // NOTE: We intentionally do NOT trust postMessage events from the iframe to mark
+  // the verification as submitted. Only the provider webhook (which sets
+  // profiles.kyc_status='pending') is authoritative.
+
 
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,15 +196,9 @@ export default function IdentityVerificationPage() {
         ? `${data.kycUrl}?lang=es`
         : `https://identity.icommunitylabs.com/identification/${data.signatureId}?lang=es`;
 
-      try {
-        await supabase.functions.invoke('ibs-signatures', {
-          body: { action: 'mark_kyc_started', signatureId: data.signatureId },
-        });
-        setKycStatus('pending');
-      } catch (markErr) {
-        console.error('[KYC] mark_kyc_started failed (non-blocking):', markErr);
-      }
-
+      // IMPORTANT: do NOT call mark_kyc_started here. The redirect/iframe load
+      // is not a real submission. We only flip to 'pending' when the provider
+      // webhook confirms documents were received.
       setKycUrl(url);
       setStep(2);
       setPolling(true);
@@ -232,20 +224,38 @@ export default function IdentityVerificationPage() {
       if (!url) throw new Error('No KYC URL');
       setSignatureId(pendingSig.ibs_signature_id);
       setKycUrl(url.includes('?') ? url : `${url}?lang=es`);
-      try {
-        await supabase.functions.invoke('ibs-signatures', {
-          body: { action: 'mark_kyc_started', signatureId: pendingSig.ibs_signature_id },
-        });
-        setKycStatus('pending');
-      } catch (markErr) {
-        console.error('[KYC] mark_kyc_started failed (non-blocking):', markErr);
-      }
+      // Do NOT optimistically set kyc_status to 'pending' on resume either.
       setStep(2);
       setPolling(true);
     } catch (err: any) {
       toast.error(err.message || tk('unknownError'));
     }
     setResuming(false);
+  };
+
+  const handleRestart = async () => {
+    setRestarting(true);
+    try {
+      // Force a fresh signature: clear local UI state and let user fill step 1 again.
+      setKycUrl(null);
+      setSignatureId(null);
+      setIframeError(false);
+      setPendingSig(null);
+      setStep(1);
+      setPolling(false);
+      // Optimistically reset local view; the real status comes from the provider.
+      if (kycStatus !== 'verified' && kycStatus !== 'pending') {
+        setKycStatus('unverified');
+      }
+    } finally {
+      setRestarting(false);
+    }
+  };
+
+  const handleBackToDashboard = async () => {
+    // Re-sync provider status before leaving so the dashboard reflects truth.
+    try { await refreshState(); } catch { /* noop */ }
+    navigate('/dashboard');
   };
 
   const selectedDocType = DOC_TYPE_KEYS.find(d => d.value === docType);
@@ -350,28 +360,43 @@ export default function IdentityVerificationPage() {
 
   return (
     <div className={`space-y-4 ${isIframeStep ? 'max-w-full' : 'max-w-2xl'}`}>
-      <h2 className="text-xl font-bold flex items-center gap-2">
-        <Shield className="h-5 w-5 text-primary" /> {tk('title')}
-      </h2>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <Shield className="h-5 w-5 text-primary" /> {tk('title')}
+        </h2>
+        <Button variant="ghost" size="sm" onClick={handleBackToDashboard} className="gap-1.5">
+          ← {tk('backToDashboard')}
+        </Button>
+      </div>
 
       {statusBanner}
 
-      {!kycLoading && pendingSig && step === 1 && !kycUrl && (
+      {!kycLoading && pendingSig && step === 1 && !kycUrl && kycStatus !== 'pending' && kycStatus !== 'verified' && (
         <Card className="border-amber-500/30 bg-amber-500/5">
-          <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <Clock className="h-5 w-5 text-amber-500 shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
-                {tk('bannerInitiatedTitle')}
-              </p>
-              <p className="text-xs text-muted-foreground">{tk('bannerInitiatedDesc')}</p>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                  {tk('notCompletedTitle')}
+                </p>
+                <p className="text-xs text-muted-foreground">{tk('notCompletedDesc')}</p>
+              </div>
             </div>
-            <Button size="sm" onClick={handleResume} disabled={resuming} className="gap-2 shrink-0">
-              {resuming
-                ? <><Loader2 className="h-4 w-4 animate-spin" /> {tk('starting')}</>
-                : <><RefreshCw className="h-4 w-4" /> {tk('retry')}</>
-              }
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button size="sm" onClick={handleResume} disabled={resuming || restarting} className="gap-2 flex-1">
+                {resuming
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> {tk('starting')}</>
+                  : <><RefreshCw className="h-4 w-4" /> {tk('continueVerification')}</>
+                }
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleRestart} disabled={resuming || restarting} className="gap-2 flex-1">
+                {restarting
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <><RefreshCw className="h-4 w-4" /> {tk('restartVerification')}</>
+                }
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
