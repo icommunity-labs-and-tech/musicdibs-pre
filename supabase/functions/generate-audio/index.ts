@@ -398,6 +398,10 @@ serve(async (req) => {
         // Only set duration if user specified one; otherwise let ElevenLabs decide.
         if (durationMs !== null) body.music_length_ms = durationMs;
         body.prompt = planOrPrompt.promptText;
+        // Si el usuario tiene letra, añadirla siempre como parámetro directo
+        if (hasUserLyrics && lyrics) {
+          body.lyrics = lyrics;
+        }
       }
       return fetchWithTimeout('https://api.elevenlabs.io/v1/music', {
         method: 'POST',
