@@ -2216,6 +2216,8 @@ const pt: typeof es = {
       step1FillRequired: 'Por favor, preencha todos os campos obrigatórios',
       step1Error: 'Erro ao iniciar verificação: ',
       unknownError: 'Erro desconhecido',
+      verifyMyIdentity: 'Verificar minha identidade',
+      directIntro: 'Ao clicar no botão, será aberta a verificação biométrica da iCommunity Labs. Você precisará do seu documento de identidade e acesso à câmera.',
       docTypes: {
         dni: 'DNI (Espanha)',
         nie: 'NIE (Espanha - estrangeiros)',
