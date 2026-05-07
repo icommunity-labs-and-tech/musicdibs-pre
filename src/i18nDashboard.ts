@@ -604,6 +604,8 @@ const es = {
       step1FillRequired: 'Por favor completa todos los campos obligatorios',
       step1Error: 'Error al iniciar verificación: ',
       unknownError: 'Error desconocido',
+      verifyMyIdentity: 'Verificar mi identidad',
+      directIntro: 'Al pulsar el botón se abrirá la verificación biométrica de iCommunity Labs. Necesitarás tu documento de identidad y acceso a la cámara.',
       docTypes: {
         dni: 'DNI (España)',
         nie: 'NIE (España - extranjeros)',
@@ -1408,6 +1410,8 @@ const en: typeof es = {
       step1FillRequired: 'Please complete all required fields',
       step1Error: 'Error starting verification: ',
       unknownError: 'Unknown error',
+      verifyMyIdentity: 'Verify my identity',
+      directIntro: 'Clicking the button will open iCommunity Labs biometric verification. You will need your ID document and camera access.',
       docTypes: {
         dni: 'DNI (Spain)',
         nie: 'NIE (Spain - foreigners)',
@@ -2212,6 +2216,8 @@ const pt: typeof es = {
       step1FillRequired: 'Por favor, preencha todos os campos obrigatórios',
       step1Error: 'Erro ao iniciar verificação: ',
       unknownError: 'Erro desconhecido',
+      verifyMyIdentity: 'Verificar minha identidade',
+      directIntro: 'Ao clicar no botão, será aberta a verificação biométrica da iCommunity Labs. Você precisará do seu documento de identidade e acesso à câmera.',
       docTypes: {
         dni: 'DNI (Espanha)',
         nie: 'NIE (Espanha - estrangeiros)',
