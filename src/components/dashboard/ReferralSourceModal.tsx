@@ -76,6 +76,7 @@ export function ReferralSourceModal() {
   const persistAndClose = () => {
     if (user) sessionStorage.setItem(`${STORAGE_KEY}_${user.id}`, '1');
     setOpen(false);
+    window.dispatchEvent(new Event('musicdibs:referral-closed'));
   };
 
   const save = async (source: Source, inf: Influencer | null = null, det: string | null = null) => {

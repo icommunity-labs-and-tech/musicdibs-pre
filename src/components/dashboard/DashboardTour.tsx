@@ -3,6 +3,7 @@ import Joyride, { CallBackProps, STATUS, ACTIONS, Step, TooltipRenderProps } fro
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '@/integrations/supabase/client';
 
 const TOUR_KEY = 'musicdibs_tour_seen';
 
@@ -150,10 +151,46 @@ export function DashboardTour() {
   useEffect(() => {
     if (!user) return;
     const seen = localStorage.getItem(getTourKey(user.id));
-    if (!seen) {
-      const timer = setTimeout(() => setRun(true), 600);
-      return () => clearTimeout(timer);
-    }
+    if (seen) return;
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const tryStart = async () => {
+      // Wait until no critical modal is open and referral has been answered/dismissed
+      const referralDismissed = sessionStorage.getItem(`musicdibs_referral_dismissed_${user.id}`);
+      let hasReferral = false;
+      if (!referralDismissed) {
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('referral_source')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          hasReferral = !!data?.referral_source;
+        } catch { /* ignore */ }
+      }
+      if (cancelled) return;
+      if (referralDismissed || hasReferral) {
+        timer = setTimeout(() => !cancelled && setRun(true), 600);
+      }
+      // else: wait for referral-closed event
+    };
+
+    const onReferralClosed = () => {
+      if (cancelled) return;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => !cancelled && setRun(true), 400);
+    };
+
+    window.addEventListener('musicdibs:referral-closed', onReferralClosed);
+    tryStart();
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('musicdibs:referral-closed', onReferralClosed);
+    };
   }, [user]);
 
   useEffect(() => {
