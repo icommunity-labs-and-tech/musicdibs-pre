@@ -77,36 +77,52 @@ export default function IdentityVerificationPage() {
 
   const [pendingSig, setPendingSig] = useState<any | null>(null);
   const [resuming, setResuming] = useState(false);
+  const [restarting, setRestarting] = useState(false);
+
+  // Real provider statuses that indicate the user has actually submitted documents.
+  // ONLY these (set by the webhook) should display "En revisión".
+  const PROVIDER_SUBMITTED_STATUSES = ['submitted', 'processing', 'under_review', 'pending'];
+  const PROVIDER_INCOMPLETE_STATUSES = ['created', 'initiated', 'started'];
+  const PROVIDER_RETRYABLE_STATUSES = ['failed', 'rejected', 'expired', 'cancelled'];
+
+  const refreshState = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('kyc_status, display_name')
+      .eq('user_id', user.id)
+      .single();
+    if (data) {
+      setKycStatus(data.kyc_status || 'unverified');
+      if (data.display_name && !fullName) setFullName(data.display_name);
+    }
+
+    if (data?.kyc_status !== 'verified') {
+      try {
+        // Ask backend to sync provider status into our DB first
+        await supabase.functions.invoke('ibs-signatures', { body: { action: 'sync' } });
+        const { data: listData } = await supabase.functions.invoke('ibs-signatures', {
+          body: { action: 'list' },
+        });
+        const inProgress = listData?.signatures?.find((s: any) =>
+          [...PROVIDER_INCOMPLETE_STATUSES, ...PROVIDER_SUBMITTED_STATUSES, ...PROVIDER_RETRYABLE_STATUSES].includes(s.status)
+        );
+        setPendingSig(inProgress || null);
+      } catch (err) {
+        console.warn('[KYC] could not list signatures:', err);
+      }
+    } else {
+      setPendingSig(null);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('kyc_status, display_name')
-        .eq('user_id', user.id)
-        .single();
-      if (data) {
-        setKycStatus(data.kyc_status || 'unverified');
-        if (data.display_name) setFullName(data.display_name);
-      }
-
-      // Detect a signature already in progress to allow resuming instead of creating a new one
-      if (data?.kyc_status !== 'verified') {
-        try {
-          const { data: listData } = await supabase.functions.invoke('ibs-signatures', {
-            body: { action: 'list' },
-          });
-          const inProgress = listData?.signatures?.find(
-            (s: any) => ['initiated', 'created', 'pending', 'failed'].includes(s.status)
-          );
-          if (inProgress) setPendingSig(inProgress);
-        } catch (err) {
-          console.warn('[KYC] could not list signatures:', err);
-        }
-      }
+      await refreshState();
       setKycLoading(false);
     })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
 
