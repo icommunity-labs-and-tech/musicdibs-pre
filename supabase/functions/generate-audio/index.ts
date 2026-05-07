@@ -383,7 +383,7 @@ serve(async (req) => {
       console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars, ${planDurationMs}ms${durationMs ? '' : ' [auto fallback]'})`);
       compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), planDurationMs, ELEVENLABS_API_KEY);
       if (!compositionPlan) {
-        console.warn('[GENERATE-AUDIO] composition plan unavailable — falling back to prompt-only mode');
+        console.warn('[GENERATE-AUDIO] composition plan unavailable — usando lyrics directo en el endpoint');
       }
     }
 
