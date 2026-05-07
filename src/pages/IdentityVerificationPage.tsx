@@ -366,22 +366,32 @@ export default function IdentityVerificationPage() {
 
       {statusBanner}
 
-      {!kycLoading && pendingSig && step === 1 && !kycUrl && (
+      {!kycLoading && pendingSig && step === 1 && !kycUrl && kycStatus !== 'pending' && kycStatus !== 'verified' && (
         <Card className="border-amber-500/30 bg-amber-500/5">
-          <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <Clock className="h-5 w-5 text-amber-500 shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
-                {tk('bannerInitiatedTitle')}
-              </p>
-              <p className="text-xs text-muted-foreground">{tk('bannerInitiatedDesc')}</p>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                  {tk('notCompletedTitle')}
+                </p>
+                <p className="text-xs text-muted-foreground">{tk('notCompletedDesc')}</p>
+              </div>
             </div>
-            <Button size="sm" onClick={handleResume} disabled={resuming} className="gap-2 shrink-0">
-              {resuming
-                ? <><Loader2 className="h-4 w-4 animate-spin" /> {tk('starting')}</>
-                : <><RefreshCw className="h-4 w-4" /> {tk('retry')}</>
-              }
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button size="sm" onClick={handleResume} disabled={resuming || restarting} className="gap-2 flex-1">
+                {resuming
+                  ? <><Loader2 className="h-4 w-4 animate-spin" /> {tk('starting')}</>
+                  : <><RefreshCw className="h-4 w-4" /> {tk('continueVerification')}</>
+                }
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleRestart} disabled={resuming || restarting} className="gap-2 flex-1">
+                {restarting
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <><RefreshCw className="h-4 w-4" /> {tk('restartVerification')}</>
+                }
+              </Button>
+            </div>
           </CardContent>
         </Card>
       )}
