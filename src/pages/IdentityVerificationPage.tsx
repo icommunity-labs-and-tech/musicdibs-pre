@@ -79,13 +79,10 @@ export default function IdentityVerificationPage() {
   const [resuming, setResuming] = useState(false);
   const [restarting, setRestarting] = useState(false);
 
-  // Real provider statuses that indicate the user has actually submitted documents.
-  // ONLY these (set by the webhook) should display "En revisión".
-  const PROVIDER_SUBMITTED_STATUSES = ['submitted', 'processing', 'under_review', 'pending'];
-  const PROVIDER_INCOMPLETE_STATUSES = ['initiated', 'started'];
-  // 'created' es retryable: el proveedor crea la firma pero el usuario aún no completó/envió docs.
-  // Debe seguir el mismo flujo de retry que 'failed'.
-  const PROVIDER_RETRYABLE_STATUSES = ['created', 'failed', 'rejected', 'expired', 'cancelled'];
+  // iBS only allows retry when the provider status is 'created' or 'failed'.
+  // We always confirm with the provider (via provider_status action) before
+  // showing the "Continue / Restart" UI — never trust local DB status alone.
+  const PROVIDER_RETRYABLE_STATUSES = ['created', 'failed'];
 
   const refreshState = async () => {
     if (!user) return;
@@ -101,15 +98,33 @@ export default function IdentityVerificationPage() {
 
     if (data?.kyc_status !== 'verified') {
       try {
-        // Ask backend to sync provider status into our DB first
         await supabase.functions.invoke('ibs-signatures', { body: { action: 'sync' } });
         const { data: listData } = await supabase.functions.invoke('ibs-signatures', {
           body: { action: 'list' },
         });
-        const inProgress = listData?.signatures?.find((s: any) =>
-          [...PROVIDER_INCOMPLETE_STATUSES, ...PROVIDER_SUBMITTED_STATUSES, ...PROVIDER_RETRYABLE_STATUSES].includes(s.status)
+        // Pick the most recent non-terminal signature and ALWAYS confirm with iBS
+        // what its real status is before deciding whether to show the retry UI.
+        const candidate = listData?.signatures?.find((s: any) =>
+          !['verified', 'success'].includes(s.status)
         );
-        setPendingSig(inProgress || null);
+        if (candidate?.ibs_signature_id) {
+          try {
+            const { data: statusData } = await supabase.functions.invoke('ibs-signatures', {
+              body: { action: 'provider_status', signatureId: candidate.ibs_signature_id },
+            });
+            const providerStatus = statusData?.providerStatus;
+            if (providerStatus && PROVIDER_RETRYABLE_STATUSES.includes(providerStatus)) {
+              setPendingSig({ ...candidate, status: providerStatus, kyc_url: statusData?.kycUrl || candidate.kyc_url });
+            } else {
+              setPendingSig(null);
+            }
+          } catch (err) {
+            console.warn('[KYC] provider_status check failed:', err);
+            setPendingSig(null);
+          }
+        } else {
+          setPendingSig(null);
+        }
       } catch (err) {
         console.warn('[KYC] could not list signatures:', err);
       }
