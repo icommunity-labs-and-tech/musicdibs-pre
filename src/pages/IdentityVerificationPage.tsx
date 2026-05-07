@@ -189,14 +189,19 @@ export default function IdentityVerificationPage() {
     setSubmitting(true);
     setIframeError(false);
     try {
-      let url: string | null = pendingSig.kyc_url || null;
-      if (!url) {
-        const { data, error } = await supabase.functions.invoke('ibs-signatures', {
-          body: { action: 'retry', signatureId: pendingSig.ibs_signature_id },
-        });
-        if (error || data?.error) throw new Error(error?.message || data?.error);
-        url = data.kycUrl;
+      // Always call retry (PUT) — never trust a cached kyc_url, because the
+      // signature may have moved to rejected/expired/cancelled in the meantime.
+      const { data, error } = await supabase.functions.invoke('ibs-signatures', {
+        body: { action: 'retry', signatureId: pendingSig.ibs_signature_id },
+      });
+      if (error || data?.error) {
+        // Provider says it can't be retried (e.g. rejected) → fall back to a brand-new signature.
+        console.warn('[KYC] retry rejected by provider, creating new signature:', data?.error || error?.message);
+        await refreshState();
+        await startNewVerification();
+        return;
       }
+      const url: string | null = data?.kycUrl || null;
       if (!url) throw new Error('No KYC URL');
       setSignatureId(pendingSig.ibs_signature_id);
       setKycUrl(url.includes('?') ? url : `${url}?lang=es`);
