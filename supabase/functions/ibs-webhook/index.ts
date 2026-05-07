@@ -115,7 +115,7 @@ serve(async (req) => {
               blockchainHash: certHash || "",
               network: network || "polygon",
               checkerUrl,
-              certificateUrl: signedPdfUrl || checkerUrl,
+              certificateUrl: `https://musicdibs.com/dashboard/certificate/${work.id}`,
               lang: userLang,
             });
             const messageId = crypto.randomUUID();

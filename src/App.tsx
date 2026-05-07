@@ -44,6 +44,7 @@ const CreditsPage = lazyWithRetry(() => import("./pages/CreditsPage"));
 const ProfilePage = lazyWithRetry(() => import("./pages/ProfilePage"));
 const BillingPage = lazyWithRetry(() => import("./pages/BillingPage"));
 const SupportPage = lazyWithRetry(() => import("./pages/SupportPage"));
+const CertificateDownloadPage = lazyWithRetry(() => import("./pages/CertificateDownloadPage"));
 
 const IdentityVerificationPage = lazyWithRetry(() => import("./pages/IdentityVerificationPage"));
 const LaunchPage = lazyWithRetry(() => import("./pages/LaunchPage"));
@@ -196,6 +197,7 @@ const App = () => (
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="billing" element={<BillingPage />} />
                 <Route path="support" element={<SupportPage />} />
+                <Route path="certificate/:workId" element={<CertificateDownloadPage />} />
                 
                 <Route path="verify-identity" element={<IdentityVerificationPage />} />
                 <Route path="artist-profiles" element={<ArtistProfilesPage />} />
