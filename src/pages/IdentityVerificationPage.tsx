@@ -396,28 +396,17 @@ export default function IdentityVerificationPage() {
             <p className="text-[10px] text-muted-foreground">{tk('privacyNote')}</p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-2">
-            {pendingSig && (
-              <Button
-                onClick={continuePendingSig}
-                disabled={submitting}
-                className="gap-2 flex-1"
-              >
-                {submitting
-                  ? <><Loader2 className="h-4 w-4 animate-spin" /> {tk('starting')}</>
-                  : <><RefreshCw className="h-4 w-4" /> {tk('continueVerification')}</>
-                }
-              </Button>
-            )}
+          <div className="flex">
             <Button
-              onClick={startNewVerification}
+              onClick={pendingSig ? continuePendingSig : startNewVerification}
               disabled={submitting}
-              variant={pendingSig ? 'outline' : 'default'}
               className="gap-2 flex-1"
             >
-              {submitting && !pendingSig
+              {submitting
                 ? <><Loader2 className="h-4 w-4 animate-spin" /> {tk('starting')}</>
-                : <><Shield className="h-4 w-4" /> {pendingSig ? tk('restartVerification') : tk('verifyMyIdentity')}</>
+                : pendingSig
+                  ? <><RefreshCw className="h-4 w-4" /> {tk('continueVerification')}</>
+                  : <><Shield className="h-4 w-4" /> {tk('verifyMyIdentity')}</>
               }
             </Button>
           </div>
