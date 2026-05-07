@@ -15,7 +15,11 @@ import { toast } from 'sonner';
 // Provider statuses (real iBS status, never local optimistic state)
 const STATUS_VERIFIED = ['verified', 'success', 'approved'];
 const STATUS_IN_REVIEW = ['pending', 'submitted', 'processing', 'under_review'];
-const STATUS_RETRYABLE = ['created', 'started', 'initiated', 'failed', 'rejected', 'expired', 'cancelled'];
+// iBS only accepts PUT (retry) on these. Anything else (rejected/expired/cancelled/...)
+// requires a brand-new signature via POST.
+const STATUS_PUT_RETRYABLE = ['created', 'failed'];
+// Terminal-but-not-verified statuses: must create a new signature.
+const STATUS_NEEDS_NEW = ['rejected', 'expired', 'cancelled', 'verification_failed'];
 
 type ProviderStatus = string;
 
