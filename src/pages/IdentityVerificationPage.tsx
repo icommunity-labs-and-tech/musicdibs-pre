@@ -15,7 +15,11 @@ import { toast } from 'sonner';
 // Provider statuses (real iBS status, never local optimistic state)
 const STATUS_VERIFIED = ['verified', 'success', 'approved'];
 const STATUS_IN_REVIEW = ['pending', 'submitted', 'processing', 'under_review'];
-const STATUS_RETRYABLE = ['created', 'started', 'initiated', 'failed', 'rejected', 'expired', 'cancelled'];
+// iBS only accepts PUT (retry) on these. Anything else (rejected/expired/cancelled/...)
+// requires a brand-new signature via POST.
+const STATUS_PUT_RETRYABLE = ['created', 'failed'];
+// Terminal-but-not-verified statuses: must create a new signature.
+const STATUS_NEEDS_NEW = ['rejected', 'expired', 'cancelled', 'verification_failed'];
 
 type ProviderStatus = string;
 
@@ -88,15 +92,22 @@ export default function IdentityVerificationPage() {
       } else if (STATUS_IN_REVIEW.includes(providerStatus)) {
         setKycStatus('pending');
         setPendingSig(null);
-      } else if (STATUS_RETRYABLE.includes(providerStatus)) {
+      } else if (STATUS_PUT_RETRYABLE.includes(providerStatus)) {
+        // 'created' or 'failed' → can resume same signature with PUT
         setKycStatus('unverified');
         setPendingSig({
           ...candidate,
           status: providerStatus,
           kyc_url: statusData?.kycUrl || candidate.kyc_url,
+          canResume: true,
         });
+      } else if (STATUS_NEEDS_NEW.includes(providerStatus)) {
+        // rejected/expired/cancelled → must create a NEW signature
+        setKycStatus('unverified');
+        setPendingSig(null);
       } else {
-        setKycStatus(localStatus);
+        // Unknown / 'initiated' / 'started' (no documents submitted yet) → start fresh
+        setKycStatus('unverified');
         setPendingSig(null);
       }
     } catch (err) {
@@ -178,14 +189,19 @@ export default function IdentityVerificationPage() {
     setSubmitting(true);
     setIframeError(false);
     try {
-      let url: string | null = pendingSig.kyc_url || null;
-      if (!url) {
-        const { data, error } = await supabase.functions.invoke('ibs-signatures', {
-          body: { action: 'retry', signatureId: pendingSig.ibs_signature_id },
-        });
-        if (error || data?.error) throw new Error(error?.message || data?.error);
-        url = data.kycUrl;
+      // Always call retry (PUT) — never trust a cached kyc_url, because the
+      // signature may have moved to rejected/expired/cancelled in the meantime.
+      const { data, error } = await supabase.functions.invoke('ibs-signatures', {
+        body: { action: 'retry', signatureId: pendingSig.ibs_signature_id },
+      });
+      if (error || data?.error) {
+        // Provider says it can't be retried (e.g. rejected) → fall back to a brand-new signature.
+        console.warn('[KYC] retry rejected by provider, creating new signature:', data?.error || error?.message);
+        await refreshState();
+        await startNewVerification();
+        return;
       }
+      const url: string | null = data?.kycUrl || null;
       if (!url) throw new Error('No KYC URL');
       setSignatureId(pendingSig.ibs_signature_id);
       setKycUrl(url.includes('?') ? url : `${url}?lang=es`);
