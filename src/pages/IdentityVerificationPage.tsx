@@ -92,15 +92,22 @@ export default function IdentityVerificationPage() {
       } else if (STATUS_IN_REVIEW.includes(providerStatus)) {
         setKycStatus('pending');
         setPendingSig(null);
-      } else if (STATUS_RETRYABLE.includes(providerStatus)) {
+      } else if (STATUS_PUT_RETRYABLE.includes(providerStatus)) {
+        // 'created' or 'failed' → can resume same signature with PUT
         setKycStatus('unverified');
         setPendingSig({
           ...candidate,
           status: providerStatus,
           kyc_url: statusData?.kycUrl || candidate.kyc_url,
+          canResume: true,
         });
+      } else if (STATUS_NEEDS_NEW.includes(providerStatus)) {
+        // rejected/expired/cancelled → must create a NEW signature
+        setKycStatus('unverified');
+        setPendingSig(null);
       } else {
-        setKycStatus(localStatus);
+        // Unknown / 'initiated' / 'started' (no documents submitted yet) → start fresh
+        setKycStatus('unverified');
         setPendingSig(null);
       }
     } catch (err) {
