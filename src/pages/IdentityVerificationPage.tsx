@@ -233,6 +233,31 @@ export default function IdentityVerificationPage() {
     setResuming(false);
   };
 
+  const handleRestart = async () => {
+    setRestarting(true);
+    try {
+      // Force a fresh signature: clear local UI state and let user fill step 1 again.
+      setKycUrl(null);
+      setSignatureId(null);
+      setIframeError(false);
+      setPendingSig(null);
+      setStep(1);
+      setPolling(false);
+      // Optimistically reset local view; the real status comes from the provider.
+      if (kycStatus !== 'verified' && kycStatus !== 'pending') {
+        setKycStatus('unverified');
+      }
+    } finally {
+      setRestarting(false);
+    }
+  };
+
+  const handleBackToDashboard = async () => {
+    // Re-sync provider status before leaving so the dashboard reflects truth.
+    try { await refreshState(); } catch { /* noop */ }
+    navigate('/dashboard');
+  };
+
   const selectedDocType = DOC_TYPE_KEYS.find(d => d.value === docType);
 
   if (!kycLoading && kycStatus === 'verified') {
