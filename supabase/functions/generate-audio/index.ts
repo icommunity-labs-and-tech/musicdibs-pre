@@ -383,7 +383,7 @@ serve(async (req) => {
       console.log(`[GENERATE-AUDIO] Building composition plan for user lyrics (${lyrics.length} chars, ${planDurationMs}ms${durationMs ? '' : ' [auto fallback]'})`);
       compositionPlan = await buildCompositionPlan(enrichedPrompt, lyrics.trim(), planDurationMs, ELEVENLABS_API_KEY);
       if (!compositionPlan) {
-        console.warn('[GENERATE-AUDIO] composition plan unavailable — falling back to prompt-only mode');
+        console.warn('[GENERATE-AUDIO] composition plan unavailable — usando lyrics directo en el endpoint');
       }
     }
 
@@ -398,6 +398,10 @@ serve(async (req) => {
         // Only set duration if user specified one; otherwise let ElevenLabs decide.
         if (durationMs !== null) body.music_length_ms = durationMs;
         body.prompt = planOrPrompt.promptText;
+        // Si el usuario tiene letra, añadirla siempre como parámetro directo
+        if (hasUserLyrics && lyrics) {
+          body.lyrics = lyrics;
+        }
       }
       return fetchWithTimeout('https://api.elevenlabs.io/v1/music', {
         method: 'POST',
