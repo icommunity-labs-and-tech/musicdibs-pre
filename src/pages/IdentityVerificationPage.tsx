@@ -126,6 +126,8 @@ export default function IdentityVerificationPage() {
   }, [user]);
 
 
+  // Polling: only react to authoritative provider statuses arriving via webhook.
+  // We do NOT optimistically mark anything as 'pending' from the frontend.
   useEffect(() => {
     if (!polling || !user) return;
     const interval = setInterval(async () => {
@@ -134,12 +136,14 @@ export default function IdentityVerificationPage() {
         .select('kyc_status')
         .eq('user_id', user.id)
         .single();
-      if (data?.kyc_status === 'verified') {
+      if (!data) return;
+      if (data.kyc_status === 'verified') {
         setKycStatus('verified');
         setPolling(false);
         setKycUrl(null);
         toast.success(tk('verifiedToast'));
-      } else if (data?.kyc_status === 'pending') {
+      } else if (data.kyc_status === 'pending') {
+        // Real submission confirmed by webhook
         setKycStatus('pending');
       }
     }, 5000);
