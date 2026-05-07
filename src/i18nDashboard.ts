@@ -604,6 +604,8 @@ const es = {
       step1FillRequired: 'Por favor completa todos los campos obligatorios',
       step1Error: 'Error al iniciar verificación: ',
       unknownError: 'Error desconocido',
+      verifyMyIdentity: 'Verificar mi identidad',
+      directIntro: 'Al pulsar el botón se abrirá la verificación biométrica de iCommunity Labs. Necesitarás tu documento de identidad y acceso a la cámara.',
       docTypes: {
         dni: 'DNI (España)',
         nie: 'NIE (España - extranjeros)',
