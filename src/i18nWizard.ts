@@ -121,12 +121,12 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
       // RegistrationWizard
       rw: {
         noCreditsMsg: 'No tienes créditos suficientes para registrar una obra.',
-        kycRequired: 'Verificación de identidad requerida',
-        kycWait: 'Tu verificación de identidad puede tardar hasta 48 horas en estar lista.',
+        kycRequired: 'Verificación requerida para registrar tu obra',
+        kycWait: 'Para registrar la propiedad intelectual de tus canciones con validez legal y certificar la autoría, necesitamos verificar tu identidad una única vez.',
         kycPending: 'Pendiente',
         kycNotVerified: 'No verificado',
         kycStatus: 'Estado: {{status}}',
-        goToVerify: 'Ir a verificar identidad',
+        goToVerify: 'Verificar identidad',
         errorAudio: 'Error al procesar el audio',
         errorRegister: 'Error en el registro',
         errorGeneric: 'Error al registrar la obra',
