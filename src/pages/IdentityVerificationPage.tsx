@@ -360,9 +360,14 @@ export default function IdentityVerificationPage() {
 
   return (
     <div className={`space-y-4 ${isIframeStep ? 'max-w-full' : 'max-w-2xl'}`}>
-      <h2 className="text-xl font-bold flex items-center gap-2">
-        <Shield className="h-5 w-5 text-primary" /> {tk('title')}
-      </h2>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h2 className="text-xl font-bold flex items-center gap-2">
+          <Shield className="h-5 w-5 text-primary" /> {tk('title')}
+        </h2>
+        <Button variant="ghost" size="sm" onClick={handleBackToDashboard} className="gap-1.5">
+          ← {tk('backToDashboard')}
+        </Button>
+      </div>
 
       {statusBanner}
 
