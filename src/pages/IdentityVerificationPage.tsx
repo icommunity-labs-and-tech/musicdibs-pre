@@ -196,15 +196,9 @@ export default function IdentityVerificationPage() {
         ? `${data.kycUrl}?lang=es`
         : `https://identity.icommunitylabs.com/identification/${data.signatureId}?lang=es`;
 
-      try {
-        await supabase.functions.invoke('ibs-signatures', {
-          body: { action: 'mark_kyc_started', signatureId: data.signatureId },
-        });
-        setKycStatus('pending');
-      } catch (markErr) {
-        console.error('[KYC] mark_kyc_started failed (non-blocking):', markErr);
-      }
-
+      // IMPORTANT: do NOT call mark_kyc_started here. The redirect/iframe load
+      // is not a real submission. We only flip to 'pending' when the provider
+      // webhook confirms documents were received.
       setKycUrl(url);
       setStep(2);
       setPolling(true);
