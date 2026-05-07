@@ -3,6 +3,7 @@ import Joyride, { CallBackProps, STATUS, ACTIONS, Step, TooltipRenderProps } fro
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '@/integrations/supabase/client';
 
 const TOUR_KEY = 'musicdibs_tour_seen';
 
