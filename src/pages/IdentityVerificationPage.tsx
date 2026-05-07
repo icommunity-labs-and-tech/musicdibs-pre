@@ -168,32 +168,10 @@ export default function IdentityVerificationPage() {
     return () => { supabase.removeChannel(channel); };
   }, [user, kycStatus]);
 
-  useEffect(() => {
-    if (step !== 2 || !kycUrl) return;
-    const handleMessage = async (event: MessageEvent) => {
-      const msg = typeof event.data === 'string' ? event.data : event.data?.type || event.data?.status;
-      const msgStr = JSON.stringify(event.data).toLowerCase();
-      if (
-        msgStr.includes('completed') || msgStr.includes('success') ||
-        msgStr.includes('verified') || msgStr.includes('finish') ||
-        msg === 'verification_complete'
-      ) {
-        setKycUrl(null);
-        if (user) {
-          const { data } = await supabase.from('profiles').select('kyc_status').eq('user_id', user.id).single();
-          if (data?.kyc_status === 'verified') {
-            setKycStatus('verified');
-            setPolling(false);
-            toast.success(tk('verifiedToast'));
-          } else {
-            toast.info(tk('verifyCompletedProcessing'));
-          }
-        }
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [step, kycUrl, user]);
+  // NOTE: We intentionally do NOT trust postMessage events from the iframe to mark
+  // the verification as submitted. Only the provider webhook (which sets
+  // profiles.kyc_status='pending') is authoritative.
+
 
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
