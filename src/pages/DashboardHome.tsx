@@ -105,44 +105,6 @@ export default function DashboardHome() {
           </CardContent>
         </Card>
       )}
-      {/* KYC verification alert */}
-      {summary && summary.kycStatus !== 'verified' && (
-        <Card className="border-amber-500/30 bg-amber-500/5">
-          <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-500/10">
-              <Shield className="h-5 w-5 text-amber-600" />
-            </div>
-            <div className="flex-1 space-y-1">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-semibold">{t('dashboard.home.kycRequired')}</p>
-                <Badge variant="outline" className="gap-1 text-xs bg-amber-500/10 text-amber-600 border-amber-500/20">
-                  {summary.kycStatus === 'pending' ? (
-                    <><Loader2 className="h-3 w-3 animate-spin" /> {t('dashboard.home.kycPending')}</>
-                  ) : (
-                    <><AlertCircle className="h-3 w-3" /> {t('dashboard.home.kycUnverified')}</>
-                  )}
-                </Badge>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {summary.kycStatus === 'pending'
-                  ? t('dashboard.home.kycPendingDesc')
-                  : t('dashboard.home.kycUnverifiedDesc')}
-              </p>
-            </div>
-            {summary.kycStatus === 'unverified' && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 border-amber-500/30 text-amber-600 hover:bg-amber-500/10 shrink-0"
-                onClick={() => navigate('/dashboard/verify-identity')}
-              >
-                <Shield className="h-3.5 w-3.5" /> {t('dashboard.home.verifyIdentity')}
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Col 1: Account Summary + AI Studio */}
         <div className="space-y-4">
