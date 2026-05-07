@@ -38,7 +38,7 @@ export default function CertificateDownloadPage() {
       try {
         const { data: work, error } = await supabase
           .from('works')
-          .select('id, user_id, title, type, description, original_filename, file_size, file_hash_sha512_b64, blockchain_hash, blockchain_network, checker_url, ibs_evidence_id, certified_at, created_at')
+          .select('id, user_id, title, type, description, file_hash_sha512_b64, blockchain_hash, blockchain_network, checker_url, ibs_evidence_id, certified_at, created_at')
           .eq('id', workId)
           .maybeSingle();
 
@@ -58,8 +58,7 @@ export default function CertificateDownloadPage() {
 
         const certData = await buildCertificateData({
           title: work.title,
-          filename: work.original_filename || `${work.title}.mp3`,
-          filesize: work.file_size || undefined,
+          filename: `${work.title}.mp3`,
           fileType: work.type || t('dashboard.certificate.fileTypeFallback'),
           description: work.description || undefined,
           authorName: profile?.display_name || user.email?.split('@')[0] || 'Autor',
