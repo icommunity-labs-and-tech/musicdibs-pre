@@ -224,14 +224,7 @@ export default function IdentityVerificationPage() {
       if (!url) throw new Error('No KYC URL');
       setSignatureId(pendingSig.ibs_signature_id);
       setKycUrl(url.includes('?') ? url : `${url}?lang=es`);
-      try {
-        await supabase.functions.invoke('ibs-signatures', {
-          body: { action: 'mark_kyc_started', signatureId: pendingSig.ibs_signature_id },
-        });
-        setKycStatus('pending');
-      } catch (markErr) {
-        console.error('[KYC] mark_kyc_started failed (non-blocking):', markErr);
-      }
+      // Do NOT optimistically set kyc_status to 'pending' on resume either.
       setStep(2);
       setPolling(true);
     } catch (err: any) {
