@@ -1,7 +1,6 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { HeroSection } from "@/components/HeroSection";
-import { LaunchPromoBanner } from "@/components/LaunchPromoBanner";
 import { ArtistsBanner } from "@/components/ArtistsBanner";
 import { SEO } from "@/components/SEO";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
@@ -135,11 +134,8 @@ const Index = () => {
         ]}
       />
       <Navbar />
-      <main>
-        <HeroSection />
-        <LaunchPromoBanner />
-        <DeferredHomeSections />
-      </main>
+      <HeroSection />
+      <DeferredHomeSections />
     </div>
   );
 };
