@@ -86,7 +86,7 @@ export const LaunchPromoPopup = () => {
 
           {/* Title */}
           <h2 className="text-center text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight mb-2">
-            La nueva era de MusicDibs ya está aquí
+            La nueva era de Musicdibs ya está aquí
           </h2>
           <p className="text-center text-white/75 text-sm sm:text-base mb-6 max-w-xl mx-auto">
             Crea música con IA, protégela y distribúyela desde un solo lugar.
