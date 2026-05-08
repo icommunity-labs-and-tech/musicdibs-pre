@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, Sparkles, Copy, Check, Flame } from "lucide-react";
 
@@ -22,32 +22,12 @@ export const LaunchPromoBanner = () => {
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState(calc());
   const [copied, setCopied] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (sessionStorage.getItem(STORAGE_KEY) === "true") return;
     setMounted(true);
     requestAnimationFrame(() => setOpen(true));
   }, []);
-
-  // Measure height -> set CSS var consumed by Navbar (top offset) and body padding
-  useEffect(() => {
-    const root = document.documentElement;
-    const apply = () => {
-      const h = open && ref.current ? ref.current.offsetHeight : 0;
-      root.style.setProperty("--promo-h", `${h}px`);
-    };
-    apply();
-    if (!mounted) return;
-    const ro = new ResizeObserver(apply);
-    if (ref.current) ro.observe(ref.current);
-    window.addEventListener("resize", apply);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", apply);
-      root.style.setProperty("--promo-h", "0px");
-    };
-  }, [mounted, open]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -86,9 +66,8 @@ export const LaunchPromoBanner = () => {
 
   return (
     <div
-      ref={ref}
-      className={`fixed top-0 inset-x-0 z-[60] transition-transform duration-400 ease-out ${
-        open ? "translate-y-0" : "-translate-y-full"
+      className={`relative z-50 overflow-hidden transition-[max-height,opacity,transform] duration-300 ease-out ${
+        open ? "max-h-[220px] opacity-100 translate-y-0" : "max-h-0 opacity-0 -translate-y-2"
       }`}
       role="region"
       aria-label="Promoción de lanzamiento"
