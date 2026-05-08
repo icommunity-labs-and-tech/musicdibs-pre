@@ -168,10 +168,15 @@ serve(async (req) => {
           .upload(fileName, imgBlob, { contentType: "image/png", upsert: false })
 
         if (!uploadErr) {
-          const { data: pubUrl } = supabaseAdmin.storage
+          // Bucket is private → use a long-lived signed URL so the browser can render & download it
+          const { data: signed, error: signErr } = await supabaseAdmin.storage
             .from("social-promo-images")
-            .getPublicUrl(fileName)
-          storedUrl = pubUrl.publicUrl
+            .createSignedUrl(fileName, 60 * 60 * 24 * 365) // 1 year
+          if (!signErr && signed?.signedUrl) {
+            storedUrl = signed.signedUrl
+          } else {
+            console.warn("[PROMO-CREATIVE] Signed URL failed, using fal URL:", signErr?.message)
+          }
         } else {
           console.warn("[PROMO-CREATIVE] Upload failed, using fal URL:", uploadErr.message)
         }
