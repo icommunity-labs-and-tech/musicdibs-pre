@@ -59,7 +59,7 @@ export const LaunchPromoPopup = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
-        className="max-w-[92vw] sm:max-w-[600px] lg:max-w-[640px] border-none p-0 overflow-hidden text-white max-h-[92vh] overflow-y-auto"
+        className="max-w-[92vw] sm:max-w-[560px] lg:max-w-[600px] border-none p-0 overflow-hidden text-white"
         style={{
           background:
             "linear-gradient(135deg, #1a0533 0%, #2a0a4a 30%, #4c1d95 60%, #c026d3 100%)",
