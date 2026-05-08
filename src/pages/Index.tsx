@@ -136,6 +136,7 @@ const Index = () => {
       />
       <Navbar />
       <HeroSection />
+      <PromoBanner />
       <DeferredHomeSections />
     </div>
   );
