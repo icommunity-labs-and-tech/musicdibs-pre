@@ -1052,6 +1052,12 @@ const en: typeof es = {
       purchase: 'Purchase',
       renewal: 'Renewal',
       consumption: 'Usage',
+      refund: 'Refund',
+      adminGrant: 'Manual adjustment',
+      onboarding: 'Welcome',
+      migration: 'Migration',
+      subscription: 'Subscription',
+      paymentFailed: 'Payment failed',
     },
     creditChart: {
       title: 'Credit usage by category',
