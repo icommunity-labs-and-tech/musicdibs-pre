@@ -351,10 +351,9 @@ serve(async (req) => {
         status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+    // GEMINI_API_KEY is optional — Lyria provider won't be available if missing
     if (!GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: 'Server configuration error: missing GEMINI_API_KEY' }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      console.warn('[GENERATE-AUDIO] GEMINI_API_KEY not configured — Lyria provider disabled');
     }
 
     // ── Request body ──
