@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, Sparkles, Copy, Check, Flame } from "lucide-react";
 
@@ -22,12 +22,32 @@ export const LaunchPromoBanner = () => {
   const [mounted, setMounted] = useState(false);
   const [time, setTime] = useState(calc());
   const [copied, setCopied] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (sessionStorage.getItem(STORAGE_KEY) === "true") return;
     setMounted(true);
     requestAnimationFrame(() => setOpen(true));
   }, []);
+
+  // Measure height -> set CSS var consumed by Navbar (top offset) and body padding
+  useEffect(() => {
+    const root = document.documentElement;
+    const apply = () => {
+      const h = open && ref.current ? ref.current.offsetHeight : 0;
+      root.style.setProperty("--promo-h", `${h}px`);
+    };
+    apply();
+    if (!mounted) return;
+    const ro = new ResizeObserver(apply);
+    if (ref.current) ro.observe(ref.current);
+    window.addEventListener("resize", apply);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", apply);
+      root.style.setProperty("--promo-h", "0px");
+    };
+  }, [mounted, open]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -54,7 +74,7 @@ export const LaunchPromoBanner = () => {
   if (!mounted || !time) return null;
 
   const TimeUnit = ({ value, label }: { value: number; label: string }) => (
-    <div className="flex flex-col items-center min-w-[36px]">
+    <div className="flex flex-col items-center min-w-[34px]">
       <span className="text-sm md:text-base font-bold text-white tabular-nums leading-none">
         {String(value).padStart(2, "0")}
       </span>
@@ -66,28 +86,26 @@ export const LaunchPromoBanner = () => {
 
   return (
     <div
-      className={`relative w-full overflow-hidden transition-[max-height,opacity] duration-400 ease-out ${
-        open ? "max-h-[200px] opacity-100" : "max-h-0 opacity-0"
+      ref={ref}
+      className={`fixed top-0 inset-x-0 z-[60] transition-transform duration-400 ease-out ${
+        open ? "translate-y-0" : "-translate-y-full"
       }`}
       role="region"
       aria-label="Promoción de lanzamiento"
     >
-      <div className="relative">
-        {/* Background */}
+      <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-[#1a0b2e] via-[#2d0b4e] to-[#3a0f5c]" />
         <div className="absolute inset-0 backdrop-blur-2xl" />
-        {/* Glow accents */}
         <div className="pointer-events-none absolute -top-16 left-1/4 h-40 w-40 rounded-full bg-fuchsia-500/30 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-16 right-1/4 h-40 w-40 rounded-full bg-purple-500/30 blur-3xl" />
-        {/* Bottom hairline */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-fuchsia-300/40 to-transparent" />
 
-        <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-3 md:py-3.5">
-          <div className="flex flex-col md:flex-row md:items-center md:gap-5 gap-3 pr-8 md:pr-10">
+        <div className="relative max-w-7xl mx-auto px-4 md:px-6 py-2.5 md:py-3">
+          <div className="flex flex-col md:flex-row md:items-center md:gap-5 gap-2.5 pr-8 md:pr-10">
             {/* Title + text */}
             <div className="flex items-center gap-3 md:flex-1 md:min-w-0">
               <div className="hidden sm:flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-600 shadow-lg shadow-fuchsia-500/30">
-                <Sparkles className="h-4.5 w-4.5 text-white" />
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div className="min-w-0">
                 <h3 className="text-sm md:text-[15px] font-bold leading-tight bg-gradient-to-r from-white via-fuchsia-100 to-purple-200 bg-clip-text text-transparent">
@@ -99,9 +117,9 @@ export const LaunchPromoBanner = () => {
               </div>
             </div>
 
-            {/* Offer + code */}
+            {/* Code */}
             <div className="flex items-center gap-2 md:gap-3">
-              <span className="hidden md:inline text-[11px] uppercase tracking-widest text-fuchsia-300 font-semibold whitespace-nowrap">
+              <span className="hidden lg:inline text-[11px] uppercase tracking-widest text-fuchsia-300 font-semibold whitespace-nowrap">
                 🎁 30% OFF · Mayo
               </span>
               <button
@@ -143,7 +161,6 @@ export const LaunchPromoBanner = () => {
             </button>
           </div>
 
-          {/* Close */}
           <button
             onClick={close}
             aria-label="Cerrar"
