@@ -6,12 +6,14 @@ import { toast } from 'sonner';
 export function useCredits() {
   const { user } = useAuth();
   const [credits, setCredits] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const prevCreditsRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!user) return;
 
     const fetch = async () => {
+      setIsLoading(true);
       const { data } = await supabase
         .from('profiles')
         .select('available_credits')
@@ -21,6 +23,7 @@ export function useCredits() {
         setCredits(data.available_credits);
         prevCreditsRef.current = data.available_credits;
       }
+      setIsLoading(false);
     };
     fetch();
 
@@ -58,5 +61,5 @@ export function useCredits() {
 
   const hasEnough = (cost: number) => credits !== null && credits >= cost;
 
-  return { credits, hasEnough };
+  return { credits, hasEnough, isLoading };
 }
