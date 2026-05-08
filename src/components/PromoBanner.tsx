@@ -54,15 +54,10 @@ export const PromoBanner = () => {
       <div className="container relative mx-auto px-4 py-3 md:py-4">
         <div className="flex flex-col items-center gap-3 text-center lg:flex-row lg:items-center lg:justify-between lg:gap-5 lg:text-left">
           {/* Texto principal */}
-          <div className="lg:max-w-[520px] lg:flex-shrink-0">
-            <div className="flex flex-col items-center gap-0.5 lg:items-start">
-              <span className="text-sm md:text-base font-bold text-white leading-tight">
-                🚀 La nueva era de MusicDibs ya está aquí
-              </span>
-              <span className="text-xs md:text-sm text-white/80 leading-snug">
-                Crea música con IA, protégela y distribúyela desde un solo lugar.
-              </span>
-            </div>
+          <div className="lg:flex-shrink-0">
+            <span className="text-sm md:text-base font-bold text-white leading-tight">
+              🚀 Nueva era de Musicdibs
+            </span>
           </div>
 
           {/* Oferta + Código + Countdown + CTA */}
