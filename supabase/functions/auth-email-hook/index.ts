@@ -69,6 +69,14 @@ function buildHtml(emailType: string, confirmationUrl: string, token: string, re
       <p>Has solicitado cambiar tu email en MusicDibs. Haz clic para confirmar:</p>
       <a href="${confirmationUrl}" class="btn">Confirmar cambio →</a>
       <p class="note">Si no solicitaste este cambio, protege tu cuenta de inmediato.</p>`,
+    email_change_current: `<h1>📧 Confirmación desde tu email actual</h1>
+      <p>Has solicitado cambiar el email de tu cuenta MusicDibs. Confirma desde esta dirección haciendo clic:</p>
+      <a href="${confirmationUrl}" class="btn">Confirmar desde email actual →</a>
+      <p class="note">Para completar el cambio también deberás confirmar desde tu nuevo email. Si no solicitaste este cambio, protege tu cuenta de inmediato.</p>`,
+    email_change_new: `<h1>📧 Confirma tu nuevo email</h1>
+      <p>Esta dirección ha sido propuesta como nuevo email para tu cuenta de MusicDibs. Haz clic para confirmarla:</p>
+      <a href="${confirmationUrl}" class="btn">Confirmar nuevo email →</a>
+      <p class="note">Si no esperabas este email, puedes ignorarlo.</p>`,
     reauthentication: `<h1>🔒 Código de verificación</h1>
       <p>Usa el siguiente código para confirmar tu identidad:</p>
       <div class="code">${token}</div>
