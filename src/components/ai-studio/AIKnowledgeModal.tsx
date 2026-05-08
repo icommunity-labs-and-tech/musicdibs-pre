@@ -56,7 +56,9 @@ export const AIKnowledgeModal = ({ open, onOpenChange }: Props) => {
         </div>
         <a
           href="/Manual_buenas_practicas_IA.pdf"
-          download
+          download="Manual_buenas_practicas_IA.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
           className="mt-2 flex items-center justify-between gap-3 p-3 rounded-lg border border-primary/40 bg-gradient-to-r from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20 transition-colors group"
         >
           <div className="flex items-center gap-3">
