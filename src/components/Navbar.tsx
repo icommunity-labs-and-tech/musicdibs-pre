@@ -14,9 +14,7 @@ export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [hidden, setHidden] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const lastScrollY = useRef(0);
   const closeTimeout = useRef<number | null>(null);
   const ticking = useRef(false);
   const navigate = useNavigate();
@@ -66,17 +64,8 @@ export const Navbar = () => {
       // Scrolled state
       setScrolled(currentY > 50);
       
-      // Auto-hide: hide when scrolling down past 100px, show when scrolling up
-      if (currentY > 100) {
-        setHidden(currentY > lastScrollY.current && currentY - lastScrollY.current > 5);
-      } else {
-        setHidden(false);
-      }
-      
       // Progress bar
       setScrollProgress(docHeight > 0 ? Math.min(currentY / docHeight, 1) : 0);
-      
-      lastScrollY.current = currentY;
       ticking.current = false;
     });
   }, []);
@@ -85,9 +74,6 @@ export const Navbar = () => {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
-
-  // Always show navbar when mobile menu is open
-  const isHidden = hidden && !mobileOpen;
 
   const openServices = () => {
     if (closeTimeout.current) {
@@ -125,10 +111,11 @@ export const Navbar = () => {
 
   return (
     <nav
-      style={{ top: 'var(--promo-h, 0px)' }}
-      className={`fixed left-0 right-0 z-40 transition-all duration-300 ${
-        isHidden ? '-translate-y-[calc(100%+var(--promo-h,0px))]' : 'translate-y-0'
-      } ${scrolled ? 'nav-scrolled bg-black/80 backdrop-blur-md shadow-lg' : 'bg-transparent'} ${isLightBg && scrolled ? '!bg-background/95 !shadow-md' : ''}`}
+      className={`relative z-40 transition-all duration-300 ${
+        isLightBg
+          ? scrolled ? 'nav-scrolled bg-background/95 backdrop-blur-md shadow-md' : 'bg-background/90 backdrop-blur-md shadow-md'
+          : scrolled ? 'nav-scrolled bg-black/85 backdrop-blur-md shadow-lg' : 'bg-black/70 backdrop-blur-md'
+      }`}
     >
       {/* Reading progress bar */}
       <div
