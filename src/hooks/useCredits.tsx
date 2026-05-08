@@ -13,6 +13,7 @@ export function useCredits() {
     if (!user) return;
 
     const fetch = async () => {
+      setIsLoading(true);
       const { data } = await supabase
         .from('profiles')
         .select('available_credits')
@@ -22,6 +23,7 @@ export function useCredits() {
         setCredits(data.available_credits);
         prevCreditsRef.current = data.available_credits;
       }
+      setIsLoading(false);
     };
     fetch();
 
