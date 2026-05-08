@@ -240,6 +240,12 @@ const es = {
       purchase: 'Compra',
       renewal: 'Renovación',
       consumption: 'Consumo',
+      refund: 'Reembolso',
+      adminGrant: 'Ajuste manual',
+      onboarding: 'Bienvenida',
+      migration: 'Migración',
+      subscription: 'Suscripción',
+      paymentFailed: 'Pago fallido',
     },
     creditChart: {
       title: 'Uso de créditos por categoría',
