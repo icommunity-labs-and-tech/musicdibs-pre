@@ -511,7 +511,19 @@ serve(async (req) => {
         //   style  = musical style / technical description
         // Mixing both into `prompt` causes Suno to literally sing the description.
         const userDesc = (original_description || prompt || '').toString().trim();
-        const styleText = [genre, mood, userDesc].filter(Boolean).join(', ').slice(0, 1000);
+
+        // ── KIE constraint 1: strip artist name references from style field ──
+        // KIE/Suno rejects tags that reference specific artists (e.g. "estilo de Rosalía").
+        // Remove patterns like: "estilo de X", "style of X", "like X", "al estilo de X",
+        // "inspirado en X", "inspired by X", and any "Artist Name" standalone tokens.
+        const stripArtistRefs = (text: string): string => text
+          .replace(/\b(estilo\s+de|style\s+of|al\s+estilo\s+de|inspired?\s+by|como|like|similar\s+a|reminiscent\s+of)\s+[^,.\n]{1,60}/gi, '')
+          .replace(/\b(inspirado\s+en|en\s+la\s+l[ií]nea\s+de|a\s+lo)\s+[^,.\n]{1,60}/gi, '')
+          .replace(/,\s*,/g, ',').replace(/\s+/g, ' ').trim();
+
+        const styleRaw = [genre, mood, userDesc].filter(Boolean).join(', ');
+        const styleText = stripArtistRefs(styleRaw).slice(0, 1000);
+
         const isInstrumental = mode !== 'song';
         const kiePayload: Record<string, unknown> = {
           instrumental: isInstrumental,
@@ -519,13 +531,17 @@ serve(async (req) => {
           ...(styleText ? { style: styleText } : {}),
         };
         if (isInstrumental) {
-          kiePayload.prompt = userDesc || enrichedPrompt;
+          // ── KIE constraint 2: non-customMode prompt ≤ 500 chars ──
+          const instrPrompt = stripArtistRefs(userDesc || enrichedPrompt);
+          kiePayload.prompt = instrPrompt.slice(0, 500);
         } else if (hasLyrics) {
           // Vocal with user lyrics: send raw lyrics as prompt so Suno sings them literally
           kiePayload.prompt = lyrics.trim();
         } else {
           // No lyrics provided: let Suno write them from the description
-          kiePayload.prompt = userDesc || enrichedPrompt;
+          // customMode=false → non-custom mode → prompt MUST be ≤ 500 chars
+          const noLyricsPrompt = stripArtistRefs(userDesc || enrichedPrompt);
+          kiePayload.prompt = noLyricsPrompt.slice(0, 500);
           kiePayload.customMode = false;
         }
         const idemKey = crypto.randomUUID();

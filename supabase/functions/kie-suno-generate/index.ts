@@ -53,6 +53,26 @@ serve(async (req) => {
       return json({ error: "prompt_required", message: "Prompt is required (min 5 chars)" }, 400);
     }
 
+    // ── Sanitize inputs before sending to KIE/Suno ──────────────────────────
+    // Constraint 1: strip artist name references from style/prompt fields.
+    // KIE rejects tags referencing specific artists (e.g. "estilo de Rosalía").
+    const stripArtistRefs = (text: string): string => text
+      .replace(/\b(estilo\s+de|style\s+of|al\s+estilo\s+de|inspired?\s+by|como|like|similar\s+a|reminiscent\s+of)\s+[^,.\n]{1,60}/gi, "")
+      .replace(/\b(inspirado\s+en|en\s+la\s+l[ií]nea\s+de|a\s+lo)\s+[^,.\n]{1,60}/gi, "")
+      .replace(/,\s*,/g, ",").replace(/\s+/g, " ").trim();
+
+    // Constraint 2: non-customMode prompt must be ≤ 500 chars (KIE API limit).
+    // customMode=true (user provided lyrics) has no hard char limit from KIE.
+    const sanitizedPrompt = customMode
+      ? prompt.trim()                                    // lyrics — no truncation
+      : stripArtistRefs(prompt.trim()).slice(0, 500);    // description — 500 cap
+
+    const sanitizedStyle = style
+      ? stripArtistRefs(String(style)).slice(0, 1000)
+      : undefined;
+
+    console.log(`[kie-suno-generate] prompt: ${sanitizedPrompt.length} chars | style: ${sanitizedStyle?.length ?? 0} chars | customMode=${customMode} | instrumental=${instrumental}`);
+
     const featureKey = instrumental ? FEATURE_KEY_INSTR : FEATURE_KEY_VOCAL;
 
     // Verify KIE Suno is the ACTIVE provider for this feature (not just enabled)
@@ -151,14 +171,14 @@ serve(async (req) => {
 
     const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-suno-callback?logId=${logId}&token=${callbackToken}`;
     const kiePayload: Record<string, unknown> = {
-      prompt,
+      prompt: sanitizedPrompt,   // sanitized: artist refs stripped + 500 char cap for non-customMode
       customMode,
       instrumental,
       model,
       callBackUrl,
     };
     if (title) kiePayload.title = title;
-    if (style) kiePayload.style = style;
+    if (sanitizedStyle) kiePayload.style = sanitizedStyle;  // sanitized: artist refs stripped
     if (negativeTags) kiePayload.negativeTags = negativeTags;
 
     console.log("[kie-suno-generate] dispatching task", { feature: featureKey, model, logId });
