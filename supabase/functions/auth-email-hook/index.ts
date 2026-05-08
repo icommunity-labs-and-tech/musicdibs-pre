@@ -262,21 +262,22 @@ function buildEmailQueue(body: AuthEmailPayload): EmailToSend[] {
   if (!emailType) return []
 
   if (emailType === 'email_change') {
+    // Confirmación única: solo enviamos al NUEVO email.
+    // Esto permite cambiar el correo aunque el usuario haya perdido acceso al antiguo.
     const emails: EmailToSend[] = []
-
-    if (currentEmail && tokenHashNew) {
-      emails.push({ type: 'email_change_current', recipient: currentEmail, token, tokenHash: tokenHashNew })
-    }
 
     if (newEmail && tokenHash) {
       emails.push({ type: 'email_change_new', recipient: newEmail, token: tokenNew || token, tokenHash })
-    }
-
-    if (emails.length === 0 && newEmail && tokenHash) {
-      emails.push({ type: 'email_change_new', recipient: newEmail, token: tokenNew || token, tokenHash })
+    } else if (newEmail && tokenHashNew) {
+      emails.push({ type: 'email_change_new', recipient: newEmail, token: tokenNew || token, tokenHash: tokenHashNew })
     }
 
     return emails
+  }
+
+  // Si Supabase manda explícitamente email_change_current, lo ignoramos (confirmación única).
+  if (emailType === 'email_change_current') {
+    return []
   }
 
   const recipient = emailType === 'email_change_new' ? (newEmail || currentEmail) : currentEmail
