@@ -37,7 +37,7 @@ export const LaunchPromoPopup = () => {
     const t = setTimeout(() => {
       setOpen(true);
       sessionStorage.setItem(STORAGE_KEY, "1");
-    }, 2500);
+    }, 4000);
     return () => clearTimeout(t);
   }, []);
 
