@@ -178,7 +178,7 @@ serve(async (req) => {
     const { work, aiGen, lyrics } = meta;
 
     await supabase.from('profiles').update({ available_credits: profile.available_credits - CREDITS_COST, updated_at: new Date().toISOString() }).eq('user_id', user.id);
-    await supabase.from('credit_transactions').insert({ user_id: user.id, amount: -CREDITS_COST, type: 'usage', description: `Promoción RRSS: ${work.title}` });
+    await supabase.from('credit_transactions').insert({ user_id: user.id, amount: -CREDITS_COST, type: 'usage', feature_key: 'promo_social_generate', description: `Promoción RRSS: ${work.title}` });
 
     const { data: promo, error: promoError } = await supabase.from('social_promotions').insert({ user_id: user.id, work_id: itemId, status: 'generating', credits_spent: CREDITS_COST }).select().single();
     if (promoError || !promo) {

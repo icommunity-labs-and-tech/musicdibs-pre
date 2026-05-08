@@ -300,6 +300,7 @@ serve(async (req) => {
       user_id: user.id,
       amount: -CREDITS_COST,
       type: "usage",
+      feature_key: "generate_cover",
       description: `Portada IA: ${trackTitle || "Sin título"}`.slice(0, 200),
     })
 
