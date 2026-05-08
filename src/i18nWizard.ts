@@ -108,6 +108,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
       signature: {
         loading: 'Cargando firmas...',
         label: 'Identidad digital (firma)',
+        verifiedIdentity: 'Identidad verificada',
         selectPlaceholder: 'Seleccionar firma',
         needCreate: 'Necesitas crear una identidad digital para firmar tus obras.',
         namePlaceholder: 'Nombre de la firma',
@@ -265,6 +266,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
       signature: {
         loading: 'Loading signatures...',
         label: 'Digital identity (signature)',
+        verifiedIdentity: 'Verified identity',
         selectPlaceholder: 'Select signature',
         needCreate: 'You need to create a digital identity to sign your works.',
         namePlaceholder: 'Signature name',
@@ -419,6 +421,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
       signature: {
         loading: 'Carregando assinaturas...',
         label: 'Identidade digital (assinatura)',
+        verifiedIdentity: 'Identidade verificada',
         selectPlaceholder: 'Selecionar assinatura',
         needCreate: 'Você precisa criar uma identidade digital para assinar suas obras.',
         namePlaceholder: 'Nome da assinatura',
