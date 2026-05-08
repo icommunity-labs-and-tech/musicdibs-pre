@@ -1864,6 +1864,12 @@ const pt: typeof es = {
       purchase: 'Compra',
       renewal: 'Renovação',
       consumption: 'Consumo',
+      refund: 'Reembolso',
+      adminGrant: 'Ajuste manual',
+      onboarding: 'Boas-vindas',
+      migration: 'Migração',
+      subscription: 'Assinatura',
+      paymentFailed: 'Pagamento falhou',
     },
     creditChart: {
       title: 'Uso de créditos por categoria',
