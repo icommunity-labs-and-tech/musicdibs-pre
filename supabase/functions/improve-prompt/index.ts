@@ -88,6 +88,65 @@ Escribe un párrafo fluido de 80-150 palabras que incluya:
 NO incluyas BPM, instrumentos, técnicas de producción ni referencias técnicas musicales.
 Devuelve SOLO la descripción lírica mejorada, sin explicaciones ni encabezados.`,
 
+  video_prompt: `Eres un experto en dirección de vídeos musicales y motion graphics. Tu tarea es transformar una descripción corta o idea en un prompt detallado y cinematográfico para generar un vídeo con IA.
+
+El prompt resultante debe incluir:
+- Descripción visual detallada del elemento principal
+- Estilo cinematográfico (iluminación, cámara, ángulo)
+- Paleta de colores y atmósfera
+- Movimiento y dinámica (cómo se mueve la cámara, el sujeto, los efectos)
+- Ambiente y contexto (entorno, hora del día, efectos visuales)
+- Estilo visual (cinematográfico, neón, oscuro, épico, etc.)
+
+Ejemplo: si el usuario escribe "Guitarra en llamas", el resultado debe ser algo como:
+"Una guitarra eléctrica envuelta en llamas vivas de color naranja y azul, sobre un escenario oscuro. Las llamas se mueven con violencia y energía, iluminando dramáticamente el instrumento. Luz cinematográfica lateral, colores saturados y vivos, cámara lenta con zoom suave hacia la guitarra. Atmósfera épica y poderosa, fondo oscuro con partículas de fuego flotando."
+
+REGLA CRÍTICA DE IDIOMA: Responde SIEMPRE en el mismo idioma en que escribió el usuario (Español → Español, Inglés → Inglés, Portugués → Portugués). Si no hay texto, responde en Español.
+
+Responde SOLO con el prompt mejorado, sin explicaciones ni comentarios adicionales.`,
+
+  creative_feed: `Eres un experto en diseño gráfico y marketing visual para música. Tu tarea es transformar una descripción simple en un prompt detallado y profesional para generar una imagen de material promocional musical con IA, en formato cuadrado 1:1 (Instagram Feed).
+
+El prompt resultante debe incluir:
+- Tipo de pieza gráfica y composición visual adaptada a formato cuadrado 1:1
+- Estilo de diseño (moderno, minimalista, urbano, vintage, etc.)
+- Paleta de colores dominante y atmósfera visual
+- Tipografía y elementos de texto (estilo, tamaño relativo, posición)
+- Elementos visuales y gráficos (iconos, formas, texturas, fondos)
+- Calidad y acabado (profesional, editorial, alta resolución)
+
+REGLA CRÍTICA DE IDIOMA: Responde SIEMPRE en el mismo idioma en que escribió el usuario (Español → Español, Inglés → Inglés, Portugués → Portugués). Si no hay texto, responde en Español.
+
+Responde SOLO con el prompt mejorado, sin explicaciones ni comentarios adicionales.`,
+
+  creative_story: `Eres un experto en diseño gráfico y marketing visual para música. Tu tarea es transformar una descripción simple en un prompt detallado y profesional para generar una imagen de material promocional musical con IA, en formato vertical 9:16 (Instagram Story).
+
+El prompt resultante debe incluir:
+- Tipo de pieza gráfica y composición visual adaptada a formato vertical 9:16
+- Estilo de diseño (moderno, minimalista, urbano, vintage, etc.)
+- Paleta de colores dominante y atmósfera visual
+- Tipografía y elementos de texto centrados y legibles en móvil (estilo, tamaño relativo, posición)
+- Elementos visuales y gráficos (iconos, formas, texturas, fondos)
+- Calidad y acabado (profesional, editorial, alta resolución)
+
+REGLA CRÍTICA DE IDIOMA: Responde SIEMPRE en el mismo idioma en que escribió el usuario (Español → Español, Inglés → Inglés, Portugués → Portugués). Si no hay texto, responde en Español.
+
+Responde SOLO con el prompt mejorado, sin explicaciones ni comentarios adicionales.`,
+
+  creative_youtube: `Eres un experto en diseño gráfico y marketing visual para música. Tu tarea es transformar una descripción simple en un prompt detallado y profesional para generar una imagen de material promocional musical con IA, en formato panorámico 16:9 como thumbnail de vídeo de YouTube.
+
+El prompt resultante debe incluir:
+- Tipo de pieza gráfica y composición visual adaptada a formato panorámico 16:9 (thumbnail de YouTube)
+- Estilo de diseño (moderno, minimalista, urbano, vintage, etc.)
+- Paleta de colores dominante con alto contraste y atmósfera visual
+- Tipografía bold y llamativa, máximo 3-4 palabras grandes y legibles
+- Elementos visuales y gráficos que generen curiosidad y clics (iconos, formas, texturas, fondos)
+- Calidad y acabado (profesional, editorial, alta resolución)
+
+REGLA CRÍTICA DE IDIOMA: Responde SIEMPRE en el mismo idioma en que escribió el usuario (Español → Español, Inglés → Inglés, Portugués → Portugués). Si no hay texto, responde en Español.
+
+Responde SOLO con el prompt mejorado, sin explicaciones ni comentarios adicionales.`,
+
   social_poster: `You are a designer of graphics for social media (Facebook/Twitter).
 Improve the following description to create a digital poster, adding details about:
 - Optimized square format
@@ -100,21 +159,6 @@ Improve the following description to create a digital poster, adding details abo
 CRITICAL: Describe visual elements of a digital poster. Do NOT mention music, songs, or music production.
 Description must be 40-100 words. Return ONLY the improved description, no explanations.
 CRITICAL RULE - LANGUAGE: You MUST respond in the SAME language the user wrote in. If there's no text, respond in Spanish.`,
-
-  video_prompt: `Eres un experto en dirección de vídeos musicales y motion graphics. Tu tarea es transformar una descripción corta o idea en un prompt detallado y cinematográfico para generar un vídeo con IA.
-
-REGLA CRÍTICA DE IDIOMA: Responde SIEMPRE en el mismo idioma en que escribió el usuario. Español → Español, Inglés → Inglés, Portugués → Portugués.
-
-El prompt resultante debe incluir:
-- Descripción visual detallada del elemento principal
-- Estilo cinematográfico: iluminación, cámara y ángulo
-- Paleta de colores y atmósfera
-- Movimiento y dinámica: cómo se mueve la cámara, el sujeto y los efectos
-- Ambiente y contexto: entorno, hora del día y efectos visuales
-- Estilo visual: cinematográfico, neón, oscuro, épico, etc.
-
-No escribas para música, canciones, letras, géneros musicales, BPM ni instrumentos como producción musical. Escribe SOLO un prompt visual para vídeo.
-Devuelve SOLO el prompt mejorado, sin explicaciones ni comentarios adicionales.`,
 };
 
 serve(async (req) => {
@@ -129,9 +173,7 @@ serve(async (req) => {
       });
     }
 
-    const { prompt, genre, mood, mode, image_base64, hasLyrics, maxChars } = await req.json();
-    const budget = Math.max(400, Math.min(Number(maxChars) || 4500, 4500));
-    const minChars = Math.min(Math.max(Math.floor(budget * 0.6), 300), Math.max(400, budget - 100));
+    const { prompt, genre, mood, mode, image_base64 } = await req.json();
 
     const isVisualMode = mode in VISUAL_SYSTEM_PROMPTS;
 
@@ -154,53 +196,61 @@ serve(async (req) => {
     if (isVisualMode) {
       systemPrompt = VISUAL_SYSTEM_PROMPTS[mode];
       userTextContent = prompt?.trim()
-        ? mode === 'video_prompt'
-          ? `Transforma esta idea en un prompt detallado y cinematográfico para generar un vídeo con IA. Responde SOLO con el prompt mejorado y en el mismo idioma del texto original:\n\n"""\n${prompt}\n"""`
-          : `Create an optimized image generation prompt based on this description: "${prompt}". Return ONLY the improved prompt.`
+        ? `Create an optimized image generation prompt based on this description: "${prompt}". Return ONLY the improved prompt.`
         : `Analyze this photo and create an optimized image generation prompt for a music promotional creative inspired by it. Return ONLY the prompt.`;
       if (image_base64) {
         userImageContent = { url: `data:image/jpeg;base64,${image_base64}` };
       }
     } else {
+      const modeContext = mode === 'instrumental'
+        ? 'an instrumental track (no lyrics, no voice)'
+        : 'a full song with vocals and lyrics';
+
       const contextParts = [];
-      if (genre) contextParts.push(`Género: ${genre}`);
+      if (genre) contextParts.push(`Genre: ${genre}`);
       if (mood) contextParts.push(`Mood: ${mood}`);
-      const contextStr = contextParts.length > 0 ? `\nContexto seleccionado por el usuario: ${contextParts.join(', ')}` : '';
+      const contextStr = contextParts.length > 0 ? `\nUser-selected context: ${contextParts.join(', ')}` : '';
 
-      systemPrompt = `Eres un experto en producción musical y prompt engineering para modelos de IA generativa de música (ElevenLabs Music, Suno, Udio). Tu tarea es transformar una descripción básica en un prompt detallado de entre ${minChars} y ${budget} caracteres (NUNCA superes los ${budget}) que maximice la calidad de la música generada.
+      systemPrompt = `You are a world-class music producer and AI prompt engineer specialized in writing ultra-detailed prompts for AI music generation systems (Suno, ElevenLabs Music, Udio, Mureka).
 
-El prompt mejorado DEBE incluir:
-- Género y subgénero específico
-- Estado emocional y atmósfera
-- Tempo (BPM) y compás
-- Instrumentos principales y su rol
-- Tipo de voz (timbre, registro, técnica)
-- Dinámica y evolución (intro, verso, coro, puente)
-- Efectos y producción (reverb, delay, compresión)
-- Referencias a artistas/producciones similares
-- Calidad de producción objetivo
+Your task: take the user's rough description and rewrite it as a PROFESSIONAL, PRODUCTION-READY prompt that maximizes audio quality and musical coherence.
 
-Responde SOLO con el prompt mejorado. Sin explicaciones, sin prefijos, sin comillas. Máximo ESTRICTO ${budget} caracteres.
+═══ CRITICAL LANGUAGE RULE ═══
+Detect the language the user wrote in and respond in that EXACT same language. Spanish → Spanish, English → English, Portuguese → Portuguese, French → French, etc. NEVER translate. Keep technical music terms (BPM, verse, drop, sidechain, reverb, etc.) in English even when responding in other languages — that's industry standard.
 
-REGLA SOBRE LA LETRA:
-- Si hasLyrics=true: NO generes ni reescribas la letra. Describe SOLO elementos musicales.
-- Si hasLyrics=false: incluye una letra completa al final con tags [Verso 1]/[Estribillo]/etc.`;
+═══ STRUCTURE OF THE OUTPUT (MANDATORY) ═══
+Write a single flowing paragraph (no bullet points, no headers, no markdown) of 180–350 words that includes ALL of these elements naturally woven together:
 
-      if (hasLyrics) {
-        systemPrompt += `\n\nATENCIÓN: hasLyrics=true → NO añadas letra. Solo descripción musical. Máximo ${budget} caracteres.`;
-      }
+1. **Genre & subgenre**: be specific (e.g. "synthwave with vaporwave influences" instead of just "electronic"; "neo-soul with trap drums" instead of just "R&B").
+2. **BPM range**: give a precise tempo (e.g. "92 BPM", "128 BPM", "65–70 BPM").
+3. **Key & mode**: suggest a musical key (e.g. "C minor", "F# major", "A Dorian") that fits the mood.
+4. **Song structure**: describe sections in order (intro → verse → pre-chorus → chorus → bridge → outro) with bar counts when relevant.
+5. **Instrumentation**: name specific instruments and synths (e.g. "Juno-60 pads", "808 sub-bass", "Rhodes electric piano", "muted Strat guitar", "analog tape drums", "TR-909 hi-hats").
+6. **Production techniques**: include mixing/mastering cues (e.g. "warm analog saturation", "wide stereo reverb", "sidechain compression on the pads", "tape hiss", "lo-fi vinyl crackle", "punchy mastering").
+7. **Vocal direction** (only for full songs): voice type, gender, range, vocal style, FX (e.g. "breathy female alto with light autotune and slap delay", "raspy male tenor with doubled harmonies"), vocal placement (lead + backing).
+8. **Mood & atmosphere**: emotional arc, dynamics, energy curve.
+9. **Reference artists or tracks**: 2–4 reference artists in the same vein (e.g. "in the vein of The Weeknd, Daft Punk and Tame Impala") to anchor the style.
+10. **Lyrical theme** (full songs): topic, point of view, imagery — and PRESERVE any lyrics the user already wrote, embedding them verbatim with section tags like [Verse 1], [Chorus], [Bridge].
 
-      const lyricsRule = hasLyrics
-        ? `El usuario YA incluye letra: NO generes ni modifiques letra; describe SOLO elementos musicales. Máximo ESTRICTO ${budget} caracteres.`
-        : `El usuario NO incluye letra: incluye una letra completa (mín. 16 líneas) con tags al final. Máximo ESTRICTO ${budget} caracteres.`;
-      userTextContent = `Mejora esta descripción técnica de canción.${contextStr}\n\nDescripción original:\n"""\n${prompt}\n"""\n\n${lyricsRule}\n\nDevuelve SOLO el prompt mejorado, entre ${minChars} y ${budget} caracteres, en el mismo idioma del original.`;
+═══ CONTENT SAFETY (STRICT) ═══
+Replace any unsafe terminology with creative musical equivalents:
+- violence/war → "inner conflict", "struggle", "adversity"
+- kill/death → "overcome", "transform", "let go"
+- drugs → "nightlife", "altered states", "excess"
+- explicit sexual content → "intimacy", "passion", "desire"
+Never include weapons, slurs, hate speech, or illegal activity.
+
+═══ OUTPUT FORMAT ═══
+Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanation, no quotes around the response, no markdown headers. Length: 180–350 words.`;
+
+      userTextContent = `Rewrite this song description for ${modeContext}.${contextStr}\n\nOriginal description from the user:\n"""\n${prompt}\n"""\n\nProduce the final professional prompt now, in the SAME language as the original. Return ONLY the rewritten prompt as a single flowing paragraph.`;
     }
 
     let improved: string | null = null;
     let lastError = '';
 
     // Try Google Generative Language API (Gemini 3 Flash) first
-    if (GEMINI_API_KEY && mode !== 'video_prompt') {
+    if (GEMINI_API_KEY) {
       try {
         const geminiModel = 'gemini-2.5-flash';
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;

@@ -10,13 +10,14 @@ const corsHeaders = {
 // ── Fallback costs (used only if DB query fails) ───────────
 const FALLBACK_COSTS: Record<string, number> = {
   register_work: 1,
-  promote_premium: 25,
+  promote_work: 15,
+  promote_premium: 30,
   generate_audio: 2,
   generate_audio_song: 3,
   edit_audio: 2,
   enhance_audio: 1,
   generate_cover: 2,
-  one_click_create: 0,
+  inspiration: 0,
   generate_video: 6,
   voice_translation_per_min: 2,
   instagram_creative: 1,
@@ -77,24 +78,23 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // ✅ operation_pricing es la única fuente de verdad
     let amount: number | null = null;
 
-    const { data: pricingRow, error: pricingError } = await supabaseAdmin
-      .from("operation_pricing")
-      .select("credits_cost, is_active")
-      .eq("operation_key", feature)
+    const { data: costRow, error: costError } = await supabaseAdmin
+      .from("feature_costs")
+      .select("credit_cost")
+      .eq("feature_key", feature)
       .maybeSingle();
 
-    if (pricingError) {
-      console.warn("[SPEND-CREDITS] operation_pricing lookup failed:", pricingError.message);
+    if (costError) {
+      console.warn("[SPEND-CREDITS] DB lookup failed, using fallback:", costError.message);
     }
 
-    if (pricingRow && pricingRow.is_active !== false) {
-      amount = pricingRow.credits_cost;
+    if (costRow) {
+      amount = costRow.credit_cost;
     } else if (feature in FALLBACK_COSTS) {
       amount = FALLBACK_COSTS[feature];
-      console.warn(`[SPEND-CREDITS] Feature "${feature}" not in operation_pricing, using fallback: ${amount}`);
+      console.warn(`[SPEND-CREDITS] Feature "${feature}" not in DB, using fallback: ${amount}`);
     } else {
       return new Response(
         JSON.stringify({ error: "Unknown feature", feature }),
@@ -123,7 +123,7 @@ serve(async (req) => {
       });
     }
 
-    if (profile.available_credits < (amount as number)) {
+    if (profile.available_credits < (amount ?? 0)) {
       return new Response(
         JSON.stringify({
           error: "Créditos insuficientes",

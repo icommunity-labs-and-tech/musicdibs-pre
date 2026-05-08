@@ -39,8 +39,18 @@ serve(async (req) => {
     }
 
     const {
-      description, genre, mood, style, language, rhymeScheme,
-      structure, artistRefs, pov, theme, regenerateSection, existingLyrics,
+      description,
+      genre,
+      mood,
+      style,
+      language,
+      rhymeScheme,
+      structure,
+      artistRefs,
+      pov,
+      theme,
+      regenerateSection,
+      existingLyrics,
     } = await req.json()
 
     const systemPrompt = `Eres un compositor profesional de letras musicales con 20 años de experiencia.
@@ -104,7 +114,7 @@ No añadas explicaciones, comentarios ni introducciones.`
       },
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
-        max_tokens: 4096,
+        max_tokens: 2000,
         system: systemPrompt,
         messages: [{ role: "user", content: userPrompt }],
       }),
@@ -112,10 +122,15 @@ No añadas explicaciones, comentarios ni introducciones.`
 
     if (!response.ok) {
       const errText = await response.text()
-      console.error("[LYRICS] Claude API error:", response.status, errText)
-      const errorCode = (response.status === 429) ? 'provider_rate_limit' : 'provider_unavailable'
-      return new Response(JSON.stringify({ error: errorCode }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      console.error("[LYRICS] Anthropic error:", response.status, errText)
+
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "Demasiadas solicitudes, espera un momento." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      }
+
+      return new Response(JSON.stringify({ error: "Error al generar letra" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
     }
 
     const data = await response.json()
@@ -123,14 +138,25 @@ No añadas explicaciones, comentarios ni introducciones.`
 
     console.log(`[LYRICS] Generated for user ${user.id}, ${lyrics.length} chars`)
 
+    // Guardar en BBDD
     try {
       const supabaseAdmin = createClient(
         Deno.env.get("SUPABASE_URL")!,
         Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       )
       await supabaseAdmin.from("lyrics_generations").insert({
-        user_id: user.id, description, theme, genre, mood, style, language,
-        rhyme_scheme: rhymeScheme, structure, artist_refs: artistRefs, pov, lyrics,
+        user_id:      user.id,
+        description,
+        theme,
+        genre,
+        mood,
+        style,
+        language,
+        rhyme_scheme: rhymeScheme,
+        structure,
+        artist_refs:  artistRefs,
+        pov,
+        lyrics,
       })
     } catch (e) {
       console.error("[LYRICS] Error saving to DB:", e)
@@ -140,6 +166,7 @@ No añadas explicaciones, comentarios ni introducciones.`
       JSON.stringify({ lyrics }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     )
+
   } catch (e) {
     console.error("[LYRICS] Error:", e)
     return new Response(
