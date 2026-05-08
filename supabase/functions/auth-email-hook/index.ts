@@ -16,6 +16,8 @@ const SUBJECTS: Record<string, string> = {
   magiclink: 'Tu enlace de acceso a MusicDibs',
   recovery: 'Restablece tu contraseña en MusicDibs',
   email_change: 'Confirma tu nuevo email en MusicDibs',
+  email_change_current: 'Confirma el cambio de email desde tu cuenta actual',
+  email_change_new: 'Confirma tu nuevo email en MusicDibs',
   reauthentication: 'Tu código de verificación de MusicDibs',
 }
 
@@ -24,7 +26,9 @@ const REDIRECTS: Record<string, string> = {
   signup: `https://${ROOT_DOMAIN}/dashboard`,
   magiclink: `https://${ROOT_DOMAIN}/dashboard`,
   invite: `https://${ROOT_DOMAIN}/dashboard`,
-  email_change: `https://${ROOT_DOMAIN}/dashboard`,
+  email_change: `https://${ROOT_DOMAIN}/dashboard/profile`,
+  email_change_current: `https://${ROOT_DOMAIN}/dashboard/profile`,
+  email_change_new: `https://${ROOT_DOMAIN}/dashboard/profile`,
   reauthentication: `https://${ROOT_DOMAIN}/dashboard`,
 }
 
