@@ -9,12 +9,18 @@ import { getNavLinks } from "@/i18nLinks";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
-export const Navbar = () => {
+type NavbarProps = {
+  layout?: "fixed" | "inline";
+};
+
+export const Navbar = ({ layout = "fixed" }: NavbarProps) => {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const lastScrollY = useRef(0);
   const closeTimeout = useRef<number | null>(null);
   const ticking = useRef(false);
   const navigate = useNavigate();
@@ -53,6 +59,7 @@ export const Navbar = () => {
   const navTextMuted = isLightBg ? 'text-foreground/70 hover:text-foreground' : 'text-white/70 hover:text-white';
   const navIconColor = isLightBg ? 'text-foreground/70 hover:text-foreground hover:bg-foreground/10' : 'text-white/70 hover:text-white hover:bg-white/10';
   const mobileToggleColor = isLightBg ? 'text-foreground' : 'text-white';
+  const isInline = layout === "inline";
 
   const handleScroll = useCallback(() => {
     if (ticking.current) return;
@@ -63,12 +70,19 @@ export const Navbar = () => {
       
       // Scrolled state
       setScrolled(currentY > 50);
+
+      if (!isInline && currentY > 100) {
+        setHidden(currentY > lastScrollY.current && currentY - lastScrollY.current > 5);
+      } else {
+        setHidden(false);
+      }
       
       // Progress bar
       setScrollProgress(docHeight > 0 ? Math.min(currentY / docHeight, 1) : 0);
+      lastScrollY.current = currentY;
       ticking.current = false;
     });
-  }, []);
+  }, [isInline]);
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -91,6 +105,7 @@ export const Navbar = () => {
 
   const { t, i18n } = useTranslation();
   const links = getNavLinks(i18n.resolvedLanguage || i18n.language);
+  const isHidden = !isInline && hidden && !mobileOpen;
 
   const scrollToSection = (sectionId: string) => {
     setMobileOpen(false);
@@ -111,10 +126,12 @@ export const Navbar = () => {
 
   return (
     <nav
-      className={`relative z-40 transition-all duration-300 ${
+      className={`${isInline ? 'relative' : 'fixed left-0 right-0 top-0'} z-40 transition-all duration-300 ${
+        isHidden ? '-translate-y-full' : 'translate-y-0'
+      } ${
         isLightBg
-          ? scrolled ? 'nav-scrolled bg-background/95 backdrop-blur-md shadow-md' : 'bg-background/90 backdrop-blur-md shadow-md'
-          : scrolled ? 'nav-scrolled bg-black/85 backdrop-blur-md shadow-lg' : 'bg-black/70 backdrop-blur-md'
+          ? scrolled || isInline ? 'nav-scrolled bg-background/95 backdrop-blur-md shadow-md' : 'bg-transparent'
+          : scrolled || isInline ? 'nav-scrolled bg-black/85 backdrop-blur-md shadow-lg' : 'bg-transparent'
       }`}
     >
       {/* Reading progress bar */}
