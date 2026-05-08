@@ -134,10 +134,14 @@ const Index = () => {
           }
         ]}
       />
-      <LaunchPromoBanner />
-      <Navbar />
-      <HeroSection />
-      <DeferredHomeSections />
+      <header className="relative z-40">
+        <LaunchPromoBanner />
+        <Navbar />
+      </header>
+      <main>
+        <HeroSection />
+        <DeferredHomeSections />
+      </main>
     </div>
   );
 };
