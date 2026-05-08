@@ -63,7 +63,7 @@ export const PromoBanner = () => {
           {/* Oferta + Código + Countdown + CTA */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 md:gap-3">
             <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1.5 text-xs md:text-sm font-bold tracking-wider text-white border border-white/20 whitespace-nowrap">
-              🎁 -30% OFF · Solo mayo
+              🎁 -30% · Solo mayo
             </span>
 
             <button
