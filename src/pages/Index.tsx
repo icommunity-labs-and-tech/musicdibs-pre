@@ -139,6 +139,7 @@ const Index = () => {
       <HeroSection />
       <PromoBanner />
       <DeferredHomeSections />
+      <LaunchPromoPopup />
     </div>
   );
 };
