@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Headphones, Target, RotateCw, Pencil, SlidersHorizontal, AlertTriangle } from "lucide-react";
+import { Headphones, Target, RotateCw, Pencil, SlidersHorizontal, AlertTriangle, FileDown } from "lucide-react";
 
 const STORAGE_KEY = "musicdibs:ai-knowledge-seen";
 const DONT_SHOW_KEY = "musicdibs:ai-knowledge-dont-show";
