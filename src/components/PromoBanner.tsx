@@ -37,7 +37,7 @@ export const PromoBanner = () => {
   };
 
   const scrollToPricing = () => {
-    document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("pricing-section")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
