@@ -428,7 +428,7 @@ const AIStudioCreate = () => {
       }
 
       // Async provider (e.g. KIE Suno): generation runs via callback.
-      // Keep the spinner/progress UI visible and poll ai_generations for the new row.
+      // Poll both ai_generations (success) and ai_generation_logs (failure) to detect outcome fast.
       if (data?.status === 'processing' && !data?.audio) {
         toast({
           title: 'Generación en curso',
@@ -439,9 +439,14 @@ const AIStudioCreate = () => {
         const startedAt = Date.now();
         const maxWaitMs = 6 * 60 * 1000; // 6 min
         const knownIds = new Set(results.map(r => r.id));
+        const logId: string | undefined = data?.logId;
         let found: any = null;
+        let failedEarly = false;
+
         while (Date.now() - startedAt < maxWaitMs) {
           await new Promise(r => setTimeout(r, 5000));
+
+          // Check for success: new row in ai_generations
           const { data: rows } = await supabase
             .from('ai_generations')
             .select('*')
@@ -450,6 +455,20 @@ const AIStudioCreate = () => {
             .limit(5);
           const fresh = (rows || []).find((row: any) => !knownIds.has(row.id) && row.audio_url);
           if (fresh) { found = fresh; break; }
+
+          // Check for failure: ai_generation_logs row marked failed
+          if (logId) {
+            const { data: logRow } = await supabase
+              .from('ai_generation_logs')
+              .select('status, error_message')
+              .eq('id', logId)
+              .maybeSingle();
+            if (logRow?.status === 'failed') {
+              console.warn('[AIStudioCreate] KIE generation failed early:', logRow.error_message);
+              failedEarly = true;
+              break;
+            }
+          }
         }
 
         if (found) {
@@ -468,6 +487,13 @@ const AIStudioCreate = () => {
           toast({ title: t('aiCreate.musicGenerated'), description: t('aiCreate.songReady') });
           track('generation_completed', { feature: 'create_music', metadata: { async: true } });
           sessionStorage.setItem('md_last_generation', Date.now().toString());
+        } else if (failedEarly) {
+          // KIE rejected the generation (artist name, prompt too long, etc.) — credits refunded by backend
+          toast({
+            title: 'Error en la generación',
+            description: 'El proveedor rechazó la solicitud. Tus créditos han sido devueltos. Intenta simplificar el prompt.',
+            variant: 'destructive',
+          });
         } else {
           toast({
             title: 'Aún en proceso',

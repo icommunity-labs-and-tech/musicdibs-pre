@@ -558,15 +558,17 @@ serve(async (req) => {
         const dispatchJson = await dispatchRes.json().catch(() => ({}));
         if (!dispatchRes.ok || dispatchJson?.error) {
           const msg = dispatchJson?.error || `kie_dispatch_${dispatchRes.status}`;
-          console.warn(`[GENERATE-AUDIO] KIE dispatch failed: ${msg}`);
+          console.warn(`[GENERATE-AUDIO] KIE dispatch failed: ${msg} | kieMsg: ${dispatchJson?.message || ''}`);
           if (msg === 'insufficient_credits') {
             return new Response(JSON.stringify(dispatchJson), {
               status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
           }
-          // Try fallback if configured
-          if (fallbackProvider === 'elevenlabs' || fallbackProvider === 'lyria') {
-            console.log(`[GENERATE-AUDIO] Falling back to ${fallbackProvider}`);
+          // Always fall back to ElevenLabs on ANY KIE error (artist name, prompt too long, etc.)
+          const effectiveFallback = (fallbackProvider === 'elevenlabs' || fallbackProvider === 'lyria')
+            ? fallbackProvider : 'elevenlabs';
+          console.log(`[GENERATE-AUDIO] KIE error — falling back to ${effectiveFallback}`);
+          if (true) {
             // KIE didn't debit (dispatch failed) — debit now for fallback
             const { data: prof } = await supabaseAdmin.from('profiles').select('available_credits').eq('user_id', userId).single();
             if (!prof || prof.available_credits < CREDITS_COST) {
@@ -580,15 +582,13 @@ serve(async (req) => {
             }).eq('user_id', userId).eq('available_credits', prof.available_credits);
             await supabaseAdmin.from('credit_transactions').insert({
               user_id: userId, amount: -CREDITS_COST, type: 'usage',
-              description: `Generación audio (fallback ${fallbackProvider}): ${prompt.slice(0, 80)}`,
+              description: `Generación audio (fallback ${effectiveFallback}): ${prompt.slice(0, 80)}`,
             });
-            actualProvider = fallbackProvider;
+            actualProvider = effectiveFallback;
             usedFallback = true;
-            console.log(`[GENERATE-AUDIO][FALLBACK] used_fallback=true | primary_provider_attempted=kie_suno | fallback=${fallbackProvider}`);
-            // Fall through to lyria/elevenlabs below by reassigning flags
-            // Re-execute via direct calls
+            console.log(`[GENERATE-AUDIO][FALLBACK] used_fallback=true | primary_provider_attempted=kie_suno | fallback=${effectiveFallback}`);
             try {
-              if (fallbackProvider === 'lyria' && lyriaCompatible) {
+              if (effectiveFallback === 'lyria' && lyriaCompatible && GEMINI_API_KEY) {
                 const r = await generateWithLyria({ prompt: lyricsAwarePrompt, explicitDuration, geminiApiKey: GEMINI_API_KEY });
                 audioBuffer = r.audioBuffer; durationSecs = r.durationSecs; songMap = r.songMap;
               } else {
