@@ -27,8 +27,7 @@ const KNOWN_ERRORS: Array<[RegExp, string]> = [
   [/bad_prompt|content.?policy|moderation/i, 'aiShared.aiContentPolicy'],
   [/network|fetch|ECONNREFUSED|ENOTFOUND/i, 'aiShared.aiNetworkError'],
   [/unauthorized|jwt/i, 'aiShared.aiSessionExpired'],
-  [/providers? failed|provider_unavailable|storage_error|auphonic_service_unavailable/i, 'aiShared.aiServiceDown'],
-  [/provider_timeout/i, 'aiShared.aiTimeout'],
+  [/providers? failed|auphonic_service_unavailable/i, 'aiShared.aiServiceDown'],
   [/auphonic_invalid_audio|invalid.?audio|unsupported.?format/i, 'aiShared.aiInvalidAudio'],
   [/auphonic_error/i, 'aiShared.aiServiceDown'],
 ];
@@ -55,12 +54,9 @@ export function parseAiError(
   }
 
   const dataError = responseData?.error as string | undefined;
-  const errObj = error as any;
-  const errMessage = error instanceof Error ? error.message : (errObj?.message ?? '');
-  const errDetails = typeof errObj?.details === 'string' ? errObj.details : '';
-  const rawMessage = [dataError, errMessage, errDetails, String(error ?? '')]
-    .filter(Boolean)
-    .join(' | ');
+  const rawMessage = dataError
+    || (error instanceof Error ? error.message : '')
+    || String(error ?? '');
 
   for (const [pattern, key] of KNOWN_ERRORS) {
     if (pattern.test(rawMessage)) {

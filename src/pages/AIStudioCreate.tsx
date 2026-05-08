@@ -1,3 +1,4 @@
+import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -43,8 +44,6 @@ import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { useProductTracking } from "@/hooks/useProductTracking";
-import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
-import { detectLyrics, LYRICS_TEMPLATE } from "@/lib/lyricsDetector";
 
 // ── Music tab constants ──
 const DURATION_OPTIONS: { value: number; label: string }[] = [
@@ -57,12 +56,24 @@ const DURATION_OPTIONS: { value: number; label: string }[] = [
 const DEFAULT_DURATION: number | null = null;
 const INSTRUMENTAL_PROMPT_REGEX = /\b(instrumental|karaoke|sin voz|sin voces|base instrumental)\b/i;
 
-// ── Lyrics tab constants (stable keys; UI labels via i18n) ──
-const LYRIC_STYLE_KEYS = ["narrativa", "abstracta", "descriptiva", "reivindicativa", "introspectiva", "poetica"] as const;
-const RHYME_SCHEME_KEYS = ["ABAB", "AABB", "ABCB", "libre"] as const;
-const STRUCTURE_KEYS = ["V+C+V+C+P+C", "V+C+V+C", "V+V+C+V+C", "V+C+P+C"] as const;
+// ── Lyrics tab constants ──
+const LYRIC_STYLES = ["Narrativa", "Abstracta", "Descriptiva", "Reivindicativa", "Introspectiva", "Poética"];
+const LYRIC_LANGUAGES = ["Español", "Inglés", "Spanglish", "Portugués", "Francés"];
+const RHYME_SCHEMES = [
+  { value: "ABAB", label: "ABAB — Alterna" },
+  { value: "AABB", label: "AABB — Pareados" },
+  { value: "ABCB", label: "ABCB — Balada" },
+  { value: "libre", label: "Libre — Sin rima" },
+];
+const STRUCTURES = [
+  { value: "V+C+V+C+P+C", label: "Verso · Coro · Verso · Coro · Puente · Coro" },
+  { value: "V+C+V+C", label: "Verso · Coro · Verso · Coro" },
+  { value: "V+V+C+V+C", label: "Verso · Verso · Coro · Verso · Coro" },
+  { value: "V+C+P+C", label: "Verso · Coro · Puente · Coro" },
+];
 // Artist presets removed — users can type freely in description
-const POV_KEYS = ["first", "second", "third"] as const;
+const THEMES = ["Amor", "Desamor", "Superación", "Fiesta", "Calle", "Familia", "Libertad", "Nostalgia", "Éxito", "Identidad"];
+const POVS = ["Primera persona", "Segunda persona", "Tercera persona"];
 
 interface LyricsGeneration {
   id: string;
@@ -103,13 +114,13 @@ const AIStudioCreate = () => {
   // ── Music tab state ──
   const [mode, setMode] = useState<'song' | 'instrumental'>('song');
   const [prompt, setPrompt] = useState("");
-  // Lyrics now live inside the prompt — auto-detected via detectLyrics().
+  const [lyrics, setLyrics] = useState<string>('');
+  const [generationPriority, setGenerationPriority] = useState<'lyrics_fidelity' | 'creative'>('lyrics_fidelity');
   const [duration, setDuration] = useState<number | null>(DEFAULT_DURATION);
   const [lyricsText, setLyricsText] = useState("");
   const [lyricsExpanded, setLyricsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<{ message: string; details?: string } | null>(null);
-  const [retryStatus, setRetryStatus] = useState<{ attempt: number; max: number } | null>(null);
   const [lastResult, setLastResult] = useState<GenerationResult | null>(null);
 
   // ── History & playback state ──
@@ -139,7 +150,7 @@ const AIStudioCreate = () => {
   const [lyricsRhyme, setLyricsRhyme] = useState("ABAB");
   const [lyricsStructure, setLyricsStructure] = useState("V+C+V+C+P+C");
   const [lyricsArtistRefs, setLyricsArtistRefs] = useState<string[]>([]);
-  const [lyricsPov, setLyricsPov] = useState<string>("first");
+  const [lyricsPov, setLyricsPov] = useState("Primera persona");
   const [_lyricsTheme] = useState(""); // kept for type compat
   const [generatedLyrics, setGeneratedLyrics] = useState("");
   const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
@@ -196,6 +207,7 @@ const AIStudioCreate = () => {
   const selectedGenre: string | null = null;
   const selectedMood: string | null = null;
   const currentCost = mode === 'song' ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio;
+  const currentFeature = mode === 'song' ? 'generate_audio_song' : 'generate_audio';
   const modeLabel = mode === 'song' ? t('aiCreate.songWithVoice') : t('aiCreate.instrumentalBase');
   const canSaveAsVirtualArtist = (_result: GenerationResult) => {
     // Allow saving any generation (vocal or instrumental) as a virtual artist
@@ -264,6 +276,52 @@ const AIStudioCreate = () => {
 
   }, [user]);
 
+  // ── Realtime: append new ai_generations rows as they are inserted ──
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`ai_generations_${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'ai_generations', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const item: any = payload.new;
+          if (!item?.audio_url) return;
+          const newResult: GenerationResult = {
+            id: item.id,
+            audioUrl: item.audio_url,
+            prompt: item.prompt,
+            duration: item.duration,
+            genre: item.genre || undefined,
+            mood: item.mood || undefined,
+            createdAt: new Date(item.created_at),
+            isFavorite: item.is_favorite || false,
+            voiceId: item.voice_id || undefined,
+            voiceName: item.voice_name || undefined,
+          };
+          setResults(prev => prev.some(r => r.id === newResult.id) ? prev : [newResult, ...prev]);
+          setLastResult(prev => prev ?? newResult);
+          setIsGenerating(false);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'ai_generations', filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const item: any = payload.new;
+          if (!item?.audio_url) return;
+          setResults(prev => prev.map(r => r.id === item.id ? {
+            ...r,
+            audioUrl: item.audio_url,
+            duration: item.duration ?? r.duration,
+            isFavorite: item.is_favorite ?? r.isFavorite,
+          } : r));
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   // ── Preload prompt and mode from URL params (e.g. from /ai-studio/inspire) ──
   useEffect(() => {
     const urlPrompt = searchParams.get('prompt');
@@ -322,6 +380,13 @@ const AIStudioCreate = () => {
     track('generation_started', { feature: 'create_music', metadata: { mode } });
 
     try {
+      // Spend credits
+      const { data: spendResult, error: spendError } = await supabase.functions.invoke('spend-credits', {
+        body: { feature: currentFeature, description: `${mode === 'song' ? 'Canción' : 'Instrumental'}: ${prompt.slice(0, 80)}` },
+      });
+      if (spendError) throw { message: spendError.message || 'Error al descontar créditos' };
+      if (spendResult?.error) throw { message: spendResult.error };
+
       // Enrich prompt with voice tag (only for song mode)
       let enrichedPrompt = prompt.trim();
       if (mode === 'song') {
@@ -330,43 +395,18 @@ const AIStudioCreate = () => {
         enrichedPrompt = `${enrichedPrompt}${voiceTag}`;
       }
 
-      // Retry with exponential backoff for transient provider failures (timeout / provider_unavailable)
-      const MAX_ATTEMPTS = 3;
-      const RETRYABLE_CODES = new Set(['provider_timeout', 'provider_unavailable', 'provider_rate_limit']);
-      const isTransientMessage = (msg?: string) =>
-        !!msg && /(timeout|timed?\s*out|fetch|network|503|504|gateway|unavailable)/i.test(msg);
-
-      let data: any = null;
-      let error: any = null;
-      let attempt = 0;
-      setRetryStatus(null);
-
-      while (attempt < MAX_ATTEMPTS) {
-        attempt += 1;
-        if (attempt > 1) {
-          setRetryStatus({ attempt, max: MAX_ATTEMPTS });
-          await new Promise((r) => setTimeout(r, 1500 * Math.pow(2, attempt - 2))); // 1.5s, 3s
+      const hasLyricsForCall = mode === 'song' && lyrics.trim().length > 0;
+      const { data, error } = await supabase.functions.invoke('generate-audio', {
+        body: {
+          prompt: enrichedPrompt,
+          lyrics: mode === 'song' ? lyrics.trim() : '',
+          mode,
+          generation_priority: hasLyricsForCall ? generationPriority : (mode === 'song' ? 'creative' : 'creative'),
+          original_description: prompt.trim(),
+          original_lyrics: mode === 'song' ? lyrics.trim() : '',
+          ...(duration ? { duration } : {}),
         }
-
-        const resp = await supabase.functions.invoke('generate-audio', {
-          body: {
-            prompt: enrichedPrompt,
-            mode,
-            ...(duration ? { duration } : {}),
-          }
-        });
-        data = resp.data;
-        error = resp.error;
-
-        const transient =
-          (data?.error && RETRYABLE_CODES.has(data.error)) ||
-          (!data && error && isTransientMessage(error?.message));
-
-        if (!transient) break;
-        if (attempt >= MAX_ATTEMPTS) break;
-        console.warn(`[AIStudioCreate] generate-audio transient failure (attempt ${attempt}/${MAX_ATTEMPTS})`, data?.error || error?.message);
-      }
-      setRetryStatus(null);
+      });
 
       if (error) {
         if (data?.error === 'rate_limit_exceeded') {
@@ -384,20 +424,61 @@ const AIStudioCreate = () => {
         if (data.error === 'insufficient_credits') {
           throw { message: data.message || 'Créditos del proveedor insuficientes', details: data.details };
         }
-        if (data.error === 'prompt_rejected') {
-          toast({
-            title: 'Descripción musical no compatible',
-            description: data.message || 'Tu descripción contiene referencias que el generador no puede procesar. Intenta describir el sonido sin mencionar artistas, bandas ni marcas específicas.',
-            variant: 'destructive',
-            duration: 8000,
-          });
-          return;
-        }
         throw { message: data.error, details: data.details };
       }
 
-      if (data?.audioUrl || data?.audio) {
-        // Prefer the persisted signed URL from the edge function; fall back to inline data URL for legacy responses
+      // Async provider (e.g. KIE Suno): generation runs via callback.
+      // Keep the spinner/progress UI visible and poll ai_generations for the new row.
+      if (data?.status === 'processing' && !data?.audio) {
+        toast({
+          title: 'Generación en curso',
+          description: data.message || 'Tu canción aparecerá en unos minutos. No cierres ni cambies de pestaña.',
+        });
+        track('generation_started', { feature: 'create_music', metadata: { mode, async: true, provider: data.provider } });
+
+        const startedAt = Date.now();
+        const maxWaitMs = 6 * 60 * 1000; // 6 min
+        const knownIds = new Set(results.map(r => r.id));
+        let found: any = null;
+        while (Date.now() - startedAt < maxWaitMs) {
+          await new Promise(r => setTimeout(r, 5000));
+          const { data: rows } = await supabase
+            .from('ai_generations')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(5);
+          const fresh = (rows || []).find((row: any) => !knownIds.has(row.id) && row.audio_url);
+          if (fresh) { found = fresh; break; }
+        }
+
+        if (found) {
+          const newResult: GenerationResult = {
+            id: found.id,
+            audioUrl: found.audio_url,
+            prompt: found.prompt,
+            duration: found.duration,
+            createdAt: new Date(found.created_at),
+            isFavorite: found.is_favorite || false,
+            voiceId: (found as any).voice_id || undefined,
+            voiceName: (found as any).voice_name || undefined,
+          };
+          setResults(prev => [newResult, ...prev.filter(r => r.id !== newResult.id)]);
+          setLastResult(newResult);
+          toast({ title: t('aiCreate.musicGenerated'), description: t('aiCreate.songReady') });
+          track('generation_completed', { feature: 'create_music', metadata: { async: true } });
+          sessionStorage.setItem('md_last_generation', Date.now().toString());
+        } else {
+          toast({
+            title: 'Aún en proceso',
+            description: 'La generación está tardando más de lo habitual. Aparecerá en tu biblioteca en cuanto termine.',
+          });
+        }
+        return;
+      }
+
+      if (data?.audio) {
+        // Prefer the persisted signed URL from the edge function; fall back to inline data URL
         const audioUrl = data.audioUrl || `data:${data.format};base64,${data.audio}`;
 
         const selectedVoiceProfile = voiceProfiles.find(v => v.id === selectedVoice);
@@ -454,7 +535,7 @@ const AIStudioCreate = () => {
         setResults(prev => [newResult, ...prev]);
         setLastResult(newResult);
         toast({ title: t('aiCreate.musicGenerated'), description: t('aiCreate.songReady') });
-        track('generation_completed', { feature: 'create_music', metadata: { mode } });
+        track('generation_completed', { feature: 'create_music' });
         sessionStorage.setItem('md_last_generation', Date.now().toString());
 
         // Show onboarding tip for first vocal generation
@@ -482,7 +563,6 @@ const AIStudioCreate = () => {
       track('generation_failed', { feature: 'create_music', metadata: { error: (error as any)?.message } });
     } finally {
       setIsGenerating(false);
-      setRetryStatus(null);
     }
   };
 
@@ -592,7 +672,8 @@ const AIStudioCreate = () => {
     if (!saveArtistName.trim() || !user) return;
     const hasStyleFallback = saveArtistStyle.trim().length > 10;
     const isInstrumentalSave = mode === 'instrumental' || (!lastGeneratedVoiceId && hasStyleFallback);
-    const voiceIdToPersist = isInstrumentalSave ? '' : (lastGeneratedVoiceId || (hasStyleFallback ? '' : voiceProfiles[0]?.id) || '');
+    const rawVoiceId = isInstrumentalSave ? null : lastGeneratedVoiceId.trim();
+    const voiceIdToPersist = rawVoiceId && rawVoiceId !== '__none__' ? rawVoiceId : null;
     if (!isInstrumentalSave && !voiceIdToPersist && !hasStyleFallback) return;
     setIsSavingArtist(true);
     try {
@@ -601,15 +682,14 @@ const AIStudioCreate = () => {
         toast({ title: t('aiCreate.saveArtistLimit'), variant: 'destructive' });
         return;
       }
-      const isInstrumental = mode === 'instrumental';
       const { data: newArtist, error } = await supabase
         .from('user_artist_profiles')
         .insert({
           user_id: user.id,
           name: saveArtistName.trim(),
-          voice_profile_id: isInstrumental ? null : voiceIdToPersist,
-          voice_type: isInstrumental ? null : 'preset',
-          generation_type: mode === 'song' ? 'vocal' : 'instrumental',
+          voice_profile_id: voiceIdToPersist,
+          voice_type: voiceIdToPersist ? 'preset' : null,
+          generation_type: voiceIdToPersist ? 'vocal' : 'instrumental',
           genre: null,
           mood: null,
           default_duration: duration,
@@ -756,41 +836,18 @@ const AIStudioCreate = () => {
     if (!prompt.trim()) return;
     setIsImprovingPrompt(true);
     try {
-      const detected = detectLyrics(prompt);
-      const promptToImprove = detected.hasLyrics
-        ? (detected.musicDescription || prompt).trim()
-        : prompt.trim();
-
-      // Total budget for the final prompt (description + lyrics).
-      // Must respect the textarea/back-end cap and the ElevenLabs "prompt" limit (~2000).
-      const TOTAL_PROMPT_MAX = 2500;
-      const SEPARATOR_LEN = 2; // "\n\n"
-      const lyricsLen = detected.hasLyrics ? detected.lyricsBlock.length : 0;
-      // Available budget for the AI-improved description; floor at 400 so the model
-      // still has room to work even with very long lyrics.
-      const improvedBudget = detected.hasLyrics
-        ? Math.max(400, TOTAL_PROMPT_MAX - lyricsLen - SEPARATOR_LEN)
-        : TOTAL_PROMPT_MAX;
-
       const { data, error } = await supabase.functions.invoke('improve-prompt', {
         body: {
-          prompt: promptToImprove,
+          prompt: prompt.trim(),
           genre: selectedGenre || undefined,
           mood: selectedMood || undefined,
           mode,
-          hasLyrics: detected.hasLyrics,
-          maxChars: improvedBudget,
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.improved) {
-        // Hard-truncate just in case the model overshot the budget.
-        const improved = (data.improved as string).slice(0, improvedBudget);
-        const finalPrompt = detected.hasLyrics
-          ? `${improved}\n\n${detected.lyricsBlock}`.slice(0, TOTAL_PROMPT_MAX)
-          : improved;
-        setPrompt(finalPrompt);
+        setPrompt(data.improved.slice(0, 2500));
         toast({ title: t('aiCreate.promptImproved'), description: t('aiCreate.promptImprovedDesc') });
       }
     } catch (e: any) {
@@ -978,6 +1035,7 @@ const AIStudioCreate = () => {
                         <p className="text-sm text-muted-foreground">{t('aiCreate.waitMsg')}</p>
                       </div>
                       <Progress value={undefined} className="w-full animate-pulse" />
+                      <GenerationWarning />
                     </CardContent>
                   </Card>
                 ) : lastResult ? (
@@ -1052,12 +1110,12 @@ const AIStudioCreate = () => {
                       {/* Main textarea — song description */}
                       <div className="space-y-1.5" data-tour="mc-description">
                         <div className="flex items-center justify-between">
-                          <Label>{t('aiCreate.describeSongLabel')}</Label>
+                          <Label>Describe tu canción *</Label>
                           <button
                             type="button"
                             onClick={handleImprovePrompt}
                             disabled={isImprovingPrompt || !prompt.trim()}
-                            title={t('aiCreate.improveTitle')}
+                            title="Optimiza tu descripción para obtener mejores resultados"
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
@@ -1084,7 +1142,7 @@ const AIStudioCreate = () => {
                         </div>
                         <Textarea
                           id="mc-description-textarea"
-                          placeholder={t('aiCreate.promptPlaceholderFull')}
+                          placeholder="Ej: Una canción pop alegre en español sobre amor de verano, con ritmo enérgico..."
                           value={prompt}
                           onChange={(e) => setPrompt(e.target.value.slice(0, 2500))}
                           rows={5}
@@ -1092,45 +1150,73 @@ const AIStudioCreate = () => {
                           maxLength={2500}
                         />
                         <div className="flex items-center justify-between">
-                          <p className="text-xs text-muted-foreground">{t('aiCreate.promptHint')}</p>
+                          <p className="text-xs text-muted-foreground">Incluye: género, mood, idioma, tema, ritmo, tipo de voz...</p>
                           <p className="text-xs text-muted-foreground">{prompt.length}/2500</p>
                         </div>
                       </div>
 
-                      {/* Lyrics auto-detection helper — only in 'song' mode */}
-                      {mode === 'song' && (() => {
-                        const det = detectLyrics(prompt);
-                        return (
-                          <div className="flex items-center justify-between gap-2 -mt-1" data-tour="mc-lyrics">
-                            <div className="flex items-center gap-2 text-xs">
-                              {det.hasLyrics ? (
-                                <Badge variant="secondary" className="gap-1">
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  {t('aiCreate.lyricsDetected', 'Letra detectada en la descripción')}
-                                </Badge>
-                              ) : (
-                                <span className="text-muted-foreground">
-                                  {t('aiCreate.lyricsHintInline', 'Puedes incluir tu letra dentro de la descripción usando [Verso] / [Estribillo].')}
-                                </span>
+                      {/* Lyrics textarea — only visible in 'song' mode */}
+                      {mode === 'song' && (
+                        <div className="space-y-1.5" data-tour="mc-lyrics">
+                          <Label>Letra de la canción (opcional)</Label>
+                          <Textarea
+                            placeholder="Pega aquí tu letra completa. La IA la cantará respetando cada palabra tal como la escribas..."
+                            value={lyrics}
+                            onChange={(e) => setLyrics(e.target.value.slice(0, 3000))}
+                            rows={6}
+                            className="resize-none"
+                            maxLength={3000}
+                          />
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-muted-foreground">💡 Si incluyes letra, la IA la cantará palabra por palabra. Cuanto más detallada, mejor resultado.</p>
+                            <p className="text-xs text-muted-foreground">{lyrics.length}/3000</p>
+                          </div>
+
+                          {lyrics.trim().length > 0 && (
+                            <div className="space-y-1.5 pt-2">
+                              <Label className="text-sm">Prioridad de generación</Label>
+                              <div className="flex gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setGenerationPriority('lyrics_fidelity')}
+                                  className={cn(
+                                    "flex-1 px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all",
+                                    generationPriority === 'lyrics_fidelity'
+                                      ? "border-primary bg-primary/10 text-primary"
+                                      : "border-border text-muted-foreground hover:border-primary/50"
+                                  )}
+                                >
+                                  Respetar letra
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setGenerationPriority('creative')}
+                                  className={cn(
+                                    "flex-1 px-3 py-2 rounded-lg text-sm font-medium border-2 transition-all",
+                                    generationPriority === 'creative'
+                                      ? "border-primary bg-primary/10 text-primary"
+                                      : "border-border text-muted-foreground hover:border-primary/50"
+                                  )}
+                                >
+                                  Más creativo
+                                </button>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                Si eliges <strong>Respetar letra</strong>, la IA intentará cantar la letra de forma más fiel. Si eliges <strong>Más creativo</strong>, tendrá más libertad musical, pero puede modificar partes de la letra.
+                              </p>
+                              {generationPriority === 'lyrics_fidelity' && prompt.trim().length > 250 && (
+                                <p className="text-xs text-amber-600 dark:text-amber-400">
+                                  ⚠️ Para respetar mejor la letra, usa una descripción más corta y directa.
+                                </p>
                               )}
                             </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs"
-                              onClick={() => setPrompt((p) => (p + LYRICS_TEMPLATE).slice(0, 2500))}
-                            >
-                              <FileText className="h-3 w-3 mr-1" />
-                              {t('aiCreate.insertLyricsTemplate', 'Insertar plantilla de letra')}
-                            </Button>
-                          </div>
-                        );
-                      })()}
+                          )}
+                        </div>
+                      )}
 
                       {/* Mode selector: Canción con voz / Instrumental */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">{t('aiCreate.generationType')}</Label>
+                        <Label className="text-sm font-medium">Tipo de generación</Label>
                         <div className="flex gap-2">
                           <button
                             type="button"
@@ -1146,7 +1232,7 @@ const AIStudioCreate = () => {
                             )}
                           >
                             <Mic className="h-4 w-4" />
-                            {t('aiCreate.modeSongLabel')}
+                            🎤 Canción con voz
                           </button>
                           <button
                             type="button"
@@ -1164,7 +1250,7 @@ const AIStudioCreate = () => {
                             )}
                           >
                             <Headphones className="h-4 w-4" />
-                            {t('aiCreate.modeInstrumentalLabel')}
+                            🎹 Instrumental / Base
                           </button>
                         </div>
                       </div>
@@ -1173,7 +1259,7 @@ const AIStudioCreate = () => {
                       {/* Voice/Preset selector */}
                       <div className="space-y-3">
                          <Label className="text-sm font-medium">
-                           {mode === 'song' ? t('aiCreate.chooseVoice') : t('aiCreate.myMusicPresets')}
+                           {mode === 'song' ? 'Elige una voz *' : 'Mis presets musicales'}
                          </Label>
                         {/* Tabs: Voces IA / Mis artistas virtuales / Mis presets musicales */}
                         <TooltipProvider delayDuration={200}>
@@ -1191,14 +1277,14 @@ const AIStudioCreate = () => {
                                   : "border-border text-muted-foreground hover:border-primary/50"
                               )}
                             >
-                              {t('aiCreate.tabAIVoices')}
+                              🎧 Voces IA
                             </button>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Info className="h-3.5 w-3.5 text-muted-foreground cursor-help shrink-0" />
                               </TooltipTrigger>
                               <TooltipContent side="top" className="max-w-xs text-sm">
-                                {t('aiCreate.tooltipAIVoices')}
+                                Elige una voz para tu canción. Después podrás guardarla como artista para reutilizarla.
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -1219,7 +1305,7 @@ const AIStudioCreate = () => {
                                     : "border-border text-muted-foreground hover:border-primary/50"
                               )}
                             >
-                              {t('aiCreate.tabMyArtists')} {vocalArtists.length > 0 && `(${vocalArtists.length})`}
+                              👤 Mis artistas virtuales {vocalArtists.length > 0 && `(${vocalArtists.length})`}
                             </button>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -1227,8 +1313,8 @@ const AIStudioCreate = () => {
                               </TooltipTrigger>
                               <TooltipContent side="top" className="max-w-xs text-sm">
                                 {vocalArtists.length > 0
-                                  ? t('aiCreate.tooltipMyArtistsHas')
-                                  : t('aiCreate.tooltipMyArtistsEmpty')}
+                                  ? "Los artistas virtuales son las voces que has guardado de otras canciones para crear nuevas con el mismo estilo."
+                                  : "Aquí aparecen tus artistas guardados. Úsalos para crear canciones con el mismo estilo."}
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -1248,7 +1334,7 @@ const AIStudioCreate = () => {
                                     : "border-border text-muted-foreground hover:border-primary/50"
                               )}
                             >
-                              {t('aiCreate.tabMyPresets')} {instrumentalPresets.length > 0 && `(${instrumentalPresets.length})`}
+                              🎹 Mis presets musicales {instrumentalPresets.length > 0 && `(${instrumentalPresets.length})`}
                             </button>
                             <Tooltip>
                               <TooltipTrigger asChild>
@@ -1256,8 +1342,8 @@ const AIStudioCreate = () => {
                               </TooltipTrigger>
                               <TooltipContent side="top" className="max-w-xs text-sm">
                                 {instrumentalPresets.length > 0
-                                  ? t('aiCreate.tooltipMyPresetsHas')
-                                  : t('aiCreate.tooltipMyPresetsEmpty')}
+                                  ? "Presets musicales guardados de tus generaciones instrumentales. Reutiliza su configuración."
+                                  : "Genera una canción instrumental y guárdala como preset para reutilizar su estilo."}
                               </TooltipContent>
                             </Tooltip>
                           </div>
@@ -1278,16 +1364,16 @@ const AIStudioCreate = () => {
                                     ? "border-2 border-primary bg-primary/5"
                                     : "border-border hover:border-primary/30"
                                 )}
-                                title={t(`aiCreate.voicePresets.${v.id}.description`, { defaultValue: v.description })}
+                                title={v.description}
                               >
                                 <span className="text-base mb-0.5">{v.emoji}</span>
-                                <span className="text-xs font-medium text-foreground">{t(`aiCreate.voicePresets.${v.id}.label`, { defaultValue: v.label })}</span>
+                                <span className="text-xs font-medium text-foreground">{v.label}</span>
                                 {v.sample_url && (
                                   <span
                                     onClick={(e) => handlePreviewVoice(e, v.id, v.sample_url)}
                                     className={cn("inline-flex items-center gap-1 mt-1 text-[11px] cursor-pointer", playingVoice === v.id ? "text-primary" : "text-muted-foreground")}
                                   >
-                                    {playingVoice === v.id ? t('aiCreate.stop') : t('aiCreate.listen')}
+                                    {playingVoice === v.id ? '⏹ Detener' : '▶ Escuchar'}
                                   </span>
                                 )}
                               </button>
@@ -1301,8 +1387,8 @@ const AIStudioCreate = () => {
                             {vocalArtists.length === 0 ? (
                               <div className="text-center py-6 border border-dashed border-border rounded-lg">
                                 <User className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                                <p className="text-sm text-muted-foreground">{t('aiCreate.noArtistsYet')}</p>
-                                <p className="text-xs text-muted-foreground mt-1">{t('aiCreate.noArtistsHint')}</p>
+                                <p className="text-sm text-muted-foreground">Aún no tienes artistas guardados</p>
+                                <p className="text-xs text-muted-foreground mt-1">Genera una canción con voz y guárdala como artista virtual.</p>
                               </div>
                             ) : (
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1324,7 +1410,7 @@ const AIStudioCreate = () => {
                                       <span className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{artist.style_notes}</span>
                                     )}
                                     {artist.voice_profiles?.label && (
-                                      <Badge variant="outline" className="text-[9px] h-4 mt-1">{t(`aiCreate.voicePresets.${artist.voice_profile_id}.label`, { defaultValue: artist.voice_profiles.label })}</Badge>
+                                      <Badge variant="outline" className="text-[9px] h-4 mt-1">{artist.voice_profiles.label}</Badge>
                                     )}
                                   </button>
                                 ))}
@@ -1339,8 +1425,8 @@ const AIStudioCreate = () => {
                             {instrumentalPresets.length === 0 ? (
                               <div className="text-center py-6 border border-dashed border-border rounded-lg">
                                 <Music2 className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                                <p className="text-sm text-muted-foreground">{t('aiCreate.noPresetsYet')}</p>
-                                <p className="text-xs text-muted-foreground mt-1">{t('aiCreate.noPresetsHint')}</p>
+                                <p className="text-sm text-muted-foreground">Aún no tienes presets musicales</p>
+                                <p className="text-xs text-muted-foreground mt-1">Genera una canción instrumental y guárdala como preset para reutilizar su estilo.</p>
                               </div>
                             ) : (
                               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1428,13 +1514,13 @@ const AIStudioCreate = () => {
                       {generationError && (
                         <Alert variant="destructive">
                           <AlertCircle className="h-4 w-4" />
-                          <AlertTitle>{t('aiCreate.errorGenTitle')}</AlertTitle>
+                          <AlertTitle>Error al generar</AlertTitle>
                           <AlertDescription className="mt-2 space-y-2">
                             <p>{generationError.message}</p>
                             {generationError.details && <p className="text-xs opacity-80">{generationError.details}</p>}
                             <Button variant="outline" size="sm" onClick={() => setGenerationError(null)} className="mt-2 gap-1">
                               <RefreshCw className="w-3 h-3" />
-                              {t('aiCreate.tryAgainBtn')}
+                              Intentar de nuevo
                             </Button>
                           </AlertDescription>
                         </Alert>
@@ -1442,7 +1528,7 @@ const AIStudioCreate = () => {
 
                       {/* CTA */}
                       {!hasEnough(currentCost) ? (
-                        <NoCreditsAlert message={t('aiCreate.noCreditsForGen', { cost: currentCost, thing: mode === 'song' ? t('aiCreate.forSong') : t('aiCreate.forInstrumental') })} />
+                        <NoCreditsAlert message={`Necesitas ${currentCost} créditos para generar ${mode === 'song' ? 'una canción' : 'un instrumental'}.`} />
                       ) : (
                         <>
                         <Button
@@ -1453,12 +1539,10 @@ const AIStudioCreate = () => {
                           data-tour="mc-generate"
                         >
                           <Wand2 className="w-4 h-4 mr-2" />
-                          {retryStatus
-                            ? t('aiShared.aiRetrying', { attempt: retryStatus.attempt, max: retryStatus.max })
-                            : <>{t('aiCreate.generateBtn')} {mode === 'song' ? t('aiCreate.genCtaSong') : t('aiCreate.genCtaInstrumental')} {t('aiCreate.genCtaSuffix')}</>}
+                          {t('aiCreate.generateBtn')} {mode === 'song' ? 'canción' : 'instrumental'} con IA
                         </Button>
-                        <PricingLink className="mt-1 block text-center" />
                         <GenerationWarning />
+                        <PricingLink className="mt-1 block text-center" />
                         </>
                       )}
                     </CardContent>
@@ -1484,7 +1568,7 @@ const AIStudioCreate = () => {
                           type="button"
                           onClick={handleImproveLyricsDesc}
                           disabled={isImprovingLyrics || !lyricsDesc.trim()}
-                          title={t('aiCreate.improveTitle')}
+                          title="Optimiza tu descripción para obtener mejores resultados"
                           style={{
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -1543,7 +1627,7 @@ const AIStudioCreate = () => {
                             <Select value={lyricsStructure} onValueChange={setLyricsStructure}>
                               <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                {STRUCTURE_KEYS.map(k => <SelectItem key={k} value={k}>{t(`aiCreate.structures.${k}`)}</SelectItem>)}
+                                {STRUCTURES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
@@ -1552,7 +1636,7 @@ const AIStudioCreate = () => {
                             <Select value={lyricsRhyme} onValueChange={setLyricsRhyme}>
                               <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                               <SelectContent>
-                                {RHYME_SCHEME_KEYS.map(k => <SelectItem key={k} value={k}>{t(`aiCreate.rhymes.${k}`)}</SelectItem>)}
+                                {RHYME_SCHEMES.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
                               </SelectContent>
                             </Select>
                           </div>
@@ -1563,7 +1647,7 @@ const AIStudioCreate = () => {
                           <Select value={lyricsPov} onValueChange={setLyricsPov}>
                             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {POV_KEYS.map(k => <SelectItem key={k} value={k}>{t(`aiCreate.povs.${k}`)}</SelectItem>)}
+                              {POVS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
@@ -1571,8 +1655,8 @@ const AIStudioCreate = () => {
                         <div className="space-y-1.5">
                           <Label className="text-sm">{t('aiCreate.writingStyleLabel')}</Label>
                           <div className="flex flex-wrap gap-1.5">
-                            {LYRIC_STYLE_KEYS.map(k => (
-                              <Badge key={k} variant={lyricsStyle === k ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => setLyricsStyle(lyricsStyle === k ? "" : k)}>{t(`aiCreate.lyricStyles.${k}`)}</Badge>
+                            {LYRIC_STYLES.map(s => (
+                              <Badge key={s} variant={lyricsStyle === s ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => setLyricsStyle(lyricsStyle === s ? "" : s)}>{s}</Badge>
                             ))}
                           </div>
                         </div>
@@ -1712,17 +1796,17 @@ const AIStudioCreate = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyLyricsFromHistory(item.id, item.lyrics)} title={t('aiCreate.copyLyricsTitle')}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyLyricsFromHistory(item.id, item.lyrics)} title="Copiar letra">
                               {copiedId === item.id ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadLyrics(item.lyrics, item.theme || item.description || "letra")} title={t('aiCreate.downloadTxt')}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadLyrics(item.lyrics, item.theme || item.description || "letra")} title="Descargar .txt">
                               <Download className="h-3.5 w-3.5" />
                             </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 text-primary"
-                              title={t('aiCreate.singWithMyVoice')}
+                              title="Cantar esta letra con mi voz"
                               onClick={() => {
                                 window.open(`/ai-studio/vocal?lyrics=${encodeURIComponent(item.lyrics)}`, '_self');
                               }}
@@ -1799,7 +1883,7 @@ const AIStudioCreate = () => {
                       <Heart className={cn("w-3.5 h-3.5 mr-1.5", filterFavorites && "fill-current")} />{t('aiCreate.favorites')}
                     </Button>
                     <Select value={filterGenre} onValueChange={setFilterGenre}>
-                      <SelectTrigger className="w-[140px] h-8 text-sm"><SelectValue placeholder={t('aiCreate.genrePlaceholder')} /></SelectTrigger>
+                      <SelectTrigger className="w-[140px] h-8 text-sm"><SelectValue placeholder="Género" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">{t('aiCreate.allGenres')}</SelectItem>
                         {availableGenres.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
@@ -1958,7 +2042,7 @@ const AIStudioCreate = () => {
                                       </AlertDialogContent>
                                     </AlertDialog>
                                   </TooltipTrigger>
-                                  <TooltipContent><p>{t('aiCreate.deleteGenTooltip')}</p></TooltipContent>
+                                  <TooltipContent><p>Eliminar generación</p></TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
                             </div>
@@ -1980,11 +2064,11 @@ const AIStudioCreate = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              {mode === 'instrumental' ? t('aiCreate.saveAsPreset') : t('aiCreate.saveArtistTitle')}
+              {mode === 'instrumental' ? 'Guardar como Preset Musical' : t('aiCreate.saveArtistTitle')}
             </DialogTitle>
             <DialogDescription>
               {mode === 'instrumental'
-                ? t('aiCreate.savePresetDesc')
+                ? 'Guarda la configuración de estilo para reutilizarla en futuras generaciones instrumentales.'
                 : t('aiCreate.saveArtistDesc')}
             </DialogDescription>
           </DialogHeader>
@@ -1992,7 +2076,7 @@ const AIStudioCreate = () => {
             {mode === 'instrumental' ? (
               <div className="rounded-lg border border-primary/20 bg-primary/5 px-3.5 py-2.5 flex items-center gap-2">
                 <span>🎹</span>
-                <span className="text-sm text-primary font-medium">{t('aiCreate.instrumentalNoVoice')}</span>
+                <span className="text-sm text-primary font-medium">Canción instrumental (sin voz)</span>
               </div>
             ) : (
               <>
@@ -2000,10 +2084,10 @@ const AIStudioCreate = () => {
                   <Label htmlFor="save-artist-voice">
                     {t('aiCreate.saveArtistVoice')}
                     {saveArtistStyle.trim().length > 10 && (
-                      <span className="text-muted-foreground font-normal"> {t('aiCreate.voiceOptional')}</span>
+                      <span className="text-muted-foreground font-normal"> (opcional)</span>
                     )}
                   </Label>
-                  <Select value={lastGeneratedVoiceId || (saveArtistStyle.trim().length > 10 ? '' : voiceProfiles[0]?.id || '')} onValueChange={(value) => {
+                  <Select value={lastGeneratedVoiceId || '__none__'} onValueChange={(value) => {
                     if (value === '__none__') {
                       setLastGeneratedVoiceId('');
                       setLastGeneratedVoiceName('');
@@ -2017,9 +2101,7 @@ const AIStudioCreate = () => {
                       <SelectValue placeholder={t('aiCreate.saveArtistVoiceOptional')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {saveArtistStyle.trim().length > 10 && (
-                        <SelectItem value="__none__">{t('aiCreate.noSpecificVoice')}</SelectItem>
-                      )}
+                      <SelectItem value="__none__">— Sin voz específica —</SelectItem>
                       {voiceProfiles.map((voice) => (
                         <SelectItem key={voice.id} value={voice.id}>{voice.label}</SelectItem>
                       ))}
@@ -2027,7 +2109,7 @@ const AIStudioCreate = () => {
                   </Select>
                   {saveArtistStyle.trim().length > 10 && !lastGeneratedVoiceId && (
                     <p className="text-xs text-muted-foreground">
-                      {t('aiCreate.styleDetailedNote')}
+                      Como has añadido una descripción de estilo detallada, la voz es opcional.
                     </p>
                   )}
                 </div>
@@ -2070,7 +2152,7 @@ const AIStudioCreate = () => {
               {isSavingArtist ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> {t('aiCreate.saveArtistSaving')}</>
               ) : (
-                <><Save className="h-4 w-4" /> {mode === 'instrumental' ? t('aiCreate.savePresetBtn') : t('aiCreate.saveArtistBtn')}</>
+                <><Save className="h-4 w-4" /> {mode === 'instrumental' ? 'Guardar preset musical' : t('aiCreate.saveArtistBtn')}</>
               )}
             </Button>
           </DialogFooter>
