@@ -47,7 +47,7 @@ export function SignatureSelector({ value, onChange }: SignatureSelectorProps) {
               id: 'profile-fallback',
               user_id: user.id,
               ibs_signature_id: profile.ibs_signature_id,
-              signature_name: t('wizard.signature.label'),
+              signature_name: t('wizard.signature.verifiedIdentity'),
               status: 'success',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),

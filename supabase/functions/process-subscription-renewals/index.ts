@@ -89,9 +89,9 @@ Deno.serve(async (req) => {
     });
 
     // ─────────────────────────────────────────────────────────────
-    // 3. Fetch subscriptions due in next 3 days
+    // 3. Fetch subscriptions due today or already expired
     // ─────────────────────────────────────────────────────────────
-    const cutoffISO = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+    const cutoffISO = new Date().toISOString();
     const { data: subs, error: subsErr } = await supabase
       .from("subscriptions")
       .select("id, user_id, tier, plan, status, current_period_start, current_period_end, stripe_customer_id")
@@ -185,6 +185,7 @@ Deno.serve(async (req) => {
           await supabase
             .from("subscriptions")
             .update({
+              stripe_subscription_id: ss.id,
               current_period_start: new Date((ss as any).current_period_start * 1000).toISOString(),
               current_period_end: new Date((ss as any).current_period_end * 1000).toISOString(),
               updated_at: new Date().toISOString(),
