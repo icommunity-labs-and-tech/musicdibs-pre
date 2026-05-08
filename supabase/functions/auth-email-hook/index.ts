@@ -250,6 +250,41 @@ function buildHtml(emailType: string, confirmationUrl: string, token: string, re
 </div></body></html>`
 }
 
+function buildEmailQueue(body: AuthEmailPayload): EmailToSend[] {
+  const emailType = body.email_data?.email_action_type
+  const currentEmail = body.user?.email
+  const newEmail = body.user?.new_email || body.email_data?.new_email
+  const token = body.email_data?.token ?? ''
+  const tokenHash = body.email_data?.token_hash ?? ''
+  const tokenNew = body.email_data?.token_new ?? ''
+  const tokenHashNew = body.email_data?.token_hash_new ?? ''
+
+  if (!emailType) return []
+
+  if (emailType === 'email_change') {
+    const emails: EmailToSend[] = []
+
+    if (currentEmail && tokenHashNew) {
+      emails.push({ type: 'email_change_current', recipient: currentEmail, token, tokenHash: tokenHashNew })
+    }
+
+    if (newEmail && tokenHash) {
+      emails.push({ type: 'email_change_new', recipient: newEmail, token: tokenNew || token, tokenHash })
+    }
+
+    if (emails.length === 0 && newEmail && tokenHash) {
+      emails.push({ type: 'email_change_new', recipient: newEmail, token: tokenNew || token, tokenHash })
+    }
+
+    return emails
+  }
+
+  const recipient = emailType === 'email_change_new' ? (newEmail || currentEmail) : currentEmail
+  if (!recipient || !tokenHash) return []
+
+  return [{ type: emailType, recipient, token, tokenHash }]
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
 
