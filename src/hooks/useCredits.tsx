@@ -61,5 +61,5 @@ export function useCredits() {
 
   const hasEnough = (cost: number) => credits !== null && credits >= cost;
 
-  return { credits, hasEnough };
+  return { credits, hasEnough, isLoading };
 }
