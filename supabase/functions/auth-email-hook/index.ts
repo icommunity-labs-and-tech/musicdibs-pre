@@ -295,10 +295,10 @@ Deno.serve(async (req) => {
     const payload = await req.text()
     const headers = Object.fromEntries(req.headers)
 
-    let body: any
+    let body: AuthEmailPayload
     try {
       const wh = new Webhook(hookSecret)
-      body = wh.verify(payload, headers)
+      body = wh.verify(payload, headers) as AuthEmailPayload
     } catch (err) {
       console.error('[AUTH-EMAIL-HOOK] Verification failed:', String(err))
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -307,15 +307,9 @@ Deno.serve(async (req) => {
     }
 
     const emailType = body.email_data?.email_action_type
-    const newEmail = body.user?.new_email || body.email_data?.new_email
-    // Para email_change_new el destinatario es el NUEVO email, no el actual
-    const recipientEmail = emailType === 'email_change_new'
-      ? (newEmail || body.user?.email)
-      : body.user?.email
-    const token = body.email_data?.token ?? ''
     const userId = body.user?.id
 
-    if (!emailType || !recipientEmail) {
+    if (!emailType) {
       return new Response(JSON.stringify({ error: 'Invalid payload' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -330,6 +324,13 @@ Deno.serve(async (req) => {
     if (!ALLOWED_TYPES.has(emailType)) {
       return new Response(JSON.stringify({ success: true, skipped: emailType }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const emailsToSend = buildEmailQueue(body)
+    if (emailsToSend.length === 0) {
+      return new Response(JSON.stringify({ error: 'Invalid email payload' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
@@ -349,46 +350,47 @@ Deno.serve(async (req) => {
 
     const siteUrl = body.email_data?.site_url || `https://${ROOT_DOMAIN}`
     const baseUrl = siteUrl.includes('/auth/v1') ? siteUrl.replace('/auth/v1', '') : siteUrl
-    const appRedirect = REDIRECTS[emailType] ?? `https://${ROOT_DOMAIN}/dashboard`
-    // Supabase espera el tipo "email_change" en el endpoint /verify para ambas variantes
-    const verifyType = emailType.startsWith('email_change') ? 'email_change' : emailType
-    const confirmationUrl = `${baseUrl}/auth/v1/verify?token=${body.email_data.token_hash}&type=${verifyType}&redirect_to=${encodeURIComponent(appRedirect)}`
-
-    const html = buildHtml(emailType, confirmationUrl, token, recipientEmail, userLang)
-    const subject = getSubject(emailType, userLang)
 
     const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
     if (!RESEND_API_KEY) throw new Error('RESEND_API_KEY not configured')
 
-    const resendRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: FROM_EMAIL, to: [recipientEmail], subject, html }),
-    })
+    for (const email of emailsToSend) {
+      const appRedirect = REDIRECTS[email.type] ?? `https://${ROOT_DOMAIN}/dashboard`
+      const verifyType = email.type.startsWith('email_change') ? 'email_change' : email.type
+      const confirmationUrl = `${baseUrl}/auth/v1/verify?token=${email.tokenHash}&type=${verifyType}&redirect_to=${encodeURIComponent(appRedirect)}`
+      const html = buildHtml(email.type, confirmationUrl, email.token, email.recipient, userLang)
+      const subject = getSubject(email.type, userLang)
 
-    if (!resendRes.ok) {
-      const errText = await resendRes.text()
-      console.error('[AUTH-EMAIL-HOOK] Resend error:', resendRes.status, errText)
-      throw new Error(`Resend error ${resendRes.status}`)
-    }
-
-    const resendData = await resendRes.json()
-
-    // Log en BD (no crítico)
-    try {
-      const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
-      await supabase.from('email_send_log').insert({
-        message_id: resendData.id || crypto.randomUUID(),
-        template_name: emailType,
-        recipient_email: recipientEmail,
-        status: 'sent',
-        language: userLang,
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: FROM_EMAIL, to: [email.recipient], subject, html }),
       })
-    } catch (logErr) {
-      console.warn('[AUTH-EMAIL-HOOK] Log error (non-critical):', String(logErr))
+
+      if (!resendRes.ok) {
+        const errText = await resendRes.text()
+        console.error('[AUTH-EMAIL-HOOK] Resend error:', resendRes.status, errText)
+        throw new Error(`Resend error ${resendRes.status}`)
+      }
+
+      const resendData = await resendRes.json()
+
+      // Log en BD (no crítico)
+      try {
+        const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+        await supabase.from('email_send_log').insert({
+          message_id: resendData.id || crypto.randomUUID(),
+          template_name: email.type,
+          recipient_email: email.recipient,
+          status: 'sent',
+          language: userLang,
+        })
+      } catch (logErr) {
+        console.warn('[AUTH-EMAIL-HOOK] Log error (non-critical):', String(logErr))
+      }
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, sent: emailsToSend.length }), {
       status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
 
