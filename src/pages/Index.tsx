@@ -134,12 +134,10 @@ const Index = () => {
           }
         ]}
       />
-      <header className="relative z-40">
-        <LaunchPromoBanner />
-        <Navbar layout="inline" />
-      </header>
+      <Navbar />
       <main>
         <HeroSection />
+        <LaunchPromoBanner />
         <DeferredHomeSections />
       </main>
     </div>
