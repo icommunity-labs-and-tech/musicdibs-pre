@@ -52,22 +52,21 @@ export const PromoBanner = () => {
       <div className="pointer-events-none absolute inset-y-0 left-1/4 w-1/2 bg-fuchsia-500/20 blur-3xl" />
 
       <div className="container relative mx-auto px-4 py-3 md:py-4">
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
+        <div className="flex flex-col items-center gap-3 text-center lg:flex-row lg:items-center lg:justify-between lg:gap-5 lg:text-left">
           {/* Texto principal */}
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span className="text-sm md:text-base font-bold text-white">
+          <div className="lg:max-w-[520px] lg:flex-shrink-0">
+            <div className="flex flex-col items-center gap-0.5 lg:items-start">
+              <span className="text-sm md:text-base font-bold text-white leading-tight">
                 🚀 La nueva era de MusicDibs ya está aquí
               </span>
-              <span className="hidden md:inline text-white/40">·</span>
-              <span className="text-xs md:text-sm text-white/80">
+              <span className="text-xs md:text-sm text-white/80 leading-snug">
                 Crea música con IA, protégela y distribúyela desde un solo lugar.
               </span>
             </div>
           </div>
 
           {/* Oferta + Código + Countdown + CTA */}
-          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-2.5">
             <span className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold tracking-wider text-white border border-white/20 whitespace-nowrap">
               🎁 30% OFF · Solo mayo
             </span>
