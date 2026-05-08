@@ -24,7 +24,22 @@ export function CreditHistory() {
   const TYPE_CONFIG: Record<string, { label: string; icon: typeof ArrowUpCircle; color: string }> = {
     purchase: { label: t('dashboard.creditHistory.purchase'), icon: ArrowUpCircle, color: 'text-emerald-500' },
     renewal: { label: t('dashboard.creditHistory.renewal'), icon: RefreshCw, color: 'text-blue-500' },
+    subscription: { label: t('dashboard.creditHistory.subscription'), icon: RefreshCw, color: 'text-blue-500' },
+    admin_grant: { label: t('dashboard.creditHistory.adminGrant'), icon: ArrowUpCircle, color: 'text-emerald-500' },
+    onboarding: { label: t('dashboard.creditHistory.onboarding'), icon: ArrowUpCircle, color: 'text-emerald-500' },
+    migration: { label: t('dashboard.creditHistory.migration'), icon: ArrowUpCircle, color: 'text-muted-foreground' },
+    refund: { label: t('dashboard.creditHistory.refund'), icon: RefreshCw, color: 'text-emerald-500' },
+    payment_failed: { label: t('dashboard.creditHistory.paymentFailed'), icon: ArrowDownCircle, color: 'text-destructive' },
     consumption: { label: t('dashboard.creditHistory.consumption'), icon: ArrowDownCircle, color: 'text-orange-500' },
+    usage: { label: t('dashboard.creditHistory.consumption'), icon: ArrowDownCircle, color: 'text-orange-500' },
+  };
+
+  // Fallback by amount sign for any unmapped type (e.g. instagram_creative, voice_translation, promote_premium…)
+  const resolveConfig = (tx: Transaction) => {
+    if (TYPE_CONFIG[tx.type]) return TYPE_CONFIG[tx.type];
+    return tx.amount < 0
+      ? { label: t('dashboard.creditHistory.consumption'), icon: ArrowDownCircle, color: 'text-orange-500' }
+      : { label: t('dashboard.creditHistory.purchase'), icon: ArrowUpCircle, color: 'text-emerald-500' };
   };
 
   useEffect(() => {
@@ -35,7 +50,7 @@ export function CreditHistory() {
         .select('id, amount, type, description, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
       setTransactions(data || []);
       setLoading(false);
     };
