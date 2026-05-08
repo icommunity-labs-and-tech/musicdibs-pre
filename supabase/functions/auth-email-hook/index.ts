@@ -16,6 +16,8 @@ const SUBJECTS: Record<string, string> = {
   magiclink: 'Tu enlace de acceso a MusicDibs',
   recovery: 'Restablece tu contraseña en MusicDibs',
   email_change: 'Confirma tu nuevo email en MusicDibs',
+  email_change_current: 'Confirma el cambio de email desde tu cuenta actual',
+  email_change_new: 'Confirma tu nuevo email en MusicDibs',
   reauthentication: 'Tu código de verificación de MusicDibs',
 }
 
@@ -24,7 +26,9 @@ const REDIRECTS: Record<string, string> = {
   signup: `https://${ROOT_DOMAIN}/dashboard`,
   magiclink: `https://${ROOT_DOMAIN}/dashboard`,
   invite: `https://${ROOT_DOMAIN}/dashboard`,
-  email_change: `https://${ROOT_DOMAIN}/dashboard`,
+  email_change: `https://${ROOT_DOMAIN}/dashboard/profile`,
+  email_change_current: `https://${ROOT_DOMAIN}/dashboard/profile`,
+  email_change_new: `https://${ROOT_DOMAIN}/dashboard/profile`,
   reauthentication: `https://${ROOT_DOMAIN}/dashboard`,
 }
 
@@ -65,6 +69,14 @@ function buildHtml(emailType: string, confirmationUrl: string, token: string, re
       <p>Has solicitado cambiar tu email en MusicDibs. Haz clic para confirmar:</p>
       <a href="${confirmationUrl}" class="btn">Confirmar cambio →</a>
       <p class="note">Si no solicitaste este cambio, protege tu cuenta de inmediato.</p>`,
+    email_change_current: `<h1>📧 Confirmación desde tu email actual</h1>
+      <p>Has solicitado cambiar el email de tu cuenta MusicDibs. Confirma desde esta dirección haciendo clic:</p>
+      <a href="${confirmationUrl}" class="btn">Confirmar desde email actual →</a>
+      <p class="note">Para completar el cambio también deberás confirmar desde tu nuevo email. Si no solicitaste este cambio, protege tu cuenta de inmediato.</p>`,
+    email_change_new: `<h1>📧 Confirma tu nuevo email</h1>
+      <p>Esta dirección ha sido propuesta como nuevo email para tu cuenta de MusicDibs. Haz clic para confirmarla:</p>
+      <a href="${confirmationUrl}" class="btn">Confirmar nuevo email →</a>
+      <p class="note">Si no esperabas este email, puedes ignorarlo.</p>`,
     reauthentication: `<h1>🔒 Código de verificación</h1>
       <p>Usa el siguiente código para confirmar tu identidad:</p>
       <div class="code">${token}</div>
@@ -103,7 +115,11 @@ Deno.serve(async (req) => {
     }
 
     const emailType = body.email_data?.email_action_type
-    const recipientEmail = body.user?.email
+    const newEmail = body.user?.new_email || body.email_data?.new_email
+    // Para email_change_new el destinatario es el NUEVO email, no el actual
+    const recipientEmail = emailType === 'email_change_new'
+      ? (newEmail || body.user?.email)
+      : body.user?.email
     const token = body.email_data?.token ?? ''
 
     if (!emailType || !recipientEmail) {
@@ -113,10 +129,10 @@ Deno.serve(async (req) => {
     }
 
     // Allowlist explícito: solo procesamos eventos transaccionales conocidos.
-    // signInWithPassword NO dispara este hook, pero por seguridad ignoramos
-    // cualquier tipo no soportado devolviendo 200 (no bloquea al usuario).
     const ALLOWED_TYPES = new Set([
-      'signup', 'magiclink', 'recovery', 'invite', 'email_change', 'reauthentication',
+      'signup', 'magiclink', 'recovery', 'invite',
+      'email_change', 'email_change_current', 'email_change_new',
+      'reauthentication',
     ])
     if (!ALLOWED_TYPES.has(emailType)) {
       return new Response(JSON.stringify({ success: true, skipped: emailType }), {
@@ -127,7 +143,9 @@ Deno.serve(async (req) => {
     const siteUrl = body.email_data?.site_url || `https://${ROOT_DOMAIN}`
     const baseUrl = siteUrl.includes('/auth/v1') ? siteUrl.replace('/auth/v1', '') : siteUrl
     const appRedirect = REDIRECTS[emailType] ?? `https://${ROOT_DOMAIN}/dashboard`
-    const confirmationUrl = `${baseUrl}/auth/v1/verify?token=${body.email_data.token_hash}&type=${emailType}&redirect_to=${encodeURIComponent(appRedirect)}`
+    // Supabase espera el tipo "email_change" en el endpoint /verify para ambas variantes
+    const verifyType = emailType.startsWith('email_change') ? 'email_change' : emailType
+    const confirmationUrl = `${baseUrl}/auth/v1/verify?token=${body.email_data.token_hash}&type=${verifyType}&redirect_to=${encodeURIComponent(appRedirect)}`
 
     const html = buildHtml(emailType, confirmationUrl, token, recipientEmail)
     const subject = SUBJECTS[emailType] || 'Notificación de MusicDibs'
