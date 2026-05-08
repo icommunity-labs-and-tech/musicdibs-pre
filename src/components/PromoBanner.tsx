@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Copy, Check } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 const TARGET_DATE = new Date("2026-05-31T23:59:59");
 const PROMO_CODE = "NEWMUSIC30";
@@ -8,11 +7,12 @@ const PROMO_CODE = "NEWMUSIC30";
 const useCountdown = (target: Date) => {
   const calc = () => {
     const diff = Math.max(0, target.getTime() - Date.now());
-    const days = Math.floor(diff / 86400000);
-    const hours = Math.floor((diff / 3600000) % 24);
-    const minutes = Math.floor((diff / 60000) % 60);
-    const seconds = Math.floor((diff / 1000) % 60);
-    return { days, hours, minutes, seconds };
+    return {
+      days: Math.floor(diff / 86400000),
+      hours: Math.floor((diff / 3600000) % 24),
+      minutes: Math.floor((diff / 60000) % 60),
+      seconds: Math.floor((diff / 1000) % 60),
+    };
   };
   const [time, setTime] = useState(calc);
   useEffect(() => {
@@ -25,7 +25,6 @@ const useCountdown = (target: Date) => {
 const pad = (n: number) => n.toString().padStart(2, "0");
 
 export const PromoBanner = () => {
-  const { t } = useTranslation();
   const { days, hours, minutes, seconds } = useCountdown(TARGET_DATE);
   const [copied, setCopied] = useState(false);
 
@@ -38,81 +37,78 @@ export const PromoBanner = () => {
   };
 
   const scrollToPricing = () => {
-    const el = document.getElementById("pricing");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <section className="relative w-full px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-      <div
-        className="relative mx-auto max-w-7xl overflow-hidden rounded-3xl border border-white/10 p-6 sm:p-8 md:p-10 animate-fade-in backdrop-blur-xl"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(76,29,149,0.95) 0%, rgba(124,58,237,0.9) 45%, rgba(217,70,239,0.9) 100%)",
-        }}
-      >
-        {/* Glow */}
-        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-fuchsia-500/40 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-purple-500/40 blur-3xl" />
+    <section
+      className="relative w-full border-y border-white/10 animate-fade-in overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(90deg, #2a0a4a 0%, #4c1d95 35%, #7c3aed 65%, #c026d3 100%)",
+      }}
+    >
+      {/* Glow sutil */}
+      <div className="pointer-events-none absolute inset-y-0 left-1/4 w-1/2 bg-fuchsia-500/20 blur-3xl" />
 
-        <div className="relative flex flex-col items-stretch gap-6 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+      <div className="container relative mx-auto px-4 py-3 md:py-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
           {/* Texto principal */}
           <div className="flex-1 min-w-0">
-            <h2 className="text-2xl md:text-3xl font-bold text-white leading-tight">
-              🚀 La nueva era de MusicDibs ya está aquí
-            </h2>
-            <p className="mt-2 text-sm md:text-base text-white/85">
-              Crea música con IA, protégela y distribúyela desde un solo lugar.
-            </p>
-            <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-bold tracking-wider text-white border border-white/20">
-              🎁 -30% Solo MAYO
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="text-sm md:text-base font-bold text-white">
+                🚀 La nueva era de MusicDibs ya está aquí
+              </span>
+              <span className="hidden md:inline text-white/40">·</span>
+              <span className="text-xs md:text-sm text-white/80">
+                Crea música con IA, protégela y distribúyela desde un solo lugar.
+              </span>
             </div>
           </div>
 
-          {/* Código */}
-          <button
-            onClick={copyCode}
-            className="group flex items-center justify-between gap-3 rounded-xl border border-white/25 bg-white/10 px-4 py-3 backdrop-blur-md transition hover:bg-white/20"
-            aria-label="Copiar código"
-          >
-            <div className="text-left">
-              <div className="text-[10px] uppercase tracking-widest text-white/70">Código</div>
-              <div className="font-mono text-base font-bold text-white">{PROMO_CODE}</div>
+          {/* Oferta + Código + Countdown + CTA */}
+          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+            <span className="inline-flex items-center rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-bold tracking-wider text-white border border-white/20 whitespace-nowrap">
+              🎁 30% OFF · Solo mayo
+            </span>
+
+            <button
+              onClick={copyCode}
+              className="group inline-flex items-center gap-2 rounded-md border border-white/25 bg-white/10 px-3 py-1.5 backdrop-blur-sm transition hover:bg-white/20"
+              aria-label="Copiar código"
+            >
+              <span className="font-mono text-xs md:text-sm font-bold text-white tracking-wider">
+                {PROMO_CODE}
+              </span>
+              {copied ? (
+                <Check className="h-3.5 w-3.5 text-emerald-300" />
+              ) : (
+                <Copy className="h-3.5 w-3.5 text-white/80 group-hover:text-white" />
+              )}
+            </button>
+
+            <div className="flex items-center gap-1 font-mono text-xs md:text-sm font-bold text-white tabular-nums">
+              {[
+                { v: days, l: "D" },
+                { v: hours, l: "H" },
+                { v: minutes, l: "M" },
+                { v: seconds, l: "S" },
+              ].map((u, i) => (
+                <span key={i} className="inline-flex items-baseline">
+                  <span className="rounded bg-black/30 px-1.5 py-0.5">{pad(u.v)}</span>
+                  <span className="ml-0.5 text-[9px] text-white/60 uppercase">{u.l}</span>
+                  {i < 3 && <span className="mx-0.5 text-white/30">:</span>}
+                </span>
+              ))}
             </div>
-            {copied ? (
-              <Check className="h-5 w-5 text-emerald-300" />
-            ) : (
-              <Copy className="h-5 w-5 text-white/80 group-hover:text-white" />
-            )}
-          </button>
 
-          {/* Countdown */}
-          <div className="flex items-center gap-2">
-            {[
-              { v: days, l: "Días" },
-              { v: hours, l: "Hrs" },
-              { v: minutes, l: "Min" },
-              { v: seconds, l: "Seg" },
-            ].map((u, i) => (
-              <div
-                key={i}
-                className="min-w-[3.25rem] rounded-lg border border-white/15 bg-black/25 px-2 py-2 text-center backdrop-blur-md"
-              >
-                <div className="font-mono text-xl font-bold text-white tabular-nums">
-                  {pad(u.v)}
-                </div>
-                <div className="text-[9px] uppercase tracking-wider text-white/70">{u.l}</div>
-              </div>
-            ))}
+            <button
+              onClick={scrollToPricing}
+              className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-500 to-fuchsia-600 px-4 py-2 text-xs md:text-sm font-bold text-white shadow-md transition hover:scale-105 hover:shadow-fuchsia-500/60 hover:shadow-xl whitespace-nowrap"
+            >
+              🔥 Aprovechar oferta
+            </button>
           </div>
-
-          {/* CTA */}
-          <button
-            onClick={scrollToPricing}
-            className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-pink-500 to-fuchsia-600 px-6 py-3 text-sm md:text-base font-bold text-white shadow-lg shadow-fuchsia-900/40 transition hover:scale-105 hover:shadow-fuchsia-500/60 hover:shadow-2xl"
-          >
-            🔥 Aprovechar oferta
-          </button>
         </div>
       </div>
     </section>
