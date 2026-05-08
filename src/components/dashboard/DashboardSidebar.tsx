@@ -95,6 +95,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.productMetrics', 'Métricas producto'), url: '/dashboard/admin/product-metrics', icon: BarChart3 },
     { title: tr('dashboard.sidebar.userChurn', 'Bajas usuarios'), url: '/dashboard/admin/churn', icon: UserX },
     { title: tr('dashboard.sidebar.alerts', 'Alertas sistema'), url: '/dashboard/admin/alerts', icon: Bell },
+    { title: '🤖 Proveedores IA', url: '/dashboard/admin/ai-models', icon: Sparkles },
   ];
 
   // Determine which group is active based on current route
