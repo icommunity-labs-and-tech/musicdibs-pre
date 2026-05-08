@@ -101,6 +101,7 @@ serve(async (req) => {
         user_id: user.id,
         amount: -REGEN_CREDIT_COST,
         type: 'usage',
+        feature_key: 'promo_social_regenerate_copies',
         description: `Regeneración copies (pagada)`,
       });
     }
