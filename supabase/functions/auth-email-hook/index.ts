@@ -10,6 +10,30 @@ const SITE_NAME = 'MusicDibs'
 const ROOT_DOMAIN = 'musicdibs.com'
 const FROM_EMAIL = `MusicDibs <noreply@notify.${ROOT_DOMAIN}>`
 
+type AuthEmailPayload = {
+  user?: {
+    id?: string
+    email?: string
+    new_email?: string
+  }
+  email_data?: {
+    email_action_type?: string
+    token?: string
+    token_hash?: string
+    token_new?: string
+    token_hash_new?: string
+    new_email?: string
+    site_url?: string
+  }
+}
+
+type EmailToSend = {
+  type: string
+  recipient: string
+  token: string
+  tokenHash: string
+}
+
 function normalizeLanguage(lang: string | null | undefined): string {
   if (!lang) return 'es'
   const l = lang.toLowerCase().trim()
