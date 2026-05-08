@@ -261,23 +261,19 @@ function buildEmailQueue(body: AuthEmailPayload): EmailToSend[] {
 
   if (!emailType) return []
 
-  if (emailType === 'email_change') {
-    // Confirmación única: solo enviamos al NUEVO email.
-    // Esto permite cambiar el correo aunque el usuario haya perdido acceso al antiguo.
-    const emails: EmailToSend[] = []
-
-    if (newEmail && tokenHash) {
-      emails.push({ type: 'email_change_new', recipient: newEmail, token: tokenNew || token, tokenHash })
-    } else if (newEmail && tokenHashNew) {
-      emails.push({ type: 'email_change_new', recipient: newEmail, token: tokenNew || token, tokenHash: tokenHashNew })
-    }
-
-    return emails
+  // IGNORAR email_change_current — solo confirmación en el nuevo email
+  if (emailType === 'email_change_current') {
+    console.log('[AUTH-EMAIL-HOOK] Skipping email_change_current')
+    return []
   }
 
-  // Si Supabase manda explícitamente email_change_current, lo ignoramos (confirmación única).
-  if (emailType === 'email_change_current') {
-    return []
+  if (emailType === 'email_change') {
+    // Solo enviar al nuevo email, nunca al email actual
+    const recipient = newEmail
+    const finalTokenHash = tokenHashNew || tokenHash
+    const finalToken = tokenNew || token
+    if (!recipient || !finalTokenHash) return []
+    return [{ type: 'email_change_new', recipient, token: finalToken, tokenHash: finalTokenHash }]
   }
 
   const recipient = emailType === 'email_change_new' ? (newEmail || currentEmail) : currentEmail
