@@ -101,54 +101,243 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_generation_logs: {
+        Row: {
+          callback_token: string | null
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          estimated_cost_usd: number | null
+          feature_key: string
+          id: string
+          idempotency_key: string | null
+          model: string
+          output_url: string | null
+          primary_provider_attempted: string | null
+          provider: string
+          provider_task_id: string | null
+          request_payload: Json | null
+          response_payload: Json | null
+          status: string
+          storage_bucket: string | null
+          storage_path: string | null
+          structured_outputs: Json | null
+          updated_at: string
+          used_fallback: boolean
+          user_credits_charged: number | null
+          user_id: string | null
+        }
+        Insert: {
+          callback_token?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          estimated_cost_usd?: number | null
+          feature_key: string
+          id?: string
+          idempotency_key?: string | null
+          model: string
+          output_url?: string | null
+          primary_provider_attempted?: string | null
+          provider: string
+          provider_task_id?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          structured_outputs?: Json | null
+          updated_at?: string
+          used_fallback?: boolean
+          user_credits_charged?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          callback_token?: string | null
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          estimated_cost_usd?: number | null
+          feature_key?: string
+          id?: string
+          idempotency_key?: string | null
+          model?: string
+          output_url?: string | null
+          primary_provider_attempted?: string | null
+          provider?: string
+          provider_task_id?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status?: string
+          storage_bucket?: string | null
+          storage_path?: string | null
+          structured_outputs?: Json | null
+          updated_at?: string
+          used_fallback?: boolean
+          user_credits_charged?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       ai_generations: {
         Row: {
           audio_url: string
+          callback_token: string | null
           created_at: string
           duration: number
+          final_prompt_sent: string | null
+          generation_group_id: string | null
           genre: string | null
           id: string
           is_favorite: boolean | null
+          is_primary: boolean
+          kie_job_id: string | null
+          lyrics_fidelity_mode: boolean | null
+          lyrics_prompt: string | null
+          model: string | null
           mood: string | null
+          primary_provider_attempted: string | null
           prompt: string
           provider: string | null
+          provider_task_id: string | null
+          request_payload: Json | null
+          response_payload: Json | null
           song_map: string | null
+          storage_bucket: string | null
+          storage_path: string | null
+          structured_outputs: Json | null
+          style_prompt: string | null
+          used_fallback: boolean | null
           user_id: string
+          variant_index: number
+          variants: Json | null
           voice_id: string | null
           voice_name: string | null
           voice_profile_id: string | null
         }
         Insert: {
           audio_url: string
+          callback_token?: string | null
           created_at?: string
           duration: number
+          final_prompt_sent?: string | null
+          generation_group_id?: string | null
           genre?: string | null
           id?: string
           is_favorite?: boolean | null
+          is_primary?: boolean
+          kie_job_id?: string | null
+          lyrics_fidelity_mode?: boolean | null
+          lyrics_prompt?: string | null
+          model?: string | null
           mood?: string | null
+          primary_provider_attempted?: string | null
           prompt: string
           provider?: string | null
+          provider_task_id?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
           song_map?: string | null
+          storage_bucket?: string | null
+          storage_path?: string | null
+          structured_outputs?: Json | null
+          style_prompt?: string | null
+          used_fallback?: boolean | null
           user_id: string
+          variant_index?: number
+          variants?: Json | null
           voice_id?: string | null
           voice_name?: string | null
           voice_profile_id?: string | null
         }
         Update: {
           audio_url?: string
+          callback_token?: string | null
           created_at?: string
           duration?: number
+          final_prompt_sent?: string | null
+          generation_group_id?: string | null
           genre?: string | null
           id?: string
           is_favorite?: boolean | null
+          is_primary?: boolean
+          kie_job_id?: string | null
+          lyrics_fidelity_mode?: boolean | null
+          lyrics_prompt?: string | null
+          model?: string | null
           mood?: string | null
+          primary_provider_attempted?: string | null
           prompt?: string
           provider?: string | null
+          provider_task_id?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
           song_map?: string | null
+          storage_bucket?: string | null
+          storage_path?: string | null
+          structured_outputs?: Json | null
+          style_prompt?: string | null
+          used_fallback?: boolean | null
           user_id?: string
+          variant_index?: number
+          variants?: Json | null
           voice_id?: string | null
           voice_name?: string | null
           voice_profile_id?: string | null
+        }
+        Relationships: []
+      }
+      ai_provider_settings: {
+        Row: {
+          config_json: Json
+          cost_usd_estimate: number | null
+          created_at: string
+          fallback_model: string | null
+          fallback_provider: string | null
+          feature_key: string
+          id: string
+          is_active: boolean
+          is_enabled: boolean
+          model: string
+          notes: string | null
+          priority: number
+          provider: string
+          updated_at: string
+          user_credits_cost: number | null
+        }
+        Insert: {
+          config_json?: Json
+          cost_usd_estimate?: number | null
+          created_at?: string
+          fallback_model?: string | null
+          fallback_provider?: string | null
+          feature_key: string
+          id?: string
+          is_active?: boolean
+          is_enabled?: boolean
+          model: string
+          notes?: string | null
+          priority?: number
+          provider: string
+          updated_at?: string
+          user_credits_cost?: number | null
+        }
+        Update: {
+          config_json?: Json
+          cost_usd_estimate?: number | null
+          created_at?: string
+          fallback_model?: string | null
+          fallback_provider?: string | null
+          feature_key?: string
+          id?: string
+          is_active?: boolean
+          is_enabled?: boolean
+          model?: string
+          notes?: string | null
+          priority?: number
+          provider?: string
+          updated_at?: string
+          user_credits_cost?: number | null
         }
         Relationships: []
       }
@@ -727,6 +916,7 @@ export type Database = {
         Row: {
           audio_duration_seconds: number | null
           audio_url: string | null
+          callback_token: string | null
           completed_at: string | null
           created_at: string
           credits_cost: number
@@ -735,22 +925,30 @@ export type Database = {
           error_message: string | null
           genre: string | null
           id: string
+          kie_job_id: string | null
           lyrics: string | null
+          lyrics_fidelity_mode: boolean | null
+          lyrics_prompt: string | null
           mode: string
           mood: string | null
+          primary_provider_attempted: string | null
           prompt: string | null
           provider: string
           provider_job_id: string | null
           started_at: string | null
           status: string
+          style_prompt: string | null
           type: string
           updated_at: string
+          used_fallback: boolean | null
           user_id: string
+          variants: Json | null
           voice_id: string | null
         }
         Insert: {
           audio_duration_seconds?: number | null
           audio_url?: string | null
+          callback_token?: string | null
           completed_at?: string | null
           created_at?: string
           credits_cost?: number
@@ -759,22 +957,30 @@ export type Database = {
           error_message?: string | null
           genre?: string | null
           id?: string
+          kie_job_id?: string | null
           lyrics?: string | null
+          lyrics_fidelity_mode?: boolean | null
+          lyrics_prompt?: string | null
           mode?: string
           mood?: string | null
+          primary_provider_attempted?: string | null
           prompt?: string | null
           provider?: string
           provider_job_id?: string | null
           started_at?: string | null
           status?: string
+          style_prompt?: string | null
           type?: string
           updated_at?: string
+          used_fallback?: boolean | null
           user_id: string
+          variants?: Json | null
           voice_id?: string | null
         }
         Update: {
           audio_duration_seconds?: number | null
           audio_url?: string | null
+          callback_token?: string | null
           completed_at?: string | null
           created_at?: string
           credits_cost?: number
@@ -783,17 +989,24 @@ export type Database = {
           error_message?: string | null
           genre?: string | null
           id?: string
+          kie_job_id?: string | null
           lyrics?: string | null
+          lyrics_fidelity_mode?: boolean | null
+          lyrics_prompt?: string | null
           mode?: string
           mood?: string | null
+          primary_provider_attempted?: string | null
           prompt?: string | null
           provider?: string
           provider_job_id?: string | null
           started_at?: string | null
           status?: string
+          style_prompt?: string | null
           type?: string
           updated_at?: string
+          used_fallback?: boolean | null
           user_id?: string
+          variants?: Json | null
           voice_id?: string | null
         }
         Relationships: []
@@ -2923,6 +3136,10 @@ export type Database = {
         }[]
       }
       check_renewals_cron_health: { Args: never; Returns: undefined }
+      debit_user_credits: {
+        Args: { p_amount: number; p_description: string; p_user_id: string }
+        Returns: number
+      }
       decrement_credits: {
         Args: { _amount: number; _user_id: string }
         Returns: undefined
@@ -2934,6 +3151,35 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_admin_ai_generation_log_payloads: {
+        Args: { p_log_id: string }
+        Returns: {
+          request_payload: Json
+          response_payload: Json
+        }[]
+      }
+      get_admin_ai_generation_logs: {
+        Args: {
+          p_feature_filter?: string
+          p_limit?: number
+          p_status_filter?: string
+        }
+        Returns: {
+          completed_at: string
+          created_at: string
+          error_message: string
+          estimated_cost_usd: number
+          feature_key: string
+          id: string
+          model: string
+          output_url: string
+          provider: string
+          provider_task_id: string
+          status: string
+          user_credits_charged: number
+          user_id: string
+        }[]
       }
       get_kyc_pending_users: {
         Args: {
@@ -3007,6 +3253,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      refund_user_credits: {
+        Args: { p_amount: number; p_reason?: string; p_user_id: string }
+        Returns: Json
       }
       set_user_password_hash: {
         Args: { new_hash: string; target_user_id: string }
