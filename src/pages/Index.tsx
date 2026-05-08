@@ -136,7 +136,7 @@ const Index = () => {
       />
       <header className="relative z-40">
         <LaunchPromoBanner />
-        <Navbar />
+        <Navbar layout="inline" />
       </header>
       <main>
         <HeroSection />
