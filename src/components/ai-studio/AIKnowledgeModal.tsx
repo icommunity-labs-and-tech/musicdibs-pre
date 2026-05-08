@@ -14,7 +14,7 @@ interface Props {
 }
 
 export const AIKnowledgeModal = ({ open, onOpenChange }: Props) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [dontShow, setDontShow] = useState(false);
 
   const blocks = [
