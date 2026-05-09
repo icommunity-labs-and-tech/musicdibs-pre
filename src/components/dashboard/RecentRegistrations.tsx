@@ -18,6 +18,7 @@ const PAGE_SIZE = 3;
 export function RecentRegistrations() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState<RecentRegistration[]>([]);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState('');
