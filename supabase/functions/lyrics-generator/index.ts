@@ -33,8 +33,38 @@ serve(async (req) => {
     }
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")
-    if (!ANTHROPIC_API_KEY) {
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")
+
+    // Resolve active provider for lyrics_generation from ai_provider_settings
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    )
+    let activeProvider = "anthropic"
+    let activeModel = "claude-haiku-4-5-20251001"
+    try {
+      const { data: setting } = await supabaseAdmin
+        .from("ai_provider_settings")
+        .select("provider, model")
+        .eq("feature_key", "lyrics_generation")
+        .eq("is_active", true)
+        .eq("is_enabled", true)
+        .maybeSingle()
+      if (setting?.provider) {
+        activeProvider = setting.provider
+        activeModel = setting.model || activeModel
+      }
+    } catch (e) {
+      console.warn("[LYRICS] provider lookup failed, using default:", e)
+    }
+    console.log(`[LYRICS] Using provider=${activeProvider} model=${activeModel}`)
+
+    if (activeProvider === "anthropic" && !ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+    }
+    if (activeProvider === "gemini" && !GEMINI_API_KEY) {
+      return new Response(JSON.stringify({ error: "GEMINI_API_KEY not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
     }
 
@@ -105,45 +135,66 @@ No añadas explicaciones, comentarios ni introducciones.`
         `Devuelve la letra COMPLETA con la sección regenerada.`
     }
 
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 2000,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }],
-      }),
-    })
+    let lyrics = ""
+    if (activeProvider === "gemini") {
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${GEMINI_API_KEY}`
+      const gResp = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          generationConfig: { maxOutputTokens: 4096, temperature: 0.85 },
+        }),
+      })
+      if (!gResp.ok) {
+        const errText = await gResp.text()
+        console.error("[LYRICS] Gemini error:", gResp.status, errText)
+        if (gResp.status === 429) {
+          return new Response(JSON.stringify({ error: "Demasiadas solicitudes, espera un momento." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+        }
+        return new Response(JSON.stringify({ error: "Error al generar letra" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      }
+      const gData = await gResp.json()
+      lyrics = (gData?.candidates?.[0]?.content?.parts || [])
+        .map((p: any) => p?.text || "").join("").trim()
+    } else {
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_API_KEY!,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: activeModel,
+          max_tokens: 2000,
+          system: systemPrompt,
+          messages: [{ role: "user", content: userPrompt }],
+        }),
+      })
 
-    if (!response.ok) {
-      const errText = await response.text()
-      console.error("[LYRICS] Anthropic error:", response.status, errText)
-
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Demasiadas solicitudes, espera un momento." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      if (!response.ok) {
+        const errText = await response.text()
+        console.error("[LYRICS] Anthropic error:", response.status, errText)
+        if (response.status === 429) {
+          return new Response(JSON.stringify({ error: "Demasiadas solicitudes, espera un momento." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+        }
+        return new Response(JSON.stringify({ error: "Error al generar letra" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
       }
 
-      return new Response(JSON.stringify({ error: "Error al generar letra" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      const data = await response.json()
+      lyrics = data.content?.[0]?.text || ""
     }
-
-    const data = await response.json()
-    const lyrics = data.content?.[0]?.text || ""
 
     console.log(`[LYRICS] Generated for user ${user.id}, ${lyrics.length} chars`)
 
     // Guardar en BBDD
     try {
-      const supabaseAdmin = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      )
       await supabaseAdmin.from("lyrics_generations").insert({
         user_id:      user.id,
         description,
