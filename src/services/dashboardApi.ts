@@ -366,7 +366,7 @@ export async function fetchRecentRegistrations(limit = 10): Promise<RecentRegist
   return (data || []).map(w => ({
     id: w.id,
     title: w.title,
-    status: w.status as 'processing' | 'registered' | 'failed',
+    status: w.status as 'processing' | 'registered' | 'failed' | 'draft',
     date: w.created_at,
     type: w.type,
     certificateUrl: w.certificate_url || undefined,
