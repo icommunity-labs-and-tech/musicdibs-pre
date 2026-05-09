@@ -1909,7 +1909,7 @@ const AIStudioCreate = () => {
                       <Heart className={cn("w-3.5 h-3.5 mr-1.5", filterFavorites && "fill-current")} />{t('aiCreate.favorites')}
                     </Button>
                     <Select value={filterGenre} onValueChange={setFilterGenre}>
-                      <SelectTrigger className="w-[140px] h-8 text-sm"><SelectValue placeholder="Género" /></SelectTrigger>
+                      <SelectTrigger className="w-full max-w-full sm:w-36 h-8 text-sm"><SelectValue placeholder="Género" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">{t('aiCreate.allGenres')}</SelectItem>
                         {availableGenres.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
