@@ -57,10 +57,26 @@ serve(async (req) => {
   const authHeader = req.headers.get("Authorization") || "";
   const cronHeader = req.headers.get("x-cron-secret") || "";
 
-  const isAuth = authHeader === `Bearer ${serviceKey}` || (cronSecret && cronHeader === cronSecret);
-  if (!isAuth) return json({ error: "Unauthorized" }, 401);
+  let isAuth = authHeader === `Bearer ${serviceKey}` || (cronSecret && cronHeader === cronSecret);
 
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
+
+  // Allow admin users via JWT (manual mode from admin UI)
+  if (!isAuth && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (user) {
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (roleRow?.role === "admin") isAuth = true;
+    }
+  }
+
+  if (!isAuth) return json({ error: "Unauthorized" }, 401);
   const mlKey = Deno.env.get("MAILERLITE_API_KEY");
   if (!mlKey) return json({ error: "MAILERLITE_API_KEY not set" }, 500);
 
