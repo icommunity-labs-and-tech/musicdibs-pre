@@ -105,6 +105,16 @@ export function RecentRegistrations() {
 
                       {/* Actions — aligned left */}
                       <div className="flex items-center gap-2">
+                        {reg.status === 'draft' && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-7 text-xs gap-1 bg-orange-500 hover:bg-orange-600 text-white"
+                            onClick={() => navigate(`/dashboard/register?resume=${reg.id}`)}
+                          >
+                            Continuar registro <ArrowRight className="h-3 w-3" />
+                          </Button>
+                        )}
                         {reg.certificateUrl && (
                           <a
                             href={reg.certificateUrl}
