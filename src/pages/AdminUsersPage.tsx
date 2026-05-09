@@ -630,6 +630,27 @@ export default function AdminUsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={cancelSubModal.open} onOpenChange={open => !open && !cancelSubModal.loading && setCancelSubModal({ open: false, userId: '', label: '', loading: false })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Dar de baja al usuario</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Dar de baja a <span className="font-medium text-foreground">{cancelSubModal.label}</span>? Esto pondrá su plan a Free, sus créditos a 0 y cancelará su suscripción en Stripe. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelSubModal.loading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleCancelSubscription(); }}
+              disabled={cancelSubModal.loading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelSubModal.loading ? 'Procesando…' : 'Dar de baja'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
