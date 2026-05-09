@@ -42,6 +42,7 @@ export function RecentRegistrations() {
   const totalPages = Math.ceil(data.length / PAGE_SIZE);
   const pageData = data.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const statusConfig: Record<string, { label: string; className: string }> = {
+    draft: { label: 'En borrador', className: 'bg-orange-500/10 text-orange-600 border-orange-500/20' },
     processing: { label: t('dashboard.recentReg.processing'), className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
     registered: { label: t('dashboard.recentReg.registered'), className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
     failed: { label: t('dashboard.recentReg.failed'), className: 'bg-destructive/10 text-destructive border-destructive/20' },
