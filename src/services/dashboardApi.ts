@@ -94,9 +94,54 @@ export async function submitPromotionRequest(data: PromotionRequest): Promise<{ 
   return { success: true };
 }
 
+// ── Drafts ─────────────────────────────────────────────────
+
+export interface DraftWork {
+  id: string;
+  title: string;
+  type: string | null;
+  description: string | null;
+  author: string | null;
+  file_path: string | null;
+  created_at: string;
+}
+
+export async function fetchUserDrafts(limit = 5): Promise<DraftWork[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from('works')
+    .select('id, title, type, description, author, file_path, created_at')
+    .eq('user_id', user.id)
+    .eq('status', 'draft')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn('[fetchUserDrafts] error', error);
+    return [];
+  }
+  return (data || []) as DraftWork[];
+}
+
+export async function loadDraftFile(filePath: string): Promise<File | null> {
+  try {
+    const { data, error } = await supabase.storage.from('works-files').download(filePath);
+    if (error || !data) {
+      console.warn('[loadDraftFile] download failed', error);
+      return null;
+    }
+    const name = filePath.split('/').pop() || 'draft-file';
+    const cleanName = name.replace(/^\d+_/, '');
+    return new File([data], cleanName, { type: data.type || 'application/octet-stream' });
+  } catch (err) {
+    console.error('[loadDraftFile] exception', err);
+    return null;
+  }
+}
+
 // ── Register Work ──────────────────────────────────────────
 
-export async function registerWork(data: WorkRegistration): Promise<{
+export async function registerWork(data: WorkRegistration & { resumeWorkId?: string }): Promise<{
   registrationId: string;
   status: string;
   certificateUrl?: string;
