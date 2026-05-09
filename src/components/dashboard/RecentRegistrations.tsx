@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { History, FileText, ExternalLink, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { History, FileText, ExternalLink, RefreshCw, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { fetchRecentRegistrations } from '@/services/dashboardApi';
 import type { RecentRegistration } from '@/types/dashboard';
 import { DistributeButton } from '@/components/dashboard/DistributeButton';
@@ -17,6 +18,7 @@ const PAGE_SIZE = 3;
 export function RecentRegistrations() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState<RecentRegistration[]>([]);
   const [loading, setLoading] = useState(true);
   const [displayName, setDisplayName] = useState('');
@@ -40,6 +42,7 @@ export function RecentRegistrations() {
   const totalPages = Math.ceil(data.length / PAGE_SIZE);
   const pageData = data.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const statusConfig: Record<string, { label: string; className: string }> = {
+    draft: { label: 'En borrador', className: 'bg-orange-500/10 text-orange-600 border-orange-500/20' },
     processing: { label: t('dashboard.recentReg.processing'), className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
     registered: { label: t('dashboard.recentReg.registered'), className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
     failed: { label: t('dashboard.recentReg.failed'), className: 'bg-destructive/10 text-destructive border-destructive/20' },
@@ -102,6 +105,16 @@ export function RecentRegistrations() {
 
                       {/* Actions — aligned left */}
                       <div className="flex items-center gap-2">
+                        {reg.status === 'draft' && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="h-7 text-xs gap-1 bg-orange-500 hover:bg-orange-600 text-white"
+                            onClick={() => navigate(`/dashboard/register?resume=${reg.id}`)}
+                          >
+                            Continuar registro <ArrowRight className="h-3 w-3" />
+                          </Button>
+                        )}
                         {reg.certificateUrl && (
                           <a
                             href={reg.certificateUrl}

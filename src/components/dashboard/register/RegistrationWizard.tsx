@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useCallback, useEffect } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
-import { ShieldAlert, Shield } from 'lucide-react';
+import { ShieldAlert, Shield, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -17,9 +17,10 @@ import { StepSuccess } from './StepSuccess';
 import { StepParentWork } from './StepParentWork';
 import { SignatureSelector } from './SignatureSelector';
 import { NoCreditsAlert } from '@/components/dashboard/NoCreditsAlert';
+import { DraftsModal } from './DraftsModal';
 import { useCredits } from '@/hooks/useCredits';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
-import { registerWork } from '@/services/dashboardApi';
+import { registerWork, fetchUserDrafts, loadDraftFile, type DraftWork } from '@/services/dashboardApi';
 import { supabase } from '@/integrations/supabase/client';
 import type { DashboardSummary } from '@/types/dashboard';
 import { initialWizardData, type WizardData } from './types';
@@ -68,6 +69,82 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
   const [loading, setLoading] = useState(false);
   const [resultId, setResultId] = useState('');
   const [resultHash, setResultHash] = useState('');
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const resumeId = searchParams.get('resume');
+  const [resumeWorkId, setResumeWorkId] = useState<string | null>(null);
+  const [resumeLoading, setResumeLoading] = useState(false);
+  const [drafts, setDrafts] = useState<DraftWork[]>([]);
+  const [draftsModalOpen, setDraftsModalOpen] = useState(false);
+  const [draftsChecked, setDraftsChecked] = useState(false);
+
+  // Load draft when ?resume=ID is present
+  useEffect(() => {
+    if (!resumeId || resumeWorkId === resumeId) return;
+    let cancelled = false;
+    (async () => {
+      setResumeLoading(true);
+      try {
+        const { data: work, error } = await supabase
+          .from('works')
+          .select('id, title, type, description, author, file_path, status')
+          .eq('id', resumeId)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error || !work) {
+          toast.error('No se pudo cargar el borrador');
+          setResumeLoading(false);
+          return;
+        }
+        if (work.status !== 'draft') {
+          toast.error('Esta obra ya no está en borrador');
+          setResumeLoading(false);
+          return;
+        }
+        const file = work.file_path ? await loadDraftFile(work.file_path) : null;
+        if (cancelled) return;
+        const authors = (work.author || '').split(',').map((s) => s.trim()).filter(Boolean);
+        setData({
+          ...initialWizardData,
+          flow: 'new',
+          file: file,
+          files: file ? [file] : [],
+          title: work.title || '',
+          workType: work.type || 'audio',
+          description: work.description || '',
+          creators: authors.length > 0
+            ? authors.map((name) => ({ id: crypto.randomUUID(), name, email: '', roles: ['autor'], percentage: null }))
+            : [{ id: crypto.randomUUID(), name: '', email: '', roles: [], percentage: null }],
+        });
+        setResumeWorkId(work.id);
+        // Jump straight to signature + summary step (penultimate)
+        setStep(STEPS_NEW.length - 2);
+        setDraftsChecked(true);
+      } catch (err) {
+        console.error('[RegistrationWizard] resume error', err);
+        toast.error('Error cargando el borrador');
+      } finally {
+        if (!cancelled) setResumeLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeId]);
+
+  // Check for existing drafts on first mount when not resuming
+  useEffect(() => {
+    if (resumeId || draftsChecked) return;
+    let cancelled = false;
+    (async () => {
+      const list = await fetchUserDrafts(5);
+      if (cancelled) return;
+      setDrafts(list);
+      if (list.length > 0) setDraftsModalOpen(true);
+      setDraftsChecked(true);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeId, draftsChecked]);
 
   const { hasEnough } = useCredits();
   const noCredits = !hasEnough(FEATURE_COSTS.register_work);
@@ -135,6 +212,7 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
         files: uploadFiles.length > 0 ? uploadFiles : undefined,
         ownershipDeclaration: true,
         signatureId: data.signatureId,
+        resumeWorkId: resumeWorkId || undefined,
       });
 
       if (res.ibsError || res.status === 'failed') {
@@ -187,6 +265,11 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
     setStep(-1);
     setResultId('');
     setResultHash('');
+    setResumeWorkId(null);
+    if (searchParams.get('resume')) {
+      searchParams.delete('resume');
+      setSearchParams(searchParams, { replace: true });
+    }
   };
 
   if (noCredits) {
@@ -268,14 +351,37 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
     }
   };
 
+  if (resumeLoading) {
+    return (
+      <Card className="border-border/40">
+        <CardContent className="p-10 flex flex-col items-center justify-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Cargando borrador…</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="border-border/40 shadow-sm">
-      <CardContent className="p-6 md:p-8">
-        {step >= 0 && step < steps.length - 1 && (
-          <WizardStepper steps={steps} currentStep={step} />
-        )}
-        {renderStep()}
-      </CardContent>
-    </Card>
+    <>
+      <DraftsModal
+        open={draftsModalOpen}
+        drafts={drafts}
+        onContinue={(id) => {
+          setDraftsModalOpen(false);
+          searchParams.set('resume', id);
+          setSearchParams(searchParams, { replace: true });
+        }}
+        onStartNew={() => setDraftsModalOpen(false)}
+      />
+      <Card className="border-border/40 shadow-sm">
+        <CardContent className="p-6 md:p-8">
+          {step >= 0 && step < steps.length - 1 && (
+            <WizardStepper steps={steps} currentStep={step} />
+          )}
+          {renderStep()}
+        </CardContent>
+      </Card>
+    </>
   );
 }

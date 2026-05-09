@@ -94,9 +94,54 @@ export async function submitPromotionRequest(data: PromotionRequest): Promise<{ 
   return { success: true };
 }
 
+// ── Drafts ─────────────────────────────────────────────────
+
+export interface DraftWork {
+  id: string;
+  title: string;
+  type: string | null;
+  description: string | null;
+  author: string | null;
+  file_path: string | null;
+  created_at: string;
+}
+
+export async function fetchUserDrafts(limit = 5): Promise<DraftWork[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from('works')
+    .select('id, title, type, description, author, file_path, created_at')
+    .eq('user_id', user.id)
+    .eq('status', 'draft')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) {
+    console.warn('[fetchUserDrafts] error', error);
+    return [];
+  }
+  return (data || []) as DraftWork[];
+}
+
+export async function loadDraftFile(filePath: string): Promise<File | null> {
+  try {
+    const { data, error } = await supabase.storage.from('works-files').download(filePath);
+    if (error || !data) {
+      console.warn('[loadDraftFile] download failed', error);
+      return null;
+    }
+    const name = filePath.split('/').pop() || 'draft-file';
+    const cleanName = name.replace(/^\d+_/, '');
+    return new File([data], cleanName, { type: data.type || 'application/octet-stream' });
+  } catch (err) {
+    console.error('[loadDraftFile] exception', err);
+    return null;
+  }
+}
+
 // ── Register Work ──────────────────────────────────────────
 
-export async function registerWork(data: WorkRegistration): Promise<{
+export async function registerWork(data: WorkRegistration & { resumeWorkId?: string }): Promise<{
   registrationId: string;
   status: string;
   certificateUrl?: string;
@@ -150,20 +195,36 @@ export async function registerWork(data: WorkRegistration): Promise<{
     filePaths.push(filePath);
   }
 
-  // Insert work record as 'draft' — only moves to 'processing' after iBS accepts it
-  const { data: work, error } = await supabase.from('works').insert({
-    user_id: user.id,
-    title: data.title,
-    type: data.type,
-    author: data.author,
-    description: data.description,
-    file_path: filePaths[0],
-    file_hash: fileHash,
-    file_hash_sha512_b64: fileHashSha512B64,
-    status: 'draft',
-  }).select().single();
-
-  if (error) throw error;
+  // Insert work record as 'draft' — or update existing draft when resuming
+  let work: { id: string };
+  if (data.resumeWorkId) {
+    const { data: updated, error: updErr } = await supabase.from('works').update({
+      title: data.title,
+      type: data.type,
+      author: data.author,
+      description: data.description,
+      file_path: filePaths[0],
+      file_hash: fileHash,
+      file_hash_sha512_b64: fileHashSha512B64,
+      status: 'draft',
+    }).eq('id', data.resumeWorkId).eq('user_id', user.id).select('id').single();
+    if (updErr || !updated) throw updErr || new Error('No se pudo actualizar el borrador');
+    work = updated;
+  } else {
+    const { data: inserted, error } = await supabase.from('works').insert({
+      user_id: user.id,
+      title: data.title,
+      type: data.type,
+      author: data.author,
+      description: data.description,
+      file_path: filePaths[0],
+      file_hash: fileHash,
+      file_hash_sha512_b64: fileHashSha512B64,
+      status: 'draft',
+    }).select('id').single();
+    if (error) throw error;
+    work = inserted;
+  }
 
   // Call real iBS registration — the edge function sets status to 'processing' on success
   const { data: ibsResult, error: ibsError } = await supabase.functions.invoke('register-work-ibs', {
@@ -305,7 +366,7 @@ export async function fetchRecentRegistrations(limit = 10): Promise<RecentRegist
   return (data || []).map(w => ({
     id: w.id,
     title: w.title,
-    status: w.status as 'processing' | 'registered' | 'failed',
+    status: w.status as 'processing' | 'registered' | 'failed' | 'draft',
     date: w.created_at,
     type: w.type,
     certificateUrl: w.certificate_url || undefined,
