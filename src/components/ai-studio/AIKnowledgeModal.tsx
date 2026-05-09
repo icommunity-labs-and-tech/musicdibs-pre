@@ -84,36 +84,6 @@ export const AIKnowledgeModal = ({ open, onOpenChange }: Props) => {
             </div>
           ))}
         </div>
-        <a
-          href="/Manual_buenas_practicas_IA.pdf"
-          download="Manual_buenas_practicas_IA.pdf"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-2 flex items-center justify-between gap-3 p-3 rounded-lg border border-primary/40 bg-gradient-to-r from-primary/10 to-accent/10 hover:from-primary/20 hover:to-accent/20 transition-colors group"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center">
-              <FileDown className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">
-                {i18n.language?.startsWith("pt")
-                  ? "Manual completo de boas práticas IA"
-                  : i18n.language?.startsWith("en")
-                  ? "Complete AI Best Practices Manual"
-                  : "Manual completo de buenas prácticas IA"}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {i18n.language?.startsWith("pt")
-                  ? "Baixar PDF · 1 clique"
-                  : i18n.language?.startsWith("en")
-                  ? "Download PDF · 1 click"
-                  : "Descargar PDF · 1 clic"}
-              </p>
-            </div>
-          </div>
-          <span className="text-xs font-medium text-primary group-hover:underline">PDF</span>
-        </a>
 
         <div className="flex items-center justify-between gap-3 pt-2 border-t">
           <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
