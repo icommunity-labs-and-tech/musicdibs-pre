@@ -351,14 +351,37 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
     }
   };
 
+  if (resumeLoading) {
+    return (
+      <Card className="border-border/40">
+        <CardContent className="p-10 flex flex-col items-center justify-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Cargando borrador…</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="border-border/40 shadow-sm">
-      <CardContent className="p-6 md:p-8">
-        {step >= 0 && step < steps.length - 1 && (
-          <WizardStepper steps={steps} currentStep={step} />
-        )}
-        {renderStep()}
-      </CardContent>
-    </Card>
+    <>
+      <DraftsModal
+        open={draftsModalOpen}
+        drafts={drafts}
+        onContinue={(id) => {
+          setDraftsModalOpen(false);
+          searchParams.set('resume', id);
+          setSearchParams(searchParams, { replace: true });
+        }}
+        onStartNew={() => setDraftsModalOpen(false)}
+      />
+      <Card className="border-border/40 shadow-sm">
+        <CardContent className="p-6 md:p-8">
+          {step >= 0 && step < steps.length - 1 && (
+            <WizardStepper steps={steps} currentStep={step} />
+          )}
+          {renderStep()}
+        </CardContent>
+      </Card>
+    </>
   );
 }
