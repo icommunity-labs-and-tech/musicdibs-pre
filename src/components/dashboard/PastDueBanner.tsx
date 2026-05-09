@@ -70,7 +70,7 @@ export function PastDueBanner() {
     if (opening) return;
     setOpening(true);
     try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
+      const { data, error } = await supabase.functions.invoke('create-billing-portal-session');
       if (error) throw error;
       if (data?.url) window.open(data.url, '_blank', 'noopener,noreferrer');
     } catch (err) {
