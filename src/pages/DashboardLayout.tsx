@@ -75,6 +75,7 @@ export default function DashboardLayout() {
                 <NotificationBell />
               </div>
             </header>
+            <PastDueBanner />
             <main className="flex-1 p-4 md:p-6 overflow-auto">
               <Outlet />
             </main>
