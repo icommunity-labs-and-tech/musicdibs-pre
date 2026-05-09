@@ -1,154 +1,133 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "../_shared/supabase-client.ts";
-import { kycInProcessEmail } from "../_shared/transactional-email.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
+const ML_API = "https://connect.mailerlite.com/api";
+const KYC_GROUPS: Record<string, string> = {
+  es: "186736686730839787",
+  en: "186736699734230889",
+  pt: "186736708193093233",
+};
 const MAX_REMINDERS = 3;
-const MIN_DAYS_BETWEEN = 5;
+const DAYS_BETWEEN = 5;
+
+function normalizeLocale(lang: string | null): "es" | "en" | "pt" {
+  if (!lang) return "es";
+  const l = lang.toLowerCase();
+  if (l.startsWith("pt") || l === "br") return "pt";
+  if (l.startsWith("en")) return "en";
+  return "es";
+}
 
 function json(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
+  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+}
+
+async function addToMailerLite(email: string, groupId: string, mlKey: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${ML_API}/subscribers`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${mlKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ email, groups: [groupId], status: "active" }),
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      console.warn(`[KYC-REMINDER] ML add failed for ${email}: ${res.status} ${err.slice(0, 100)}`);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.warn(`[KYC-REMINDER] ML exception for ${email}:`, e);
+    return false;
+  }
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+  let body: any = {};
+  try { body = await req.json(); } catch { /* no body */ }
 
-    const supabaseUser = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const cronSecret = Deno.env.get("CRON_SECRET") || "";
+  const authHeader = req.headers.get("Authorization") || "";
+  const cronHeader = req.headers.get("x-cron-secret") || "";
 
-    const token = authHeader.replace("Bearer ", "");
-    let callerUserId = "";
+  const isAuth = authHeader === `Bearer ${serviceKey}` || (cronSecret && cronHeader === cronSecret);
+  if (!isAuth) return json({ error: "Unauthorized" }, 401);
 
-    try {
-      const gc = (supabaseUser.auth as any).getClaims;
-      if (typeof gc === "function") {
-        const { data: claimsData } = await gc.call(supabaseUser.auth, token);
-        if (claimsData?.claims?.sub) callerUserId = claimsData.claims.sub;
-      }
-    } catch (_) { /* */ }
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
+  const mlKey = Deno.env.get("MAILERLITE_API_KEY");
+  if (!mlKey) return json({ error: "MAILERLITE_API_KEY not set" }, 500);
 
-    if (!callerUserId) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-        if (payload?.sub) callerUserId = payload.sub;
-      } catch (_) { /* */ }
+  const manualUserId: string | null = body.user_id || null;
+  const batchSize: number = Math.min(body.batch_size || 200, 2000);
+  const cutoffDate = new Date(Date.now() - DAYS_BETWEEN * 24 * 60 * 60 * 1000).toISOString();
+
+  // MODO MANUAL: admin envía recordatorio a usuario concreto
+  if (manualUserId) {
+    const { data: profile } = await supabase.from("profiles").select("user_id, language, kyc_status").eq("user_id", manualUserId).single();
+    if (!profile) return json({ error: "User not found" }, 404);
+    if (profile.kyc_status === "verified") return json({ ok: false, reason: "User already verified" });
+    const { data: authUser } = await supabase.auth.admin.getUserById(manualUserId);
+    const email = authUser?.user?.email;
+    if (!email) return json({ error: "No email" }, 400);
+    const { data: lastLog } = await supabase.from("kyc_reminder_log").select("sent_at").eq("user_id", manualUserId).order("sent_at", { ascending: false }).limit(1).maybeSingle();
+    if (lastLog) {
+      const daysSince = (Date.now() - new Date(lastLog.sent_at).getTime()) / 86400000;
+      if (daysSince < DAYS_BETWEEN) return json({ ok: false, reason: `Last reminder ${Math.floor(daysSince)}d ago` });
     }
-
-    if (!callerUserId) {
-      const { data: { user }, error } = await supabaseUser.auth.getUser(token);
-      if (error || !user) return json({ error: "Unauthorized" }, 401);
-      callerUserId = user.id;
-    }
-
-    const admin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    const { data: roleRow } = await admin
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", callerUserId)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (roleRow?.role !== "admin") return json({ error: "Forbidden" }, 403);
-
-    const body = await req.json().catch(() => ({}));
-    const userId = body?.user_id as string | undefined;
-    if (!userId) return json({ ok: false, reason: "user_id requerido" }, 400);
-
-    // Profile + email
-    const { data: profile } = await admin
-      .from("profiles")
-      .select("display_name, language, kyc_status")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (!profile) return json({ ok: false, reason: "Usuario no encontrado" }, 404);
-    if (profile.kyc_status === "verified") {
-      return json({ ok: false, reason: "El usuario ya tiene KYC verificado" });
-    }
-
-    const { data: authUser } = await admin.auth.admin.getUserById(userId);
-    const userEmail = authUser?.user?.email;
-    if (!userEmail) return json({ ok: false, reason: "Email no encontrado" }, 404);
-
-    // Check reminder log
-    const { data: logs } = await admin
-      .from("kyc_reminder_log")
-      .select("reminder_number, sent_at")
-      .eq("user_id", userId)
-      .order("sent_at", { ascending: false });
-
-    const sentCount = logs?.length || 0;
-    if (sentCount >= MAX_REMINDERS) {
-      return json({ ok: false, reason: `Máximo de ${MAX_REMINDERS} recordatorios alcanzado` });
-    }
-
-    if (logs && logs.length > 0) {
-      const last = new Date(logs[0].sent_at as string).getTime();
-      const days = (Date.now() - last) / (1000 * 60 * 60 * 24);
-      if (days < MIN_DAYS_BETWEEN) {
-        const remaining = Math.ceil(MIN_DAYS_BETWEEN - days);
-        return json({ ok: false, reason: `Último recordatorio hace ${days.toFixed(1)} días. Espera ${remaining} día(s) más.` });
-      }
-    }
-
-    const reminderNumber = sentCount + 1;
-    const lang = (profile.language as string) || "es";
-    const displayName = (profile.display_name as string) || userEmail.split("@")[0];
-
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) return json({ ok: false, reason: "RESEND_API_KEY no configurado" }, 500);
-
-    const email = kycInProcessEmail({ name: displayName, lang });
-    const subjectPrefix = lang === "en" ? `Reminder #${reminderNumber}` : lang === "pt" ? `Lembrete #${reminderNumber}` : `Recordatorio #${reminderNumber}`;
-
-    const resendRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "MusicDibs <noreply@notify.musicdibs.com>",
-        to: [userEmail],
-        subject: `${subjectPrefix} — ${email.subject}`,
-        html: email.html,
-      }),
-    });
-
-    if (!resendRes.ok) {
-      const errTxt = await resendRes.text();
-      console.error("[KYC-REMINDER] Resend error:", errTxt);
-      return json({ ok: false, reason: "Error al enviar email" }, 500);
-    }
-
-    await admin.from("kyc_reminder_log").insert({
-      user_id: userId,
-      reminder_number: reminderNumber,
-      type: "manual_admin",
-      sent_at: new Date().toISOString(),
-    });
-
-    return json({ ok: true, reminder_number: reminderNumber });
-  } catch (e: any) {
-    console.error("[KYC-REMINDER] Error:", e);
-    return json({ error: e?.message || "Internal error" }, 500);
+    const { count } = await supabase.from("kyc_reminder_log").select("id", { count: "exact", head: true }).eq("user_id", manualUserId);
+    const reminderNumber = (count || 0) + 1;
+    if (reminderNumber > MAX_REMINDERS) return json({ ok: false, reason: `Max ${MAX_REMINDERS} reminders sent` });
+    const locale = normalizeLocale(profile.language);
+    const groupId = KYC_GROUPS[locale];
+    const added = await addToMailerLite(email, groupId, mlKey);
+    if (added) await supabase.from("kyc_reminder_log").insert({ user_id: manualUserId, reminder_number: reminderNumber, type: "manual", mailerlite_group_id: groupId });
+    return json({ ok: added, email, reminder_number: reminderNumber, group: locale });
   }
+
+  // MODO CRON/MASIVO: usar RPC get_kyc_pending_users_with_email
+  const { data: eligible, error: rpcErr } = await supabase.rpc("get_kyc_pending_users_with_email", {
+    p_batch_size: batchSize,
+    p_cutoff_date: cutoffDate,
+    p_max_reminders: MAX_REMINDERS,
+  });
+
+  if (rpcErr) {
+    console.error("[KYC-REMINDER] RPC error:", rpcErr.message);
+    return json({ ok: false, error: rpcErr.message }, 500);
+  }
+  if (!eligible || eligible.length === 0) return json({ ok: true, processed: 0, reason: "No eligible users" });
+
+  // Agrupar por idioma e importar en bloque a MailerLite
+  const byLocale: Record<string, { email: string; user_id: string; reminder_count: number }[]> = { es: [], en: [], pt: [] };
+  for (const u of eligible) {
+    const locale = normalizeLocale(u.language);
+    byLocale[locale].push(u);
+  }
+
+  let totalAdded = 0, totalFailed = 0;
+  const logs: any[] = [];
+
+  for (const [locale, users] of Object.entries(byLocale)) {
+    if (users.length === 0) continue;
+    const groupId = KYC_GROUPS[locale];
+    for (const u of users) {
+      const success = await addToMailerLite(u.email, groupId, mlKey);
+      if (success) {
+        logs.push({ user_id: u.user_id, reminder_number: (u.reminder_count || 0) + 1, type: "auto", mailerlite_group_id: groupId });
+        totalAdded++;
+      } else { totalFailed++; }
+    }
+  }
+
+  if (logs.length > 0) await supabase.from("kyc_reminder_log").insert(logs);
+
+  console.log(`[KYC-REMINDER] Done: ${totalAdded} added, ${totalFailed} failed`);
+  return json({ ok: true, processed: eligible.length, added: totalAdded, failed: totalFailed });
 });
