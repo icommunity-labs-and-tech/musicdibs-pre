@@ -33,8 +33,38 @@ serve(async (req) => {
     }
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")
-    if (!ANTHROPIC_API_KEY) {
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")
+
+    // Resolve active provider for lyrics_generation from ai_provider_settings
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    )
+    let activeProvider = "anthropic"
+    let activeModel = "claude-haiku-4-5-20251001"
+    try {
+      const { data: setting } = await supabaseAdmin
+        .from("ai_provider_settings")
+        .select("provider, model")
+        .eq("feature_key", "lyrics_generation")
+        .eq("is_active", true)
+        .eq("is_enabled", true)
+        .maybeSingle()
+      if (setting?.provider) {
+        activeProvider = setting.provider
+        activeModel = setting.model || activeModel
+      }
+    } catch (e) {
+      console.warn("[LYRICS] provider lookup failed, using default:", e)
+    }
+    console.log(`[LYRICS] Using provider=${activeProvider} model=${activeModel}`)
+
+    if (activeProvider === "anthropic" && !ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+    }
+    if (activeProvider === "gemini" && !GEMINI_API_KEY) {
+      return new Response(JSON.stringify({ error: "GEMINI_API_KEY not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
     }
 
