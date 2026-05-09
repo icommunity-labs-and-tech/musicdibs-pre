@@ -1243,7 +1243,7 @@ const AIStudioCreate = () => {
                       {/* Mode selector: Canción con voz / Instrumental */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Tipo de generación</Label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2 w-full max-w-full">
                           <button
                             type="button"
                             onClick={() => {
@@ -1251,7 +1251,7 @@ const AIStudioCreate = () => {
                               setVoiceTab('preset');
                             }}
                             className={cn(
-                              "flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-all flex items-center justify-center gap-2",
+                              "flex-1 min-w-0 px-3 sm:px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-all flex items-center justify-center gap-2 break-words",
                               mode === 'song'
                                 ? "border-primary bg-primary/10 text-primary"
                                 : "border-border text-muted-foreground hover:border-primary/50"
@@ -1269,7 +1269,7 @@ const AIStudioCreate = () => {
                               setVoiceTab(instrumentalPresets.length > 0 ? 'my_presets' : 'preset');
                             }}
                             className={cn(
-                              "flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-all flex items-center justify-center gap-2",
+                              "flex-1 min-w-0 px-3 sm:px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-all flex items-center justify-center gap-2 break-words",
                               mode === 'instrumental'
                                 ? "border-primary bg-primary/10 text-primary"
                                 : "border-border text-muted-foreground hover:border-primary/50"
@@ -1289,15 +1289,15 @@ const AIStudioCreate = () => {
                          </Label>
                         {/* Tabs: Voces IA / Mis artistas virtuales / Mis presets musicales */}
                         <TooltipProvider delayDuration={200}>
-                        <div className="flex flex-wrap gap-2 mb-3">
+                        <div className="flex flex-wrap gap-2 w-full max-w-full overflow-hidden mb-3">
                           {/* Tab: Voces IA — only in song mode */}
                           {mode === 'song' && (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 min-w-0">
                             <button
                               type="button"
                               onClick={() => { setVoiceTab('preset'); setSelectedArtistId(''); }}
                               className={cn(
-                                "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
+                                "max-w-full px-3 sm:px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all break-words whitespace-normal",
                                 voiceTab === 'preset'
                                   ? "border-primary bg-primary/10 text-primary border-2"
                                   : "border-border text-muted-foreground hover:border-primary/50"
