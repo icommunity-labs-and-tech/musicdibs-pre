@@ -47,6 +47,27 @@ export default function AdminUsersPage() {
   const [bulkConfirm, setBulkConfirm] = useState<{ open: boolean; op: 'block' | 'unblock' | 'kyc_verified' | 'kyc_pending' | null; label: string }>({ open: false, op: null, label: '' });
   const [tempPwConfirm, setTempPwConfirm] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
   const [tempPwResult, setTempPwResult] = useState<{ open: boolean; email: string; password: string; copied: boolean; emailSent: boolean; sending: boolean }>({ open: false, email: '', password: '', copied: false, emailSent: false, sending: false });
+  const [cancelSubModal, setCancelSubModal] = useState<{ open: boolean; userId: string; label: string; loading: boolean }>({ open: false, userId: '', label: '', loading: false });
+
+  const handleCancelSubscription = async () => {
+    setCancelSubModal(s => ({ ...s, loading: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-cancel-subscription', {
+        body: { user_id: cancelSubModal.userId },
+      });
+      if (error || !data?.ok) {
+        toast.error(data?.error || error?.message || 'Error al dar de baja');
+      } else {
+        toast.success('Usuario dado de baja: plan a Free, créditos a 0, suscripción cancelada en Stripe.');
+        setCancelSubModal({ open: false, userId: '', label: '', loading: false });
+        load();
+        return;
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'Error al dar de baja');
+    }
+    setCancelSubModal(s => ({ ...s, loading: false }));
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
