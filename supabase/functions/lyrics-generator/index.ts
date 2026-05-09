@@ -195,10 +195,6 @@ No añadas explicaciones, comentarios ni introducciones.`
 
     // Guardar en BBDD
     try {
-      const supabaseAdmin = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      )
       await supabaseAdmin.from("lyrics_generations").insert({
         user_id:      user.id,
         description,
