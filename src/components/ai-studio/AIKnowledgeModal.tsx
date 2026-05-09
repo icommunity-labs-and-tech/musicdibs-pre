@@ -40,20 +40,6 @@ export const AIKnowledgeModal = ({ open, onOpenChange }: Props) => {
             {t("aiStudio.knowledge.title")}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-2">
-          {blocks.map(({ Icon, title, desc, warn }, i) => (
-            <div
-              key={i}
-              className={`flex gap-3 p-3 rounded-lg border ${warn ? "border-amber-500/40 bg-amber-500/5" : "border-border/40 bg-muted/30"}`}
-            >
-              <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${warn ? "text-amber-500" : "text-primary"}`} />
-              <div>
-                <p className="font-semibold text-sm mb-0.5">{title}</p>
-                <p className="text-sm text-muted-foreground">{desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
         <a
           href="/Manual_buenas_practicas_IA.pdf"
           download="Manual_buenas_practicas_IA.pdf"
@@ -84,6 +70,20 @@ export const AIKnowledgeModal = ({ open, onOpenChange }: Props) => {
           </div>
           <span className="text-xs font-medium text-primary group-hover:underline">PDF</span>
         </a>
+        <div className="space-y-4 py-2">
+          {blocks.map(({ Icon, title, desc, warn }, i) => (
+            <div
+              key={i}
+              className={`flex gap-3 p-3 rounded-lg border ${warn ? "border-amber-500/40 bg-amber-500/5" : "border-border/40 bg-muted/30"}`}
+            >
+              <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${warn ? "text-amber-500" : "text-primary"}`} />
+              <div>
+                <p className="font-semibold text-sm mb-0.5">{title}</p>
+                <p className="text-sm text-muted-foreground">{desc}</p>
+              </div>
+            </div>
+          ))}
+        </div>
 
         <div className="flex items-center justify-between gap-3 pt-2 border-t">
           <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
