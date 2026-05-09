@@ -1004,29 +1004,29 @@ const AIStudioCreate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
       <Navbar />
       <AIStudioThemeBar />
 
-      <main className="container mx-auto px-4 py-6 pt-16">
+      <main className="container mx-auto px-4 py-6 pt-16 max-w-full overflow-x-hidden">
         <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
           <ArrowLeft className="w-4 h-4" />
           {t('aiCreate.backToStudio')}
         </Link>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:items-stretch">
+        <div className="grid lg:grid-cols-2 gap-8 lg:items-stretch min-w-0">
           {/* ═══ LEFT: Creation Panel ═══ */}
-          <div className="space-y-6 flex flex-col" ref={formRef}>
+          <div className="space-y-6 flex flex-col min-w-0" ref={formRef}>
             <MusicCreatorTour />
-            <div className="flex items-start justify-between min-h-[68px]">
-              <div>
-                <h1 className="text-3xl font-bold mb-2">{t('aiCreate.title')}</h1>
-                <p className="text-muted-foreground">{t('aiCreate.subtitle')}</p>
+            <div className="flex items-start justify-between gap-2 min-h-[68px] min-w-0">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">{t('aiCreate.title')}</h1>
+                <p className="text-muted-foreground break-words">{t('aiCreate.subtitle')}</p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-xs text-muted-foreground gap-1.5"
+                className="text-xs text-muted-foreground gap-1.5 shrink-0"
                 onClick={() => {
                   if (user) localStorage.removeItem(`musicdibs_music_creator_tour_seen_${user.id}`);
                   window.dispatchEvent(new Event('musicdibs:start-music-tour'));
