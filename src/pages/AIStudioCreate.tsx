@@ -1004,7 +1004,7 @@ const AIStudioCreate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background">
       <Navbar />
       <AIStudioThemeBar />
 
@@ -1172,7 +1172,7 @@ const AIStudioCreate = () => {
                           value={prompt}
                           onChange={(e) => setPrompt(e.target.value.slice(0, 2500))}
                           rows={5}
-                          className="resize-none"
+                          className="w-full max-w-full resize-none"
                           maxLength={2500}
                         />
                         <div className="flex items-center justify-between">
@@ -1190,11 +1190,11 @@ const AIStudioCreate = () => {
                             value={lyrics}
                             onChange={(e) => setLyrics(e.target.value.slice(0, 3000))}
                             rows={6}
-                            className="resize-none"
+                            className="w-full max-w-full resize-none"
                             maxLength={3000}
                           />
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground">💡 Si incluyes letra, la IA la cantará palabra por palabra. Cuanto más detallada, mejor resultado.</p>
+                          <div className="flex flex-wrap items-start justify-between gap-1">
+                            <p className="w-full text-sm text-muted-foreground break-words whitespace-normal">💡 Si incluyes letra, la IA la cantará palabra por palabra. Cuanto más detallada, mejor resultado.</p>
                             <p className="text-xs text-muted-foreground">{lyrics.length}/3000</p>
                           </div>
 
@@ -1243,7 +1243,7 @@ const AIStudioCreate = () => {
                       {/* Mode selector: Canción con voz / Instrumental */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Tipo de generación</Label>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2 w-full max-w-full">
                           <button
                             type="button"
                             onClick={() => {
@@ -1251,7 +1251,7 @@ const AIStudioCreate = () => {
                               setVoiceTab('preset');
                             }}
                             className={cn(
-                              "flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-all flex items-center justify-center gap-2",
+                              "flex-1 min-w-0 px-3 sm:px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-all flex items-center justify-center gap-2 break-words",
                               mode === 'song'
                                 ? "border-primary bg-primary/10 text-primary"
                                 : "border-border text-muted-foreground hover:border-primary/50"
@@ -1269,7 +1269,7 @@ const AIStudioCreate = () => {
                               setVoiceTab(instrumentalPresets.length > 0 ? 'my_presets' : 'preset');
                             }}
                             className={cn(
-                              "flex-1 px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-all flex items-center justify-center gap-2",
+                              "flex-1 min-w-0 px-3 sm:px-4 py-2.5 rounded-lg text-sm font-medium border-2 transition-all flex items-center justify-center gap-2 break-words",
                               mode === 'instrumental'
                                 ? "border-primary bg-primary/10 text-primary"
                                 : "border-border text-muted-foreground hover:border-primary/50"
@@ -1289,15 +1289,15 @@ const AIStudioCreate = () => {
                          </Label>
                         {/* Tabs: Voces IA / Mis artistas virtuales / Mis presets musicales */}
                         <TooltipProvider delayDuration={200}>
-                        <div className="flex flex-wrap gap-2 mb-3">
+                        <div className="flex flex-wrap gap-2 w-full max-w-full overflow-hidden mb-3">
                           {/* Tab: Voces IA — only in song mode */}
                           {mode === 'song' && (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 min-w-0">
                             <button
                               type="button"
                               onClick={() => { setVoiceTab('preset'); setSelectedArtistId(''); }}
                               className={cn(
-                                "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
+                                "max-w-full px-3 sm:px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all break-words whitespace-normal",
                                 voiceTab === 'preset'
                                   ? "border-primary bg-primary/10 text-primary border-2"
                                   : "border-border text-muted-foreground hover:border-primary/50"
@@ -1317,13 +1317,13 @@ const AIStudioCreate = () => {
                           )}
                           {/* Tab: Mis artistas virtuales — only in song mode */}
                           {mode === 'song' && (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 min-w-0">
                             <button
                               type="button"
                               onClick={() => { if (vocalArtists.length > 0) setVoiceTab('my_artists'); }}
                               disabled={vocalArtists.length === 0}
                               className={cn(
-                                "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
+                                "max-w-full px-3 sm:px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all break-words whitespace-normal",
                                 voiceTab === 'my_artists'
                                   ? "border-primary bg-primary/10 text-primary border-2"
                                   : vocalArtists.length === 0
@@ -1346,13 +1346,13 @@ const AIStudioCreate = () => {
                           </div>
                           )}
                           {/* Tab: Mis presets musicales */}
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 min-w-0">
                             <button
                               type="button"
                               onClick={() => { if (instrumentalPresets.length > 0) setVoiceTab('my_presets'); }}
                               disabled={instrumentalPresets.length === 0}
                               className={cn(
-                                "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
+                                "max-w-full px-3 sm:px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all break-words whitespace-normal",
                                 voiceTab === 'my_presets'
                                   ? "border-primary bg-primary/10 text-primary border-2"
                                   : instrumentalPresets.length === 0
@@ -1619,7 +1619,7 @@ const AIStudioCreate = () => {
                           }
                         </button>
                       </div>
-                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="resize-none" maxLength={2500} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
+                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="w-full max-w-full resize-none" maxLength={2500} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
                       {improvedLyricsDesc && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {t('aiCreate.lyricsDescImproved')} — {t('aiCreate.lyricsDescImprovedSub')}
@@ -1909,7 +1909,7 @@ const AIStudioCreate = () => {
                       <Heart className={cn("w-3.5 h-3.5 mr-1.5", filterFavorites && "fill-current")} />{t('aiCreate.favorites')}
                     </Button>
                     <Select value={filterGenre} onValueChange={setFilterGenre}>
-                      <SelectTrigger className="w-[140px] h-8 text-sm"><SelectValue placeholder="Género" /></SelectTrigger>
+                      <SelectTrigger className="w-full max-w-full sm:w-36 h-8 text-sm"><SelectValue placeholder="Género" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">{t('aiCreate.allGenres')}</SelectItem>
                         {availableGenres.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
