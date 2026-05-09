@@ -70,6 +70,82 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
   const [resultId, setResultId] = useState('');
   const [resultHash, setResultHash] = useState('');
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const resumeId = searchParams.get('resume');
+  const [resumeWorkId, setResumeWorkId] = useState<string | null>(null);
+  const [resumeLoading, setResumeLoading] = useState(false);
+  const [drafts, setDrafts] = useState<DraftWork[]>([]);
+  const [draftsModalOpen, setDraftsModalOpen] = useState(false);
+  const [draftsChecked, setDraftsChecked] = useState(false);
+
+  // Load draft when ?resume=ID is present
+  useEffect(() => {
+    if (!resumeId || resumeWorkId === resumeId) return;
+    let cancelled = false;
+    (async () => {
+      setResumeLoading(true);
+      try {
+        const { data: work, error } = await supabase
+          .from('works')
+          .select('id, title, type, description, author, file_path, status')
+          .eq('id', resumeId)
+          .maybeSingle();
+        if (cancelled) return;
+        if (error || !work) {
+          toast.error('No se pudo cargar el borrador');
+          setResumeLoading(false);
+          return;
+        }
+        if (work.status !== 'draft') {
+          toast.error('Esta obra ya no está en borrador');
+          setResumeLoading(false);
+          return;
+        }
+        const file = work.file_path ? await loadDraftFile(work.file_path) : null;
+        if (cancelled) return;
+        const authors = (work.author || '').split(',').map((s) => s.trim()).filter(Boolean);
+        setData({
+          ...initialWizardData,
+          flow: 'new',
+          file: file,
+          files: file ? [file] : [],
+          title: work.title || '',
+          workType: work.type || 'audio',
+          description: work.description || '',
+          creators: authors.length > 0
+            ? authors.map((name) => ({ id: crypto.randomUUID(), name, email: '', roles: ['autor'], percentage: null }))
+            : [{ id: crypto.randomUUID(), name: '', email: '', roles: [], percentage: null }],
+        });
+        setResumeWorkId(work.id);
+        // Jump straight to signature + summary step (penultimate)
+        setStep(STEPS_NEW.length - 2);
+        setDraftsChecked(true);
+      } catch (err) {
+        console.error('[RegistrationWizard] resume error', err);
+        toast.error('Error cargando el borrador');
+      } finally {
+        if (!cancelled) setResumeLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeId]);
+
+  // Check for existing drafts on first mount when not resuming
+  useEffect(() => {
+    if (resumeId || draftsChecked) return;
+    let cancelled = false;
+    (async () => {
+      const list = await fetchUserDrafts(5);
+      if (cancelled) return;
+      setDrafts(list);
+      if (list.length > 0) setDraftsModalOpen(true);
+      setDraftsChecked(true);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeId, draftsChecked]);
+
   const { hasEnough } = useCredits();
   const noCredits = !hasEnough(FEATURE_COSTS.register_work);
   const kycBlocked = summary && summary.kycStatus !== 'verified';
