@@ -459,6 +459,15 @@ export default function AdminUsersPage() {
                         {(u.roles || []).includes('manager') ? 'Quitar manager' : 'Dar manager'}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
+                      {u.subscription_plan && u.subscription_plan !== 'Free' && (
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          disabled={u.user_id === user?.id}
+                          onClick={() => setCancelSubModal({ open: true, userId: u.user_id, label: u.display_name || u.email, loading: false })}
+                        >
+                          🚫 Dar de baja
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         disabled={u.user_id === user?.id}
