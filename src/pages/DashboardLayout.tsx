@@ -8,6 +8,7 @@ import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { NotificationBell } from '@/components/dashboard/NotificationBell';
 import { NotificationToaster } from '@/components/dashboard/NotificationToaster';
 import { CreditBadge } from '@/components/dashboard/CreditBadge';
+import { PastDueBanner } from '@/components/dashboard/PastDueBanner';
 import { DashboardTour } from '@/components/dashboard/DashboardTour';
 import { ReferralSourceModal } from '@/components/dashboard/ReferralSourceModal';
 import { DashboardThemeToggle } from '@/components/dashboard/DashboardThemeToggle';
