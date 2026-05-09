@@ -212,6 +212,7 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
         files: uploadFiles.length > 0 ? uploadFiles : undefined,
         ownershipDeclaration: true,
         signatureId: data.signatureId,
+        resumeWorkId: resumeWorkId || undefined,
       });
 
       if (res.ibsError || res.status === 'failed') {
