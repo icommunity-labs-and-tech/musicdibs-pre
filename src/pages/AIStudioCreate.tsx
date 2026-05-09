@@ -1317,13 +1317,13 @@ const AIStudioCreate = () => {
                           )}
                           {/* Tab: Mis artistas virtuales — only in song mode */}
                           {mode === 'song' && (
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 min-w-0">
                             <button
                               type="button"
                               onClick={() => { if (vocalArtists.length > 0) setVoiceTab('my_artists'); }}
                               disabled={vocalArtists.length === 0}
                               className={cn(
-                                "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
+                                "max-w-full px-3 sm:px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all break-words whitespace-normal",
                                 voiceTab === 'my_artists'
                                   ? "border-primary bg-primary/10 text-primary border-2"
                                   : vocalArtists.length === 0
@@ -1346,13 +1346,13 @@ const AIStudioCreate = () => {
                           </div>
                           )}
                           {/* Tab: Mis presets musicales */}
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 min-w-0">
                             <button
                               type="button"
                               onClick={() => { if (instrumentalPresets.length > 0) setVoiceTab('my_presets'); }}
                               disabled={instrumentalPresets.length === 0}
                               className={cn(
-                                "px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all",
+                                "max-w-full px-3 sm:px-4 py-1.5 rounded-full text-[13px] font-medium border transition-all break-words whitespace-normal",
                                 voiceTab === 'my_presets'
                                   ? "border-primary bg-primary/10 text-primary border-2"
                                   : instrumentalPresets.length === 0
@@ -1619,7 +1619,7 @@ const AIStudioCreate = () => {
                           }
                         </button>
                       </div>
-                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="resize-none" maxLength={2500} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
+                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="w-full max-w-full resize-none" maxLength={2500} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
                       {improvedLyricsDesc && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {t('aiCreate.lyricsDescImproved')} — {t('aiCreate.lyricsDescImprovedSub')}
