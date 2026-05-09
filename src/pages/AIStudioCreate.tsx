@@ -1004,7 +1004,7 @@ const AIStudioCreate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background w-full max-w-full overflow-x-hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background">
       <Navbar />
       <AIStudioThemeBar />
 
@@ -1172,7 +1172,7 @@ const AIStudioCreate = () => {
                           value={prompt}
                           onChange={(e) => setPrompt(e.target.value.slice(0, 2500))}
                           rows={5}
-                          className="resize-none"
+                          className="w-full max-w-full resize-none"
                           maxLength={2500}
                         />
                         <div className="flex items-center justify-between">
@@ -1190,11 +1190,11 @@ const AIStudioCreate = () => {
                             value={lyrics}
                             onChange={(e) => setLyrics(e.target.value.slice(0, 3000))}
                             rows={6}
-                            className="resize-none"
+                            className="w-full max-w-full resize-none"
                             maxLength={3000}
                           />
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs text-muted-foreground">💡 Si incluyes letra, la IA la cantará palabra por palabra. Cuanto más detallada, mejor resultado.</p>
+                          <div className="flex flex-wrap items-start justify-between gap-1">
+                            <p className="w-full text-sm text-muted-foreground break-words whitespace-normal">💡 Si incluyes letra, la IA la cantará palabra por palabra. Cuanto más detallada, mejor resultado.</p>
                             <p className="text-xs text-muted-foreground">{lyrics.length}/3000</p>
                           </div>
 
