@@ -948,8 +948,10 @@ serve(async (req) => {
         }, { onConflict: "user_id" });
         console.log(`[WEBHOOK] subscription.deleted → marked subscriptions as cancelled for user ${profile.user_id}`);
 
+        let cancelUserEmail: string | null = null;
         try {
           const { data: { user: cancelUser } } = await supabase.auth.admin.getUserById(profile.user_id);
+          cancelUserEmail = cancelUser?.email ?? null;
           if (cancelUser?.email) {
             await syncMailerLite("subscription.cancelled", {
               email: cancelUser.email, locale: cancelProfile?.language || "es",
@@ -957,6 +959,73 @@ serve(async (req) => {
             });
           }
         } catch (mlErr) { console.warn("[WEBHOOK] MailerLite cancellation sync error:", mlErr); }
+
+        // ── Email específico si la cancelación fue por impago ──
+        try {
+          const canceledByNonPayment =
+            (subscription as any).cancellation_details?.reason === "payment_failed"
+            || (subscription as any).latest_invoice !== null;
+
+          if (canceledByNonPayment && cancelUserEmail) {
+            const rawLang = (cancelProfile?.language || "es").toLowerCase();
+            const lang: "es" | "en" | "pt" = rawLang.startsWith("pt") ? "pt" : rawLang.startsWith("en") ? "en" : "es";
+
+            const subjects = {
+              es: "❌ Tu suscripción ha sido cancelada por impago — MusicDibs",
+              en: "❌ Your subscription has been cancelled due to non-payment — MusicDibs",
+              pt: "❌ Sua assinatura foi cancelada por falta de pagamento — MusicDibs",
+            };
+            const headings = {
+              es: "Tu suscripción ha sido cancelada",
+              en: "Your subscription has been cancelled",
+              pt: "Sua assinatura foi cancelada",
+            };
+            const messages = {
+              es: "Después de varios intentos fallidos de cobro, tu suscripción ha sido cancelada. Puedes reactivarla en cualquier momento contratando un nuevo plan.",
+              en: "After several failed payment attempts, your subscription has been cancelled. You can reactivate it at any time by subscribing to a new plan.",
+              pt: "Após várias tentativas de cobrança malsucedidas, sua assinatura foi cancelada. Você pode reativá-la a qualquer momento contratando um novo plano.",
+            };
+            const ctas = { es: "Ver planes", en: "View plans", pt: "Ver planos" };
+
+            const plansUrl = "https://musicdibs.com/dashboard/credits";
+            const html = `<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8"><title>${subjects[lang]}</title></head>
+<body style="margin:0;padding:0;background:#f5f5f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;color:#1a1a1a;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f7;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+        <tr><td style="padding:32px 32px 8px;">
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:700;color:#1a1a1a;">${headings[lang]}</h1>
+          <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#444;">${messages[lang]}</p>
+          <p style="margin:0 0 32px;text-align:center;">
+            <a href="${plansUrl}" style="display:inline-block;background:linear-gradient(135deg,#ec4899,#9333ea);color:#ffffff;text-decoration:none;font-weight:600;font-size:15px;padding:12px 28px;border-radius:8px;">${ctas[lang]} →</a>
+          </p>
+        </td></tr>
+        <tr><td style="padding:16px 32px 28px;border-top:1px solid #eee;font-size:12px;color:#888;">MusicDibs · <a href="https://musicdibs.com" style="color:#888;text-decoration:underline;">musicdibs.com</a></td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+
+            await supabase.rpc("enqueue_email", {
+              queue_name: "transactional_emails",
+              payload: {
+                idempotency_key: `sub-cancelled-nonpayment-${profile.user_id}`,
+                message_id: crypto.randomUUID(),
+                to: cancelUserEmail,
+                from: "MusicDibs <noreply@notify.musicdibs.com>",
+                sender_domain: "notify.musicdibs.com",
+                subject: subjects[lang],
+                html,
+                purpose: "transactional",
+                label: "subscription_cancelled_nonpayment",
+                queued_at: new Date().toISOString(),
+              },
+            });
+            console.log(`[WEBHOOK] Enqueued non-payment cancellation email for user ${profile.user_id}`);
+          }
+        } catch (emailErr) {
+          console.warn("[WEBHOOK] Non-payment cancellation email failed:", emailErr);
+        }
       }
     }
 
