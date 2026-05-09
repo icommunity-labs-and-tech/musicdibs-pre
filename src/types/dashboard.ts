@@ -66,7 +66,7 @@ export interface VerificationResult {
 export interface RecentRegistration {
   id: string;
   title: string;
-  status: 'processing' | 'registered' | 'failed';
+  status: 'processing' | 'registered' | 'failed' | 'draft';
   date: string;
   type: string;
   certificateUrl?: string;
