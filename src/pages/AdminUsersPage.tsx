@@ -47,6 +47,27 @@ export default function AdminUsersPage() {
   const [bulkConfirm, setBulkConfirm] = useState<{ open: boolean; op: 'block' | 'unblock' | 'kyc_verified' | 'kyc_pending' | null; label: string }>({ open: false, op: null, label: '' });
   const [tempPwConfirm, setTempPwConfirm] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
   const [tempPwResult, setTempPwResult] = useState<{ open: boolean; email: string; password: string; copied: boolean; emailSent: boolean; sending: boolean }>({ open: false, email: '', password: '', copied: false, emailSent: false, sending: false });
+  const [cancelSubModal, setCancelSubModal] = useState<{ open: boolean; userId: string; label: string; loading: boolean }>({ open: false, userId: '', label: '', loading: false });
+
+  const handleCancelSubscription = async () => {
+    setCancelSubModal(s => ({ ...s, loading: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-cancel-subscription', {
+        body: { user_id: cancelSubModal.userId },
+      });
+      if (error || !data?.ok) {
+        toast.error(data?.error || error?.message || 'Error al dar de baja');
+      } else {
+        toast.success('Usuario dado de baja: plan a Free, créditos a 0, suscripción cancelada en Stripe.');
+        setCancelSubModal({ open: false, userId: '', label: '', loading: false });
+        load();
+        return;
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'Error al dar de baja');
+    }
+    setCancelSubModal(s => ({ ...s, loading: false }));
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -438,6 +459,15 @@ export default function AdminUsersPage() {
                         {(u.roles || []).includes('manager') ? 'Quitar manager' : 'Dar manager'}
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
+                      {u.subscription_plan && u.subscription_plan !== 'Free' && (
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          disabled={u.user_id === user?.id}
+                          onClick={() => setCancelSubModal({ open: true, userId: u.user_id, label: u.display_name || u.email, loading: false })}
+                        >
+                          🚫 Dar de baja
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
                         disabled={u.user_id === user?.id}
@@ -596,6 +626,27 @@ export default function AdminUsersPage() {
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setTempPwResult({ open: false, email: '', password: '', copied: false, emailSent: false, sending: false })}>
               Cerrar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={cancelSubModal.open} onOpenChange={open => !open && !cancelSubModal.loading && setCancelSubModal({ open: false, userId: '', label: '', loading: false })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Dar de baja al usuario</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Dar de baja a <span className="font-medium text-foreground">{cancelSubModal.label}</span>? Esto pondrá su plan a Free, sus créditos a 0 y cancelará su suscripción en Stripe. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelSubModal.loading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleCancelSubscription(); }}
+              disabled={cancelSubModal.loading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelSubModal.loading ? 'Procesando…' : 'Dar de baja'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
