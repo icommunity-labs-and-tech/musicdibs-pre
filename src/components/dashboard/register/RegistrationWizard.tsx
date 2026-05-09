@@ -265,6 +265,11 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
     setStep(-1);
     setResultId('');
     setResultHash('');
+    setResumeWorkId(null);
+    if (searchParams.get('resume')) {
+      searchParams.delete('resume');
+      setSearchParams(searchParams, { replace: true });
+    }
   };
 
   if (noCredits) {
