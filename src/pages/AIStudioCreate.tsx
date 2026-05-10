@@ -1008,13 +1008,13 @@ const AIStudioCreate = () => {
       <Navbar />
       <AIStudioThemeBar />
 
-      <main className="container mx-auto px-4 py-6 pt-16 max-w-full overflow-x-hidden">
+      <main className="container mx-auto px-3 sm:px-4 py-6 pt-16 w-full max-w-full overflow-x-hidden">
         <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
           <ArrowLeft className="w-4 h-4" />
           {t('aiCreate.backToStudio')}
         </Link>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:items-stretch min-w-0">
+        <div className="grid lg:grid-cols-2 gap-8 lg:items-stretch min-w-0 w-full overflow-x-hidden">
           {/* ═══ LEFT: Creation Panel ═══ */}
           <div className="space-y-6 flex flex-col min-w-0" ref={formRef}>
             <MusicCreatorTour />
@@ -1766,7 +1766,7 @@ const AIStudioCreate = () => {
           </div>
 
           {/* ═══ RIGHT: Results Panel ═══ */}
-          <div className="space-y-6 flex flex-col" data-tour="mc-results">
+          <div className="space-y-6 flex flex-col min-w-0 w-full overflow-x-hidden" data-tour="mc-results">
             <div className="flex items-center justify-between min-h-[68px]">
               <h2 className="text-xl font-semibold">
                 {activeTab === "lyrics" ? t('aiCreate.myLyrics') : t('aiCreate.results')}
