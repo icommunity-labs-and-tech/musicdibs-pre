@@ -1983,7 +1983,7 @@ const AIStudioCreate = () => {
                   </Card>
                 ) : (
                   <div className="space-y-4 flex-1 min-h-0 overflow-y-auto pr-2">
-                    {filteredResults.map(result => (
+                    {paginatedResults.map(result => (
                       <Card key={result.id} className="overflow-hidden">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-4">
