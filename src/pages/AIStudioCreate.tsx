@@ -2088,6 +2088,29 @@ const AIStudioCreate = () => {
                         </CardContent>
                       </Card>
                     ))}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                        >
+                          {t('aiCreate.prev', 'Anterior')}
+                        </Button>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {currentPage} / {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                        >
+                          {t('aiCreate.next', 'Siguiente')}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </>
