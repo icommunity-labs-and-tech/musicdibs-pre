@@ -952,9 +952,6 @@ serve(async (req) => {
             }
           }
         } catch { /* cache miss is non-fatal */ }
-        if (!stripeBundle && staleStripeBundle) {
-          stripeBundle = staleStripeBundle;
-        }
       }
 
       const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -1034,6 +1031,9 @@ serve(async (req) => {
             }
           }
         } catch { /* cache miss is non-fatal */ }
+        if (!stripeBundle && staleStripeBundle) {
+          stripeBundle = staleStripeBundle;
+        }
 
         try {
           if (!stripeBundle) {
