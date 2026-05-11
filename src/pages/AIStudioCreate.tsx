@@ -236,6 +236,18 @@ const AIStudioCreate = () => {
 
   const hasActiveFilters = filterFavorites || filterGenre !== "all" || filterDateFrom || filterDateTo;
 
+  // Pagination (4 per page)
+  const RESULTS_PER_PAGE = 4;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(filteredResults.length / RESULTS_PER_PAGE));
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(1);
+  }, [filteredResults.length, totalPages, currentPage]);
+  const paginatedResults = useMemo(() => {
+    const start = (currentPage - 1) * RESULTS_PER_PAGE;
+    return filteredResults.slice(start, start + RESULTS_PER_PAGE);
+  }, [filteredResults, currentPage]);
+
   const clearFilters = () => {
     setFilterFavorites(false);
     setFilterGenre("all");
@@ -1971,7 +1983,7 @@ const AIStudioCreate = () => {
                   </Card>
                 ) : (
                   <div className="space-y-4 flex-1 min-h-0 overflow-y-auto pr-2">
-                    {filteredResults.map(result => (
+                    {paginatedResults.map(result => (
                       <Card key={result.id} className="overflow-hidden">
                         <CardContent className="p-4">
                           <div className="flex items-start gap-4">
@@ -2076,6 +2088,29 @@ const AIStudioCreate = () => {
                         </CardContent>
                       </Card>
                     ))}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                        >
+                          {t('aiCreate.prev', 'Anterior')}
+                        </Button>
+                        <span className="text-xs text-muted-foreground tabular-nums">
+                          {currentPage} / {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                        >
+                          {t('aiCreate.next', 'Siguiente')}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )}
               </>
