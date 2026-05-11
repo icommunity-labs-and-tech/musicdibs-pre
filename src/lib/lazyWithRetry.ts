@@ -27,8 +27,14 @@ function reloadOnce(storageKey: string) {
   return true;
 }
 
-function isDynamicImportFetchError(error: unknown) {
-  return error instanceof TypeError && /Failed to fetch dynamically imported module/i.test(error.message);
+function isChunkLoadError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return (
+    /Failed to fetch dynamically imported module/i.test(error.message) ||
+    /Importing a module script failed/i.test(error.message) ||
+    /Loading chunk \d+ failed/i.test(error.message) ||
+    /error loading dynamically imported module/i.test(error.message)
+  );
 }
 
 function installPreloadErrorRecovery() {
@@ -45,24 +51,46 @@ installPreloadErrorRecovery();
 
 type ImportFactory<T extends ComponentType<any>> = () => Promise<{ default: T }>;
 
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 export function lazyWithRetry<T extends ComponentType<any>>(importFactory: ImportFactory<T>) {
   return lazy(async () => {
-    try {
-      const module = await importFactory();
+    const tryImport = async () => {
+      const mod = await importFactory();
+      if (!mod || typeof (mod as any).default === "undefined") {
+        throw new Error("Dynamic import resolved without a default export");
+      }
+      return mod;
+    };
 
+    try {
+      const module = await tryImport();
       try {
         browserWindow?.sessionStorage.removeItem(DYNAMIC_IMPORT_RELOAD_KEY);
       } catch {
         // Ignore storage cleanup issues.
       }
-
       return module;
-    } catch (error) {
-      if (isDynamicImportFetchError(error) && reloadOnce(DYNAMIC_IMPORT_RELOAD_KEY)) {
-        return new Promise<never>(() => {});
+    } catch (firstError) {
+      // Retry once after a small delay (handles transient network/chunk hiccups)
+      try {
+        await sleep(300);
+        const module = await tryImport();
+        try {
+          browserWindow?.sessionStorage.removeItem(DYNAMIC_IMPORT_RELOAD_KEY);
+        } catch {
+          // ignore
+        }
+        return module;
+      } catch (secondError) {
+        if (isChunkLoadError(secondError) || isChunkLoadError(firstError)) {
+          if (reloadOnce(DYNAMIC_IMPORT_RELOAD_KEY)) {
+            // Suspend forever while the page reloads
+            return new Promise<never>(() => {});
+          }
+        }
+        throw secondError;
       }
-
-      throw error;
     }
   });
 }
