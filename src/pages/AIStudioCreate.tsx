@@ -236,6 +236,18 @@ const AIStudioCreate = () => {
 
   const hasActiveFilters = filterFavorites || filterGenre !== "all" || filterDateFrom || filterDateTo;
 
+  // Pagination (4 per page)
+  const RESULTS_PER_PAGE = 4;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil(filteredResults.length / RESULTS_PER_PAGE));
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(1);
+  }, [filteredResults.length, totalPages, currentPage]);
+  const paginatedResults = useMemo(() => {
+    const start = (currentPage - 1) * RESULTS_PER_PAGE;
+    return filteredResults.slice(start, start + RESULTS_PER_PAGE);
+  }, [filteredResults, currentPage]);
+
   const clearFilters = () => {
     setFilterFavorites(false);
     setFilterGenre("all");
