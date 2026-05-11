@@ -1092,14 +1092,22 @@ serve(async (req) => {
               }
             }
             const productNames: Record<string, string> = {};
-            await Promise.all(
-              [...productIds].map(async (pid) => {
-                try {
-                  const prod = await stripe.products.retrieve(pid);
-                  productNames[pid] = prod.name || pid;
-                } catch { productNames[pid] = pid; }
-              }),
-            );
+            try {
+              await withTimeout(
+                Promise.all(
+                  [...productIds].map(async (pid) => {
+                    try {
+                      const prod = await stripe.products.retrieve(pid);
+                      productNames[pid] = prod.name || pid;
+                    } catch { productNames[pid] = pid; }
+                  }),
+                ),
+                3_000,
+                "stripe_products_timeout",
+              );
+            } catch {
+              for (const pid of productIds) productNames[pid] ||= pid;
+            }
 
             // Slim down: keep only fields we actually use, to keep cache row small
             const slimSubs = allSubs.map((s: any) => ({
