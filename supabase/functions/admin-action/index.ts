@@ -1426,10 +1426,20 @@ serve(async (req) => {
 
         // Orders in the period
         if (filterStart && filterEnd) {
-          const { data: periodOrders } = await admin.from("orders").select("*").gte("paid_at", filterStart).lt("paid_at", filterEnd).eq("order_status", "paid");
+          const { data: periodOrders } = await admin
+            .from("orders")
+            .select("user_id, paid_at, amount_gross, product_type, is_renewal, billing_interval, attributed_campaign_name")
+            .gte("paid_at", filterStart)
+            .lt("paid_at", filterEnd)
+            .eq("order_status", "paid");
           ordersData = periodOrders || [];
         } else {
-          const { data: allOrders } = await admin.from("orders").select("*").eq("order_status", "paid").order("paid_at", { ascending: false }).limit(1000);
+          const { data: allOrders } = await admin
+            .from("orders")
+            .select("user_id, paid_at, amount_gross, product_type, is_renewal, billing_interval, attributed_campaign_name")
+            .eq("order_status", "paid")
+            .order("paid_at", { ascending: false })
+            .limit(1000);
           ordersData = allOrders || [];
         }
 
