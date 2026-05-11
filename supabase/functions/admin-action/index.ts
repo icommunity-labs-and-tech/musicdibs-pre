@@ -1185,7 +1185,6 @@ serve(async (req) => {
       }
 
       // ── DB queries ──
-      const activityStart = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString();
       let totalQuery = admin.from("profiles").select("id", { count: "exact", head: true });
       let worksQuery = admin.from("works").select("id", { count: "exact", head: true });
       if (filterStart && filterEnd) {
@@ -1198,7 +1197,7 @@ serve(async (req) => {
         admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", thisMonthStart),
         admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", lastMonthStart).lt("created_at", thisMonthStart),
         admin.from("profiles").select("id", { count: "exact", head: true }).eq("kyc_status", "verified"),
-        admin.from("profiles").select("user_id, subscription_plan, created_at").gte("created_at", activityStart).range(0, 9999),
+        admin.from("profiles").select("user_id, subscription_plan, created_at").range(0, 9999),
         worksQuery,
         admin.from("works").select("id", { count: "exact", head: true }).gte("created_at", thisMonthStart),
       ]);
