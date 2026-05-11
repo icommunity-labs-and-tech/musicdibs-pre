@@ -996,69 +996,114 @@ serve(async (req) => {
       let cancelledSubs: any[] = [];
 
       if (stripe) {
+        // ── Stripe heavy-data cache (filter-independent, 15 min TTL) ──
+        const STRIPE_CACHE_KEY = "saas_metrics_stripe_cache_v1";
+        const STRIPE_CACHE_TTL_MS = 15 * 60 * 1000;
+        let stripeBundle: any = null;
         try {
-          // Helper: paginate a Stripe list endpoint until exhausted (or until shouldStop returns true)
-          const paginateAll = async (
-            listFn: (params: any) => Promise<any>,
-            baseParams: any,
-            shouldStop?: (lastItem: any) => boolean,
-          ): Promise<any[]> => {
-            const out: any[] = [];
-            let hasMore = true;
-            let startingAfter: string | undefined;
-            while (hasMore) {
-              const params: any = { ...baseParams, limit: 100 };
-              if (startingAfter) params.starting_after = startingAfter;
-              const batch = await listFn(params);
-              out.push(...batch.data);
-              if (batch.data.length === 0) break;
-              if (shouldStop && shouldStop(batch.data[batch.data.length - 1])) break;
-              hasMore = batch.has_more;
-              startingAfter = batch.data[batch.data.length - 1].id;
+          const { data: scRow } = await admin
+            .from("app_settings")
+            .select("value, updated_at")
+            .eq("key", STRIPE_CACHE_KEY)
+            .maybeSingle();
+          if (scRow?.value && scRow?.updated_at) {
+            const age = Date.now() - new Date(scRow.updated_at).getTime();
+            if (age < STRIPE_CACHE_TTL_MS && !force_refresh) {
+              stripeBundle = scRow.value;
             }
-            return out;
-          };
+          }
+        } catch { /* cache miss is non-fatal */ }
+
+        try {
+          if (!stripeBundle) {
+            // Helper: paginate a Stripe list endpoint until exhausted (or until shouldStop returns true)
+            const paginateAll = async (
+              listFn: (params: any) => Promise<any>,
+              baseParams: any,
+              shouldStop?: (lastItem: any) => boolean,
+            ): Promise<any[]> => {
+              const out: any[] = [];
+              let hasMore = true;
+              let startingAfter: string | undefined;
+              while (hasMore) {
+                const params: any = { ...baseParams, limit: 100 };
+                if (startingAfter) params.starting_after = startingAfter;
+                const batch = await listFn(params);
+                out.push(...batch.data);
+                if (batch.data.length === 0) break;
+                if (shouldStop && shouldStop(batch.data[batch.data.length - 1])) break;
+                hasMore = batch.has_more;
+                startingAfter = batch.data[batch.data.length - 1].id;
+              }
+              return out;
+            };
+
+            const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
+            const twelveMonthsAgoTs = Math.floor(new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime() / 1000);
+
+            // Run the three heavy Stripe queries in parallel
+            const [allSubs, cancelledSubsRaw, allCharges] = await Promise.all([
+              paginateAll(
+                (p) => stripe.subscriptions.list(p),
+                { status: "active", expand: ["data.items.data.price"] },
+              ),
+              paginateAll(
+                (p) => stripe.subscriptions.list(p),
+                { status: "canceled" },
+                (last) => last.canceled_at && last.canceled_at < lastMonthTs,
+              ),
+              paginateAll(
+                (p) => stripe.charges.list(p),
+                { created: { gte: twelveMonthsAgoTs } },
+              ),
+            ]);
+
+            // Resolve product names in parallel
+            const productIds = new Set<string>();
+            for (const sub of allSubs) {
+              for (const item of sub.items.data) {
+                const prodId = typeof item.price.product === "string" ? item.price.product : item.price.product?.id;
+                if (prodId) productIds.add(prodId);
+              }
+            }
+            const productNames: Record<string, string> = {};
+            await Promise.all(
+              [...productIds].map(async (pid) => {
+                try {
+                  const prod = await stripe.products.retrieve(pid);
+                  productNames[pid] = prod.name || pid;
+                } catch { productNames[pid] = pid; }
+              }),
+            );
+
+            // Slim down: keep only fields we actually use, to keep cache row small
+            const slimSubs = allSubs.map((s: any) => ({
+              items: { data: s.items.data.map((it: any) => ({ price: { unit_amount: it.price.unit_amount, recurring: it.price.recurring, nickname: it.price.nickname, product: typeof it.price.product === "string" ? it.price.product : it.price.product?.id } })) },
+            }));
+            const slimCancelled = cancelledSubsRaw.map((s: any) => ({ canceled_at: s.canceled_at }));
+            const slimCharges = allCharges
+              .filter((c: any) => c.status === "succeeded" && !c.refunded)
+              .map((c: any) => ({ created: c.created, amount: c.amount, invoice: !!c.invoice }));
+
+            stripeBundle = { allSubs: slimSubs, cancelledSubsRaw: slimCancelled, allCharges: slimCharges, productNames };
+
+            // Best-effort cache write
+            try {
+              await admin
+                .from("app_settings")
+                .upsert({ key: STRIPE_CACHE_KEY, value: stripeBundle, updated_at: new Date().toISOString() }, { onConflict: "key" });
+            } catch { /* non-fatal */ }
+          }
+
+          const allSubs = stripeBundle.allSubs;
+          const cancelledSubsRaw = stripeBundle.cancelledSubsRaw;
+          const allCharges = stripeBundle.allCharges;
+          const productNames: Record<string, string> = stripeBundle.productNames || {};
 
           const thisMonthTs = Math.floor(new Date(thisMonthStart).getTime() / 1000);
           const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
-          const twelveMonthsAgoTs = Math.floor(new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime() / 1000);
-
-          // Run the three heavy Stripe queries in parallel
-          const [allSubs, cancelledSubsRaw, allCharges] = await Promise.all([
-            paginateAll(
-              (p) => stripe.subscriptions.list(p),
-              { status: "active", expand: ["data.items.data.price"] },
-            ),
-            paginateAll(
-              (p) => stripe.subscriptions.list(p),
-              { status: "canceled" },
-              (last) => last.canceled_at && last.canceled_at < lastMonthTs,
-            ),
-            paginateAll(
-              (p) => stripe.charges.list(p),
-              { created: { gte: twelveMonthsAgoTs } },
-            ),
-          ]);
 
           activeSubsCount = allSubs.length;
-
-          // Collect unique product IDs and resolve names in parallel (instead of sequential retrieves)
-          const productIds = new Set<string>();
-          for (const sub of allSubs) {
-            for (const item of sub.items.data) {
-              const prodId = typeof item.price.product === "string" ? item.price.product : item.price.product?.id;
-              if (prodId) productIds.add(prodId);
-            }
-          }
-          const productNames: Record<string, string> = {};
-          await Promise.all(
-            [...productIds].map(async (pid) => {
-              try {
-                const prod = await stripe.products.retrieve(pid);
-                productNames[pid] = prod.name || pid;
-              } catch { productNames[pid] = pid; }
-            }),
-          );
 
           for (const sub of allSubs) {
             for (const item of sub.items.data) {
@@ -1091,7 +1136,6 @@ serve(async (req) => {
           // Aggregate charges by month
           const chargesByMonth: Record<string, number> = {};
           for (const charge of allCharges) {
-            if (charge.status !== "succeeded" || charge.refunded) continue;
             const d = new Date(charge.created * 1000);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
             chargesByMonth[key] = (chargesByMonth[key] || 0) + (charge.amount / 100);

@@ -32,7 +32,7 @@ const MONTHS = [
   { value: '11', label: 'Noviembre' }, { value: '12', label: 'Diciembre' },
 ];
 
-const METRICS_TIMEOUT_MS = 25_000;
+const METRICS_TIMEOUT_MS = 60_000;
 const IBS_QUEUE_TIMEOUT_MS = 15_000;
 
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
