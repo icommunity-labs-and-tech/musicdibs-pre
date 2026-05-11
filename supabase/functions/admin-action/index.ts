@@ -16,6 +16,19 @@ function json(body: unknown, status = 200) {
   });
 }
 
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeoutId: number | undefined;
+  const timeoutPromise = new Promise<T>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -999,7 +1012,10 @@ serve(async (req) => {
         // ── Stripe heavy-data cache (filter-independent, 15 min TTL) ──
         const STRIPE_CACHE_KEY = "saas_metrics_stripe_cache_v1";
         const STRIPE_CACHE_TTL_MS = 15 * 60 * 1000;
+        const STRIPE_STALE_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+        const STRIPE_FETCH_TIMEOUT_MS = 8_000;
         let stripeBundle: any = null;
+        let staleStripeBundle: any = null;
         try {
           const { data: scRow } = await admin
             .from("app_settings")
@@ -1008,11 +1024,16 @@ serve(async (req) => {
             .maybeSingle();
           if (scRow?.value && scRow?.updated_at) {
             const age = Date.now() - new Date(scRow.updated_at).getTime();
-            if (age < STRIPE_CACHE_TTL_MS && !force_refresh) {
+            if (age < STRIPE_CACHE_TTL_MS) {
               stripeBundle = scRow.value;
+            } else if (age < STRIPE_STALE_CACHE_TTL_MS) {
+              staleStripeBundle = scRow.value;
             }
           }
         } catch { /* cache miss is non-fatal */ }
+        if (!stripeBundle && staleStripeBundle) {
+          stripeBundle = staleStripeBundle;
+        }
 
         try {
           if (!stripeBundle) {
@@ -1041,22 +1062,26 @@ serve(async (req) => {
             const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
             const twelveMonthsAgoTs = Math.floor(new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime() / 1000);
 
-            // Run the three heavy Stripe queries in parallel
-            const [allSubs, cancelledSubsRaw, allCharges] = await Promise.all([
-              paginateAll(
-                (p) => stripe.subscriptions.list(p),
-                { status: "active", expand: ["data.items.data.price"] },
-              ),
-              paginateAll(
-                (p) => stripe.subscriptions.list(p),
-                { status: "canceled" },
-                (last) => last.canceled_at && last.canceled_at < lastMonthTs,
-              ),
-              paginateAll(
-                (p) => stripe.charges.list(p),
-                { created: { gte: twelveMonthsAgoTs } },
-              ),
-            ]);
+            // Run the heavy Stripe queries in parallel, but never let Stripe block the dashboard.
+            const [allSubs, cancelledSubsRaw, allCharges] = await withTimeout(
+              Promise.all([
+                paginateAll(
+                  (p) => stripe.subscriptions.list(p),
+                  { status: "active", expand: ["data.items.data.price"] },
+                ),
+                paginateAll(
+                  (p) => stripe.subscriptions.list(p),
+                  { status: "canceled" },
+                  (last) => last.canceled_at && last.canceled_at < lastMonthTs,
+                ),
+                paginateAll(
+                  (p) => stripe.charges.list(p),
+                  { created: { gte: twelveMonthsAgoTs } },
+                ),
+              ]),
+              STRIPE_FETCH_TIMEOUT_MS,
+              "stripe_metrics_timeout",
+            );
 
             // Resolve product names in parallel
             const productIds = new Set<string>();
@@ -1067,14 +1092,22 @@ serve(async (req) => {
               }
             }
             const productNames: Record<string, string> = {};
-            await Promise.all(
-              [...productIds].map(async (pid) => {
-                try {
-                  const prod = await stripe.products.retrieve(pid);
-                  productNames[pid] = prod.name || pid;
-                } catch { productNames[pid] = pid; }
-              }),
-            );
+            try {
+              await withTimeout(
+                Promise.all(
+                  [...productIds].map(async (pid) => {
+                    try {
+                      const prod = await stripe.products.retrieve(pid);
+                      productNames[pid] = prod.name || pid;
+                    } catch { productNames[pid] = pid; }
+                  }),
+                ),
+                3_000,
+                "stripe_products_timeout",
+              );
+            } catch {
+              for (const pid of productIds) productNames[pid] ||= pid;
+            }
 
             // Slim down: keep only fields we actually use, to keep cache row small
             const slimSubs = allSubs.map((s: any) => ({
@@ -1159,9 +1192,9 @@ serve(async (req) => {
         }
       }
 
-      // ── DB queries (unchanged) ──
-      let totalQuery = admin.from("profiles").select("*", { count: "exact", head: true });
-      let worksQuery = admin.from("works").select("*", { count: "exact", head: true });
+      // ── DB queries ──
+      let totalQuery = admin.from("profiles").select("id", { count: "exact", head: true });
+      let worksQuery = admin.from("works").select("id", { count: "exact", head: true });
       if (filterStart && filterEnd) {
         totalQuery = totalQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
         worksQuery = worksQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
@@ -1169,12 +1202,12 @@ serve(async (req) => {
 
       const [totalRes, newThisRes, newLastRes, verifiedRes, profilesRes, totalWorksRes, worksMonthRes] = await Promise.all([
         totalQuery,
-        admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", thisMonthStart),
-        admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", lastMonthStart).lt("created_at", thisMonthStart),
-        admin.from("profiles").select("*", { count: "exact", head: true }).eq("kyc_status", "verified"),
-        admin.from("profiles").select("subscription_plan, created_at"),
+        admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", thisMonthStart),
+        admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", lastMonthStart).lt("created_at", thisMonthStart),
+        admin.from("profiles").select("id", { count: "exact", head: true }).eq("kyc_status", "verified"),
+        admin.from("profiles").select("user_id, subscription_plan, created_at").range(0, 9999),
         worksQuery,
-        admin.from("works").select("*", { count: "exact", head: true }).gte("created_at", thisMonthStart),
+        admin.from("works").select("id", { count: "exact", head: true }).gte("created_at", thisMonthStart),
       ]);
 
       const totalUsers = totalRes.count || 0;
@@ -1401,10 +1434,20 @@ serve(async (req) => {
 
         // Orders in the period
         if (filterStart && filterEnd) {
-          const { data: periodOrders } = await admin.from("orders").select("*").gte("paid_at", filterStart).lt("paid_at", filterEnd).eq("order_status", "paid");
+          const { data: periodOrders } = await admin
+            .from("orders")
+            .select("user_id, paid_at, amount_gross, product_type, is_renewal, billing_interval, attributed_campaign_name")
+            .gte("paid_at", filterStart)
+            .lt("paid_at", filterEnd)
+            .eq("order_status", "paid");
           ordersData = periodOrders || [];
         } else {
-          const { data: allOrders } = await admin.from("orders").select("*").eq("order_status", "paid").order("paid_at", { ascending: false }).limit(1000);
+          const { data: allOrders } = await admin
+            .from("orders")
+            .select("user_id, paid_at, amount_gross, product_type, is_renewal, billing_interval, attributed_campaign_name")
+            .eq("order_status", "paid")
+            .order("paid_at", { ascending: false })
+            .limit(1000);
           ordersData = allOrders || [];
         }
 

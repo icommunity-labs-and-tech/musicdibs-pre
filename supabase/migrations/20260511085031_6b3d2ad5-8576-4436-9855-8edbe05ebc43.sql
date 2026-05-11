@@ -1,0 +1,11 @@
+CREATE INDEX IF NOT EXISTS idx_profiles_created_at ON public.profiles (created_at);
+CREATE INDEX IF NOT EXISTS idx_profiles_kyc_status ON public.profiles (kyc_status);
+CREATE INDEX IF NOT EXISTS idx_works_created_at ON public.works (created_at);
+CREATE INDEX IF NOT EXISTS idx_orders_status_paid_at ON public.orders (order_status, paid_at);
+CREATE INDEX IF NOT EXISTS idx_orders_paid_user_paid_at ON public.orders (user_id, paid_at) WHERE order_status = 'paid';
+CREATE INDEX IF NOT EXISTS idx_user_attribution_created_at ON public.user_attribution (created_at);
+CREATE INDEX IF NOT EXISTS idx_ai_generations_created_at ON public.ai_generations (created_at);
+CREATE INDEX IF NOT EXISTS idx_video_generations_created_at ON public.video_generations (created_at);
+CREATE INDEX IF NOT EXISTS idx_voice_clones_created_at ON public.voice_clones (created_at);
+CREATE INDEX IF NOT EXISTS idx_social_promotions_created_at ON public.social_promotions (created_at);
+CREATE INDEX IF NOT EXISTS idx_lyrics_generations_created_at ON public.lyrics_generations (created_at);
