@@ -1012,7 +1012,10 @@ serve(async (req) => {
         // ── Stripe heavy-data cache (filter-independent, 15 min TTL) ──
         const STRIPE_CACHE_KEY = "saas_metrics_stripe_cache_v1";
         const STRIPE_CACHE_TTL_MS = 15 * 60 * 1000;
+        const STRIPE_STALE_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+        const STRIPE_FETCH_TIMEOUT_MS = 8_000;
         let stripeBundle: any = null;
+        let staleStripeBundle: any = null;
         try {
           const { data: scRow } = await admin
             .from("app_settings")
@@ -1021,8 +1024,10 @@ serve(async (req) => {
             .maybeSingle();
           if (scRow?.value && scRow?.updated_at) {
             const age = Date.now() - new Date(scRow.updated_at).getTime();
-            if (age < STRIPE_CACHE_TTL_MS && !force_refresh) {
+            if (age < STRIPE_CACHE_TTL_MS) {
               stripeBundle = scRow.value;
+            } else if (age < STRIPE_STALE_CACHE_TTL_MS) {
+              staleStripeBundle = scRow.value;
             }
           }
         } catch { /* cache miss is non-fatal */ }
@@ -1054,22 +1059,26 @@ serve(async (req) => {
             const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
             const twelveMonthsAgoTs = Math.floor(new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime() / 1000);
 
-            // Run the three heavy Stripe queries in parallel
-            const [allSubs, cancelledSubsRaw, allCharges] = await Promise.all([
-              paginateAll(
-                (p) => stripe.subscriptions.list(p),
-                { status: "active", expand: ["data.items.data.price"] },
-              ),
-              paginateAll(
-                (p) => stripe.subscriptions.list(p),
-                { status: "canceled" },
-                (last) => last.canceled_at && last.canceled_at < lastMonthTs,
-              ),
-              paginateAll(
-                (p) => stripe.charges.list(p),
-                { created: { gte: twelveMonthsAgoTs } },
-              ),
-            ]);
+            // Run the heavy Stripe queries in parallel, but never let Stripe block the dashboard.
+            const [allSubs, cancelledSubsRaw, allCharges] = await withTimeout(
+              Promise.all([
+                paginateAll(
+                  (p) => stripe.subscriptions.list(p),
+                  { status: "active", expand: ["data.items.data.price"] },
+                ),
+                paginateAll(
+                  (p) => stripe.subscriptions.list(p),
+                  { status: "canceled" },
+                  (last) => last.canceled_at && last.canceled_at < lastMonthTs,
+                ),
+                paginateAll(
+                  (p) => stripe.charges.list(p),
+                  { created: { gte: twelveMonthsAgoTs } },
+                ),
+              ]),
+              STRIPE_FETCH_TIMEOUT_MS,
+              "stripe_metrics_timeout",
+            );
 
             // Resolve product names in parallel
             const productIds = new Set<string>();
