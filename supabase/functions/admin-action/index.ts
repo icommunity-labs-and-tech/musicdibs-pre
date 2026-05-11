@@ -1184,9 +1184,10 @@ serve(async (req) => {
         }
       }
 
-      // ── DB queries (unchanged) ──
-      let totalQuery = admin.from("profiles").select("*", { count: "exact", head: true });
-      let worksQuery = admin.from("works").select("*", { count: "exact", head: true });
+      // ── DB queries ──
+      const activityStart = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString();
+      let totalQuery = admin.from("profiles").select("id", { count: "exact", head: true });
+      let worksQuery = admin.from("works").select("id", { count: "exact", head: true });
       if (filterStart && filterEnd) {
         totalQuery = totalQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
         worksQuery = worksQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
@@ -1194,12 +1195,12 @@ serve(async (req) => {
 
       const [totalRes, newThisRes, newLastRes, verifiedRes, profilesRes, totalWorksRes, worksMonthRes] = await Promise.all([
         totalQuery,
-        admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", thisMonthStart),
-        admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", lastMonthStart).lt("created_at", thisMonthStart),
-        admin.from("profiles").select("*", { count: "exact", head: true }).eq("kyc_status", "verified"),
-        admin.from("profiles").select("subscription_plan, created_at"),
+        admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", thisMonthStart),
+        admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", lastMonthStart).lt("created_at", thisMonthStart),
+        admin.from("profiles").select("id", { count: "exact", head: true }).eq("kyc_status", "verified"),
+        admin.from("profiles").select("user_id, subscription_plan, created_at").gte("created_at", activityStart).range(0, 9999),
         worksQuery,
-        admin.from("works").select("*", { count: "exact", head: true }).gte("created_at", thisMonthStart),
+        admin.from("works").select("id", { count: "exact", head: true }).gte("created_at", thisMonthStart),
       ]);
 
       const totalUsers = totalRes.count || 0;
