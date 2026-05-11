@@ -114,9 +114,17 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
               <CardTitle className="text-base">💳 Revenue por Tipo</CardTitle>
               <CardDescription>Distribución de ingresos por tipo de producto</CardDescription>
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold">€{(m.totalRevenue ?? 0).toLocaleString()}</p>
-              <p className="text-[10px] text-muted-foreground">Revenue total del periodo</p>
+            <div className="text-right flex items-start gap-6">
+              <div>
+                <p className="text-2xl font-bold">
+                  {((m.unitsSoldAnnual ?? 0) + (m.unitsSoldMonthly ?? 0) + (m.unitsSoldSingle ?? 0) + (m.unitsSoldTopup ?? 0)).toLocaleString()}
+                </p>
+                <p className="text-[10px] text-muted-foreground">Ventas del periodo</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold">€{(m.totalRevenue ?? 0).toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground">Revenue total del periodo</p>
+              </div>
             </div>
           </div>
         </CardHeader>
