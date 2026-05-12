@@ -2100,10 +2100,8 @@ serve(async (req) => {
       const seenCodes = new Set(codes.map((c: any) => canonicalCouponCode(c.code)));
       for (const c of codesFromCoupons) {
         const up = canonicalCouponCode(c.code);
-        if (!seenCodes.has(up)) {
-          codes.push(c);
-          seenCodes.add(up);
-        }
+        codes.push(c);
+        seenCodes.add(up);
       }
 
       const consolidatedByCode = new Map<string, any>();
