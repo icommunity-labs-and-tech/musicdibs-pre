@@ -330,9 +330,39 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
+    const errMsg = e instanceof Error ? e.message : "Internal error";
     console.error("[IBS-REGISTER] Error:", e);
+
+    // CRITICAL: if credits were already deducted, refund them now so the user
+    // does not lose credits when the function dies after deduction (e.g. OOM,
+    // base64 encoding of large files, network errors with iBS, etc.).
+    if (_refundCtx.deducted && _refundCtx.supabaseAdmin && _refundCtx.workId && _refundCtx.userId) {
+      try {
+        await handleIbsFailure(
+          _refundCtx.supabaseAdmin,
+          _refundCtx.workId,
+          _refundCtx.userId,
+          _refundCtx.workTitle,
+          `unexpected_error: ${errMsg}`.slice(0, 480),
+          _refundCtx.creditCost,
+        );
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: errMsg,
+            workId: _refundCtx.workId,
+            status: "failed",
+            refunded: true,
+          }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (refundErr) {
+        console.error("[IBS-REGISTER] Refund attempt failed:", refundErr);
+      }
+    }
+
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Internal error" }),
+      JSON.stringify({ error: errMsg }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
