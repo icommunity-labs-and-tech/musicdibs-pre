@@ -79,12 +79,12 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
   const handleSelect = async (asset: AudioAsset) => {
     if (audioRef.current) audioRef.current.pause();
     setPlayingId(null);
-    // Pre-check size via HEAD to avoid breaking the 25MB worker limit
+    // Pre-check size via HEAD (max 50MB per file)
     try {
       const head = await fetch(asset.url, { method: 'HEAD' });
       const len = Number(head.headers.get('content-length') || 0);
-      if (len > 25 * 1024 * 1024) {
-        toast.error(`Este audio supera el límite temporal de 25MB (${(len / (1024 * 1024)).toFixed(1)} MB). Genera/usa una versión MP3 más ligera.`);
+      if (len > 50 * 1024 * 1024) {
+        toast.error(`Este audio supera el tamaño máximo de 50MB (${(len / (1024 * 1024)).toFixed(1)} MB). Genera/usa una versión MP3 más ligera.`);
         return;
       }
     } catch { /* if HEAD fails, allow and let StepFile validate later */ }
@@ -107,7 +107,7 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
 
         <div className="flex items-start gap-2 rounded-md border border-amber-300/40 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-          <span>Tamaño máximo temporal: 25MB por archivo. Estamos optimizando el sistema para soportar archivos más grandes próximamente.</span>
+          <span>Tamaño máximo: 50MB por archivo.</span>
         </div>
 
         <div className="relative">
