@@ -193,9 +193,37 @@ serve(async (req) => {
         if ((roleUserIds || []).length === 0) return json({ users: [], total: 0 });
       }
 
+      // If searching, pre-resolve user_ids whose email matches (auth.users)
+      let searchUserIds: string[] = [];
+      if (search) {
+        try {
+          // Paginate through auth users to find email matches (case-insensitive, substring)
+          const perPage = 1000;
+          for (let pageIdx = 1; pageIdx <= 10; pageIdx++) {
+            const { data: pageData } = await admin.auth.admin.listUsers({ page: pageIdx, perPage });
+            const usersPage = (pageData as any)?.users || [];
+            for (const au of usersPage) {
+              const em = (au?.email || "").toLowerCase();
+              const meta = ((au?.user_metadata?.display_name || au?.user_metadata?.full_name || "") as string).toLowerCase();
+              if (em.includes(search) || meta.includes(search)) searchUserIds.push(au.id);
+            }
+            if (usersPage.length < perPage) break;
+          }
+        } catch { /* ignore */ }
+      }
+
       let query = admin.from("profiles").select("*", { count: "exact" });
 
-      if (search) query = query.ilike("display_name", `%${search}%`);
+      if (search) {
+        if (searchUserIds.length > 0) {
+          // Match by display_name OR by user_id resolved from email/meta
+          const escaped = search.replace(/[%,()]/g, "");
+          const idsCsv = searchUserIds.join(",");
+          query = query.or(`display_name.ilike.%${escaped}%,user_id.in.(${idsCsv})`);
+        } else {
+          query = query.ilike("display_name", `%${search}%`);
+        }
+      }
       if (kycFilter) query = query.eq("kyc_status", kycFilter);
       if (planFilter) query = query.eq("subscription_plan", planFilter);
       if (stripeFilter === "linked") query = query.not("stripe_customer_id", "is", null);
