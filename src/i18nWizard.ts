@@ -177,6 +177,10 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
       back: 'Back',
       continue: 'Continue',
       optional: 'optional',
+      dontCloseTab: {
+        title: 'DO NOT close this screen during the registration process',
+        body: 'Please wait until your registration has been processed successfully before leaving this section. If you leave earlier, you may lose your credits.',
+      },
       entry: {
         title: 'Choose protection type',
         subtitle: 'What do you want to register?',
