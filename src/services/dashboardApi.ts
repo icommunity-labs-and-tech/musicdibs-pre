@@ -236,9 +236,37 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
     primaryFilePath: filePaths[0],
   });
 
-  const { data: ibsResult, error: ibsError } = await supabase.functions.invoke('register-work-ibs', {
+  const invokePromise = supabase.functions.invoke('register-work-ibs', {
     body: { workId: work.id, signatureId: data.signatureId, additionalFilePaths: filePaths.slice(1) },
   });
+
+  const timeoutPromise = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), 25000)
+  );
+
+  let ibsResult: any;
+  let ibsError: any;
+
+  try {
+    const raceRes = await Promise.race([invokePromise, timeoutPromise]) as any;
+    ibsResult = raceRes.data;
+    ibsError = raceRes.error;
+  } catch (err: any) {
+    if (err.message === 'timeout') {
+      console.error('[registerWork] IBS call timed out after 25s');
+      await supabase
+        .from('works')
+        .update({
+          status: 'failed',
+          failure_reason: 'timeout_invoke_ibs',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', work.id)
+        .eq('status', 'draft');
+      throw new Error('El registro está tardando más de lo esperado. Tu crédito ha sido reservado y el proceso continuará. Si el problema persiste, contacta con soporte.');
+    }
+    throw err;
+  }
 
   console.log('[registerWork] register-work-ibs response', { ibsResult, ibsError });
 
