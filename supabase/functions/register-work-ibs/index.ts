@@ -431,3 +431,24 @@ async function handleIbsFailure(
     console.log(`[IBS] FAILURE — Work ${workId} marked as failed, no credits to refund. Reason: ${reason}`);
   }
 }
+
+// Marca un work como failed solo si actualmente está en draft (idempotente).
+// Usado en retornos tempranos (validación, créditos insuficientes, etc.).
+async function markDraftAsFailed(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  workId: string,
+  reason: string,
+) {
+  if (!workId) return;
+  try {
+    const { error } = await supabaseAdmin
+      .from("works")
+      .update({ status: "failed", failure_reason: reason, updated_at: new Date().toISOString() })
+      .eq("id", workId)
+      .eq("status", "draft");
+    if (error) console.error(`[markDraftAsFailed] ${workId}: ${error.message}`);
+    else console.log(`[markDraftAsFailed] ${workId} -> failed (${reason})`);
+  } catch (e) {
+    console.error(`[markDraftAsFailed] exception:`, e);
+  }
+}
