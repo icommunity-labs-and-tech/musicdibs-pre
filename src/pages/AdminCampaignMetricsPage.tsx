@@ -473,7 +473,7 @@ export default function AdminCampaignMetricsPage() {
           <Card className="border-border/40">
             <CardHeader><CardTitle className="text-base">📈 ROI acumulado por cupón</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={Math.max(260, filteredCoupons.length * 28 + 40)}>
                 <BarChart
                   data={filteredCoupons
                     .map(c => ({
@@ -484,7 +484,7 @@ export default function AdminCampaignMetricsPage() {
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis dataKey="name" type="category" width={140} interval={0} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                   <Tooltip
                     contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
                     formatter={(v: any) => [`${v}%`, 'ROI']}
