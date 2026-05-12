@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -79,6 +79,7 @@ export default function AdminCampaignMetricsPage() {
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
   const [loadingCoupons, setLoadingCoupons] = useState(true);
   const [syncingStripe, setSyncingStripe] = useState(false);
+  const initialStripeSyncStarted = useRef(false);
   
   const [referralRows, setReferralRows] = useState<Array<{ referral_source: string | null; referral_influencer: string | null; referral_detail: string | null; user_id: string }>>([]);
   const [totalProfiles, setTotalProfiles] = useState<number>(0);
@@ -160,18 +161,26 @@ export default function AdminCampaignMetricsPage() {
 
   useEffect(() => { loadReferral(); }, [loadReferral]);
 
-  const handleSyncStripeCoupons = useCallback(async () => {
+  const handleSyncStripeCoupons = useCallback(async (options?: { silent?: boolean }) => {
     setSyncingStripe(true);
     try {
       const res: any = await adminApi.syncStripeCoupons();
-      toast.success(`Stripe: ${res.stripe_coupons || res.stripe_promotion_codes || 0} cupones · ${res.inserted || 0} nuevos · ${res.updated || 0} actualizados`);
+      if (!options?.silent) {
+        toast.success(`Stripe: ${res.stripe_coupons || res.stripe_promotion_codes || 0} cupones · ${res.inserted || 0} nuevos · ${res.updated || 0} actualizados`);
+      }
       await Promise.all([loadData(), loadCoupons(), loadReferral()]);
     } catch (e: any) {
-      toast.error(e.message || 'Error sincronizando con Stripe');
+      if (!options?.silent) toast.error(e.message || 'Error sincronizando con Stripe');
     } finally {
       setSyncingStripe(false);
     }
   }, [loadData, loadCoupons, loadReferral]);
+
+  useEffect(() => {
+    if (initialStripeSyncStarted.current) return;
+    initialStripeSyncStarted.current = true;
+    void handleSyncStripeCoupons({ silent: true });
+  }, [handleSyncStripeCoupons]);
 
   const loadDetail = async (campaignName: string) => {
     if (!campaignName) { toast.error('Campaña sin nombre'); return; }
