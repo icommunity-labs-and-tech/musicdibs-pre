@@ -1193,17 +1193,29 @@ serve(async (req) => {
       }
 
       // ── DB queries ──
-      let totalQuery = admin.from("profiles").select("id", { count: "exact", head: true });
+      // "Registrados totales" must always reflect the full lifetime count, never the period filter.
+      const totalQuery = admin.from("profiles").select("id", { count: "exact", head: true });
       let worksQuery = admin.from("works").select("id", { count: "exact", head: true });
       if (filterStart && filterEnd) {
-        totalQuery = totalQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
         worksQuery = worksQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
       }
 
+      // "Nuevos registros" reflects the selected period when one is active, else the current month.
+      const newThisStart = filterStart || thisMonthStart;
+      const newThisEnd = filterEnd || null;
+      const periodMs = filterStart && filterEnd
+        ? new Date(filterEnd).getTime() - new Date(filterStart).getTime()
+        : new Date(thisMonthStart).getTime() - new Date(lastMonthStart).getTime();
+      const prevStart = new Date(new Date(newThisStart).getTime() - periodMs).toISOString();
+      const prevEnd = newThisStart;
+
+      let newThisQuery = admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", newThisStart);
+      if (newThisEnd) newThisQuery = newThisQuery.lt("created_at", newThisEnd);
+
       const [totalRes, newThisRes, newLastRes, verifiedRes, profilesRes, totalWorksRes, worksMonthRes] = await Promise.all([
         totalQuery,
-        admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", thisMonthStart),
-        admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", lastMonthStart).lt("created_at", thisMonthStart),
+        newThisQuery,
+        admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", prevStart).lt("created_at", prevEnd),
         admin.from("profiles").select("id", { count: "exact", head: true }).eq("kyc_status", "verified"),
         admin.from("profiles").select("user_id, subscription_plan, created_at").range(0, 9999),
         worksQuery,
