@@ -8,7 +8,7 @@ import { PricingPopup } from '@/components/dashboard/PricingPopup';
 import { useAuth } from '@/hooks/useAuth';
 import { useKycGuard } from '@/hooks/useKycGuard';
 import type { DashboardSummary } from '@/types/dashboard';
-import { Loader2, Coins, AlertTriangle } from 'lucide-react';
+import { Loader2, Coins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function RegisterPage() {
