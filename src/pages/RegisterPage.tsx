@@ -8,7 +8,7 @@ import { PricingPopup } from '@/components/dashboard/PricingPopup';
 import { useAuth } from '@/hooks/useAuth';
 import { useKycGuard } from '@/hooks/useKycGuard';
 import type { DashboardSummary } from '@/types/dashboard';
-import { Loader2, Coins } from 'lucide-react';
+import { Loader2, Coins, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function RegisterPage() {
@@ -45,8 +45,22 @@ export default function RegisterPage() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
         <RegistrationWizard summary={summary} />
-        <div className="hidden lg:block">
+        <div className="hidden lg:block space-y-4">
           <AccountSummary onSummaryLoaded={setSummary} />
+          <div
+            role="alert"
+            className="w-full rounded-xl border border-amber-300/60 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700/50 px-4 py-3 flex gap-3 items-start"
+          >
+            <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+            <div className="space-y-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-900 dark:text-amber-200 leading-snug">
+                ⚠️ NO salgas de esta pantalla durante el registro
+              </p>
+              <p className="text-xs sm:text-[13px] text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                Si sales antes de que finalice, podrías perder tus créditos.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
       <PricingPopup open={pricingOpen} onOpenChange={setPricingOpen} />
