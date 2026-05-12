@@ -41,6 +41,10 @@ function isMissingDefaultExportError(error: unknown) {
   return error instanceof Error && /Dynamic import resolved without a default export/i.test(error.message);
 }
 
+function isEmptyModuleError(error: unknown) {
+  return error instanceof Error && /Dynamic import resolved to empty module/i.test(error.message);
+}
+
 function installPreloadErrorRecovery() {
   if (!browserWindow || browserWindow.__lazyImportRecoveryInstalled) return;
 
