@@ -122,12 +122,26 @@ serve(async (req) => {
       }
     }
 
-    if (work.status !== "draft" && work.status !== "processing") {
+    // ── Atomic lock: reserve the work BEFORE deducting credits to prevent
+    // double charges from concurrent client retries. Only succeeds if the
+    // work is still in 'draft' status. The conditional UPDATE is atomic at
+    // the row level in Postgres.
+    const { data: locked, error: lockError } = await supabaseAdmin
+      .from("works")
+      .update({ status: "processing", updated_at: new Date().toISOString() })
+      .eq("id", workId)
+      .eq("status", "draft")
+      .select("id")
+      .maybeSingle();
+
+    if (lockError || !locked) {
+      console.warn(`[IBS] Lock not acquired for work ${workId} (current status: ${work.status}). Possible concurrent retry.`);
       return new Response(
-        JSON.stringify({ error: "Work is not in draft/processing state", status: work.status }),
+        JSON.stringify({ error: "Work already being processed", status: work.status }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    console.log(`[IBS] Atomic lock acquired for work ${workId}`);
 
     // ── Deduct credit NOW (before any iBS call) ──
     // Read cost from feature_costs table
@@ -458,6 +472,21 @@ async function handleIbsFailure(
     .eq("id", workId);
 
   if (creditCost > 0) {
+    // Idempotency guard: avoid double refunds if this function is retried
+    // or if the abandoned-drafts cron already issued one for this work.
+    const { data: existingRefund } = await supabaseAdmin
+      .from("credit_transactions")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("type", "refund")
+      .ilike("description", `%${workId}%`)
+      .maybeSingle();
+
+    if (existingRefund) {
+      console.log(`[IBS] Skipping refund for work ${workId} — refund already exists (${existingRefund.id}). Reason: ${reason}`);
+      return;
+    }
+
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("available_credits")
@@ -477,7 +506,7 @@ async function handleIbsFailure(
         user_id: userId,
         amount: creditCost,
         type: "refund",
-        description: `Reembolso por fallo iBS: ${workTitle} — ${reason}`,
+        description: `Reembolso por fallo iBS: work ${workId} — ${workTitle} — ${reason}`,
       });
 
       console.log(`[IBS] FAILURE — Work ${workId} marked as failed, ${creditCost} credit(s) refunded. Reason: ${reason}`);
