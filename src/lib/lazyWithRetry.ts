@@ -56,8 +56,19 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 export function lazyWithRetry<T extends ComponentType<any>>(importFactory: ImportFactory<T>) {
   return lazy(async () => {
     const tryImport = async () => {
-      const mod = await importFactory();
-      if (!mod || typeof (mod as any).default === "undefined") {
+      const mod: any = await importFactory();
+      if (!mod) {
+        throw new Error("Dynamic import resolved to empty module");
+      }
+      if (typeof mod.default === "undefined") {
+        // Fall back to the first function/class export (covers components
+        // re-exported as named exports without a default).
+        const firstComponent = Object.values(mod).find(
+          (v) => typeof v === "function"
+        );
+        if (firstComponent) {
+          return { default: firstComponent as T };
+        }
         throw new Error("Dynamic import resolved without a default export");
       }
       return mod;
