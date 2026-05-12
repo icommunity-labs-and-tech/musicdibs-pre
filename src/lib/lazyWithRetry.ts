@@ -107,7 +107,9 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(importFactory: I
           isChunkLoadError(secondError) ||
           isChunkLoadError(firstError) ||
           isMissingDefaultExportError(secondError) ||
-          isMissingDefaultExportError(firstError)
+          isMissingDefaultExportError(firstError) ||
+          isEmptyModuleError(secondError) ||
+          isEmptyModuleError(firstError)
         ) {
           if (reloadOnce(DYNAMIC_IMPORT_RELOAD_KEY)) {
             // Suspend forever while the page reloads
