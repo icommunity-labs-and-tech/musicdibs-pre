@@ -278,7 +278,7 @@ export default function AdminCampaignMetricsPage() {
             </Select>
           )}
 
-          <Button variant="outline" size="sm" onClick={handleSyncStripeCoupons} disabled={syncingStripe}>
+          <Button variant="outline" size="sm" onClick={() => void handleSyncStripeCoupons()} disabled={syncingStripe}>
             {syncingStripe ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />} Actualizar
           </Button>
 
@@ -463,7 +463,7 @@ export default function AdminCampaignMetricsPage() {
               variant="outline"
               size="sm"
               className="h-7 text-xs gap-1"
-              onClick={handleSyncStripeCoupons}
+              onClick={() => void handleSyncStripeCoupons()}
               disabled={syncingStripe}
             >
               {syncingStripe ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />} Sincronizar Stripe
