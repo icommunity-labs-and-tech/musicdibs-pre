@@ -55,6 +55,11 @@ serve(async (req) => {
     const userId = user.id;
     const { workId, signatureId, additionalFilePaths } = await req.json();
 
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
     if (!workId || typeof workId !== "string") {
       return new Response(JSON.stringify({ error: "workId is required" }), {
         status: 400,
@@ -63,16 +68,12 @@ serve(async (req) => {
     }
 
     if (!signatureId || typeof signatureId !== "string") {
+      await markDraftAsFailed(supabaseAdmin, workId, "missing_signature_id");
       return new Response(JSON.stringify({ error: "signatureId is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     // Verify the work belongs to the user and is in draft state
     const { data: work, error: workError } = await supabaseAdmin
