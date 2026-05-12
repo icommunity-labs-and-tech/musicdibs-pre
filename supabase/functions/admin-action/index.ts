@@ -2043,9 +2043,13 @@ serve(async (req) => {
         .from("marketing_campaigns")
         .select("id, coupon_code, cost")
         .not("coupon_code", "is", null);
-      const existingByCode = new Map<string, any>(
-        (existing || []).map((c: any) => [canonicalCouponCode(c.coupon_code), c])
-      );
+      const existingByCode = new Map<string, any>();
+      (existing || []).forEach((c: any) => {
+        const canonical = canonicalCouponCode(c.coupon_code);
+        const raw = String(c.coupon_code || "").trim().toUpperCase();
+        const current = existingByCode.get(canonical);
+        if (!current || raw === canonical) existingByCode.set(canonical, c);
+      });
 
       // 2a. listar promotion_codes (activos e inactivos) en Stripe (paginar)
       const codes: any[] = [];
@@ -2138,7 +2142,7 @@ serve(async (req) => {
           continue;
         }
 
-        existingByCode.set(upper, "pending");
+        existingByCode.set(upper, { id: "pending", cost: 0 });
         const pctOff = coupon.percent_off ? `${coupon.percent_off}%` : null;
         const amtOff = coupon.amount_off
           ? `${(coupon.amount_off / 100).toFixed(2)} ${(coupon.currency || "eur").toUpperCase()}`
