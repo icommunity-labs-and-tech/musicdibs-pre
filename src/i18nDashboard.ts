@@ -434,6 +434,11 @@ const es = {
     paymentAlert: {
       managePayment: 'Gestionar pago',
     },
+    paypalBanner: {
+      title: 'Acción requerida: tu suscripción no se puede renovar',
+      body: 'MusicDibs ya no soporta pagos con PayPal. Tu suscripción vencerá pronto y no se renovará automáticamente. Añade una tarjeta de crédito/débito para mantener el acceso.',
+      cta: 'Renovar con tarjeta →',
+    },
     verify: {
       title: 'Verificar tu registro',
       description: 'Verifica si una obra ha sido registrada con nosotros.',
