@@ -55,6 +55,11 @@ serve(async (req) => {
     const userId = user.id;
     const { workId, signatureId, additionalFilePaths } = await req.json();
 
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
     if (!workId || typeof workId !== "string") {
       return new Response(JSON.stringify({ error: "workId is required" }), {
         status: 400,
@@ -63,16 +68,12 @@ serve(async (req) => {
     }
 
     if (!signatureId || typeof signatureId !== "string") {
+      await markDraftAsFailed(supabaseAdmin, workId, "missing_signature_id");
       return new Response(JSON.stringify({ error: "signatureId is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
 
     // Verify the work belongs to the user and is in draft state
     const { data: work, error: workError } = await supabaseAdmin
@@ -128,6 +129,7 @@ serve(async (req) => {
       .single();
 
     if (!profile || profile.available_credits < creditCost) {
+      await markDraftAsFailed(supabaseAdmin, workId, "insufficient_credits");
       return new Response(
         JSON.stringify({ error: "Créditos insuficientes", available: profile?.available_credits || 0, required: creditCost }),
         { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -397,7 +399,7 @@ async function handleIbsFailure(
 ) {
   await supabaseAdmin
     .from("works")
-    .update({ status: "failed", updated_at: new Date().toISOString() })
+    .update({ status: "failed", failure_reason: reason, updated_at: new Date().toISOString() })
     .eq("id", workId);
 
   if (creditCost > 0) {
@@ -427,5 +429,26 @@ async function handleIbsFailure(
     }
   } else {
     console.log(`[IBS] FAILURE — Work ${workId} marked as failed, no credits to refund. Reason: ${reason}`);
+  }
+}
+
+// Marca un work como failed solo si actualmente está en draft (idempotente).
+// Usado en retornos tempranos (validación, créditos insuficientes, etc.).
+async function markDraftAsFailed(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  workId: string,
+  reason: string,
+) {
+  if (!workId) return;
+  try {
+    const { error } = await supabaseAdmin
+      .from("works")
+      .update({ status: "failed", failure_reason: reason, updated_at: new Date().toISOString() })
+      .eq("id", workId)
+      .eq("status", "draft");
+    if (error) console.error(`[markDraftAsFailed] ${workId}: ${error.message}`);
+    else console.log(`[markDraftAsFailed] ${workId} -> failed (${reason})`);
+  } catch (e) {
+    console.error(`[markDraftAsFailed] exception:`, e);
   }
 }
