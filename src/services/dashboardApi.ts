@@ -109,11 +109,13 @@ export interface DraftWork {
 export async function fetchUserDrafts(limit = 5): Promise<DraftWork[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return [];
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from('works')
     .select('id, title, type, description, author, file_path, created_at')
     .eq('user_id', user.id)
     .eq('status', 'draft')
+    .gte('created_at', twoHoursAgo)
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) {
