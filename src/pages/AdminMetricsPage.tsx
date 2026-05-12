@@ -287,7 +287,7 @@ export default function AdminMetricsPage() {
       <HistoricalDataNotice collapsible storageKey="admin-metrics-notice" />
 
       {/* KPI Rows — separated blocks */}
-      <KpiGrid metrics={metrics} />
+      <KpiGrid metrics={lifetimeTotalUsers != null ? { ...metrics, totalUsers: lifetimeTotalUsers } : metrics} />
 
       {/* Financial Alerts */}
       <FinancialAlerts metrics={metrics} />
