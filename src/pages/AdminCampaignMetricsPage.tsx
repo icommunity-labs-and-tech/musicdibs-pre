@@ -485,27 +485,25 @@ export default function AdminCampaignMetricsPage() {
         })()}
 
         {/* Gráfico ROI por cupón */}
-        {!loadingCoupons && filteredCoupons.length > 0 && (
+        {!loadingCoupons && roiChartData.length > 0 && (
           <Card className="border-border/40">
             <CardHeader><CardTitle className="text-base">📈 ROI acumulado por cupón</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={Math.max(260, filteredCoupons.length * 28 + 40)}>
+              <ResponsiveContainer width="100%" height={roiChartHeight}>
                 <BarChart
-                  data={filteredCoupons
-                    .map(c => ({
-                      name: c.coupon_code,
-                      roi: parseFloat((c.current_roi * 100).toFixed(0)),
-                    }))}
+                  data={roiChartData}
                   layout="vertical"
+                  margin={{ top: 8, right: 28, bottom: 8, left: 28 }}
+                  barCategoryGap={8}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis dataKey="name" type="category" width={140} interval={0} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis dataKey="name" type="category" width={170} interval={0} minTickGap={0} tickMargin={8} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                   <Tooltip
                     contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
                     formatter={(v: any) => [`${v}%`, 'ROI']}
                   />
-                  <Bar dataKey="roi" fill="hsl(var(--primary))" />
+                  <Bar dataKey="roi" fill="hsl(var(--primary))" barSize={28} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
