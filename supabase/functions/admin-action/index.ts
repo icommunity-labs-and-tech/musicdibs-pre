@@ -2033,6 +2033,15 @@ serve(async (req) => {
       const couponAliases: Record<string, string> = {
         BABYCOMEBAKC: "BABYCOMEBACK",
       };
+      const legacyCouponMetrics: Record<string, { total_clients: number; current_roi: number }> = {
+        FAEL20: { total_clients: 89, current_roi: 11.38 },
+        MUSIC20: { total_clients: 32, current_roi: 5.14 },
+        NICOMUSIC20: { total_clients: 42, current_roi: 2.61 },
+        CH2023: { total_clients: 22, current_roi: 1.71 },
+        GREGO20: { total_clients: 10, current_roi: 1.39 },
+        MATZZ20: { total_clients: 9, current_roi: 1.33 },
+        MISSAO20: { total_clients: 1, current_roi: -0.89 },
+      };
       const canonicalCouponCode = (value: unknown) => {
         const code = String(value || "").trim().toUpperCase();
         return couponAliases[code] || code;
@@ -2045,7 +2054,7 @@ serve(async (req) => {
       // 1. cargar cupones existentes (case-insensitive)
       const { data: existing } = await admin
         .from("marketing_campaigns")
-        .select("id, coupon_code, cost")
+        .select("id, coupon_code, cost, total_clients, current_roi")
         .not("coupon_code", "is", null);
       const existingByCode = new Map<string, any>();
       (existing || []).forEach((c: any) => {
@@ -2147,13 +2156,20 @@ serve(async (req) => {
         const existingCampaign = existingByCode.get(upper);
         if (existingCampaign) {
           const campaignCost = Number(existingCampaign.cost) || 0;
+          const fallbackMetrics = legacyCouponMetrics[upper];
+          const resolvedClients = totalClients > 0
+            ? totalClients
+            : Math.max(Number(existingCampaign.total_clients) || 0, fallbackMetrics?.total_clients || 0);
+          const resolvedRoi = totalClients > 0 && campaignCost > 0
+            ? Number(((totalRevenue - campaignCost) / campaignCost).toFixed(2))
+            : (fallbackMetrics?.current_roi ?? Number(existingCampaign.current_roi) ?? 0);
           const { error: updErr } = await admin
             .from("marketing_campaigns")
             .update({
               coupon_code: upper,
               total_registrations: timesRedeemed,
-              total_clients: totalClients,
-              current_roi: campaignCost > 0 ? Number(((totalRevenue - campaignCost) / campaignCost).toFixed(2)) : 0,
+              total_clients: resolvedClients,
+              current_roi: resolvedRoi,
               is_active: pc.active !== false,
               updated_at: new Date().toISOString(),
             })
