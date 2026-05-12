@@ -2030,13 +2030,21 @@ serve(async (req) => {
       if (!stripeKey) return json({ error: "STRIPE_SECRET_KEY not set" }, 500);
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
+      const couponAliases: Record<string, string> = {
+        BABYCOMEBAKC: "BABYCOMEBACK",
+      };
+      const canonicalCouponCode = (value: unknown) => {
+        const code = String(value || "").trim().toUpperCase();
+        return couponAliases[code] || code;
+      };
+
       // 1. cargar cupones existentes (case-insensitive)
       const { data: existing } = await admin
         .from("marketing_campaigns")
-        .select("id, coupon_code")
+        .select("id, coupon_code, cost")
         .not("coupon_code", "is", null);
-      const existingByCode = new Map<string, string>(
-        (existing || []).map((c: any) => [String(c.coupon_code).toUpperCase(), c.id])
+      const existingByCode = new Map<string, any>(
+        (existing || []).map((c: any) => [canonicalCouponCode(c.coupon_code), c])
       );
 
       // 2a. listar promotion_codes (activos e inactivos) en Stripe (paginar)
@@ -2084,10 +2092,10 @@ serve(async (req) => {
           expires_at: c.redeem_by,
           coupon: c,
         }));
-      // Mezclar evitando duplicados por code (promotion_codes tienen prioridad)
-      const seenCodes = new Set(codes.map((c: any) => String(c.code || "").toUpperCase()));
+      // Mezclar evitando duplicados por code canónico (promotion_codes tienen prioridad)
+      const seenCodes = new Set(codes.map((c: any) => canonicalCouponCode(c.code)));
       for (const c of codesFromCoupons) {
-        const up = String(c.code).toUpperCase();
+        const up = canonicalCouponCode(c.code);
         if (!seenCodes.has(up)) {
           codes.push(c);
           seenCodes.add(up);
