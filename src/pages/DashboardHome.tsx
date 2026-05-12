@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { AccountSummary } from '@/components/dashboard/AccountSummary';
 import { CreditStore } from '@/components/dashboard/CreditStore';
 import { PaymentAlertBanner } from '@/components/dashboard/PaymentAlertBanner';
+import { PaypalLegacyBanner } from '@/components/dashboard/PaypalLegacyBanner';
 import { RecentRegistrations } from '@/components/dashboard/RecentRegistrations';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -73,6 +74,7 @@ export default function DashboardHome() {
 
   return (
     <div className="space-y-6 max-w-[1400px]">
+      <PaypalLegacyBanner />
       <PaymentAlertBanner />
 
       {/* Banner for new users with no works */}
