@@ -41,6 +41,10 @@ function isMissingDefaultExportError(error: unknown) {
   return error instanceof Error && /Dynamic import resolved without a default export/i.test(error.message);
 }
 
+function isEmptyModuleError(error: unknown) {
+  return error instanceof Error && /Dynamic import resolved to empty module/i.test(error.message);
+}
+
 function installPreloadErrorRecovery() {
   if (!browserWindow || browserWindow.__lazyImportRecoveryInstalled) return;
 
@@ -103,7 +107,9 @@ export function lazyWithRetry<T extends ComponentType<unknown>>(importFactory: I
           isChunkLoadError(secondError) ||
           isChunkLoadError(firstError) ||
           isMissingDefaultExportError(secondError) ||
-          isMissingDefaultExportError(firstError)
+          isMissingDefaultExportError(firstError) ||
+          isEmptyModuleError(secondError) ||
+          isEmptyModuleError(firstError)
         ) {
           if (reloadOnce(DYNAMIC_IMPORT_RELOAD_KEY)) {
             // Suspend forever while the page reloads
