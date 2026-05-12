@@ -2030,14 +2030,30 @@ serve(async (req) => {
       if (!stripeKey) return json({ error: "STRIPE_SECRET_KEY not set" }, 500);
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
+      const couponAliases: Record<string, string> = {
+        BABYCOMEBAKC: "BABYCOMEBACK",
+      };
+      const canonicalCouponCode = (value: unknown) => {
+        const code = String(value || "").trim().toUpperCase();
+        return couponAliases[code] || code;
+      };
+      const couponCodeVariants = (canonical: string) => [
+        canonical,
+        ...Object.entries(couponAliases).filter(([, target]) => target === canonical).map(([alias]) => alias),
+      ];
+
       // 1. cargar cupones existentes (case-insensitive)
       const { data: existing } = await admin
         .from("marketing_campaigns")
-        .select("id, coupon_code")
+        .select("id, coupon_code, cost")
         .not("coupon_code", "is", null);
-      const existingByCode = new Map<string, string>(
-        (existing || []).map((c: any) => [String(c.coupon_code).toUpperCase(), c.id])
-      );
+      const existingByCode = new Map<string, any>();
+      (existing || []).forEach((c: any) => {
+        const canonical = canonicalCouponCode(c.coupon_code);
+        const raw = String(c.coupon_code || "").trim().toUpperCase();
+        const current = existingByCode.get(canonical);
+        if (!current || raw === canonical) existingByCode.set(canonical, c);
+      });
 
       // 2a. listar promotion_codes (activos e inactivos) en Stripe (paginar)
       const codes: any[] = [];
@@ -2084,55 +2100,84 @@ serve(async (req) => {
           expires_at: c.redeem_by,
           coupon: c,
         }));
-      // Mezclar evitando duplicados por code (promotion_codes tienen prioridad)
-      const seenCodes = new Set(codes.map((c: any) => String(c.code || "").toUpperCase()));
+      // Mezclar evitando duplicados por code canónico (promotion_codes tienen prioridad)
       for (const c of codesFromCoupons) {
-        const up = String(c.code).toUpperCase();
-        if (!seenCodes.has(up)) {
-          codes.push(c);
-          seenCodes.add(up);
-        }
+        codes.push(c);
       }
+
+      const consolidatedByCode = new Map<string, any>();
+      for (const pc of codes) {
+        const upper = canonicalCouponCode(pc.code);
+        if (!upper) continue;
+        const coupon = pc.coupon || {};
+        const timesRedeemed = Number(pc.times_redeemed || coupon.times_redeemed || 0);
+        const current = consolidatedByCode.get(upper);
+        if (!current) {
+          consolidatedByCode.set(upper, { ...pc, code: upper, times_redeemed: timesRedeemed });
+          continue;
+        }
+        current.times_redeemed = Math.max(Number(current.times_redeemed || 0), timesRedeemed);
+        current.active = current.active !== false || pc.active !== false;
+        current.expires_at = current.expires_at || pc.expires_at;
+        current.created = Math.min(Number(current.created || pc.created || 0), Number(pc.created || current.created || 0));
+      }
+      const syncCodes = [...consolidatedByCode.values()];
 
       // 3. insertar los que faltan + actualizar usos (times_redeemed) en los existentes
       const toInsert: any[] = [];
       let updated = 0;
-      for (const pc of codes) {
+      for (const pc of syncCodes) {
         const code = String(pc.code || "").trim();
         if (!code) continue;
-        const upper = code.toUpperCase();
+        const upper = canonicalCouponCode(code);
         const coupon = pc.coupon || {};
         const timesRedeemed = Number(pc.times_redeemed || coupon.times_redeemed || 0);
+        const couponFilters = couponCodeVariants(upper)
+          .flatMap((variant) => [`coupon_code.ilike.${variant}`, `promotion_code.ilike.${variant}`])
+          .join(",");
+        const paidOrders = await admin
+          .from("orders")
+          .select("user_id, amount_gross")
+          .eq("order_status", "paid")
+          .or(couponFilters);
+        const paidRows = paidOrders.data || [];
+        const totalClients = new Set(paidRows.map((o: any) => o.user_id).filter(Boolean)).size;
+        const totalRevenue = paidRows.reduce((sum: number, o: any) => sum + (Number(o.amount_gross) || 0), 0);
 
-        const existingId = existingByCode.get(upper);
-        if (existingId) {
-          // Actualizar uso (total_registrations) y estado activo
+        const existingCampaign = existingByCode.get(upper);
+        if (existingCampaign) {
+          const campaignCost = Number(existingCampaign.cost) || 0;
           const { error: updErr } = await admin
             .from("marketing_campaigns")
             .update({
+              coupon_code: upper,
               total_registrations: timesRedeemed,
+              total_clients: totalClients,
+              current_roi: campaignCost > 0 ? Number(((totalRevenue - campaignCost) / campaignCost).toFixed(2)) : 0,
               is_active: pc.active !== false,
               updated_at: new Date().toISOString(),
             })
-            .eq("id", existingId);
+            .eq("id", existingCampaign.id);
           if (!updErr) updated++;
           continue;
         }
 
-        existingByCode.set(upper, "pending");
+        existingByCode.set(upper, { id: "pending", cost: 0 });
         const pctOff = coupon.percent_off ? `${coupon.percent_off}%` : null;
         const amtOff = coupon.amount_off
           ? `${(coupon.amount_off / 100).toFixed(2)} ${(coupon.currency || "eur").toUpperCase()}`
           : null;
         const desc = pctOff || amtOff || coupon.name || "";
         toInsert.push({
-          name: code,
+          name: upper,
           type: null,
           owner: null,
           cost: 0,
-          coupon_code: code,
+          coupon_code: upper,
           is_active: pc.active !== false,
           total_registrations: timesRedeemed,
+          total_clients: totalClients,
+          current_roi: 0,
           start_date: pc.created ? new Date(pc.created * 1000).toISOString().slice(0, 10) : null,
           end_date: pc.expires_at ? new Date(pc.expires_at * 1000).toISOString().slice(0, 10) : null,
           notes: `Auto-importado desde Stripe${desc ? ` · ${desc}` : ""} · promo_id=${pc.id}`,
@@ -2146,11 +2191,12 @@ serve(async (req) => {
         if (insErr) return json({ error: insErr.message }, 500);
         inserted = toInsert.length;
       }
-      await audit({ action: "sync_stripe_coupons", details: { inserted, updated, total_stripe: codes.length } });
+      await audit({ action: "sync_stripe_coupons", details: { inserted, updated, total_stripe: syncCodes.length } });
 
       return json({
         success: true,
         stripe_promotion_codes: codes.length,
+        stripe_coupons: syncCodes.length,
         existing_in_db: existing?.length || 0,
         inserted,
         updated,

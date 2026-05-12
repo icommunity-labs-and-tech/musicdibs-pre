@@ -22,6 +22,15 @@ import {
 
 type PeriodType = 'week' | 'month' | 'year';
 
+const COUPON_CODE_ALIASES: Record<string, string> = {
+  BABYCOMEBAKC: 'BABYCOMEBACK',
+};
+
+function canonicalCouponCode(code: string | null | undefined): string {
+  const normalized = String(code || '').trim().toUpperCase();
+  return COUPON_CODE_ALIASES[normalized] || normalized;
+}
+
 
 function getWeekMonday(date: Date): string {
   const d = new Date(date);
@@ -69,6 +78,7 @@ export default function AdminCampaignMetricsPage() {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
   const [loadingCoupons, setLoadingCoupons] = useState(true);
+  const [syncingStripe, setSyncingStripe] = useState(false);
   
   const [referralRows, setReferralRows] = useState<Array<{ referral_source: string | null; referral_influencer: string | null; referral_detail: string | null; user_id: string }>>([]);
   const [totalProfiles, setTotalProfiles] = useState<number>(0);
@@ -150,6 +160,19 @@ export default function AdminCampaignMetricsPage() {
 
   useEffect(() => { loadReferral(); }, [loadReferral]);
 
+  const handleSyncStripeCoupons = useCallback(async () => {
+    setSyncingStripe(true);
+    try {
+      const res: any = await adminApi.syncStripeCoupons();
+      toast.success(`Stripe: ${res.stripe_coupons || res.stripe_promotion_codes || 0} cupones · ${res.inserted || 0} nuevos · ${res.updated || 0} actualizados`);
+      await Promise.all([loadData(), loadCoupons(), loadReferral()]);
+    } catch (e: any) {
+      toast.error(e.message || 'Error sincronizando con Stripe');
+    } finally {
+      setSyncingStripe(false);
+    }
+  }, [loadData, loadCoupons, loadReferral]);
+
   const loadDetail = async (campaignName: string) => {
     if (!campaignName) { toast.error('Campaña sin nombre'); return; }
     setDetailCampaign(campaignName);
@@ -190,6 +213,14 @@ export default function AdminCampaignMetricsPage() {
   const topByRevenue = [...campaignRows].sort((a: any, b: any) => b.revenue - a.revenue).slice(0, 5);
   const topByCustomers = [...campaignRows].sort((a: any, b: any) => b.new_customers - a.new_customers).slice(0, 5);
   const filteredCoupons = coupons.filter(c => couponFilter === 'all' || c.type === couponFilter);
+  const roiChartData = Object.values(filteredCoupons.reduce<Record<string, { name: string; roi: number }>>((acc, c: any) => {
+    const name = canonicalCouponCode(c.coupon_code);
+    if (!name) return acc;
+    const roi = Number.isFinite(Number(c.current_roi)) ? Math.round(Number(c.current_roi) * 100) : 0;
+    if (!acc[name] || roi > acc[name].roi) acc[name] = { name, roi };
+    return acc;
+  }, {})).sort((a, b) => b.roi - a.roi || a.name.localeCompare(b.name));
+  const roiChartHeight = Math.max(280, roiChartData.length * 36 + 64);
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando campañas...</div>;
 
@@ -238,16 +269,8 @@ export default function AdminCampaignMetricsPage() {
             </Select>
           )}
 
-          <Button variant="outline" size="sm" onClick={async () => {
-            try {
-              const res: any = await adminApi.syncStripeCoupons();
-              toast.success(`Stripe: ${res.stripe_promotion_codes} promo codes · ${res.inserted} nuevos · ${res.updated} actualizados`);
-            } catch (e: any) {
-              toast.error(e.message || 'Error sincronizando con Stripe');
-            }
-            await Promise.all([loadData(), loadCoupons(), loadReferral()]);
-          }}>
-            <RefreshCw className="h-4 w-4 mr-1" /> Actualizar
+          <Button variant="outline" size="sm" onClick={handleSyncStripeCoupons} disabled={syncingStripe}>
+            {syncingStripe ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />} Actualizar
           </Button>
 
           <Dialog open={showNewCampaign} onOpenChange={setShowNewCampaign}>
@@ -431,17 +454,10 @@ export default function AdminCampaignMetricsPage() {
               variant="outline"
               size="sm"
               className="h-7 text-xs gap-1"
-              onClick={async () => {
-                try {
-                  const res: any = await adminApi.syncStripeCoupons();
-                  toast.success(`Stripe: ${res.stripe_promotion_codes} promo codes · ${res.inserted} nuevos importados`);
-                  await loadCoupons();
-                } catch (e: any) {
-                  toast.error(e.message || 'Error sincronizando con Stripe');
-                }
-              }}
+              onClick={handleSyncStripeCoupons}
+              disabled={syncingStripe}
             >
-              <RefreshCw className="w-3 h-3" /> Sincronizar Stripe
+              {syncingStripe ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />} Sincronizar Stripe
             </Button>
             {(['all', 'influencer', 'rrss'] as const).map(f => (
               <Button key={f} variant={couponFilter === f ? 'default' : 'outline'} className="h-7 text-xs" onClick={() => setCouponFilter(f)}>
@@ -469,27 +485,25 @@ export default function AdminCampaignMetricsPage() {
         })()}
 
         {/* Gráfico ROI por cupón */}
-        {!loadingCoupons && filteredCoupons.length > 0 && (
+        {!loadingCoupons && roiChartData.length > 0 && (
           <Card className="border-border/40">
             <CardHeader><CardTitle className="text-base">📈 ROI acumulado por cupón</CardTitle></CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={Math.max(260, filteredCoupons.length * 28 + 40)}>
+              <ResponsiveContainer width="100%" height={roiChartHeight}>
                 <BarChart
-                  data={filteredCoupons
-                    .map(c => ({
-                      name: c.coupon_code,
-                      roi: parseFloat((c.current_roi * 100).toFixed(0)),
-                    }))}
+                  data={roiChartData}
                   layout="vertical"
+                  margin={{ top: 8, right: 28, bottom: 8, left: 28 }}
+                  barCategoryGap={8}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis dataKey="name" type="category" width={140} interval={0} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis dataKey="name" type="category" width={170} interval={0} minTickGap={0} tickMargin={8} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
                   <Tooltip
                     contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
                     formatter={(v: any) => [`${v}%`, 'ROI']}
                   />
-                  <Bar dataKey="roi" fill="hsl(var(--primary))" />
+                  <Bar dataKey="roi" fill="hsl(var(--primary))" barSize={28} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
