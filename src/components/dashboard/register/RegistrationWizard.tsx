@@ -191,7 +191,18 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
       }
       uploadFiles = [uploadFile];
     }
-    if ((!uploadFile && uploadFiles.length === 0) || !data.signatureId) return;
+    if (!uploadFile && uploadFiles.length === 0) {
+      console.warn('[RegistrationWizard] handleSubmit aborted: no file selected');
+      toast.error(t('wizard.rw.errorAudio'));
+      setLoading(false);
+      return;
+    }
+    if (!data.signatureId) {
+      console.warn('[RegistrationWizard] handleSubmit aborted: missing signatureId', { data });
+      toast.error(t('dashboard.registerWork.kycRequired', 'Necesitas una firma KYC válida para registrar la obra.'));
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     try {
