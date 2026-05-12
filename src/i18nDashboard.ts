@@ -1251,6 +1251,11 @@ const en: typeof es = {
     paymentAlert: {
       managePayment: 'Manage payment',
     },
+    paypalBanner: {
+      title: 'Action required: your subscription cannot be renewed',
+      body: 'MusicDibs no longer supports PayPal payments. Your subscription will expire soon and will not renew automatically. Please add a credit/debit card to keep your access.',
+      cta: 'Renew with card →',
+    },
     verify: {
       title: 'Verify your registration',
       description: 'Check if a work has been registered with us.',
