@@ -229,12 +229,27 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
   }
 
   // Call real iBS registration — the edge function sets status to 'processing' on success
+  console.log('[registerWork] Invoking register-work-ibs', {
+    workId: work.id,
+    signatureId: data.signatureId,
+    additionalFilePaths: filePaths.slice(1),
+    primaryFilePath: filePaths[0],
+  });
+
   const { data: ibsResult, error: ibsError } = await supabase.functions.invoke('register-work-ibs', {
     body: { workId: work.id, signatureId: data.signatureId, additionalFilePaths: filePaths.slice(1) },
   });
 
+  console.log('[registerWork] register-work-ibs response', { ibsResult, ibsError });
+
   if (ibsError) {
     console.error('[registerWork] IBS call error:', ibsError);
+    // Mark draft as failed so it doesn't get stuck forever in 'draft'
+    await supabase
+      .from('works')
+      .update({ status: 'failed', failure_reason: `client_invoke_error: ${ibsError.message || 'unknown'}` })
+      .eq('id', work.id)
+      .eq('user_id', user.id);
     return { registrationId: work.id, status: 'failed', ibsError: ibsError.message };
   }
 
