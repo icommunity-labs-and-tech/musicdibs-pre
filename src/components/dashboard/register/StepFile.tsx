@@ -7,7 +7,7 @@ import type { WizardData } from './types';
 import { toast } from 'sonner';
 import { LibraryAudioPicker } from './LibraryAudioPicker';
 
-const MAX_FILE_SIZE_MB = 100;
+const MAX_FILE_SIZE_MB = 50;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const MAX_FILES = 5;
 const MAX_TOTAL_SIZE_MB = 200;
