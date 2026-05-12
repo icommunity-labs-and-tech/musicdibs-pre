@@ -491,7 +491,8 @@ export default function AdminCampaignMetricsPage() {
         {/* ── Tabla 1: Influencers unificada (cupones + referral) ── */}
         {(() => {
           const INFLUENCER_MAP: Record<string, string> = {
-            fael: 'fael', gr3go: 'fael', grego: 'fael',
+            fael: 'fael',
+            gr3go: 'grego', grego: 'grego',
             nico: 'nico', nicolas: 'nico', nicomusic: 'nico',
             matzz: 'matzz', missao: 'missao', christian: 'christian', erika: 'erika',
           };
@@ -501,7 +502,7 @@ export default function AdminCampaignMetricsPage() {
             return INFLUENCER_MAP[k] || k;
           };
           const LABELS: Record<string, string> = {
-            fael: 'Fael', nico: 'Nicolas (NicoMusic)', matzz: 'Matzz',
+            fael: 'Fael', grego: 'Grego', nico: 'Nicolas (NicoMusic)', matzz: 'Matzz',
             missao: 'Missao', christian: 'Christian', erika: 'Erika',
           };
 
