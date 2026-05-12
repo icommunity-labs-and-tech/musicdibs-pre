@@ -269,16 +269,8 @@ export default function AdminCampaignMetricsPage() {
             </Select>
           )}
 
-          <Button variant="outline" size="sm" onClick={async () => {
-            try {
-              const res: any = await adminApi.syncStripeCoupons();
-              toast.success(`Stripe: ${res.stripe_promotion_codes} promo codes · ${res.inserted} nuevos · ${res.updated} actualizados`);
-            } catch (e: any) {
-              toast.error(e.message || 'Error sincronizando con Stripe');
-            }
-            await Promise.all([loadData(), loadCoupons(), loadReferral()]);
-          }}>
-            <RefreshCw className="h-4 w-4 mr-1" /> Actualizar
+          <Button variant="outline" size="sm" onClick={handleSyncStripeCoupons} disabled={syncingStripe}>
+            {syncingStripe ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />} Actualizar
           </Button>
 
           <Dialog open={showNewCampaign} onOpenChange={setShowNewCampaign}>
@@ -462,17 +454,10 @@ export default function AdminCampaignMetricsPage() {
               variant="outline"
               size="sm"
               className="h-7 text-xs gap-1"
-              onClick={async () => {
-                try {
-                  const res: any = await adminApi.syncStripeCoupons();
-                  toast.success(`Stripe: ${res.stripe_promotion_codes} promo codes · ${res.inserted} nuevos importados`);
-                  await loadCoupons();
-                } catch (e: any) {
-                  toast.error(e.message || 'Error sincronizando con Stripe');
-                }
-              }}
+              onClick={handleSyncStripeCoupons}
+              disabled={syncingStripe}
             >
-              <RefreshCw className="w-3 h-3" /> Sincronizar Stripe
+              {syncingStripe ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />} Sincronizar Stripe
             </Button>
             {(['all', 'influencer', 'rrss'] as const).map(f => (
               <Button key={f} variant={couponFilter === f ? 'default' : 'outline'} className="h-7 text-xs" onClick={() => setCouponFilter(f)}>
