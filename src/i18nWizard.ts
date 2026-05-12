@@ -6,6 +6,10 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
       back: 'Atrás',
       continue: 'Continuar',
       optional: 'opcional',
+      dontCloseTab: {
+        title: 'NO cierres esta pantalla durante el proceso de registro',
+        body: 'Espera a que tu registro se haya procesado correctamente antes de salir de la sección. Si sales antes, podrías perder tus créditos.',
+      },
       // StepEntry
       entry: {
         title: 'Elegir tipo de protección',
