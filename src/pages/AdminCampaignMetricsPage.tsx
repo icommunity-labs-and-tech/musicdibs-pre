@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -79,6 +79,7 @@ export default function AdminCampaignMetricsPage() {
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
   const [loadingCoupons, setLoadingCoupons] = useState(true);
   const [syncingStripe, setSyncingStripe] = useState(false);
+  const initialStripeSyncStarted = useRef(false);
   
   const [referralRows, setReferralRows] = useState<Array<{ referral_source: string | null; referral_influencer: string | null; referral_detail: string | null; user_id: string }>>([]);
   const [totalProfiles, setTotalProfiles] = useState<number>(0);
@@ -160,18 +161,26 @@ export default function AdminCampaignMetricsPage() {
 
   useEffect(() => { loadReferral(); }, [loadReferral]);
 
-  const handleSyncStripeCoupons = useCallback(async () => {
+  const handleSyncStripeCoupons = useCallback(async (options?: { silent?: boolean }) => {
     setSyncingStripe(true);
     try {
       const res: any = await adminApi.syncStripeCoupons();
-      toast.success(`Stripe: ${res.stripe_coupons || res.stripe_promotion_codes || 0} cupones · ${res.inserted || 0} nuevos · ${res.updated || 0} actualizados`);
+      if (!options?.silent) {
+        toast.success(`Stripe: ${res.stripe_coupons || res.stripe_promotion_codes || 0} cupones · ${res.inserted || 0} nuevos · ${res.updated || 0} actualizados`);
+      }
       await Promise.all([loadData(), loadCoupons(), loadReferral()]);
     } catch (e: any) {
-      toast.error(e.message || 'Error sincronizando con Stripe');
+      if (!options?.silent) toast.error(e.message || 'Error sincronizando con Stripe');
     } finally {
       setSyncingStripe(false);
     }
   }, [loadData, loadCoupons, loadReferral]);
+
+  useEffect(() => {
+    if (initialStripeSyncStarted.current) return;
+    initialStripeSyncStarted.current = true;
+    void handleSyncStripeCoupons({ silent: true });
+  }, [handleSyncStripeCoupons]);
 
   const loadDetail = async (campaignName: string) => {
     if (!campaignName) { toast.error('Campaña sin nombre'); return; }
@@ -269,7 +278,7 @@ export default function AdminCampaignMetricsPage() {
             </Select>
           )}
 
-          <Button variant="outline" size="sm" onClick={handleSyncStripeCoupons} disabled={syncingStripe}>
+          <Button variant="outline" size="sm" onClick={() => void handleSyncStripeCoupons()} disabled={syncingStripe}>
             {syncingStripe ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1" />} Actualizar
           </Button>
 
@@ -454,7 +463,7 @@ export default function AdminCampaignMetricsPage() {
               variant="outline"
               size="sm"
               className="h-7 text-xs gap-1"
-              onClick={handleSyncStripeCoupons}
+              onClick={() => void handleSyncStripeCoupons()}
               disabled={syncingStripe}
             >
               {syncingStripe ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />} Sincronizar Stripe
@@ -469,11 +478,12 @@ export default function AdminCampaignMetricsPage() {
 
         {/* KPI cards resumen */}
         {!loadingCoupons && coupons.length > 0 && (() => {
-          const influencers = coupons.filter(c => c.type === 'influencer');
+          const summaryCoupons = filteredCoupons;
+          const influencers = summaryCoupons.filter(c => c.type === 'influencer');
           const totalSpend = influencers.reduce((s, c) => s + (parseFloat(c.cost) || 0), 0);
-          const totalClients = coupons.reduce((s, c) => s + (c.total_clients || 0), 0);
-          const totalReg = coupons.reduce((s, c) => s + (c.total_registrations || 0), 0);
-          const bestRoi = coupons.filter(c => c.current_roi > 0).sort((a, b) => b.current_roi - a.current_roi)[0];
+          const totalClients = summaryCoupons.reduce((s, c) => s + (c.total_clients || 0), 0);
+          const totalReg = summaryCoupons.reduce((s, c) => s + (c.total_registrations || 0), 0);
+          const bestRoi = summaryCoupons.filter(c => c.current_roi > 0).sort((a, b) => b.current_roi - a.current_roi)[0];
           return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <KpiCard label="Gasto influencers" value={`€${totalSpend.toLocaleString('es-ES', { minimumFractionDigits: 0 })}`} icon={DollarSign} />
