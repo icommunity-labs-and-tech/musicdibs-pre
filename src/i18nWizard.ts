@@ -192,8 +192,8 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         addMore: 'Add more files',
         dragHere: 'Drag your files here',
         clickSelect: 'or click to select (you can choose multiple)',
-        fileTooLarge: 'File exceeds the 50MB limit. For large WAV files, export as MP3 (320kbps) — 90% smaller with no audible quality loss.',
-        fileSizeLimit: 'Maximum size: 50MB. For high-quality WAV, consider exporting to MP3 320kbps.',
+        fileTooLarge: 'File exceeds the temporary 25MB limit. For large WAV files, export as MP3 (320kbps) — 90% smaller with no audible quality loss.',
+        fileSizeLimit: 'Temporary max size: 25MB per file. For high-quality WAV, export as MP3 320kbps.',
       },
       stepTitle: {
         title: 'Work information',
