@@ -22,6 +22,23 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Track credit deduction so the outer catch can refund on unexpected failures
+  let _refundCtx: {
+    supabaseAdmin: ReturnType<typeof createClient> | null;
+    workId: string | null;
+    userId: string | null;
+    workTitle: string;
+    creditCost: number;
+    deducted: boolean;
+  } = {
+    supabaseAdmin: null,
+    workId: null,
+    userId: null,
+    workTitle: "",
+    creditCost: 0,
+    deducted: false,
+  };
+
   try {
     const IBS_API_KEY = Deno.env.get("IBS_API_KEY");
     if (!IBS_API_KEY) {
