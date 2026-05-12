@@ -79,12 +79,12 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
   const handleSelect = async (asset: AudioAsset) => {
     if (audioRef.current) audioRef.current.pause();
     setPlayingId(null);
-    // Pre-check size via HEAD to avoid breaking the 25MB worker limit
+    // Pre-check size via HEAD (max 50MB per file)
     try {
       const head = await fetch(asset.url, { method: 'HEAD' });
       const len = Number(head.headers.get('content-length') || 0);
-      if (len > 25 * 1024 * 1024) {
-        toast.error(`Este audio supera el límite temporal de 25MB (${(len / (1024 * 1024)).toFixed(1)} MB). Genera/usa una versión MP3 más ligera.`);
+      if (len > 50 * 1024 * 1024) {
+        toast.error(`Este audio supera el tamaño máximo de 50MB (${(len / (1024 * 1024)).toFixed(1)} MB). Genera/usa una versión MP3 más ligera.`);
         return;
       }
     } catch { /* if HEAD fails, allow and let StepFile validate later */ }
