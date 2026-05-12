@@ -44,7 +44,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
 
       for (const f of filesArray) {
         if (f.size > MAX_FILE_SIZE_BYTES) {
-          newErrors.push(`"${f.name}" supera el límite de ${MAX_FILE_SIZE_MB} MB (${formatSize(f.size)})`);
+          newErrors.push(t('wizard.file.fileTooLarge') || `El archivo supera el límite de ${MAX_FILE_SIZE_MB}MB. Por favor, comprime el archivo o usa MP3 en lugar de WAV.`);
           continue;
         }
         if (f.size === 0) {
