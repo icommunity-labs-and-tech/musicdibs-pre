@@ -4,7 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Music, Search, Play, Pause, Loader2, FolderOpen } from 'lucide-react';
+import { Music, Search, Play, Pause, Loader2, FolderOpen, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface AudioAsset {
