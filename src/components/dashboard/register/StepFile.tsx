@@ -7,7 +7,7 @@ import type { WizardData } from './types';
 import { toast } from 'sonner';
 import { LibraryAudioPicker } from './LibraryAudioPicker';
 
-const MAX_FILE_SIZE_MB = 100;
+const MAX_FILE_SIZE_MB = 50;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const MAX_FILES = 5;
 const MAX_TOTAL_SIZE_MB = 200;
@@ -44,7 +44,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
 
       for (const f of filesArray) {
         if (f.size > MAX_FILE_SIZE_BYTES) {
-          newErrors.push(`"${f.name}" supera el límite de ${MAX_FILE_SIZE_MB} MB (${formatSize(f.size)})`);
+          newErrors.push(t('wizard.file.fileTooLarge') || `El archivo supera el límite de ${MAX_FILE_SIZE_MB}MB. Por favor, comprime el archivo o usa MP3 en lugar de WAV.`);
           continue;
         }
         if (f.size === 0) {
@@ -179,6 +179,9 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
               <p className="text-xs text-muted-foreground mt-1">{t('wizard.file.clickSelect')}</p>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground text-center">
+            {t('wizard.file.fileSizeLimit') || `Tamaño máximo: ${MAX_FILE_SIZE_MB}MB. Para WAV de alta calidad, considera exportar en MP3 320kbps.`}
+          </p>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
             <span className="text-xs text-muted-foreground">o</span>
