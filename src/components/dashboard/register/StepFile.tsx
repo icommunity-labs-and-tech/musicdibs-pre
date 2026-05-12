@@ -179,6 +179,9 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
               <p className="text-xs text-muted-foreground mt-1">{t('wizard.file.clickSelect')}</p>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground text-center">
+            {t('wizard.file.fileSizeLimit') || `Tamaño máximo: ${MAX_FILE_SIZE_MB}MB. Para WAV de alta calidad, considera exportar en MP3 320kbps.`}
+          </p>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
             <span className="text-xs text-muted-foreground">o</span>
