@@ -2841,6 +2841,7 @@ export type Database = {
           description: string | null
           distributed_at: string | null
           distribution_clicks: number | null
+          failure_reason: string | null
           file_hash: string | null
           file_hash_sha512_b64: string | null
           file_path: string | null
@@ -2867,6 +2868,7 @@ export type Database = {
           description?: string | null
           distributed_at?: string | null
           distribution_clicks?: number | null
+          failure_reason?: string | null
           file_hash?: string | null
           file_hash_sha512_b64?: string | null
           file_path?: string | null
@@ -2893,6 +2895,7 @@ export type Database = {
           description?: string | null
           distributed_at?: string | null
           distribution_clicks?: number | null
+          failure_reason?: string | null
           file_hash?: string | null
           file_hash_sha512_b64?: string | null
           file_path?: string | null
@@ -3237,6 +3240,7 @@ export type Database = {
         Args: { _artist_id: string; _manager_id: string }
         Returns: boolean
       }
+      mark_abandoned_drafts_as_failed: { Args: never; Returns: number }
       move_to_dlq: {
         Args: {
           dlq_name: string
