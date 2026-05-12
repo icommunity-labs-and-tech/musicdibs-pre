@@ -22,6 +22,15 @@ import {
 
 type PeriodType = 'week' | 'month' | 'year';
 
+const COUPON_CODE_ALIASES: Record<string, string> = {
+  BABYCOMEBAKC: 'BABYCOMEBACK',
+};
+
+function canonicalCouponCode(code: string | null | undefined): string {
+  const normalized = String(code || '').trim().toUpperCase();
+  return COUPON_CODE_ALIASES[normalized] || normalized;
+}
+
 
 function getWeekMonday(date: Date): string {
   const d = new Date(date);
@@ -69,6 +78,7 @@ export default function AdminCampaignMetricsPage() {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
   const [loadingCoupons, setLoadingCoupons] = useState(true);
+  const [syncingStripe, setSyncingStripe] = useState(false);
   
   const [referralRows, setReferralRows] = useState<Array<{ referral_source: string | null; referral_influencer: string | null; referral_detail: string | null; user_id: string }>>([]);
   const [totalProfiles, setTotalProfiles] = useState<number>(0);
@@ -150,6 +160,19 @@ export default function AdminCampaignMetricsPage() {
 
   useEffect(() => { loadReferral(); }, [loadReferral]);
 
+  const handleSyncStripeCoupons = useCallback(async () => {
+    setSyncingStripe(true);
+    try {
+      const res: any = await adminApi.syncStripeCoupons();
+      toast.success(`Stripe: ${res.stripe_coupons || res.stripe_promotion_codes || 0} cupones · ${res.inserted || 0} nuevos · ${res.updated || 0} actualizados`);
+      await Promise.all([loadData(), loadCoupons(), loadReferral()]);
+    } catch (e: any) {
+      toast.error(e.message || 'Error sincronizando con Stripe');
+    } finally {
+      setSyncingStripe(false);
+    }
+  }, [loadData, loadCoupons, loadReferral]);
+
   const loadDetail = async (campaignName: string) => {
     if (!campaignName) { toast.error('Campaña sin nombre'); return; }
     setDetailCampaign(campaignName);
@@ -190,6 +213,14 @@ export default function AdminCampaignMetricsPage() {
   const topByRevenue = [...campaignRows].sort((a: any, b: any) => b.revenue - a.revenue).slice(0, 5);
   const topByCustomers = [...campaignRows].sort((a: any, b: any) => b.new_customers - a.new_customers).slice(0, 5);
   const filteredCoupons = coupons.filter(c => couponFilter === 'all' || c.type === couponFilter);
+  const roiChartData = Object.values(filteredCoupons.reduce<Record<string, { name: string; roi: number }>>((acc, c: any) => {
+    const name = canonicalCouponCode(c.coupon_code);
+    if (!name) return acc;
+    const roi = Number.isFinite(Number(c.current_roi)) ? Math.round(Number(c.current_roi) * 100) : 0;
+    if (!acc[name] || roi > acc[name].roi) acc[name] = { name, roi };
+    return acc;
+  }, {})).sort((a, b) => b.roi - a.roi || a.name.localeCompare(b.name));
+  const roiChartHeight = Math.max(280, roiChartData.length * 36 + 64);
 
   if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando campañas...</div>;
 
