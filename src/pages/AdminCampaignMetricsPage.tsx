@@ -418,7 +418,23 @@ export default function AdminCampaignMetricsPage() {
             <h2 className="text-xl font-bold">🎟️ Cupones e Influencers</h2>
             <p className="text-sm text-muted-foreground">Histórico acumulado</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs gap-1"
+              onClick={async () => {
+                try {
+                  const res: any = await adminApi.syncStripeCoupons();
+                  toast.success(`Stripe: ${res.stripe_promotion_codes} promo codes · ${res.inserted} nuevos importados`);
+                  await loadCoupons();
+                } catch (e: any) {
+                  toast.error(e.message || 'Error sincronizando con Stripe');
+                }
+              }}
+            >
+              <RefreshCw className="w-3 h-3" /> Sincronizar Stripe
+            </Button>
             {(['all', 'influencer', 'rrss'] as const).map(f => (
               <Button key={f} variant={couponFilter === f ? 'default' : 'outline'} className="h-7 text-xs" onClick={() => setCouponFilter(f)}>
                 {f === 'all' ? 'Todos' : f === 'influencer' ? '🎥 Influencers' : '📱 RRSS'}

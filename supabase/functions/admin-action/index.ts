@@ -2021,6 +2021,81 @@ serve(async (req) => {
       return json({ success: true });
     }
 
+    // ── sync_stripe_coupons ───────────────────────────────────────
+    // Importa cupones/promotion_codes desde Stripe a marketing_campaigns
+    // para que aparezcan automáticamente en el panel de campañas aunque
+    // se hayan creado directamente en el dashboard de Stripe.
+    if (action === "sync_stripe_coupons") {
+      const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+      if (!stripeKey) return json({ error: "STRIPE_SECRET_KEY not set" }, 500);
+      const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
+      // 1. cargar cupones existentes (case-insensitive)
+      const { data: existing } = await admin
+        .from("marketing_campaigns")
+        .select("id, coupon_code")
+        .not("coupon_code", "is", null);
+      const existingSet = new Set(
+        (existing || []).map((c: any) => String(c.coupon_code).toUpperCase())
+      );
+
+      // 2. listar promotion_codes activos en Stripe (paginar)
+      const codes: any[] = [];
+      let starting_after: string | undefined = undefined;
+      for (let i = 0; i < 20; i++) {
+        const page: any = await stripe.promotionCodes.list({
+          limit: 100,
+          ...(starting_after ? { starting_after } : {}),
+        });
+        codes.push(...page.data);
+        if (!page.has_more) break;
+        starting_after = page.data[page.data.length - 1]?.id;
+        if (!starting_after) break;
+      }
+
+      // 3. insertar los que faltan
+      const toInsert: any[] = [];
+      for (const pc of codes) {
+        const code = String(pc.code || "").trim();
+        if (!code) continue;
+        if (existingSet.has(code.toUpperCase())) continue;
+        existingSet.add(code.toUpperCase());
+        const coupon = pc.coupon || {};
+        const pctOff = coupon.percent_off ? `${coupon.percent_off}%` : null;
+        const amtOff = coupon.amount_off
+          ? `${(coupon.amount_off / 100).toFixed(2)} ${(coupon.currency || "eur").toUpperCase()}`
+          : null;
+        const desc = pctOff || amtOff || coupon.name || "";
+        toInsert.push({
+          name: code,
+          type: null,
+          owner: null,
+          cost: 0,
+          coupon_code: code,
+          is_active: pc.active !== false,
+          start_date: pc.created ? new Date(pc.created * 1000).toISOString().slice(0, 10) : null,
+          end_date: pc.expires_at ? new Date(pc.expires_at * 1000).toISOString().slice(0, 10) : null,
+          notes: `Auto-importado desde Stripe${desc ? ` · ${desc}` : ""} · promo_id=${pc.id}`,
+          updated_at: new Date().toISOString(),
+        });
+      }
+
+      let inserted = 0;
+      if (toInsert.length > 0) {
+        const { error: insErr } = await admin.from("marketing_campaigns").insert(toInsert);
+        if (insErr) return json({ error: insErr.message }, 500);
+        inserted = toInsert.length;
+        await audit({ action: "sync_stripe_coupons", details: { inserted, total_stripe: codes.length } });
+      }
+
+      return json({
+        success: true,
+        stripe_promotion_codes: codes.length,
+        existing_in_db: existing?.length || 0,
+        inserted,
+      });
+    }
+
     // ── get_campaign_metrics ──────────────────────────────────────
     if (action === "get_campaign_metrics") {
       const { periodType, weekStart, month, year } = payload || {};
