@@ -69,6 +69,7 @@ function formatWeekLabel(weekStart: string): string {
 export default function AdminMetricsPage() {
   const now = new Date();
   const [metrics, setMetrics] = useState<any>(null);
+  const [lifetimeTotalUsers, setLifetimeTotalUsers] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
