@@ -69,6 +69,7 @@ function formatWeekLabel(weekStart: string): string {
 export default function AdminMetricsPage() {
   const now = new Date();
   const [metrics, setMetrics] = useState<any>(null);
+  const [lifetimeTotalUsers, setLifetimeTotalUsers] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -132,6 +133,9 @@ export default function AdminMetricsPage() {
         'Las métricas están tardando demasiado en responder. Inténtalo de nuevo en unos segundos.'
       );
       setMetrics(data);
+      if (typeof data?.totalUsers === 'number') {
+        setLifetimeTotalUsers((prev) => prev == null ? data.totalUsers : Math.max(prev, data.totalUsers));
+      }
     } catch (e: any) {
       setErrorMessage(e.message);
       toast.error(e.message);
@@ -283,7 +287,7 @@ export default function AdminMetricsPage() {
       <HistoricalDataNotice collapsible storageKey="admin-metrics-notice" />
 
       {/* KPI Rows — separated blocks */}
-      <KpiGrid metrics={metrics} />
+      <KpiGrid metrics={lifetimeTotalUsers != null ? { ...metrics, totalUsers: lifetimeTotalUsers } : metrics} />
 
       {/* Financial Alerts */}
       <FinancialAlerts metrics={metrics} />
