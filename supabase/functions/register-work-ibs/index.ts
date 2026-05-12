@@ -399,7 +399,7 @@ async function handleIbsFailure(
 ) {
   await supabaseAdmin
     .from("works")
-    .update({ status: "failed", updated_at: new Date().toISOString() })
+    .update({ status: "failed", failure_reason: reason, updated_at: new Date().toISOString() })
     .eq("id", workId);
 
   if (creditCost > 0) {
