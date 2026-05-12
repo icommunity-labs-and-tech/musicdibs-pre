@@ -2108,21 +2108,32 @@ serve(async (req) => {
       for (const pc of codes) {
         const code = String(pc.code || "").trim();
         if (!code) continue;
-        const upper = code.toUpperCase();
+        const upper = canonicalCouponCode(code);
         const coupon = pc.coupon || {};
         const timesRedeemed = Number(pc.times_redeemed || coupon.times_redeemed || 0);
+        const paidOrders = await admin
+          .from("orders")
+          .select("user_id, amount_gross")
+          .eq("order_status", "paid")
+          .or(`coupon_code.ilike.${upper},promotion_code.ilike.${upper}`);
+        const paidRows = paidOrders.data || [];
+        const totalClients = new Set(paidRows.map((o: any) => o.user_id).filter(Boolean)).size;
+        const totalRevenue = paidRows.reduce((sum: number, o: any) => sum + (Number(o.amount_gross) || 0), 0);
 
-        const existingId = existingByCode.get(upper);
-        if (existingId) {
-          // Actualizar uso (total_registrations) y estado activo
+        const existingCampaign = existingByCode.get(upper);
+        if (existingCampaign) {
+          const campaignCost = Number(existingCampaign.cost) || 0;
           const { error: updErr } = await admin
             .from("marketing_campaigns")
             .update({
+              coupon_code: upper,
               total_registrations: timesRedeemed,
+              total_clients: totalClients,
+              current_roi: campaignCost > 0 ? Number(((totalRevenue - campaignCost) / campaignCost).toFixed(2)) : 0,
               is_active: pc.active !== false,
               updated_at: new Date().toISOString(),
             })
-            .eq("id", existingId);
+            .eq("id", existingCampaign.id);
           if (!updErr) updated++;
           continue;
         }
@@ -2134,13 +2145,15 @@ serve(async (req) => {
           : null;
         const desc = pctOff || amtOff || coupon.name || "";
         toInsert.push({
-          name: code,
+          name: upper,
           type: null,
           owner: null,
           cost: 0,
-          coupon_code: code,
+          coupon_code: upper,
           is_active: pc.active !== false,
           total_registrations: timesRedeemed,
+          total_clients: totalClients,
+          current_roi: 0,
           start_date: pc.created ? new Date(pc.created * 1000).toISOString().slice(0, 10) : null,
           end_date: pc.expires_at ? new Date(pc.expires_at * 1000).toISOString().slice(0, 10) : null,
           notes: `Auto-importado desde Stripe${desc ? ` · ${desc}` : ""} · promo_id=${pc.id}`,
