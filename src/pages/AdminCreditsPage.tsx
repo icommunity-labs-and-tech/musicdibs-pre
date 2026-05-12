@@ -18,10 +18,32 @@ const typeBadge: Record<string, string> = {
   usage: 'bg-destructive/20 text-destructive',
   admin_grant: 'bg-blue-500/20 text-blue-400',
   admin_deduct: 'bg-blue-500/20 text-blue-400',
+  admin_adjustment: 'bg-blue-500/20 text-blue-400',
   refund: 'bg-yellow-500/20 text-yellow-400',
   renewal: 'bg-muted text-muted-foreground',
+  subscription: 'bg-cyan-500/20 text-cyan-400',
+  subscription_issue: 'bg-orange-500/20 text-orange-400',
+  payment_failed: 'bg-red-500/20 text-red-400',
+  promote_premium: 'bg-fuchsia-500/20 text-fuchsia-400',
+  migration: 'bg-slate-500/20 text-slate-400',
   onboarding: 'bg-purple-500/20 text-purple-400',
 };
+
+const TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: 'purchase', label: 'Compra' },
+  { value: 'usage', label: 'Uso' },
+  { value: 'admin_grant', label: 'Admin +' },
+  { value: 'admin_deduct', label: 'Admin -' },
+  { value: 'admin_adjustment', label: 'Ajuste admin' },
+  { value: 'refund', label: 'Reembolso' },
+  { value: 'renewal', label: 'Renovación' },
+  { value: 'subscription', label: 'Suscripción' },
+  { value: 'subscription_issue', label: 'Incidencia suscripción' },
+  { value: 'payment_failed', label: 'Pago fallido' },
+  { value: 'promote_premium', label: 'Promoción premium' },
+  { value: 'migration', label: 'Migración' },
+  { value: 'onboarding', label: 'Onboarding' },
+];
 
 export default function AdminCreditsPage() {
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -181,15 +203,12 @@ export default function AdminCreditsPage() {
       {/* Filters */}
       <div className="flex gap-2 items-center flex-wrap">
         <Select value={typeFilter || 'all'} onValueChange={v => { setTypeFilter(v === 'all' ? '' : v); setOffset(0); }}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="Filtrar tipo" /></SelectTrigger>
+          <SelectTrigger className="w-52"><SelectValue placeholder="Filtrar tipo" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="purchase">Compra</SelectItem>
-            <SelectItem value="usage">Uso</SelectItem>
-            <SelectItem value="admin_grant">Admin +</SelectItem>
-            <SelectItem value="admin_deduct">Admin -</SelectItem>
-            <SelectItem value="onboarding">Onboarding</SelectItem>
-            <SelectItem value="refund">Reembolso</SelectItem>
+            <SelectItem value="all">Todos los tipos</SelectItem>
+            {TYPE_OPTIONS.map(opt => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <div className="flex items-center gap-1">
