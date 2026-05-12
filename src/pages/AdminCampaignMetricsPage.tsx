@@ -478,11 +478,12 @@ export default function AdminCampaignMetricsPage() {
 
         {/* KPI cards resumen */}
         {!loadingCoupons && coupons.length > 0 && (() => {
-          const influencers = coupons.filter(c => c.type === 'influencer');
+          const summaryCoupons = filteredCoupons;
+          const influencers = summaryCoupons.filter(c => c.type === 'influencer');
           const totalSpend = influencers.reduce((s, c) => s + (parseFloat(c.cost) || 0), 0);
-          const totalClients = coupons.reduce((s, c) => s + (c.total_clients || 0), 0);
-          const totalReg = coupons.reduce((s, c) => s + (c.total_registrations || 0), 0);
-          const bestRoi = coupons.filter(c => c.current_roi > 0).sort((a, b) => b.current_roi - a.current_roi)[0];
+          const totalClients = summaryCoupons.reduce((s, c) => s + (c.total_clients || 0), 0);
+          const totalReg = summaryCoupons.reduce((s, c) => s + (c.total_registrations || 0), 0);
+          const bestRoi = summaryCoupons.filter(c => c.current_roi > 0).sort((a, b) => b.current_roi - a.current_roi)[0];
           return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <KpiCard label="Gasto influencers" value={`€${totalSpend.toLocaleString('es-ES', { minimumFractionDigits: 0 })}`} icon={DollarSign} />
