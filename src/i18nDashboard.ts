@@ -2068,6 +2068,11 @@ const pt: typeof es = {
     paymentAlert: {
       managePayment: 'Gerenciar pagamento',
     },
+    paypalBanner: {
+      title: 'Ação necessária: sua assinatura não pode ser renovada',
+      body: 'O MusicDibs não suporta mais pagamentos via PayPal. Sua assinatura irá expirar em breve e não será renovada automaticamente. Adicione um cartão para manter o acesso.',
+      cta: 'Renovar com cartão →',
+    },
     verify: {
       title: 'Verificar seu registro',
       description: 'Verifique se uma obra foi registrada conosco.',
