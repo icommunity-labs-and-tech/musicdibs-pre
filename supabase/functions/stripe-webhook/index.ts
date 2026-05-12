@@ -406,9 +406,72 @@ serve(async (req) => {
     // ── checkout.session.completed ──────────────────────────────────────
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
-      const userId   = session.metadata?.user_id;
-      const credits  = parseInt(session.metadata?.credits || "0", 10);
-      const planId   = session.metadata?.plan_id || "unknown";
+      let userId    = session.metadata?.user_id || "";
+      const credits = parseInt(session.metadata?.credits || "0", 10);
+      const planId  = session.metadata?.plan_id || "unknown";
+
+      // ── Guest checkout fallback: resolve / create user from email ──
+      if (!userId) {
+        const guestEmail = (session.metadata?.guest_email
+          || (session.customer_details && (session.customer_details as any).email)
+          || "").toString().trim().toLowerCase();
+        if (guestEmail) {
+          console.log(`[WEBHOOK] Guest checkout — resolving user for ${guestEmail}`);
+          // 1) Try to find an existing auth user
+          try {
+            let page = 1;
+            const perPage = 200;
+            while (!userId && page <= 50) {
+              const { data: list, error: listErr } = await supabase.auth.admin.listUsers({ page, perPage });
+              if (listErr || !list?.users?.length) break;
+              const found = list.users.find((u: any) => (u.email || "").toLowerCase() === guestEmail);
+              if (found) { userId = found.id; break; }
+              if (list.users.length < perPage) break;
+              page++;
+            }
+          } catch (e) {
+            console.warn("[WEBHOOK] guest user lookup failed:", e);
+          }
+
+          // 2) If not found, create via register-guest-lead (handles MailerLite + welcome email)
+          if (!userId) {
+            try {
+              const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/register-guest-lead`;
+              const res = await fetch(url, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                },
+                body: JSON.stringify({
+                  email: guestEmail,
+                  language: session.metadata?.language || "es",
+                  attribution: {
+                    utm_source: session.metadata?.utm_source,
+                    utm_medium: session.metadata?.utm_medium,
+                    utm_campaign: session.metadata?.utm_campaign,
+                    referrer: session.metadata?.referrer,
+                    landing_path: session.metadata?.landing_path,
+                  },
+                }),
+              });
+              if (res.ok) {
+                const j = await res.json().catch(() => ({}));
+                if (j?.userId) userId = j.userId;
+              } else {
+                console.warn(`[WEBHOOK] register-guest-lead returned ${res.status}: ${await res.text()}`);
+              }
+            } catch (e) {
+              console.warn("[WEBHOOK] register-guest-lead invoke failed:", e);
+            }
+          }
+          if (userId) {
+            console.log(`[WEBHOOK] Guest checkout resolved to user ${userId}`);
+          } else {
+            console.error(`[WEBHOOK] Could not resolve user for guest email ${guestEmail}; credits will not be applied.`);
+          }
+        }
+      }
 
       if (userId && credits > 0) {
         // ── Idempotency guard: skip if this checkout session was already processed ──
