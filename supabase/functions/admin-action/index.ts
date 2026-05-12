@@ -193,19 +193,26 @@ serve(async (req) => {
         if ((roleUserIds || []).length === 0) return json({ users: [], total: 0 });
       }
 
-      // If searching, pre-resolve user_ids whose email matches (auth.users)
+      // If searching (≥2 chars), pre-resolve user_ids whose email/meta matches (auth.users)
+      const MAX_SEARCH_IDS = 250;
       let searchUserIds: string[] = [];
-      if (search) {
+      let searchIdsTruncated = false;
+      if (search && search.length >= 2) {
         try {
-          // Paginate through auth users to find email matches (case-insensitive, substring)
           const perPage = 1000;
-          for (let pageIdx = 1; pageIdx <= 10; pageIdx++) {
+          outer: for (let pageIdx = 1; pageIdx <= 10; pageIdx++) {
             const { data: pageData } = await admin.auth.admin.listUsers({ page: pageIdx, perPage });
             const usersPage = (pageData as any)?.users || [];
             for (const au of usersPage) {
               const em = (au?.email || "").toLowerCase();
               const meta = ((au?.user_metadata?.display_name || au?.user_metadata?.full_name || "") as string).toLowerCase();
-              if (em.includes(search) || meta.includes(search)) searchUserIds.push(au.id);
+              if (em.includes(search) || meta.includes(search)) {
+                searchUserIds.push(au.id);
+                if (searchUserIds.length > MAX_SEARCH_IDS) {
+                  searchIdsTruncated = true;
+                  break outer;
+                }
+              }
             }
             if (usersPage.length < perPage) break;
           }
@@ -215,13 +222,13 @@ serve(async (req) => {
       let query = admin.from("profiles").select("*", { count: "exact" });
 
       if (search) {
-        if (searchUserIds.length > 0) {
-          // Match by display_name OR by user_id resolved from email/meta
-          const escaped = search.replace(/[%,()]/g, "");
+        const escaped = search.replace(/[%,()]/g, "");
+        // If too many email matches, fallback to display_name only to avoid URL length explosion
+        if (searchUserIds.length > 0 && !searchIdsTruncated) {
           const idsCsv = searchUserIds.join(",");
           query = query.or(`display_name.ilike.%${escaped}%,user_id.in.(${idsCsv})`);
         } else {
-          query = query.ilike("display_name", `%${search}%`);
+          query = query.ilike("display_name", `%${escaped}%`);
         }
       }
       if (kycFilter) query = query.eq("kyc_status", kycFilter);
