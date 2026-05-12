@@ -54,6 +54,7 @@ export const adminApi = {
   deleteWork: (work_id: string) => adminAction('delete_work', { work_id }),
   getCampaignsCatalog: () => adminAction('get_campaigns_catalog'),
   saveCampaign: (campaign: AdminActionPayload) => adminAction('save_campaign', campaign),
+  syncStripeCoupons: () => adminAction('sync_stripe_coupons'),
   getCampaignMetrics: (filters: { periodType?: string; weekStart?: string; month?: string; year?: string }) => adminAction('get_campaign_metrics', filters),
   getCampaignDetail: (campaign_name: string) => adminAction('get_campaign_detail', { campaign_name }),
   backfillOrdersFromStripe: (dry_run = false, limit?: number) => adminAction('backfill_orders_from_stripe', { dry_run, limit }),
