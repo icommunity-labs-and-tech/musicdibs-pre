@@ -129,6 +129,7 @@ serve(async (req) => {
       .single();
 
     if (!profile || profile.available_credits < creditCost) {
+      await markDraftAsFailed(supabaseAdmin, workId, "insufficient_credits");
       return new Response(
         JSON.stringify({ error: "Créditos insuficientes", available: profile?.available_credits || 0, required: creditCost }),
         { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
