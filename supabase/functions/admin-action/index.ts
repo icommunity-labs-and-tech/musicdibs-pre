@@ -2106,10 +2106,28 @@ serve(async (req) => {
         }
       }
 
+      const consolidatedByCode = new Map<string, any>();
+      for (const pc of codes) {
+        const upper = canonicalCouponCode(pc.code);
+        if (!upper) continue;
+        const coupon = pc.coupon || {};
+        const timesRedeemed = Number(pc.times_redeemed || coupon.times_redeemed || 0);
+        const current = consolidatedByCode.get(upper);
+        if (!current) {
+          consolidatedByCode.set(upper, { ...pc, code: upper, times_redeemed: timesRedeemed });
+          continue;
+        }
+        current.times_redeemed = Math.max(Number(current.times_redeemed || 0), timesRedeemed);
+        current.active = current.active !== false || pc.active !== false;
+        current.expires_at = current.expires_at || pc.expires_at;
+        current.created = Math.min(Number(current.created || pc.created || 0), Number(pc.created || current.created || 0));
+      }
+      const syncCodes = [...consolidatedByCode.values()];
+
       // 3. insertar los que faltan + actualizar usos (times_redeemed) en los existentes
       const toInsert: any[] = [];
       let updated = 0;
-      for (const pc of codes) {
+      for (const pc of syncCodes) {
         const code = String(pc.code || "").trim();
         if (!code) continue;
         const upper = canonicalCouponCode(code);
@@ -2171,11 +2189,12 @@ serve(async (req) => {
         if (insErr) return json({ error: insErr.message }, 500);
         inserted = toInsert.length;
       }
-      await audit({ action: "sync_stripe_coupons", details: { inserted, updated, total_stripe: codes.length } });
+      await audit({ action: "sync_stripe_coupons", details: { inserted, updated, total_stripe: syncCodes.length } });
 
       return json({
         success: true,
         stripe_promotion_codes: codes.length,
+        stripe_coupons: syncCodes.length,
         existing_in_db: existing?.length || 0,
         inserted,
         updated,
