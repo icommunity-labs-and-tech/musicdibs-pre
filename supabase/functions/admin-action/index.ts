@@ -2037,6 +2037,10 @@ serve(async (req) => {
         const code = String(value || "").trim().toUpperCase();
         return couponAliases[code] || code;
       };
+      const couponCodeVariants = (canonical: string) => [
+        canonical,
+        ...Object.entries(couponAliases).filter(([, target]) => target === canonical).map(([alias]) => alias),
+      ];
 
       // 1. cargar cupones existentes (case-insensitive)
       const { data: existing } = await admin
@@ -2128,11 +2132,14 @@ serve(async (req) => {
         const upper = canonicalCouponCode(code);
         const coupon = pc.coupon || {};
         const timesRedeemed = Number(pc.times_redeemed || coupon.times_redeemed || 0);
+        const couponFilters = couponCodeVariants(upper)
+          .flatMap((variant) => [`coupon_code.ilike.${variant}`, `promotion_code.ilike.${variant}`])
+          .join(",");
         const paidOrders = await admin
           .from("orders")
           .select("user_id, amount_gross")
           .eq("order_status", "paid")
-          .or(`coupon_code.ilike.${upper},promotion_code.ilike.${upper}`);
+          .or(couponFilters);
         const paidRows = paidOrders.data || [];
         const totalClients = new Set(paidRows.map((o: any) => o.user_id).filter(Boolean)).size;
         const totalRevenue = paidRows.reduce((sum: number, o: any) => sum + (Number(o.amount_gross) || 0), 0);
