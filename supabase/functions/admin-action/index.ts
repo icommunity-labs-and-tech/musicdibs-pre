@@ -2097,11 +2097,8 @@ serve(async (req) => {
           coupon: c,
         }));
       // Mezclar evitando duplicados por code canónico (promotion_codes tienen prioridad)
-      const seenCodes = new Set(codes.map((c: any) => canonicalCouponCode(c.code)));
       for (const c of codesFromCoupons) {
-        const up = canonicalCouponCode(c.code);
         codes.push(c);
-        seenCodes.add(up);
       }
 
       const consolidatedByCode = new Map<string, any>();
