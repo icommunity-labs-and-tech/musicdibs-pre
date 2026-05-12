@@ -166,6 +166,14 @@ serve(async (req) => {
     });
 
     let creditDeducted = true;
+    _refundCtx = {
+      supabaseAdmin,
+      workId,
+      userId,
+      workTitle: work.title,
+      creditCost,
+      deducted: true,
+    };
     console.log(`[IBS] Credit deducted for work ${workId}: ${creditCost} credit(s)`);
 
     // Get a signed URL for the file (avoid downloading into memory)
