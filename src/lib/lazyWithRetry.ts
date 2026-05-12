@@ -37,6 +37,10 @@ function isChunkLoadError(error: unknown) {
   );
 }
 
+function isMissingDefaultExportError(error: unknown) {
+  return error instanceof Error && /Dynamic import resolved without a default export/i.test(error.message);
+}
+
 function installPreloadErrorRecovery() {
   if (!browserWindow || browserWindow.__lazyImportRecoveryInstalled) return;
 
@@ -49,14 +53,15 @@ function installPreloadErrorRecovery() {
 
 installPreloadErrorRecovery();
 
-type ImportFactory<T extends ComponentType<any>> = () => Promise<{ default: T }>;
+type LazyModule<T extends ComponentType<unknown>> = { default?: T } & Record<string, unknown>;
+type ImportFactory<T extends ComponentType<unknown>> = () => Promise<LazyModule<T>>;
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-export function lazyWithRetry<T extends ComponentType<any>>(importFactory: ImportFactory<T>) {
+export function lazyWithRetry<T extends ComponentType<unknown>>(importFactory: ImportFactory<T>) {
   return lazy(async () => {
     const tryImport = async () => {
-      const mod: any = await importFactory();
+      const mod = await importFactory();
       if (!mod) {
         throw new Error("Dynamic import resolved to empty module");
       }
@@ -94,7 +99,12 @@ export function lazyWithRetry<T extends ComponentType<any>>(importFactory: Impor
         }
         return module;
       } catch (secondError) {
-        if (isChunkLoadError(secondError) || isChunkLoadError(firstError)) {
+        if (
+          isChunkLoadError(secondError) ||
+          isChunkLoadError(firstError) ||
+          isMissingDefaultExportError(secondError) ||
+          isMissingDefaultExportError(firstError)
+        ) {
           if (reloadOnce(DYNAMIC_IMPORT_RELOAD_KEY)) {
             // Suspend forever while the page reloads
             return new Promise<never>(() => {});
