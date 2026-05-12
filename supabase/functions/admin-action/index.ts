@@ -2039,7 +2039,7 @@ serve(async (req) => {
         (existing || []).map((c: any) => [String(c.coupon_code).toUpperCase(), c.id])
       );
 
-      // 2. listar promotion_codes (activos e inactivos) en Stripe (paginar)
+      // 2a. listar promotion_codes (activos e inactivos) en Stripe (paginar)
       const codes: any[] = [];
       for (const activeFilter of [true, false]) {
         let starting_after: string | undefined = undefined;
@@ -2053,6 +2053,44 @@ serve(async (req) => {
           if (!page.has_more) break;
           starting_after = page.data[page.data.length - 1]?.id;
           if (!starting_after) break;
+        }
+      }
+
+      // 2b. listar Coupons directos (los que no tienen promotion_code asociado
+      //     pero se usan por id como NEWMUSIC30, BABYCOMEBACK, etc.)
+      const rawCoupons: any[] = [];
+      {
+        let starting_after: string | undefined = undefined;
+        for (let i = 0; i < 20; i++) {
+          const page: any = await stripe.coupons.list({
+            limit: 100,
+            ...(starting_after ? { starting_after } : {}),
+          });
+          rawCoupons.push(...page.data);
+          if (!page.has_more) break;
+          starting_after = page.data[page.data.length - 1]?.id;
+          if (!starting_after) break;
+        }
+      }
+      // Convertir coupons -> formato compatible con promotion_code
+      const codesFromCoupons = rawCoupons
+        .filter((c: any) => c.id && /^[A-Za-z0-9_-]+$/.test(c.id))
+        .map((c: any) => ({
+          id: c.id,
+          code: c.id,
+          active: c.valid !== false,
+          times_redeemed: c.times_redeemed || 0,
+          created: c.created,
+          expires_at: c.redeem_by,
+          coupon: c,
+        }));
+      // Mezclar evitando duplicados por code (promotion_codes tienen prioridad)
+      const seenCodes = new Set(codes.map((c: any) => String(c.code || "").toUpperCase()));
+      for (const c of codesFromCoupons) {
+        const up = String(c.code).toUpperCase();
+        if (!seenCodes.has(up)) {
+          codes.push(c);
+          seenCodes.add(up);
         }
       }
 
