@@ -203,15 +203,12 @@ export default function AdminCreditsPage() {
       {/* Filters */}
       <div className="flex gap-2 items-center flex-wrap">
         <Select value={typeFilter || 'all'} onValueChange={v => { setTypeFilter(v === 'all' ? '' : v); setOffset(0); }}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="Filtrar tipo" /></SelectTrigger>
+          <SelectTrigger className="w-52"><SelectValue placeholder="Filtrar tipo" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="purchase">Compra</SelectItem>
-            <SelectItem value="usage">Uso</SelectItem>
-            <SelectItem value="admin_grant">Admin +</SelectItem>
-            <SelectItem value="admin_deduct">Admin -</SelectItem>
-            <SelectItem value="onboarding">Onboarding</SelectItem>
-            <SelectItem value="refund">Reembolso</SelectItem>
+            <SelectItem value="all">Todos los tipos</SelectItem>
+            {TYPE_OPTIONS.map(opt => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <div className="flex items-center gap-1">
