@@ -74,6 +74,7 @@ export default function DashboardHome() {
 
   return (
     <div className="space-y-6 max-w-[1400px]">
+      <PaypalLegacyBanner />
       <PaymentAlertBanner />
 
       {/* Banner for new users with no works */}
