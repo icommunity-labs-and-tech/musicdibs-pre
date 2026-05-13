@@ -70,6 +70,26 @@ export default function AdminAlertsPage() {
     }
   };
 
+  const [ibsSyncLoading, setIbsSyncLoading] = useState(false);
+  const runIbsSync = async () => {
+    setIbsSyncLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ibs-sync-cron", {
+        body: { force: true },
+      });
+      if (error) throw error;
+      const s = data as { processed?: number; resolved?: number; retrying?: number; exhausted?: number };
+      toast.success(
+        `Sync iBS: procesadas ${s?.processed ?? 0} · resueltas ${s?.resolved ?? 0} · reintentando ${s?.retrying ?? 0} · agotadas ${s?.exhausted ?? 0}`,
+      );
+      load();
+    } catch (err: any) {
+      toast.error("Error en sync iBS: " + (err?.message ?? String(err)));
+    } finally {
+      setIbsSyncLoading(false);
+    }
+  };
+
   const load = async () => {
     setLoading(true);
     let q = supabase
