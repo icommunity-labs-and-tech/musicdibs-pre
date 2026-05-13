@@ -6,6 +6,7 @@ import { ShieldAlert, Shield, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/hooks/useAuth';
 import { WizardStepper } from './WizardStepper';
 import { StepEntry } from './StepEntry';
 import { StepFile } from './StepFile';
@@ -179,6 +180,27 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
   };
 
   const handleSubmit = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data: recentProcessing } = await supabase
+        .from('works')
+        .select('id, title, status')
+        .eq('user_id', user.id)
+        .in('status', ['processing', 'draft'])
+        .gte('created_at', fiveMinutesAgo)
+        .limit(1)
+        .maybeSingle();
+
+      if (recentProcessing) {
+        toast.warning(
+          t('wizard.rw.throttle', { title: recentProcessing.title }) ||
+          `Tienes un registro en curso ("${recentProcessing.title}"). Espera a que finalice antes de registrar otra obra.`
+        );
+        return;
+      }
+    }
+
     let uploadFile = data.file;
     let uploadFiles = data.files.length > 0 ? [...data.files] : [];
     if (!uploadFile && data.aiAudioUrl) {

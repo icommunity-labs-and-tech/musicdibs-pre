@@ -133,6 +133,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         errorAudio: 'Error al procesar el audio',
         errorRegister: 'Error en el registro',
         errorGeneric: 'Error al registrar la obra',
+        throttle: 'Tienes un registro en curso ("{{title}}"). Espera a que finalice antes de registrar otra obra.',
       },
       // Step labels for stepper
       steps: {
@@ -292,6 +293,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         errorAudio: 'Error processing audio',
         errorRegister: 'Registration error',
         errorGeneric: 'Error registering the work',
+        throttle: 'You have a registration in progress ("{{title}}"). Wait for it to finish before registering another work.',
       },
       steps: {
         file: 'File',
@@ -449,6 +451,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         errorAudio: 'Erro ao processar o áudio',
         errorRegister: 'Erro no registro',
         errorGeneric: 'Erro ao registrar a obra',
+        throttle: 'Você tem um registro em andamento ("{{title}}"). Aguarde a conclusão antes de registrar outra obra.',
       },
       steps: {
         file: 'Arquivo',
