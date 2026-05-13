@@ -15,9 +15,10 @@ serve(async (req) => {
   }
 
   try {
-    // ── Validar que la llamada viene de pg_cron ──────────────
+    // ── Auth: aceptar pg_cron (x-cron-secret) o admin autenticado ─────
     const cronSecret = req.headers.get("x-cron-secret");
     const expectedSecret = Deno.env.get("CRON_SECRET");
+    const authHeader = req.headers.get("Authorization");
 
     if (!expectedSecret) {
       console.error("[IBS-SYNC-CRON] CRON_SECRET not configured");
@@ -27,12 +28,50 @@ serve(async (req) => {
       });
     }
 
-    if (cronSecret !== expectedSecret) {
-      console.warn("[IBS-SYNC-CRON] Unauthorized call — invalid x-cron-secret");
+    let authorized = cronSecret === expectedSecret;
+    let isAdminCall = false;
+    let targetUserId: string | null = null;
+    let force = false;
+
+    if (!authorized && authHeader?.startsWith("Bearer ")) {
+      const userClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const { data: userData } = await userClient.auth.getUser();
+      if (userData?.user) {
+        const { data: roleRow } = await userClient
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userData.user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        if (roleRow) {
+          authorized = true;
+          isAdminCall = true;
+        }
+      }
+    }
+
+    if (!authorized) {
+      console.warn("[IBS-SYNC-CRON] Unauthorized call");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    if (isAdminCall) {
+      try {
+        const body = await req.json();
+        if (body && typeof body === "object") {
+          if (typeof body.user_id === "string") targetUserId = body.user_id;
+          if (body.force === true) force = true;
+        }
+      } catch {
+        // no body, ok
+      }
     }
 
     const IBS_API_KEY = Deno.env.get("IBS_API_KEY");
@@ -43,13 +82,19 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Get stale queue items (>15 min old)
-    const { data: items, error } = await supabaseAdmin
+    // Get queue items — cron: >15 min old; admin: optional force + filter
+    let q = supabaseAdmin
       .from("ibs_sync_queue")
       .select("*")
       .in("status", ["waiting", "retrying"])
-      .lt("created_at", new Date(Date.now() - 15 * 60 * 1000).toISOString())
-      .limit(20);
+      .limit(50);
+    if (!force) {
+      q = q.lt("created_at", new Date(Date.now() - 15 * 60 * 1000).toISOString());
+    }
+    if (targetUserId) {
+      q = q.eq("user_id", targetUserId);
+    }
+    const { data: items, error } = await q;
 
     if (error) throw error;
     if (!items || items.length === 0) {

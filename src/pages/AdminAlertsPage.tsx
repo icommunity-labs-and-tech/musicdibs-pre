@@ -70,6 +70,26 @@ export default function AdminAlertsPage() {
     }
   };
 
+  const [ibsSyncLoading, setIbsSyncLoading] = useState(false);
+  const runIbsSync = async () => {
+    setIbsSyncLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ibs-sync-cron", {
+        body: { force: true },
+      });
+      if (error) throw error;
+      const s = data as { processed?: number; resolved?: number; retrying?: number; exhausted?: number };
+      toast.success(
+        `Sync iBS: procesadas ${s?.processed ?? 0} · resueltas ${s?.resolved ?? 0} · reintentando ${s?.retrying ?? 0} · agotadas ${s?.exhausted ?? 0}`,
+      );
+      load();
+    } catch (err: any) {
+      toast.error("Error en sync iBS: " + (err?.message ?? String(err)));
+    } finally {
+      setIbsSyncLoading(false);
+    }
+  };
+
   const load = async () => {
     setLoading(true);
     let q = supabase
@@ -147,10 +167,14 @@ export default function AdminAlertsPage() {
             Avisos automáticos del backend (renovaciones, Stripe, crons…)
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button variant="default" size="sm" onClick={runDryRun} disabled={dryRunLoading}>
             <PlayCircle className={`h-4 w-4 mr-2 ${dryRunLoading ? "animate-pulse" : ""}`} />
             Simular renovaciones (dry-run)
+          </Button>
+          <Button variant="secondary" size="sm" onClick={runIbsSync} disabled={ibsSyncLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${ibsSyncLoading ? "animate-spin" : ""}`} />
+            Forzar sync iBS ahora
           </Button>
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Refrescar
