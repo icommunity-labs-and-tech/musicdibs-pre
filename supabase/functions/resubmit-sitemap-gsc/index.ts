@@ -50,11 +50,7 @@ Deno.serve(async (req) => {
       );
       const { data: userData } = await supabase.auth.getUser();
       if (userData?.user) {
-        const admin = createClient(
-          Deno.env.get('SUPABASE_URL')!,
-          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-        );
-        const { data: roleRow } = await admin
+        const { data: roleRow } = await adminClient
           .from('user_roles')
           .select('role')
           .eq('user_id', userData.user.id)
