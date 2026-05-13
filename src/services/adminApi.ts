@@ -7,6 +7,8 @@ const SUPABASE_PUBLISHABLE_KEY =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imttd2VoeWl4ZW55YmVnd2hxbGp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NDEwMzQsImV4cCI6MjA5MDAxNzAzNH0.DZ2gEjz_DAkHfEetYo72NAUbdhq2lui9rIrMysWJUNo';
 
+let refreshSessionPromise: Promise<string | null> | null = null;
+
 class AdminActionHttpError extends Error {
   status: number;
   body: unknown;
@@ -19,16 +21,53 @@ class AdminActionHttpError extends Error {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getJwtExpiryMs(token: string) {
+  try {
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    return isRecord(decoded) && typeof decoded.exp === 'number' ? decoded.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
+function isTokenExpiringSoon(token: string) {
+  const expiryMs = getJwtExpiryMs(token);
+  return expiryMs !== null && expiryMs - Date.now() < 60_000;
+}
+
+async function refreshAdminAccessToken() {
+  refreshSessionPromise ??= supabase.auth.refreshSession()
+    .then(async ({ data, error }) => {
+      if (!error && data.session?.access_token) return data.session.access_token;
+
+      await new Promise((resolve) => window.setTimeout(resolve, 250));
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token || null;
+      if (accessToken && !isTokenExpiringSoon(accessToken)) return accessToken;
+
+      throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión.');
+    })
+    .finally(() => {
+      refreshSessionPromise = null;
+    });
+
+  return refreshSessionPromise;
+}
+
 async function getAdminAccessToken() {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) throw new Error('No se pudo verificar la sesión. Vuelve a iniciar sesión.');
 
   let accessToken = sessionData.session?.access_token;
 
-  if (!accessToken) {
-    const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-    if (refreshError) throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión.');
-    accessToken = refreshData.session?.access_token;
+  if (!accessToken || isTokenExpiringSoon(accessToken)) {
+    accessToken = await refreshAdminAccessToken();
   }
 
   if (!accessToken) throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión.');
@@ -76,10 +115,7 @@ async function adminAction(action: string, payload: AdminActionPayload = {}) {
     // Transient 401 → refresh session and retry once with a fresh bearer token.
     if (!isUnauthorized(error)) throw error;
 
-    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
-    if (refreshError) throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión.');
-
-    accessToken = refreshed.session?.access_token || accessToken;
+    accessToken = await refreshAdminAccessToken() || accessToken;
     const data = await invokeOnce(action, payload, accessToken);
     if (data?.error) throw new Error(data.error);
     return data;
