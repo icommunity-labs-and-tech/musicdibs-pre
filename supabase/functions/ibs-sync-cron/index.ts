@@ -33,7 +33,6 @@ serve(async (req) => {
     let targetUserId: string | null = null;
     let force = false;
 
-    console.log("[IBS-SYNC-CRON] auth debug:", { hasCronSecret: !!cronSecret, hasAuthHeader: !!authHeader, authPrefix: authHeader?.slice(0, 20) });
     if (!authorized && authHeader?.startsWith("Bearer ")) {
       const userClient = createClient(
         Deno.env.get("SUPABASE_URL")!,
