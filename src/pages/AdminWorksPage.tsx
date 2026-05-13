@@ -39,10 +39,11 @@ export default function AdminWorksPage() {
   const handleDownloadCertificate = async (w: any) => {
     setGeneratingCert(w.id);
     try {
+      const fileMetadata = await adminApi.getWorkFileMetadata(w.id);
       const certData = await buildCertificateData({
         title: w.title,
-        filename: w.original_filename || `${w.title}.mp3`,
-        filesize: w.file_size,
+        filename: fileMetadata.filename || w.original_filename || `${w.title}.mp3`,
+        filesize: fileMetadata.filesize ?? w.file_size,
         fileType: w.type || 'audio',
         description: w.description || undefined,
         authorName: w.user_display_name || w.user_email || 'N/A',
