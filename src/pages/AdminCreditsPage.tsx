@@ -57,6 +57,9 @@ export default function AdminCreditsPage() {
 
   // Quick adjust
   const [searchEmail, setSearchEmail] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [foundUser, setFoundUser] = useState<any>(null);
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
@@ -72,17 +75,34 @@ export default function AdminCreditsPage() {
 
   useEffect(() => { loadTx(); }, [offset, typeFilter, dateFrom, dateTo]);
 
-  const handleSearchUser = async () => {
-    if (!searchEmail.trim()) return;
-    try {
-      const res = await adminApi.searchUserByEmail(searchEmail);
-      if (!res.user) {
-        toast.error('Usuario no encontrado');
-        setFoundUser(null);
-        return;
+  // Live search with debounce
+  useEffect(() => {
+    const q = searchEmail.trim();
+    if (q.length < 2) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await adminApi.searchUsersByEmail(q, 10);
+        setSearchResults(res.users || []);
+        setShowResults(true);
+      } catch (e: any) {
+        toast.error(e.message);
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
       }
-      setFoundUser(res.user);
-    } catch (e: any) { toast.error(e.message); setFoundUser(null); }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchEmail]);
+
+  const selectUser = (u: any) => {
+    setFoundUser(u);
+    setSearchEmail(u.email || u.display_name || '');
+    setShowResults(false);
   };
 
   const parsedAmount = parseInt(amount);
@@ -100,7 +120,11 @@ export default function AdminCreditsPage() {
       await adminApi.adjustCredits(foundUser.user_id, parsedAmount, reason.slice(0, 200));
       toast.success(`Créditos ajustados: ${parsedAmount > 0 ? '+' : ''}${parsedAmount}`);
       setAmount(''); setReason('');
-      handleSearchUser(); // refresh
+      // refresh found user balance
+      try {
+        const res = await adminApi.searchUsersByEmail(foundUser.email || '', 1);
+        if (res.users?.[0]) setFoundUser(res.users[0]);
+      } catch { /* ignore */ }
       loadTx();
     } catch (e: any) { toast.error(e.message); }
   };
@@ -167,9 +191,37 @@ export default function AdminCreditsPage() {
       <Card className="border-border/40">
         <CardHeader><CardTitle className="text-base">Ajuste rápido de créditos</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input placeholder="Email del usuario" value={searchEmail} onChange={e => setSearchEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearchUser()} />
-            <Button onClick={handleSearchUser} variant="secondary"><Search className="h-4 w-4 mr-1" /> Buscar</Button>
+          <div className="relative">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Email o nombre del usuario (mínimo 2 caracteres)"
+                value={searchEmail}
+                onChange={e => { setSearchEmail(e.target.value); setShowResults(true); }}
+                onFocus={() => setShowResults(true)}
+              />
+              {searching && <span className="text-xs text-muted-foreground self-center">Buscando…</span>}
+            </div>
+            {showResults && searchEmail.trim().length >= 2 && (
+              <div className="absolute z-10 mt-1 w-full max-h-72 overflow-auto rounded-md border border-border/40 bg-popover shadow-md">
+                {searchResults.length === 0 && !searching && (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">Sin resultados</div>
+                )}
+                {searchResults.map(u => (
+                  <button
+                    key={u.user_id}
+                    type="button"
+                    onClick={() => selectUser(u)}
+                    className="w-full text-left px-3 py-2 hover:bg-muted/50 border-b border-border/20 last:border-0"
+                  >
+                    <div className="text-sm font-medium">{u.display_name || u.email || '(sin nombre)'}</div>
+                    <div className="text-xs text-muted-foreground flex justify-between gap-2">
+                      <span className="truncate">{u.email}</span>
+                      <span className="font-mono text-primary shrink-0">{u.available_credits ?? 0} cr.</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           {foundUser && (
             <div className="space-y-3 p-3 rounded-lg bg-muted/30">

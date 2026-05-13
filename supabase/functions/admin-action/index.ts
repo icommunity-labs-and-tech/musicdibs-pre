@@ -837,6 +837,56 @@ serve(async (req) => {
       return json({ transactions: enriched });
     }
 
+    if (action === "search_users_by_email") {
+      const q = String(payload.query || "").trim().toLowerCase();
+      if (q.length < 2) return json({ users: [] });
+      const limit = Math.min(payload.limit || 10, 25);
+
+      const matches: Record<string, { id: string; email: string }> = {};
+
+      // 1) Search profiles by display_name (fast, indexed-ish)
+      try {
+        const { data: profMatches } = await admin
+          .from("profiles")
+          .select("user_id, display_name")
+          .ilike("display_name", `%${q}%`)
+          .limit(limit);
+        for (const p of profMatches || []) {
+          try {
+            const { data } = await admin.auth.admin.getUserById(p.user_id);
+            if (data?.user) matches[p.user_id] = { id: p.user_id, email: data.user.email || "" };
+          } catch { /* ignore */ }
+        }
+      } catch { /* ignore */ }
+
+      // 2) Search auth users by email (paginated)
+      const perPage = 1000;
+      for (let page = 1; page <= 50 && Object.keys(matches).length < limit; page++) {
+        const { data, error: listErr } = await admin.auth.admin.listUsers({ page, perPage });
+        if (listErr) break;
+        const users = data?.users || [];
+        for (const u of users as Array<{ id: string; email?: string }>) {
+          const e = (u.email || "").toLowerCase();
+          if (e.includes(q) && !matches[u.id]) {
+            matches[u.id] = { id: u.id, email: u.email || "" };
+            if (Object.keys(matches).length >= limit) break;
+          }
+        }
+        if (users.length < perPage) break;
+      }
+
+      const ids = Object.keys(matches);
+      if (ids.length === 0) return json({ users: [] });
+      const { data: profiles } = await admin.from("profiles").select("*").in("user_id", ids);
+      const profileMap: Record<string, any> = {};
+      (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p; });
+      const users = ids.map((id) => ({
+        ...(profileMap[id] || { user_id: id, available_credits: 0, display_name: null }),
+        email: matches[id].email,
+      }));
+      return json({ users });
+    }
+
     if (action === "search_user_by_email") {
       const { email } = payload;
       if (!email) return json({ error: "email required" }, 400);

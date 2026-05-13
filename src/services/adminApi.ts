@@ -45,6 +45,7 @@ export const adminApi = {
   getSaasMetrics: (filters?: { periodType?: string; weekStart?: string; month?: string; year?: string; force_refresh?: boolean }) => adminAction('get_saas_metrics', filters || {}),
   getAllTransactions: (offset = 0, type_filter = '', date_from = '', date_to = '') => adminAction('get_all_transactions', { offset, type_filter, date_from, date_to }),
   searchUserByEmail: (email: string) => adminAction('search_user_by_email', { email }),
+  searchUsersByEmail: (query: string, limit = 10) => adminAction('search_users_by_email', { query, limit }),
   exportCsv: (dataset: string) => adminAction('export_csv', { dataset }),
   getAdmins: () => adminAction('get_admins'),
   getAuditLog: (offset = 0, action_filter = '') => adminAction('get_audit_log', { offset, action_filter }),
