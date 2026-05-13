@@ -813,10 +813,16 @@ serve(async (req) => {
       const { email } = payload;
       if (!email) return json({ error: "email required" }, 400);
 
-      const { data: { users: authUsers } } = await admin.auth.admin.listUsers({ perPage: 1000 });
-      const found = (authUsers || []).find(
-        (u: any) => u.email?.toLowerCase() === email.toLowerCase()
-      );
+      const target = email.trim().toLowerCase();
+      let found: any = null;
+      // Paginate through auth.users (listUsers caps perPage at 1000) until we find a match
+      for (let page = 1; page <= 50 && !found; page++) {
+        const { data, error: listErr } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+        if (listErr) return json({ error: listErr.message }, 500);
+        const users = data?.users || [];
+        found = users.find((u: any) => u.email?.toLowerCase() === target);
+        if (users.length < 1000) break; // no more pages
+      }
       if (!found) return json({ error: "User not found" }, 404);
 
       const { data: profile } = await admin.from("profiles").select("*").eq("user_id", found.id).single();
