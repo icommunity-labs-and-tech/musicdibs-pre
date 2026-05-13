@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "../_shared/supabase-client.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { premiumPromoApprovedEmail, premiumPromoPublishedEmail, premiumPromoRejectedEmail, kycRejectedEmail, kycVerifiedEmail, temporaryPasswordEmail } from "../_shared/transactional-email.ts";
 
@@ -63,7 +63,13 @@ serve(async (req) => {
 
     // 3) Last resort: getUser
     if (!callerUserId) {
-      const { data: { user: callerUser }, error: userError } = await supabaseUser.auth.getUser(token);
+      let { data: { user: callerUser }, error: userError } = await supabaseUser.auth.getUser(token);
+      if (userError || !callerUser) {
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        const retry = await supabaseUser.auth.getUser(token);
+        callerUser = retry.data.user;
+        userError = retry.error;
+      }
       if (userError || !callerUser) return json({ error: "Unauthorized" }, 401);
       callerUserId = callerUser.id;
       callerEmail = callerUser.email || "";
