@@ -1,5 +1,6 @@
 import type { CertificateData } from '@/lib/generateCertificate';
 import { pollEvidenceStatus } from '@/services/dashboardApi';
+import { supabase } from '@/integrations/supabase/client';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -20,6 +21,7 @@ export interface CertificateBuildInput {
   fallbackFingerprint?: string;
   fallbackAlgorithm?: string;
   sourceFile?: File | null;
+  workId?: string;
 }
 
 interface EvidenceCertificateDetail {
@@ -79,8 +81,16 @@ export const buildBlockchainExplorerUrl = (network?: string, txHash?: string): s
 };
 
 const formatFilesize = (value: number | string | undefined, locale: string): string => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return `${value.toLocaleString(locale)} bytes`;
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let size = value;
+    let unit = 0;
+    while (size >= 1024 && unit < units.length - 1) {
+      size /= 1024;
+      unit++;
+    }
+    const formatted = size.toLocaleString(locale, { maximumFractionDigits: unit === 0 ? 0 : 2 });
+    return `${formatted} ${units[unit]}`;
   }
 
   if (typeof value === 'string' && value.trim()) {
@@ -151,6 +161,31 @@ const normalizeEvidenceDetail = (value: unknown): EvidenceCertificateDetail | nu
   };
 };
 
+async function resolveFromStorage(workId?: string): Promise<{ filename?: string; filesize?: number }> {
+  if (!workId) return {};
+  try {
+    const { data: work } = await supabase
+      .from('works')
+      .select('file_path')
+      .eq('id', workId)
+      .maybeSingle();
+    const filePath = work?.file_path;
+    if (!filePath) return {};
+    const slash = filePath.lastIndexOf('/');
+    const folder = slash >= 0 ? filePath.slice(0, slash) : '';
+    const filename = slash >= 0 ? filePath.slice(slash + 1) : filePath;
+    const { data: items } = await supabase.storage
+      .from('works-files')
+      .list(folder, { search: filename, limit: 1 });
+    const match = items?.find((i: any) => i.name === filename) || items?.[0];
+    const size = (match as any)?.metadata?.size;
+    return { filename, filesize: typeof size === 'number' ? size : undefined };
+  } catch (e) {
+    console.warn('[certificateData] Unable to resolve file from storage', e);
+    return {};
+  }
+}
+
 export async function buildCertificateData(input: CertificateBuildInput): Promise<CertificateData> {
   let evidenceDetail: EvidenceCertificateDetail | null = null;
 
@@ -160,6 +195,9 @@ export async function buildCertificateData(input: CertificateBuildInput): Promis
     console.warn('[certificateData] Unable to load evidence detail', error);
   }
 
+  const needsStorageLookup = !input.filesize || !input.filename;
+  const storageInfo = needsStorageLookup ? await resolveFromStorage(input.workId) : {};
+
   const fallbackFingerprint = input.fallbackFingerprint || await computeSha512Base64(input.sourceFile);
   const txHash = evidenceDetail?.txHash || input.txHash || '';
   const network = evidenceDetail?.network || input.network || 'Polygon';
@@ -167,10 +205,13 @@ export async function buildCertificateData(input: CertificateBuildInput): Promis
     ? `https://checker.icommunitylabs.com/check/${toCheckerNetworkSlug(network)}/${txHash}`
     : 'https://musicdibs.com');
 
+  const resolvedFilename = evidenceDetail?.fileName || input.filename || storageInfo.filename || `${input.title}.mp3`;
+  const resolvedFilesize = evidenceDetail?.fileSize ?? input.filesize ?? storageInfo.filesize;
+
   return {
     title: evidenceDetail?.title || input.title,
-    filename: evidenceDetail?.fileName || input.filename || `${input.title}.mp3`,
-    filesize: formatFilesize(evidenceDetail?.fileSize ?? input.filesize, input.locale),
+    filename: resolvedFilename,
+    filesize: formatFilesize(resolvedFilesize, input.locale),
     fileType: input.fileType || 'Audio',
     description: evidenceDetail?.description || input.description,
     authorName: input.authorName,

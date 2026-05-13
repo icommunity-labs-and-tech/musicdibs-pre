@@ -39,7 +39,7 @@ export function CertificateButton({ work, authorName, authorDocId }: Props) {
     try {
       const certData = await buildCertificateData({
         title: work.title,
-        filename: work.original_filename || `${work.title}.mp3`,
+        filename: work.original_filename,
         filesize: work.file_size,
         fileType: work.type || t('dashboard.certificate.fileTypeFallback'),
         description: work.description || undefined,
@@ -53,6 +53,7 @@ export function CertificateButton({ work, authorName, authorDocId }: Props) {
         locale,
         fallbackFingerprint: work.file_hash_sha512_b64,
         fallbackAlgorithm: 'SHA-512',
+        workId: work.id,
       })
       await generateCertificate(certData, locale)
       toast.success(t('dashboard.certificate.downloadSuccess'))

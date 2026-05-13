@@ -58,7 +58,6 @@ export default function CertificateDownloadPage() {
 
         const certData = await buildCertificateData({
           title: work.title,
-          filename: `${work.title}.mp3`,
           fileType: work.type || t('dashboard.certificate.fileTypeFallback'),
           description: work.description || undefined,
           authorName: profile?.display_name || user.email?.split('@')[0] || 'Autor',
@@ -70,6 +69,7 @@ export default function CertificateDownloadPage() {
           locale,
           fallbackFingerprint: work.file_hash_sha512_b64 || undefined,
           fallbackAlgorithm: 'SHA-512',
+          workId: work.id,
         });
 
         await generateCertificate(certData, locale);
