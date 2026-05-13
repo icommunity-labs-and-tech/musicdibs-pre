@@ -1976,6 +1976,35 @@ serve(async (req) => {
       return json({ signed_url: data.signedUrl });
     }
 
+    // ── get_work_file_metadata ────────────────────────────────
+    if (action === "get_work_file_metadata") {
+      const { work_id } = payload;
+      if (!work_id) return json({ error: "work_id required" }, 400);
+
+      const { data: work, error: workErr } = await admin
+        .from("works")
+        .select("file_path")
+        .eq("id", work_id)
+        .maybeSingle();
+      if (workErr) return json({ error: workErr.message }, 500);
+      if (!work?.file_path) return json({ filename: null, filesize: null });
+
+      const filePath = work.file_path as string;
+      const slash = filePath.lastIndexOf("/");
+      const folder = slash >= 0 ? filePath.slice(0, slash) : "";
+      const filename = slash >= 0 ? filePath.slice(slash + 1) : filePath;
+      const { data: items, error: listErr } = await admin.storage
+        .from("works-files")
+        .list(folder, { search: filename, limit: 1 });
+      if (listErr) return json({ error: listErr.message }, 500);
+
+      const match = (items || []).find((item) => item.name === filename) || items?.[0];
+      const metadata = match?.metadata || {};
+      const filesize = Number(metadata.size || metadata.contentLength || metadata.content_length || metadata.ContentLength) || null;
+
+      return json({ filename, filesize });
+    }
+
     // ── delete_work ────────────────────────────────────────────
     if (action === "delete_work") {
       const { work_id } = payload;

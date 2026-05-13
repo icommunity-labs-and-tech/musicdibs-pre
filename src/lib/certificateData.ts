@@ -100,6 +100,15 @@ const formatFilesize = (value: number | string | undefined, locale: string): str
   return 'N/A';
 };
 
+const toFinitePositiveNumber = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value;
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value.trim());
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : undefined;
+  }
+  return undefined;
+};
+
 const formatCertificateDate = (value: string | undefined, locale: string): string => {
   if (!value) return 'N/A';
 
@@ -177,9 +186,25 @@ async function resolveFromStorage(workId?: string): Promise<{ filename?: string;
     const { data: items } = await supabase.storage
       .from('works-files')
       .list(folder, { search: filename, limit: 1 });
-    const match = items?.find((i: any) => i.name === filename) || items?.[0];
-    const size = (match as any)?.metadata?.size;
-    return { filename, filesize: typeof size === 'number' ? size : undefined };
+    const match = items?.find((item) => item.name === filename) || items?.[0];
+    const metadata = isRecord(match?.metadata) ? match.metadata : undefined;
+    const size = toFinitePositiveNumber(metadata?.size)
+      ?? toFinitePositiveNumber(metadata?.contentLength)
+      ?? toFinitePositiveNumber(metadata?.content_length)
+      ?? toFinitePositiveNumber(metadata?.ContentLength);
+
+    if (size) return { filename, filesize: size };
+
+    const { data: blob, error: downloadError } = await supabase.storage
+      .from('works-files')
+      .download(filePath);
+
+    if (downloadError) {
+      console.warn('[certificateData] Unable to download file for size fallback', downloadError);
+      return { filename };
+    }
+
+    return { filename, filesize: blob?.size };
   } catch (e) {
     console.warn('[certificateData] Unable to resolve file from storage', e);
     return {};
@@ -206,7 +231,7 @@ export async function buildCertificateData(input: CertificateBuildInput): Promis
     : 'https://musicdibs.com');
 
   const resolvedFilename = evidenceDetail?.fileName || input.filename || storageInfo.filename || `${input.title}.mp3`;
-  const resolvedFilesize = evidenceDetail?.fileSize ?? input.filesize ?? storageInfo.filesize;
+  const resolvedFilesize = input.filesize ?? storageInfo.filesize ?? evidenceDetail?.fileSize;
 
   return {
     title: evidenceDetail?.title || input.title,
