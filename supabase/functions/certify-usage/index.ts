@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "../_shared/supabase-client.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const IBS_API_URL = "https://api.icommunitylabs.com/v2";
 
@@ -16,6 +16,20 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Auth: only callable internally (service role or cron secret)
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const cronSecret = Deno.env.get("CRON_SECRET") || "";
+  const authHeader = req.headers.get("Authorization") || "";
+  const cronHeader = req.headers.get("x-cron-secret") || "";
+  const isAuth =
+    authHeader === `Bearer ${serviceKey}` ||
+    (cronSecret && cronHeader === cronSecret);
+  if (!isAuth) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
