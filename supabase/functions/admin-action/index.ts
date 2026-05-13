@@ -147,6 +147,30 @@ serve(async (req) => {
       return map;
     }
 
+    async function findAuthUserByEmail(email: string): Promise<{ id: string; email: string } | null> {
+      const target = email.trim().toLowerCase();
+      if (!target) return null;
+
+      const { data: authRows } = await admin.rpc("get_user_auth_data", { user_email: target });
+      const rpcUserId = Array.isArray(authRows) ? authRows[0]?.user_id : null;
+      if (typeof rpcUserId === "string" && rpcUserId.length > 0) {
+        const { data: targetAuth } = await admin.auth.admin.getUserById(rpcUserId);
+        return { id: rpcUserId, email: targetAuth?.user?.email || target };
+      }
+
+      const perPage = 1000;
+      for (let page = 1; page <= 50; page++) {
+        const { data, error: listErr } = await admin.auth.admin.listUsers({ page, perPage });
+        if (listErr) throw listErr;
+        const users = data?.users || [];
+        const found = users.find((u) => u.email?.toLowerCase() === target);
+        if (found) return { id: found.id, email: found.email || target };
+        if (users.length < perPage) break;
+      }
+
+      return null;
+    }
+
     // ── Helper: get display_name map from profiles ──────────
     async function getAllNamesMap(): Promise<Record<string, string>> {
       const map: Record<string, string> = {};
