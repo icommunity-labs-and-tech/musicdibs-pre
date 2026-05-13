@@ -186,8 +186,8 @@ async function resolveFromStorage(workId?: string): Promise<{ filename?: string;
     const { data: items } = await supabase.storage
       .from('works-files')
       .list(folder, { search: filename, limit: 1 });
-    const match = items?.find((i: any) => i.name === filename) || items?.[0];
-    const metadata = (match as any)?.metadata;
+    const match = items?.find((item) => item.name === filename) || items?.[0];
+    const metadata = isRecord(match?.metadata) ? match.metadata : undefined;
     const size = toFinitePositiveNumber(metadata?.size)
       ?? toFinitePositiveNumber(metadata?.contentLength)
       ?? toFinitePositiveNumber(metadata?.content_length)
