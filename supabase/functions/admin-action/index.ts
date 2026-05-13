@@ -163,7 +163,7 @@ serve(async (req) => {
         const { data, error: listErr } = await admin.auth.admin.listUsers({ page, perPage });
         if (listErr) throw listErr;
         const users = data?.users || [];
-        const found = users.find((u) => u.email?.toLowerCase() === target);
+        const found = users.find((u: { id: string; email?: string }) => u.email?.toLowerCase() === target);
         if (found) return { id: found.id, email: found.email || target };
         if (users.length < perPage) break;
       }
