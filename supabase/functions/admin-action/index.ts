@@ -837,19 +837,17 @@ serve(async (req) => {
       const { email } = payload;
       if (!email) return json({ error: "email required" }, 400);
 
-      const target = email.trim().toLowerCase();
-      let found: any = null;
-      // Paginate through auth.users (listUsers caps perPage at 1000) until we find a match
-      for (let page = 1; page <= 50 && !found; page++) {
-        const { data, error: listErr } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
-        if (listErr) return json({ error: listErr.message }, 500);
-        const users = data?.users || [];
-        found = users.find((u: any) => u.email?.toLowerCase() === target);
-        if (users.length < 1000) break; // no more pages
+      let found: { id: string; email: string } | null = null;
+      try {
+        found = await findAuthUserByEmail(String(email));
+      } catch (listErr) {
+        return json({ error: listErr instanceof Error ? listErr.message : "Error searching user" }, 500);
       }
       if (!found) return json({ error: "User not found" }, 404);
 
-      const { data: profile } = await admin.from("profiles").select("*").eq("user_id", found.id).single();
+      const { data: profile, error: profileErr } = await admin.from("profiles").select("*").eq("user_id", found.id).maybeSingle();
+      if (profileErr) return json({ error: profileErr.message }, 500);
+      if (!profile) return json({ error: "Profile not found" }, 404);
       return json({ user: { ...profile, email: found.email } });
     }
 
