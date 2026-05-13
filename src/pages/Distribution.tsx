@@ -13,9 +13,22 @@ const Distribution = () => {
 
   const faqItems = t("distribution.faq.items", { returnObjects: true }) as Array<{ q: string; a: string }>;
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: Array.isArray(faqItems) ? faqItems.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    })) : [],
+  };
+
   return (
     <div className="min-h-screen page-bg">
-      <SEO title="Distribución Musical" description="Distribuye tu música en Spotify, Apple Music, YouTube Music y más de 150 plataformas con Musicdibs. 95% de royalties." path="/distribution" />
+      <SEO title="Distribución Musical" description="Distribuye tu música en Spotify, Apple Music, YouTube Music y más de 150 plataformas con Musicdibs. 95% de royalties." path="/distribution" jsonLd={faqJsonLd} />
       <Navbar />
 
       {/* Hero Section */}
