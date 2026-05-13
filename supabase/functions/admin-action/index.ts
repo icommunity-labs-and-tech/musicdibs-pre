@@ -150,6 +150,7 @@ serve(async (req) => {
     async function findAuthUserByEmail(email: string): Promise<{ id: string; email: string } | null> {
       const target = email.trim().toLowerCase();
       if (!target) return null;
+      const allowPartialMatch = target.length >= 2 && !target.includes("@");
 
       const { data: authRows } = await admin.rpc("get_user_auth_data", { user_email: target });
       const rpcUserId = Array.isArray(authRows) ? authRows[0]?.user_id : null;
@@ -163,7 +164,10 @@ serve(async (req) => {
         const { data, error: listErr } = await admin.auth.admin.listUsers({ page, perPage });
         if (listErr) throw listErr;
         const users = data?.users || [];
-        const found = users.find((u: { id: string; email?: string }) => u.email?.toLowerCase() === target);
+        const found = users.find((u: { id: string; email?: string }) => {
+          const userEmail = u.email?.toLowerCase() || "";
+          return allowPartialMatch ? userEmail.includes(target) : userEmail === target;
+        });
         if (found) return { id: found.id, email: found.email || target };
         if (users.length < perPage) break;
       }
@@ -843,7 +847,7 @@ serve(async (req) => {
       } catch (listErr) {
         return json({ error: listErr instanceof Error ? listErr.message : "Error searching user" }, 500);
       }
-      if (!found) return json({ error: "User not found" }, 404);
+      if (!found) return json({ user: null, not_found: true });
 
       const { data: profile, error: profileErr } = await admin.from("profiles").select("*").eq("user_id", found.id).maybeSingle();
       if (profileErr) return json({ error: profileErr.message }, 500);

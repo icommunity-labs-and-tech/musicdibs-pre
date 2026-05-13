@@ -76,6 +76,11 @@ export default function AdminCreditsPage() {
     if (!searchEmail.trim()) return;
     try {
       const res = await adminApi.searchUserByEmail(searchEmail);
+      if (!res.user) {
+        toast.error('Usuario no encontrado');
+        setFoundUser(null);
+        return;
+      }
       setFoundUser(res.user);
     } catch (e: any) { toast.error(e.message); setFoundUser(null); }
   };
