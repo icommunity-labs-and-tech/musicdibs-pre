@@ -96,7 +96,11 @@ const NewsArticle = () => {
   return (
     <div className="min-h-screen page-bg">
       <SEO
-        title={post?.title || "Artículo"}
+        title={(() => {
+          const raw = post?.title || "Artículo";
+          // Reserve space for " | Musicdibs" (12 chars) → keep title ≤ 47 chars
+          return raw.length > 47 ? `${raw.slice(0, 44).trimEnd()}…` : raw;
+        })()}
         description={post?.excerpt || ""}
         path={`/news/${slug}`}
         type="article"
