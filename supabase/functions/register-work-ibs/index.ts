@@ -327,30 +327,34 @@ serve(async (req) => {
         console.log(`[IBS] ${fileMeta.name} subido a GCS ✅ (${gcsRes.status})`);
       }
 
-      // PASO 3: Confirmar
-      console.log(`[IBS] PASO 3 — Confirmando sesión ${sessionId}`);
-      const completeRes = await fetch(`${IBS_API_URL}/evidences/uploads/${sessionId}/complete`, {
-        method: "POST", headers: ibsHeaders, body: JSON.stringify({}),
+      // PASO 3: ENCOLAR para confirmar de forma diferida (evita saturar iBS)
+      // El cron `ibs-sync-cron` procesará pending_complete con delay entre ítems.
+      console.log(`[IBS] PASO 3 diferido — encolando sesión ${sessionId} en ibs_sync_queue`);
+
+      await supabaseAdmin.from("ibs_sync_queue").insert({
+        work_id: workId,
+        user_id: user.id,
+        ibs_evidence_id: sessionId, // session id (evd_xxx) hasta que el /complete devuelva el id final
+        status: "pending_complete",
       });
 
-      if (!completeRes.ok) {
-        const errBody = await completeRes.text();
-        console.error(`[IBS] Complete fallido [${completeRes.status}]:`, errBody);
-        await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `iBS complete error ${completeRes.status}: ${errBody.slice(0, 200)}`, creditCost);
-        ctx.deducted = false;
-        return new Response(
-          JSON.stringify({ success: false, error: "iBS complete failed", workId, status: "failed", refunded: true }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      await supabaseAdmin.from("works").update({
+        ibs_signature_id: signatureId,
+        file_hash: work.file_hash || "",
+        ibs_payload_checksum: work.file_hash_sha512_b64 || "",
+        ibs_payload_algorithm: "SHA-512",
+        updated_at: new Date().toISOString(),
+      }).eq("id", workId);
 
-      const completeResult = await completeRes.json();
-      evidenceId = completeResult.id;
-      evidenceLink = completeResult.link;
-      console.log(`[IBS] Ruta B OK — evidence: ${evidenceId}`);
+      console.log(`[IBS] Work ${workId} encolado para complete diferido ✅`);
+
+      return new Response(
+        JSON.stringify({ success: true, workId, status: "queued", sessionId }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // ── Actualizar work ───────────────────────────────────────────────
+    // ── RUTA A: Actualizar work con evidence final ────────────────────
     await supabaseAdmin.from("works").update({
       ibs_evidence_id: evidenceId,
       ibs_signature_id: signatureId,
