@@ -25,8 +25,16 @@ serve(async (req) => {
       throw new Error("IBS_API_KEY is not configured");
     }
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const cronSecret = Deno.env.get("CRON_SECRET") || "";
+    const authHeader = req.headers.get("Authorization") || "";
+    const cronHeader = req.headers.get("x-cron-secret") || "";
+    // Accept: service role key, cron secret, or valid user JWT (validated below)
+    const isServiceCall =
+      authHeader === `Bearer ${serviceKey}` ||
+      (cronSecret && cronHeader === cronSecret);
+
+    if (!isServiceCall && !authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -37,6 +45,18 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // If not a service call, validate the user JWT
+    if (!isServiceCall) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: userErr } = await supabase.auth.getUser(token);
+      if (userErr || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     const { evidence_id } = await req.json();
     if (!evidence_id) {
