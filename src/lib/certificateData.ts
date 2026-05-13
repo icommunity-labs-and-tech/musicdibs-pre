@@ -81,8 +81,16 @@ export const buildBlockchainExplorerUrl = (network?: string, txHash?: string): s
 };
 
 const formatFilesize = (value: number | string | undefined, locale: string): string => {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return `${value.toLocaleString(locale)} bytes`;
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let size = value;
+    let unit = 0;
+    while (size >= 1024 && unit < units.length - 1) {
+      size /= 1024;
+      unit++;
+    }
+    const formatted = size.toLocaleString(locale, { maximumFractionDigits: unit === 0 ? 0 : 2 });
+    return `${formatted} ${units[unit]}`;
   }
 
   if (typeof value === 'string' && value.trim()) {
