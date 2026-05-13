@@ -132,6 +132,46 @@ const Index = () => {
                 availability: "https://schema.org/InStock"
               }
             ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Musicdibs",
+            url: "https://musicdibs.com",
+            inLanguage: ["es", "en", "pt-BR"],
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://musicdibs.com/news?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            name: "Musicdibs",
+            url: "https://musicdibs.com",
+            applicationCategory: "MultimediaApplication",
+            operatingSystem: "Web",
+            description: "Plataforma todo-en-uno para artistas: genera música con IA, regístrala con certificación blockchain, distribúyela en más de 150 plataformas y promociónala en redes.",
+            featureList: [
+              "Generación de música con IA",
+              "Generación de letras con IA",
+              "Generación de portadas con IA",
+              "Generación de vídeos musicales con IA",
+              "Síntesis y clonación de voz con IA",
+              "Registro de obras en blockchain (iBS)",
+              "Distribución a Spotify, Apple Music, YouTube Music y +150 plataformas",
+              "Promoción y marketing en redes sociales",
+              "Panel para managers y agencias musicales"
+            ],
+            offers: {
+              "@type": "AggregateOffer",
+              priceCurrency: "EUR",
+              lowPrice: "2.99",
+              highPrice: "9.99",
+              offerCount: 3
+            },
+            inLanguage: ["es", "en", "pt-BR"]
           }
         ]}
       />
