@@ -29,6 +29,20 @@ function getPriceId(tier: string): { priceId: string; credits: number } {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  // Auth: require CRON_SECRET or service role key
+  const cronSecret = Deno.env.get("CRON_SECRET") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const authHeader = req.headers.get("Authorization") || "";
+  const cronHeader = req.headers.get("x-cron-secret") || "";
+  const isAuth =
+    (cronSecret && cronHeader === cronSecret) ||
+    authHeader === `Bearer ${serviceKey}`;
+  if (!isAuth) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
