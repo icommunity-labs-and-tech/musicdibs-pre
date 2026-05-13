@@ -16,4 +16,4 @@ Allow: /
 Allow: /llms.txt
 Allow: /sitemap.xml
 
-Sitemap: https://musicdibs.com/sitemap.xml
+Sitemap: https://www.musicdibs.com/sitemap.xml
