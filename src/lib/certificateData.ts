@@ -21,6 +21,7 @@ export interface CertificateBuildInput {
   fallbackFingerprint?: string;
   fallbackAlgorithm?: string;
   sourceFile?: File | null;
+  workId?: string;
 }
 
 interface EvidenceCertificateDetail {
