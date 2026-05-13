@@ -12,5 +12,8 @@ Allow: /
 
 User-agent: *
 Allow: /
+# AI assistants: machine-readable site summary
+Allow: /llms.txt
+Allow: /sitemap.xml
 
 Sitemap: https://musicdibs.com/sitemap.xml
