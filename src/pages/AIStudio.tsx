@@ -10,6 +10,7 @@ import { Navbar } from "@/components/Navbar";
 import { AIStudioThemeBar } from "@/components/ai-studio/AIStudioThemeBar";
 import { AIKnowledgeModal, useAIKnowledgeAutoShow } from "@/components/ai-studio/AIKnowledgeModal";
 import { BookOpen } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 import { useCredits } from "@/hooks/useCredits";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
@@ -156,6 +157,11 @@ const AIStudio = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Crea tu música con IA"
+        description="Genera música, letras, portadas, vídeos y voces con IA en Musicdibs AI Studio. Crea, edita e inspírate al instante."
+        path="/ai-studio"
+      />
       <Navbar />
       <AIStudioThemeBar />
       <main className="container mx-auto px-4 py-6 pt-16">
