@@ -31,13 +31,8 @@ Deno.serve(async (req) => {
     );
 
     if (cronHeader) {
-      const { data: vaultSecret } = await adminClient
-        .schema('vault')
-        .from('decrypted_secrets')
-        .select('decrypted_secret')
-        .eq('name', 'sitemap_resubmit_cron_secret')
-        .maybeSingle();
-      if (vaultSecret?.decrypted_secret && cronHeader === vaultSecret.decrypted_secret) {
+      const { data: secret } = await adminClient.rpc('get_sitemap_cron_secret');
+      if (secret && cronHeader === secret) {
         authorized = true;
       }
     }
