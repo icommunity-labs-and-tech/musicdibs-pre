@@ -16,19 +16,33 @@ Deno.serve(async (req) => {
   try {
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     const GSC_API_KEY = Deno.env.get('GOOGLE_SEARCH_CONSOLE_API_KEY');
-    const CRON_SECRET = Deno.env.get('CRON_SECRET');
 
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
     if (!GSC_API_KEY) throw new Error('GOOGLE_SEARCH_CONSOLE_API_KEY not configured');
 
-    // Auth: allow either CRON_SECRET (for pg_cron) or an authenticated admin user.
+    // Auth: allow either the cron secret stored in vault (for pg_cron) or an authenticated admin user.
     const authHeader = req.headers.get('authorization') ?? '';
     const cronHeader = req.headers.get('x-cron-secret') ?? '';
     let authorized = false;
 
-    if (CRON_SECRET && cronHeader === CRON_SECRET) {
-      authorized = true;
-    } else if (authHeader.startsWith('Bearer ')) {
+    const adminClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+
+    if (cronHeader) {
+      const { data: vaultSecret } = await adminClient
+        .schema('vault')
+        .from('decrypted_secrets')
+        .select('decrypted_secret')
+        .eq('name', 'sitemap_resubmit_cron_secret')
+        .maybeSingle();
+      if (vaultSecret?.decrypted_secret && cronHeader === vaultSecret.decrypted_secret) {
+        authorized = true;
+      }
+    }
+
+    if (!authorized && authHeader.startsWith('Bearer ')) {
       const supabase = createClient(
         Deno.env.get('SUPABASE_URL')!,
         Deno.env.get('SUPABASE_ANON_KEY')!,
