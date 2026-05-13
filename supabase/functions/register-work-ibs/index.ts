@@ -20,8 +20,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const IBS_API_URL = "https://api.icommunitylabs.com/v2";
 
-// Umbral: archivos < 15MB usan endpoint directo (A), >= 15MB usan presigned GCS (B)
-const DIRECT_UPLOAD_THRESHOLD_BYTES = 15 * 1024 * 1024;
+// SIEMPRE usamos presigned GCS streaming (ruta B) para evitar OOM en el worker.
+// La ruta A (base64 en RAM) causa WORKER_RESOURCE_LIMIT incluso con archivos pequeños.
+const DIRECT_UPLOAD_THRESHOLD_BYTES = 0;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
