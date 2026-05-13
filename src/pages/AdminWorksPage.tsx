@@ -54,6 +54,7 @@ export default function AdminWorksPage() {
         locale: 'es',
         fallbackFingerprint: w.file_hash_sha512_b64,
         fallbackAlgorithm: 'SHA-512',
+        workId: w.id,
       });
       await generateCertificate(certData, 'es');
       toast.success('Certificado descargado');
