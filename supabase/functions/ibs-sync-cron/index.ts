@@ -82,7 +82,87 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Get queue items — cron: >15 min old; admin: optional force + filter
+    const ibsHeaders = {
+      Authorization: `Bearer ${IBS_API_KEY}`,
+      "Content-Type": "application/json",
+    };
+
+    const summary = {
+      processed: 0,
+      resolved: 0,
+      retrying: 0,
+      exhausted: 0,
+      completed: 0,
+      complete_failed: 0,
+    };
+
+    // ── FASE 1: Procesar pending_complete (de uno en uno, con delay) ──
+    let pcQuery = supabaseAdmin
+      .from("ibs_sync_queue")
+      .select("*")
+      .eq("status", "pending_complete")
+      .order("created_at", { ascending: true })
+      .limit(5);
+    if (targetUserId) pcQuery = pcQuery.eq("user_id", targetUserId);
+    const { data: pendingComplete } = await pcQuery;
+
+    for (let i = 0; i < (pendingComplete?.length || 0); i++) {
+      const item = pendingComplete![i];
+      // delay entre confirmaciones para no saturar iBS (no en la primera)
+      if (i > 0) await new Promise((r) => setTimeout(r, 10000));
+
+      try {
+        const completeRes = await fetch(
+          `${IBS_API_URL}/evidences/uploads/${item.ibs_evidence_id}/complete`,
+          { method: "POST", headers: ibsHeaders, body: JSON.stringify({}) },
+        );
+
+        if (completeRes.ok) {
+          const result = await completeRes.json();
+          const finalEvidenceId = result.id;
+          await supabaseAdmin.from("works").update({
+            ibs_evidence_id: finalEvidenceId,
+            updated_at: new Date().toISOString(),
+          }).eq("id", item.work_id);
+
+          await supabaseAdmin.from("ibs_sync_queue").update({
+            status: "waiting",
+            ibs_evidence_id: finalEvidenceId,
+            updated_at: new Date().toISOString(),
+          }).eq("id", item.id);
+
+          summary.completed++;
+          console.log(`[IBS-SYNC] Complete OK ${item.work_id} → ${finalEvidenceId}`);
+        } else {
+          const errText = await completeRes.text().catch(() => "unknown");
+          const newRetry = (item.retry_count || 0) + 1;
+          const exhaustedNow = newRetry >= (item.max_retries || 3);
+          await supabaseAdmin.from("ibs_sync_queue").update({
+            retry_count: newRetry,
+            status: exhaustedNow ? "exhausted" : "pending_complete",
+            error_detail: `complete ${completeRes.status}: ${errText.slice(0, 300)}`,
+            last_retry_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }).eq("id", item.id);
+          summary.complete_failed++;
+          console.warn(`[IBS-SYNC] Complete failed ${item.work_id} [${completeRes.status}]: ${errText.slice(0, 200)}`);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "network error";
+        const newRetry = (item.retry_count || 0) + 1;
+        const exhaustedNow = newRetry >= (item.max_retries || 3);
+        await supabaseAdmin.from("ibs_sync_queue").update({
+          retry_count: newRetry,
+          status: exhaustedNow ? "exhausted" : "pending_complete",
+          error_detail: `complete network: ${msg}`,
+          last_retry_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }).eq("id", item.id);
+        summary.complete_failed++;
+      }
+    }
+
+    // ── FASE 2: Polling de estado (waiting/retrying) ──────────────────
     let q = supabaseAdmin
       .from("ibs_sync_queue")
       .select("*")
@@ -99,12 +179,13 @@ serve(async (req) => {
     if (error) throw error;
     if (!items || items.length === 0) {
       return new Response(
-        JSON.stringify({ processed: 0, resolved: 0, retrying: 0, exhausted: 0 }),
+        JSON.stringify(summary),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const summary = { processed: items.length, resolved: 0, retrying: 0, exhausted: 0 };
+    summary.processed = items.length;
+
 
     for (const item of items) {
       try {
