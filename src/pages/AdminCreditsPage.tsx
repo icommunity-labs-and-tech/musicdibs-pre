@@ -57,6 +57,9 @@ export default function AdminCreditsPage() {
 
   // Quick adjust
   const [searchEmail, setSearchEmail] = useState('');
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
   const [foundUser, setFoundUser] = useState<any>(null);
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
@@ -72,17 +75,34 @@ export default function AdminCreditsPage() {
 
   useEffect(() => { loadTx(); }, [offset, typeFilter, dateFrom, dateTo]);
 
-  const handleSearchUser = async () => {
-    if (!searchEmail.trim()) return;
-    try {
-      const res = await adminApi.searchUserByEmail(searchEmail);
-      if (!res.user) {
-        toast.error('Usuario no encontrado');
-        setFoundUser(null);
-        return;
+  // Live search with debounce
+  useEffect(() => {
+    const q = searchEmail.trim();
+    if (q.length < 2) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await adminApi.searchUsersByEmail(q, 10);
+        setSearchResults(res.users || []);
+        setShowResults(true);
+      } catch (e: any) {
+        toast.error(e.message);
+        setSearchResults([]);
+      } finally {
+        setSearching(false);
       }
-      setFoundUser(res.user);
-    } catch (e: any) { toast.error(e.message); setFoundUser(null); }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchEmail]);
+
+  const selectUser = (u: any) => {
+    setFoundUser(u);
+    setSearchEmail(u.email || u.display_name || '');
+    setShowResults(false);
   };
 
   const parsedAmount = parseInt(amount);
