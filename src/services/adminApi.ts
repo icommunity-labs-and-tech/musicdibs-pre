@@ -18,12 +18,29 @@ async function getAdminAccessToken() {
   return accessToken;
 }
 
-async function adminAction(action: string, payload: AdminActionPayload = {}) {
-  const accessToken = await getAdminAccessToken();
-  const { data, error } = await supabase.functions.invoke('admin-action', {
-    headers: { Authorization: `Bearer ${accessToken}` },
+async function invokeOnce(action: string, payload: AdminActionPayload, token: string) {
+  return supabase.functions.invoke('admin-action', {
+    headers: { Authorization: `Bearer ${token}` },
     body: { action, payload },
   });
+}
+
+function isUnauthorized(error: any, data: any) {
+  const msg = String(error?.message || data?.error || '').toLowerCase();
+  return (error as any)?.context?.status === 401 || msg.includes('unauthorized') || msg.includes('401');
+}
+
+async function adminAction(action: string, payload: AdminActionPayload = {}) {
+  let accessToken = await getAdminAccessToken();
+  let { data, error } = await invokeOnce(action, payload, accessToken);
+
+  // Transient 401 → refresh session and retry once
+  if ((error || data?.error) && isUnauthorized(error, data)) {
+    const { data: refreshed } = await supabase.auth.refreshSession();
+    accessToken = refreshed.session?.access_token || accessToken;
+    ({ data, error } = await invokeOnce(action, payload, accessToken));
+  }
+
   if (error) throw new Error(error.message || 'Admin action failed');
   if (data?.error) throw new Error(data.error);
   return data;
