@@ -1,0 +1,25 @@
+# MusicDibs
+
+> MusicDibs es un SaaS de registro de propiedad intelectual musical en blockchain con IA generativa, dirigido a músicos, productores, managers y agencias. Permite registrar obras con evidencia certificada (iBS), crear música, letras, portadas, vídeo y voz con IA, gestionar una biblioteca multimedia, distribuir y promocionar en redes sociales.
+
+## Pages
+
+- [Inicio](/): Visión general de la plataforma, registro blockchain y AI Studio.
+- [Distribución](/distribution): Distribución musical a plataformas digitales.
+- [AI Studio](/ai-studio): Suite de herramientas de IA generativa para música.
+- [Crea tu música](/ai-studio/music): Generación de música con IA.
+- [Letras con IA](/ai-studio/lyrics): Generación de letras con IA.
+- [Portadas con IA](/ai-studio/cover): Generación de portadas de álbum con IA.
+- [Vídeo con IA](/ai-studio/video): Generación de vídeos musicales con IA.
+- [Voz con IA](/ai-studio/voice): Síntesis y clonación de voz con IA.
+- [Manager](/manager): Panel para managers y agencias musicales.
+- [Noticias](/news): Blog y novedades del sector musical.
+- [FAQ](/faq): Preguntas frecuentes.
+- [Validez legal](/legal-validity): Información sobre la validez legal del registro blockchain.
+- [Contacto](/contact): Formulario de contacto.
+- [Verificar](/verify): Verificación pública de obras registradas.
+- [SLA](/sla): Acuerdo de nivel de servicio.
+- [Privacidad](/privacy): Política de privacidad.
+- [Términos](/terms): Términos y condiciones.
+- [Cookies](/cookies): Política de cookies.
+- [Login](/login): Acceso a la plataforma.
