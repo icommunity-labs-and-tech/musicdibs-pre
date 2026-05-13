@@ -235,7 +235,47 @@ serve(async (req) => {
     // Use POST /v2/evidences directly with inline base64 files (per iBS support)
     console.log(`[IBS] Using POST /evidences (inline) for work ${workId} (${fileSizeMB.toFixed(1)}MB), ${allFilePaths.length} file(s)`);
 
-    const { encode: base64Encode } = await import("https://deno.land/std@0.168.0/encoding/base64.ts");
+    // Streaming base64 encoder: reads file in chunks from storage and encodes
+    // incrementally to avoid loading the entire ArrayBuffer + a separate base64
+    // string into memory at the same time (which caused worker OOM > 50MB).
+    async function streamFileToBase64(url: string): Promise<string> {
+      const res = await fetch(url);
+      if (!res.ok || !res.body) {
+        throw new Error(`fetch failed: ${res.status}`);
+      }
+      const reader = res.body.getReader();
+      let out = "";
+      let leftover = new Uint8Array(0);
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        if (!value || value.length === 0) continue;
+        // Concatenate leftover (0..2 bytes) with new chunk
+        const merged = new Uint8Array(leftover.length + value.length);
+        merged.set(leftover, 0);
+        merged.set(value, leftover.length);
+        // Encode in multiples of 3 bytes; carry the rest to next iteration
+        const usable = merged.length - (merged.length % 3);
+        if (usable > 0) {
+          // btoa needs a binary string — build it directly from this slice only
+          let bin = "";
+          const slice = merged.subarray(0, usable);
+          const STEP = 0x8000;
+          for (let i = 0; i < slice.length; i += STEP) {
+            bin += String.fromCharCode(...slice.subarray(i, Math.min(i + STEP, slice.length)));
+          }
+          out += btoa(bin);
+        }
+        leftover = merged.subarray(usable);
+      }
+      // Flush remaining 0..2 bytes
+      if (leftover.length > 0) {
+        let bin = "";
+        for (let i = 0; i < leftover.length; i++) bin += String.fromCharCode(leftover[i]);
+        out += btoa(bin);
+      }
+      return out;
+    }
 
     const inlineFiles: Array<{ name: string; file: string }> = [];
     for (const fp of allFilePaths) {
@@ -246,17 +286,17 @@ serve(async (req) => {
         console.warn(`[IBS] Could not sign URL for "${fp}", skipping`);
         continue;
       }
-      const fr = await fetch(url);
-      if (!fr.ok) {
-        console.error(`[IBS] Failed to fetch "${fp}" from storage: ${fr.status}`);
+      try {
+        const b64 = await streamFileToBase64(url);
+        if (!b64) {
+          console.warn(`[IBS] File "${fp}" is empty, skipping`);
+          continue;
+        }
+        inlineFiles.push({ name, file: b64 });
+      } catch (err) {
+        console.error(`[IBS] Failed to stream-encode "${fp}":`, err);
         continue;
       }
-      const buf = await fr.arrayBuffer();
-      if (!buf.byteLength) {
-        console.warn(`[IBS] File "${fp}" is empty, skipping`);
-        continue;
-      }
-      inlineFiles.push({ name, file: base64Encode(new Uint8Array(buf) as any) });
     }
 
     if (inlineFiles.length === 0) {
