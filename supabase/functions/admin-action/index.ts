@@ -58,16 +58,7 @@ serve(async (req) => {
       }
     } catch (_e) { /* fall through */ }
 
-    // 2) Fallback: decode JWT payload directly (sub + email are signed claims)
-    if (!callerUserId) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-        if (payload?.sub) {
-          callerUserId = payload.sub;
-          callerEmail = payload.email || "";
-        }
-      } catch (_e) { /* ignore */ }
-    }
+    // NOTE: JWT decode fallback removed — insecure (no signature verification)
 
     // 3) Last resort: getUser
     if (!callerUserId) {
@@ -813,16 +804,10 @@ serve(async (req) => {
       const { email } = payload;
       if (!email) return json({ error: "email required" }, 400);
 
-      const target = email.trim().toLowerCase();
-      let found: any = null;
-      // Paginate through auth.users (listUsers caps perPage at 1000) until we find a match
-      for (let page = 1; page <= 50 && !found; page++) {
-        const { data, error: listErr } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
-        if (listErr) return json({ error: listErr.message }, 500);
-        const users = data?.users || [];
-        found = users.find((u: any) => u.email?.toLowerCase() === target);
-        if (users.length < 1000) break; // no more pages
-      }
+      const { data: { users: authUsers } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      const found = (authUsers || []).find(
+        (u: any) => u.email?.toLowerCase() === email.toLowerCase()
+      );
       if (!found) return json({ error: "User not found" }, 404);
 
       const { data: profile } = await admin.from("profiles").select("*").eq("user_id", found.id).single();
