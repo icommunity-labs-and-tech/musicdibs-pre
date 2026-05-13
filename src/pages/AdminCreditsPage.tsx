@@ -120,7 +120,11 @@ export default function AdminCreditsPage() {
       await adminApi.adjustCredits(foundUser.user_id, parsedAmount, reason.slice(0, 200));
       toast.success(`Créditos ajustados: ${parsedAmount > 0 ? '+' : ''}${parsedAmount}`);
       setAmount(''); setReason('');
-      handleSearchUser(); // refresh
+      // refresh found user balance
+      try {
+        const res = await adminApi.searchUsersByEmail(foundUser.email || '', 1);
+        if (res.users?.[0]) setFoundUser(res.users[0]);
+      } catch { /* ignore */ }
       loadTx();
     } catch (e: any) { toast.error(e.message); }
   };
