@@ -1,3 +1,18 @@
+/**
+ * ⚠️  DO NOT MODIFY THIS FILE  ⚠️
+ *
+ * register-work-ibs usa el flujo presigned GCS de 3 pasos (iBS API v2).
+ * Cualquier cambio a base64 (incluso "streaming") causa OOM en el worker
+ * Deno con archivos >25MB y rompe el registro de obras para todos los usuarios.
+ *
+ * Flujo actual (v224):
+ *   PASO 1 → POST /v2/evidences/uploads      (sesión + URLs presignadas GCS)
+ *   PASO 2 → PUT  <url_gcs>                  (stream directo, SIN base64)
+ *   PASO 3 → POST /v2/evidences/uploads/{id}/complete
+ *
+ * Para cualquier cambio en esta función, consultar primero con el equipo técnico.
+ * Límite soportado: hasta 5 GiB por archivo.
+ */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
