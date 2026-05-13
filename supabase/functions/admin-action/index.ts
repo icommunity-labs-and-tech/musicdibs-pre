@@ -58,16 +58,8 @@ serve(async (req) => {
       }
     } catch (_e) { /* fall through */ }
 
-    // 2) Fallback: decode JWT payload directly (sub + email are signed claims)
-    if (!callerUserId) {
-      try {
-        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-        if (payload?.sub) {
-          callerUserId = payload.sub;
-          callerEmail = payload.email || "";
-        }
-      } catch (_e) { /* ignore */ }
-    }
+    // NOTE: JWT decode fallback removed — insecure (no signature verification)
+    // callerUserId must come from supabase.auth.getUser() only
 
     // 3) Last resort: getUser
     if (!callerUserId) {
