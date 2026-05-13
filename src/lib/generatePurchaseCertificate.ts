@@ -1,4 +1,4 @@
-import jsPDF from 'jspdf'
+import { jsPDF } from 'jspdf'
 import QRCode from 'qrcode'
 import logoMusicdibs from '@/assets/logo_musicdibs_black.jpg'
 
