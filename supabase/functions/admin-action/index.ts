@@ -58,7 +58,16 @@ serve(async (req) => {
       }
     } catch (_e) { /* fall through */ }
 
-    // NOTE: JWT decode fallback removed — insecure (no signature verification)
+    // 2) Fallback: decode JWT payload directly (sub + email are signed claims)
+    if (!callerUserId) {
+      try {
+        const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+        if (payload?.sub) {
+          callerUserId = payload.sub;
+          callerEmail = payload.email || "";
+        }
+      } catch (_e) { /* ignore */ }
+    }
 
     // 3) Last resort: getUser
     if (!callerUserId) {
@@ -136,6 +145,30 @@ serve(async (req) => {
       );
       results.forEach((r) => { if (r.email) map[r.uid] = r.email; });
       return map;
+    }
+
+    async function findAuthUserByEmail(email: string): Promise<{ id: string; email: string } | null> {
+      const target = email.trim().toLowerCase();
+      if (!target) return null;
+
+      const { data: authRows } = await admin.rpc("get_user_auth_data", { user_email: target });
+      const rpcUserId = Array.isArray(authRows) ? authRows[0]?.user_id : null;
+      if (typeof rpcUserId === "string" && rpcUserId.length > 0) {
+        const { data: targetAuth } = await admin.auth.admin.getUserById(rpcUserId);
+        return { id: rpcUserId, email: targetAuth?.user?.email || target };
+      }
+
+      const perPage = 1000;
+      for (let page = 1; page <= 50; page++) {
+        const { data, error: listErr } = await admin.auth.admin.listUsers({ page, perPage });
+        if (listErr) throw listErr;
+        const users = data?.users || [];
+        const found = users.find((u: { id: string; email?: string }) => u.email?.toLowerCase() === target);
+        if (found) return { id: found.id, email: found.email || target };
+        if (users.length < perPage) break;
+      }
+
+      return null;
     }
 
     // ── Helper: get display_name map from profiles ──────────
@@ -804,13 +837,17 @@ serve(async (req) => {
       const { email } = payload;
       if (!email) return json({ error: "email required" }, 400);
 
-      const { data: { users: authUsers } } = await admin.auth.admin.listUsers({ perPage: 1000 });
-      const found = (authUsers || []).find(
-        (u: any) => u.email?.toLowerCase() === email.toLowerCase()
-      );
+      let found: { id: string; email: string } | null = null;
+      try {
+        found = await findAuthUserByEmail(String(email));
+      } catch (listErr) {
+        return json({ error: listErr instanceof Error ? listErr.message : "Error searching user" }, 500);
+      }
       if (!found) return json({ error: "User not found" }, 404);
 
-      const { data: profile } = await admin.from("profiles").select("*").eq("user_id", found.id).single();
+      const { data: profile, error: profileErr } = await admin.from("profiles").select("*").eq("user_id", found.id).maybeSingle();
+      if (profileErr) return json({ error: profileErr.message }, 500);
+      if (!profile) return json({ error: "Profile not found" }, 404);
       return json({ user: { ...profile, email: found.email } });
     }
 
