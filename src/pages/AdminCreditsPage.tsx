@@ -191,9 +191,37 @@ export default function AdminCreditsPage() {
       <Card className="border-border/40">
         <CardHeader><CardTitle className="text-base">Ajuste rápido de créditos</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input placeholder="Email del usuario" value={searchEmail} onChange={e => setSearchEmail(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearchUser()} />
-            <Button onClick={handleSearchUser} variant="secondary"><Search className="h-4 w-4 mr-1" /> Buscar</Button>
+          <div className="relative">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Email o nombre del usuario (mínimo 2 caracteres)"
+                value={searchEmail}
+                onChange={e => { setSearchEmail(e.target.value); setShowResults(true); }}
+                onFocus={() => setShowResults(true)}
+              />
+              {searching && <span className="text-xs text-muted-foreground self-center">Buscando…</span>}
+            </div>
+            {showResults && searchEmail.trim().length >= 2 && (
+              <div className="absolute z-10 mt-1 w-full max-h-72 overflow-auto rounded-md border border-border/40 bg-popover shadow-md">
+                {searchResults.length === 0 && !searching && (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">Sin resultados</div>
+                )}
+                {searchResults.map(u => (
+                  <button
+                    key={u.user_id}
+                    type="button"
+                    onClick={() => selectUser(u)}
+                    className="w-full text-left px-3 py-2 hover:bg-muted/50 border-b border-border/20 last:border-0"
+                  >
+                    <div className="text-sm font-medium">{u.display_name || u.email || '(sin nombre)'}</div>
+                    <div className="text-xs text-muted-foreground flex justify-between gap-2">
+                      <span className="truncate">{u.email}</span>
+                      <span className="font-mono text-primary shrink-0">{u.available_credits ?? 0} cr.</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           {foundUser && (
             <div className="space-y-3 p-3 rounded-lg bg-muted/30">
