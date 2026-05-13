@@ -26,6 +26,20 @@ const SAMPLE_PROMPTS: Record<string, string> = {
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
+  // Auth: only callable internally (service role or cron secret)
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  const cronSecret = Deno.env.get('CRON_SECRET') || '';
+  const authHeader = req.headers.get('Authorization') || '';
+  const cronHeader = req.headers.get('x-cron-secret') || '';
+  const isAuth =
+    authHeader === `Bearer ${serviceKey}` ||
+    (cronSecret && cronHeader === cronSecret);
+  if (!isAuth) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const ELEVENLABS_API_KEY = Deno.env.get('ELEVENLABS_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
