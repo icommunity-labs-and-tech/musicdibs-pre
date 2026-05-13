@@ -2,6 +2,23 @@ import { supabase } from '@/integrations/supabase/client';
 
 type AdminActionPayload = Record<string, unknown>;
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://kmwehyixenybegwhqljx.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY =
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imttd2VoeWl4ZW55YmVnd2hxbGp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NDEwMzQsImV4cCI6MjA5MDAxNzAzNH0.DZ2gEjz_DAkHfEetYo72NAUbdhq2lui9rIrMysWJUNo';
+
+class AdminActionHttpError extends Error {
+  status: number;
+  body: unknown;
+
+  constructor(status: number, message: string, body: unknown) {
+    super(message);
+    this.name = 'AdminActionHttpError';
+    this.status = status;
+    this.body = body;
+  }
+}
+
 async function getAdminAccessToken() {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) throw new Error('No se pudo verificar la sesión. Vuelve a iniciar sesión.');
@@ -19,31 +36,54 @@ async function getAdminAccessToken() {
 }
 
 async function invokeOnce(action: string, payload: AdminActionPayload, token: string) {
-  return supabase.functions.invoke('admin-action', {
-    headers: { Authorization: `Bearer ${token}` },
-    body: { action, payload },
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/admin-action`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ action, payload }),
   });
+
+  const contentType = response.headers.get('Content-Type') || '';
+  const data = contentType.includes('application/json') ? await response.json() : await response.text();
+
+  if (!response.ok) {
+    const message = typeof data === 'object' && data !== null && 'error' in data
+      ? String((data as { error?: unknown }).error || 'Admin action failed')
+      : `Admin action failed (${response.status})`;
+    throw new AdminActionHttpError(response.status, message, data);
+  }
+
+  return data;
 }
 
-function isUnauthorized(error: any, data: any) {
-  const msg = String(error?.message || data?.error || '').toLowerCase();
-  return (error as any)?.context?.status === 401 || msg.includes('unauthorized') || msg.includes('401');
+function isUnauthorized(error: unknown) {
+  if (error instanceof AdminActionHttpError && error.status === 401) return true;
+  const msg = error instanceof Error ? error.message.toLowerCase() : String(error || '').toLowerCase();
+  return msg.includes('unauthorized') || msg.includes('401');
 }
 
 async function adminAction(action: string, payload: AdminActionPayload = {}) {
   let accessToken = await getAdminAccessToken();
-  let { data, error } = await invokeOnce(action, payload, accessToken);
 
-  // Transient 401 → refresh session and retry once
-  if ((error || data?.error) && isUnauthorized(error, data)) {
-    const { data: refreshed } = await supabase.auth.refreshSession();
+  try {
+    const data = await invokeOnce(action, payload, accessToken);
+    if (data?.error) throw new Error(data.error);
+    return data;
+  } catch (error) {
+    // Transient 401 → refresh session and retry once with a fresh bearer token.
+    if (!isUnauthorized(error)) throw error;
+
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) throw new Error('Tu sesión ha caducado. Vuelve a iniciar sesión.');
+
     accessToken = refreshed.session?.access_token || accessToken;
-    ({ data, error } = await invokeOnce(action, payload, accessToken));
+    const data = await invokeOnce(action, payload, accessToken);
+    if (data?.error) throw new Error(data.error);
+    return data;
   }
-
-  if (error) throw new Error(error.message || 'Admin action failed');
-  if (data?.error) throw new Error(data.error);
-  return data;
 }
 
 export const adminApi = {
