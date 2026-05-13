@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, Check, X, Wand2 } from 'lucide-react';
+import { SEO } from '@/components/SEO';
 
 export default function UserLogin() {
   const { t, i18n } = useTranslation();
@@ -178,6 +179,11 @@ export default function UserLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #16082a 50%, #0d0618 100%)' }}>
+      <SEO
+        title="Acceder"
+        description="Inicia sesión o crea tu cuenta en Musicdibs para registrar tu música en blockchain, distribuirla y promocionarla."
+        path="/login"
+      />
       <Card className="w-full max-w-md border-border/30 bg-card/95 backdrop-blur-sm shadow-2xl">
         <CardHeader className="text-center space-y-3">
           <img src="/lovable-uploads/81d79e1f-fd6f-4e2c-a573-89261bcf3879.png" alt="Musicdibs" className="mx-auto h-14 w-auto invert" />
