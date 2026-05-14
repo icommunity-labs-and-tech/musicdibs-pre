@@ -43,8 +43,8 @@ const Footer = () => {
       
       <div className="relative z-10 container mx-auto px-6 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-          {/* Block 1 - Logo */}
-          <div>
+          {/* Block 1 - Logo + SEO landing links */}
+          <div className="space-y-4">
             <a href="https://icommunity.io/" target="_blank" rel="noopener noreferrer">
               <img 
                 src="/lovable-uploads/eca60bb5-0409-4e18-bc0a-0e93aeabee3d.png" 
@@ -55,6 +55,20 @@ const Footer = () => {
                 loading="lazy"
               />
             </a>
+            <div className="space-y-2 pt-2">
+              <Link to="/registro-obras-musicales" className="block text-white/70 hover:text-white text-sm transition-colors">
+                Registro de obras musicales
+              </Link>
+              <Link to="/derechos-autor-musica" className="block text-white/70 hover:text-white text-sm transition-colors">
+                Derechos de autor en música
+              </Link>
+              <Link to="/copyright-a-song" className="block text-white/70 hover:text-white text-sm transition-colors">
+                How to copyright a song
+              </Link>
+              <Link to="/register-a-song" className="block text-white/70 hover:text-white text-sm transition-colors">
+                Register a song online
+              </Link>
+            </div>
           </div>
 
           {/* Block 2 - Web */}
@@ -87,21 +101,6 @@ const Footer = () => {
             <Link to="/verify" className="block text-white/80 hover:text-white transition-colors">
               {t('nav.verifier')}
             </Link>
-            {/* SEO landing pages — internal authority links */}
-            <div className="pt-3 mt-3 border-t border-white/10 space-y-2">
-              <Link to="/registro-obras-musicales" className="block text-white/70 hover:text-white text-sm transition-colors">
-                Registro de obras musicales
-              </Link>
-              <Link to="/derechos-autor-musica" className="block text-white/70 hover:text-white text-sm transition-colors">
-                Derechos de autor en música
-              </Link>
-              <Link to="/copyright-a-song" className="block text-white/70 hover:text-white text-sm transition-colors">
-                How to copyright a song
-              </Link>
-              <Link to="/register-a-song" className="block text-white/70 hover:text-white text-sm transition-colors">
-                Register a song online
-              </Link>
-            </div>
           </div>
 
           {/* Block 3 - Corporativo */}
