@@ -5,6 +5,56 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ── Artist-name filter ──────────────────────────────────────────────────────
+// Kie/Suno rejects prompts that reference real artists. We strip both an
+// explicit blocklist of well-known names AND any proper noun introduced by
+// phrases like "estilo de", "influencias de", "como" or "similar a".
+const BLOCKED_ARTISTS = [
+  'BTS', 'Stray Kids', 'TXT', 'Tomorrow X Together', 'Taylor Swift',
+  'Bad Bunny', 'Drake', 'Beyoncé', 'Beyonce', 'The Weeknd', 'Daft Punk',
+  'Tame Impala', 'Rosalía', 'Rosalia', 'Billie Eilish', 'Dua Lipa',
+  'Ariana Grande', 'Ed Sheeran', 'Justin Bieber', 'Rihanna', 'Adele',
+  'Kanye West', 'Kendrick Lamar', 'Travis Scott', 'Post Malone',
+  'Harry Styles', 'Olivia Rodrigo', 'BLACKPINK', 'NewJeans', 'SEVENTEEN',
+  'Karol G', 'J Balvin', 'Shakira', 'Maluma', 'Anuel', 'Anitta', 'Peso Pluma',
+];
+
+function sanitizeArtistRefs(text: string, genre?: string): string {
+  if (!text) return text;
+  const generic = (genre && genre.trim()) ? `the ${genre.trim()} genre` : 'the genre';
+
+  let out = text;
+
+  // 1) Phrase-introduced references (ES/EN/PT). Capture up to ~80 chars or end of clause.
+  const phrasePatterns: RegExp[] = [
+    /\b(influencias?\s+de|influenced?\s+by|influências?\s+de)\s+[^,.;\n]{1,80}/gi,
+    /\b(estilo\s+de|al\s+estilo\s+de|style\s+of|estilo\s+a\s+lo|no\s+estilo\s+de)\s+[^,.;\n]{1,80}/gi,
+    /\b(inspirad[oa]s?\s+(?:en|por)|inspired?\s+by|inspirad[oa]s?\s+em)\s+[^,.;\n]{1,80}/gi,
+    /\b(en\s+la\s+vena\s+de|in\s+the\s+vein\s+of|na\s+linha\s+de|en\s+la\s+l[ií]nea\s+de|a\s+lo)\s+[^,.;\n]{1,80}/gi,
+    /\b(como|like|similar(?:es)?\s+a|similar\s+to|reminiscent\s+of|parecid[oa]s?\s+a)\s+[A-ZÁÉÍÓÚÑ][^,.;\n]{1,80}/g,
+    /\b(reference\s+artists?|artistas?\s+(?:de\s+)?referencia|artistas?\s+como)\s*:?\s*[^.;\n]{1,120}/gi,
+  ];
+  for (const re of phrasePatterns) out = out.replace(re, generic);
+
+  // 2) Explicit blocklist (whole word, case-insensitive).
+  for (const name of BLOCKED_ARTISTS) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`\\b${escaped}\\b`, 'gi');
+    out = out.replace(re, generic);
+  }
+
+  // 3) Cleanup: collapse leftover whitespace/punctuation.
+  out = out
+    .replace(/\s+,/g, ',')
+    .replace(/,\s*,+/g, ',')
+    .replace(/\(\s*[,.\s]*\)/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s+([.,;])/g, '$1')
+    .trim();
+
+  return out;
+}
+
 const VISUAL_SYSTEM_PROMPTS: Record<string, string> = {
   visual_creative: `You are an expert in visual design and AI image generation for music promotion (Instagram, YouTube, posters).
 Your task is to create or improve image generation prompts that produce stunning promotional visuals.
