@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { SEO } from "@/components/SEO"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
@@ -160,6 +161,7 @@ const AIStudioCovers = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Generador de Portadas" description="Crea portadas profesionales para tu single o álbum con IA. Configura estilo, artista y título." path="/ai-studio/covers" />
       <Navbar />
       <AIStudioThemeBar />
       <main className="container mx-auto px-4 py-6 pt-16">

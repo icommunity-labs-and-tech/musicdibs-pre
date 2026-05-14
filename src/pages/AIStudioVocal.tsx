@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { SEO } from '@/components/SEO';
 import { FileDropzone } from '@/components/FileDropzone';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -389,6 +390,7 @@ export default function AIStudioVocal() {
   // ──── REGULAR (has clones) ────
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Herramientas de Voz" description="Tu estudio vocal IA: clona tu voz, canta en 29 idiomas, genera pistas vocales y traduce audios." path="/ai-studio/vocal" />
       <VoiceToolsTour />
       <Navbar />
       <AIStudioThemeBar />

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SEO } from '@/components/SEO';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,6 +21,7 @@ const PromoMaterialPage = () => {
 
   return (
     <div className="min-h-screen bg-background" key={i18n.language}>
+      <SEO title="Material Promocional" description="Crea portadas, videos, creatividades y todo el contenido visual para promocionar tu música en redes sociales." path="/ai-studio/promo-material" />
       <Navbar />
       <AIStudioThemeBar />
       <PromoMaterialTour />

@@ -1,4 +1,5 @@
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { SEO } from "@/components/SEO";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -1017,6 +1018,7 @@ const AIStudioCreate = () => {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background">
+      <SEO title="Crea tu música" description="Crea música e inspírate con IA. Describe tu canción, elige género, voz y genera tu track en minutos." path="/ai-studio/create" />
       <Navbar />
       <AIStudioThemeBar />
 
