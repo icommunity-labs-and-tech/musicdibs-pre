@@ -151,10 +151,20 @@ const COPY: Record<Lang, {
 
 const whyIcons = [Shield, Zap, Globe, FileCheck];
 
-const SongRegistrationPage = () => {
+interface Props {
+  forcedLang?: Lang;
+  forcedPath?: string;
+  forcedSeoTitle?: string;
+  forcedSeoDesc?: string;
+}
+
+const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoDesc }: Props = {}) => {
   const { i18n } = useTranslation();
-  const lang = (["es", "en", "pt-BR"].includes(i18n.language) ? i18n.language : "es") as Lang;
+  const lang: Lang = forcedLang ?? ((["es", "en", "pt-BR"].includes(i18n.language) ? i18n.language : "es") as Lang);
   const c = COPY[lang];
+  const path = forcedPath ?? "/registro-obras-musicales";
+  const seoTitle = forcedSeoTitle ?? c.seoTitle;
+  const seoDesc = forcedSeoDesc ?? c.seoDesc;
 
   const articleSchema = {
     "@context": "https://schema.org",
@@ -178,9 +188,9 @@ const SongRegistrationPage = () => {
   return (
     <div className="min-h-screen page-bg">
       <SEO
-        title={c.seoTitle}
-        description={c.seoDesc}
-        path="/registro-obras-musicales"
+        title={seoTitle}
+        description={seoDesc}
+        path={path}
         type="article"
         locale={lang}
         jsonLd={[articleSchema, faqSchema]}
