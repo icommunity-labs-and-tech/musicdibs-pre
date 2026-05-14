@@ -93,6 +93,63 @@ serve(async (req) => {
       });
     }
 
+    // ── Pre-check: verificar que la firma esté REALMENTE verificada en iBS ──
+    // Evita consumir crédito + reintentos si la firma no está KYC-completa
+    // (iBS devuelve 500 en /evidences si el signer no está verificado).
+    {
+      const { data: sigRow } = await supabaseAdmin
+        .from("ibs_signatures")
+        .select("status")
+        .eq("ibs_signature_id", signatureId)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      let sigStatus = sigRow?.status as string | undefined;
+
+      // Si no está 'success' en BD, refrescamos contra iBS antes de rechazar
+      if (sigStatus !== "success") {
+        try {
+          const ibsCheck = await fetch(`${IBS_API_URL}/signatures/${signatureId}`, {
+            headers: { Authorization: `Bearer ${IBS_API_KEY}` },
+          });
+          if (ibsCheck.ok) {
+            const ibsData = await ibsCheck.json();
+            const realStatus = ibsData?.status as string | undefined;
+            if (realStatus && realStatus !== sigStatus) {
+              await supabaseAdmin
+                .from("ibs_signatures")
+                .update({ status: realStatus, updated_at: new Date().toISOString() })
+                .eq("ibs_signature_id", signatureId);
+              sigStatus = realStatus;
+            }
+            // Si iBS la marca como verificada, sincronizamos también el perfil
+            if (realStatus === "success") {
+              await supabaseAdmin
+                .from("profiles")
+                .update({ kyc_status: "verified", ibs_signature_id: signatureId, updated_at: new Date().toISOString() })
+                .eq("user_id", user.id);
+            }
+          }
+        } catch (err) {
+          console.warn(`[IBS] pre-check signature fetch failed:`, err);
+        }
+      }
+
+      if (sigStatus !== "success") {
+        console.log(`[IBS] Pre-check rejected: signature ${signatureId} status='${sigStatus}' (no verificada)`);
+        // No tocamos el work — sigue en draft, sin descontar crédito
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: "Esta firma no está verificada. Completa el KYC pendiente o crea una nueva firma para poder registrar obras.",
+            code: "signature_not_verified",
+            signatureStatus: sigStatus || "unknown",
+          }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     const { data: work, error: workError } = await supabaseAdmin
       .from("works")
       .select("id, user_id, title, description, status, file_path, file_hash, file_hash_sha512_b64")
