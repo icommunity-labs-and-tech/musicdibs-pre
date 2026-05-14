@@ -281,7 +281,7 @@ serve(async (req) => {
 
       const [{ data: roles }, { data: worksCounts }] = await Promise.all([
         admin.from("user_roles").select("user_id, role").in("user_id", userIds),
-        admin.from("works").select("user_id").in("user_id", userIds),
+        admin.from("works").select("user_id").in("user_id", userIds).eq("status", "registered"),
       ]);
 
       const rolesMap: Record<string, string[]> = {};
