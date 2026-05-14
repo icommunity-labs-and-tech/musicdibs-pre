@@ -236,46 +236,6 @@ const AISongGeneratorPage = () => {
         </div>
       </section>
 
-      {/* EXAMPLES */}
-      <section className="px-6 py-24">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Songs generated on Musicdibs</h2>
-            <p className="text-white/60 text-lg max-w-2xl mx-auto">
-              From bedroom pop to cinematic scores — every genre, every mood.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-            {[
-              { genre: "Synthwave", mood: "Dreamy nights", color: "from-pink-500 to-purple-600" },
-              { genre: "Lo-fi Hip Hop", mood: "Late study", color: "from-blue-500 to-cyan-500" },
-              { genre: "Cinematic", mood: "Epic trailer", color: "from-orange-500 to-red-500" },
-              { genre: "Indie Pop", mood: "Summer roadtrip", color: "from-purple-500 to-pink-500" },
-              { genre: "Ambient", mood: "Deep focus", color: "from-emerald-500 to-teal-500" },
-              { genre: "Trap", mood: "Late drive", color: "from-yellow-500 to-orange-500" },
-              { genre: "Acoustic", mood: "Morning coffee", color: "from-amber-500 to-pink-500" },
-              { genre: "Electronic", mood: "Festival drop", color: "from-fuchsia-500 to-indigo-500" },
-            ].map((s, i) => (
-              <div
-                key={i}
-                className="group relative aspect-square rounded-2xl overflow-hidden border border-white/10 cursor-pointer"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-br ${s.color} opacity-80`} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="text-white/70 text-xs font-medium mb-1">AI-generated</div>
-                  <div className="text-white font-bold">{s.genre}</div>
-                  <div className="text-white/80 text-sm">{s.mood}</div>
-                </div>
-                <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center group-hover:bg-white/40 transition-all">
-                  <Music2 className="w-5 h-5 text-white" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* COMPARISON */}
       <section className="px-6 py-24 bg-white/[0.02]">
         <div className="max-w-5xl mx-auto">
