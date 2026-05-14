@@ -73,6 +73,12 @@ const ROUTES = [
     title: "AI Song Generator for Creators | Musicdibs",
     description: "Create, protect and distribute AI-generated music from one platform. AI vocals, lyrics, mastering, blockchain copyright and global distribution.",
   },
+  {
+    path: "/generador-canciones-ia",
+    locale: "es",
+    title: "Generador de canciones con IA | Musicdibs",
+    description: "Crea, protege y distribuye música generada con IA desde una sola plataforma. Voces IA, letras, masterización, copyright blockchain y distribución global.",
+  },
 ];
 
 const escapeAttr = (value) =>
