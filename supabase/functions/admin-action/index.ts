@@ -319,6 +319,7 @@ serve(async (req) => {
         roles: rolesMap[p.user_id] || ["user"],
         works_count: worksCountMap[p.user_id] || 0,
         email: emailsMap[p.user_id] || "",
+        latest_signature: sigMap[p.user_id] || null,
       }));
 
       if (search) {
