@@ -452,6 +452,14 @@ export default function AdminUsersPage() {
                           📧 Recordatorio KYC
                         </DropdownMenuItem>
                       )}
+                      {u.kyc_status !== 'verified' && u.latest_signature && u.latest_signature.status !== 'success' && (
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDeleteKycSignature(u.user_id, u.email)}
+                        >
+                          🗑️ Eliminar verificación KYC
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={async () => {
                         try {
