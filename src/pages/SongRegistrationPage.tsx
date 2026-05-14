@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
+import { CompetitorComparison } from "@/components/CompetitorComparison";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Shield, Clock, Globe, FileCheck, Zap, ArrowRight, CheckCircle2 } from "lucide-react";
@@ -303,6 +304,9 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
               </table>
             </div>
           </section>
+
+          {/* Competitor comparison block */}
+          <CompetitorComparison lang={lang} />
 
           {/* FAQ */}
           <section className="mb-20">
