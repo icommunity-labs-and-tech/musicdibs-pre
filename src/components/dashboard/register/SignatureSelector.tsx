@@ -28,36 +28,14 @@ export function SignatureSelector({ value, onChange }: SignatureSelectorProps) {
     try {
       await syncIbsSignatures();
       const sigs = await listIbsSignatures();
-      let merged = sigs;
+      // Estricto: solo mostramos firmas REALMENTE verificadas en iBS (status === 'success').
+      // Cualquier otro estado ('created', 'pending', 'initiated') significa que el KYC
+      // no está confirmado y certificar evidencia con esa firma fallaría con 500.
       const active = sigs.find((s: IbsSignature) => s.status === 'success');
       if (active && !value) {
         onChange(active.ibs_signature_id);
-      } else if (!active) {
-        // Fallback: migrated users may have a verified signature on their profile
-        // without a corresponding row in ibs_signatures.
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('ibs_signature_id, kyc_status')
-            .eq('user_id', user.id)
-            .single();
-          if (profile?.kyc_status === 'verified' && profile?.ibs_signature_id) {
-            const syntheticSig: IbsSignature = {
-              id: 'profile-fallback',
-              user_id: user.id,
-              ibs_signature_id: profile.ibs_signature_id,
-              signature_name: t('wizard.signature.verifiedIdentity'),
-              status: 'success',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            };
-            merged = [syntheticSig, ...sigs];
-            if (!value) onChange(profile.ibs_signature_id);
-          }
-        }
       }
-      setSignatures(merged);
+      setSignatures(sigs);
     } catch (err) {
       console.error('Error loading signatures:', err);
     }
