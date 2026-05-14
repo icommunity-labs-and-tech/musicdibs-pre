@@ -103,7 +103,7 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
       await new Promise((r) => setTimeout(r, INTERVAL_MS));
       try {
         const { data } = await supabase.functions.invoke('check-subscription');
-        const plan = (data as any)?.subscription_plan as string | undefined;
+        const plan = ((data as any)?.plan ?? (data as any)?.subscription_plan) as string | undefined;
         if (plan === expectedPlan) {
           if (expectedPlan === 'Annual') setCurrentPlanId('annual_100');
           else setCurrentPlanId('monthly');
