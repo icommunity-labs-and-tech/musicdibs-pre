@@ -257,7 +257,19 @@ serve(async (req) => {
           query = query.ilike("display_name", `%${escaped}%`);
         }
       }
-      if (kycFilter) query = query.eq("kyc_status", kycFilter);
+      // Filtros KYC: 'verified', 'pending', 'unverified', 'rejected', 'failed' van contra profiles.kyc_status.
+      // 'initiated' y 'created' filtran por estado de la última firma iBS (no se reflejan en profiles).
+      if (kycFilter === "initiated" || kycFilter === "created") {
+        const { data: sigUsers } = await admin
+          .from("ibs_signatures")
+          .select("user_id")
+          .eq("status", kycFilter);
+        const ids = Array.from(new Set((sigUsers || []).map((r: any) => r.user_id)));
+        if (ids.length === 0) return json({ users: [], total: 0 });
+        query = query.in("user_id", ids).neq("kyc_status", "verified");
+      } else if (kycFilter) {
+        query = query.eq("kyc_status", kycFilter);
+      }
       if (planFilter) query = query.eq("subscription_plan", planFilter);
       if (stripeFilter === "linked") query = query.not("stripe_customer_id", "is", null);
       if (stripeFilter === "unlinked") query = query.is("stripe_customer_id", null);
