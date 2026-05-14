@@ -331,7 +331,7 @@ serve(async (req) => {
         .from("ibs_signatures")
         .select("ibs_signature_id, status")
         .eq("user_id", user.id)
-        .in("status", ["pending"]);
+        .in("status", ["pending", "created", "initiated"]);
 
       if (sigs && sigs.length > 0) {
         for (const sig of sigs) {
@@ -346,6 +346,13 @@ serve(async (req) => {
                   .from("ibs_signatures")
                   .update({ status: ibsData.status, updated_at: new Date().toISOString() })
                   .eq("ibs_signature_id", sig.ibs_signature_id);
+                // Si pasó a verified, sincronizar perfil
+                if (ibsData.status === "success") {
+                  await supabaseAdmin
+                    .from("profiles")
+                    .update({ kyc_status: "verified", ibs_signature_id: sig.ibs_signature_id, updated_at: new Date().toISOString() })
+                    .eq("user_id", user.id);
+                }
               }
             }
           } catch (err) {
