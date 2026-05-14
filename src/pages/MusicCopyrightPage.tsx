@@ -301,6 +301,9 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
             </div>
           </section>
 
+          {/* Competitor comparison block */}
+          <CompetitorComparison lang={lang} ctaHref="/registro-obras-musicales" />
+
           {/* Myths */}
           <section className="mb-20">
             <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.mythsTitle}</h2>
