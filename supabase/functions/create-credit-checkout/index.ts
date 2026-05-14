@@ -262,18 +262,64 @@ serve(async (req) => {
           cancel_at_period_end: false,
         });
 
+        // Wait for Stripe to settle and re-read actual subscription state.
+        // Never trust the request payload — Stripe is the source of truth.
+        await new Promise((r) => setTimeout(r, 500));
+        const updatedSub = await stripe.subscriptions.retrieve(activeSub.id);
+        const actualPriceId = updatedSub.items?.data?.[0]?.price?.id ?? plan.priceId;
+
+        // Map actualPriceId → credits/plan via the same definitions used here.
+        let actualCredits = plan.credits;
+        let actualLabel = plan.label;
+        let actualProductType = plan.productType;
+        if (actualPriceId !== plan.priceId) {
+          try {
+            const actualPrice = await stripe.prices.retrieve(actualPriceId, { expand: ["product"] });
+            const matchedDef = PLAN_DEFINITIONS.find((d) => matchesDefinition(actualPrice, d));
+            if (matchedDef) {
+              actualCredits = resolveCredits(actualPrice, matchedDef);
+              actualLabel = matchedDef.label;
+              actualProductType = matchedDef.productType;
+            }
+          } catch (e) {
+            console.warn("[CHECKOUT] Could not resolve actual price, falling back to payload:", e);
+          }
+        }
+
+        const actualPlanName = actualProductType === "annual" ? "Annual" : "Monthly";
+
         await supabaseAdmin.from("profiles").update({
-          subscription_plan: plan.productType === "annual" ? "Annual" : "Monthly",
-          available_credits: plan.credits,
+          subscription_plan: actualPlanName,
+          available_credits: actualCredits,
           updated_at: new Date().toISOString(),
         }).eq("user_id", user.id);
+
+        // Persist the actual price id so the webhook can detect real plan changes.
+        const periodStart = (updatedSub as any).current_period_start
+          ? new Date((updatedSub as any).current_period_start * 1000).toISOString()
+          : null;
+        const periodEnd = (updatedSub as any).current_period_end
+          ? new Date((updatedSub as any).current_period_end * 1000).toISOString()
+          : null;
+        await supabaseAdmin.from("subscriptions").upsert({
+          user_id: user.id,
+          stripe_customer_id: customerId,
+          stripe_subscription_id: updatedSub.id,
+          stripe_price_id: actualPriceId,
+          plan: actualPlanName,
+          status: "active",
+          current_period_start: periodStart,
+          current_period_end: periodEnd,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+
         await supabaseAdmin.from("credit_transactions").insert({
           user_id: user.id,
-          amount: plan.credits,
+          amount: actualCredits,
           type: "subscription",
-          description: `Cambio de plan: ${plan.label}`,
+          description: `Cambio de plan: ${actualLabel}`,
         });
-        return json({ switched: true, message: `Plan cambiado a ${plan.label}.` });
+        return json({ switched: true, message: `Plan cambiado a ${actualLabel}.`, plan: actualPlanName, credits: actualCredits });
       }
     }
 
