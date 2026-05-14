@@ -300,35 +300,13 @@ async function handleRetryOrExhaust(
       })
       .eq("id", item.id);
 
-    // Mark work as failed and refund credit
+    // Mark work as failed — DB trigger `auto_refund_on_work_failure`
+    // is the single source of truth for refunding the credit. Do NOT
+    // refund here or we get duplicate refunds.
     await supabaseAdmin
       .from("works")
       .update({ status: "failed", updated_at: new Date().toISOString() })
       .eq("id", item.work_id);
-
-    // Refund credit
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("available_credits")
-      .eq("user_id", item.user_id)
-      .single();
-
-    if (profile) {
-      await supabaseAdmin
-        .from("profiles")
-        .update({
-          available_credits: profile.available_credits + 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", item.user_id);
-
-      await supabaseAdmin.from("credit_transactions").insert({
-        user_id: item.user_id,
-        amount: 1,
-        type: "refund",
-        description: `Reembolso automático (sync cron): ${reason}`,
-      });
-    }
 
     // Raise admin alert: certification definitively failed and credit refunded
     await supabaseAdmin.from("admin_alerts").insert({
