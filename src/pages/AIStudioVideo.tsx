@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { SEO } from "@/components/SEO";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -493,6 +494,7 @@ const AIStudioVideo = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Videoclips con IA" description="Genera videoclips musicales con IA desde texto o imagen. Crea contenido visual profesional para tu música." path="/ai-studio/video" />
       <Navbar />
       <AIStudioThemeBar />
 

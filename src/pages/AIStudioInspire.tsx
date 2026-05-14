@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { SEO } from "@/components/SEO";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -312,6 +313,7 @@ const AIStudioInspire = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Crear en 1 click" description="¿No sabes por dónde empezar? Genera una canción automáticamente y empieza a crear al instante con IA." path="/ai-studio/inspire" />
       <Navbar />
       <AIStudioThemeBar />
 

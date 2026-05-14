@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { SEO } from "@/components/SEO";
 import { FileDropzone } from '@/components/FileDropzone';
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -506,6 +507,7 @@ const AIStudioEdit = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO title="Masterización profesional" description="Deja tu canción lista para Spotify con calidad profesional en segundos. Sube tu audio y masterízalo con IA." path="/ai-studio/edit" />
       <Navbar />
       <AIStudioThemeBar />
 
