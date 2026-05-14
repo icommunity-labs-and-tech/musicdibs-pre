@@ -30,6 +30,7 @@ const Marketing = lazyWithRetry(() => import("./pages/Marketing"));
 const SongRegistrationPage = lazyWithRetry(() => import("./pages/SongRegistrationPage"));
 const MusicCopyrightPage = lazyWithRetry(() => import("./pages/MusicCopyrightPage"));
 const RegisterASongPage = lazyWithRetry(() => import("./pages/RegisterASongPage"));
+const AISongGeneratorPage = lazyWithRetry(() => import("./pages/AISongGeneratorPage"));
 const CopyrightASongPage = lazyWithRetry(() => import("./pages/CopyrightASongPage"));
 const News = lazyWithRetry(() => import("./pages/News"));
 const NewsArticle = lazyWithRetry(() => import("./pages/NewsArticle"));
