@@ -383,6 +383,9 @@ serve(async (req) => {
     }
 
     // customer.subscription.updated
+    // IMPORTANT: only reset credits when the priceId actually changed (real plan switch).
+    // Same-price updates (cancel_at_period_end toggle, payment-method change, etc.) must NOT touch credits.
+    // Same-plan renewals are handled by invoice.payment_succeeded with billing_reason=subscription_cycle.
     if (event.type === "customer.subscription.updated") {
       const sub = event.data.object as Stripe.Subscription;
       const custId = typeof sub.customer === "string" ? sub.customer : (sub.customer as any)?.id ?? "";
@@ -393,9 +396,53 @@ serve(async (req) => {
         const subStatus = mapStripeStatus(sub.status);
         const periodStart = (sub as any).current_period_start ? new Date((sub as any).current_period_start * 1000).toISOString() : null;
         const periodEnd = (sub as any).current_period_end ? new Date((sub as any).current_period_end * 1000).toISOString() : null;
-        await supabase.from("subscriptions").upsert({ user_id: profile.user_id, stripe_customer_id: custId, plan: planName || "Annual", status: subStatus, current_period_start: periodStart, current_period_end: periodEnd, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
-        if (subStatus === "active" && planName) await supabase.from("profiles").update({ subscription_plan: planName, updated_at: new Date().toISOString() }).eq("user_id", profile.user_id);
-        else if (["cancelled", "expired"].includes(subStatus)) await supabase.from("profiles").update({ subscription_plan: "Free", updated_at: new Date().toISOString() }).eq("user_id", profile.user_id);
+
+        // Read previous price_id to detect real plan changes
+        const { data: currentSub } = await supabase
+          .from("subscriptions")
+          .select("stripe_price_id")
+          .eq("user_id", profile.user_id)
+          .maybeSingle();
+        const priceChanged = !!priceId && currentSub?.stripe_price_id !== priceId;
+        const newCredits = priceId ? (PRICE_CREDITS[priceId] || 0) : 0;
+
+        await supabase.from("subscriptions").upsert({
+          user_id: profile.user_id,
+          stripe_customer_id: custId,
+          stripe_subscription_id: sub.id,
+          stripe_price_id: priceId || null,
+          plan: planName || "Annual",
+          status: subStatus,
+          current_period_start: periodStart,
+          current_period_end: periodEnd,
+          cancel_at_period_end: !!(sub as any).cancel_at_period_end,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "user_id" });
+
+        if (subStatus === "active") {
+          if (priceChanged && newCredits > 0 && planName) {
+            // Real plan change → reset credits to the new value
+            await supabase.from("profiles").update({
+              subscription_plan: planName,
+              available_credits: newCredits,
+              updated_at: new Date().toISOString(),
+            }).eq("user_id", profile.user_id);
+            await supabase.from("credit_transactions").insert({
+              user_id: profile.user_id,
+              amount: newCredits,
+              type: "subscription",
+              description: `Cambio de plan (webhook): creditos reiniciados a ${newCredits}`,
+            });
+          } else if (!priceChanged && planName) {
+            // Same plan, minor update → only sync plan name, never touch credits
+            await supabase.from("profiles").update({
+              subscription_plan: planName,
+              updated_at: new Date().toISOString(),
+            }).eq("user_id", profile.user_id);
+          }
+        } else if (["cancelled", "expired"].includes(subStatus)) {
+          await supabase.from("profiles").update({ subscription_plan: "Free", updated_at: new Date().toISOString() }).eq("user_id", profile.user_id);
+        }
       }
     }
 
