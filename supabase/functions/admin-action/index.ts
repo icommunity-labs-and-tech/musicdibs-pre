@@ -582,6 +582,62 @@ serve(async (req) => {
       return json({ success: true, deleted: idsToDelete.length, results: ibsResults });
     }
 
+    if (action === "force_delete_signature_by_id") {
+      const { signature_row_id, reassign_to_ibs_signature_id } = payload as {
+        signature_row_id?: string; reassign_to_ibs_signature_id?: string | null;
+      };
+      if (!signature_row_id) return json({ error: "signature_row_id required" }, 400);
+
+      const { data: sig, error: sigErr } = await admin
+        .from("ibs_signatures")
+        .select("id, user_id, ibs_signature_id, status")
+        .eq("id", signature_row_id)
+        .maybeSingle();
+      if (sigErr || !sig) return json({ error: "signature not found" }, 404);
+
+      const IBS_API_KEY = Deno.env.get("IBS_API_KEY");
+      const IBS_API_URL = "https://api.icommunitylabs.com/v2";
+      let ibsStatus = 0; let ibsError: string | undefined;
+      try {
+        const res = await fetch(`${IBS_API_URL}/signatures/${sig.ibs_signature_id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${IBS_API_KEY}`, "Content-Type": "application/json" },
+        });
+        ibsStatus = res.status;
+        if (!res.ok && res.status !== 404) {
+          ibsError = (await res.text()).slice(0, 500);
+          return json({ error: `iBS DELETE failed (${res.status}): ${ibsError}` }, 502);
+        }
+      } catch (e: any) {
+        return json({ error: `iBS DELETE network error: ${String(e?.message || e)}` }, 502);
+      }
+
+      const { error: delErr } = await admin.from("ibs_signatures").delete().eq("id", sig.id);
+      if (delErr) return json({ error: `DB delete failed: ${delErr.message}` }, 500);
+
+      // If profile points to this sig, reassign or clear
+      const { data: prof } = await admin
+        .from("profiles").select("ibs_signature_id").eq("user_id", sig.user_id).maybeSingle();
+      let reassigned = false;
+      if (prof?.ibs_signature_id === sig.ibs_signature_id) {
+        await admin.from("profiles").update({
+          ibs_signature_id: reassign_to_ibs_signature_id ?? null,
+          updated_at: new Date().toISOString(),
+        }).eq("user_id", sig.user_id);
+        reassigned = true;
+      }
+
+      const { data: targetAuth } = await admin.auth.admin.getUserById(sig.user_id);
+      await audit({
+        action: "force_delete_signature_by_id",
+        target_user_id: sig.user_id,
+        target_email: targetAuth?.user?.email || "",
+        details: { signature_row_id, ibs_signature_id: sig.ibs_signature_id, ibs_status: ibsStatus, reassigned, reassign_to_ibs_signature_id: reassign_to_ibs_signature_id ?? null },
+      });
+
+      return json({ success: true, ibs_status: ibsStatus, reassigned });
+    }
+
     if (action === "toggle_block") {
       const { user_id, blocked } = payload;
       if (!user_id || typeof blocked !== "boolean") return json({ error: "user_id and blocked are required" }, 400);
