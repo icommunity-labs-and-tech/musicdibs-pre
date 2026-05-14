@@ -173,13 +173,22 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
   const seoTitle = forcedSeoTitle ?? c.seoTitle;
   const seoDesc = forcedSeoDesc ?? c.seoDesc;
 
+  const baseUrl = "https://www.musicdibs.com";
+  const fullUrl = `${baseUrl}${path}`;
+
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: c.h1,
     description: seoDesc,
     inLanguage: lang,
-    publisher: { "@type": "Organization", name: "Musicdibs", url: "https://musicdibs.com" },
+    mainEntityOfPage: { "@type": "WebPage", "@id": fullUrl },
+    publisher: {
+      "@type": "Organization",
+      name: "Musicdibs",
+      url: baseUrl,
+      logo: { "@type": "ImageObject", url: `${baseUrl}/og-image.png` },
+    },
   };
 
   const faqSchema = {
@@ -192,6 +201,15 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
     })),
   };
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Musicdibs", item: baseUrl },
+      { "@type": "ListItem", position: 2, name: c.h1, item: fullUrl },
+    ],
+  };
+
   return (
     <div className="min-h-screen page-bg">
       <SEO
@@ -200,7 +218,7 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
         path={path}
         type="article"
         locale={lang}
-        jsonLd={[articleSchema, faqSchema]}
+        jsonLd={[articleSchema, faqSchema, breadcrumbSchema]}
       />
       <Navbar />
 
