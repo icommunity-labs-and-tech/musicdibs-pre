@@ -454,8 +454,17 @@ serve(async (req) => {
       if (profile) {
         const { data: cp } = await supabase.from("profiles").select("subscription_plan, language").eq("user_id", profile.user_id).single();
         const oldPlan = cp?.subscription_plan;
-        await supabase.from("profiles").update({ subscription_plan: "Free" }).eq("user_id", profile.user_id);
+        const cancelReason = (sub as any).cancellation_details?.reason || null;
+        const byNonPayment = cancelReason === "payment_failed";
+        // Si la cancelación viene por impago, además de Free, vaciamos créditos
+        const profileUpdate: Record<string, unknown> = { subscription_plan: "Free", updated_at: new Date().toISOString() };
+        if (byNonPayment) profileUpdate.available_credits = 0;
+        await supabase.from("profiles").update(profileUpdate).eq("user_id", profile.user_id);
         await supabase.from("subscriptions").upsert({ user_id: profile.user_id, stripe_customer_id: custId, plan: "Annual", status: "cancelled", updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+        if (byNonPayment) {
+          await supabase.from("credit_transactions").insert({ user_id: profile.user_id, amount: 0, type: "admin_adjustment", description: `Baja automatica por impago tras agotar reintentos de Stripe (plan previo: ${oldPlan || "?"})` });
+          console.log(`[WEBHOOK] subscription.deleted by non-payment → user ${profile.user_id}: plan→Free, credits→0`);
+        }
         let cancelEmail: string | null = null;
         try { const { data: { user: au } } = await supabase.auth.admin.getUserById(profile.user_id); cancelEmail = au?.email ?? null; if (au?.email) await syncMailerLite("subscription.cancelled", { email: au.email, locale: cp?.language || "es", plan_type: planToMLType(oldPlan), cancellation_reason: "stripe_deleted" }); } catch (e) { console.warn("[WEBHOOK] ML cancellation error:", e); }
         try {
