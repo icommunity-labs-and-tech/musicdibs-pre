@@ -95,6 +95,25 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
     });
   }, [user]);
 
+  const pollSubscriptionChange = async (expectedPlan: 'Annual' | 'Monthly'): Promise<boolean> => {
+    const start = Date.now();
+    const TIMEOUT_MS = 10_000;
+    const INTERVAL_MS = 2_000;
+    while (Date.now() - start < TIMEOUT_MS) {
+      await new Promise((r) => setTimeout(r, INTERVAL_MS));
+      try {
+        const { data } = await supabase.functions.invoke('check-subscription');
+        const plan = (data as any)?.subscription_plan as string | undefined;
+        if (plan === expectedPlan) {
+          if (expectedPlan === 'Annual') setCurrentPlanId('annual_100');
+          else setCurrentPlanId('monthly');
+          return true;
+        }
+      } catch { /* keep polling */ }
+    }
+    return false;
+  };
+
   const handleBuy = async (planId: string) => {
     setLoading(planId);
     setError(null);
@@ -121,7 +140,22 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
       if (data?.already_subscribed) { toast.info(data.message); return; }
-      if (data?.switched || data?.reactivated) { toast.success(data.message); if (data.reactivated) setCancelAtPeriodEnd(false); return; }
+      if (data?.switched || data?.reactivated) {
+        toast.success(data.message);
+        if (data.reactivated) setCancelAtPeriodEnd(false);
+        // Optimistic UI update with the truth returned by the function
+        const returnedPlan = (data as any)?.plan as 'Annual' | 'Monthly' | undefined;
+        if (returnedPlan === 'Annual') setCurrentPlanId('annual_100');
+        else if (returnedPlan === 'Monthly') setCurrentPlanId('monthly');
+        // Poll Stripe-backed check-subscription to confirm propagation
+        const expected: 'Annual' | 'Monthly' = returnedPlan
+          ?? (planId.startsWith('annual') ? 'Annual' : 'Monthly');
+        const confirmed = await pollSubscriptionChange(expected);
+        if (!confirmed) {
+          toast.message(t(`${cs}.switchProcessing`, { defaultValue: 'Cambio procesándose, puede tardar unos segundos.' }));
+        }
+        return;
+      }
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       setError(err?.message || t(`${cs}.paymentError`));
