@@ -67,6 +67,12 @@ const ROUTES = [
     title: "Preguntas Frecuentes | Musicdibs",
     description: "Respuestas a las dudas más comunes sobre registro blockchain de música, créditos, distribución y AI Studio en Musicdibs.",
   },
+  {
+    path: "/ai-song-generator",
+    locale: "en",
+    title: "AI Song Generator for Creators | Musicdibs",
+    description: "Create, protect and distribute AI-generated music from one platform. AI vocals, lyrics, mastering, blockchain copyright and global distribution.",
+  },
 ];
 
 const escapeAttr = (value) =>
