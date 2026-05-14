@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
+import { CompetitorComparison } from "@/components/CompetitorComparison";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Shield, ScrollText, Globe, Gavel, Lightbulb, ArrowRight, ChevronDown } from "lucide-react";
@@ -299,6 +300,9 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
               ))}
             </div>
           </section>
+
+          {/* Competitor comparison block */}
+          <CompetitorComparison lang={lang} ctaHref="/registro-obras-musicales" />
 
           {/* Myths */}
           <section className="mb-20">
