@@ -131,9 +131,33 @@ export default function AdminUsersPage() {
     catch (e: any) { toast.error(e.message); }
   };
 
-  const kycBadge = (status: string) => {
-    const map: Record<string, string> = { verified: 'bg-green-500/20 text-green-400', pending: 'bg-yellow-500/20 text-yellow-400', unverified: 'bg-muted text-muted-foreground', rejected: 'bg-destructive/20 text-destructive' };
-    return <Badge className={map[status] || map.unverified}>{status}</Badge>;
+  // Estado KYC enriquecido: combina profiles.kyc_status con la última firma iBS
+  const getEffectiveKyc = (u: any): { key: string; label: string; cls: string } => {
+    const sigStatus = u.latest_signature?.status as string | undefined;
+    const profStatus = u.kyc_status as string | undefined;
+    if (profStatus === 'verified') return { key: 'verified', label: 'Verificado', cls: 'bg-green-500/20 text-green-400' };
+    if (profStatus === 'rejected') return { key: 'rejected', label: 'Rechazado', cls: 'bg-destructive/20 text-destructive' };
+    if (profStatus === 'failed') return { key: 'failed', label: 'Fallido', cls: 'bg-destructive/20 text-destructive' };
+    if (profStatus === 'pending' || sigStatus === 'pending') return { key: 'pending', label: 'Pendiente iBS', cls: 'bg-yellow-500/20 text-yellow-400' };
+    if (sigStatus === 'created') return { key: 'created', label: 'En proceso', cls: 'bg-orange-500/20 text-orange-400' };
+    if (sigStatus === 'initiated') return { key: 'initiated', label: 'Iniciado', cls: 'bg-blue-500/20 text-blue-400' };
+    return { key: 'unverified', label: 'Sin verificar', cls: 'bg-muted text-muted-foreground' };
+  };
+
+  const kycBadge = (u: any) => {
+    const { label, cls } = getEffectiveKyc(u);
+    return <Badge className={cls}>{label}</Badge>;
+  };
+
+  const handleDeleteKycSignature = async (userId: string, email: string) => {
+    if (!confirm(`¿Eliminar la verificación KYC en proceso de ${email}?\n\nSe borrará tanto en MusicDibs como en iBS.`)) return;
+    try {
+      const res: any = await adminApi.callAction('delete_kyc_signature', { user_id: userId });
+      toast.success(`Verificación KYC eliminada (${res?.deleted ?? 0} firma${(res?.deleted ?? 0) === 1 ? '' : 's'})`);
+      load();
+    } catch (e: any) {
+      toast.error('Error al eliminar', { description: e.message });
+    }
   };
 
   const togglePageSelection = (checked: boolean) => {
@@ -383,7 +407,7 @@ export default function AdminUsersPage() {
                     ))}
                   </div>
                 </TableCell>
-                <TableCell>{kycBadge(u.kyc_status)}</TableCell>
+                <TableCell>{kycBadge(u)}</TableCell>
                 <TableCell>{u.works_count}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(u.updated_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</TableCell>
@@ -426,6 +450,14 @@ export default function AdminUsersPage() {
                           }
                         }}>
                           📧 Recordatorio KYC
+                        </DropdownMenuItem>
+                      )}
+                      {u.kyc_status !== 'verified' && u.latest_signature && u.latest_signature.status !== 'success' && (
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDeleteKycSignature(u.user_id, u.email)}
+                        >
+                          🗑️ Eliminar verificación KYC
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
