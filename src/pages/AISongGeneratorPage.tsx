@@ -164,16 +164,6 @@ const AISongGeneratorPage = () => {
               </Button>
             </a>
           </div>
-          <div className="relative max-w-5xl mx-auto animate-fade-in">
-            <div className="absolute -inset-4 bg-gradient-to-r from-pink-500/30 to-purple-500/30 blur-2xl rounded-3xl" />
-            <img
-              src={heroImage}
-              alt="AI music studio dashboard generating a song with waveform visualization"
-              width={1280}
-              height={800}
-              className="relative rounded-2xl border border-white/10 shadow-2xl"
-            />
-          </div>
         </div>
       </section>
 
