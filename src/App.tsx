@@ -30,6 +30,7 @@ const Marketing = lazyWithRetry(() => import("./pages/Marketing"));
 const SongRegistrationPage = lazyWithRetry(() => import("./pages/SongRegistrationPage"));
 const MusicCopyrightPage = lazyWithRetry(() => import("./pages/MusicCopyrightPage"));
 const RegisterASongPage = lazyWithRetry(() => import("./pages/RegisterASongPage"));
+const AISongGeneratorPage = lazyWithRetry(() => import("./pages/AISongGeneratorPage"));
 const CopyrightASongPage = lazyWithRetry(() => import("./pages/CopyrightASongPage"));
 const News = lazyWithRetry(() => import("./pages/News"));
 const NewsArticle = lazyWithRetry(() => import("./pages/NewsArticle"));
@@ -184,6 +185,7 @@ const App = () => (
               <Route path="/derechos-autor-musica" element={<MusicCopyrightPage />} />
               <Route path="/register-a-song" element={<RegisterASongPage />} />
               <Route path="/copyright-a-song" element={<CopyrightASongPage />} />
+              <Route path="/ai-song-generator" element={<AISongGeneratorPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
               <Route path="/admin" element={<AdminLogin />} />
