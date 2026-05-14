@@ -158,16 +158,26 @@ const COPY: Record<Lang, {
 
 const rightIcons = [Shield, ScrollText, Globe, Gavel];
 
-const MusicCopyrightPage = () => {
+interface Props {
+  forcedLang?: Lang;
+  forcedPath?: string;
+  forcedSeoTitle?: string;
+  forcedSeoDesc?: string;
+}
+
+const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoDesc }: Props = {}) => {
   const { i18n } = useTranslation();
-  const lang = (["es", "en", "pt-BR"].includes(i18n.language) ? i18n.language : "es") as Lang;
+  const lang: Lang = forcedLang ?? ((["es", "en", "pt-BR"].includes(i18n.language) ? i18n.language : "es") as Lang);
   const c = COPY[lang];
+  const path = forcedPath ?? "/derechos-autor-musica";
+  const seoTitle = forcedSeoTitle ?? c.seoTitle;
+  const seoDesc = forcedSeoDesc ?? c.seoDesc;
 
   const articleSchema = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: c.h1,
-    description: c.seoDesc,
+    description: seoDesc,
     inLanguage: lang,
     publisher: { "@type": "Organization", name: "Musicdibs", url: "https://musicdibs.com" },
   };
@@ -185,9 +195,9 @@ const MusicCopyrightPage = () => {
   return (
     <div className="min-h-screen page-bg">
       <SEO
-        title={c.seoTitle}
-        description={c.seoDesc}
-        path="/derechos-autor-musica"
+        title={seoTitle}
+        description={seoDesc}
+        path={path}
         type="article"
         locale={lang}
         jsonLd={[articleSchema, faqSchema]}

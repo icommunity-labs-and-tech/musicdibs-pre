@@ -87,6 +87,21 @@ const Footer = () => {
             <Link to="/verify" className="block text-white/80 hover:text-white transition-colors">
               {t('nav.verifier')}
             </Link>
+            {/* SEO landing pages — internal authority links */}
+            <div className="pt-3 mt-3 border-t border-white/10 space-y-2">
+              <Link to="/registro-obras-musicales" className="block text-white/70 hover:text-white text-sm transition-colors">
+                Registro de obras musicales
+              </Link>
+              <Link to="/derechos-autor-musica" className="block text-white/70 hover:text-white text-sm transition-colors">
+                Derechos de autor en música
+              </Link>
+              <Link to="/copyright-a-song" className="block text-white/70 hover:text-white text-sm transition-colors">
+                How to copyright a song
+              </Link>
+              <Link to="/register-a-song" className="block text-white/70 hover:text-white text-sm transition-colors">
+                Register a song online
+              </Link>
+            </div>
           </div>
 
           {/* Block 3 - Corporativo */}
