@@ -101,16 +101,6 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://www.musicdibs.com/ai-song-generator</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://www.musicdibs.com/generador-canciones-ia</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://www.musicdibs.com/contact</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
