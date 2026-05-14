@@ -19,7 +19,7 @@ import {
   Workflow,
   Rocket,
 } from "lucide-react";
-import heroImage from "@/assets/ai-song-generator-hero.jpg";
+
 
 const BASE_URL = "https://www.musicdibs.com";
 const PATH = "/ai-song-generator";
