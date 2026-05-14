@@ -185,6 +185,7 @@ const App = () => (
               <Route path="/derechos-autor-musica" element={<MusicCopyrightPage />} />
               <Route path="/register-a-song" element={<RegisterASongPage />} />
               <Route path="/copyright-a-song" element={<CopyrightASongPage />} />
+              <Route path="/ai-song-generator" element={<AISongGeneratorPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
               <Route path="/admin" element={<AdminLogin />} />
