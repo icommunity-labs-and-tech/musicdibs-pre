@@ -487,6 +487,89 @@ serve(async (req) => {
       return json({ success: true });
     }
 
+    if (action === "delete_kyc_signature") {
+      const { user_id } = payload;
+      if (!user_id) return json({ error: "user_id required" }, 400);
+
+      const { data: profile } = await admin.from("profiles").select("kyc_status").eq("user_id", user_id).single();
+      if (!profile) return json({ error: "User not found" }, 404);
+      if (profile.kyc_status === "verified") {
+        return json({ error: "No se puede eliminar una verificación KYC ya completada" }, 400);
+      }
+
+      // Get all non-success signatures for this user
+      const { data: sigs } = await admin
+        .from("ibs_signatures")
+        .select("id, ibs_signature_id, status")
+        .eq("user_id", user_id)
+        .order("created_at", { ascending: false });
+
+      const deletable = (sigs || []).filter((s: any) => s.status !== "success");
+      if (deletable.length === 0) {
+        return json({ error: "No hay verificaciones KYC en proceso para eliminar" }, 400);
+      }
+
+      const IBS_API_KEY = Deno.env.get("IBS_API_KEY");
+      const IBS_API_URL = "https://api.icommunitylabs.com/v2";
+      const ibsResults: Array<{ ibs_signature_id: string; ok: boolean; status?: number; error?: string }> = [];
+
+      for (const sig of deletable) {
+        try {
+          const res = await fetch(`${IBS_API_URL}/signatures/${sig.ibs_signature_id}`, {
+            method: "DELETE",
+            headers: { "Authorization": `Bearer ${IBS_API_KEY}`, "Content-Type": "application/json" },
+          });
+          const ok = res.ok || res.status === 404; // 404 = ya no existe, lo consideramos eliminado
+          let errorBody: string | undefined;
+          if (!ok) {
+            try { errorBody = (await res.text()).slice(0, 300); } catch { /* ignore */ }
+          }
+          ibsResults.push({ ibs_signature_id: sig.ibs_signature_id, ok, status: res.status, error: errorBody });
+        } catch (e: any) {
+          ibsResults.push({ ibs_signature_id: sig.ibs_signature_id, ok: false, error: String(e?.message || e).slice(0, 300) });
+        }
+      }
+
+      // Borrar localmente solo las que iBS confirmó (o que ya no existían)
+      const idsToDelete = deletable
+        .filter((s: any, i: number) => ibsResults[i].ok)
+        .map((s: any) => s.id);
+
+      if (idsToDelete.length > 0) {
+        await admin.from("ibs_signatures").delete().in("id", idsToDelete);
+      }
+
+      // Resetear el perfil si todas las firmas borrables se eliminaron correctamente
+      const allOk = ibsResults.every(r => r.ok);
+      if (allOk) {
+        await admin.from("profiles").update({
+          kyc_status: "unverified",
+          ibs_signature_id: null,
+          updated_at: new Date().toISOString(),
+        }).eq("user_id", user_id);
+      }
+
+      const { data: targetAuth } = await admin.auth.admin.getUserById(user_id);
+      await audit({
+        action: "delete_kyc_signature",
+        target_user_id: user_id,
+        target_email: targetAuth?.user?.email || "",
+        details: { signatures: ibsResults, profile_reset: allOk },
+      });
+
+      if (!allOk) {
+        const failed = ibsResults.filter(r => !r.ok);
+        return json({
+          success: false,
+          partial: idsToDelete.length > 0,
+          error: `Algunas firmas no se pudieron eliminar en iBS: ${failed.map(f => `${f.ibs_signature_id} (${f.status || 'error'}${f.error ? ': ' + f.error : ''})`).join('; ')}`,
+          results: ibsResults,
+        }, 502);
+      }
+
+      return json({ success: true, deleted: idsToDelete.length, results: ibsResults });
+    }
+
     if (action === "toggle_block") {
       const { user_id, blocked } = payload;
       if (!user_id || typeof blocked !== "boolean") return json({ error: "user_id and blocked are required" }, 400);
