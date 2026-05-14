@@ -279,10 +279,17 @@ serve(async (req) => {
       const userIds = (profiles || []).map((p: any) => p.user_id);
       if (userIds.length === 0) return json({ users: [], total: 0 });
 
-      const [{ data: roles }, { data: worksCounts }] = await Promise.all([
+      const [{ data: roles }, { data: worksCounts }, { data: sigs }] = await Promise.all([
         admin.from("user_roles").select("user_id, role").in("user_id", userIds),
         admin.from("works").select("user_id").in("user_id", userIds).eq("status", "registered"),
+        admin.from("ibs_signatures").select("id, user_id, ibs_signature_id, status, created_at").in("user_id", userIds).order("created_at", { ascending: false }),
       ]);
+
+      // Pick the most recent signature per user (already ordered desc)
+      const sigMap: Record<string, { id: string; ibs_signature_id: string; status: string; created_at: string }> = {};
+      (sigs || []).forEach((s: any) => {
+        if (!sigMap[s.user_id]) sigMap[s.user_id] = s;
+      });
 
       const rolesMap: Record<string, string[]> = {};
       (roles || []).forEach((r: any) => {
