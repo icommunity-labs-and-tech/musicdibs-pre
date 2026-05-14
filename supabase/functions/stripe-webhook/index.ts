@@ -468,7 +468,6 @@ serve(async (req) => {
         let cancelEmail: string | null = null;
         try { const { data: { user: au } } = await supabase.auth.admin.getUserById(profile.user_id); cancelEmail = au?.email ?? null; if (au?.email) await syncMailerLite("subscription.cancelled", { email: au.email, locale: cp?.language || "es", plan_type: planToMLType(oldPlan), cancellation_reason: "stripe_deleted" }); } catch (e) { console.warn("[WEBHOOK] ML cancellation error:", e); }
         try {
-          const byNonPayment = (sub as any).cancellation_details?.reason === "payment_failed" || (sub as any).latest_invoice !== null;
           if (byNonPayment && cancelEmail) {
             const lang = (cp?.language || "es").toLowerCase().startsWith("pt") ? "pt" : (cp?.language || "es").toLowerCase().startsWith("en") ? "en" : "es";
             const subjects: Record<string, string> = { es: "Tu suscripcion ha sido cancelada por impago - MusicDibs", en: "Your subscription has been cancelled due to non-payment - MusicDibs", pt: "Sua assinatura foi cancelada por falta de pagamento - MusicDibs" };
