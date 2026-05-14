@@ -281,10 +281,13 @@ export default function AdminUsersPage() {
           <SelectTrigger className="w-[140px] h-8"><SelectValue placeholder="KYC" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los KYC</SelectItem>
-            <SelectItem value="verified">Verified</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="unverified">Unverified</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="verified">Verificado</SelectItem>
+            <SelectItem value="pending">Pendiente iBS</SelectItem>
+            <SelectItem value="created">En proceso</SelectItem>
+            <SelectItem value="initiated">Iniciado</SelectItem>
+            <SelectItem value="rejected">Rechazado</SelectItem>
+            <SelectItem value="failed">Fallido</SelectItem>
+            <SelectItem value="unverified">Sin verificar</SelectItem>
           </SelectContent>
         </Select>
         <Select value={planFilter} onValueChange={v => { setPlanFilter(v); setPage(0); }}>
