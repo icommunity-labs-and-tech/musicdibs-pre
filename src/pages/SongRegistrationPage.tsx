@@ -239,7 +239,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
                 </Button>
               </Link>
               <Link to="/legal-validity">
-                <Button variant="outline" size="xl">{c.ctaSecondary}</Button>
+                <Button variant="hero" size="xl" className="font-semibold">{c.ctaSecondary}</Button>
               </Link>
             </div>
           </header>
