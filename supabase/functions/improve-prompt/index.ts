@@ -335,6 +335,11 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
       });
     }
 
+    // Post-filter: strip artist references for music prompts (Suno/Kie rejects them)
+    if (!isVisualMode) {
+      improved = sanitizeArtistRefs(improved, genre);
+    }
+
     return new Response(JSON.stringify({ improved }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
