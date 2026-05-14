@@ -68,6 +68,12 @@ const Footer = () => {
               <Link to="/register-a-song" className="block text-white/70 hover:text-white text-sm transition-colors">
                 Register a song online
               </Link>
+              <Link to="/generador-canciones-ia" className="block text-white/70 hover:text-white text-sm transition-colors">
+                Generador de canciones con IA
+              </Link>
+              <Link to="/ai-song-generator" className="block text-white/70 hover:text-white text-sm transition-colors">
+                AI song generator
+              </Link>
             </div>
           </div>
 
