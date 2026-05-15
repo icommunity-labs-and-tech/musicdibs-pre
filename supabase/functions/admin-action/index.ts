@@ -1338,17 +1338,28 @@ serve(async (req) => {
             const twelveMonthsAgoTs = Math.floor(new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime() / 1000);
 
             // Run the heavy Stripe queries in parallel, but never let Stripe block the dashboard.
-            const [allSubs, cancelledSubsRaw, allCharges] = await withTimeout(
+            // Helper: fetch terminated subs for a given status (canceled, unpaid, incomplete_expired, paused)
+            // and normalize to a common shape. Stripe sets `ended_at` when a sub terminates for any reason
+            // (user cancel, payment failure, dunning exhaustion, expiration, pause, etc.).
+            const fetchTerminated = (status: string) => paginateAll(
+              (p) => stripe.subscriptions.list(p),
+              { status },
+              (last) => {
+                const ts = last.ended_at || last.canceled_at;
+                return ts && ts < twelveMonthsAgoTs;
+              },
+            );
+
+            const [allSubs, canceledRaw, unpaidRaw, incompleteExpiredRaw, pausedRaw, allCharges] = await withTimeout(
               Promise.all([
                 paginateAll(
                   (p) => stripe.subscriptions.list(p),
                   { status: "active", expand: ["data.items.data.price"] },
                 ),
-                paginateAll(
-                  (p) => stripe.subscriptions.list(p),
-                  { status: "canceled" },
-                  (last) => last.canceled_at && last.canceled_at < twelveMonthsAgoTs,
-                ),
+                fetchTerminated("canceled"),
+                fetchTerminated("unpaid"),
+                fetchTerminated("incomplete_expired"),
+                fetchTerminated("paused").catch(() => []), // paused only on some accounts
                 paginateAll(
                   (p) => stripe.charges.list(p),
                   { created: { gte: twelveMonthsAgoTs } },
@@ -1357,6 +1368,31 @@ serve(async (req) => {
               STRIPE_FETCH_TIMEOUT_MS,
               "stripe_metrics_timeout",
             );
+
+            // Merge all terminal-state subs into a single "churned" list.
+            // Use ended_at when present, fall back to canceled_at. Tag the reason for visibility.
+            const cancelledSubsRaw = [
+              ...canceledRaw.map((s: any) => ({
+                ended_at: s.ended_at || s.canceled_at,
+                reason: s.cancellation_details?.reason || "user_canceled",
+                status: "canceled",
+              })),
+              ...unpaidRaw.map((s: any) => ({
+                ended_at: s.ended_at || s.canceled_at,
+                reason: "payment_failed",
+                status: "unpaid",
+              })),
+              ...incompleteExpiredRaw.map((s: any) => ({
+                ended_at: s.ended_at || s.canceled_at || s.created,
+                reason: "incomplete_expired",
+                status: "incomplete_expired",
+              })),
+              ...(pausedRaw as any[]).map((s: any) => ({
+                ended_at: s.ended_at || s.canceled_at,
+                reason: "paused",
+                status: "paused",
+              })),
+            ].filter((s: any) => !!s.ended_at);
 
             // Resolve product names in parallel
             const productIds = new Set<string>();
@@ -1388,7 +1424,7 @@ serve(async (req) => {
             const slimSubs = allSubs.map((s: any) => ({
               items: { data: s.items.data.map((it: any) => ({ price: { unit_amount: it.price.unit_amount, recurring: it.price.recurring, nickname: it.price.nickname, product: typeof it.price.product === "string" ? it.price.product : it.price.product?.id } })) },
             }));
-            const slimCancelled = cancelledSubsRaw.map((s: any) => ({ canceled_at: s.canceled_at }));
+            const slimCancelled = cancelledSubsRaw.map((s: any) => ({ canceled_at: s.ended_at, reason: s.reason, status: s.status }));
             const slimCharges = allCharges
               .filter((c: any) => c.status === "succeeded" && !c.refunded)
               .map((c: any) => ({ created: c.created, amount: c.amount, invoice: !!c.invoice }));
