@@ -529,13 +529,20 @@ export default function AdminUsersPage() {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {u.subscription_plan && u.subscription_plan !== 'Free' && (
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          disabled={u.user_id === user?.id}
-                          onClick={() => setCancelSubModal({ open: true, userId: u.user_id, label: u.display_name || u.email, loading: false })}
-                        >
-                          🚫 Dar de baja
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => setPaymentNotifyModal({ open: true, userId: u.user_id, email: u.email, displayName: u.display_name || u.email, loading: false })}
+                          >
+                            ⚠️ Notificar problema de pago
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            disabled={u.user_id === user?.id}
+                            onClick={() => setCancelSubModal({ open: true, userId: u.user_id, label: u.display_name || u.email, loading: false })}
+                          >
+                            🚫 Dar de baja
+                          </DropdownMenuItem>
+                        </>
                       )}
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
