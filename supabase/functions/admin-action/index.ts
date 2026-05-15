@@ -1346,7 +1346,7 @@ serve(async (req) => {
                 paginateAll(
                   (p) => stripe.subscriptions.list(p),
                   { status: "canceled" },
-                  (last) => last.canceled_at && last.canceled_at < lastMonthTs,
+                  (last) => last.canceled_at && last.canceled_at < twelveMonthsAgoTs,
                 ),
                 paginateAll(
                   (p) => stripe.charges.list(p),
