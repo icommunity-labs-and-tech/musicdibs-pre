@@ -16,8 +16,9 @@ export function validateIbsWebhookAuth(req: Request, logPrefix: string) {
   const webhookSecret = Deno.env.get("IBS_WEBHOOK_SECRET");
 
   if (!webhookSecret) {
-    console.warn(`[${logPrefix}] IBS_WEBHOOK_SECRET not configured, skipping validation`);
-    return true;
+    // SECURITY: reject all requests if secret is not configured — never allow open access
+    console.error(`[${logPrefix}] IBS_WEBHOOK_SECRET not configured — rejecting request`);
+    return false;
   }
 
   const url = new URL(req.url);
