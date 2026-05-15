@@ -134,6 +134,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         errorRegister: 'Error en el registro',
         errorGeneric: 'Error al registrar la obra',
         throttle: 'Tienes un registro en curso ("{{title}}"). Espera a que finalice antes de registrar otra obra.',
+        uploadFailed: 'No se pudo subir el archivo correctamente. Comprueba tu conexión a internet e inténtalo de nuevo.',
       },
       // Step labels for stepper
       steps: {
@@ -294,6 +295,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         errorRegister: 'Registration error',
         errorGeneric: 'Error registering the work',
         throttle: 'You have a registration in progress ("{{title}}"). Wait for it to finish before registering another work.',
+        uploadFailed: 'Could not upload the file correctly. Please check your internet connection and try again.',
       },
       steps: {
         file: 'File',
@@ -452,6 +454,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         errorRegister: 'Erro no registro',
         errorGeneric: 'Erro ao registrar a obra',
         throttle: 'Você tem um registro em andamento ("{{title}}"). Aguarde a conclusão antes de registrar outra obra.',
+        uploadFailed: 'Não foi possível enviar o arquivo corretamente. Verifique sua conexão com a internet e tente novamente.',
       },
       steps: {
         file: 'Arquivo',
