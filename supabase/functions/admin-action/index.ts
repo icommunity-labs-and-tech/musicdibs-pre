@@ -1284,7 +1284,7 @@ serve(async (req) => {
 
       if (stripe) {
         // ── Stripe heavy-data cache (filter-independent, 15 min TTL) ──
-        const STRIPE_CACHE_KEY = "saas_metrics_stripe_cache_v1";
+        const STRIPE_CACHE_KEY = "saas_metrics_stripe_cache_v2";
         const STRIPE_CACHE_TTL_MS = 15 * 60 * 1000;
         const STRIPE_STALE_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
         const STRIPE_FETCH_TIMEOUT_MS = 8_000;
