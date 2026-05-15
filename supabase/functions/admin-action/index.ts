@@ -1809,45 +1809,70 @@ serve(async (req) => {
       } catch {}
 
       // ── Time series for charts ──
-      const timeSeries: any = { revenue: [], orders: [] };
+      const timeSeries: any = { revenue: [], orders: [], userAcquisition: [], productBreakdown: [] };
+
+      // Build period-aware buckets: week→days, month→weeks, year→months
+      type Bucket = { label: string; start: Date; end: Date };
+      const buckets: Bucket[] = [];
       if (filterStart && filterEnd) {
         const start = new Date(filterStart);
         const end = new Date(filterEnd);
         const diffDays = Math.round((end.getTime() - start.getTime()) / 86400000);
 
         if (diffDays <= 8) {
-          // Week: by day
+          // Week → days
           for (let i = 0; i < diffDays; i++) {
-            const d = new Date(start);
-            d.setDate(d.getDate() + i);
-            const dayStr = d.toISOString().slice(0, 10);
-            const dayNext = new Date(d);
-            dayNext.setDate(dayNext.getDate() + 1);
-            const dayOrders = ordersData.filter((o: any) => o.paid_at >= dayStr && o.paid_at < dayNext.toISOString().slice(0, 10));
-            const dayRev = dayOrders.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
-            timeSeries.revenue.push({ label: d.toLocaleDateString("es-ES", { weekday: "short", day: "2-digit" }), value: Math.round(dayRev * 100) / 100 });
-            timeSeries.orders.push({ label: d.toLocaleDateString("es-ES", { weekday: "short", day: "2-digit" }), value: dayOrders.length });
+            const s = new Date(start); s.setUTCDate(s.getUTCDate() + i);
+            const e = new Date(s); e.setUTCDate(e.getUTCDate() + 1);
+            buckets.push({ label: s.toLocaleDateString("es-ES", { weekday: "short", day: "2-digit" }), start: s, end: e });
           }
         } else if (diffDays <= 35) {
-          // Month: by day
-          for (let i = 0; i < diffDays; i++) {
-            const d = new Date(start);
-            d.setDate(d.getDate() + i);
-            const dayStr = d.toISOString().slice(0, 10);
-            const dayOrders = ordersData.filter((o: any) => o.paid_at?.slice(0, 10) === dayStr);
-            const dayRev = dayOrders.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
-            timeSeries.revenue.push({ label: d.toLocaleDateString("es-ES", { day: "2-digit", month: "short" }), value: Math.round(dayRev * 100) / 100 });
+          // Month → weeks (calendar weeks within the month)
+          let s = new Date(start);
+          let weekIdx = 1;
+          while (s < end) {
+            const e = new Date(s); e.setUTCDate(e.getUTCDate() + 7);
+            const eClamped = e > end ? end : e;
+            buckets.push({ label: `Sem ${weekIdx}`, start: new Date(s), end: new Date(eClamped) });
+            s = e;
+            weekIdx++;
           }
         } else {
-          // Year: by month
+          // Year → months
           for (let m = 0; m < 12; m++) {
-            const mStart = new Date(start.getFullYear(), m, 1);
-            const mEnd = new Date(start.getFullYear(), m + 1, 1);
-            if (mStart >= end) break;
-            const mOrders = ordersData.filter((o: any) => o.paid_at >= mStart.toISOString() && o.paid_at < mEnd.toISOString());
-            const mRev = mOrders.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
-            timeSeries.revenue.push({ label: mStart.toLocaleDateString("es-ES", { month: "short" }), value: Math.round(mRev * 100) / 100 });
+            const s = new Date(start.getFullYear(), m, 1);
+            const e = new Date(start.getFullYear(), m + 1, 1);
+            if (s >= end) break;
+            buckets.push({ label: s.toLocaleDateString("es-ES", { month: "short" }), start: s, end: e });
           }
+        }
+
+        // Aggregate revenue + orders per bucket
+        for (const b of buckets) {
+          const sIso = b.start.toISOString();
+          const eIso = b.end.toISOString();
+          const bOrders = ordersData.filter((o: any) => o.paid_at >= sIso && o.paid_at < eIso);
+          const bRev = bOrders.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
+          timeSeries.revenue.push({ label: b.label, value: Math.round(bRev * 100) / 100 });
+          timeSeries.orders.push({ label: b.label, value: bOrders.length });
+
+          // User acquisition: new registrations + active users (with credit tx) in bucket
+          const newInBucket = profiles.filter((p: any) => p.created_at >= sIso && p.created_at < eIso).length;
+          const activeInBucket = new Set(
+            (activeTxRes.data || []).filter((t: any) => t.created_at >= sIso && t.created_at < eIso).map((t: any) => t.user_id)
+          ).size;
+          timeSeries.userAcquisition.push({ label: b.label, newUsers: newInBucket, activeUsers: activeInBucket });
+
+          // Product breakdown by bucket (units per type)
+          const bucketByType: Record<string, number> = {};
+          bOrders.forEach((o: any) => { const pt = o.product_type || "unknown"; bucketByType[pt] = (bucketByType[pt] || 0) + 1; });
+          timeSeries.productBreakdown.push({
+            label: b.label,
+            annual: bucketByType["annual"] || 0,
+            monthly: bucketByType["monthly"] || 0,
+            single: bucketByType["single"] || 0,
+            topup: bucketByType["topup"] || 0,
+          });
         }
       }
 
