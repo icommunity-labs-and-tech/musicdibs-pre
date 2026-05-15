@@ -727,6 +727,25 @@ export default function AdminUsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={paymentNotifyModal.open} onOpenChange={open => !open && !paymentNotifyModal.loading && setPaymentNotifyModal({ open: false, userId: '', email: '', displayName: '', loading: false })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Notificar problema de pago</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Enviar notificación de problema de pago a <span className="font-medium text-foreground">{paymentNotifyModal.displayName}</span> ({paymentNotifyModal.email})?
+              <br /><br />
+              Se le enviará un email con 7 días de plazo para actualizar su método de pago.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={paymentNotifyModal.loading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleNotifyPaymentIssue} disabled={paymentNotifyModal.loading}>
+              {paymentNotifyModal.loading ? 'Enviando…' : 'Enviar notificación'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
