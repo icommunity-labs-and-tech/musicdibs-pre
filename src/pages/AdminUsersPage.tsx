@@ -49,6 +49,7 @@ export default function AdminUsersPage() {
   const [tempPwResult, setTempPwResult] = useState<{ open: boolean; email: string; password: string; copied: boolean; emailSent: boolean; sending: boolean }>({ open: false, email: '', password: '', copied: false, emailSent: false, sending: false });
   const [cancelSubModal, setCancelSubModal] = useState<{ open: boolean; userId: string; label: string; loading: boolean }>({ open: false, userId: '', label: '', loading: false });
   const [paymentNotifyModal, setPaymentNotifyModal] = useState<{ open: boolean; userId: string; email: string; displayName: string; loading: boolean }>({ open: false, userId: '', email: '', displayName: '', loading: false });
+  const [bulkPastDueModal, setBulkPastDueModal] = useState<{ open: boolean; loading: boolean; userIds: string[]; progress: { sent: number; failed: number } | null }>({ open: false, loading: false, userIds: [], progress: null });
 
   const handleNotifyPaymentIssue = async () => {
     setPaymentNotifyModal(s => ({ ...s, loading: true }));
