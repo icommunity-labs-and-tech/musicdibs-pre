@@ -49,6 +49,7 @@ export default function AdminUsersPage() {
   const [tempPwResult, setTempPwResult] = useState<{ open: boolean; email: string; password: string; copied: boolean; emailSent: boolean; sending: boolean }>({ open: false, email: '', password: '', copied: false, emailSent: false, sending: false });
   const [cancelSubModal, setCancelSubModal] = useState<{ open: boolean; userId: string; label: string; loading: boolean }>({ open: false, userId: '', label: '', loading: false });
   const [paymentNotifyModal, setPaymentNotifyModal] = useState<{ open: boolean; userId: string; email: string; displayName: string; loading: boolean }>({ open: false, userId: '', email: '', displayName: '', loading: false });
+  const [bulkPastDueModal, setBulkPastDueModal] = useState<{ open: boolean; loading: boolean; userIds: string[]; progress: { sent: number; failed: number } | null }>({ open: false, loading: false, userIds: [], progress: null });
 
   const handleNotifyPaymentIssue = async () => {
     setPaymentNotifyModal(s => ({ ...s, loading: true }));
@@ -69,6 +70,54 @@ export default function AdminUsersPage() {
       toast.error(e?.message || 'Error al enviar notificación');
     }
     setPaymentNotifyModal(s => ({ ...s, loading: false }));
+  };
+
+  const openBulkPastDueModal = async () => {
+    setBulkPastDueModal({ open: true, loading: true, userIds: [], progress: null });
+    try {
+      // Subs en past_due
+      const { data: subs, error: subsErr } = await supabase
+        .from('subscriptions')
+        .select('user_id')
+        .eq('status', 'past_due');
+      if (subsErr) throw subsErr;
+      const ids = Array.from(new Set((subs || []).map((s: any) => s.user_id).filter(Boolean)));
+      if (ids.length === 0) {
+        setBulkPastDueModal({ open: true, loading: false, userIds: [], progress: null });
+        return;
+      }
+      // Excluir los que ya están en periodo de gracia activo
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('user_id, payment_grace_expires_at')
+        .in('user_id', ids);
+      const now = Date.now();
+      const skip = new Set((profs || [])
+        .filter((p: any) => p.payment_grace_expires_at && new Date(p.payment_grace_expires_at).getTime() > now)
+        .map((p: any) => p.user_id));
+      const filtered = ids.filter(id => !skip.has(id));
+      setBulkPastDueModal({ open: true, loading: false, userIds: filtered, progress: null });
+    } catch (e: any) {
+      toast.error(e.message || 'Error al cargar past_due');
+      setBulkPastDueModal({ open: false, loading: false, userIds: [], progress: null });
+    }
+  };
+
+  const handleBulkNotifyPastDue = async () => {
+    const ids = bulkPastDueModal.userIds;
+    if (ids.length === 0) return;
+    setBulkPastDueModal(s => ({ ...s, loading: true, progress: { sent: 0, failed: 0 } }));
+    let sent = 0, failed = 0;
+    for (const uid of ids) {
+      try {
+        const { data, error } = await supabase.functions.invoke('notify-payment-issue', { body: { user_id: uid } });
+        if (error || !data?.success) failed++; else sent++;
+      } catch { failed++; }
+      setBulkPastDueModal(s => ({ ...s, progress: { sent, failed } }));
+    }
+    toast.success(`Notificaciones enviadas: ${sent}${failed ? ` · ${failed} fallidas` : ''}`);
+    setBulkPastDueModal({ open: false, loading: false, userIds: [], progress: null });
+    load();
   };
 
   const handleCancelSubscription = async () => {
@@ -285,9 +334,10 @@ export default function AdminUsersPage() {
         }}>
           <Download className="h-4 w-4 mr-1" /> Exportar todo
         </Button>
+        <Button variant="outline" size="sm" onClick={openBulkPastDueModal} className="border-yellow-500/40 text-yellow-500 hover:bg-yellow-500/10 hover:text-yellow-400">
+          ⚠️ Notificar past_due
+        </Button>
       </div>
-
-      {/* Filters */}
       <div className="flex gap-2 items-center flex-wrap p-3 rounded-lg border border-border/40 bg-muted/20">
         <span className="text-xs font-medium text-muted-foreground">Filtros:</span>
         <Select value={roleFilter} onValueChange={v => { setRoleFilter(v); setPage(0); }}>
@@ -743,6 +793,41 @@ export default function AdminUsersPage() {
             <AlertDialogAction onClick={handleNotifyPaymentIssue} disabled={paymentNotifyModal.loading}>
               {paymentNotifyModal.loading ? 'Enviando…' : 'Enviar notificación'}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkPastDueModal.open} onOpenChange={open => !open && !bulkPastDueModal.loading && setBulkPastDueModal({ open: false, loading: false, userIds: [], progress: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Notificar a usuarios en past_due</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                {bulkPastDueModal.loading && !bulkPastDueModal.progress ? (
+                  <p>Cargando suscripciones en past_due…</p>
+                ) : bulkPastDueModal.progress ? (
+                  <p>Enviando… {bulkPastDueModal.progress.sent + bulkPastDueModal.progress.failed} / {bulkPastDueModal.userIds.length} (✅ {bulkPastDueModal.progress.sent} · ❌ {bulkPastDueModal.progress.failed})</p>
+                ) : bulkPastDueModal.userIds.length === 0 ? (
+                  <p>No hay usuarios en past_due pendientes de notificar (se excluyen los que ya están en periodo de gracia activo).</p>
+                ) : (
+                  <>
+                    <p>Se notificará a <span className="font-medium text-foreground">{bulkPastDueModal.userIds.length}</span> usuario{bulkPastDueModal.userIds.length === 1 ? '' : 's'} con suscripción en <span className="font-mono">past_due</span>.</p>
+                    <p className="text-muted-foreground">Cada uno recibirá un email con 7 días de plazo para actualizar su método de pago. Se excluyen los que ya tienen un periodo de gracia activo.</p>
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkPastDueModal.loading}>Cerrar</AlertDialogCancel>
+            {bulkPastDueModal.userIds.length > 0 && !bulkPastDueModal.progress && (
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); handleBulkNotifyPastDue(); }}
+                disabled={bulkPastDueModal.loading}
+              >
+                {bulkPastDueModal.loading ? 'Procesando…' : `Notificar a ${bulkPastDueModal.userIds.length}`}
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
