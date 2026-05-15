@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import i18n from 'i18next';
 import type {
   DashboardSummary,
   PromotionRequest,
