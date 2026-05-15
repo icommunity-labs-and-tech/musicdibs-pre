@@ -183,7 +183,44 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
 
   console.log('[registerWork] Pre-upload file hash:', fileHash);
 
-  // Upload all files to storage
+  // Upload all files to storage with size verification + retry
+  const MAX_UPLOAD_RETRIES = 3;
+  const uploadWithRetry = async (filePath: string, file: File): Promise<void> => {
+    for (let attempt = 1; attempt <= MAX_UPLOAD_RETRIES; attempt++) {
+      const { error } = await supabase.storage
+        .from('works-files')
+        .upload(filePath, file, { upsert: true });
+      if (error) {
+        if (attempt >= MAX_UPLOAD_RETRIES) throw new Error(`Error subiendo archivo: ${error.message}`);
+        await new Promise((r) => setTimeout(r, 1000 * attempt));
+        continue;
+      }
+      try {
+        const { data: urlData } = await supabase.storage
+          .from('works-files')
+          .createSignedUrl(filePath, 60);
+        if (urlData?.signedUrl) {
+          const head = await fetch(urlData.signedUrl, { method: 'HEAD' });
+          const uploadedSize = parseInt(head.headers.get('content-length') || '0', 10);
+          if (uploadedSize >= file.size * 0.99) {
+            console.log(`[upload] OK en intento ${attempt}: ${uploadedSize}/${file.size} bytes`);
+            return;
+          }
+          console.warn(`[upload] Intento ${attempt} incompleto: ${uploadedSize}/${file.size} bytes`);
+        }
+      } catch (verifyErr) {
+        console.warn(`[upload] Verificación falló en intento ${attempt}`, verifyErr);
+      }
+      if (attempt < MAX_UPLOAD_RETRIES) {
+        await new Promise((r) => setTimeout(r, 1000 * attempt));
+      }
+    }
+    throw new Error(
+      i18n.t('wizard.rw.uploadFailed') ||
+        'No se pudo subir el archivo correctamente después de varios intentos. Comprueba tu conexión a internet e inténtalo de nuevo.'
+    );
+  };
+
   const filePaths: string[] = [];
   for (const f of allFiles) {
     const safeName = f.name
@@ -191,10 +228,7 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-zA-Z0-9._-]/g, '_');
     const filePath = `${user.id}/${Date.now()}_${safeName}`;
-    const { error: uploadError } = await supabase.storage
-      .from('works-files')
-      .upload(filePath, f);
-    if (uploadError) throw new Error(`Error subiendo archivo: ${uploadError.message}`);
+    await uploadWithRetry(filePath, f);
     filePaths.push(filePath);
   }
 
