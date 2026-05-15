@@ -1436,8 +1436,9 @@ serve(async (req) => {
           }
           stripeArr = stripeMrr * 12;
 
-          // Cancelled subs in last 2 months (for KPI deltas); full list available in cancelledSubsRaw for chart
-          cancelledSubs = cancelledSubsRaw.filter((s: any) => s.canceled_at && s.canceled_at >= lastMonthTs);
+          // Cancelled subs in last 2 months (for KPI deltas); full list available in allCancelledSubs for chart
+          allCancelledSubs = cancelledSubsRaw.filter((s: any) => !!s.canceled_at);
+          cancelledSubs = allCancelledSubs.filter((s: any) => s.canceled_at >= lastMonthTs);
           cancelledSubsThisMonth = cancelledSubs.filter((s: any) => s.canceled_at >= thisMonthTs).length;
           cancelledSubsLastMonth = cancelledSubs.filter((s: any) => s.canceled_at >= lastMonthTs && s.canceled_at < thisMonthTs).length;
 
