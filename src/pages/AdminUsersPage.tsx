@@ -72,7 +72,53 @@ export default function AdminUsersPage() {
     setPaymentNotifyModal(s => ({ ...s, loading: false }));
   };
 
-  const handleCancelSubscription = async () => {
+  const openBulkPastDueModal = async () => {
+    setBulkPastDueModal({ open: true, loading: true, userIds: [], progress: null });
+    try {
+      // Subs en past_due
+      const { data: subs, error: subsErr } = await supabase
+        .from('subscriptions')
+        .select('user_id')
+        .eq('status', 'past_due');
+      if (subsErr) throw subsErr;
+      const ids = Array.from(new Set((subs || []).map((s: any) => s.user_id).filter(Boolean)));
+      if (ids.length === 0) {
+        setBulkPastDueModal({ open: true, loading: false, userIds: [], progress: null });
+        return;
+      }
+      // Excluir los que ya están en periodo de gracia activo
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('user_id, payment_grace_expires_at')
+        .in('user_id', ids);
+      const now = Date.now();
+      const skip = new Set((profs || [])
+        .filter((p: any) => p.payment_grace_expires_at && new Date(p.payment_grace_expires_at).getTime() > now)
+        .map((p: any) => p.user_id));
+      const filtered = ids.filter(id => !skip.has(id));
+      setBulkPastDueModal({ open: true, loading: false, userIds: filtered, progress: null });
+    } catch (e: any) {
+      toast.error(e.message || 'Error al cargar past_due');
+      setBulkPastDueModal({ open: false, loading: false, userIds: [], progress: null });
+    }
+  };
+
+  const handleBulkNotifyPastDue = async () => {
+    const ids = bulkPastDueModal.userIds;
+    if (ids.length === 0) return;
+    setBulkPastDueModal(s => ({ ...s, loading: true, progress: { sent: 0, failed: 0 } }));
+    let sent = 0, failed = 0;
+    for (const uid of ids) {
+      try {
+        const { data, error } = await supabase.functions.invoke('notify-payment-issue', { body: { user_id: uid } });
+        if (error || !data?.success) failed++; else sent++;
+      } catch { failed++; }
+      setBulkPastDueModal(s => ({ ...s, progress: { sent, failed } }));
+    }
+    toast.success(`Notificaciones enviadas: ${sent}${failed ? ` · ${failed} fallidas` : ''}`);
+    setBulkPastDueModal({ open: false, loading: false, userIds: [], progress: null });
+    load();
+  };
     setCancelSubModal(s => ({ ...s, loading: true }));
     try {
       const { data, error } = await supabase.functions.invoke('admin-cancel-subscription', {
