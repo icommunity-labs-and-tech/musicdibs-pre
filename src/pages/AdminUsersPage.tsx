@@ -337,6 +337,7 @@ export default function AdminUsersPage() {
         <Button variant="outline" size="sm" onClick={openBulkPastDueModal} className="border-yellow-500/40 text-yellow-500 hover:bg-yellow-500/10 hover:text-yellow-400">
           ⚠️ Notificar past_due
         </Button>
+      </div>
       <div className="flex gap-2 items-center flex-wrap p-3 rounded-lg border border-border/40 bg-muted/20">
         <span className="text-xs font-medium text-muted-foreground">Filtros:</span>
         <Select value={roleFilter} onValueChange={v => { setRoleFilter(v); setPage(0); }}>
