@@ -119,6 +119,8 @@ export default function AdminUsersPage() {
     setBulkPastDueModal({ open: false, loading: false, userIds: [], progress: null });
     load();
   };
+
+  const handleCancelSubscription = async () => {
     setCancelSubModal(s => ({ ...s, loading: true }));
     try {
       const { data, error } = await supabase.functions.invoke('admin-cancel-subscription', {
