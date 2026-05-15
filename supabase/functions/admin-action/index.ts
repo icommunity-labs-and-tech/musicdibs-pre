@@ -1876,7 +1876,16 @@ serve(async (req) => {
         }
       }
 
-      const creditsPercentage = totalRevenue > 0 ? parseFloat((((revenueSingle + revenueTopup + creditsRevenue) / totalRevenue) * 100).toFixed(1)) : 0;
+      // Period revenue = sum of all order revenue inside the selected period
+      const periodRevenue = Math.round((revenueAnnual + revenueMonthly + revenueSingle + revenueTopup) * 100) / 100;
+
+      const creditsPercentage = periodRevenue > 0 ? parseFloat((((revenueSingle + revenueTopup) / periodRevenue) * 100).toFixed(1)) : 0;
+
+      // Cash & Runway: only use the manual marketing_metrics row of the current month.
+      // Burn rate falls back to current-month ad_spend when no monthly_burn was set.
+      const burnEffective = monthlyBurnManual > 0 ? monthlyBurnManual : (adSpend > 0 ? adSpend : 0);
+      const cashEffective = cashBalanceManual > 0 ? cashBalanceManual : 0;
+      const runwayEffective = burnEffective > 0 && cashEffective > 0 ? Math.round(cashEffective / burnEffective) : 0;
 
       const responsePayload = {
         mrr, arr,
@@ -1885,9 +1894,9 @@ serve(async (req) => {
         churnRate, churnChange, ltv,
         ltvCacRatio: ltv > 0 ? parseFloat((ltv / cac).toFixed(1)) : 0,
         nrr, quickRatio, arpu, cac, grossMargin, paybackPeriod, magicNumber,
-        cashBalance: cashBalanceManual > 0 ? cashBalanceManual : Math.round(totalRevenue),
-        burnRate: monthlyBurnManual > 0 ? monthlyBurnManual : Math.round(totalRevenue * 0.3),
-        runway: monthlyBurnManual > 0 ? Math.round(cashBalanceManual / monthlyBurnManual) : (totalRevenue > 0 ? Math.round(totalRevenue / (totalRevenue * 0.3 || 1)) : 0),
+        cashBalance: cashEffective,
+        burnRate: burnEffective,
+        runway: runwayEffective,
         adSpend, cogsManual, hasManualMetrics,
         totalUsers, newUsersThisMonth: newThisMonth,
         newUsersChange: newLastMonth > 0 ? parseFloat((((newThisMonth - newLastMonth) / newLastMonth) * 100).toFixed(1)) : 100,
@@ -1897,6 +1906,7 @@ serve(async (req) => {
         creditsSold, creditsConsumed, creditsRevenue: Math.round(creditsRevenue * 100) / 100,
         dau: dauSet.size, mau: mauSet.size, planBreakdown: plans,
         totalRevenue,
+        periodRevenue,
         annualRevenue: Math.round(stripeAnnualRevenue * 100) / 100,
         monthlyRevenue: Math.round(stripeMonthlyRevenue * 100) / 100,
         annualPercentage: annualSubPct,
