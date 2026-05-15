@@ -796,6 +796,41 @@ export default function AdminUsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={bulkPastDueModal.open} onOpenChange={open => !open && !bulkPastDueModal.loading && setBulkPastDueModal({ open: false, loading: false, userIds: [], progress: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Notificar a usuarios en past_due</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm">
+                {bulkPastDueModal.loading && !bulkPastDueModal.progress ? (
+                  <p>Cargando suscripciones en past_due…</p>
+                ) : bulkPastDueModal.progress ? (
+                  <p>Enviando… {bulkPastDueModal.progress.sent + bulkPastDueModal.progress.failed} / {bulkPastDueModal.userIds.length} (✅ {bulkPastDueModal.progress.sent} · ❌ {bulkPastDueModal.progress.failed})</p>
+                ) : bulkPastDueModal.userIds.length === 0 ? (
+                  <p>No hay usuarios en past_due pendientes de notificar (se excluyen los que ya están en periodo de gracia activo).</p>
+                ) : (
+                  <>
+                    <p>Se notificará a <span className="font-medium text-foreground">{bulkPastDueModal.userIds.length}</span> usuario{bulkPastDueModal.userIds.length === 1 ? '' : 's'} con suscripción en <span className="font-mono">past_due</span>.</p>
+                    <p className="text-muted-foreground">Cada uno recibirá un email con 7 días de plazo para actualizar su método de pago. Se excluyen los que ya tienen un periodo de gracia activo.</p>
+                  </>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkPastDueModal.loading}>Cerrar</AlertDialogCancel>
+            {bulkPastDueModal.userIds.length > 0 && !bulkPastDueModal.progress && (
+              <AlertDialogAction
+                onClick={(e) => { e.preventDefault(); handleBulkNotifyPastDue(); }}
+                disabled={bulkPastDueModal.loading}
+              >
+                {bulkPastDueModal.loading ? 'Procesando…' : `Notificar a ${bulkPastDueModal.userIds.length}`}
+              </AlertDialogAction>
+            )}
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
