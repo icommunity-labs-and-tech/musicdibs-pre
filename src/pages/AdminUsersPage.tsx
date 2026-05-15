@@ -48,6 +48,28 @@ export default function AdminUsersPage() {
   const [tempPwConfirm, setTempPwConfirm] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
   const [tempPwResult, setTempPwResult] = useState<{ open: boolean; email: string; password: string; copied: boolean; emailSent: boolean; sending: boolean }>({ open: false, email: '', password: '', copied: false, emailSent: false, sending: false });
   const [cancelSubModal, setCancelSubModal] = useState<{ open: boolean; userId: string; label: string; loading: boolean }>({ open: false, userId: '', label: '', loading: false });
+  const [paymentNotifyModal, setPaymentNotifyModal] = useState<{ open: boolean; userId: string; email: string; displayName: string; loading: boolean }>({ open: false, userId: '', email: '', displayName: '', loading: false });
+
+  const handleNotifyPaymentIssue = async () => {
+    setPaymentNotifyModal(s => ({ ...s, loading: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('notify-payment-issue', {
+        body: { user_id: paymentNotifyModal.userId },
+      });
+      if (error || !data?.success) {
+        toast.error(data?.error || error?.message || 'Error al enviar notificación');
+      } else {
+        const grace = data.grace_expires_at ? new Date(data.grace_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+        toast.success(`Email de problema de pago enviado a ${data.email}. Período de gracia hasta ${grace}.`);
+        setPaymentNotifyModal({ open: false, userId: '', email: '', displayName: '', loading: false });
+        load();
+        return;
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'Error al enviar notificación');
+    }
+    setPaymentNotifyModal(s => ({ ...s, loading: false }));
+  };
 
   const handleCancelSubscription = async () => {
     setCancelSubModal(s => ({ ...s, loading: true }));
