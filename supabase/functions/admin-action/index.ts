@@ -1206,7 +1206,7 @@ serve(async (req) => {
       const now = new Date();
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v2:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
       if (!force_refresh) {
@@ -1281,10 +1281,11 @@ serve(async (req) => {
       const stripePlanBreakdown: Record<string, { count: number; mrr: number }> = {};
       let mrrEvolution: { month: string; mrr: number }[] = [];
       let cancelledSubs: any[] = [];
+      let allCancelledSubs: any[] = [];
 
       if (stripe) {
         // ── Stripe heavy-data cache (filter-independent, 15 min TTL) ──
-        const STRIPE_CACHE_KEY = "saas_metrics_stripe_cache_v1";
+        const STRIPE_CACHE_KEY = "saas_metrics_stripe_cache_v2";
         const STRIPE_CACHE_TTL_MS = 15 * 60 * 1000;
         const STRIPE_STALE_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
         const STRIPE_FETCH_TIMEOUT_MS = 8_000;
@@ -1346,7 +1347,7 @@ serve(async (req) => {
                 paginateAll(
                   (p) => stripe.subscriptions.list(p),
                   { status: "canceled" },
-                  (last) => last.canceled_at && last.canceled_at < lastMonthTs,
+                  (last) => last.canceled_at && last.canceled_at < twelveMonthsAgoTs,
                 ),
                 paginateAll(
                   (p) => stripe.charges.list(p),
@@ -1435,8 +1436,9 @@ serve(async (req) => {
           }
           stripeArr = stripeMrr * 12;
 
-          // Cancelled subs in last 2 months
-          cancelledSubs = cancelledSubsRaw.filter((s: any) => s.canceled_at && s.canceled_at >= lastMonthTs);
+          // Cancelled subs in last 2 months (for KPI deltas); full list available in allCancelledSubs for chart
+          allCancelledSubs = cancelledSubsRaw.filter((s: any) => !!s.canceled_at);
+          cancelledSubs = allCancelledSubs.filter((s: any) => s.canceled_at >= lastMonthTs);
           cancelledSubsThisMonth = cancelledSubs.filter((s: any) => s.canceled_at >= thisMonthTs).length;
           cancelledSubsLastMonth = cancelledSubs.filter((s: any) => s.canceled_at >= lastMonthTs && s.canceled_at < thisMonthTs).length;
 
@@ -1624,10 +1626,8 @@ serve(async (req) => {
           const mStart = Math.floor(d.getTime() / 1000);
           const mEnd = Math.floor(new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() / 1000);
           const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
-          // Count cancelled in this month from already-fetched data for recent, estimate for older
-          const cancelledInMonth = cancelledSubs
-            ? cancelledSubs.filter((s: any) => s.canceled_at >= mStart && s.canceled_at < mEnd).length
-            : 0;
+          // Count cancelled in this month using full 12-month cancelled list
+          const cancelledInMonth = allCancelledSubs.filter((s: any) => s.canceled_at >= mStart && s.canceled_at < mEnd).length;
           const baseForMonth = activeSubsCount + cancelledInMonth;
           const monthChurn = baseForMonth > 0 ? parseFloat(((cancelledInMonth / baseForMonth) * 100).toFixed(1)) : 0;
           churnEvolution.push({ month: label, churn: monthChurn });
@@ -1809,49 +1809,83 @@ serve(async (req) => {
       } catch {}
 
       // ── Time series for charts ──
-      const timeSeries: any = { revenue: [], orders: [] };
+      const timeSeries: any = { revenue: [], orders: [], userAcquisition: [], productBreakdown: [] };
+
+      // Build period-aware buckets: week→days, month→weeks, year→months
+      type Bucket = { label: string; start: Date; end: Date };
+      const buckets: Bucket[] = [];
       if (filterStart && filterEnd) {
         const start = new Date(filterStart);
         const end = new Date(filterEnd);
         const diffDays = Math.round((end.getTime() - start.getTime()) / 86400000);
 
         if (diffDays <= 8) {
-          // Week: by day
+          // Week → days
           for (let i = 0; i < diffDays; i++) {
-            const d = new Date(start);
-            d.setDate(d.getDate() + i);
-            const dayStr = d.toISOString().slice(0, 10);
-            const dayNext = new Date(d);
-            dayNext.setDate(dayNext.getDate() + 1);
-            const dayOrders = ordersData.filter((o: any) => o.paid_at >= dayStr && o.paid_at < dayNext.toISOString().slice(0, 10));
-            const dayRev = dayOrders.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
-            timeSeries.revenue.push({ label: d.toLocaleDateString("es-ES", { weekday: "short", day: "2-digit" }), value: Math.round(dayRev * 100) / 100 });
-            timeSeries.orders.push({ label: d.toLocaleDateString("es-ES", { weekday: "short", day: "2-digit" }), value: dayOrders.length });
+            const s = new Date(start); s.setUTCDate(s.getUTCDate() + i);
+            const e = new Date(s); e.setUTCDate(e.getUTCDate() + 1);
+            buckets.push({ label: s.toLocaleDateString("es-ES", { weekday: "short", day: "2-digit" }), start: s, end: e });
           }
         } else if (diffDays <= 35) {
-          // Month: by day
-          for (let i = 0; i < diffDays; i++) {
-            const d = new Date(start);
-            d.setDate(d.getDate() + i);
-            const dayStr = d.toISOString().slice(0, 10);
-            const dayOrders = ordersData.filter((o: any) => o.paid_at?.slice(0, 10) === dayStr);
-            const dayRev = dayOrders.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
-            timeSeries.revenue.push({ label: d.toLocaleDateString("es-ES", { day: "2-digit", month: "short" }), value: Math.round(dayRev * 100) / 100 });
+          // Month → weeks (calendar weeks within the month)
+          let s = new Date(start);
+          let weekIdx = 1;
+          while (s < end) {
+            const e = new Date(s); e.setUTCDate(e.getUTCDate() + 7);
+            const eClamped = e > end ? end : e;
+            buckets.push({ label: `Sem ${weekIdx}`, start: new Date(s), end: new Date(eClamped) });
+            s = e;
+            weekIdx++;
           }
         } else {
-          // Year: by month
+          // Year → months
           for (let m = 0; m < 12; m++) {
-            const mStart = new Date(start.getFullYear(), m, 1);
-            const mEnd = new Date(start.getFullYear(), m + 1, 1);
-            if (mStart >= end) break;
-            const mOrders = ordersData.filter((o: any) => o.paid_at >= mStart.toISOString() && o.paid_at < mEnd.toISOString());
-            const mRev = mOrders.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
-            timeSeries.revenue.push({ label: mStart.toLocaleDateString("es-ES", { month: "short" }), value: Math.round(mRev * 100) / 100 });
+            const s = new Date(start.getFullYear(), m, 1);
+            const e = new Date(start.getFullYear(), m + 1, 1);
+            if (s >= end) break;
+            buckets.push({ label: s.toLocaleDateString("es-ES", { month: "short" }), start: s, end: e });
           }
+        }
+
+        // Aggregate revenue + orders per bucket
+        for (const b of buckets) {
+          const sIso = b.start.toISOString();
+          const eIso = b.end.toISOString();
+          const bOrders = ordersData.filter((o: any) => o.paid_at >= sIso && o.paid_at < eIso);
+          const bRev = bOrders.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
+          timeSeries.revenue.push({ label: b.label, value: Math.round(bRev * 100) / 100 });
+          timeSeries.orders.push({ label: b.label, value: bOrders.length });
+
+          // User acquisition: new registrations + active users (with credit tx) in bucket
+          const newInBucket = profiles.filter((p: any) => p.created_at >= sIso && p.created_at < eIso).length;
+          const activeInBucket = new Set(
+            (activeTxRes.data || []).filter((t: any) => t.created_at >= sIso && t.created_at < eIso).map((t: any) => t.user_id)
+          ).size;
+          timeSeries.userAcquisition.push({ label: b.label, newUsers: newInBucket, activeUsers: activeInBucket });
+
+          // Product breakdown by bucket (units per type)
+          const bucketByType: Record<string, number> = {};
+          bOrders.forEach((o: any) => { const pt = o.product_type || "unknown"; bucketByType[pt] = (bucketByType[pt] || 0) + 1; });
+          timeSeries.productBreakdown.push({
+            label: b.label,
+            annual: bucketByType["annual"] || 0,
+            monthly: bucketByType["monthly"] || 0,
+            single: bucketByType["single"] || 0,
+            topup: bucketByType["topup"] || 0,
+          });
         }
       }
 
-      const creditsPercentage = totalRevenue > 0 ? parseFloat((((revenueSingle + revenueTopup + creditsRevenue) / totalRevenue) * 100).toFixed(1)) : 0;
+      // Period revenue = sum of all order revenue inside the selected period
+      const periodRevenue = Math.round((revenueAnnual + revenueMonthly + revenueSingle + revenueTopup) * 100) / 100;
+
+      const creditsPercentage = periodRevenue > 0 ? parseFloat((((revenueSingle + revenueTopup) / periodRevenue) * 100).toFixed(1)) : 0;
+
+      // Cash & Runway: only use the manual marketing_metrics row of the current month.
+      // Burn rate falls back to current-month ad_spend when no monthly_burn was set.
+      const burnEffective = monthlyBurnManual > 0 ? monthlyBurnManual : (adSpend > 0 ? adSpend : 0);
+      const cashEffective = cashBalanceManual > 0 ? cashBalanceManual : 0;
+      const runwayEffective = burnEffective > 0 && cashEffective > 0 ? Math.round(cashEffective / burnEffective) : 0;
 
       const responsePayload = {
         mrr, arr,
@@ -1860,9 +1894,9 @@ serve(async (req) => {
         churnRate, churnChange, ltv,
         ltvCacRatio: ltv > 0 ? parseFloat((ltv / cac).toFixed(1)) : 0,
         nrr, quickRatio, arpu, cac, grossMargin, paybackPeriod, magicNumber,
-        cashBalance: cashBalanceManual > 0 ? cashBalanceManual : Math.round(totalRevenue),
-        burnRate: monthlyBurnManual > 0 ? monthlyBurnManual : Math.round(totalRevenue * 0.3),
-        runway: monthlyBurnManual > 0 ? Math.round(cashBalanceManual / monthlyBurnManual) : (totalRevenue > 0 ? Math.round(totalRevenue / (totalRevenue * 0.3 || 1)) : 0),
+        cashBalance: cashEffective,
+        burnRate: burnEffective,
+        runway: runwayEffective,
         adSpend, cogsManual, hasManualMetrics,
         totalUsers, newUsersThisMonth: newThisMonth,
         newUsersChange: newLastMonth > 0 ? parseFloat((((newThisMonth - newLastMonth) / newLastMonth) * 100).toFixed(1)) : 100,
@@ -1872,6 +1906,7 @@ serve(async (req) => {
         creditsSold, creditsConsumed, creditsRevenue: Math.round(creditsRevenue * 100) / 100,
         dau: dauSet.size, mau: mauSet.size, planBreakdown: plans,
         totalRevenue,
+        periodRevenue,
         annualRevenue: Math.round(stripeAnnualRevenue * 100) / 100,
         monthlyRevenue: Math.round(stripeMonthlyRevenue * 100) / 100,
         annualPercentage: annualSubPct,

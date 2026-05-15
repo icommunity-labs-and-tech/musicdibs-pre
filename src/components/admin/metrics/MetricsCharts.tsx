@@ -14,10 +14,21 @@ interface MetricsChartsProps {
 export default function MetricsCharts({ metrics, periodType = 'month' }: MetricsChartsProps) {
   const m = metrics;
 
-  // Use timeSeries if available (new v2 format), fall back to legacy arrays
+  // Use timeSeries if available (period-aware), fall back to legacy arrays
   const revenueTimeSeries = m.timeSeries?.revenue ?? m.mrrEvolution ?? [];
-  const ordersTimeSeries = m.timeSeries?.orders ?? [];
-  const renewalsVsCancellations = m.timeSeries?.renewals_vs_cancellations ?? [];
+  const userAcquisitionSeries = (m.timeSeries?.userAcquisition && m.timeSeries.userAcquisition.length > 0)
+    ? m.timeSeries.userAcquisition
+    : (m.userAcquisition ?? []).map((u: any) => ({ label: u.month, newUsers: u.newUsers, activeUsers: u.activeUsers }));
+  const productSeries = (m.timeSeries?.productBreakdown && m.timeSeries.productBreakdown.length > 0)
+    ? m.timeSeries.productBreakdown
+    : [];
+
+  const periodRevenueSum = revenueTimeSeries.reduce(
+    (sum: number, p: any) => sum + (Number(p.value ?? p.mrr ?? 0) || 0),
+    0,
+  );
+  const periodRevenue = m.periodRevenue ?? periodRevenueSum;
+  const periodUnits = (m.unitsSoldAnnual ?? 0) + (m.unitsSoldMonthly ?? 0) + (m.unitsSoldSingle ?? 0) + (m.unitsSoldTopup ?? 0);
 
   return (
     <div className="space-y-6">
@@ -25,11 +36,17 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
         {/* Revenue Evolution */}
         <Card className="border-border/40">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-base">📈 Revenue</CardTitle>
-              {m._dataSource === "stripe_real" && (
-                <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-500">Stripe Live</Badge>
-              )}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base">📈 Revenue</CardTitle>
+                {m._dataSource === "stripe_real" && (
+                  <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-500">Stripe Live</Badge>
+                )}
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-bold">€{Math.round(periodRevenueSum).toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground">Total del periodo</p>
+              </div>
             </div>
             <CardDescription>Ingresos en el periodo</CardDescription>
           </CardHeader>
@@ -50,7 +67,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
         <Card className="border-border/40">
           <CardHeader>
             <CardTitle className="text-base">📉 Churn Rate</CardTitle>
-            <CardDescription>Evolución de cancelaciones</CardDescription>
+            <CardDescription>Evolución de cancelaciones (últimos 12 meses)</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -69,15 +86,16 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
         <Card className="border-border/40">
           <CardHeader>
             <CardTitle className="text-base">👥 Registros y Clientes</CardTitle>
-            <CardDescription>Nuevos registros vs nuevos clientes por periodo</CardDescription>
+            <CardDescription>Nuevos registros vs activos del periodo</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={m.userAcquisition}>
+              <BarChart data={userAcquisitionSeries}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="newUsers" fill="hsl(142, 76%, 36%)" name="Nuevos registros" />
                 <Bar dataKey="activeUsers" fill="hsl(217, 91%, 60%)" name="Activos" />
               </BarChart>
@@ -89,18 +107,34 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
         <Card className="border-border/40">
           <CardHeader>
             <CardTitle className="text-base">📦 Ventas por Producto</CardTitle>
-            <CardDescription>Unidades vendidas en el periodo</CardDescription>
+            <CardDescription>
+              {productSeries.length > 0 ? 'Unidades por producto a lo largo del periodo' : 'Unidades vendidas en el periodo'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={m.productBreakdown || m.featureUsage} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                <Bar dataKey="units" fill="hsl(var(--primary))" name="Unidades" />
-                <Bar dataKey="uses" fill="hsl(var(--primary))" name="Usos" />
-              </BarChart>
+              {productSeries.length > 0 ? (
+                <BarChart data={productSeries}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                  <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="annual" stackId="a" fill="hsl(262, 83%, 58%)" name="Anual" />
+                  <Bar dataKey="monthly" stackId="a" fill="hsl(217, 91%, 60%)" name="Mensual" />
+                  <Bar dataKey="single" stackId="a" fill="hsl(142, 76%, 36%)" name="Single" />
+                  <Bar dataKey="topup" stackId="a" fill="hsl(38, 92%, 50%)" name="Topup" />
+                </BarChart>
+              ) : (
+                <BarChart data={m.productBreakdown || m.featureUsage} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                  <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+                  <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                  <Bar dataKey="units" fill="hsl(var(--primary))" name="Unidades" />
+                  <Bar dataKey="uses" fill="hsl(var(--primary))" name="Usos" />
+                </BarChart>
+              )}
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -112,27 +146,25 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-base">💳 Revenue por Tipo</CardTitle>
-              <CardDescription>Distribución de ingresos por tipo de producto</CardDescription>
+              <CardDescription>Distribución de ingresos por tipo de producto en el periodo</CardDescription>
             </div>
             <div className="text-right flex items-start gap-6">
               <div>
-                <p className="text-2xl font-bold">
-                  {((m.unitsSoldAnnual ?? 0) + (m.unitsSoldMonthly ?? 0) + (m.unitsSoldSingle ?? 0) + (m.unitsSoldTopup ?? 0)).toLocaleString()}
-                </p>
+                <p className="text-2xl font-bold">{periodUnits.toLocaleString()}</p>
                 <p className="text-[10px] text-muted-foreground">Ventas del periodo</p>
               </div>
               <div>
-                <p className="text-2xl font-bold">€{(m.totalRevenue ?? 0).toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground">Revenue total del periodo</p>
+                <p className="text-2xl font-bold">€{Math.round(periodRevenue).toLocaleString()}</p>
+                <p className="text-[10px] text-muted-foreground">Revenue del periodo</p>
               </div>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <RevenueBar label="Anual" value={m.annualRevenue ?? m.revenueAnnual ?? 0} percent={m.annualPercentage ?? 0} gradient="from-violet-500 to-purple-600" />
-            <RevenueBar label="Mensual" value={m.monthlyRevenue ?? m.revenueMonthly ?? 0} percent={m.monthlyPercentage ?? 0} gradient="from-blue-500 to-cyan-600" />
-            <RevenueBar label="Singles / Topups" value={(m.revenueSingle ?? 0) + (m.revenueTopup ?? 0) + (m.creditsRevenue ?? 0)} percent={m.creditsPercentage ?? 0} gradient="from-emerald-500 to-teal-600" sub="Compras únicas" />
+            <RevenueBar label="Anual" value={m.revenueAnnual ?? 0} percent={periodRevenue > 0 ? Math.round(((m.revenueAnnual ?? 0) / periodRevenue) * 100) : 0} gradient="from-violet-500 to-purple-600" />
+            <RevenueBar label="Mensual" value={m.revenueMonthly ?? 0} percent={periodRevenue > 0 ? Math.round(((m.revenueMonthly ?? 0) / periodRevenue) * 100) : 0} gradient="from-blue-500 to-cyan-600" />
+            <RevenueBar label="Singles / Topups" value={(m.revenueSingle ?? 0) + (m.revenueTopup ?? 0)} percent={periodRevenue > 0 ? Math.round((((m.revenueSingle ?? 0) + (m.revenueTopup ?? 0)) / periodRevenue) * 100) : 0} gradient="from-emerald-500 to-teal-600" sub="Compras únicas" />
           </div>
 
           <Separator className="my-4" />
