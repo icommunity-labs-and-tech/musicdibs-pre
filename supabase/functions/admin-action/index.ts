@@ -1626,10 +1626,8 @@ serve(async (req) => {
           const mStart = Math.floor(d.getTime() / 1000);
           const mEnd = Math.floor(new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() / 1000);
           const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
-          // Count cancelled in this month from already-fetched data for recent, estimate for older
-          const cancelledInMonth = cancelledSubs
-            ? cancelledSubs.filter((s: any) => s.canceled_at >= mStart && s.canceled_at < mEnd).length
-            : 0;
+          // Count cancelled in this month using full 12-month cancelled list
+          const cancelledInMonth = allCancelledSubs.filter((s: any) => s.canceled_at >= mStart && s.canceled_at < mEnd).length;
           const baseForMonth = activeSubsCount + cancelledInMonth;
           const monthChurn = baseForMonth > 0 ? parseFloat(((cancelledInMonth / baseForMonth) * 100).toFixed(1)) : 0;
           churnEvolution.push({ month: label, churn: monthChurn });
