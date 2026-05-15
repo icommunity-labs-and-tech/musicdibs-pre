@@ -419,7 +419,19 @@ export default function AdminUsersPage() {
                     <p className="text-xs text-muted-foreground">{u.email}</p>
                   </div>
                 </TableCell>
-                <TableCell><Badge variant="outline">{u.subscription_plan}</Badge></TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <Badge variant="outline">{u.subscription_plan}</Badge>
+                    {u.payment_grace_expires_at && (
+                      new Date(u.payment_grace_expires_at) > new Date()
+                        ? <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">⚠️ Gracia hasta {new Date(u.payment_grace_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</Badge>
+                        : <Badge className="bg-destructive/20 text-destructive text-xs">🔴 Gracia expirada</Badge>
+                    )}
+                    {u.payment_issue_notified_at && !u.payment_grace_expires_at && (
+                      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">⚠️ Pago pendiente</Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="font-mono">{u.available_credits}</TableCell>
                 <TableCell>
                   <div className="flex gap-1 flex-wrap">
