@@ -1281,6 +1281,7 @@ serve(async (req) => {
       const stripePlanBreakdown: Record<string, { count: number; mrr: number }> = {};
       let mrrEvolution: { month: string; mrr: number }[] = [];
       let cancelledSubs: any[] = [];
+      let allCancelledSubs: any[] = [];
 
       if (stripe) {
         // ── Stripe heavy-data cache (filter-independent, 15 min TTL) ──
