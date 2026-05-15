@@ -454,6 +454,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         errorRegister: 'Erro no registro',
         errorGeneric: 'Erro ao registrar a obra',
         throttle: 'Você tem um registro em andamento ("{{title}}"). Aguarde a conclusão antes de registrar outra obra.',
+        uploadFailed: 'Não foi possível enviar o arquivo corretamente. Verifique sua conexão com a internet e tente novamente.',
       },
       steps: {
         file: 'Arquivo',
