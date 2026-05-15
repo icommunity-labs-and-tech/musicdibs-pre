@@ -295,6 +295,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         errorRegister: 'Registration error',
         errorGeneric: 'Error registering the work',
         throttle: 'You have a registration in progress ("{{title}}"). Wait for it to finish before registering another work.',
+        uploadFailed: 'Could not upload the file correctly. Please check your internet connection and try again.',
       },
       steps: {
         file: 'File',
