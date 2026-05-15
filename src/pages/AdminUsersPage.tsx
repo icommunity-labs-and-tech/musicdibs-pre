@@ -48,6 +48,28 @@ export default function AdminUsersPage() {
   const [tempPwConfirm, setTempPwConfirm] = useState<{ open: boolean; userId: string; email: string }>({ open: false, userId: '', email: '' });
   const [tempPwResult, setTempPwResult] = useState<{ open: boolean; email: string; password: string; copied: boolean; emailSent: boolean; sending: boolean }>({ open: false, email: '', password: '', copied: false, emailSent: false, sending: false });
   const [cancelSubModal, setCancelSubModal] = useState<{ open: boolean; userId: string; label: string; loading: boolean }>({ open: false, userId: '', label: '', loading: false });
+  const [paymentNotifyModal, setPaymentNotifyModal] = useState<{ open: boolean; userId: string; email: string; displayName: string; loading: boolean }>({ open: false, userId: '', email: '', displayName: '', loading: false });
+
+  const handleNotifyPaymentIssue = async () => {
+    setPaymentNotifyModal(s => ({ ...s, loading: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke('notify-payment-issue', {
+        body: { user_id: paymentNotifyModal.userId },
+      });
+      if (error || !data?.success) {
+        toast.error(data?.error || error?.message || 'Error al enviar notificación');
+      } else {
+        const grace = data.grace_expires_at ? new Date(data.grace_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }) : '';
+        toast.success(`Email de problema de pago enviado a ${data.email}. Período de gracia hasta ${grace}.`);
+        setPaymentNotifyModal({ open: false, userId: '', email: '', displayName: '', loading: false });
+        load();
+        return;
+      }
+    } catch (e: any) {
+      toast.error(e?.message || 'Error al enviar notificación');
+    }
+    setPaymentNotifyModal(s => ({ ...s, loading: false }));
+  };
 
   const handleCancelSubscription = async () => {
     setCancelSubModal(s => ({ ...s, loading: true }));
@@ -397,7 +419,19 @@ export default function AdminUsersPage() {
                     <p className="text-xs text-muted-foreground">{u.email}</p>
                   </div>
                 </TableCell>
-                <TableCell><Badge variant="outline">{u.subscription_plan}</Badge></TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <Badge variant="outline">{u.subscription_plan}</Badge>
+                    {u.payment_grace_expires_at && (
+                      new Date(u.payment_grace_expires_at) > new Date()
+                        ? <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">⚠️ Gracia hasta {new Date(u.payment_grace_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</Badge>
+                        : <Badge className="bg-destructive/20 text-destructive text-xs">🔴 Gracia expirada</Badge>
+                    )}
+                    {u.payment_issue_notified_at && !u.payment_grace_expires_at && (
+                      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">⚠️ Pago pendiente</Badge>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell className="font-mono">{u.available_credits}</TableCell>
                 <TableCell>
                   <div className="flex gap-1 flex-wrap">
@@ -495,13 +529,20 @@ export default function AdminUsersPage() {
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       {u.subscription_plan && u.subscription_plan !== 'Free' && (
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          disabled={u.user_id === user?.id}
-                          onClick={() => setCancelSubModal({ open: true, userId: u.user_id, label: u.display_name || u.email, loading: false })}
-                        >
-                          🚫 Dar de baja
-                        </DropdownMenuItem>
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => setPaymentNotifyModal({ open: true, userId: u.user_id, email: u.email, displayName: u.display_name || u.email, loading: false })}
+                          >
+                            ⚠️ Notificar problema de pago
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            disabled={u.user_id === user?.id}
+                            onClick={() => setCancelSubModal({ open: true, userId: u.user_id, label: u.display_name || u.email, loading: false })}
+                          >
+                            🚫 Dar de baja
+                          </DropdownMenuItem>
+                        </>
                       )}
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
@@ -682,6 +723,25 @@ export default function AdminUsersPage() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {cancelSubModal.loading ? 'Procesando…' : 'Dar de baja'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={paymentNotifyModal.open} onOpenChange={open => !open && !paymentNotifyModal.loading && setPaymentNotifyModal({ open: false, userId: '', email: '', displayName: '', loading: false })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Notificar problema de pago</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Enviar notificación de problema de pago a <span className="font-medium text-foreground">{paymentNotifyModal.displayName}</span> ({paymentNotifyModal.email})?
+              <br /><br />
+              Se le enviará un email con 7 días de plazo para actualizar su método de pago.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={paymentNotifyModal.loading}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleNotifyPaymentIssue} disabled={paymentNotifyModal.loading}>
+              {paymentNotifyModal.loading ? 'Enviando…' : 'Enviar notificación'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

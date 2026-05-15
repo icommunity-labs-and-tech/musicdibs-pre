@@ -2075,6 +2075,9 @@ export type Database = {
           library_status: string | null
           library_status_since: string | null
           managed_by_manager_id: string | null
+          payment_grace_expires_at: string | null
+          payment_issue_count: number | null
+          payment_issue_notified_at: string | null
           phone: string | null
           referral_detail: string | null
           referral_influencer: string | null
@@ -2100,6 +2103,9 @@ export type Database = {
           library_status?: string | null
           library_status_since?: string | null
           managed_by_manager_id?: string | null
+          payment_grace_expires_at?: string | null
+          payment_issue_count?: number | null
+          payment_issue_notified_at?: string | null
           phone?: string | null
           referral_detail?: string | null
           referral_influencer?: string | null
@@ -2125,6 +2131,9 @@ export type Database = {
           library_status?: string | null
           library_status_since?: string | null
           managed_by_manager_id?: string | null
+          payment_grace_expires_at?: string | null
+          payment_issue_count?: number | null
+          payment_issue_notified_at?: string | null
           phone?: string | null
           referral_detail?: string | null
           referral_influencer?: string | null
