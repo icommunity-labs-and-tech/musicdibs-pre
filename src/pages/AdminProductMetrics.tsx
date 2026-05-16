@@ -288,7 +288,7 @@ export default function AdminProductMetrics() {
       { label: "Vídeos IA", uses: (lc["social_video"] || 0) + (lc["video"] || 0), costKeys: ["social_video", "generate_video"] },
       { label: "Promoción RRSS", uses: (lc["promotion"] || 0) + (lc["premium_promotion"] || 0), costKeys: ["promote_premium"] },
       { label: "Registro blockchain", uses: lc["register"] || 0, costKeys: ["register_work"] },
-      { label: "Masterización (ROEX)", uses: lc["enhance_audio"] || 0, costKeys: ["enhance_audio"] },
+      { label: "Masterización", uses: lc["enhance_audio"] || 0, costKeys: ["enhance_audio"] },
     ];
 
     const items = featureMap.map((f) => {
