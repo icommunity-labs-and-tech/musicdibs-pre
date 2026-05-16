@@ -349,11 +349,21 @@ serve(async (req) => {
       const userIds = (profiles || []).map((p: any) => p.user_id);
       if (userIds.length === 0) return json({ users: [], total: 0 });
 
-      const [{ data: roles }, { data: worksCounts }, { data: sigs }] = await Promise.all([
+      const [{ data: roles }, { data: worksCounts }, { data: sigs }, { data: reminders }] = await Promise.all([
         admin.from("user_roles").select("user_id, role").in("user_id", userIds),
         admin.from("works").select("user_id").in("user_id", userIds).eq("status", "registered"),
         admin.from("ibs_signatures").select("id, user_id, ibs_signature_id, status, created_at").in("user_id", userIds).order("created_at", { ascending: false }),
+        admin.from("kyc_reminder_log").select("user_id, sent_at").in("user_id", userIds),
       ]);
+
+      const reminderMap: Record<string, { count: number; last_sent_at: string | null }> = {};
+      (reminders || []).forEach((r: any) => {
+        const m = reminderMap[r.user_id] ||= { count: 0, last_sent_at: null };
+        m.count++;
+        if (r.sent_at && (!m.last_sent_at || new Date(r.sent_at).getTime() > new Date(m.last_sent_at).getTime())) {
+          m.last_sent_at = r.sent_at;
+        }
+      });
 
       // Pick the most recent signature per user (already ordered desc)
       const sigMap: Record<string, { id: string; ibs_signature_id: string; status: string; created_at: string }> = {};
