@@ -17,7 +17,7 @@ import AdminUserModals from '@/components/admin/AdminUserModals';
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
-type SortKey = 'created_at' | 'updated_at' | 'display_name' | 'available_credits' | 'subscription_plan' | 'kyc_status';
+type SortKey = 'created_at' | 'updated_at' | 'display_name' | 'available_credits' | 'subscription_plan' | 'kyc_status' | 'kyc_reminders_count' | 'kyc_last_reminder_at';
 
 export default function AdminUsersPage() {
   const { user } = useAuth();
@@ -436,6 +436,12 @@ export default function AdminUsersPage() {
               <TableHead className="cursor-pointer" onClick={() => toggleSort('kyc_status')}>
                 <div className="flex items-center gap-1">KYC <SortIcon k="kyc_status" /></div>
               </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('kyc_reminders_count')}>
+                <div className="flex items-center gap-1">Avisos KYC <SortIcon k="kyc_reminders_count" /></div>
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('kyc_last_reminder_at')}>
+                <div className="flex items-center gap-1">Último aviso <SortIcon k="kyc_last_reminder_at" /></div>
+              </TableHead>
               <TableHead>Obras</TableHead>
               <TableHead className="cursor-pointer" onClick={() => toggleSort('created_at')}>
                 <div className="flex items-center gap-1">Alta <SortIcon k="created_at" /></div>
@@ -450,9 +456,9 @@ export default function AdminUsersPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={12} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
             ) : users.length === 0 ? (
-              <TableRow><TableCell colSpan={12} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
+              <TableRow><TableCell colSpan={14} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
             ) : users.map(u => (
               <TableRow key={u.user_id} className="cursor-pointer hover:bg-muted/40" onClick={() => setSelectedUser(u)}>
                 <TableCell onClick={e => e.stopPropagation()}>
@@ -495,6 +501,16 @@ export default function AdminUsersPage() {
                   </div>
                 </TableCell>
                 <TableCell>{kycBadge(u)}</TableCell>
+                <TableCell className="text-xs">
+                  {u.kyc_status === 'verified'
+                    ? <span className="text-muted-foreground">—</span>
+                    : <span className="font-mono">{u.kyc_reminders_count ?? 0}</span>}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {u.kyc_status === 'verified' || !u.kyc_last_reminder_at
+                    ? '—'
+                    : `hace ${Math.max(0, Math.floor((Date.now() - new Date(u.kyc_last_reminder_at).getTime()) / 86400000))} d`}
+                </TableCell>
                 <TableCell>{u.works_count}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(u.updated_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</TableCell>

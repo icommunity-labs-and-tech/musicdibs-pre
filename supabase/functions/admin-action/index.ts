@@ -201,8 +201,11 @@ serve(async (req) => {
       const stripeFilter = (payload.stripe_filter || "").trim(); // 'linked' | 'unlinked'
       const statusFilter = (payload.status_filter || "").trim(); // 'active' | 'blocked'
       const roleFilter = (payload.role_filter || "").trim(); // 'admin' | 'manager' | 'user'
-      const sortBy = ["created_at", "updated_at", "display_name", "available_credits", "subscription_plan", "kyc_status"].includes(payload.sort_by) ? payload.sort_by : "created_at";
+      const REMINDER_SORT_KEYS = ["kyc_reminders_count", "kyc_last_reminder_at"];
+      const validSorts = ["created_at", "updated_at", "display_name", "available_credits", "subscription_plan", "kyc_status", ...REMINDER_SORT_KEYS];
+      const sortBy = validSorts.includes(payload.sort_by) ? payload.sort_by : "created_at";
       const sortDir = payload.sort_dir === "asc" ? true : false;
+      const isReminderSort = REMINDER_SORT_KEYS.includes(sortBy);
 
       // If filtering by role, pre-fetch matching user_ids
       let roleUserIds: string[] | null = null;
@@ -277,11 +280,66 @@ serve(async (req) => {
       if (statusFilter === "active") query = query.or("is_blocked.is.null,is_blocked.eq.false");
       if (roleUserIds) query = query.in("user_id", roleUserIds);
 
-      query = query.order(sortBy, { ascending: sortDir }).range(offset, offset + limit - 1);
+      let profiles: any[] = [];
+      let profilesCount = 0;
+      let error: any = null;
 
-      const { data: profiles, error, count: profilesCount } = await query;
+      if (isReminderSort) {
+        // Fetch all matching profile rows (capped), join with reminder aggregates, sort, paginate, then refetch full rows.
+        const { data: idRows, error: idErr, count: idCount } = await query
+          .select("user_id", { count: "exact" })
+          .range(0, 4999);
+        if (idErr) {
+          if ((idErr.message || "").toLowerCase().includes("range not satisfiable")) return json({ users: [], total: 0 });
+          return json({ error: idErr.message }, 500);
+        }
+        const allIds = (idRows || []).map((r: any) => r.user_id);
+        if (allIds.length === 0) return json({ users: [], total: 0 });
+
+        const { data: allReminders } = await admin
+          .from("kyc_reminder_log")
+          .select("user_id, sent_at")
+          .in("user_id", allIds);
+        const remStats: Record<string, { count: number; last: number | null }> = {};
+        (allReminders || []).forEach((r: any) => {
+          const s = remStats[r.user_id] ||= { count: 0, last: null };
+          s.count++;
+          const t = r.sent_at ? new Date(r.sent_at).getTime() : null;
+          if (t !== null && (s.last === null || t > s.last)) s.last = t;
+        });
+
+        const sortable = allIds.map((id) => ({
+          id,
+          count: remStats[id]?.count || 0,
+          last: remStats[id]?.last ?? null,
+        }));
+        const dir = sortDir ? 1 : -1;
+        sortable.sort((a, b) => {
+          if (sortBy === "kyc_reminders_count") return (a.count - b.count) * dir;
+          // kyc_last_reminder_at: nulls always at the end
+          if (a.last === null && b.last === null) return 0;
+          if (a.last === null) return 1;
+          if (b.last === null) return -1;
+          return (a.last - b.last) * dir;
+        });
+
+        profilesCount = idCount ?? sortable.length;
+        const pageIds = sortable.slice(offset, offset + limit).map((s) => s.id);
+        if (pageIds.length === 0) return json({ users: [], total: profilesCount });
+
+        const { data: pageProfiles, error: pErr } = await admin.from("profiles").select("*").in("user_id", pageIds);
+        if (pErr) return json({ error: pErr.message }, 500);
+        // Preserve sort order
+        const pMap: Record<string, any> = {};
+        (pageProfiles || []).forEach((p: any) => { pMap[p.user_id] = p; });
+        profiles = pageIds.map((id) => pMap[id]).filter(Boolean);
+      } else {
+        query = query.order(sortBy, { ascending: sortDir }).range(offset, offset + limit - 1);
+        const res = await query;
+        error = res.error; profiles = res.data || []; profilesCount = res.count ?? 0;
+      }
+
       if (error) {
-        // PostgREST returns "Requested range not satisfiable" when offset >= total rows
         if ((error.message || "").toLowerCase().includes("range not satisfiable")) {
           return json({ users: [], total: 0 });
         }
@@ -291,11 +349,21 @@ serve(async (req) => {
       const userIds = (profiles || []).map((p: any) => p.user_id);
       if (userIds.length === 0) return json({ users: [], total: 0 });
 
-      const [{ data: roles }, { data: worksCounts }, { data: sigs }] = await Promise.all([
+      const [{ data: roles }, { data: worksCounts }, { data: sigs }, { data: reminders }] = await Promise.all([
         admin.from("user_roles").select("user_id, role").in("user_id", userIds),
         admin.from("works").select("user_id").in("user_id", userIds).eq("status", "registered"),
         admin.from("ibs_signatures").select("id, user_id, ibs_signature_id, status, created_at").in("user_id", userIds).order("created_at", { ascending: false }),
+        admin.from("kyc_reminder_log").select("user_id, sent_at").in("user_id", userIds),
       ]);
+
+      const reminderMap: Record<string, { count: number; last_sent_at: string | null }> = {};
+      (reminders || []).forEach((r: any) => {
+        const m = reminderMap[r.user_id] ||= { count: 0, last_sent_at: null };
+        m.count++;
+        if (r.sent_at && (!m.last_sent_at || new Date(r.sent_at).getTime() > new Date(m.last_sent_at).getTime())) {
+          m.last_sent_at = r.sent_at;
+        }
+      });
 
       // Pick the most recent signature per user (already ordered desc)
       const sigMap: Record<string, { id: string; ibs_signature_id: string; status: string; created_at: string }> = {};
@@ -332,6 +400,8 @@ serve(async (req) => {
         works_count: worksCountMap[p.user_id] || 0,
         email: emailsMap[p.user_id] || "",
         latest_signature: sigMap[p.user_id] || null,
+        kyc_reminders_count: reminderMap[p.user_id]?.count || 0,
+        kyc_last_reminder_at: reminderMap[p.user_id]?.last_sent_at || null,
       }));
 
       if (search) {
