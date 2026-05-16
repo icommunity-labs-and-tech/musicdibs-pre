@@ -267,16 +267,19 @@ serve(async (req) => {
       const emailContent = buildCancellationEmail(locale, profile.display_name);
       const messageId = `payment-grace-cancelled-${userId}-${Date.now()}`;
 
-      const { error: queueErr } = await supabase.rpc("send_email", {
+      const { error: queueErr } = await supabase.rpc("enqueue_email", {
         queue_name: "transactional_emails",
-        message: {
+        payload: {
+          idempotency_key: messageId,
           message_id: messageId,
           label: "payment_grace_cancellation",
-          from: "MusicDibs <noreply@musicdibs.com>",
+          from: "MusicDibs <noreply@notify.musicdibs.com>",
+          sender_domain: "notify.musicdibs.com",
           to: email,
           subject: emailContent.subject,
           html: emailContent.html,
           text: emailContent.text,
+          purpose: "transactional",
           queued_at: now,
         },
       });
