@@ -1206,7 +1206,7 @@ serve(async (req) => {
       const now = new Date();
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v3:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v4:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
       if (!force_refresh) {
@@ -1549,11 +1549,15 @@ serve(async (req) => {
         negTxQuery = negTxQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
       }
 
-      const [posTxRes, negTxRes, activeTxRes, todayTxRes] = await Promise.all([
+      // Cohort tx: 12 months of history (not period-filtered) so cohort retention can compute m1/m3/m6
+      const cohortTxStart = new Date(now.getFullYear(), now.getMonth() - 12, 1).toISOString();
+
+      const [posTxRes, negTxRes, activeTxRes, todayTxRes, cohortTxRes] = await Promise.all([
         posTxQuery,
         negTxQuery,
         admin.from("credit_transactions").select("user_id, created_at").gte("created_at", thirtyDaysAgo),
         admin.from("credit_transactions").select("user_id").gte("created_at", `${todayStr}T00:00:00Z`),
+        admin.from("credit_transactions").select("user_id, created_at").gte("created_at", cohortTxStart),
       ]);
 
       const creditsSold = (posTxRes.data || []).reduce((s: number, t: any) => s + t.amount, 0);
@@ -1626,14 +1630,22 @@ serve(async (req) => {
       const ltv = churnRate > 0 ? Math.round(arpu / (churnRate / 100)) : Math.round(arpu * 24);
       const totalRevenue = totalStripeRevenue > 0 ? Math.round(totalStripeRevenue * 100) / 100 : Math.round((mrr + creditsRevenue) * 100) / 100;
 
-      // Fetch manual marketing metrics from DB for current month
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
+      // Fetch manual marketing metrics from DB: prefer the period's month when one is selected
+      let marketingYear = now.getFullYear();
+      let marketingMonth = now.getMonth() + 1;
+      if (periodType === "month" && month && month !== "all" && year && year !== "all") {
+        marketingYear = parseInt(String(year), 10);
+        marketingMonth = parseInt(String(month), 10);
+      } else if (filterStart) {
+        const fs = new Date(filterStart);
+        marketingYear = fs.getUTCFullYear();
+        marketingMonth = fs.getUTCMonth() + 1;
+      }
       const { data: marketingRow } = await admin
         .from("marketing_metrics")
         .select("*")
-        .eq("year", currentYear)
-        .eq("month", currentMonth)
+        .eq("year", marketingYear)
+        .eq("month", marketingMonth)
         .maybeSingle();
 
       const adSpend = marketingRow ? parseFloat(marketingRow.ad_spend) : 0;
@@ -1687,7 +1699,7 @@ serve(async (req) => {
         const cohortSize = cohortUsers.length;
         if (cohortSize === 0) continue;
         const cohortIds = new Set(cohortUsers.map((p: any) => p.user_id || p.id));
-        const allTx = activeTxRes.data || [];
+        const allTx = cohortTxRes.data || [];
 
         // m1: activity 1 month later
         const m1Start = new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString();
@@ -1923,13 +1935,51 @@ serve(async (req) => {
       const cashEffective = cashBalanceManual > 0 ? cashBalanceManual : 0;
       const runwayEffective = burnEffective > 0 && cashEffective > 0 ? Math.round(cashEffective / burnEffective) : 0;
 
+      // ── Period-aware overrides for Revenue Concentration & Unit Economics ──
+      // Top plan computed from the actual orders in the selected period (not global Stripe snapshot)
+      const periodCustomerSet = new Set<string>(ordersData.map((o: any) => o.user_id).filter(Boolean));
+      const periodCustomers = periodCustomerSet.size;
+      const periodTopPlanEntry = productBreakdown.length > 0 ? productBreakdown[0] : null;
+      const periodTopPlanName = periodTopPlanEntry?.name || topPlanName;
+      const periodTopPlanPct = periodTopPlanEntry && totalOrders > 0
+        ? Math.round((periodTopPlanEntry.units / totalOrders) * 100)
+        : topPlanPct;
+      const periodTopPlanRevPct = periodTopPlanEntry && periodRevenue > 0
+        ? Math.round((periodTopPlanEntry.revenue / periodRevenue) * 100)
+        : topPlanPct;
+
+      // Cancellations inside the selected period (any Stripe termination type)
+      let cancelledInPeriod = cancelledSubsThisMonth;
+      if (filterStart && filterEnd && allCancelledSubs.length > 0) {
+        const fsSec = Math.floor(new Date(filterStart).getTime() / 1000);
+        const feSec = Math.floor(new Date(filterEnd).getTime() / 1000);
+        cancelledInPeriod = allCancelledSubs.filter((s: any) => s.canceled_at >= fsSec && s.canceled_at < feSec).length;
+      }
+
+      // Unit Economics — period-aware where it makes sense
+      const arpuPeriod = periodCustomers > 0
+        ? parseFloat((periodRevenue / periodCustomers).toFixed(2))
+        : arpu;
+      const grossMarginPeriod = periodRevenue > 0 && cogsManual > 0
+        ? parseFloat((((periodRevenue - cogsManual) / periodRevenue) * 100).toFixed(1))
+        : (periodRevenue > 0 ? 85 : grossMargin);
+      const paybackPeriodPeriod = arpuPeriod > 0 ? Math.round(cac / arpuPeriod) : paybackPeriod;
+      const magicNumberPeriod = periodRevenue > 0 && newThisMonth > 0 && cac > 0
+        ? parseFloat((periodRevenue / (cac * newThisMonth)).toFixed(2))
+        : magicNumber;
+
       const responsePayload = {
         mrr, arr,
         mrrChange,
         arrChange: mrrChange,
         churnRate, churnChange, ltv,
         ltvCacRatio: ltv > 0 ? parseFloat((ltv / cac).toFixed(1)) : 0,
-        nrr, quickRatio, arpu, cac, grossMargin, paybackPeriod, magicNumber,
+        nrr, quickRatio,
+        arpu: arpuPeriod,
+        cac,
+        grossMargin: grossMarginPeriod,
+        paybackPeriod: paybackPeriodPeriod,
+        magicNumber: magicNumberPeriod,
         cashBalance: cashEffective,
         burnRate: burnEffective,
         runway: runwayEffective,
@@ -1949,10 +1999,11 @@ serve(async (req) => {
         monthlyPercentage: monthlySubPct,
         creditsPercentage,
         oneTimeRevenue: Math.round(oneTimeRevenue * 100) / 100,
-        top10RevenuePercentage: topPlanPct,
-        topPlanName, topPlanPercentage: topPlanPct,
+        top10RevenuePercentage: periodTopPlanRevPct,
+        topPlanName: periodTopPlanName,
+        topPlanPercentage: periodTopPlanPct,
         activeSubscriptions: activeSubsCount,
-        cancelledThisMonth: cancelledSubsThisMonth,
+        cancelledThisMonth: cancelledInPeriod,
         stripePlanBreakdown,
         customersTotal, customersNew, customersReturning,
         totalOrders, averageOrderValue,
