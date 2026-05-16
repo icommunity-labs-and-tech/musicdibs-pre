@@ -61,8 +61,9 @@ Deno.serve(async (req) => {
 
   const isAuth = isSystemAuth || isAdminAuth;
   if (!isAuth) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.warn("[renewals] Unauthorized probe ignored");
+    return new Response(JSON.stringify({ ok: true, skipped: true, reason: "authentication_required" }), {
+      status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
