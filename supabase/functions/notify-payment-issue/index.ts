@@ -202,16 +202,19 @@ serve(async (req) => {
   const messageId = `payment-issue-${targetUserId}-${now.getTime()}`;
 
   // Encolar en transactional_emails (mismo patrón que el resto del sistema)
-  const { error: queueErr } = await supabase.rpc("send_email", {
+  const { error: queueErr } = await supabase.rpc("enqueue_email", {
     queue_name: "transactional_emails",
-    message: {
+    payload: {
+      idempotency_key: messageId,
       message_id: messageId,
       label: "payment_issue_notification",
-      from: "MusicDibs <noreply@musicdibs.com>",
+      from: "MusicDibs <noreply@notify.musicdibs.com>",
+      sender_domain: "notify.musicdibs.com",
       to: email,
       subject: emailContent.subject,
       html: emailContent.html,
       text: emailContent.text,
+      purpose: "transactional",
       queued_at: now.toISOString(),
     },
   });
