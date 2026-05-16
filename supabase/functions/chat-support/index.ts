@@ -133,8 +133,7 @@ serve(async (req) => {
       );
     }
 
-    // Transform Anthropic SSE stream to OpenAI-compatible format
-    // so the existing frontend code works without changes
+    // Transform Gemini SSE stream to OpenAI-compatible format
     const reader = response.body!.getReader();
     const decoder = new TextDecoder();
 
@@ -157,22 +156,19 @@ serve(async (req) => {
 
               if (!line.startsWith("data: ")) continue;
               const jsonStr = line.slice(6).trim();
-              if (!jsonStr || jsonStr === "[DONE]") continue;
+              if (!jsonStr) continue;
 
               try {
                 const event = JSON.parse(jsonStr);
+                const text = event?.candidates?.[0]?.content?.parts
+                  ?.map((p: { text?: string }) => p.text || "")
+                  .join("") || "";
 
-                if (event.type === "content_block_delta" && event.delta?.text) {
-                  // Convert to OpenAI format
+                if (text) {
                   const openaiChunk = {
-                    choices: [{
-                      delta: { content: event.delta.text },
-                      index: 0,
-                    }],
+                    choices: [{ delta: { content: text }, index: 0 }],
                   };
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify(openaiChunk)}\n\n`));
-                } else if (event.type === "message_stop") {
-                  controller.enqueue(encoder.encode("data: [DONE]\n\n"));
                 }
               } catch {
                 // skip unparseable lines
@@ -180,7 +176,6 @@ serve(async (req) => {
             }
           }
 
-          // Final flush
           controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           controller.close();
         } catch (err) {
