@@ -501,6 +501,16 @@ export default function AdminUsersPage() {
                   </div>
                 </TableCell>
                 <TableCell>{kycBadge(u)}</TableCell>
+                <TableCell className="text-xs">
+                  {u.kyc_status === 'verified'
+                    ? <span className="text-muted-foreground">—</span>
+                    : <span className="font-mono">{u.kyc_reminders_count ?? 0}</span>}
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">
+                  {u.kyc_status === 'verified' || !u.kyc_last_reminder_at
+                    ? '—'
+                    : `hace ${Math.max(0, Math.floor((Date.now() - new Date(u.kyc_last_reminder_at).getTime()) / 86400000))} d`}
+                </TableCell>
                 <TableCell>{u.works_count}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(u.updated_at).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</TableCell>
