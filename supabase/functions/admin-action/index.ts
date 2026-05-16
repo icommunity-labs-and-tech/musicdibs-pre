@@ -1691,7 +1691,7 @@ serve(async (req) => {
         const cohortSize = cohortUsers.length;
         if (cohortSize === 0) continue;
         const cohortIds = new Set(cohortUsers.map((p: any) => p.user_id || p.id));
-        const allTx = activeTxRes.data || [];
+        const allTx = cohortTxRes.data || [];
 
         // m1: activity 1 month later
         const m1Start = new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString();
