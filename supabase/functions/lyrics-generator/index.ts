@@ -93,18 +93,13 @@ REGLAS DE FORMATO:
 - Mantén coherencia temática y narrativa entre secciones
 - Respeta el esquema de rima indicado en TODOS los versos
 
-ANÁLISIS DE SÍLABAS:
-- Después de cada línea, añade entre paréntesis el número de sílabas
-- Ejemplo: "Camino solo por la ciudad (9)"
-- Intenta mantener sílabas similares entre líneas del mismo patrón
-
 ESQUEMAS DE RIMA:
 - ABAB: líneas alternas riman entre sí
 - AABB: pares de líneas consecutivas riman
 - ABCB: solo riman la 2ª y 4ª línea
 - Libre: sin rima obligatoria, prioriza fluidez y emoción
 
-Devuelve SOLO la letra con sus etiquetas y el conteo de sílabas.
+Devuelve SOLO la letra con sus etiquetas de sección.
 No añadas explicaciones, comentarios ni introducciones.`
 
     let userPrompt = `Compón una letra musical con estas características:\n\n`
