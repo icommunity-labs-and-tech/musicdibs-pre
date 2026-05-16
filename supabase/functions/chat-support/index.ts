@@ -89,29 +89,38 @@ serve(async (req) => {
       }
     }
 
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
 
-    // Use Anthropic streaming API
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        messages,
-        stream: true,
-      }),
-    });
+    // Model selectable via secret without code changes.
+    // Allowed values: "gemini-2.5-flash" (default) or "gemini-2.5-pro".
+    const ALLOWED_MODELS = new Set(["gemini-2.5-flash", "gemini-2.5-pro"]);
+    const requestedModel = (Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash").trim();
+    const model = ALLOWED_MODELS.has(requestedModel) ? requestedModel : "gemini-2.5-flash";
+    console.log(`chat-support using model: ${model}`);
+
+    // Convert messages to Gemini format
+    const contents = messages.map((m: { role: string; content: string }) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents,
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
+        }),
+      }
+    );
 
     if (!response.ok) {
       const t = await response.text();
-      console.error("Claude API error:", response.status, t);
+      console.error("Gemini API error:", response.status, t);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Too many requests. Please try again later." }),
