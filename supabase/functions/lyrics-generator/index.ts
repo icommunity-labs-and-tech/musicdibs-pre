@@ -93,6 +93,7 @@ REGLAS DE FORMATO:
 - Mantén coherencia temática y narrativa entre secciones
 - Respeta el esquema de rima indicado en TODOS los versos
 
+
 ESQUEMAS DE RIMA:
 - ABAB: líneas alternas riman entre sí
 - AABB: pares de líneas consecutivas riman
