@@ -400,6 +400,8 @@ serve(async (req) => {
         works_count: worksCountMap[p.user_id] || 0,
         email: emailsMap[p.user_id] || "",
         latest_signature: sigMap[p.user_id] || null,
+        kyc_reminders_count: reminderMap[p.user_id]?.count || 0,
+        kyc_last_reminder_at: reminderMap[p.user_id]?.last_sent_at || null,
       }));
 
       if (search) {
