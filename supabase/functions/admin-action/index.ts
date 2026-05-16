@@ -1935,6 +1935,39 @@ serve(async (req) => {
       const cashEffective = cashBalanceManual > 0 ? cashBalanceManual : 0;
       const runwayEffective = burnEffective > 0 && cashEffective > 0 ? Math.round(cashEffective / burnEffective) : 0;
 
+      // ── Period-aware overrides for Revenue Concentration & Unit Economics ──
+      // Top plan computed from the actual orders in the selected period (not global Stripe snapshot)
+      const periodCustomerSet = new Set<string>(ordersData.map((o: any) => o.user_id).filter(Boolean));
+      const periodCustomers = periodCustomerSet.size;
+      const periodTopPlanEntry = productBreakdown.length > 0 ? productBreakdown[0] : null;
+      const periodTopPlanName = periodTopPlanEntry?.name || topPlanName;
+      const periodTopPlanPct = periodTopPlanEntry && totalOrders > 0
+        ? Math.round((periodTopPlanEntry.units / totalOrders) * 100)
+        : topPlanPct;
+      const periodTopPlanRevPct = periodTopPlanEntry && periodRevenue > 0
+        ? Math.round((periodTopPlanEntry.revenue / periodRevenue) * 100)
+        : topPlanPct;
+
+      // Cancellations inside the selected period (any Stripe termination type)
+      let cancelledInPeriod = cancelledSubsThisMonth;
+      if (filterStart && filterEnd && allCancelledSubs.length > 0) {
+        const fsSec = Math.floor(new Date(filterStart).getTime() / 1000);
+        const feSec = Math.floor(new Date(filterEnd).getTime() / 1000);
+        cancelledInPeriod = allCancelledSubs.filter((s: any) => s.canceled_at >= fsSec && s.canceled_at < feSec).length;
+      }
+
+      // Unit Economics — period-aware where it makes sense
+      const arpuPeriod = periodCustomers > 0
+        ? parseFloat((periodRevenue / periodCustomers).toFixed(2))
+        : arpu;
+      const grossMarginPeriod = periodRevenue > 0 && cogsManual > 0
+        ? parseFloat((((periodRevenue - cogsManual) / periodRevenue) * 100).toFixed(1))
+        : (periodRevenue > 0 ? 85 : grossMargin);
+      const paybackPeriodPeriod = arpuPeriod > 0 ? Math.round(cac / arpuPeriod) : paybackPeriod;
+      const magicNumberPeriod = periodRevenue > 0 && newThisMonth > 0 && cac > 0
+        ? parseFloat((periodRevenue / (cac * newThisMonth)).toFixed(2))
+        : magicNumber;
+
       const responsePayload = {
         mrr, arr,
         mrrChange,
