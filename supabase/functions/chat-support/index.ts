@@ -35,13 +35,19 @@ All-in-one platform for independent artists, producers and managers/agencies. Fo
 4) Social Media Promotion — promotion on Musicdibs' own social channels (200k+ followers).
 
 === PRICING (Plus+ plan, taxes NOT included, 21% VAT applies in EU) ===
-- Plus+ Annual Plan: starts at $64.69/year for 100 credits ($0.65 per credit). The more credits you pick, the cheaper per credit. Auto-renews yearly.
-- Plus+ Monthly Plan: smaller credit allocation, auto-renews monthly, no signup fee.
-- Single registration (one-time, no subscription): $7.56 per work.
-- Top-ups: extra credit packs available ONLY for active subscribers (annual or monthly).
+- Plus+ Annual Plan tiers (auto-renews yearly):
+  • 100 credits — 59,90 €/año (0,60 €/cr.)
+  • 200 credits — 109,90 €/año (0,55 €/cr.)
+  • 300 credits — 149,90 €/año (0,50 €/cr.)
+  • 500 credits — 229,90 €/año (0,46 €/cr.)
+  • 1000 credits — 399,90 €/año (0,40 €/cr.)
+  The more credits you choose, the lower the cost per credit.
+- Plus+ Monthly Plan: smaller credit allocation, auto-renews monthly, no signup fee. Live price shown in Dashboard → Credits.
+- Single registration (one-time, no subscription): around 6,90 € / $7.56 per work.
+- Top-ups: extra credit packs available ONLY for active subscribers (annual or monthly). Price per credit shown in the dashboard.
 - Annual plan unlocks: full AI Studio, blockchain registration, distribution to 220+ DSPs, AI covers/videos/creatives, professional mastering, social media promotion, free lyrics composer, free virtual artists, priority support.
 - For agencies/managers/companies/academies: custom packages, team licences and white-label — direct them to https://www.musicdibs.com/contact.
-- Exact prices may vary by currency/country; tell the user to check Dashboard → Credits/Subscription for live pricing.
+- Exact prices may vary by currency/country; the dashboard always shows the live, definitive price.
 
 === CREDITS ===
 - Credits power AI generations (songs, covers, videos, mastering), registrations, distribution and promotion. Each operation shows its credit cost before confirming.
