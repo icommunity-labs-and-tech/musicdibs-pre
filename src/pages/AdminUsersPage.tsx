@@ -436,6 +436,12 @@ export default function AdminUsersPage() {
               <TableHead className="cursor-pointer" onClick={() => toggleSort('kyc_status')}>
                 <div className="flex items-center gap-1">KYC <SortIcon k="kyc_status" /></div>
               </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('kyc_reminders_count')}>
+                <div className="flex items-center gap-1">Avisos KYC <SortIcon k="kyc_reminders_count" /></div>
+              </TableHead>
+              <TableHead className="cursor-pointer" onClick={() => toggleSort('kyc_last_reminder_at')}>
+                <div className="flex items-center gap-1">Último aviso <SortIcon k="kyc_last_reminder_at" /></div>
+              </TableHead>
               <TableHead>Obras</TableHead>
               <TableHead className="cursor-pointer" onClick={() => toggleSort('created_at')}>
                 <div className="flex items-center gap-1">Alta <SortIcon k="created_at" /></div>
