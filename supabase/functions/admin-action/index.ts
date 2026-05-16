@@ -1549,11 +1549,15 @@ serve(async (req) => {
         negTxQuery = negTxQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
       }
 
-      const [posTxRes, negTxRes, activeTxRes, todayTxRes] = await Promise.all([
+      // Cohort tx: 12 months of history (not period-filtered) so cohort retention can compute m1/m3/m6
+      const cohortTxStart = new Date(now.getFullYear(), now.getMonth() - 12, 1).toISOString();
+
+      const [posTxRes, negTxRes, activeTxRes, todayTxRes, cohortTxRes] = await Promise.all([
         posTxQuery,
         negTxQuery,
         admin.from("credit_transactions").select("user_id, created_at").gte("created_at", thirtyDaysAgo),
         admin.from("credit_transactions").select("user_id").gte("created_at", `${todayStr}T00:00:00Z`),
+        admin.from("credit_transactions").select("user_id, created_at").gte("created_at", cohortTxStart),
       ]);
 
       const creditsSold = (posTxRes.data || []).reduce((s: number, t: any) => s + t.amount, 0);
