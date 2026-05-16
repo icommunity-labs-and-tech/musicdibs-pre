@@ -4,7 +4,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 // Special discount coupons (50% lifetime) for migrated users
@@ -29,24 +29,42 @@ function getPriceId(tier: string): { priceId: string; credits: number } {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  // Auth: require CRON_SECRET or service role key
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  );
+
+  // Auth: real execution requires CRON_SECRET or service role key.
+  // Admin JWTs are accepted only for safe manual/dry-run checks from the admin UI/tools.
   const cronSecret = Deno.env.get("CRON_SECRET") || "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const authHeader = req.headers.get("Authorization") || "";
   const cronHeader = req.headers.get("x-cron-secret") || "";
-  const isAuth =
+  const isSystemAuth =
     (cronSecret && cronHeader === cronSecret) ||
-    authHeader === `Bearer ${serviceKey}`;
+    (serviceKey && authHeader === `Bearer ${serviceKey}`);
+
+  let isAdminAuth = false;
+  if (!isSystemAuth && authHeader.startsWith("Bearer ")) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (user?.id) {
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      isAdminAuth = roleRow?.role === "admin";
+    }
+  }
+
+  const isAuth = isSystemAuth || isAdminAuth;
   if (!isAuth) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
 
   const log = async (entry: {
     user_id?: string | null;
@@ -64,6 +82,7 @@ Deno.serve(async (req) => {
     const bodyJson = bodyText ? JSON.parse(bodyText) : {};
     dryRun = bodyJson.dry_run === true;
   } catch (_) { /* ignore body parse errors */ }
+  if (isAdminAuth && !isSystemAuth) dryRun = true;
   if (dryRun) console.log('[renewals] *** DRY RUN MODE — no changes will be made ***');
   const dryRunResults: any[] = [];
 
