@@ -17,7 +17,7 @@ import AdminUserModals from '@/components/admin/AdminUserModals';
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
-type SortKey = 'created_at' | 'updated_at' | 'display_name' | 'available_credits' | 'subscription_plan' | 'kyc_status';
+type SortKey = 'created_at' | 'updated_at' | 'display_name' | 'available_credits' | 'subscription_plan' | 'kyc_status' | 'kyc_reminders_count' | 'kyc_last_reminder_at';
 
 export default function AdminUsersPage() {
   const { user } = useAuth();
