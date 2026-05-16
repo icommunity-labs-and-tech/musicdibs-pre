@@ -1630,14 +1630,22 @@ serve(async (req) => {
       const ltv = churnRate > 0 ? Math.round(arpu / (churnRate / 100)) : Math.round(arpu * 24);
       const totalRevenue = totalStripeRevenue > 0 ? Math.round(totalStripeRevenue * 100) / 100 : Math.round((mrr + creditsRevenue) * 100) / 100;
 
-      // Fetch manual marketing metrics from DB for current month
-      const currentMonth = now.getMonth() + 1;
-      const currentYear = now.getFullYear();
+      // Fetch manual marketing metrics from DB: prefer the period's month when one is selected
+      let marketingYear = now.getFullYear();
+      let marketingMonth = now.getMonth() + 1;
+      if (periodType === "month" && month && month !== "all" && year && year !== "all") {
+        marketingYear = parseInt(String(year), 10);
+        marketingMonth = parseInt(String(month), 10);
+      } else if (filterStart) {
+        const fs = new Date(filterStart);
+        marketingYear = fs.getUTCFullYear();
+        marketingMonth = fs.getUTCMonth() + 1;
+      }
       const { data: marketingRow } = await admin
         .from("marketing_metrics")
         .select("*")
-        .eq("year", currentYear)
-        .eq("month", currentMonth)
+        .eq("year", marketingYear)
+        .eq("month", marketingMonth)
         .maybeSingle();
 
       const adSpend = marketingRow ? parseFloat(marketingRow.ad_spend) : 0;
