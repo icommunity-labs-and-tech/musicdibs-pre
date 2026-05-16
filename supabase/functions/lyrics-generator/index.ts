@@ -100,8 +100,12 @@ ESQUEMAS DE RIMA:
 - ABCB: solo riman la 2ª y 4ª línea
 - Libre: sin rima obligatoria, prioriza fluidez y emoción
 
-Devuelve SOLO la letra con sus etiquetas de sección.
-No añadas explicaciones, comentarios ni introducciones.`
+PROHIBIDO ESTRICTAMENTE:
+- NO añadas conteos de sílabas al final de las líneas (ej: "(9)", "(10)").
+- NO añadas números entre paréntesis ni ningún tipo de anotación numérica en las líneas.
+- NO añadas explicaciones, comentarios, análisis métrico ni introducciones.
+
+Devuelve SOLO la letra con sus etiquetas de sección, sin ningún número ni paréntesis al final de cada línea.`
 
     let userPrompt = `Compón una letra musical con estas características:\n\n`
 
