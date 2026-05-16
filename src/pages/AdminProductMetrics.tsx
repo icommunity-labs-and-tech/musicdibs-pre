@@ -246,17 +246,16 @@ export default function AdminProductMetrics() {
       { label: "Crear música — Instrumental", icon: "🎹", uses: instrumentalCount },
       ...(unknownCount > 0 ? [{ label: "Crear música — Sin clasificar", icon: "🎵", uses: unknownCount }] : []),
       { label: "Compositor letras", icon: "📝", uses: lc["lyrics"] || 0 },
-      { label: "Canta tu canción", icon: "🎙️", uses: lc["vocal"] || 0 },
+      { label: "Clonación de voz", icon: "🎙️", uses: lc["voice_cloning"] || 0 },
       { label: "Portadas con IA", icon: "🖼️", uses: lc["cover"] || 0 },
       { label: "Creativo Instagram", icon: "📸", uses: lc["instagram_creative"] || 0 },
       { label: "Miniatura YouTube", icon: "▶️", uses: lc["youtube_thumbnail"] || 0 },
       { label: "Vídeos IA", icon: "🎬", uses: (lc["social_video"] || 0) + (lc["video"] || 0) },
       { label: "Promoción RRSS", icon: "📱", uses: (lc["promotion"] || 0) + (lc["premium_promotion"] || 0) },
-      { label: "Prensa & visibilidad", icon: "📰", uses: lc["press"] || 0 },
       { label: "Registro blockchain", icon: "🔐", uses: lc["register"] || 0 },
-      { label: "Masterización (ROEX)", icon: "🎛️", uses: lc["enhance_audio"] || 0 },
+      { label: "Masterización", icon: "🎛️", uses: lc["enhance_audio"] || 0 },
       { label: "Distribución", icon: "🌍", uses: lc["distribution"] || 0 },
-      { label: "Inspiración (entradas)", icon: "💡", uses: lc["inspire"] || 0 },
+      { label: "Crea con un click", icon: "💡", uses: lc["inspire"] || 0 },
     ];
     const total = items.reduce((s, i) => s + i.uses, 0);
     const maxUses = Math.max(...items.map((i) => i.uses));
@@ -289,7 +288,7 @@ export default function AdminProductMetrics() {
       { label: "Vídeos IA", uses: (lc["social_video"] || 0) + (lc["video"] || 0), costKeys: ["social_video", "generate_video"] },
       { label: "Promoción RRSS", uses: (lc["promotion"] || 0) + (lc["premium_promotion"] || 0), costKeys: ["promote_premium"] },
       { label: "Registro blockchain", uses: lc["register"] || 0, costKeys: ["register_work"] },
-      { label: "Masterización (ROEX)", uses: lc["enhance_audio"] || 0, costKeys: ["enhance_audio"] },
+      { label: "Masterización", uses: lc["enhance_audio"] || 0, costKeys: ["enhance_audio"] },
     ];
 
     const items = featureMap.map((f) => {
