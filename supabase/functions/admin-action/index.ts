@@ -201,8 +201,11 @@ serve(async (req) => {
       const stripeFilter = (payload.stripe_filter || "").trim(); // 'linked' | 'unlinked'
       const statusFilter = (payload.status_filter || "").trim(); // 'active' | 'blocked'
       const roleFilter = (payload.role_filter || "").trim(); // 'admin' | 'manager' | 'user'
-      const sortBy = ["created_at", "updated_at", "display_name", "available_credits", "subscription_plan", "kyc_status"].includes(payload.sort_by) ? payload.sort_by : "created_at";
+      const REMINDER_SORT_KEYS = ["kyc_reminders_count", "kyc_last_reminder_at"];
+      const validSorts = ["created_at", "updated_at", "display_name", "available_credits", "subscription_plan", "kyc_status", ...REMINDER_SORT_KEYS];
+      const sortBy = validSorts.includes(payload.sort_by) ? payload.sort_by : "created_at";
       const sortDir = payload.sort_dir === "asc" ? true : false;
+      const isReminderSort = REMINDER_SORT_KEYS.includes(sortBy);
 
       // If filtering by role, pre-fetch matching user_ids
       let roleUserIds: string[] | null = null;
