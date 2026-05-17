@@ -25,8 +25,8 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         addMore: 'Añadir más archivos',
         dragHere: 'Arrastra tus archivos aquí',
         clickSelect: 'o haz clic para seleccionar (puedes elegir varios)',
-        fileTooLarge: 'El archivo supera el tamaño máximo de 50MB. Para archivos WAV grandes, exporta en MP3 (320kbps) y el tamaño se reducirá un 90% sin pérdida audible.',
-        fileSizeLimit: 'Tamaño máximo: 50MB por archivo. Para WAV de alta calidad, exporta en MP3 320kbps.',
+        fileTooLarge: 'El archivo supera el tamaño máximo de 100MB. Para archivos WAV grandes, exporta en MP3 (320kbps) y el tamaño se reducirá un 90% sin pérdida audible.',
+        fileSizeLimit: 'Tamaño máximo: 100MB por archivo. Para WAV de alta calidad, exporta en MP3 320kbps.',
       },
       // StepTitle
       stepTitle: {
@@ -194,8 +194,8 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         addMore: 'Add more files',
         dragHere: 'Drag your files here',
         clickSelect: 'or click to select (you can choose multiple)',
-        fileTooLarge: 'File exceeds the 50MB max size. For large WAV files, export as MP3 (320kbps) — 90% smaller with no audible quality loss.',
-        fileSizeLimit: 'Max size: 50MB per file. For high-quality WAV, export as MP3 320kbps.',
+        fileTooLarge: 'File exceeds the 100MB max size. For large WAV files, export as MP3 (320kbps) — 90% smaller with no audible quality loss.',
+        fileSizeLimit: 'Max size: 100MB per file. For high-quality WAV, export as MP3 320kbps.',
       },
       stepTitle: {
         title: 'Work information',
@@ -353,8 +353,8 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         addMore: 'Adicionar mais arquivos',
         dragHere: 'Arraste seus arquivos aqui',
         clickSelect: 'ou clique para selecionar (pode escolher vários)',
-        fileTooLarge: 'O arquivo excede o tamanho máximo de 50MB. Para arquivos WAV grandes, exporte como MP3 (320kbps) — 90% menor sem perda audível.',
-        fileSizeLimit: 'Tamanho máximo: 50MB por arquivo. Para WAV de alta qualidade, exporte em MP3 320kbps.',
+        fileTooLarge: 'O arquivo excede o tamanho máximo de 100MB. Para arquivos WAV grandes, exporte como MP3 (320kbps) — 90% menor sem perda audível.',
+        fileSizeLimit: 'Tamanho máximo: 100MB por arquivo. Para WAV de alta qualidade, exporte em MP3 320kbps.',
       },
       stepTitle: {
         title: 'Informações da obra',
