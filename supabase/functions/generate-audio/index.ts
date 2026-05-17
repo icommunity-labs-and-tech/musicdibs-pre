@@ -414,14 +414,14 @@ serve(async (req) => {
     // Track if we end up using fallback for logging purposes
     let usedFallback = false;
     const primaryProviderAttempted: string | null = configuredProvider;
-    const operationKey = mode === 'song' ? 'song_ai_voice' : 'instrumental_base';
+    const operationKey = mode === 'song' ? 'generate_audio_song' : 'generate_audio';
     const { data: pricingRow } = await supabaseAdmin
       .from('operation_pricing')
       .select('credits_cost')
       .eq('operation_key', operationKey)
       .eq('is_active', true)
       .maybeSingle();
-    const CREDITS_COST = pricingRow?.credits_cost ?? 3;
+    const CREDITS_COST = pricingRow?.credits_cost ?? 1;
     console.log(`[GENERATE-AUDIO] Pricing: ${operationKey} = ${CREDITS_COST} credits`);
 
     if (!useKie) {
