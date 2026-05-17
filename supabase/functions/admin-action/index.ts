@@ -201,8 +201,9 @@ serve(async (req) => {
       const stripeFilter = (payload.stripe_filter || "").trim(); // 'linked' | 'unlinked'
       const statusFilter = (payload.status_filter || "").trim(); // 'active' | 'blocked'
       const roleFilter = (payload.role_filter || "").trim(); // 'admin' | 'manager' | 'user'
+      const creditsFilter = (payload.credits_filter || "").trim(); // 'has_permanent' | 'no_permanent'
       const REMINDER_SORT_KEYS = ["kyc_reminders_count", "kyc_last_reminder_at"];
-      const validSorts = ["created_at", "updated_at", "display_name", "available_credits", "subscription_plan", "kyc_status", ...REMINDER_SORT_KEYS];
+      const validSorts = ["created_at", "updated_at", "display_name", "available_credits", "permanent_credits", "subscription_plan", "kyc_status", ...REMINDER_SORT_KEYS];
       const sortBy = validSorts.includes(payload.sort_by) ? payload.sort_by : "created_at";
       const sortDir = payload.sort_dir === "asc" ? true : false;
       const isReminderSort = REMINDER_SORT_KEYS.includes(sortBy);
@@ -291,6 +292,8 @@ serve(async (req) => {
       if (statusFilter === "blocked") query = query.eq("is_blocked", true);
       if (statusFilter === "active") query = query.or("is_blocked.is.null,is_blocked.eq.false");
       if (roleUserIds) query = query.in("user_id", roleUserIds);
+      if (creditsFilter === "has_permanent") query = query.gt("permanent_credits", 0);
+      if (creditsFilter === "no_permanent") query = query.or("permanent_credits.is.null,permanent_credits.eq.0");
 
       let profiles: any[] = [];
       let profilesCount = 0;

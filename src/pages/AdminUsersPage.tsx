@@ -17,7 +17,7 @@ import AdminUserModals from '@/components/admin/AdminUserModals';
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
-type SortKey = 'created_at' | 'updated_at' | 'display_name' | 'available_credits' | 'subscription_plan' | 'kyc_status' | 'kyc_reminders_count' | 'kyc_last_reminder_at';
+type SortKey = 'created_at' | 'updated_at' | 'display_name' | 'available_credits' | 'permanent_credits' | 'subscription_plan' | 'kyc_status' | 'kyc_reminders_count' | 'kyc_last_reminder_at';
 
 export default function AdminUsersPage() {
   const { user } = useAuth();
@@ -36,6 +36,7 @@ export default function AdminUsersPage() {
   const [stripeFilter, setStripeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [creditsFilter, setCreditsFilter] = useState<string>('all'); // 'has_permanent' | 'no_permanent'
 
   // Sorting
   const [sortBy, setSortBy] = useState<SortKey>('created_at');
@@ -149,6 +150,7 @@ export default function AdminUsersPage() {
         stripe_filter: stripeFilter === 'all' ? '' : stripeFilter,
         status_filter: statusFilter === 'all' ? '' : statusFilter,
         role_filter: roleFilter === 'all' ? '' : roleFilter,
+        credits_filter: creditsFilter === 'all' ? '' : creditsFilter,
         sort_by: sortBy,
         sort_dir: sortDir,
       });
@@ -158,7 +160,7 @@ export default function AdminUsersPage() {
       toast.error(e.message);
     }
     setLoading(false);
-  }, [page, pageSize, search, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, sortBy, sortDir]);
+  }, [page, pageSize, search, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, sortBy, sortDir]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -283,11 +285,11 @@ export default function AdminUsersPage() {
   };
 
   const clearFilters = () => {
-    setKycFilter('all'); setPlanFilter('all'); setStripeFilter('all'); setStatusFilter('all'); setRoleFilter('all');
+    setKycFilter('all'); setPlanFilter('all'); setStripeFilter('all'); setStatusFilter('all'); setRoleFilter('all'); setCreditsFilter('all');
     setSearch(''); setPage(0);
   };
 
-  const activeFiltersCount = [kycFilter, planFilter, stripeFilter, statusFilter, roleFilter].filter(f => f !== 'all').length + (search ? 1 : 0);
+  const activeFiltersCount = [kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter].filter(f => f !== 'all').length + (search ? 1 : 0);
 
   const getPageNumbers = () => {
     const pages: (number | 'ellipsis')[] = [];
@@ -330,6 +332,7 @@ export default function AdminUsersPage() {
               stripe_filter: stripeFilter === 'all' ? '' : stripeFilter,
               status_filter: statusFilter === 'all' ? '' : statusFilter,
               role_filter: roleFilter === 'all' ? '' : roleFilter,
+              credits_filter: creditsFilter === 'all' ? '' : creditsFilter,
             });
             const blob = new Blob([res.csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
@@ -399,6 +402,14 @@ export default function AdminUsersPage() {
             <SelectItem value="blocked">Bloqueados</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={creditsFilter} onValueChange={v => { setCreditsFilter(v); setPage(0); }}>
+          <SelectTrigger className="w-[170px] h-8"><SelectValue placeholder="Créditos" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Créditos (todos)</SelectItem>
+            <SelectItem value="has_permanent">Con permanentes</SelectItem>
+            <SelectItem value="no_permanent">Sin permanentes</SelectItem>
+          </SelectContent>
+        </Select>
         {activeFiltersCount > 0 && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
             <X className="h-3 w-3 mr-1" /> Limpiar ({activeFiltersCount})
@@ -441,8 +452,16 @@ export default function AdminUsersPage() {
               <TableHead className="cursor-pointer" onClick={() => toggleSort('subscription_plan')}>
                 <div className="flex items-center gap-1">Plan <SortIcon k="subscription_plan" /></div>
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => toggleSort('available_credits')}>
-                <div className="flex items-center gap-1">Créditos <SortIcon k="available_credits" /></div>
+              <TableHead>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => toggleSort('available_credits')} className="flex items-center gap-1 hover:text-foreground">
+                    Créditos <SortIcon k="available_credits" />
+                  </button>
+                  <span className="text-muted-foreground/40">·</span>
+                  <button type="button" onClick={() => toggleSort('permanent_credits')} className="flex items-center gap-1 text-xs text-amber-500 hover:text-amber-400" title="Ordenar por créditos permanentes">
+                    perm <SortIcon k="permanent_credits" />
+                  </button>
+                </div>
               </TableHead>
               <TableHead>Rol</TableHead>
               <TableHead className="cursor-pointer" onClick={() => toggleSort('kyc_status')}>

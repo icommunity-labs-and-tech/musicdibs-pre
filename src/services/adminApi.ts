@@ -123,7 +123,7 @@ async function adminAction(action: string, payload: AdminActionPayload = {}) {
 }
 
 export const adminApi = {
-  getUsers: (offset = 0, search = '', limit = 50, filters: { kyc_filter?: string; plan_filter?: string; stripe_filter?: string; status_filter?: string; role_filter?: string; sort_by?: string; sort_dir?: 'asc' | 'desc' } = {}) =>
+  getUsers: (offset = 0, search = '', limit = 50, filters: { kyc_filter?: string; plan_filter?: string; stripe_filter?: string; status_filter?: string; role_filter?: string; credits_filter?: string; sort_by?: string; sort_dir?: 'asc' | 'desc' } = {}) =>
     adminAction('get_users', { offset, search, limit, ...filters }),
   bulkUserAction: (user_ids: string[], op: 'block' | 'unblock' | 'kyc_verified' | 'kyc_pending') => adminAction('bulk_user_action', { user_ids, op }),
   adjustCredits: (user_id: string, amount: number, reason: string) => adminAction('adjust_credits', { user_id, amount, reason }),
