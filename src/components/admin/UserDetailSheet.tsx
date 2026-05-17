@@ -70,9 +70,23 @@ export default function UserDetailSheet({ user, open, onOpenChange }: UserDetail
         <div className="space-y-1">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Suscripción y créditos</h3>
           <DetailRow icon={CreditCard} label="Plan" value={<Badge variant="outline">{user.subscription_plan}</Badge>} badge />
-          <DetailRow icon={Hash} label="Créditos disponibles" value={
-            <span className="font-mono text-sm font-semibold text-primary">{user.available_credits}</span>
-          } badge />
+          <DetailRow icon={Hash} label="Créditos disponibles" value={(() => {
+            const perm = (user as any).permanent_credits ?? 0;
+            const total = user.available_credits ?? 0;
+            const plan = Math.max(0, total - perm);
+            if (perm === 0) {
+              return <span className="font-mono text-sm font-semibold text-primary">{total}</span>;
+            }
+            return (
+              <div className="flex flex-col items-end gap-1">
+                <span className="font-mono text-sm font-semibold text-primary">{total} total</span>
+                <div className="flex flex-wrap gap-1 justify-end">
+                  <Badge variant="secondary" className="text-xs">{plan} plan · caducan al renovar</Badge>
+                  <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-xs">{perm} permanente · no caduca</Badge>
+                </div>
+              </div>
+            );
+          })()} badge />
           <DetailRow icon={CreditCard} label="Stripe Customer ID" value={
             user.stripe_customer_id
               ? <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono break-all">{user.stripe_customer_id}</code>
