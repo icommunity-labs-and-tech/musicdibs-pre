@@ -323,7 +323,14 @@ export default function AdminUsersPage() {
         <Button onClick={handleSearch} variant="secondary">Buscar</Button>
         <Button variant="outline" size="sm" onClick={async () => {
           try {
-            const res = await adminApi.exportCsv('users');
+            const res = await adminApi.exportCsv('users', {
+              search,
+              kyc_filter: kycFilter === 'all' ? '' : kycFilter,
+              plan_filter: planFilter === 'all' ? '' : planFilter,
+              stripe_filter: stripeFilter === 'all' ? '' : stripeFilter,
+              status_filter: statusFilter === 'all' ? '' : statusFilter,
+              role_filter: roleFilter === 'all' ? '' : roleFilter,
+            });
             const blob = new Blob([res.csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -332,7 +339,7 @@ export default function AdminUsersPage() {
             toast.success('CSV descargado');
           } catch (e: any) { toast.error(e.message); }
         }}>
-          <Download className="h-4 w-4 mr-1" /> Exportar todo
+          <Download className="h-4 w-4 mr-1" /> {activeFiltersCount > 0 ? 'Exportar filtrados' : 'Exportar todo'}
         </Button>
         <Button variant="outline" size="sm" onClick={openBulkPastDueModal} className="border-yellow-500/40 text-yellow-500 hover:bg-yellow-500/10 hover:text-yellow-400">
           ⚠️ Notificar past_due
