@@ -273,7 +273,19 @@ serve(async (req) => {
       } else if (kycFilter) {
         query = query.eq("kyc_status", kycFilter);
       }
-      if (planFilter) query = query.eq("subscription_plan", planFilter);
+      if (planFilter) {
+        if (planFilter === "Free") {
+          query = query.eq("subscription_plan", "Free");
+        } else if (planFilter === "Annual") {
+          query = query.eq("subscription_plan", "Annual").is("subscription_tier", null);
+        } else if (planFilter === "Monthly") {
+          query = query.eq("subscription_tier", "monthly");
+        } else if (planFilter.startsWith("annual_")) {
+          query = query.eq("subscription_tier", planFilter);
+        } else {
+          query = query.eq("subscription_plan", planFilter);
+        }
+      }
       if (stripeFilter === "linked") query = query.not("stripe_customer_id", "is", null);
       if (stripeFilter === "unlinked") query = query.is("stripe_customer_id", null);
       if (statusFilter === "blocked") query = query.eq("is_blocked", true);
