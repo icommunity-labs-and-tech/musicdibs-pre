@@ -36,6 +36,7 @@ export default function AdminUsersPage() {
   const [stripeFilter, setStripeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [creditsFilter, setCreditsFilter] = useState<string>('all'); // 'has_permanent' | 'no_permanent'
 
   // Sorting
   const [sortBy, setSortBy] = useState<SortKey>('created_at');
