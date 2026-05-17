@@ -160,7 +160,7 @@ export default function AdminUsersPage() {
       toast.error(e.message);
     }
     setLoading(false);
-  }, [page, pageSize, search, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, sortBy, sortDir]);
+  }, [page, pageSize, search, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, sortBy, sortDir]);
 
   useEffect(() => { load(); }, [load]);
 
