@@ -118,14 +118,14 @@ serve(async (req) => {
     }
 
     // Resolve credit cost from operation_pricing (single source of truth)
-    const operationKey = instrumental ? "instrumental_base" : "song_ai_voice";
+    const operationKey = instrumental ? "generate_audio" : "generate_audio_song";
     const { data: pricingRow } = await supabaseAdmin
       .from("operation_pricing")
       .select("credits_cost")
       .eq("operation_key", operationKey)
       .eq("is_active", true)
       .maybeSingle();
-    const creditsCost = pricingRow?.credits_cost ?? 3;
+    const creditsCost = pricingRow?.credits_cost ?? 1;
 
     // Atomic credit debit via RPC. Returns remaining credits or raises.
     const { error: debitErr } = await supabaseAdmin.rpc("debit_user_credits", {
