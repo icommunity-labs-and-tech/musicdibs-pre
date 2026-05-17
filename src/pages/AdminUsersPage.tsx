@@ -369,6 +369,11 @@ export default function AdminUsersPage() {
             <SelectItem value="Free">Free</SelectItem>
             <SelectItem value="Monthly">Monthly</SelectItem>
             <SelectItem value="Annual">Annual</SelectItem>
+            <SelectItem value="annual_100">Annual 100</SelectItem>
+            <SelectItem value="annual_200">Annual 200</SelectItem>
+            <SelectItem value="annual_300">Annual 300</SelectItem>
+            <SelectItem value="annual_500">Annual 500</SelectItem>
+            <SelectItem value="annual_1000">Annual 1000</SelectItem>
           </SelectContent>
         </Select>
         <Select value={stripeFilter} onValueChange={v => { setStripeFilter(v); setPage(0); }}>
