@@ -504,7 +504,23 @@ export default function AdminUsersPage() {
                     )}
                   </div>
                 </TableCell>
-                <TableCell className="font-mono">{u.available_credits}</TableCell>
+                <TableCell className="font-mono">
+                  {(() => {
+                    const perm = (u as any).permanent_credits ?? 0;
+                    const total = u.available_credits ?? 0;
+                    const plan = Math.max(0, total - perm);
+                    if (perm === 0) return <span>{total}</span>;
+                    return (
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold">{total} total</span>
+                        <div className="flex flex-wrap gap-1">
+                          <Badge variant="secondary" className="text-xs" title="Caducan al renovar">{plan} plan</Badge>
+                          <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-xs" title="No caducan">{perm} permanente</Badge>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-1 flex-wrap">
                     {(u.roles || ['user']).map((r: string) => (
