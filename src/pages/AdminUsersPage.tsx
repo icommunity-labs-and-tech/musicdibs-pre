@@ -477,7 +477,11 @@ export default function AdminUsersPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
-                    <Badge variant="outline">{u.subscription_plan}</Badge>
+                    <Badge variant="outline">{(() => {
+                      const tier = (u as any).subscription_tier as string | null | undefined;
+                      if (tier) return tier.charAt(0).toUpperCase() + tier.slice(1).replace(/_/g, ' ');
+                      return u.subscription_plan;
+                    })()}</Badge>
                     {u.payment_grace_expires_at && (
                       new Date(u.payment_grace_expires_at) > new Date()
                         ? <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">⚠️ Gracia hasta {new Date(u.payment_grace_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</Badge>
