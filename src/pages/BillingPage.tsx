@@ -53,6 +53,8 @@ export default function BillingPage() {
   const [tier, setTier] = useState<string | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   // Annual tier → credits (for display next to the plan label)
   const ANNUAL_TIER_CREDITS: Record<string, number> = {
