@@ -2085,6 +2085,7 @@ export type Database = {
           referral_source: string | null
           stripe_customer_id: string | null
           subscription_plan: string
+          subscription_tier: string | null
           updated_at: string
           user_id: string
         }
@@ -2113,6 +2114,7 @@ export type Database = {
           referral_source?: string | null
           stripe_customer_id?: string | null
           subscription_plan?: string
+          subscription_tier?: string | null
           updated_at?: string
           user_id: string
         }
@@ -2141,6 +2143,7 @@ export type Database = {
           referral_source?: string | null
           stripe_customer_id?: string | null
           subscription_plan?: string
+          subscription_tier?: string | null
           updated_at?: string
           user_id?: string
         }
