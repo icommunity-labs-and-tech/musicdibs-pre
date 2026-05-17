@@ -93,11 +93,12 @@ export default function BillingPage() {
     if (!user) return;
     const { data: profile } = await supabase
       .from('profiles')
-      .select('subscription_plan')
+      .select('subscription_plan, stripe_customer_id')
       .eq('user_id', user.id)
       .single();
 
     setPlan(profile?.subscription_plan ?? 'Free');
+    setStripeCustomerId(profile?.stripe_customer_id ?? null);
 
     const { data: subRow } = await supabase
       .from('subscriptions')
