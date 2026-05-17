@@ -9,6 +9,7 @@ import type { DashboardSummary } from '@/types/dashboard';
 import { differenceInDays } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { formatPlanLabel } from '@/lib/planLabel';
 
 export function AccountSummary({ onSummaryLoaded, subscriptionEnd, cancelAtPeriodEnd }: { onSummaryLoaded?: (s: DashboardSummary) => void; subscriptionEnd?: string | null; cancelAtPeriodEnd?: boolean }) {
   const [data, setData] = useState<DashboardSummary | null>(null);
