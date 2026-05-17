@@ -1,0 +1,2 @@
+SELECT public.refund_user_credits('ec8563a3-cd2e-403f-a171-93834608bb42'::uuid, 16, 'Reembolso: corrección sobrecobro generación audio (2 cr × 8 generaciones desde 16/may 20:00)');
+SELECT public.refund_user_credits('c9c9534e-9351-4da4-840a-c83e19ddb1d0'::uuid, 4, 'Reembolso: corrección sobrecobro generación audio (2 cr × 2 generaciones desde 16/may 20:00)');
