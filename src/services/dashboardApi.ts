@@ -45,12 +45,23 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     .eq('user_id', user.id)
     .eq('status', 'processing');
 
+  // Active subscription tier (e.g. annual_200) for detailed plan label
+  const { data: activeSub } = await supabase
+    .from('subscriptions')
+    .select('tier')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return {
     registeredWorks: registeredWorks || 0,
     pendingRegistrations: pendingRegistrations || 0,
     availableCredits: profile.available_credits,
     kycStatus: profile.kyc_status as 'verified' | 'pending' | 'unverified',
     subscriptionPlan: profile.subscription_plan || 'Free',
+    subscriptionTier: activeSub?.tier ?? null,
     canRegisterWorks: profile.kyc_status === 'verified',
   };
 }
