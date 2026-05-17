@@ -392,9 +392,21 @@ export default function BillingPage() {
               {cancelAtPeriodEnd ? t('dashboard.billing.cancelled') : plan === 'Free' ? 'Free' : t('dashboard.billing.active')}
             </Badge>
           </div>
-          <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/credits')}>
-            {plan === 'Free' ? t('dashboard.billing.viewPlans') : t('dashboard.billing.changePlan')} <ArrowRight className="h-3.5 w-3.5 ml-1" />
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/credits')}>
+              {plan === 'Free' ? t('dashboard.billing.viewPlans') : t('dashboard.billing.changePlan')} <ArrowRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+            {showBillingPortal && (
+              <Button variant="outline" size="sm" onClick={handleOpenPortal} disabled={portalLoading}>
+                {portalLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                ) : (
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                )}
+                Gestionar facturación →
+              </Button>
+            )}
+          </div>
           {hasActiveSubscription && (
             <span
               className="block mt-3 text-sm text-muted-foreground cursor-pointer hover:underline hover:text-foreground transition-colors"
