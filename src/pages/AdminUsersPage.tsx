@@ -332,6 +332,7 @@ export default function AdminUsersPage() {
               stripe_filter: stripeFilter === 'all' ? '' : stripeFilter,
               status_filter: statusFilter === 'all' ? '' : statusFilter,
               role_filter: roleFilter === 'all' ? '' : roleFilter,
+              credits_filter: creditsFilter === 'all' ? '' : creditsFilter,
             });
             const blob = new Blob([res.csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
