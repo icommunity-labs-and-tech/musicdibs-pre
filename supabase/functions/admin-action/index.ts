@@ -1148,12 +1148,91 @@ serve(async (req) => {
       const { dataset } = payload;
 
       if (dataset === "users") {
-        const { data: profiles } = await admin.from("profiles").select("*").order("created_at", { ascending: false });
+        const search = (payload.search || "").trim().toLowerCase();
+        const kycFilter = (payload.kyc_filter || "").trim();
+        const planFilter = (payload.plan_filter || "").trim();
+        const stripeFilter = (payload.stripe_filter || "").trim();
+        const statusFilter = (payload.status_filter || "").trim();
+        const roleFilter = (payload.role_filter || "").trim();
+
         const emailsMap = await getAllEmailsMap();
 
+        // Role pre-filter
+        let roleUserIds: Set<string> | null = null;
+        if (roleFilter) {
+          if (roleFilter === "user") {
+            const { data: nonUsers } = await admin.from("user_roles").select("user_id").in("role", ["admin", "manager"]);
+            const exclude = new Set((nonUsers || []).map((r: any) => r.user_id));
+            const { data: allP } = await admin.from("profiles").select("user_id");
+            roleUserIds = new Set((allP || []).map((p: any) => p.user_id).filter((id: string) => !exclude.has(id)));
+          } else {
+            const { data: rs } = await admin.from("user_roles").select("user_id").eq("role", roleFilter);
+            roleUserIds = new Set((rs || []).map((r: any) => r.user_id));
+          }
+        }
+
+        // Search → user_ids by email/meta
+        let searchUserIds: Set<string> | null = null;
+        if (search && search.length >= 2) {
+          searchUserIds = new Set();
+          try {
+            const perPage = 1000;
+            for (let pageIdx = 1; pageIdx <= 10; pageIdx++) {
+              const { data: pageData } = await admin.auth.admin.listUsers({ page: pageIdx, perPage });
+              const usersPage = (pageData as any)?.users || [];
+              for (const au of usersPage) {
+                const em = (au?.email || "").toLowerCase();
+                const meta = ((au?.user_metadata?.display_name || au?.user_metadata?.full_name || "") as string).toLowerCase();
+                if (em.includes(search) || meta.includes(search)) searchUserIds.add(au.id);
+              }
+              if (usersPage.length < perPage) break;
+            }
+          } catch { /* ignore */ }
+        }
+
+        let query = admin.from("profiles").select("*").order("created_at", { ascending: false });
+
+        if (kycFilter === "initiated" || kycFilter === "created") {
+          const { data: sigUsers } = await admin.from("ibs_signatures").select("user_id").eq("status", kycFilter);
+          const ids = Array.from(new Set((sigUsers || []).map((r: any) => r.user_id)));
+          if (ids.length === 0) return json({ csv: "email,display_name,plan,credits,kyc_status,is_blocked,created_at" });
+          query = query.in("user_id", ids).neq("kyc_status", "verified");
+        } else if (kycFilter) {
+          query = query.eq("kyc_status", kycFilter);
+        }
+        if (planFilter) {
+          if (planFilter === "Free") query = query.eq("subscription_plan", "Free");
+          else if (planFilter === "Annual") query = query.eq("subscription_plan", "Annual").is("subscription_tier", null);
+          else if (planFilter === "Monthly") query = query.eq("subscription_tier", "monthly");
+          else if (planFilter.startsWith("annual_")) query = query.eq("subscription_tier", planFilter);
+          else query = query.eq("subscription_plan", planFilter);
+        }
+        if (stripeFilter === "linked") query = query.not("stripe_customer_id", "is", null);
+        if (stripeFilter === "unlinked") query = query.is("stripe_customer_id", null);
+        if (statusFilter === "blocked") query = query.eq("is_blocked", true);
+        if (statusFilter === "active") query = query.or("is_blocked.is.null,is_blocked.eq.false");
+
+        const { data: profiles } = await query;
+        let filtered = profiles || [];
+        if (roleUserIds) filtered = filtered.filter((p: any) => roleUserIds!.has(p.user_id));
+        if (searchUserIds) {
+          const s = search;
+          filtered = filtered.filter((p: any) =>
+            searchUserIds!.has(p.user_id) || (p.display_name || "").toLowerCase().includes(s),
+          );
+        }
+
+        const planLabel = (p: any) => {
+          if (p.subscription_tier) {
+            const t = String(p.subscription_tier).replace(/_/g, " ");
+            return t.charAt(0).toUpperCase() + t.slice(1);
+          }
+          return p.subscription_plan || "";
+        };
+
         const header = "email,display_name,plan,credits,kyc_status,is_blocked,created_at";
-        const rows = (profiles || []).map((p: any) =>
-          `${emailsMap[p.user_id] || ""},${p.display_name || ""},${p.subscription_plan},${p.available_credits},${p.kyc_status},${p.is_blocked || false},${p.created_at}`
+        const rows = filtered.map((p: any) =>
+          `${emailsMap[p.user_id] || ""},${(p.display_name || "").replace(/,/g, " ")},${planLabel(p)},${p.available_credits},${p.kyc_status},${p.is_blocked || false},${p.created_at}`
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
