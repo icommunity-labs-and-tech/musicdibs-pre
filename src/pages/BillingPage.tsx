@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CreditCard, Receipt, ArrowRight, Loader2, Download, Eye, FileText, RefreshCw, Coins } from 'lucide-react';
+import { CreditCard, Receipt, ArrowRight, Loader2, Download, Eye, FileText, RefreshCw, Coins, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -53,6 +53,8 @@ export default function BillingPage() {
   const [tier, setTier] = useState<string | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
 
   // Annual tier → credits (for display next to the plan label)
   const ANNUAL_TIER_CREDITS: Record<string, number> = {
@@ -91,11 +93,12 @@ export default function BillingPage() {
     if (!user) return;
     const { data: profile } = await supabase
       .from('profiles')
-      .select('subscription_plan')
+      .select('subscription_plan, stripe_customer_id')
       .eq('user_id', user.id)
       .single();
 
     setPlan(profile?.subscription_plan ?? 'Free');
+    setStripeCustomerId(profile?.stripe_customer_id ?? null);
 
     const { data: subRow } = await supabase
       .from('subscriptions')
@@ -199,8 +202,38 @@ export default function BillingPage() {
     }
   };
 
+  const handleOpenPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-portal', {
+        body: { return_url: window.location.href },
+      });
+      if (error) throw error;
+      const errCode = data?.error;
+      if (errCode === 'no_billing_account') {
+        toast.error('No tienes una cuenta de facturación activa');
+        return;
+      }
+      if (errCode === 'portal_not_configured') {
+        toast.error('El portal no está disponible. Contacta con info@musicdibs.com');
+        return;
+      }
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        toast.error('No se pudo abrir el portal de facturación');
+      }
+    } catch (err: any) {
+      console.error('[stripe-portal] error:', err);
+      toast.error(err?.message || 'Error al abrir el portal de facturación');
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
   const planLabel = plan ? (PLAN_LABELS[plan] || plan) : '...';
   const hasActiveSubscription = plan && plan !== 'Free' && !cancelAtPeriodEnd;
+  const showBillingPortal = (plan && plan !== 'Free') || !!stripeCustomerId;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -359,9 +392,21 @@ export default function BillingPage() {
               {cancelAtPeriodEnd ? t('dashboard.billing.cancelled') : plan === 'Free' ? 'Free' : t('dashboard.billing.active')}
             </Badge>
           </div>
-          <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/credits')}>
-            {plan === 'Free' ? t('dashboard.billing.viewPlans') : t('dashboard.billing.changePlan')} <ArrowRight className="h-3.5 w-3.5 ml-1" />
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/credits')}>
+              {plan === 'Free' ? t('dashboard.billing.viewPlans') : t('dashboard.billing.changePlan')} <ArrowRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+            {showBillingPortal && (
+              <Button variant="outline" size="sm" onClick={handleOpenPortal} disabled={portalLoading}>
+                {portalLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                ) : (
+                  <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                )}
+                Gestionar facturación →
+              </Button>
+            )}
+          </div>
           {hasActiveSubscription && (
             <span
               className="block mt-3 text-sm text-muted-foreground cursor-pointer hover:underline hover:text-foreground transition-colors"
