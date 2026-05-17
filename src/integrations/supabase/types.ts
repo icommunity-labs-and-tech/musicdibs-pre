@@ -2078,6 +2078,7 @@ export type Database = {
           payment_grace_expires_at: string | null
           payment_issue_count: number | null
           payment_issue_notified_at: string | null
+          permanent_credits: number
           phone: string | null
           referral_detail: string | null
           referral_influencer: string | null
@@ -2107,6 +2108,7 @@ export type Database = {
           payment_grace_expires_at?: string | null
           payment_issue_count?: number | null
           payment_issue_notified_at?: string | null
+          permanent_credits?: number
           phone?: string | null
           referral_detail?: string | null
           referral_influencer?: string | null
@@ -2136,6 +2138,7 @@ export type Database = {
           payment_grace_expires_at?: string | null
           payment_issue_count?: number | null
           payment_issue_notified_at?: string | null
+          permanent_credits?: number
           phone?: string | null
           referral_detail?: string | null
           referral_influencer?: string | null
