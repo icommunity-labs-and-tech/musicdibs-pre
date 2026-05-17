@@ -402,6 +402,14 @@ export default function AdminUsersPage() {
             <SelectItem value="blocked">Bloqueados</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={creditsFilter} onValueChange={v => { setCreditsFilter(v); setPage(0); }}>
+          <SelectTrigger className="w-[170px] h-8"><SelectValue placeholder="Créditos" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Créditos (todos)</SelectItem>
+            <SelectItem value="has_permanent">Con permanentes</SelectItem>
+            <SelectItem value="no_permanent">Sin permanentes</SelectItem>
+          </SelectContent>
+        </Select>
         {activeFiltersCount > 0 && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
             <X className="h-3 w-3 mr-1" /> Limpiar ({activeFiltersCount})
