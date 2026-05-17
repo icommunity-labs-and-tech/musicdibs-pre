@@ -9,6 +9,7 @@ import type { DashboardSummary } from '@/types/dashboard';
 import { differenceInDays } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { formatPlanLabel } from '@/lib/planLabel';
 
 export function AccountSummary({ onSummaryLoaded, subscriptionEnd, cancelAtPeriodEnd }: { onSummaryLoaded?: (s: DashboardSummary) => void; subscriptionEnd?: string | null; cancelAtPeriodEnd?: boolean }) {
   const [data, setData] = useState<DashboardSummary | null>(null);
@@ -82,7 +83,7 @@ export function AccountSummary({ onSummaryLoaded, subscriptionEnd, cancelAtPerio
       <CardHeader className="flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-semibold tracking-tight">{t('dashboard.account.title')}</CardTitle>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">{data.subscriptionPlan}</Badge>
+          <Badge variant="secondary" className="text-xs">{formatPlanLabel(data.subscriptionPlan, data.subscriptionTier, t)}</Badge>
           <button onClick={() => load()} className="text-muted-foreground hover:text-foreground transition-colors">
             <RefreshCw className="h-4 w-4" />
           </button>

@@ -17,6 +17,7 @@ import {
   CheckCircle2, AlertCircle, Eye, EyeOff, Pencil, Save, X, Bell, Volume2, Globe,
 } from 'lucide-react';
 import { fetchDashboardSummary } from '@/services/dashboardApi';
+import { formatPlanLabel } from '@/lib/planLabel';
 import type { DashboardSummary } from '@/types/dashboard';
 
 type ProfileLanguageRow = {
@@ -295,7 +296,7 @@ export default function ProfilePage() {
                   {kyc.label}
                 </Badge>
                 {summary?.subscriptionPlan && (
-                  <Badge variant="secondary" className="text-xs">{t('dashboard.profile.plan')} {summary.subscriptionPlan}</Badge>
+                  <Badge variant="secondary" className="text-xs">{t('dashboard.profile.plan')} {formatPlanLabel(summary.subscriptionPlan, summary.subscriptionTier, t)}</Badge>
                 )}
               </div>
               {summary?.kycStatus === 'verified' && (

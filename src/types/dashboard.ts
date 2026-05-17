@@ -4,6 +4,7 @@ export interface DashboardSummary {
   availableCredits: number;
   kycStatus: 'verified' | 'pending' | 'unverified';
   subscriptionPlan: string;
+  subscriptionTier?: string | null;
   canRegisterWorks: boolean;
 }
 
