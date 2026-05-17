@@ -17,6 +17,7 @@ import {
   CheckCircle2, AlertCircle, Eye, EyeOff, Pencil, Save, X, Bell, Volume2, Globe,
 } from 'lucide-react';
 import { fetchDashboardSummary } from '@/services/dashboardApi';
+import { formatPlanLabel } from '@/lib/planLabel';
 import type { DashboardSummary } from '@/types/dashboard';
 
 type ProfileLanguageRow = {
