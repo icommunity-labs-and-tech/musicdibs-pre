@@ -292,6 +292,8 @@ serve(async (req) => {
       if (statusFilter === "blocked") query = query.eq("is_blocked", true);
       if (statusFilter === "active") query = query.or("is_blocked.is.null,is_blocked.eq.false");
       if (roleUserIds) query = query.in("user_id", roleUserIds);
+      if (creditsFilter === "has_permanent") query = query.gt("permanent_credits", 0);
+      if (creditsFilter === "no_permanent") query = query.or("permanent_credits.is.null,permanent_credits.eq.0");
 
       let profiles: any[] = [];
       let profilesCount = 0;
