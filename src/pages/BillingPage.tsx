@@ -202,8 +202,38 @@ export default function BillingPage() {
     }
   };
 
+  const handleOpenPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('stripe-portal', {
+        body: { return_url: window.location.href },
+      });
+      if (error) throw error;
+      const errCode = data?.error;
+      if (errCode === 'no_billing_account') {
+        toast.error('No tienes una cuenta de facturación activa');
+        return;
+      }
+      if (errCode === 'portal_not_configured') {
+        toast.error('El portal no está disponible. Contacta con info@musicdibs.com');
+        return;
+      }
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        toast.error('No se pudo abrir el portal de facturación');
+      }
+    } catch (err: any) {
+      console.error('[stripe-portal] error:', err);
+      toast.error(err?.message || 'Error al abrir el portal de facturación');
+    } finally {
+      setPortalLoading(false);
+    }
+  };
+
   const planLabel = plan ? (PLAN_LABELS[plan] || plan) : '...';
   const hasActiveSubscription = plan && plan !== 'Free' && !cancelAtPeriodEnd;
+  const showBillingPortal = (plan && plan !== 'Free') || !!stripeCustomerId;
 
   return (
     <div className="max-w-2xl space-y-6">
