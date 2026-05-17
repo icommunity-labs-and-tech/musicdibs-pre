@@ -452,8 +452,16 @@ export default function AdminUsersPage() {
               <TableHead className="cursor-pointer" onClick={() => toggleSort('subscription_plan')}>
                 <div className="flex items-center gap-1">Plan <SortIcon k="subscription_plan" /></div>
               </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => toggleSort('available_credits')}>
-                <div className="flex items-center gap-1">Créditos <SortIcon k="available_credits" /></div>
+              <TableHead>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => toggleSort('available_credits')} className="flex items-center gap-1 hover:text-foreground">
+                    Créditos <SortIcon k="available_credits" />
+                  </button>
+                  <span className="text-muted-foreground/40">·</span>
+                  <button type="button" onClick={() => toggleSort('permanent_credits')} className="flex items-center gap-1 text-xs text-amber-500 hover:text-amber-400" title="Ordenar por créditos permanentes">
+                    perm <SortIcon k="permanent_credits" />
+                  </button>
+                </div>
               </TableHead>
               <TableHead>Rol</TableHead>
               <TableHead className="cursor-pointer" onClick={() => toggleSort('kyc_status')}>
