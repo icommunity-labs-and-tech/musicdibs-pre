@@ -769,13 +769,14 @@ serve(async (req) => {
             }
           }
 
-          const credits = actualPriceId ? (PRICE_CREDITS[actualPriceId] || 0) : 0;
+          const { credits, source: creditsSource, tier: dbTier } = await resolveCreditsForUser(supabase, profile.user_id, actualPriceId);
+          console.log(`[WEBHOOK] subscription_update: credits=${credits} source=${creditsSource} tier=${dbTier} price=${actualPriceId}`);
 
           if (credits > 0) {
             await addCredits(supabase, profile.user_id, credits, `Cambio de plan: +${credits} créditos acumulados`);
             console.log(`[WEBHOOK] Plan change: added ${credits} credits to user ${profile.user_id} (accumulated)`);
           } else {
-            console.warn(`[WEBHOOK] subscription_update: no credits mapping for price ${actualPriceId}`);
+            console.warn(`[WEBHOOK] subscription_update: no credits mapping for price ${actualPriceId} (tier=${dbTier})`);
           }
 
           // Update plan name
