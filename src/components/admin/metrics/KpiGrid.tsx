@@ -61,7 +61,11 @@ function TrendKpi({ label, value, icon: Icon, change, suffix, invertColor }: {
 
 export default function KpiGrid({ metrics }: KpiGridProps) {
   const m = metrics;
-  const salesRevenue = m.periodRevenue ?? m.totalRevenue ?? 0;
+  const periodGross = Number(m.periodGross ?? 0);
+  const periodIva = Number(m.periodIva ?? Math.max(0, periodGross - (m.periodRevenue ?? 0) - (m.periodFees ?? 0)));
+  const periodFees = Number(m.periodFees ?? 0);
+  const periodNet = Number(m.periodRevenue ?? m.totalRevenue ?? 0);
+  const feesPending = periodFees === 0 && periodGross > 0;
 
   const convRate = m.totalUsers > 0
     ? ((m.customersTotal || 0) / m.totalUsers * 100).toFixed(1)
