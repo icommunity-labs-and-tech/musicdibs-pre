@@ -77,6 +77,21 @@ function downloadCsv(filename: string, csv: string) {
   }
 }
 
+async function withTimeout<T>(promise: Promise<T>, ms: number, message: string) {
+  let timeoutId: ReturnType<typeof window.setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error(message)), ms);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId);
+  }
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
@@ -162,7 +177,11 @@ export default function AdminSystemPage() {
     toast.info('Ejecutando dry-run…');
 
     try {
-      const res = await adminApi.backfillOrdersFromStripe(true);
+      const res = await withTimeout(
+        adminApi.backfillOrdersFromStripe(true, 200),
+        90_000,
+        'El dry-run está tardando demasiado. Se ha cancelado la espera para no dejar el botón bloqueado; inténtalo de nuevo con menos datos o revisa Stripe/Supabase.'
+      );
       const stats = res.stats || {};
       const report = res.report || { inserts: [], updates: [] };
       if (!res.report || (!Array.isArray(report.updates) && !Array.isArray(report.inserts))) {
@@ -180,6 +199,9 @@ export default function AdminSystemPage() {
       console.info('[BACKFILL DRY-RUN CSV ROWS]', rows.length);
 
       toast.success(`Dry-run: ${stats.orders_to_create || 0} a insertar, ${stats.orders_to_update || 0} a actualizar (${stats.updated_by_stripe_ref || 0} por ref Stripe + ${stats.updated_by_fuzzy_match || 0} fuzzy), ${stats.missing_user || 0} sin usuario`);
+      if (stats.scan_limited || stats.time_budget_reached) {
+        toast.warning('CSV parcial generado para evitar timeout. Puedes repetir el dry-run si necesitas seguir revisando más registros.');
+      }
 
       const filename = `backfill-dryrun-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
       const csv = toCsv(rows);
