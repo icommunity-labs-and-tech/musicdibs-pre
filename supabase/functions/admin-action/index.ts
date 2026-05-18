@@ -3141,6 +3141,7 @@ serve(async (req) => {
         const updates: any = {
           amount_gross: candidate.amount_gross,
           amount_net: candidate.amount_net,
+          stripe_fee: candidate.stripe_fee,
           product_type: candidate.product_type,
           order_status: candidate.order_status,
         };
