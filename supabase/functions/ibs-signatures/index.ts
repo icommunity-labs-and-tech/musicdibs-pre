@@ -327,11 +327,14 @@ serve(async (req) => {
 
     // ── SYNC (update local status from iBS) ──────────────────
     if (action === "sync") {
+      // Throttle: no re-pollear a iBS si la firma se sincronizó hace <5 min
+      const throttleCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       const { data: sigs } = await supabaseUser
         .from("ibs_signatures")
-        .select("ibs_signature_id, status")
+        .select("ibs_signature_id, status, updated_at")
         .eq("user_id", user.id)
-        .in("status", ["pending", "created", "initiated"]);
+        .in("status", ["pending", "created", "initiated"])
+        .lt("updated_at", throttleCutoff);
 
       if (sigs && sigs.length > 0) {
         for (const sig of sigs) {
