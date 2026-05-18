@@ -2872,6 +2872,9 @@ serve(async (req) => {
       let revenueSingle = 0;
       let revenueTopup = 0;
       let orderRevenue = 0;
+      let periodGross = 0;
+      let periodIva = 0;
+      let periodFees = 0;
       let renewalsMonthlyCount = 0;
       let renewalsAnnualCount = 0;
       const productBreakdown: {
