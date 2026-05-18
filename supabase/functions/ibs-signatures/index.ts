@@ -362,7 +362,13 @@ serve(async (req) => {
             console.warn(`[IBS-SIG] Failed to sync ${sig.ibs_signature_id}:`, err);
           }
         }
-      }
+              } else {
+                // Touch updated_at para que el throttle de 5 min funcione aunque el status no cambie
+                await supabaseAdmin
+                  .from("ibs_signatures")
+                  .update({ updated_at: new Date().toISOString() })
+                  .eq("ibs_signature_id", sig.ibs_signature_id);
+              }
 
       return new Response(JSON.stringify({ synced: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
