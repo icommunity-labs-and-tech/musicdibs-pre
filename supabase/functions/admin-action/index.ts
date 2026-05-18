@@ -3006,7 +3006,7 @@ serve(async (req) => {
       // Load all existing orders (full row for matching + update decisions)
       const { data: existingOrders } = await admin
         .from("orders")
-        .select("id, user_id, stripe_invoice_id, stripe_charge_id, stripe_checkout_session_id, amount_gross, amount_net, product_type, product_code, order_status, paid_at, created_at");
+        .select("id, user_id, stripe_invoice_id, stripe_charge_id, stripe_checkout_session_id, amount_gross, amount_net, stripe_fee, product_type, product_code, order_status, paid_at, created_at");
 
       // Index by stripe refs
       const byInvoiceId = new Map<string, any>();
