@@ -2925,6 +2925,25 @@ serve(async (req) => {
             ? parseFloat((orderRevenue / totalOrders).toFixed(2))
             : 0;
 
+        // Gross / IVA / Stripe fees breakdown for the period (excluding refunded)
+        var periodGross = 0;
+        var periodIva = 0;
+        var periodFees = 0;
+        ordersData.forEach((o: any) => {
+          if (o.order_status === "refunded") return;
+          const gross = parseFloat(o.amount_gross) || 0;
+          const netVal = parseFloat(o.amount_net);
+          const netBase =
+            !isNaN(netVal) && netVal > 0 ? netVal : gross / 1.21;
+          const fee = parseFloat(o.stripe_fee) || 0;
+          periodGross += gross;
+          periodIva += Math.max(0, gross - netBase);
+          periodFees += fee;
+        });
+        periodGross = Math.round(periodGross * 100) / 100;
+        periodIva = Math.round(periodIva * 100) / 100;
+        periodFees = Math.round(periodFees * 100) / 100;
+
         // Units/revenue by product type
         const byType: Record<string, { units: number; revenue: number }> = {};
         ordersData.forEach((o: any) => {
