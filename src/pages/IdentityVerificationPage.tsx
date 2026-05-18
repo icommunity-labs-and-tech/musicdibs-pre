@@ -126,10 +126,32 @@ export default function IdentityVerificationPage() {
   }, [user]);
 
   // Poll while iframe is open
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingStartRef = useRef<number | null>(null);
+  const MAX_POLLING_MS = 30 * 60 * 1000; // 30 minutes
+
   useEffect(() => {
-    if (!polling || !user) return;
-    const interval = setInterval(() => { refreshState(); }, 5000);
-    return () => clearInterval(interval);
+    if (!polling || !user) {
+      pollingStartRef.current = null;
+      return;
+    }
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    pollingStartRef.current = Date.now();
+    intervalRef.current = setInterval(() => {
+      if (pollingStartRef.current && Date.now() - pollingStartRef.current >= MAX_POLLING_MS) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = null;
+        pollingStartRef.current = null;
+        setPolling(false);
+        return;
+      }
+      refreshState();
+    }, 15000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      pollingStartRef.current = null;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [polling, user]);
 
