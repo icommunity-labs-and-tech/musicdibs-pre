@@ -118,7 +118,7 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
           <ShoppingCart className="w-3.5 h-3.5" /> Ventas
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <TrendKpi label="Revenue periodo" value={`€${salesRevenue.toLocaleString()}`} icon={DollarSign} change={m.mrrChange || 0} />
+          <TrendKpi label="Revenue neto periodo" value={`€${salesRevenue.toLocaleString()}`} icon={DollarSign} change={m.mrrChange || 0} />
           <KpiCard label="Órdenes" value={m.totalOrders ?? 0} icon={ShoppingCart} sub="En el periodo" />
           <KpiCard label="Suscripciones anuales" value={m.unitsSoldAnnual ?? 0} icon={BarChart3}
             sub={m.revenueAnnual ? `€${m.revenueAnnual.toLocaleString()}` : undefined}
