@@ -1,7 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { premiumPromoApprovedEmail, premiumPromoPublishedEmail, premiumPromoRejectedEmail, kycRejectedEmail, kycVerifiedEmail, temporaryPasswordEmail } from "../_shared/transactional-email.ts";
+import {
+  premiumPromoApprovedEmail,
+  premiumPromoPublishedEmail,
+  premiumPromoRejectedEmail,
+  kycRejectedEmail,
+  kycVerifiedEmail,
+  temporaryPasswordEmail,
+} from "../_shared/transactional-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,7 +23,11 @@ function json(body: unknown, status = 200) {
   });
 }
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string,
+): Promise<T> {
   let timeoutId: number | undefined;
   const timeoutPromise = new Promise<T>((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error(message)), timeoutMs);
@@ -30,16 +41,18 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: s
 }
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method === "OPTIONS")
+    return new Response(null, { headers: corsHeaders });
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+    if (!authHeader?.startsWith("Bearer "))
+      return json({ error: "Unauthorized" }, 401);
 
     const supabaseUser = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     );
 
     const token = authHeader.replace("Bearer ", "");
@@ -50,20 +63,28 @@ serve(async (req) => {
     try {
       const gc = (supabaseUser.auth as any).getClaims;
       if (typeof gc === "function") {
-        const { data: claimsData, error: claimsError } = await gc.call(supabaseUser.auth, token);
+        const { data: claimsData, error: claimsError } = await gc.call(
+          supabaseUser.auth,
+          token,
+        );
         if (!claimsError && claimsData?.claims?.sub) {
           callerUserId = claimsData.claims.sub;
           callerEmail = claimsData.claims.email || "";
         }
       }
-    } catch (_e) { /* fall through */ }
+    } catch (_e) {
+      /* fall through */
+    }
 
     // NOTE: JWT decode fallback removed — insecure (no signature verification)
     // callerUserId must come from supabase.auth.getUser() only
 
     // 3) Last resort: getUser
     if (!callerUserId) {
-      let { data: { user: callerUser }, error: userError } = await supabaseUser.auth.getUser(token);
+      let {
+        data: { user: callerUser },
+        error: userError,
+      } = await supabaseUser.auth.getUser(token);
       if (userError || !callerUser) {
         await new Promise((resolve) => setTimeout(resolve, 250));
         const retry = await supabaseUser.auth.getUser(token);
@@ -77,7 +98,7 @@ serve(async (req) => {
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     const { data: roleRow } = await admin
@@ -117,17 +138,24 @@ serve(async (req) => {
       const map: Record<string, string> = {};
       const perPage = 1000;
       for (let page = 1; page <= 50; page++) {
-        const { data, error } = await admin.auth.admin.listUsers({ perPage, page });
+        const { data, error } = await admin.auth.admin.listUsers({
+          perPage,
+          page,
+        });
         if (error) break;
         const users = data?.users || [];
-        users.forEach((u: any) => { if (u.email) map[u.id] = u.email; });
+        users.forEach((u: any) => {
+          if (u.email) map[u.id] = u.email;
+        });
         if (users.length < perPage) break;
       }
       return map;
     }
 
     // ── Helper: get emails only for a specific list of user_ids ──
-    async function getEmailsForUserIds(userIds: string[]): Promise<Record<string, string>> {
+    async function getEmailsForUserIds(
+      userIds: string[],
+    ): Promise<Record<string, string>> {
       const map: Record<string, string> = {};
       if (!userIds || userIds.length === 0) return map;
       const unique = [...new Set(userIds)];
@@ -139,32 +167,44 @@ serve(async (req) => {
           } catch {
             return { uid, email: "" };
           }
-        })
+        }),
       );
-      results.forEach((r) => { if (r.email) map[r.uid] = r.email; });
+      results.forEach((r) => {
+        if (r.email) map[r.uid] = r.email;
+      });
       return map;
     }
 
-    async function findAuthUserByEmail(email: string): Promise<{ id: string; email: string } | null> {
+    async function findAuthUserByEmail(
+      email: string,
+    ): Promise<{ id: string; email: string } | null> {
       const target = email.trim().toLowerCase();
       if (!target) return null;
       const allowPartialMatch = target.length >= 2 && !target.includes("@");
 
-      const { data: authRows } = await admin.rpc("get_user_auth_data", { user_email: target });
+      const { data: authRows } = await admin.rpc("get_user_auth_data", {
+        user_email: target,
+      });
       const rpcUserId = Array.isArray(authRows) ? authRows[0]?.user_id : null;
       if (typeof rpcUserId === "string" && rpcUserId.length > 0) {
-        const { data: targetAuth } = await admin.auth.admin.getUserById(rpcUserId);
+        const { data: targetAuth } =
+          await admin.auth.admin.getUserById(rpcUserId);
         return { id: rpcUserId, email: targetAuth?.user?.email || target };
       }
 
       const perPage = 1000;
       for (let page = 1; page <= 50; page++) {
-        const { data, error: listErr } = await admin.auth.admin.listUsers({ page, perPage });
+        const { data, error: listErr } = await admin.auth.admin.listUsers({
+          page,
+          perPage,
+        });
         if (listErr) throw listErr;
         const users = data?.users || [];
         const found = users.find((u: { id: string; email?: string }) => {
           const userEmail = u.email?.toLowerCase() || "";
-          return allowPartialMatch ? userEmail.includes(target) : userEmail === target;
+          return allowPartialMatch
+            ? userEmail.includes(target)
+            : userEmail === target;
         });
         if (found) return { id: found.id, email: found.email || target };
         if (users.length < perPage) break;
@@ -184,7 +224,9 @@ serve(async (req) => {
           .range(from, from + pageSize - 1);
         if (error) break;
         const rows = data || [];
-        rows.forEach((p: any) => { if (p.display_name) map[p.user_id] = p.display_name; });
+        rows.forEach((p: any) => {
+          if (p.display_name) map[p.user_id] = p.display_name;
+        });
         if (rows.length < pageSize) break;
       }
       return map;
@@ -202,9 +244,23 @@ serve(async (req) => {
       const statusFilter = (payload.status_filter || "").trim(); // 'active' | 'blocked'
       const roleFilter = (payload.role_filter || "").trim(); // 'admin' | 'manager' | 'user'
       const creditsFilter = (payload.credits_filter || "").trim(); // 'has_permanent' | 'no_permanent'
-      const REMINDER_SORT_KEYS = ["kyc_reminders_count", "kyc_last_reminder_at"];
-      const validSorts = ["created_at", "updated_at", "display_name", "available_credits", "permanent_credits", "subscription_plan", "kyc_status", ...REMINDER_SORT_KEYS];
-      const sortBy = validSorts.includes(payload.sort_by) ? payload.sort_by : "created_at";
+      const REMINDER_SORT_KEYS = [
+        "kyc_reminders_count",
+        "kyc_last_reminder_at",
+      ];
+      const validSorts = [
+        "created_at",
+        "updated_at",
+        "display_name",
+        "available_credits",
+        "permanent_credits",
+        "subscription_plan",
+        "kyc_status",
+        ...REMINDER_SORT_KEYS,
+      ];
+      const sortBy = validSorts.includes(payload.sort_by)
+        ? payload.sort_by
+        : "created_at";
       const sortDir = payload.sort_dir === "asc" ? true : false;
       const isReminderSort = REMINDER_SORT_KEYS.includes(sortBy);
 
@@ -212,15 +268,24 @@ serve(async (req) => {
       let roleUserIds: string[] | null = null;
       if (roleFilter) {
         if (roleFilter === "user") {
-          const { data: nonUsers } = await admin.from("user_roles").select("user_id").in("role", ["admin", "manager"]);
+          const { data: nonUsers } = await admin
+            .from("user_roles")
+            .select("user_id")
+            .in("role", ["admin", "manager"]);
           const exclude = new Set((nonUsers || []).map((r: any) => r.user_id));
           const { data: allP } = await admin.from("profiles").select("user_id");
-          roleUserIds = (allP || []).map((p: any) => p.user_id).filter((id: string) => !exclude.has(id));
+          roleUserIds = (allP || [])
+            .map((p: any) => p.user_id)
+            .filter((id: string) => !exclude.has(id));
         } else {
-          const { data: rs } = await admin.from("user_roles").select("user_id").eq("role", roleFilter);
+          const { data: rs } = await admin
+            .from("user_roles")
+            .select("user_id")
+            .eq("role", roleFilter);
           roleUserIds = (rs || []).map((r: any) => r.user_id);
         }
-        if ((roleUserIds || []).length === 0) return json({ users: [], total: 0 });
+        if ((roleUserIds || []).length === 0)
+          return json({ users: [], total: 0 });
       }
 
       // If searching (≥2 chars), pre-resolve user_ids whose email/meta matches (auth.users)
@@ -231,11 +296,18 @@ serve(async (req) => {
         try {
           const perPage = 1000;
           outer: for (let pageIdx = 1; pageIdx <= 10; pageIdx++) {
-            const { data: pageData } = await admin.auth.admin.listUsers({ page: pageIdx, perPage });
+            const { data: pageData } = await admin.auth.admin.listUsers({
+              page: pageIdx,
+              perPage,
+            });
             const usersPage = (pageData as any)?.users || [];
             for (const au of usersPage) {
               const em = (au?.email || "").toLowerCase();
-              const meta = ((au?.user_metadata?.display_name || au?.user_metadata?.full_name || "") as string).toLowerCase();
+              const meta = (
+                (au?.user_metadata?.display_name ||
+                  au?.user_metadata?.full_name ||
+                  "") as string
+              ).toLowerCase();
               if (em.includes(search) || meta.includes(search)) {
                 searchUserIds.push(au.id);
                 if (searchUserIds.length > MAX_SEARCH_IDS) {
@@ -246,7 +318,9 @@ serve(async (req) => {
             }
             if (usersPage.length < perPage) break;
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
 
       let query = admin.from("profiles").select("*", { count: "exact" });
@@ -256,7 +330,9 @@ serve(async (req) => {
         // If too many email matches, fallback to display_name only to avoid URL length explosion
         if (searchUserIds.length > 0 && !searchIdsTruncated) {
           const idsCsv = searchUserIds.join(",");
-          query = query.or(`display_name.ilike.%${escaped}%,user_id.in.(${idsCsv})`);
+          query = query.or(
+            `display_name.ilike.%${escaped}%,user_id.in.(${idsCsv})`,
+          );
         } else {
           query = query.ilike("display_name", `%${escaped}%`);
         }
@@ -268,7 +344,9 @@ serve(async (req) => {
           .from("ibs_signatures")
           .select("user_id")
           .eq("status", kycFilter);
-        const ids = Array.from(new Set((sigUsers || []).map((r: any) => r.user_id)));
+        const ids = Array.from(
+          new Set((sigUsers || []).map((r: any) => r.user_id)),
+        );
         if (ids.length === 0) return json({ users: [], total: 0 });
         query = query.in("user_id", ids).neq("kyc_status", "verified");
       } else if (kycFilter) {
@@ -278,7 +356,9 @@ serve(async (req) => {
         if (planFilter === "Free") {
           query = query.eq("subscription_plan", "Free");
         } else if (planFilter === "Annual") {
-          query = query.eq("subscription_plan", "Annual").is("subscription_tier", null);
+          query = query
+            .eq("subscription_plan", "Annual")
+            .is("subscription_tier", null);
         } else if (planFilter === "Monthly") {
           query = query.eq("subscription_tier", "monthly");
         } else if (planFilter.startsWith("annual_")) {
@@ -287,13 +367,18 @@ serve(async (req) => {
           query = query.eq("subscription_plan", planFilter);
         }
       }
-      if (stripeFilter === "linked") query = query.not("stripe_customer_id", "is", null);
-      if (stripeFilter === "unlinked") query = query.is("stripe_customer_id", null);
+      if (stripeFilter === "linked")
+        query = query.not("stripe_customer_id", "is", null);
+      if (stripeFilter === "unlinked")
+        query = query.is("stripe_customer_id", null);
       if (statusFilter === "blocked") query = query.eq("is_blocked", true);
-      if (statusFilter === "active") query = query.or("is_blocked.is.null,is_blocked.eq.false");
+      if (statusFilter === "active")
+        query = query.or("is_blocked.is.null,is_blocked.eq.false");
       if (roleUserIds) query = query.in("user_id", roleUserIds);
-      if (creditsFilter === "has_permanent") query = query.gt("permanent_credits", 0);
-      if (creditsFilter === "no_permanent") query = query.or("permanent_credits.is.null,permanent_credits.eq.0");
+      if (creditsFilter === "has_permanent")
+        query = query.gt("permanent_credits", 0);
+      if (creditsFilter === "no_permanent")
+        query = query.or("permanent_credits.is.null,permanent_credits.eq.0");
 
       let profiles: any[] = [];
       let profilesCount = 0;
@@ -301,11 +386,18 @@ serve(async (req) => {
 
       if (isReminderSort) {
         // Fetch all matching profile rows (capped), join with reminder aggregates, sort, paginate, then refetch full rows.
-        const { data: idRows, error: idErr, count: idCount } = await query
-          .select("user_id", { count: "exact" })
-          .range(0, 4999);
+        const {
+          data: idRows,
+          error: idErr,
+          count: idCount,
+        } = await query.select("user_id", { count: "exact" }).range(0, 4999);
         if (idErr) {
-          if ((idErr.message || "").toLowerCase().includes("range not satisfiable")) return json({ users: [], total: 0 });
+          if (
+            (idErr.message || "")
+              .toLowerCase()
+              .includes("range not satisfiable")
+          )
+            return json({ users: [], total: 0 });
           return json({ error: idErr.message }, 500);
         }
         const allIds = (idRows || []).map((r: any) => r.user_id);
@@ -315,9 +407,10 @@ serve(async (req) => {
           .from("kyc_reminder_log")
           .select("user_id, sent_at")
           .in("user_id", allIds);
-        const remStats: Record<string, { count: number; last: number | null }> = {};
+        const remStats: Record<string, { count: number; last: number | null }> =
+          {};
         (allReminders || []).forEach((r: any) => {
-          const s = remStats[r.user_id] ||= { count: 0, last: null };
+          const s = (remStats[r.user_id] ||= { count: 0, last: null });
           s.count++;
           const t = r.sent_at ? new Date(r.sent_at).getTime() : null;
           if (t !== null && (s.last === null || t > s.last)) s.last = t;
@@ -330,7 +423,8 @@ serve(async (req) => {
         }));
         const dir = sortDir ? 1 : -1;
         sortable.sort((a, b) => {
-          if (sortBy === "kyc_reminders_count") return (a.count - b.count) * dir;
+          if (sortBy === "kyc_reminders_count")
+            return (a.count - b.count) * dir;
           // kyc_last_reminder_at: nulls always at the end
           if (a.last === null && b.last === null) return 0;
           if (a.last === null) return 1;
@@ -340,22 +434,34 @@ serve(async (req) => {
 
         profilesCount = idCount ?? sortable.length;
         const pageIds = sortable.slice(offset, offset + limit).map((s) => s.id);
-        if (pageIds.length === 0) return json({ users: [], total: profilesCount });
+        if (pageIds.length === 0)
+          return json({ users: [], total: profilesCount });
 
-        const { data: pageProfiles, error: pErr } = await admin.from("profiles").select("*").in("user_id", pageIds);
+        const { data: pageProfiles, error: pErr } = await admin
+          .from("profiles")
+          .select("*")
+          .in("user_id", pageIds);
         if (pErr) return json({ error: pErr.message }, 500);
         // Preserve sort order
         const pMap: Record<string, any> = {};
-        (pageProfiles || []).forEach((p: any) => { pMap[p.user_id] = p; });
+        (pageProfiles || []).forEach((p: any) => {
+          pMap[p.user_id] = p;
+        });
         profiles = pageIds.map((id) => pMap[id]).filter(Boolean);
       } else {
-        query = query.order(sortBy, { ascending: sortDir }).range(offset, offset + limit - 1);
+        query = query
+          .order(sortBy, { ascending: sortDir })
+          .range(offset, offset + limit - 1);
         const res = await query;
-        error = res.error; profiles = res.data || []; profilesCount = res.count ?? 0;
+        error = res.error;
+        profiles = res.data || [];
+        profilesCount = res.count ?? 0;
       }
 
       if (error) {
-        if ((error.message || "").toLowerCase().includes("range not satisfiable")) {
+        if (
+          (error.message || "").toLowerCase().includes("range not satisfiable")
+        ) {
           return json({ users: [], total: 0 });
         }
         return json({ error: error.message }, 500);
@@ -364,24 +470,55 @@ serve(async (req) => {
       const userIds = (profiles || []).map((p: any) => p.user_id);
       if (userIds.length === 0) return json({ users: [], total: 0 });
 
-      const [{ data: roles }, { data: worksCounts }, { data: sigs }, { data: reminders }] = await Promise.all([
+      const [
+        { data: roles },
+        { data: worksCounts },
+        { data: sigs },
+        { data: reminders },
+      ] = await Promise.all([
         admin.from("user_roles").select("user_id, role").in("user_id", userIds),
-        admin.from("works").select("user_id").in("user_id", userIds).eq("status", "registered"),
-        admin.from("ibs_signatures").select("id, user_id, ibs_signature_id, status, created_at").in("user_id", userIds).order("created_at", { ascending: false }),
-        admin.from("kyc_reminder_log").select("user_id, sent_at").in("user_id", userIds),
+        admin
+          .from("works")
+          .select("user_id")
+          .in("user_id", userIds)
+          .eq("status", "registered"),
+        admin
+          .from("ibs_signatures")
+          .select("id, user_id, ibs_signature_id, status, created_at")
+          .in("user_id", userIds)
+          .order("created_at", { ascending: false }),
+        admin
+          .from("kyc_reminder_log")
+          .select("user_id, sent_at")
+          .in("user_id", userIds),
       ]);
 
-      const reminderMap: Record<string, { count: number; last_sent_at: string | null }> = {};
+      const reminderMap: Record<
+        string,
+        { count: number; last_sent_at: string | null }
+      > = {};
       (reminders || []).forEach((r: any) => {
-        const m = reminderMap[r.user_id] ||= { count: 0, last_sent_at: null };
+        const m = (reminderMap[r.user_id] ||= { count: 0, last_sent_at: null });
         m.count++;
-        if (r.sent_at && (!m.last_sent_at || new Date(r.sent_at).getTime() > new Date(m.last_sent_at).getTime())) {
+        if (
+          r.sent_at &&
+          (!m.last_sent_at ||
+            new Date(r.sent_at).getTime() > new Date(m.last_sent_at).getTime())
+        ) {
           m.last_sent_at = r.sent_at;
         }
       });
 
       // Pick the most recent signature per user (already ordered desc)
-      const sigMap: Record<string, { id: string; ibs_signature_id: string; status: string; created_at: string }> = {};
+      const sigMap: Record<
+        string,
+        {
+          id: string;
+          ibs_signature_id: string;
+          status: string;
+          created_at: string;
+        }
+      > = {};
       (sigs || []).forEach((s: any) => {
         if (!sigMap[s.user_id]) sigMap[s.user_id] = s;
       });
@@ -401,11 +538,18 @@ serve(async (req) => {
       const metaNameMap: Record<string, string> = {};
       for (const uid of userIds) {
         try {
-          const { data: { user: au } } = await admin.auth.admin.getUserById(uid);
+          const {
+            data: { user: au },
+          } = await admin.auth.admin.getUserById(uid);
           if (au?.email) emailsMap[au.id] = au.email;
-          const metaName = au?.user_metadata?.display_name || au?.user_metadata?.full_name || "";
+          const metaName =
+            au?.user_metadata?.display_name ||
+            au?.user_metadata?.full_name ||
+            "";
           if (metaName) metaNameMap[au!.id] = metaName;
-        } catch { /* skip */ }
+        } catch {
+          /* skip */
+        }
       }
 
       let result = (profiles || []).map((p: any) => ({
@@ -420,9 +564,10 @@ serve(async (req) => {
       }));
 
       if (search) {
-        result = result.filter((u: any) =>
-          u.email.toLowerCase().includes(search) ||
-          u.display_name?.toLowerCase().includes(search)
+        result = result.filter(
+          (u: any) =>
+            u.email.toLowerCase().includes(search) ||
+            u.display_name?.toLowerCase().includes(search),
         );
       }
 
@@ -432,38 +577,97 @@ serve(async (req) => {
 
     if (action === "bulk_user_action") {
       const { user_ids, op } = payload;
-      if (!Array.isArray(user_ids) || user_ids.length === 0) return json({ error: "user_ids required" }, 400);
-      if (user_ids.length > 200) return json({ error: "Máximo 200 usuarios por operación" }, 400);
-      let success = 0; let failed = 0;
+      if (!Array.isArray(user_ids) || user_ids.length === 0)
+        return json({ error: "user_ids required" }, 400);
+      if (user_ids.length > 200)
+        return json({ error: "Máximo 200 usuarios por operación" }, 400);
+      let success = 0;
+      let failed = 0;
       for (const uid of user_ids) {
         try {
-          if (op === "block") await admin.from("profiles").update({ is_blocked: true, updated_at: new Date().toISOString() }).eq("user_id", uid);
-          else if (op === "unblock") await admin.from("profiles").update({ is_blocked: false, updated_at: new Date().toISOString() }).eq("user_id", uid);
-          else if (op === "kyc_verified") await admin.from("profiles").update({ kyc_status: "verified", updated_at: new Date().toISOString() }).eq("user_id", uid);
-          else if (op === "kyc_pending") await admin.from("profiles").update({ kyc_status: "pending", updated_at: new Date().toISOString() }).eq("user_id", uid);
-          else { failed++; continue; }
+          if (op === "block")
+            await admin
+              .from("profiles")
+              .update({
+                is_blocked: true,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("user_id", uid);
+          else if (op === "unblock")
+            await admin
+              .from("profiles")
+              .update({
+                is_blocked: false,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("user_id", uid);
+          else if (op === "kyc_verified")
+            await admin
+              .from("profiles")
+              .update({
+                kyc_status: "verified",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("user_id", uid);
+          else if (op === "kyc_pending")
+            await admin
+              .from("profiles")
+              .update({
+                kyc_status: "pending",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("user_id", uid);
+          else {
+            failed++;
+            continue;
+          }
           success++;
-        } catch { failed++; }
+        } catch {
+          failed++;
+        }
       }
-      await audit({ action: `bulk_${op}`, details: { count: user_ids.length, success, failed } });
+      await audit({
+        action: `bulk_${op}`,
+        details: { count: user_ids.length, success, failed },
+      });
       return json({ success, failed });
     }
 
     if (action === "adjust_credits") {
       const { user_id, amount, reason } = payload;
-      if (!user_id || amount === undefined || !reason) return json({ error: "user_id, amount, reason required" }, 400);
-      if (amount === 0) return json({ error: "La cantidad no puede ser 0" }, 400);
-      if (amount < -1000 || amount > 1000) return json({ error: "La cantidad debe estar entre -1000 y 1000" }, 400);
-      if (typeof reason !== "string" || reason.trim().length < 5) return json({ error: "El motivo debe tener al menos 5 caracteres" }, 400);
+      if (!user_id || amount === undefined || !reason)
+        return json({ error: "user_id, amount, reason required" }, 400);
+      if (amount === 0)
+        return json({ error: "La cantidad no puede ser 0" }, 400);
+      if (amount < -1000 || amount > 1000)
+        return json(
+          { error: "La cantidad debe estar entre -1000 y 1000" },
+          400,
+        );
+      if (typeof reason !== "string" || reason.trim().length < 5)
+        return json(
+          { error: "El motivo debe tener al menos 5 caracteres" },
+          400,
+        );
 
-      const { data: profile } = await admin.from("profiles").select("available_credits").eq("user_id", user_id).single();
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("available_credits")
+        .eq("user_id", user_id)
+        .single();
       if (!profile) return json({ error: "User not found" }, 404);
 
       const { data: targetAuth } = await admin.auth.admin.getUserById(user_id);
       const targetEmail = targetAuth?.user?.email || "";
 
       const newCredits = Math.max(0, profile.available_credits + amount);
-      const { error: upErr } = await admin.from("profiles").update({ available_credits: newCredits, updated_at: new Date().toISOString() }).eq("user_id", user_id);
+      const { error: upErr } = await admin
+        .from("profiles")
+        .update({
+          available_credits: newCredits,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user_id);
       if (upErr) return json({ error: upErr.message }, 500);
 
       await admin.from("credit_transactions").insert({
@@ -477,7 +681,12 @@ serve(async (req) => {
         action: "adjust_credits",
         target_user_id: user_id,
         target_email: targetEmail,
-        details: { amount, reason: reason.slice(0, 200), previous_balance: profile.available_credits, new_balance: newCredits },
+        details: {
+          amount,
+          reason: reason.slice(0, 200),
+          previous_balance: profile.available_credits,
+          new_balance: newCredits,
+        },
       });
 
       return json({ success: true, new_balance: newCredits });
@@ -485,7 +694,8 @@ serve(async (req) => {
 
     if (action === "set_kyc") {
       const { user_id, status } = payload;
-      if (!["pending", "verified", "rejected"].includes(status)) return json({ error: "Invalid status" }, 400);
+      if (!["pending", "verified", "rejected"].includes(status))
+        return json({ error: "Invalid status" }, 400);
 
       // When rejecting, reset to 'unverified' so the user can retry verification
       const effectiveStatus = status === "rejected" ? "unverified" : status;
@@ -498,7 +708,10 @@ serve(async (req) => {
         updateData.ibs_signature_id = null;
       }
 
-      const { error } = await admin.from("profiles").update(updateData).eq("user_id", user_id);
+      const { error } = await admin
+        .from("profiles")
+        .update(updateData)
+        .eq("user_id", user_id);
       if (error) return json({ error: error.message }, 500);
 
       const { data: targetAuth } = await admin.auth.admin.getUserById(user_id);
@@ -508,14 +721,22 @@ serve(async (req) => {
         action: "set_kyc",
         target_user_id: user_id,
         target_email: targetEmail,
-        details: { requested_status: status, effective_status: effectiveStatus },
+        details: {
+          requested_status: status,
+          effective_status: effectiveStatus,
+        },
       });
 
       // Send verified email when KYC is manually verified
       if (status === "verified" && targetEmail) {
         try {
-          const { data: profile } = await admin.from("profiles").select("display_name, language").eq("user_id", user_id).single();
-          const name = profile?.display_name || targetEmail.split("@")[0] || "Usuario";
+          const { data: profile } = await admin
+            .from("profiles")
+            .select("display_name, language")
+            .eq("user_id", user_id)
+            .single();
+          const name =
+            profile?.display_name || targetEmail.split("@")[0] || "Usuario";
           const emailData = kycVerifiedEmail({ name, lang: profile?.language });
           const messageId = crypto.randomUUID();
           await admin.from("email_send_log").insert({
@@ -549,8 +770,13 @@ serve(async (req) => {
       // Send rejection email when KYC is rejected
       if (status === "rejected" && targetEmail) {
         try {
-          const { data: profile } = await admin.from("profiles").select("display_name, language").eq("user_id", user_id).single();
-          const name = profile?.display_name || targetEmail.split("@")[0] || "Usuario";
+          const { data: profile } = await admin
+            .from("profiles")
+            .select("display_name, language")
+            .eq("user_id", user_id)
+            .single();
+          const name =
+            profile?.display_name || targetEmail.split("@")[0] || "Usuario";
           const emailData = kycRejectedEmail({ name, lang: profile?.language });
           const messageId = crypto.randomUUID();
           await admin.from("email_send_log").insert({
@@ -588,10 +814,17 @@ serve(async (req) => {
       const { user_id } = payload;
       if (!user_id) return json({ error: "user_id required" }, 400);
 
-      const { data: profile } = await admin.from("profiles").select("kyc_status").eq("user_id", user_id).single();
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("kyc_status")
+        .eq("user_id", user_id)
+        .single();
       if (!profile) return json({ error: "User not found" }, 404);
       if (profile.kyc_status === "verified") {
-        return json({ error: "No se puede eliminar una verificación KYC ya completada" }, 400);
+        return json(
+          { error: "No se puede eliminar una verificación KYC ya completada" },
+          400,
+        );
       }
 
       // Get all non-success signatures for this user
@@ -603,27 +836,54 @@ serve(async (req) => {
 
       const deletable = (sigs || []).filter((s: any) => s.status !== "success");
       if (deletable.length === 0) {
-        return json({ error: "No hay verificaciones KYC en proceso para eliminar" }, 400);
+        return json(
+          { error: "No hay verificaciones KYC en proceso para eliminar" },
+          400,
+        );
       }
 
       const IBS_API_KEY = Deno.env.get("IBS_API_KEY");
       const IBS_API_URL = "https://api.icommunitylabs.com/v2";
-      const ibsResults: Array<{ ibs_signature_id: string; ok: boolean; status?: number; error?: string }> = [];
+      const ibsResults: Array<{
+        ibs_signature_id: string;
+        ok: boolean;
+        status?: number;
+        error?: string;
+      }> = [];
 
       for (const sig of deletable) {
         try {
-          const res = await fetch(`${IBS_API_URL}/signatures/${sig.ibs_signature_id}`, {
-            method: "DELETE",
-            headers: { "Authorization": `Bearer ${IBS_API_KEY}`, "Content-Type": "application/json" },
-          });
+          const res = await fetch(
+            `${IBS_API_URL}/signatures/${sig.ibs_signature_id}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${IBS_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+            },
+          );
           const ok = res.ok || res.status === 404; // 404 = ya no existe, lo consideramos eliminado
           let errorBody: string | undefined;
           if (!ok) {
-            try { errorBody = (await res.text()).slice(0, 300); } catch { /* ignore */ }
+            try {
+              errorBody = (await res.text()).slice(0, 300);
+            } catch {
+              /* ignore */
+            }
           }
-          ibsResults.push({ ibs_signature_id: sig.ibs_signature_id, ok, status: res.status, error: errorBody });
+          ibsResults.push({
+            ibs_signature_id: sig.ibs_signature_id,
+            ok,
+            status: res.status,
+            error: errorBody,
+          });
         } catch (e: any) {
-          ibsResults.push({ ibs_signature_id: sig.ibs_signature_id, ok: false, error: String(e?.message || e).slice(0, 300) });
+          ibsResults.push({
+            ibs_signature_id: sig.ibs_signature_id,
+            ok: false,
+            error: String(e?.message || e).slice(0, 300),
+          });
         }
       }
 
@@ -637,13 +897,16 @@ serve(async (req) => {
       }
 
       // Resetear el perfil si todas las firmas borrables se eliminaron correctamente
-      const allOk = ibsResults.every(r => r.ok);
+      const allOk = ibsResults.every((r) => r.ok);
       if (allOk) {
-        await admin.from("profiles").update({
-          kyc_status: "unverified",
-          ibs_signature_id: null,
-          updated_at: new Date().toISOString(),
-        }).eq("user_id", user_id);
+        await admin
+          .from("profiles")
+          .update({
+            kyc_status: "unverified",
+            ibs_signature_id: null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", user_id);
       }
 
       const { data: targetAuth } = await admin.auth.admin.getUserById(user_id);
@@ -655,23 +918,32 @@ serve(async (req) => {
       });
 
       if (!allOk) {
-        const failed = ibsResults.filter(r => !r.ok);
-        return json({
-          success: false,
-          partial: idsToDelete.length > 0,
-          error: `Algunas firmas no se pudieron eliminar en iBS: ${failed.map(f => `${f.ibs_signature_id} (${f.status || 'error'}${f.error ? ': ' + f.error : ''})`).join('; ')}`,
-          results: ibsResults,
-        }, 502);
+        const failed = ibsResults.filter((r) => !r.ok);
+        return json(
+          {
+            success: false,
+            partial: idsToDelete.length > 0,
+            error: `Algunas firmas no se pudieron eliminar en iBS: ${failed.map((f) => `${f.ibs_signature_id} (${f.status || "error"}${f.error ? ": " + f.error : ""})`).join("; ")}`,
+            results: ibsResults,
+          },
+          502,
+        );
       }
 
-      return json({ success: true, deleted: idsToDelete.length, results: ibsResults });
+      return json({
+        success: true,
+        deleted: idsToDelete.length,
+        results: ibsResults,
+      });
     }
 
     if (action === "force_delete_signature_by_id") {
       const { signature_row_id, reassign_to_ibs_signature_id } = payload as {
-        signature_row_id?: string; reassign_to_ibs_signature_id?: string | null;
+        signature_row_id?: string;
+        reassign_to_ibs_signature_id?: string | null;
       };
-      if (!signature_row_id) return json({ error: "signature_row_id required" }, 400);
+      if (!signature_row_id)
+        return json({ error: "signature_row_id required" }, 400);
 
       const { data: sig, error: sigErr } = await admin
         .from("ibs_signatures")
@@ -682,42 +954,73 @@ serve(async (req) => {
 
       const IBS_API_KEY = Deno.env.get("IBS_API_KEY");
       const IBS_API_URL = "https://api.icommunitylabs.com/v2";
-      let ibsStatus = 0; let ibsError: string | undefined;
+      let ibsStatus = 0;
+      let ibsError: string | undefined;
       try {
-        const res = await fetch(`${IBS_API_URL}/signatures/${sig.ibs_signature_id}`, {
-          method: "DELETE",
-          headers: { "Authorization": `Bearer ${IBS_API_KEY}`, "Content-Type": "application/json" },
-        });
+        const res = await fetch(
+          `${IBS_API_URL}/signatures/${sig.ibs_signature_id}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${IBS_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
         ibsStatus = res.status;
         if (!res.ok && res.status !== 404) {
           ibsError = (await res.text()).slice(0, 500);
-          return json({ error: `iBS DELETE failed (${res.status}): ${ibsError}` }, 502);
+          return json(
+            { error: `iBS DELETE failed (${res.status}): ${ibsError}` },
+            502,
+          );
         }
       } catch (e: any) {
-        return json({ error: `iBS DELETE network error: ${String(e?.message || e)}` }, 502);
+        return json(
+          { error: `iBS DELETE network error: ${String(e?.message || e)}` },
+          502,
+        );
       }
 
-      const { error: delErr } = await admin.from("ibs_signatures").delete().eq("id", sig.id);
-      if (delErr) return json({ error: `DB delete failed: ${delErr.message}` }, 500);
+      const { error: delErr } = await admin
+        .from("ibs_signatures")
+        .delete()
+        .eq("id", sig.id);
+      if (delErr)
+        return json({ error: `DB delete failed: ${delErr.message}` }, 500);
 
       // If profile points to this sig, reassign or clear
       const { data: prof } = await admin
-        .from("profiles").select("ibs_signature_id").eq("user_id", sig.user_id).maybeSingle();
+        .from("profiles")
+        .select("ibs_signature_id")
+        .eq("user_id", sig.user_id)
+        .maybeSingle();
       let reassigned = false;
       if (prof?.ibs_signature_id === sig.ibs_signature_id) {
-        await admin.from("profiles").update({
-          ibs_signature_id: reassign_to_ibs_signature_id ?? null,
-          updated_at: new Date().toISOString(),
-        }).eq("user_id", sig.user_id);
+        await admin
+          .from("profiles")
+          .update({
+            ibs_signature_id: reassign_to_ibs_signature_id ?? null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", sig.user_id);
         reassigned = true;
       }
 
-      const { data: targetAuth } = await admin.auth.admin.getUserById(sig.user_id);
+      const { data: targetAuth } = await admin.auth.admin.getUserById(
+        sig.user_id,
+      );
       await audit({
         action: "force_delete_signature_by_id",
         target_user_id: sig.user_id,
         target_email: targetAuth?.user?.email || "",
-        details: { signature_row_id, ibs_signature_id: sig.ibs_signature_id, ibs_status: ibsStatus, reassigned, reassign_to_ibs_signature_id: reassign_to_ibs_signature_id ?? null },
+        details: {
+          signature_row_id,
+          ibs_signature_id: sig.ibs_signature_id,
+          ibs_status: ibsStatus,
+          reassigned,
+          reassign_to_ibs_signature_id: reassign_to_ibs_signature_id ?? null,
+        },
       });
 
       return json({ success: true, ibs_status: ibsStatus, reassigned });
@@ -725,7 +1028,8 @@ serve(async (req) => {
 
     if (action === "toggle_block") {
       const { user_id, blocked } = payload;
-      if (!user_id || typeof blocked !== "boolean") return json({ error: "user_id and blocked are required" }, 400);
+      if (!user_id || typeof blocked !== "boolean")
+        return json({ error: "user_id and blocked are required" }, 400);
 
       const { error } = await admin
         .from("profiles")
@@ -733,9 +1037,12 @@ serve(async (req) => {
         .eq("user_id", user_id);
       if (error) return json({ error: error.message }, 500);
 
-      const { error: authErr } = await admin.auth.admin.updateUserById(user_id, {
-        ban_duration: blocked ? "876000h" : "none",
-      });
+      const { error: authErr } = await admin.auth.admin.updateUserById(
+        user_id,
+        {
+          ban_duration: blocked ? "876000h" : "none",
+        },
+      );
       if (authErr) return json({ error: authErr.message }, 500);
 
       if (blocked) {
@@ -755,12 +1062,22 @@ serve(async (req) => {
 
     if (action === "set_admin_role") {
       const { user_id, is_admin } = payload;
-      if (user_id === callerUserId && !is_admin) return json({ error: "No puedes quitarte el rol de admin a ti mismo" }, 400);
+      if (user_id === callerUserId && !is_admin)
+        return json(
+          { error: "No puedes quitarte el rol de admin a ti mismo" },
+          400,
+        );
 
       if (is_admin) {
-        await admin.from("user_roles").upsert({ user_id, role: "admin" }, { onConflict: "user_id,role" });
+        await admin
+          .from("user_roles")
+          .upsert({ user_id, role: "admin" }, { onConflict: "user_id,role" });
       } else {
-        await admin.from("user_roles").delete().eq("user_id", user_id).eq("role", "admin");
+        await admin
+          .from("user_roles")
+          .delete()
+          .eq("user_id", user_id)
+          .eq("role", "admin");
       }
 
       const { data: targetAuth } = await admin.auth.admin.getUserById(user_id);
@@ -779,9 +1096,15 @@ serve(async (req) => {
       if (!user_id) return json({ error: "user_id required" }, 400);
 
       if (is_manager) {
-        await admin.from("user_roles").upsert({ user_id, role: "manager" }, { onConflict: "user_id,role" });
+        await admin
+          .from("user_roles")
+          .upsert({ user_id, role: "manager" }, { onConflict: "user_id,role" });
       } else {
-        await admin.from("user_roles").delete().eq("user_id", user_id).eq("role", "manager");
+        await admin
+          .from("user_roles")
+          .delete()
+          .eq("user_id", user_id)
+          .eq("role", "manager");
       }
 
       const { data: targetAuth } = await admin.auth.admin.getUserById(user_id);
@@ -799,16 +1122,27 @@ serve(async (req) => {
       const { user_id } = payload;
       if (!user_id) return json({ error: "user_id required" }, 400);
 
-      const { data: targetAuth, error: getErr } = await admin.auth.admin.getUserById(user_id);
-      if (getErr || !targetAuth?.user?.email) return json({ error: "Usuario no encontrado" }, 404);
+      const { data: targetAuth, error: getErr } =
+        await admin.auth.admin.getUserById(user_id);
+      if (getErr || !targetAuth?.user?.email)
+        return json({ error: "Usuario no encontrado" }, 404);
       const targetEmail = targetAuth.user.email;
 
       // Derive redirect URL from request origin (falls back to env SITE_URL)
-      const origin = req.headers.get("origin") || req.headers.get("referer") || Deno.env.get("SITE_URL") || "";
-      const cleanOrigin = origin.replace(/\/$/, "").replace(/\/dashboard.*$/, "");
+      const origin =
+        req.headers.get("origin") ||
+        req.headers.get("referer") ||
+        Deno.env.get("SITE_URL") ||
+        "";
+      const cleanOrigin = origin
+        .replace(/\/$/, "")
+        .replace(/\/dashboard.*$/, "");
       const redirectTo = `${cleanOrigin}/reset-password`;
 
-      const { error: resetErr } = await admin.auth.resetPasswordForEmail(targetEmail, { redirectTo });
+      const { error: resetErr } = await admin.auth.resetPasswordForEmail(
+        targetEmail,
+        { redirectTo },
+      );
       if (resetErr) return json({ error: resetErr.message }, 500);
 
       await audit({
@@ -825,8 +1159,10 @@ serve(async (req) => {
       const { user_id, send_email } = payload;
       if (!user_id) return json({ error: "user_id required" }, 400);
 
-      const { data: targetAuth, error: getErr } = await admin.auth.admin.getUserById(user_id);
-      if (getErr || !targetAuth?.user) return json({ error: "Usuario no encontrado" }, 404);
+      const { data: targetAuth, error: getErr } =
+        await admin.auth.admin.getUserById(user_id);
+      if (getErr || !targetAuth?.user)
+        return json({ error: "Usuario no encontrado" }, 404);
       const targetEmail = targetAuth.user.email || "";
 
       // Generate a strong temporary password: 14 chars, includes upper/lower/digit/symbol
@@ -858,9 +1194,18 @@ serve(async (req) => {
       let emailError: string | null = null;
       if (send_email && targetEmail) {
         try {
-          const { data: profile } = await admin.from("profiles").select("display_name, language").eq("user_id", user_id).single();
-          const name = profile?.display_name || targetEmail.split("@")[0] || "Usuario";
-          const emailData = temporaryPasswordEmail({ name, password: tempPassword, lang: profile?.language });
+          const { data: profile } = await admin
+            .from("profiles")
+            .select("display_name, language")
+            .eq("user_id", user_id)
+            .single();
+          const name =
+            profile?.display_name || targetEmail.split("@")[0] || "Usuario";
+          const emailData = temporaryPasswordEmail({
+            name,
+            password: tempPassword,
+            lang: profile?.language,
+          });
           const messageId = crypto.randomUUID();
           await admin.from("email_send_log").insert({
             message_id: messageId,
@@ -885,10 +1230,15 @@ serve(async (req) => {
             },
           });
           emailSent = true;
-          console.log(`[ADMIN] Enqueued temporary_password email to ${targetEmail}`);
+          console.log(
+            `[ADMIN] Enqueued temporary_password email to ${targetEmail}`,
+          );
         } catch (err) {
           emailError = err instanceof Error ? err.message : String(err);
-          console.error("[ADMIN] Failed to enqueue temporary password email:", err);
+          console.error(
+            "[ADMIN] Failed to enqueue temporary password email:",
+            err,
+          );
         }
       }
 
@@ -899,7 +1249,13 @@ serve(async (req) => {
         details: { method: "admin_generated", email_sent: emailSent },
       });
 
-      return json({ success: true, temporary_password: tempPassword, email: targetEmail, email_sent: emailSent, email_error: emailError });
+      return json({
+        success: true,
+        temporary_password: tempPassword,
+        email: targetEmail,
+        email_sent: emailSent,
+        email_error: emailError,
+      });
     }
 
     if (action === "get_all_works") {
@@ -911,19 +1267,28 @@ serve(async (req) => {
 
       // Only fetch the full email map when we need to search/sort by it
       const needsAllEmails = !!search || sortBy === "user_email";
-      const emailsMap: Record<string, string> = needsAllEmails ? await getAllEmailsMap() : {};
+      const emailsMap: Record<string, string> = needsAllEmails
+        ? await getAllEmailsMap()
+        : {};
 
       // If sorting/searching by email, we need to pre-resolve user_ids
       let userIdFilter: string[] | null = null;
       if (search) {
         const matchingUserIds = Object.entries(emailsMap)
-          .filter(([, em]) => (em || "").toLowerCase().includes(search.toLowerCase()))
+          .filter(([, em]) =>
+            (em || "").toLowerCase().includes(search.toLowerCase()),
+          )
           .map(([uid]) => uid);
         const { data: nameMatches } = await admin
           .from("profiles")
           .select("user_id")
           .ilike("display_name", `%${search}%`);
-        userIdFilter = [...new Set([...matchingUserIds, ...(nameMatches || []).map((p: any) => p.user_id)])];
+        userIdFilter = [
+          ...new Set([
+            ...matchingUserIds,
+            ...(nameMatches || []).map((p: any) => p.user_id),
+          ]),
+        ];
       }
 
       const buildBase = () => {
@@ -967,9 +1332,14 @@ serve(async (req) => {
         total = count || 0;
 
         const userIdsAll = [...new Set(all.map((w: any) => w.user_id))];
-        const { data: profilesAll } = await admin.from("profiles").select("user_id, display_name").in("user_id", userIdsAll);
+        const { data: profilesAll } = await admin
+          .from("profiles")
+          .select("user_id, display_name")
+          .in("user_id", userIdsAll);
         const namesMapAll: Record<string, string> = {};
-        (profilesAll || []).forEach((p: any) => { namesMapAll[p.user_id] = p.display_name || ""; });
+        (profilesAll || []).forEach((p: any) => {
+          namesMapAll[p.user_id] = p.display_name || "";
+        });
 
         const keyFn = (w: any) =>
           sortBy === "user_email"
@@ -977,7 +1347,8 @@ serve(async (req) => {
             : (namesMapAll[w.user_id] || "").toLowerCase();
 
         all.sort((a: any, b: any) => {
-          const ka = keyFn(a); const kb = keyFn(b);
+          const ka = keyFn(a);
+          const kb = keyFn(b);
           if (ka < kb) return sortDir === "asc" ? -1 : 1;
           if (ka > kb) return sortDir === "asc" ? 1 : -1;
           return 0;
@@ -987,11 +1358,18 @@ serve(async (req) => {
 
       const userIds = [...new Set(works.map((w: any) => w.user_id))];
       const [{ data: profiles }, pageEmailsMap] = await Promise.all([
-        admin.from("profiles").select("user_id, display_name").in("user_id", userIds),
-        needsAllEmails ? Promise.resolve(emailsMap) : getEmailsForUserIds(userIds as string[]),
+        admin
+          .from("profiles")
+          .select("user_id, display_name")
+          .in("user_id", userIds),
+        needsAllEmails
+          ? Promise.resolve(emailsMap)
+          : getEmailsForUserIds(userIds as string[]),
       ]);
       const namesMap: Record<string, string> = {};
-      (profiles || []).forEach((p: any) => { namesMap[p.user_id] = p.display_name; });
+      (profiles || []).forEach((p: any) => {
+        namesMap[p.user_id] = p.display_name;
+      });
 
       const enriched = works.map((w: any) => ({
         ...w,
@@ -1003,27 +1381,60 @@ serve(async (req) => {
     }
 
     if (action === "get_metrics") {
-      const { count: total_users } = await admin.from("profiles").select("*", { count: "exact", head: true });
+      const { count: total_users } = await admin
+        .from("profiles")
+        .select("*", { count: "exact", head: true });
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString();
-      const { count: new_users_7d } = await admin.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", sevenDaysAgo);
-      const { count: total_works } = await admin.from("works").select("*", { count: "exact", head: true });
-      const { count: works_registered } = await admin.from("works").select("*", { count: "exact", head: true }).eq("status", "registered");
-      const { count: works_processing } = await admin.from("works").select("*", { count: "exact", head: true }).eq("status", "processing");
-      const { count: works_failed } = await admin.from("works").select("*", { count: "exact", head: true }).eq("status", "failed");
+      const { count: new_users_7d } = await admin
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", sevenDaysAgo);
+      const { count: total_works } = await admin
+        .from("works")
+        .select("*", { count: "exact", head: true });
+      const { count: works_registered } = await admin
+        .from("works")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "registered");
+      const { count: works_processing } = await admin
+        .from("works")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "processing");
+      const { count: works_failed } = await admin
+        .from("works")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "failed");
 
-      const { data: posTx } = await admin.from("credit_transactions").select("amount").gt("amount", 0);
-      const total_credits_sold = (posTx || []).reduce((s: number, t: any) => s + t.amount, 0);
-      const { data: negTx } = await admin.from("credit_transactions").select("amount").lt("amount", 0);
-      const total_credits_consumed = Math.abs((negTx || []).reduce((s: number, t: any) => s + t.amount, 0));
+      const { data: posTx } = await admin
+        .from("credit_transactions")
+        .select("amount")
+        .gt("amount", 0);
+      const total_credits_sold = (posTx || []).reduce(
+        (s: number, t: any) => s + t.amount,
+        0,
+      );
+      const { data: negTx } = await admin
+        .from("credit_transactions")
+        .select("amount")
+        .lt("amount", 0);
+      const total_credits_consumed = Math.abs(
+        (negTx || []).reduce((s: number, t: any) => s + t.amount, 0),
+      );
 
-      const { data: allProfiles } = await admin.from("profiles").select("subscription_plan");
+      const { data: allProfiles } = await admin
+        .from("profiles")
+        .select("subscription_plan");
       const plan_breakdown: Record<string, number> = {};
       (allProfiles || []).forEach((p: any) => {
-        plan_breakdown[p.subscription_plan] = (plan_breakdown[p.subscription_plan] || 0) + 1;
+        plan_breakdown[p.subscription_plan] =
+          (plan_breakdown[p.subscription_plan] || 0) + 1;
       });
 
       const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
-      const { data: recentWorks } = await admin.from("works").select("created_at").gte("created_at", thirtyDaysAgo);
+      const { data: recentWorks } = await admin
+        .from("works")
+        .select("created_at")
+        .gte("created_at", thirtyDaysAgo);
       const works_per_day: Record<string, number> = {};
       (recentWorks || []).forEach((w: any) => {
         const day = w.created_at.slice(0, 10);
@@ -1046,10 +1457,16 @@ serve(async (req) => {
 
     if (action === "get_all_transactions") {
       const offset = payload.offset || 0;
-      let query = admin.from("credit_transactions").select("*").order("created_at", { ascending: false }).range(offset, offset + 49);
+      let query = admin
+        .from("credit_transactions")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(offset, offset + 49);
       if (payload.type_filter) query = query.eq("type", payload.type_filter);
-      if (payload.date_from) query = query.gte("created_at", payload.date_from + "T00:00:00Z");
-      if (payload.date_to) query = query.lte("created_at", payload.date_to + "T23:59:59Z");
+      if (payload.date_from)
+        query = query.gte("created_at", payload.date_from + "T00:00:00Z");
+      if (payload.date_to)
+        query = query.lte("created_at", payload.date_to + "T23:59:59Z");
 
       const { data: txs, error } = await query;
       if (error) return json({ error: error.message }, 500);
@@ -1057,20 +1474,33 @@ serve(async (req) => {
       const userIds = [...new Set((txs || []).map((t: any) => t.user_id))];
       const [{ data: authList }, { data: profiles }] = await Promise.all([
         admin.auth.admin.listUsers({ perPage: 1000 }),
-        admin.from("profiles").select("user_id, display_name").in("user_id", userIds),
+        admin
+          .from("profiles")
+          .select("user_id, display_name")
+          .in("user_id", userIds),
       ]);
       const emailsMap: Record<string, string> = {};
-      (authList?.users || []).forEach((u: any) => { if (userIds.includes(u.id) && u.email) emailsMap[u.id] = u.email; });
+      (authList?.users || []).forEach((u: any) => {
+        if (userIds.includes(u.id) && u.email) emailsMap[u.id] = u.email;
+      });
       // For users not in first page, fetch individually
-      const missing = (userIds as string[]).filter((id: string) => !emailsMap[id]);
-      await Promise.all(missing.map(async (id: string) => {
-        try {
-          const { data } = await admin.auth.admin.getUserById(id);
-          if (data?.user?.email) emailsMap[id] = data.user.email;
-        } catch { /* ignore */ }
-      }));
+      const missing = (userIds as string[]).filter(
+        (id: string) => !emailsMap[id],
+      );
+      await Promise.all(
+        missing.map(async (id: string) => {
+          try {
+            const { data } = await admin.auth.admin.getUserById(id);
+            if (data?.user?.email) emailsMap[id] = data.user.email;
+          } catch {
+            /* ignore */
+          }
+        }),
+      );
       const namesMap: Record<string, string> = {};
-      (profiles || []).forEach((p: any) => { if (p.display_name) namesMap[p.user_id] = p.display_name; });
+      (profiles || []).forEach((p: any) => {
+        if (p.display_name) namesMap[p.user_id] = p.display_name;
+      });
       const enriched = (txs || []).map((t: any) => ({
         ...t,
         email: emailsMap[t.user_id] || "",
@@ -1080,7 +1510,9 @@ serve(async (req) => {
     }
 
     if (action === "search_users_by_email") {
-      const q = String(payload.query || "").trim().toLowerCase();
+      const q = String(payload.query || "")
+        .trim()
+        .toLowerCase();
       if (q.length < 2) return json({ users: [] });
       const limit = Math.min(payload.limit || 10, 25);
 
@@ -1096,15 +1528,30 @@ serve(async (req) => {
         for (const p of profMatches || []) {
           try {
             const { data } = await admin.auth.admin.getUserById(p.user_id);
-            if (data?.user) matches[p.user_id] = { id: p.user_id, email: data.user.email || "" };
-          } catch { /* ignore */ }
+            if (data?.user)
+              matches[p.user_id] = {
+                id: p.user_id,
+                email: data.user.email || "",
+              };
+          } catch {
+            /* ignore */
+          }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       // 2) Search auth users by email (paginated)
       const perPage = 1000;
-      for (let page = 1; page <= 50 && Object.keys(matches).length < limit; page++) {
-        const { data, error: listErr } = await admin.auth.admin.listUsers({ page, perPage });
+      for (
+        let page = 1;
+        page <= 50 && Object.keys(matches).length < limit;
+        page++
+      ) {
+        const { data, error: listErr } = await admin.auth.admin.listUsers({
+          page,
+          perPage,
+        });
         if (listErr) break;
         const users = data?.users || [];
         for (const u of users as Array<{ id: string; email?: string }>) {
@@ -1119,11 +1566,20 @@ serve(async (req) => {
 
       const ids = Object.keys(matches);
       if (ids.length === 0) return json({ users: [] });
-      const { data: profiles } = await admin.from("profiles").select("*").in("user_id", ids);
+      const { data: profiles } = await admin
+        .from("profiles")
+        .select("*")
+        .in("user_id", ids);
       const profileMap: Record<string, any> = {};
-      (profiles || []).forEach((p: any) => { profileMap[p.user_id] = p; });
+      (profiles || []).forEach((p: any) => {
+        profileMap[p.user_id] = p;
+      });
       const users = ids.map((id) => ({
-        ...(profileMap[id] || { user_id: id, available_credits: 0, display_name: null }),
+        ...(profileMap[id] || {
+          user_id: id,
+          available_credits: 0,
+          display_name: null,
+        }),
         email: matches[id].email,
       }));
       return json({ users });
@@ -1137,11 +1593,23 @@ serve(async (req) => {
       try {
         found = await findAuthUserByEmail(String(email));
       } catch (listErr) {
-        return json({ error: listErr instanceof Error ? listErr.message : "Error searching user" }, 500);
+        return json(
+          {
+            error:
+              listErr instanceof Error
+                ? listErr.message
+                : "Error searching user",
+          },
+          500,
+        );
       }
       if (!found) return json({ user: null, not_found: true });
 
-      const { data: profile, error: profileErr } = await admin.from("profiles").select("*").eq("user_id", found.id).maybeSingle();
+      const { data: profile, error: profileErr } = await admin
+        .from("profiles")
+        .select("*")
+        .eq("user_id", found.id)
+        .maybeSingle();
       if (profileErr) return json({ error: profileErr.message }, 500);
       if (!profile) return json({ error: "Profile not found" }, 404);
       return json({ user: { ...profile, email: found.email } });
@@ -1164,12 +1632,26 @@ serve(async (req) => {
         let roleUserIds: Set<string> | null = null;
         if (roleFilter) {
           if (roleFilter === "user") {
-            const { data: nonUsers } = await admin.from("user_roles").select("user_id").in("role", ["admin", "manager"]);
-            const exclude = new Set((nonUsers || []).map((r: any) => r.user_id));
-            const { data: allP } = await admin.from("profiles").select("user_id");
-            roleUserIds = new Set((allP || []).map((p: any) => p.user_id).filter((id: string) => !exclude.has(id)));
+            const { data: nonUsers } = await admin
+              .from("user_roles")
+              .select("user_id")
+              .in("role", ["admin", "manager"]);
+            const exclude = new Set(
+              (nonUsers || []).map((r: any) => r.user_id),
+            );
+            const { data: allP } = await admin
+              .from("profiles")
+              .select("user_id");
+            roleUserIds = new Set(
+              (allP || [])
+                .map((p: any) => p.user_id)
+                .filter((id: string) => !exclude.has(id)),
+            );
           } else {
-            const { data: rs } = await admin.from("user_roles").select("user_id").eq("role", roleFilter);
+            const { data: rs } = await admin
+              .from("user_roles")
+              .select("user_id")
+              .eq("role", roleFilter);
             roleUserIds = new Set((rs || []).map((r: any) => r.user_id));
           }
         }
@@ -1181,47 +1663,80 @@ serve(async (req) => {
           try {
             const perPage = 1000;
             for (let pageIdx = 1; pageIdx <= 10; pageIdx++) {
-              const { data: pageData } = await admin.auth.admin.listUsers({ page: pageIdx, perPage });
+              const { data: pageData } = await admin.auth.admin.listUsers({
+                page: pageIdx,
+                perPage,
+              });
               const usersPage = (pageData as any)?.users || [];
               for (const au of usersPage) {
                 const em = (au?.email || "").toLowerCase();
-                const meta = ((au?.user_metadata?.display_name || au?.user_metadata?.full_name || "") as string).toLowerCase();
-                if (em.includes(search) || meta.includes(search)) searchUserIds.add(au.id);
+                const meta = (
+                  (au?.user_metadata?.display_name ||
+                    au?.user_metadata?.full_name ||
+                    "") as string
+                ).toLowerCase();
+                if (em.includes(search) || meta.includes(search))
+                  searchUserIds.add(au.id);
               }
               if (usersPage.length < perPage) break;
             }
-          } catch { /* ignore */ }
+          } catch {
+            /* ignore */
+          }
         }
 
-        let query = admin.from("profiles").select("*").order("created_at", { ascending: false });
+        let query = admin
+          .from("profiles")
+          .select("*")
+          .order("created_at", { ascending: false });
 
         if (kycFilter === "initiated" || kycFilter === "created") {
-          const { data: sigUsers } = await admin.from("ibs_signatures").select("user_id").eq("status", kycFilter);
-          const ids = Array.from(new Set((sigUsers || []).map((r: any) => r.user_id)));
-          if (ids.length === 0) return json({ csv: "email,display_name,plan,credits,kyc_status,is_blocked,created_at" });
+          const { data: sigUsers } = await admin
+            .from("ibs_signatures")
+            .select("user_id")
+            .eq("status", kycFilter);
+          const ids = Array.from(
+            new Set((sigUsers || []).map((r: any) => r.user_id)),
+          );
+          if (ids.length === 0)
+            return json({
+              csv: "email,display_name,plan,credits,kyc_status,is_blocked,created_at",
+            });
           query = query.in("user_id", ids).neq("kyc_status", "verified");
         } else if (kycFilter) {
           query = query.eq("kyc_status", kycFilter);
         }
         if (planFilter) {
-          if (planFilter === "Free") query = query.eq("subscription_plan", "Free");
-          else if (planFilter === "Annual") query = query.eq("subscription_plan", "Annual").is("subscription_tier", null);
-          else if (planFilter === "Monthly") query = query.eq("subscription_tier", "monthly");
-          else if (planFilter.startsWith("annual_")) query = query.eq("subscription_tier", planFilter);
+          if (planFilter === "Free")
+            query = query.eq("subscription_plan", "Free");
+          else if (planFilter === "Annual")
+            query = query
+              .eq("subscription_plan", "Annual")
+              .is("subscription_tier", null);
+          else if (planFilter === "Monthly")
+            query = query.eq("subscription_tier", "monthly");
+          else if (planFilter.startsWith("annual_"))
+            query = query.eq("subscription_tier", planFilter);
           else query = query.eq("subscription_plan", planFilter);
         }
-        if (stripeFilter === "linked") query = query.not("stripe_customer_id", "is", null);
-        if (stripeFilter === "unlinked") query = query.is("stripe_customer_id", null);
+        if (stripeFilter === "linked")
+          query = query.not("stripe_customer_id", "is", null);
+        if (stripeFilter === "unlinked")
+          query = query.is("stripe_customer_id", null);
         if (statusFilter === "blocked") query = query.eq("is_blocked", true);
-        if (statusFilter === "active") query = query.or("is_blocked.is.null,is_blocked.eq.false");
+        if (statusFilter === "active")
+          query = query.or("is_blocked.is.null,is_blocked.eq.false");
 
         const { data: profiles } = await query;
         let filtered = profiles || [];
-        if (roleUserIds) filtered = filtered.filter((p: any) => roleUserIds!.has(p.user_id));
+        if (roleUserIds)
+          filtered = filtered.filter((p: any) => roleUserIds!.has(p.user_id));
         if (searchUserIds) {
           const s = search;
-          filtered = filtered.filter((p: any) =>
-            searchUserIds!.has(p.user_id) || (p.display_name || "").toLowerCase().includes(s),
+          filtered = filtered.filter(
+            (p: any) =>
+              searchUserIds!.has(p.user_id) ||
+              (p.display_name || "").toLowerCase().includes(s),
           );
         }
 
@@ -1233,45 +1748,65 @@ serve(async (req) => {
           return p.subscription_plan || "";
         };
 
-        const header = "email,display_name,plan,credits,kyc_status,is_blocked,created_at";
-        const rows = filtered.map((p: any) =>
-          `${emailsMap[p.user_id] || ""},${(p.display_name || "").replace(/,/g, " ")},${planLabel(p)},${p.available_credits},${p.kyc_status},${p.is_blocked || false},${p.created_at}`
+        const header =
+          "email,display_name,plan,credits,kyc_status,is_blocked,created_at";
+        const rows = filtered.map(
+          (p: any) =>
+            `${emailsMap[p.user_id] || ""},${(p.display_name || "").replace(/,/g, " ")},${planLabel(p)},${p.available_credits},${p.kyc_status},${p.is_blocked || false},${p.created_at}`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
 
       if (dataset === "transactions") {
-        const { data: txs } = await admin.from("credit_transactions").select("*").order("created_at", { ascending: false }).limit(1000);
+        const { data: txs } = await admin
+          .from("credit_transactions")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(1000);
         const emailsMap = await getAllEmailsMap();
         const header = "email,amount,type,description,created_at";
-        const rows = (txs || []).map((t: any) =>
-          `${emailsMap[t.user_id] || ""},${t.amount},${t.type},"${(t.description || "").replace(/"/g, '""')}",${t.created_at}`
+        const rows = (txs || []).map(
+          (t: any) =>
+            `${emailsMap[t.user_id] || ""},${t.amount},${t.type},"${(t.description || "").replace(/"/g, '""')}",${t.created_at}`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
 
       if (dataset === "works") {
-        const { data: works } = await admin.from("works").select("*").order("created_at", { ascending: false }).limit(1000);
+        const { data: works } = await admin
+          .from("works")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(1000);
         const emailsMap = await getAllEmailsMap();
         const header = "email,title,type,status,blockchain_hash,created_at";
-        const rows = (works || []).map((w: any) =>
-          `${emailsMap[w.user_id] || ""},"${(w.title || "").replace(/"/g, '""')}",${w.type},${w.status},${w.blockchain_hash || ""},${w.created_at}`
+        const rows = (works || []).map(
+          (w: any) =>
+            `${emailsMap[w.user_id] || ""},"${(w.title || "").replace(/"/g, '""')}",${w.type},${w.status},${w.blockchain_hash || ""},${w.created_at}`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
 
       if (dataset === "audit") {
-        const { data: logs } = await admin.from("audit_log").select("*").order("created_at", { ascending: false }).limit(1000);
+        const { data: logs } = await admin
+          .from("audit_log")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(1000);
         const header = "admin_email,action,target_email,details,created_at";
-        const rows = (logs || []).map((l: any) =>
-          `${l.admin_email},${l.action},${l.target_email || ""},"${JSON.stringify(l.details || {}).replace(/"/g, '""')}",${l.created_at}`
+        const rows = (logs || []).map(
+          (l: any) =>
+            `${l.admin_email},${l.action},${l.target_email || ""},"${JSON.stringify(l.details || {}).replace(/"/g, '""')}",${l.created_at}`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
       if (dataset === "revenue") {
         const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-        if (!stripeKey) return json({ error: "STRIPE_SECRET_KEY not set" }, 500);
-        const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+        if (!stripeKey)
+          return json({ error: "STRIPE_SECRET_KEY not set" }, 500);
+        const stripe = new Stripe(stripeKey, {
+          apiVersion: "2025-08-27.basil",
+        });
 
         const charges: any[] = [];
         for await (const charge of stripe.charges.list({ limit: 100 })) {
@@ -1280,8 +1815,9 @@ serve(async (req) => {
         }
 
         const header = "date,amount,currency,status,customer,description";
-        const rows = charges.map((c: any) =>
-          `${new Date(c.created * 1000).toISOString().slice(0, 10)},${(c.amount / 100).toFixed(2)},${c.currency},${c.status},${c.customer || ""},\"${(c.description || "").replace(/"/g, '""')}\"`
+        const rows = charges.map(
+          (c: any) =>
+            `${new Date(c.created * 1000).toISOString().slice(0, 10)},${(c.amount / 100).toFixed(2)},${c.currency},${c.status},${c.customer || ""},\"${(c.description || "").replace(/"/g, '""')}\"`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
@@ -1290,7 +1826,10 @@ serve(async (req) => {
     }
 
     if (action === "get_admins") {
-      const { data: adminRoles } = await admin.from("user_roles").select("*").eq("role", "admin");
+      const { data: adminRoles } = await admin
+        .from("user_roles")
+        .select("*")
+        .eq("role", "admin");
       const emailsMap = await getAllEmailsMap();
       const admins = (adminRoles || []).map((r: any) => ({
         user_id: r.user_id,
@@ -1302,8 +1841,13 @@ serve(async (req) => {
 
     if (action === "get_audit_log") {
       const offset = payload.offset || 0;
-      let query = admin.from("audit_log").select("*").order("created_at", { ascending: false }).range(offset, offset + 49);
-      if (payload.action_filter) query = query.eq("action", payload.action_filter);
+      let query = admin
+        .from("audit_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(offset, offset + 49);
+      if (payload.action_filter)
+        query = query.eq("action", payload.action_filter);
 
       const { data: logs, error } = await query;
       if (error) return json({ error: error.message }, 500);
@@ -1317,13 +1861,17 @@ serve(async (req) => {
       const [exhausted, stale, resolved_24h] = await Promise.all([
         admin
           .from("ibs_sync_queue")
-          .select("id, work_id, user_id, ibs_evidence_id, retry_count, max_retries, error_detail, created_at, updated_at")
+          .select(
+            "id, work_id, user_id, ibs_evidence_id, retry_count, max_retries, error_detail, created_at, updated_at",
+          )
           .eq("status", "exhausted")
           .order("updated_at", { ascending: false })
           .limit(20),
         admin
           .from("ibs_sync_queue")
-          .select("id, work_id, user_id, ibs_evidence_id, retry_count, max_retries, status, created_at, updated_at")
+          .select(
+            "id, work_id, user_id, ibs_evidence_id, retry_count, max_retries, status, created_at, updated_at",
+          )
           .in("status", ["waiting", "retrying"])
           .lt("created_at", thirtyMinAgo)
           .order("created_at", { ascending: true })
@@ -1332,11 +1880,17 @@ serve(async (req) => {
           .from("ibs_sync_queue")
           .select("*", { count: "exact", head: true })
           .eq("status", "resolved")
-          .gte("updated_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+          .gte(
+            "updated_at",
+            new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          ),
       ]);
 
       const allItems = [
-        ...(exhausted.data || []).map((r: any) => ({ ...r, status: "exhausted" })),
+        ...(exhausted.data || []).map((r: any) => ({
+          ...r,
+          status: "exhausted",
+        })),
         ...(stale.data || []),
       ];
 
@@ -1348,7 +1902,9 @@ serve(async (req) => {
           .select("id, title, type")
           .in("id", workIds);
         const workMap: Record<string, any> = {};
-        (works || []).forEach((w: any) => { workMap[w.id] = w; });
+        (works || []).forEach((w: any) => {
+          workMap[w.id] = w;
+        });
         itemsWithTitle = allItems.map((r: any) => ({
           ...r,
           work_title: workMap[r.work_id]?.title || "Obra desconocida",
@@ -1366,7 +1922,8 @@ serve(async (req) => {
 
     // ── get_saas_metrics ──────────────────────────────────────────
     if (action === "get_saas_metrics") {
-      const { periodType, weekStart, month, year, force_refresh } = payload || {};
+      const { periodType, weekStart, month, year, force_refresh } =
+        payload || {};
       const now = new Date();
 
       // ── Cache layer (5 min TTL per filter combination) ──
@@ -1383,13 +1940,24 @@ serve(async (req) => {
           if (cacheRow?.value && cacheRow?.updated_at) {
             const age = Date.now() - new Date(cacheRow.updated_at).getTime();
             if (age < CACHE_TTL_MS) {
-              return json({ ...(cacheRow.value as any), _cached: true, _cache_age_ms: age });
+              return json({
+                ...(cacheRow.value as any),
+                _cached: true,
+                _cache_age_ms: age,
+              });
             }
             if (age < STALE_CACHE_TTL_MS) {
-              return json({ ...(cacheRow.value as any), _cached: true, _stale: true, _cache_age_ms: age });
+              return json({
+                ...(cacheRow.value as any),
+                _cached: true,
+                _stale: true,
+                _cache_age_ms: age,
+              });
             }
           }
-        } catch { /* cache miss is non-fatal */ }
+        } catch {
+          /* cache miss is non-fatal */
+        }
       }
 
       const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
@@ -1412,12 +1980,20 @@ serve(async (req) => {
         const y = parseInt(year);
         filterStart = new Date(y, 0, 1).toISOString();
         filterEnd = new Date(y + 1, 0, 1).toISOString();
-      } else if ((periodType === "month" || !periodType) && month && month !== "all" && year && year !== "all") {
-        const y = parseInt(year), m = parseInt(month);
+      } else if (
+        (periodType === "month" || !periodType) &&
+        month &&
+        month !== "all" &&
+        year &&
+        year !== "all"
+      ) {
+        const y = parseInt(year),
+          m = parseInt(month);
         filterStart = new Date(y, m - 1, 1).toISOString();
         filterEnd = new Date(y, m, 1).toISOString();
       } else if (month && month !== "all" && (!year || year === "all")) {
-        const y = now.getFullYear(), m = parseInt(month);
+        const y = now.getFullYear(),
+          m = parseInt(month);
         filterStart = new Date(y, m - 1, 1).toISOString();
         filterEnd = new Date(y, m, 1).toISOString();
       } else if (year && year !== "all") {
@@ -1442,7 +2018,10 @@ serve(async (req) => {
       let stripeMonthlyRevenue = 0;
       let totalStripeRevenue = 0;
       let oneTimeRevenue = 0;
-      const stripePlanBreakdown: Record<string, { count: number; mrr: number }> = {};
+      const stripePlanBreakdown: Record<
+        string,
+        { count: number; mrr: number }
+      > = {};
       let mrrEvolution: { month: string; mrr: number }[] = [];
       let cancelledSubs: any[] = [];
       let allCancelledSubs: any[] = [];
@@ -1469,7 +2048,9 @@ serve(async (req) => {
               staleStripeBundle = scRow.value;
             }
           }
-        } catch { /* cache miss is non-fatal */ }
+        } catch {
+          /* cache miss is non-fatal */
+        }
         if (!stripeBundle && staleStripeBundle) {
           stripeBundle = staleStripeBundle;
         }
@@ -1491,43 +2072,56 @@ serve(async (req) => {
                 const batch = await listFn(params);
                 out.push(...batch.data);
                 if (batch.data.length === 0) break;
-                if (shouldStop && shouldStop(batch.data[batch.data.length - 1])) break;
+                if (shouldStop && shouldStop(batch.data[batch.data.length - 1]))
+                  break;
                 hasMore = batch.has_more;
                 startingAfter = batch.data[batch.data.length - 1].id;
               }
               return out;
             };
 
-            const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
-            const twelveMonthsAgoTs = Math.floor(new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime() / 1000);
+            const lastMonthTs = Math.floor(
+              new Date(lastMonthStart).getTime() / 1000,
+            );
+            const twelveMonthsAgoTs = Math.floor(
+              new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime() /
+                1000,
+            );
 
             // Run the heavy Stripe queries in parallel, but never let Stripe block the dashboard.
             // Helper: fetch terminated subs for a given status (canceled, unpaid, incomplete_expired, paused)
             // and normalize to a common shape. Stripe sets `ended_at` when a sub terminates for any reason
             // (user cancel, payment failure, dunning exhaustion, expiration, pause, etc.).
-            const fetchTerminated = (status: string) => paginateAll(
-              (p) => stripe.subscriptions.list(p),
-              { status },
-              (last) => {
-                const ts = last.ended_at || last.canceled_at;
-                return ts && ts < twelveMonthsAgoTs;
-              },
-            );
+            const fetchTerminated = (status: string) =>
+              paginateAll(
+                (p) => stripe.subscriptions.list(p),
+                { status },
+                (last) => {
+                  const ts = last.ended_at || last.canceled_at;
+                  return ts && ts < twelveMonthsAgoTs;
+                },
+              );
 
-            const [allSubs, canceledRaw, unpaidRaw, incompleteExpiredRaw, pausedRaw, allCharges] = await withTimeout(
+            const [
+              allSubs,
+              canceledRaw,
+              unpaidRaw,
+              incompleteExpiredRaw,
+              pausedRaw,
+              allCharges,
+            ] = await withTimeout(
               Promise.all([
-                paginateAll(
-                  (p) => stripe.subscriptions.list(p),
-                  { status: "active", expand: ["data.items.data.price"] },
-                ),
+                paginateAll((p) => stripe.subscriptions.list(p), {
+                  status: "active",
+                  expand: ["data.items.data.price"],
+                }),
                 fetchTerminated("canceled"),
                 fetchTerminated("unpaid"),
                 fetchTerminated("incomplete_expired"),
                 fetchTerminated("paused").catch(() => []), // paused only on some accounts
-                paginateAll(
-                  (p) => stripe.charges.list(p),
-                  { created: { gte: twelveMonthsAgoTs } },
-                ),
+                paginateAll((p) => stripe.charges.list(p), {
+                  created: { gte: twelveMonthsAgoTs },
+                }),
               ]),
               STRIPE_FETCH_TIMEOUT_MS,
               "stripe_metrics_timeout",
@@ -1562,7 +2156,10 @@ serve(async (req) => {
             const productIds = new Set<string>();
             for (const sub of allSubs) {
               for (const item of sub.items.data) {
-                const prodId = typeof item.price.product === "string" ? item.price.product : item.price.product?.id;
+                const prodId =
+                  typeof item.price.product === "string"
+                    ? item.price.product
+                    : item.price.product?.id;
                 if (prodId) productIds.add(prodId);
               }
             }
@@ -1574,7 +2171,9 @@ serve(async (req) => {
                     try {
                       const prod = await stripe.products.retrieve(pid);
                       productNames[pid] = prod.name || pid;
-                    } catch { productNames[pid] = pid; }
+                    } catch {
+                      productNames[pid] = pid;
+                    }
                   }),
                 ),
                 3_000,
@@ -1586,30 +2185,69 @@ serve(async (req) => {
 
             // Slim down: keep only fields we actually use, to keep cache row small
             const slimSubs = allSubs.map((s: any) => ({
-              items: { data: s.items.data.map((it: any) => ({ price: { unit_amount: it.price.unit_amount, recurring: it.price.recurring, nickname: it.price.nickname, product: typeof it.price.product === "string" ? it.price.product : it.price.product?.id } })) },
+              items: {
+                data: s.items.data.map((it: any) => ({
+                  price: {
+                    unit_amount: it.price.unit_amount,
+                    recurring: it.price.recurring,
+                    nickname: it.price.nickname,
+                    product:
+                      typeof it.price.product === "string"
+                        ? it.price.product
+                        : it.price.product?.id,
+                  },
+                })),
+              },
             }));
-            const slimCancelled = cancelledSubsRaw.map((s: any) => ({ canceled_at: s.ended_at, reason: s.reason, status: s.status }));
+            const slimCancelled = cancelledSubsRaw.map((s: any) => ({
+              canceled_at: s.ended_at,
+              reason: s.reason,
+              status: s.status,
+            }));
             const slimCharges = allCharges
               .filter((c: any) => c.status === "succeeded" && !c.refunded)
-              .map((c: any) => ({ created: c.created, amount: c.amount, invoice: !!c.invoice }));
+              .map((c: any) => ({
+                created: c.created,
+                amount: c.amount,
+                invoice: !!c.invoice,
+              }));
 
-            stripeBundle = { allSubs: slimSubs, cancelledSubsRaw: slimCancelled, allCharges: slimCharges, productNames };
+            stripeBundle = {
+              allSubs: slimSubs,
+              cancelledSubsRaw: slimCancelled,
+              allCharges: slimCharges,
+              productNames,
+            };
 
             // Best-effort cache write
             try {
               await admin
                 .from("app_settings")
-                .upsert({ key: STRIPE_CACHE_KEY, value: stripeBundle, updated_at: new Date().toISOString() }, { onConflict: "key" });
-            } catch { /* non-fatal */ }
+                .upsert(
+                  {
+                    key: STRIPE_CACHE_KEY,
+                    value: stripeBundle,
+                    updated_at: new Date().toISOString(),
+                  },
+                  { onConflict: "key" },
+                );
+            } catch {
+              /* non-fatal */
+            }
           }
 
           const allSubs = stripeBundle.allSubs;
           const cancelledSubsRaw = stripeBundle.cancelledSubsRaw;
           const allCharges = stripeBundle.allCharges;
-          const productNames: Record<string, string> = stripeBundle.productNames || {};
+          const productNames: Record<string, string> =
+            stripeBundle.productNames || {};
 
-          const thisMonthTs = Math.floor(new Date(thisMonthStart).getTime() / 1000);
-          const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
+          const thisMonthTs = Math.floor(
+            new Date(thisMonthStart).getTime() / 1000,
+          );
+          const lastMonthTs = Math.floor(
+            new Date(lastMonthStart).getTime() / 1000,
+          );
 
           activeSubsCount = allSubs.length;
 
@@ -1618,12 +2256,17 @@ serve(async (req) => {
               const price = item.price;
               const unitAmount = (price.unit_amount || 0) / 100;
               const interval = price.recurring?.interval;
-              const monthlyAmount = interval === "year" ? unitAmount / 12 : unitAmount;
+              const monthlyAmount =
+                interval === "year" ? unitAmount / 12 : unitAmount;
               stripeMrr += monthlyAmount;
 
-              const prodId = typeof price.product === "string" ? price.product : price.product?.id || "unknown";
+              const prodId =
+                typeof price.product === "string"
+                  ? price.product
+                  : price.product?.id || "unknown";
               const planName = price.nickname || productNames[prodId] || prodId;
-              if (!stripePlanBreakdown[planName]) stripePlanBreakdown[planName] = { count: 0, mrr: 0 };
+              if (!stripePlanBreakdown[planName])
+                stripePlanBreakdown[planName] = { count: 0, mrr: 0 };
               stripePlanBreakdown[planName].count += 1;
               stripePlanBreakdown[planName].mrr += monthlyAmount;
 
@@ -1637,17 +2280,27 @@ serve(async (req) => {
           stripeArr = stripeMrr * 12;
 
           // Cancelled subs in last 2 months (for KPI deltas); full list available in allCancelledSubs for chart
-          allCancelledSubs = cancelledSubsRaw.filter((s: any) => !!s.canceled_at);
-          cancelledSubs = allCancelledSubs.filter((s: any) => s.canceled_at >= lastMonthTs);
-          cancelledSubsThisMonth = cancelledSubs.filter((s: any) => s.canceled_at >= thisMonthTs).length;
-          cancelledSubsLastMonth = cancelledSubs.filter((s: any) => s.canceled_at >= lastMonthTs && s.canceled_at < thisMonthTs).length;
+          allCancelledSubs = cancelledSubsRaw.filter(
+            (s: any) => !!s.canceled_at,
+          );
+          cancelledSubs = allCancelledSubs.filter(
+            (s: any) => s.canceled_at >= lastMonthTs,
+          );
+          cancelledSubsThisMonth = cancelledSubs.filter(
+            (s: any) => s.canceled_at >= thisMonthTs,
+          ).length;
+          cancelledSubsLastMonth = cancelledSubs.filter(
+            (s: any) =>
+              s.canceled_at >= lastMonthTs && s.canceled_at < thisMonthTs,
+          ).length;
 
           // Aggregate charges by month
           const chargesByMonth: Record<string, number> = {};
           for (const charge of allCharges) {
             const d = new Date(charge.created * 1000);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-            chargesByMonth[key] = (chargesByMonth[key] || 0) + (charge.amount / 100);
+            chargesByMonth[key] =
+              (chargesByMonth[key] || 0) + charge.amount / 100;
             totalStripeRevenue += charge.amount / 100;
             if (!charge.invoice) {
               oneTimeRevenue += charge.amount / 100;
@@ -1659,8 +2312,14 @@ serve(async (req) => {
           for (let i = 11; i >= 0; i--) {
             const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
             const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-            const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
-            mrrEvolution.push({ month: label, mrr: Math.round((chargesByMonth[key] || 0) * 100) / 100 });
+            const label = d.toLocaleDateString("es-ES", {
+              month: "short",
+              year: "2-digit",
+            });
+            mrrEvolution.push({
+              month: label,
+              mrr: Math.round((chargesByMonth[key] || 0) * 100) / 100,
+            });
           }
         } catch (stripeErr: any) {
           console.error("[get_saas_metrics] Stripe error:", stripeErr.message);
@@ -1670,32 +2329,66 @@ serve(async (req) => {
 
       // ── DB queries ──
       // "Registrados totales" must always reflect the full lifetime count, never the period filter.
-      const totalQuery = admin.from("profiles").select("id", { count: "exact", head: true });
-      let worksQuery = admin.from("works").select("id", { count: "exact", head: true });
+      const totalQuery = admin
+        .from("profiles")
+        .select("id", { count: "exact", head: true });
+      let worksQuery = admin
+        .from("works")
+        .select("id", { count: "exact", head: true });
       if (filterStart && filterEnd) {
-        worksQuery = worksQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
+        worksQuery = worksQuery
+          .gte("created_at", filterStart)
+          .lt("created_at", filterEnd);
       }
 
       // "Nuevos registros" reflects the selected period when one is active, else the current month.
       const newThisStart = filterStart || thisMonthStart;
       const newThisEnd = filterEnd || null;
-      const periodMs = filterStart && filterEnd
-        ? new Date(filterEnd).getTime() - new Date(filterStart).getTime()
-        : new Date(thisMonthStart).getTime() - new Date(lastMonthStart).getTime();
-      const prevStart = new Date(new Date(newThisStart).getTime() - periodMs).toISOString();
+      const periodMs =
+        filterStart && filterEnd
+          ? new Date(filterEnd).getTime() - new Date(filterStart).getTime()
+          : new Date(thisMonthStart).getTime() -
+            new Date(lastMonthStart).getTime();
+      const prevStart = new Date(
+        new Date(newThisStart).getTime() - periodMs,
+      ).toISOString();
       const prevEnd = newThisStart;
 
-      let newThisQuery = admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", newThisStart);
+      let newThisQuery = admin
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .gte("created_at", newThisStart);
       if (newThisEnd) newThisQuery = newThisQuery.lt("created_at", newThisEnd);
 
-      const [totalRes, newThisRes, newLastRes, verifiedRes, profilesRes, totalWorksRes, worksMonthRes] = await Promise.all([
+      const [
+        totalRes,
+        newThisRes,
+        newLastRes,
+        verifiedRes,
+        profilesRes,
+        totalWorksRes,
+        worksMonthRes,
+      ] = await Promise.all([
         totalQuery,
         newThisQuery,
-        admin.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", prevStart).lt("created_at", prevEnd),
-        admin.from("profiles").select("id", { count: "exact", head: true }).eq("kyc_status", "verified"),
-        admin.from("profiles").select("user_id, subscription_plan, created_at").range(0, 9999),
+        admin
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", prevStart)
+          .lt("created_at", prevEnd),
+        admin
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("kyc_status", "verified"),
+        admin
+          .from("profiles")
+          .select("user_id, subscription_plan, created_at")
+          .range(0, 9999),
         worksQuery,
-        admin.from("works").select("id", { count: "exact", head: true }).gte("created_at", thisMonthStart),
+        admin
+          .from("works")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", thisMonthStart),
       ]);
 
       const totalUsers = totalRes.count || 0;
@@ -1703,50 +2396,116 @@ serve(async (req) => {
       const newLastMonth = newLastRes.count || 0;
       const profiles = profilesRes.data || [];
       const plans: Record<string, number> = {};
-      profiles.forEach((p: any) => { plans[p.subscription_plan] = (plans[p.subscription_plan] || 0) + 1; });
-      const paidUsers = activeSubsCount > 0 ? activeSubsCount : (totalUsers - (plans["Free"] || 0));
+      profiles.forEach((p: any) => {
+        plans[p.subscription_plan] = (plans[p.subscription_plan] || 0) + 1;
+      });
+      const paidUsers =
+        activeSubsCount > 0
+          ? activeSubsCount
+          : totalUsers - (plans["Free"] || 0);
 
-      let posTxQuery = admin.from("credit_transactions").select("amount, type, created_at").gt("amount", 0);
-      let negTxQuery = admin.from("credit_transactions").select("amount").lt("amount", 0);
+      let posTxQuery = admin
+        .from("credit_transactions")
+        .select("amount, type, created_at")
+        .gt("amount", 0);
+      let negTxQuery = admin
+        .from("credit_transactions")
+        .select("amount")
+        .lt("amount", 0);
       if (filterStart && filterEnd) {
-        posTxQuery = posTxQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
-        negTxQuery = negTxQuery.gte("created_at", filterStart).lt("created_at", filterEnd);
+        posTxQuery = posTxQuery
+          .gte("created_at", filterStart)
+          .lt("created_at", filterEnd);
+        negTxQuery = negTxQuery
+          .gte("created_at", filterStart)
+          .lt("created_at", filterEnd);
       }
 
       // Cohort tx: 12 months of history (not period-filtered) so cohort retention can compute m1/m3/m6
-      const cohortTxStart = new Date(now.getFullYear(), now.getMonth() - 12, 1).toISOString();
+      const cohortTxStart = new Date(
+        now.getFullYear(),
+        now.getMonth() - 12,
+        1,
+      ).toISOString();
 
-      const [posTxRes, negTxRes, activeTxRes, todayTxRes, cohortTxRes] = await Promise.all([
-        posTxQuery,
-        negTxQuery,
-        admin.from("credit_transactions").select("user_id, created_at").gte("created_at", thirtyDaysAgo),
-        admin.from("credit_transactions").select("user_id").gte("created_at", `${todayStr}T00:00:00Z`),
-        admin.from("credit_transactions").select("user_id, created_at").gte("created_at", cohortTxStart),
-      ]);
+      const [posTxRes, negTxRes, activeTxRes, todayTxRes, cohortTxRes] =
+        await Promise.all([
+          posTxQuery,
+          negTxQuery,
+          admin
+            .from("credit_transactions")
+            .select("user_id, created_at")
+            .gte("created_at", thirtyDaysAgo),
+          admin
+            .from("credit_transactions")
+            .select("user_id")
+            .gte("created_at", `${todayStr}T00:00:00Z`),
+          admin
+            .from("credit_transactions")
+            .select("user_id, created_at")
+            .gte("created_at", cohortTxStart),
+        ]);
 
-      const creditsSold = (posTxRes.data || []).reduce((s: number, t: any) => s + t.amount, 0);
-      const creditsConsumed = Math.abs((negTxRes.data || []).reduce((s: number, t: any) => s + t.amount, 0));
-      const purchaseTxs = (posTxRes.data || []).filter((t: any) => ["purchase", "stripe_purchase", "subscription_credit"].includes(t.type));
-      const creditsRevenue = purchaseTxs.reduce((s: number, t: any) => s + t.amount, 0) * 0.99;
-      const mauSet = new Set((activeTxRes.data || []).map((t: any) => t.user_id));
-      const dauSet = new Set((todayTxRes.data || []).map((t: any) => t.user_id));
+      const creditsSold = (posTxRes.data || []).reduce(
+        (s: number, t: any) => s + t.amount,
+        0,
+      );
+      const creditsConsumed = Math.abs(
+        (negTxRes.data || []).reduce((s: number, t: any) => s + t.amount, 0),
+      );
+      const purchaseTxs = (posTxRes.data || []).filter((t: any) =>
+        ["purchase", "stripe_purchase", "subscription_credit"].includes(t.type),
+      );
+      const creditsRevenue =
+        purchaseTxs.reduce((s: number, t: any) => s + t.amount, 0) * 0.99;
+      const mauSet = new Set(
+        (activeTxRes.data || []).map((t: any) => t.user_id),
+      );
+      const dauSet = new Set(
+        (todayTxRes.data || []).map((t: any) => t.user_id),
+      );
 
-      let aiGenQ = admin.from("ai_generations").select("*", { count: "exact", head: true });
-      let videoGenQ = admin.from("video_generations").select("*", { count: "exact", head: true });
-      let voiceCloneQ = admin.from("voice_clones").select("*", { count: "exact", head: true });
-      let socialPromoQ = admin.from("social_promotions").select("*", { count: "exact", head: true });
-      let lyricsGenQ = admin.from("lyrics_generations").select("*", { count: "exact", head: true });
+      let aiGenQ = admin
+        .from("ai_generations")
+        .select("*", { count: "exact", head: true });
+      let videoGenQ = admin
+        .from("video_generations")
+        .select("*", { count: "exact", head: true });
+      let voiceCloneQ = admin
+        .from("voice_clones")
+        .select("*", { count: "exact", head: true });
+      let socialPromoQ = admin
+        .from("social_promotions")
+        .select("*", { count: "exact", head: true });
+      let lyricsGenQ = admin
+        .from("lyrics_generations")
+        .select("*", { count: "exact", head: true });
       if (filterStart && filterEnd) {
-        aiGenQ = aiGenQ.gte("created_at", filterStart).lt("created_at", filterEnd);
-        videoGenQ = videoGenQ.gte("created_at", filterStart).lt("created_at", filterEnd);
-        voiceCloneQ = voiceCloneQ.gte("created_at", filterStart).lt("created_at", filterEnd);
-        socialPromoQ = socialPromoQ.gte("created_at", filterStart).lt("created_at", filterEnd);
-        lyricsGenQ = lyricsGenQ.gte("created_at", filterStart).lt("created_at", filterEnd);
+        aiGenQ = aiGenQ
+          .gte("created_at", filterStart)
+          .lt("created_at", filterEnd);
+        videoGenQ = videoGenQ
+          .gte("created_at", filterStart)
+          .lt("created_at", filterEnd);
+        voiceCloneQ = voiceCloneQ
+          .gte("created_at", filterStart)
+          .lt("created_at", filterEnd);
+        socialPromoQ = socialPromoQ
+          .gte("created_at", filterStart)
+          .lt("created_at", filterEnd);
+        lyricsGenQ = lyricsGenQ
+          .gte("created_at", filterStart)
+          .lt("created_at", filterEnd);
       }
 
-      const [aiGen, videoGen, voiceClone, socialPromo, lyricsGen] = await Promise.all([
-        aiGenQ, videoGenQ, voiceCloneQ, socialPromoQ, lyricsGenQ,
-      ]);
+      const [aiGen, videoGen, voiceClone, socialPromo, lyricsGen] =
+        await Promise.all([
+          aiGenQ,
+          videoGenQ,
+          voiceCloneQ,
+          socialPromoQ,
+          lyricsGenQ,
+        ]);
 
       // User acquisition per month (last 12) — always full, not filtered
       const userAcquisition = [];
@@ -1754,12 +2513,23 @@ serve(async (req) => {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const ms = d.toISOString();
         const me = new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString();
-        const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
-        const newInMonth = profiles.filter((p: any) => p.created_at >= ms && p.created_at < me).length;
+        const label = d.toLocaleDateString("es-ES", {
+          month: "short",
+          year: "2-digit",
+        });
+        const newInMonth = profiles.filter(
+          (p: any) => p.created_at >= ms && p.created_at < me,
+        ).length;
         const activeInMonth = new Set(
-          (activeTxRes.data || []).filter((t: any) => t.created_at >= ms && t.created_at < me).map((t: any) => t.user_id)
+          (activeTxRes.data || [])
+            .filter((t: any) => t.created_at >= ms && t.created_at < me)
+            .map((t: any) => t.user_id),
         ).size;
-        userAcquisition.push({ month: label, newUsers: newInMonth, activeUsers: activeInMonth });
+        userAcquisition.push({
+          month: label,
+          newUsers: newInMonth,
+          activeUsers: activeInMonth,
+        });
       }
 
       // If no Stripe data, build estimated MRR evolution
@@ -1768,36 +2538,78 @@ serve(async (req) => {
         for (let i = 11; i >= 0; i--) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const ms = d.toISOString();
-          const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
-          const paidBefore = profiles.filter((p: any) => p.created_at < ms && p.subscription_plan !== "Free").length;
-          mrrEvolution.push({ month: label, mrr: Math.round(paidBefore * avgPrice * 100) / 100 });
+          const label = d.toLocaleDateString("es-ES", {
+            month: "short",
+            year: "2-digit",
+          });
+          const paidBefore = profiles.filter(
+            (p: any) => p.created_at < ms && p.subscription_plan !== "Free",
+          ).length;
+          mrrEvolution.push({
+            month: label,
+            mrr: Math.round(paidBefore * avgPrice * 100) / 100,
+          });
         }
       }
 
       // Works per day
-      const { data: recentWorks } = await admin.from("works").select("created_at").gte("created_at", thirtyDaysAgo);
+      const { data: recentWorks } = await admin
+        .from("works")
+        .select("created_at")
+        .gte("created_at", thirtyDaysAgo);
       const wpd: Record<string, number> = {};
-      (recentWorks || []).forEach((w: any) => { wpd[w.created_at.slice(0, 10)] = (wpd[w.created_at.slice(0, 10)] || 0) + 1; });
-      const worksPerDay = Object.entries(wpd).sort(([a], [b]) => a.localeCompare(b)).map(([date, count]) => ({ date: date.slice(5), count }));
+      (recentWorks || []).forEach((w: any) => {
+        wpd[w.created_at.slice(0, 10)] =
+          (wpd[w.created_at.slice(0, 10)] || 0) + 1;
+      });
+      const worksPerDay = Object.entries(wpd)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([date, count]) => ({ date: date.slice(5), count }));
 
       // ── Real SaaS metrics from Stripe ──
       const mrr = Math.round(stripeMrr * 100) / 100;
       const arr = Math.round(stripeArr * 100) / 100;
-      const churnRate = (activeSubsCount + cancelledSubsThisMonth) > 0
-        ? parseFloat(((cancelledSubsThisMonth / (activeSubsCount + cancelledSubsThisMonth)) * 100).toFixed(1))
-        : 0;
-      const prevChurnRate = (activeSubsCount + cancelledSubsLastMonth) > 0
-        ? parseFloat(((cancelledSubsLastMonth / (activeSubsCount + cancelledSubsLastMonth)) * 100).toFixed(1))
-        : 0;
+      const churnRate =
+        activeSubsCount + cancelledSubsThisMonth > 0
+          ? parseFloat(
+              (
+                (cancelledSubsThisMonth /
+                  (activeSubsCount + cancelledSubsThisMonth)) *
+                100
+              ).toFixed(1),
+            )
+          : 0;
+      const prevChurnRate =
+        activeSubsCount + cancelledSubsLastMonth > 0
+          ? parseFloat(
+              (
+                (cancelledSubsLastMonth /
+                  (activeSubsCount + cancelledSubsLastMonth)) *
+                100
+              ).toFixed(1),
+            )
+          : 0;
       const churnChange = parseFloat((churnRate - prevChurnRate).toFixed(1));
       const arpu = paidUsers > 0 ? parseFloat((mrr / paidUsers).toFixed(2)) : 0;
-      const ltv = churnRate > 0 ? Math.round(arpu / (churnRate / 100)) : Math.round(arpu * 24);
-      const totalRevenue = totalStripeRevenue > 0 ? Math.round(totalStripeRevenue * 100) / 100 : Math.round((mrr + creditsRevenue) * 100) / 100;
+      const ltv =
+        churnRate > 0
+          ? Math.round(arpu / (churnRate / 100))
+          : Math.round(arpu * 24);
+      const totalRevenue =
+        totalStripeRevenue > 0
+          ? Math.round(totalStripeRevenue * 100) / 100
+          : Math.round((mrr + creditsRevenue) * 100) / 100;
 
       // Fetch manual marketing metrics from DB: prefer the period's month when one is selected
       let marketingYear = now.getFullYear();
       let marketingMonth = now.getMonth() + 1;
-      if (periodType === "month" && month && month !== "all" && year && year !== "all") {
+      if (
+        periodType === "month" &&
+        month &&
+        month !== "all" &&
+        year &&
+        year !== "all"
+      ) {
         marketingYear = parseInt(String(year), 10);
         marketingMonth = parseInt(String(month), 10);
       } else if (filterStart) {
@@ -1814,21 +2626,46 @@ serve(async (req) => {
 
       const adSpend = marketingRow ? parseFloat(marketingRow.ad_spend) : 0;
       const cogsManual = marketingRow ? parseFloat(marketingRow.cogs) : 0;
-      const cashBalanceManual = marketingRow ? parseFloat(marketingRow.cash_balance) : 0;
-      const monthlyBurnManual = marketingRow ? parseFloat(marketingRow.monthly_burn) : 0;
+      const cashBalanceManual = marketingRow
+        ? parseFloat(marketingRow.cash_balance)
+        : 0;
+      const monthlyBurnManual = marketingRow
+        ? parseFloat(marketingRow.monthly_burn)
+        : 0;
 
       // CAC: real if ad_spend is set, else estimated
-      const cac = adSpend > 0 && newThisMonth > 0
-        ? parseFloat((adSpend / newThisMonth).toFixed(2))
-        : (adSpend > 0 ? adSpend : 50);
-      const grossMargin = totalRevenue > 0 && cogsManual > 0
-        ? parseFloat((((totalRevenue - cogsManual) / totalRevenue) * 100).toFixed(1))
-        : (totalRevenue > 0 ? 85 : 0);
+      const cac =
+        adSpend > 0 && newThisMonth > 0
+          ? parseFloat((adSpend / newThisMonth).toFixed(2))
+          : adSpend > 0
+            ? adSpend
+            : 50;
+      const grossMargin =
+        totalRevenue > 0 && cogsManual > 0
+          ? parseFloat(
+              (((totalRevenue - cogsManual) / totalRevenue) * 100).toFixed(1),
+            )
+          : totalRevenue > 0
+            ? 85
+            : 0;
       const paybackPeriod = arpu > 0 ? Math.round(cac / arpu) : 0;
-      const magicNumber = mrr > 0 && newThisMonth > 0 ? parseFloat((mrr / (cac * newThisMonth)).toFixed(2)) : 0;
-      const nrr = churnRate > 0 ? Math.round(100 - churnRate + (paidUsers > 5 ? 5 : 0)) : 100;
+      const magicNumber =
+        mrr > 0 && newThisMonth > 0
+          ? parseFloat((mrr / (cac * newThisMonth)).toFixed(2))
+          : 0;
+      const nrr =
+        churnRate > 0
+          ? Math.round(100 - churnRate + (paidUsers > 5 ? 5 : 0))
+          : 100;
       const hasManualMetrics = !!marketingRow;
-      const quickRatio = churnRate > 0 ? parseFloat(((newThisMonth * arpu) / (churnRate / 100 * mrr || 1)).toFixed(1)) : 0;
+      const quickRatio =
+        churnRate > 0
+          ? parseFloat(
+              ((newThisMonth * arpu) / ((churnRate / 100) * mrr || 1)).toFixed(
+                1,
+              ),
+            )
+          : 0;
 
       // Churn evolution from Stripe (real cancelled subs per month)
       const churnEvolution: { month: string; churn: number }[] = [];
@@ -1836,18 +2673,31 @@ serve(async (req) => {
         for (let i = 11; i >= 0; i--) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
           const mStart = Math.floor(d.getTime() / 1000);
-          const mEnd = Math.floor(new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() / 1000);
-          const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
+          const mEnd = Math.floor(
+            new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() / 1000,
+          );
+          const label = d.toLocaleDateString("es-ES", {
+            month: "short",
+            year: "2-digit",
+          });
           // Count cancelled in this month using full 12-month cancelled list
-          const cancelledInMonth = allCancelledSubs.filter((s: any) => s.canceled_at >= mStart && s.canceled_at < mEnd).length;
+          const cancelledInMonth = allCancelledSubs.filter(
+            (s: any) => s.canceled_at >= mStart && s.canceled_at < mEnd,
+          ).length;
           const baseForMonth = activeSubsCount + cancelledInMonth;
-          const monthChurn = baseForMonth > 0 ? parseFloat(((cancelledInMonth / baseForMonth) * 100).toFixed(1)) : 0;
+          const monthChurn =
+            baseForMonth > 0
+              ? parseFloat(((cancelledInMonth / baseForMonth) * 100).toFixed(1))
+              : 0;
           churnEvolution.push({ month: label, churn: monthChurn });
         }
       } else {
         for (let i = 11; i >= 0; i--) {
           const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
+          const label = d.toLocaleDateString("es-ES", {
+            month: "short",
+            year: "2-digit",
+          });
           churnEvolution.push({ month: label, churn: 0 });
         }
       }
@@ -1858,53 +2708,153 @@ serve(async (req) => {
         const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
         const ms = d.toISOString();
         const me = new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString();
-        const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
-        const cohortUsers = profiles.filter((p: any) => p.created_at >= ms && p.created_at < me);
+        const label = d.toLocaleDateString("es-ES", {
+          month: "short",
+          year: "2-digit",
+        });
+        const cohortUsers = profiles.filter(
+          (p: any) => p.created_at >= ms && p.created_at < me,
+        );
         const cohortSize = cohortUsers.length;
         if (cohortSize === 0) continue;
-        const cohortIds = new Set(cohortUsers.map((p: any) => p.user_id || p.id));
+        const cohortIds = new Set(
+          cohortUsers.map((p: any) => p.user_id || p.id),
+        );
         const allTx = cohortTxRes.data || [];
 
         // m1: activity 1 month later
-        const m1Start = new Date(d.getFullYear(), d.getMonth() + 1, 1).toISOString();
-        const m1End = new Date(d.getFullYear(), d.getMonth() + 2, 1).toISOString();
-        const m1Active = i >= 1 ? new Set(allTx.filter((t: any) => cohortIds.has(t.user_id) && t.created_at >= m1Start && t.created_at < m1End).map((t: any) => t.user_id)).size : null;
+        const m1Start = new Date(
+          d.getFullYear(),
+          d.getMonth() + 1,
+          1,
+        ).toISOString();
+        const m1End = new Date(
+          d.getFullYear(),
+          d.getMonth() + 2,
+          1,
+        ).toISOString();
+        const m1Active =
+          i >= 1
+            ? new Set(
+                allTx
+                  .filter(
+                    (t: any) =>
+                      cohortIds.has(t.user_id) &&
+                      t.created_at >= m1Start &&
+                      t.created_at < m1End,
+                  )
+                  .map((t: any) => t.user_id),
+              ).size
+            : null;
 
         // m3: activity 3 months later
-        const m3Start = new Date(d.getFullYear(), d.getMonth() + 3, 1).toISOString();
-        const m3End = new Date(d.getFullYear(), d.getMonth() + 4, 1).toISOString();
-        const m3Active = i >= 3 ? new Set(allTx.filter((t: any) => cohortIds.has(t.user_id) && t.created_at >= m3Start && t.created_at < m3End).map((t: any) => t.user_id)).size : null;
+        const m3Start = new Date(
+          d.getFullYear(),
+          d.getMonth() + 3,
+          1,
+        ).toISOString();
+        const m3End = new Date(
+          d.getFullYear(),
+          d.getMonth() + 4,
+          1,
+        ).toISOString();
+        const m3Active =
+          i >= 3
+            ? new Set(
+                allTx
+                  .filter(
+                    (t: any) =>
+                      cohortIds.has(t.user_id) &&
+                      t.created_at >= m3Start &&
+                      t.created_at < m3End,
+                  )
+                  .map((t: any) => t.user_id),
+              ).size
+            : null;
 
         // m6
-        const m6Start = new Date(d.getFullYear(), d.getMonth() + 6, 1).toISOString();
-        const m6End = new Date(d.getFullYear(), d.getMonth() + 7, 1).toISOString();
-        const m6Active = i >= 6 ? new Set(allTx.filter((t: any) => cohortIds.has(t.user_id) && t.created_at >= m6Start && t.created_at < m6End).map((t: any) => t.user_id)).size : null;
+        const m6Start = new Date(
+          d.getFullYear(),
+          d.getMonth() + 6,
+          1,
+        ).toISOString();
+        const m6End = new Date(
+          d.getFullYear(),
+          d.getMonth() + 7,
+          1,
+        ).toISOString();
+        const m6Active =
+          i >= 6
+            ? new Set(
+                allTx
+                  .filter(
+                    (t: any) =>
+                      cohortIds.has(t.user_id) &&
+                      t.created_at >= m6Start &&
+                      t.created_at < m6End,
+                  )
+                  .map((t: any) => t.user_id),
+              ).size
+            : null;
 
         cohortData.push({
-          month: label, cohortSize, m0: 100,
-          m1: m1Active !== null ? Math.round((m1Active / cohortSize) * 100) : null,
-          m3: m3Active !== null ? Math.round((m3Active / cohortSize) * 100) : null,
-          m6: m6Active !== null ? Math.round((m6Active / cohortSize) * 100) : null,
+          month: label,
+          cohortSize,
+          m0: 100,
+          m1:
+            m1Active !== null
+              ? Math.round((m1Active / cohortSize) * 100)
+              : null,
+          m3:
+            m3Active !== null
+              ? Math.round((m3Active / cohortSize) * 100)
+              : null,
+          m6:
+            m6Active !== null
+              ? Math.round((m6Active / cohortSize) * 100)
+              : null,
           m12: null,
         });
       }
 
       // Revenue concentration from Stripe plan breakdown
-      const planRevSorted = Object.entries(stripePlanBreakdown).sort((a, b) => b[1].mrr - a[1].mrr);
+      const planRevSorted = Object.entries(stripePlanBreakdown).sort(
+        (a, b) => b[1].mrr - a[1].mrr,
+      );
       const topPlanEntry = planRevSorted.length > 0 ? planRevSorted[0] : null;
       const topPlanName = topPlanEntry ? topPlanEntry[0] : "N/A";
-      const topPlanPct = paidUsers > 0 && topPlanEntry ? Math.round((topPlanEntry[1].count / paidUsers) * 100) : 0;
+      const topPlanPct =
+        paidUsers > 0 && topPlanEntry
+          ? Math.round((topPlanEntry[1].count / paidUsers) * 100)
+          : 0;
 
       // MRR change (compare this month charges vs last month)
       const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       const lastMonthKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
-      const thisMonthRev = mrrEvolution.find(e => e.month === mrrEvolution[mrrEvolution.length - 1]?.month)?.mrr || 0;
-      const lastMonthRev = mrrEvolution.length >= 2 ? mrrEvolution[mrrEvolution.length - 2]?.mrr || 0 : 0;
-      const mrrChange = lastMonthRev > 0 ? parseFloat((((thisMonthRev - lastMonthRev) / lastMonthRev) * 100).toFixed(1)) : 0;
+      const thisMonthRev =
+        mrrEvolution.find(
+          (e) => e.month === mrrEvolution[mrrEvolution.length - 1]?.month,
+        )?.mrr || 0;
+      const lastMonthRev =
+        mrrEvolution.length >= 2
+          ? mrrEvolution[mrrEvolution.length - 2]?.mrr || 0
+          : 0;
+      const mrrChange =
+        lastMonthRev > 0
+          ? parseFloat(
+              (((thisMonthRev - lastMonthRev) / lastMonthRev) * 100).toFixed(1),
+            )
+          : 0;
 
       const subscriptionRevenue = mrr;
-      const annualSubPct = totalRevenue > 0 ? parseFloat(((stripeAnnualRevenue / totalRevenue) * 100).toFixed(1)) : 0;
-      const monthlySubPct = totalRevenue > 0 ? parseFloat(((stripeMonthlyRevenue / totalRevenue) * 100).toFixed(1)) : 0;
+      const annualSubPct =
+        totalRevenue > 0
+          ? parseFloat(((stripeAnnualRevenue / totalRevenue) * 100).toFixed(1))
+          : 0;
+      const monthlySubPct =
+        totalRevenue > 0
+          ? parseFloat(((stripeMonthlyRevenue / totalRevenue) * 100).toFixed(1))
+          : 0;
 
       // ── Orders-based metrics (new) ──
       let ordersData: any[] = [];
@@ -1924,27 +2874,40 @@ serve(async (req) => {
       let orderRevenue = 0;
       let renewalsMonthlyCount = 0;
       let renewalsAnnualCount = 0;
-      const productBreakdown: { name: string; units: number; revenue: number }[] = [];
+      const productBreakdown: {
+        name: string;
+        units: number;
+        revenue: number;
+      }[] = [];
 
       // Net revenue helper: amount_net (pre-IVA) − stripe_fee, excluding refunded orders
       const netRev = (o: any): number => {
         if (o.order_status === "refunded") return 0;
         const net = parseFloat(o.amount_net);
-        const base = !isNaN(net) && net > 0 ? net : (parseFloat(o.amount_gross) || 0) / 1.21;
+        const base =
+          !isNaN(net) && net > 0
+            ? net
+            : (parseFloat(o.amount_gross) || 0) / 1.21;
         const fee = parseFloat(o.stripe_fee) || 0;
         return Math.max(0, base - fee);
       };
 
       try {
         // Customers total = unique users with at least one paid order ever
-        const { data: custRows } = await admin.from("orders").select("user_id").eq("order_status", "paid");
-        customersTotal = new Set((custRows || []).map((r: any) => r.user_id)).size;
+        const { data: custRows } = await admin
+          .from("orders")
+          .select("user_id")
+          .eq("order_status", "paid");
+        customersTotal = new Set((custRows || []).map((r: any) => r.user_id))
+          .size;
 
         // Orders in the period
         if (filterStart && filterEnd) {
           const { data: periodOrders } = await admin
             .from("orders")
-            .select("user_id, paid_at, amount_gross, amount_net, stripe_fee, order_status, product_type, is_renewal, billing_interval, attributed_campaign_name")
+            .select(
+              "user_id, paid_at, amount_gross, amount_net, stripe_fee, order_status, product_type, is_renewal, billing_interval, attributed_campaign_name",
+            )
             .eq("order_status", "paid")
             .gte("paid_at", filterStart)
             .lte("paid_at", filterEnd)
@@ -1953,8 +2916,14 @@ serve(async (req) => {
           ordersData = periodOrders || [];
         }
         totalOrders = ordersData.length;
-        orderRevenue = ordersData.reduce((s: number, o: any) => s + netRev(o), 0);
-        averageOrderValue = totalOrders > 0 ? parseFloat((orderRevenue / totalOrders).toFixed(2)) : 0;
+        orderRevenue = ordersData.reduce(
+          (s: number, o: any) => s + netRev(o),
+          0,
+        );
+        averageOrderValue =
+          totalOrders > 0
+            ? parseFloat((orderRevenue / totalOrders).toFixed(2))
+            : 0;
 
         // Units/revenue by product type
         const byType: Record<string, { units: number; revenue: number }> = {};
@@ -1972,24 +2941,40 @@ serve(async (req) => {
         unitsSoldMonthly = byType["monthly"]?.units || 0;
         unitsSoldSingle = byType["single"]?.units || 0;
         unitsSoldTopup = byType["topup"]?.units || 0;
-        revenueAnnual = Math.round((byType["annual"]?.revenue || 0) * 100) / 100;
-        revenueMonthly = Math.round((byType["monthly"]?.revenue || 0) * 100) / 100;
-        revenueSingle = Math.round((byType["single"]?.revenue || 0) * 100) / 100;
+        revenueAnnual =
+          Math.round((byType["annual"]?.revenue || 0) * 100) / 100;
+        revenueMonthly =
+          Math.round((byType["monthly"]?.revenue || 0) * 100) / 100;
+        revenueSingle =
+          Math.round((byType["single"]?.revenue || 0) * 100) / 100;
         revenueTopup = Math.round((byType["topup"]?.revenue || 0) * 100) / 100;
 
         Object.entries(byType).forEach(([name, v]) => {
-          productBreakdown.push({ name, units: v.units, revenue: Math.round(v.revenue * 100) / 100 });
+          productBreakdown.push({
+            name,
+            units: v.units,
+            revenue: Math.round(v.revenue * 100) / 100,
+          });
         });
         productBreakdown.sort((a, b) => b.revenue - a.revenue);
 
         // New vs returning customers in period
-        const periodUserIds = [...new Set(ordersData.map((o: any) => o.user_id))];
+        const periodUserIds = [
+          ...new Set(ordersData.map((o: any) => o.user_id)),
+        ];
         if (periodUserIds.length > 0 && filterStart) {
-          const { data: priorOrders } = await admin.from("orders").select("user_id").lt("paid_at", filterStart).eq("order_status", "paid").in("user_id", periodUserIds);
-          const priorSet = new Set((priorOrders || []).map((o: any) => o.user_id));
+          const { data: priorOrders } = await admin
+            .from("orders")
+            .select("user_id")
+            .lt("paid_at", filterStart)
+            .eq("order_status", "paid")
+            .in("user_id", periodUserIds);
+          const priorSet = new Set(
+            (priorOrders || []).map((o: any) => o.user_id),
+          );
           const newCustSet = new Set<string>();
           const retCustSet = new Set<string>();
-          periodUserIds.forEach(uid => {
+          periodUserIds.forEach((uid) => {
             if (priorSet.has(uid)) retCustSet.add(uid);
             else newCustSet.add(uid);
           });
@@ -2001,15 +2986,27 @@ serve(async (req) => {
       }
 
       // ── Marketing summary (mini) ──
-      let marketingSummary: any = { attributed_registered: 0, attributed_customers: 0, ad_spend: adSpend, cac, top_campaigns: [] };
+      let marketingSummary: any = {
+        attributed_registered: 0,
+        attributed_customers: 0,
+        ad_spend: adSpend,
+        cac,
+        top_campaigns: [],
+      };
       try {
         if (filterStart && filterEnd) {
-          const { data: attrProfiles } = await admin.from("user_attribution").select("user_id, attributed_campaign_name").gte("created_at", filterStart).lt("created_at", filterEnd);
+          const { data: attrProfiles } = await admin
+            .from("user_attribution")
+            .select("user_id, attributed_campaign_name")
+            .gte("created_at", filterStart)
+            .lt("created_at", filterEnd);
           marketingSummary.attributed_registered = (attrProfiles || []).length;
           // Attributed customers = users who both registered AND purchased in the period
           const attrUserIds = (attrProfiles || []).map((a: any) => a.user_id);
           const purchasedSet = new Set(ordersData.map((o: any) => o.user_id));
-          marketingSummary.attributed_customers = attrUserIds.filter((uid: string) => purchasedSet.has(uid)).length;
+          marketingSummary.attributed_customers = attrUserIds.filter(
+            (uid: string) => purchasedSet.has(uid),
+          ).length;
         }
         // Top campaigns by revenue
         const campRevMap: Record<string, number> = {};
@@ -2018,13 +3015,21 @@ serve(async (req) => {
           if (cn) campRevMap[cn] = (campRevMap[cn] || 0) + netRev(o);
         });
         marketingSummary.top_campaigns = Object.entries(campRevMap)
-          .map(([name, revenue]) => ({ name, revenue: Math.round(revenue * 100) / 100 }))
+          .map(([name, revenue]) => ({
+            name,
+            revenue: Math.round(revenue * 100) / 100,
+          }))
           .sort((a, b) => b.revenue - a.revenue)
           .slice(0, 5);
       } catch {}
 
       // ── Time series for charts ──
-      const timeSeries: any = { revenue: [], orders: [], userAcquisition: [], productBreakdown: [] };
+      const timeSeries: any = {
+        revenue: [],
+        orders: [],
+        userAcquisition: [],
+        productBreakdown: [],
+      };
 
       // Build period-aware buckets: week→days, month→weeks, year→months
       type Bucket = { label: string; start: Date; end: Date };
@@ -2032,23 +3037,39 @@ serve(async (req) => {
       if (filterStart && filterEnd) {
         const start = new Date(filterStart);
         const end = new Date(filterEnd);
-        const diffDays = Math.round((end.getTime() - start.getTime()) / 86400000);
+        const diffDays = Math.round(
+          (end.getTime() - start.getTime()) / 86400000,
+        );
 
         if (diffDays <= 8) {
           // Week → days
           for (let i = 0; i < diffDays; i++) {
-            const s = new Date(start); s.setUTCDate(s.getUTCDate() + i);
-            const e = new Date(s); e.setUTCDate(e.getUTCDate() + 1);
-            buckets.push({ label: s.toLocaleDateString("es-ES", { weekday: "short", day: "2-digit" }), start: s, end: e });
+            const s = new Date(start);
+            s.setUTCDate(s.getUTCDate() + i);
+            const e = new Date(s);
+            e.setUTCDate(e.getUTCDate() + 1);
+            buckets.push({
+              label: s.toLocaleDateString("es-ES", {
+                weekday: "short",
+                day: "2-digit",
+              }),
+              start: s,
+              end: e,
+            });
           }
         } else if (diffDays <= 35) {
           // Month → weeks (calendar weeks within the month)
           let s = new Date(start);
           let weekIdx = 1;
           while (s < end) {
-            const e = new Date(s); e.setUTCDate(e.getUTCDate() + 7);
+            const e = new Date(s);
+            e.setUTCDate(e.getUTCDate() + 7);
             const eClamped = e > end ? end : e;
-            buckets.push({ label: `Sem ${weekIdx}`, start: new Date(s), end: new Date(eClamped) });
+            buckets.push({
+              label: `Sem ${weekIdx}`,
+              start: new Date(s),
+              end: new Date(eClamped),
+            });
             s = e;
             weekIdx++;
           }
@@ -2058,7 +3079,11 @@ serve(async (req) => {
             const s = new Date(start.getFullYear(), m, 1);
             const e = new Date(start.getFullYear(), m + 1, 1);
             if (s >= end) break;
-            buckets.push({ label: s.toLocaleDateString("es-ES", { month: "short" }), start: s, end: e });
+            buckets.push({
+              label: s.toLocaleDateString("es-ES", { month: "short" }),
+              start: s,
+              end: e,
+            });
           }
         }
 
@@ -2066,21 +3091,37 @@ serve(async (req) => {
         for (const b of buckets) {
           const sIso = b.start.toISOString();
           const eIso = b.end.toISOString();
-          const bOrders = ordersData.filter((o: any) => o.paid_at >= sIso && o.paid_at < eIso);
+          const bOrders = ordersData.filter(
+            (o: any) => o.paid_at >= sIso && o.paid_at < eIso,
+          );
           const bRev = bOrders.reduce((s: number, o: any) => s + netRev(o), 0);
-          timeSeries.revenue.push({ label: b.label, value: Math.round(bRev * 100) / 100 });
+          timeSeries.revenue.push({
+            label: b.label,
+            value: Math.round(bRev * 100) / 100,
+          });
           timeSeries.orders.push({ label: b.label, value: bOrders.length });
 
           // User acquisition: new registrations + active users (with credit tx) in bucket
-          const newInBucket = profiles.filter((p: any) => p.created_at >= sIso && p.created_at < eIso).length;
+          const newInBucket = profiles.filter(
+            (p: any) => p.created_at >= sIso && p.created_at < eIso,
+          ).length;
           const activeInBucket = new Set(
-            (activeTxRes.data || []).filter((t: any) => t.created_at >= sIso && t.created_at < eIso).map((t: any) => t.user_id)
+            (activeTxRes.data || [])
+              .filter((t: any) => t.created_at >= sIso && t.created_at < eIso)
+              .map((t: any) => t.user_id),
           ).size;
-          timeSeries.userAcquisition.push({ label: b.label, newUsers: newInBucket, activeUsers: activeInBucket });
+          timeSeries.userAcquisition.push({
+            label: b.label,
+            newUsers: newInBucket,
+            activeUsers: activeInBucket,
+          });
 
           // Product breakdown by bucket (units per type)
           const bucketByType: Record<string, number> = {};
-          bOrders.forEach((o: any) => { const pt = o.product_type || "unknown"; bucketByType[pt] = (bucketByType[pt] || 0) + 1; });
+          bOrders.forEach((o: any) => {
+            const pt = o.product_type || "unknown";
+            bucketByType[pt] = (bucketByType[pt] || 0) + 1;
+          });
           timeSeries.productBreakdown.push({
             label: b.label,
             annual: bucketByType["annual"] || 0,
@@ -2094,54 +3135,84 @@ serve(async (req) => {
       // Period revenue = sum of all order revenue inside the selected period
       const periodRevenue = Math.round(orderRevenue * 100) / 100;
 
-      const creditsPercentage = periodRevenue > 0 ? parseFloat((((revenueSingle + revenueTopup) / periodRevenue) * 100).toFixed(1)) : 0;
+      const creditsPercentage =
+        periodRevenue > 0
+          ? parseFloat(
+              (((revenueSingle + revenueTopup) / periodRevenue) * 100).toFixed(
+                1,
+              ),
+            )
+          : 0;
 
       // Cash & Runway: only use the manual marketing_metrics row of the current month.
       // Burn rate falls back to current-month ad_spend when no monthly_burn was set.
-      const burnEffective = monthlyBurnManual > 0 ? monthlyBurnManual : (adSpend > 0 ? adSpend : 0);
+      const burnEffective =
+        monthlyBurnManual > 0 ? monthlyBurnManual : adSpend > 0 ? adSpend : 0;
       const cashEffective = cashBalanceManual > 0 ? cashBalanceManual : 0;
-      const runwayEffective = burnEffective > 0 && cashEffective > 0 ? Math.round(cashEffective / burnEffective) : 0;
+      const runwayEffective =
+        burnEffective > 0 && cashEffective > 0
+          ? Math.round(cashEffective / burnEffective)
+          : 0;
 
       // ── Period-aware overrides for Revenue Concentration & Unit Economics ──
       // Top plan computed from the actual orders in the selected period (not global Stripe snapshot)
-      const periodCustomerSet = new Set<string>(ordersData.map((o: any) => o.user_id).filter(Boolean));
+      const periodCustomerSet = new Set<string>(
+        ordersData.map((o: any) => o.user_id).filter(Boolean),
+      );
       const periodCustomers = periodCustomerSet.size;
-      const periodTopPlanEntry = productBreakdown.length > 0 ? productBreakdown[0] : null;
+      const periodTopPlanEntry =
+        productBreakdown.length > 0 ? productBreakdown[0] : null;
       const periodTopPlanName = periodTopPlanEntry?.name || topPlanName;
-      const periodTopPlanPct = periodTopPlanEntry && totalOrders > 0
-        ? Math.round((periodTopPlanEntry.units / totalOrders) * 100)
-        : topPlanPct;
-      const periodTopPlanRevPct = periodTopPlanEntry && periodRevenue > 0
-        ? Math.round((periodTopPlanEntry.revenue / periodRevenue) * 100)
-        : topPlanPct;
+      const periodTopPlanPct =
+        periodTopPlanEntry && totalOrders > 0
+          ? Math.round((periodTopPlanEntry.units / totalOrders) * 100)
+          : topPlanPct;
+      const periodTopPlanRevPct =
+        periodTopPlanEntry && periodRevenue > 0
+          ? Math.round((periodTopPlanEntry.revenue / periodRevenue) * 100)
+          : topPlanPct;
 
       // Cancellations inside the selected period (any Stripe termination type)
       let cancelledInPeriod = cancelledSubsThisMonth;
       if (filterStart && filterEnd && allCancelledSubs.length > 0) {
         const fsSec = Math.floor(new Date(filterStart).getTime() / 1000);
         const feSec = Math.floor(new Date(filterEnd).getTime() / 1000);
-        cancelledInPeriod = allCancelledSubs.filter((s: any) => s.canceled_at >= fsSec && s.canceled_at < feSec).length;
+        cancelledInPeriod = allCancelledSubs.filter(
+          (s: any) => s.canceled_at >= fsSec && s.canceled_at < feSec,
+        ).length;
       }
 
       // Unit Economics — period-aware where it makes sense
-      const arpuPeriod = periodCustomers > 0
-        ? parseFloat((periodRevenue / periodCustomers).toFixed(2))
-        : arpu;
-      const grossMarginPeriod = periodRevenue > 0 && cogsManual > 0
-        ? parseFloat((((periodRevenue - cogsManual) / periodRevenue) * 100).toFixed(1))
-        : (periodRevenue > 0 ? 85 : grossMargin);
-      const paybackPeriodPeriod = arpuPeriod > 0 ? Math.round(cac / arpuPeriod) : paybackPeriod;
-      const magicNumberPeriod = periodRevenue > 0 && newThisMonth > 0 && cac > 0
-        ? parseFloat((periodRevenue / (cac * newThisMonth)).toFixed(2))
-        : magicNumber;
+      const arpuPeriod =
+        periodCustomers > 0
+          ? parseFloat((periodRevenue / periodCustomers).toFixed(2))
+          : arpu;
+      const grossMarginPeriod =
+        periodRevenue > 0 && cogsManual > 0
+          ? parseFloat(
+              (((periodRevenue - cogsManual) / periodRevenue) * 100).toFixed(1),
+            )
+          : periodRevenue > 0
+            ? 85
+            : grossMargin;
+      const paybackPeriodPeriod =
+        arpuPeriod > 0 ? Math.round(cac / arpuPeriod) : paybackPeriod;
+      const magicNumberPeriod =
+        periodRevenue > 0 && newThisMonth > 0 && cac > 0
+          ? parseFloat((periodRevenue / (cac * newThisMonth)).toFixed(2))
+          : magicNumber;
 
       const responsePayload = {
-        mrr, arr,
+        mrr,
+        arr,
         mrrChange,
         arrChange: mrrChange,
-        churnRate, churnChange, ltv,
+        churnRate,
+        churnChange,
+        ltv,
         ltvCacRatio: ltv > 0 ? parseFloat((ltv / cac).toFixed(1)) : 0,
-        nrr, quickRatio,
+        nrr,
+        quickRatio,
         arpu: arpuPeriod,
         cac,
         grossMargin: grossMarginPeriod,
@@ -2150,14 +3221,33 @@ serve(async (req) => {
         cashBalance: cashEffective,
         burnRate: burnEffective,
         runway: runwayEffective,
-        adSpend, cogsManual, hasManualMetrics,
-        totalUsers, newUsersThisMonth: newThisMonth,
-        newUsersChange: newLastMonth > 0 ? parseFloat((((newThisMonth - newLastMonth) / newLastMonth) * 100).toFixed(1)) : 100,
-        activeUsers30d: mauSet.size, verifiedUsers: verifiedRes.count || 0,
-        conversionRate: totalUsers > 0 ? parseFloat(((paidUsers / totalUsers) * 100).toFixed(1)) : 0,
-        totalWorks: totalWorksRes.count || 0, worksThisMonth: worksMonthRes.count || 0,
-        creditsSold, creditsConsumed, creditsRevenue: Math.round(creditsRevenue * 100) / 100,
-        dau: dauSet.size, mau: mauSet.size, planBreakdown: plans,
+        adSpend,
+        cogsManual,
+        hasManualMetrics,
+        totalUsers,
+        newUsersThisMonth: newThisMonth,
+        newUsersChange:
+          newLastMonth > 0
+            ? parseFloat(
+                (((newThisMonth - newLastMonth) / newLastMonth) * 100).toFixed(
+                  1,
+                ),
+              )
+            : 100,
+        activeUsers30d: mauSet.size,
+        verifiedUsers: verifiedRes.count || 0,
+        conversionRate:
+          totalUsers > 0
+            ? parseFloat(((paidUsers / totalUsers) * 100).toFixed(1))
+            : 0,
+        totalWorks: totalWorksRes.count || 0,
+        worksThisMonth: worksMonthRes.count || 0,
+        creditsSold,
+        creditsConsumed,
+        creditsRevenue: Math.round(creditsRevenue * 100) / 100,
+        dau: dauSet.size,
+        mau: mauSet.size,
+        planBreakdown: plans,
         totalRevenue,
         periodRevenue,
         annualRevenue: Math.round(stripeAnnualRevenue * 100) / 100,
@@ -2172,15 +3262,29 @@ serve(async (req) => {
         activeSubscriptions: activeSubsCount,
         cancelledThisMonth: cancelledInPeriod,
         stripePlanBreakdown,
-        customersTotal, customersNew, customersReturning,
-        totalOrders, averageOrderValue,
-        unitsSoldAnnual, unitsSoldMonthly, unitsSoldSingle, unitsSoldTopup,
-        revenueAnnual, revenueMonthly, revenueSingle, revenueTopup,
-        renewalsMonthly: renewalsMonthlyCount, renewalsAnnual: renewalsAnnualCount,
+        customersTotal,
+        customersNew,
+        customersReturning,
+        totalOrders,
+        averageOrderValue,
+        unitsSoldAnnual,
+        unitsSoldMonthly,
+        unitsSoldSingle,
+        unitsSoldTopup,
+        revenueAnnual,
+        revenueMonthly,
+        revenueSingle,
+        revenueTopup,
+        renewalsMonthly: renewalsMonthlyCount,
+        renewalsAnnual: renewalsAnnualCount,
         productBreakdown,
         marketingSummary,
         timeSeries,
-        mrrEvolution, churnEvolution, userAcquisition, worksPerDay, cohortData,
+        mrrEvolution,
+        churnEvolution,
+        userAcquisition,
+        worksPerDay,
+        cohortData,
         featureUsage: [
           { feature: "Crear música", uses: aiGen.count || 0 },
           { feature: "Videos", uses: videoGen.count || 0 },
@@ -2195,9 +3299,19 @@ serve(async (req) => {
       try {
         await admin
           .from("app_settings")
-          .upsert({ key: cacheKey, value: responsePayload, updated_at: new Date().toISOString() }, { onConflict: "key" });
+          .upsert(
+            {
+              key: cacheKey,
+              value: responsePayload,
+              updated_at: new Date().toISOString(),
+            },
+            { onConflict: "key" },
+          );
       } catch (cacheErr: any) {
-        console.warn("[get_saas_metrics] cache write failed:", cacheErr?.message);
+        console.warn(
+          "[get_saas_metrics] cache write failed:",
+          cacheErr?.message,
+        );
       }
 
       return json({ ...responsePayload, _cached: false });
@@ -2205,11 +3319,11 @@ serve(async (req) => {
 
     // ── save_marketing_metrics ────────────────────────────────────
     if (action === "save_marketing_metrics") {
-      const { year, month, ad_spend, cogs, cash_balance, monthly_burn, notes } = payload;
+      const { year, month, ad_spend, cogs, cash_balance, monthly_burn, notes } =
+        payload;
       if (!year || !month) throw new Error("year and month are required");
-      const { data, error } = await admin
-        .from("marketing_metrics")
-        .upsert({
+      const { data, error } = await admin.from("marketing_metrics").upsert(
+        {
           year: parseInt(year),
           month: parseInt(month),
           ad_spend: parseFloat(ad_spend || "0"),
@@ -2219,7 +3333,9 @@ serve(async (req) => {
           notes: notes || null,
           updated_by: callerEmail,
           updated_at: new Date().toISOString(),
-        }, { onConflict: "year,month" });
+        },
+        { onConflict: "year,month" },
+      );
       if (error) return json({ error: error.message }, 500);
       return json({ success: true });
     }
@@ -2239,7 +3355,8 @@ serve(async (req) => {
     // ── retry_ibs_queue_item ──────────────────────────────────────
     if (action === "retry_ibs_queue_item") {
       const { queueId, workId } = payload;
-      if (!queueId || !workId) throw new Error("queueId and workId are required");
+      if (!queueId || !workId)
+        throw new Error("queueId and workId are required");
 
       await admin
         .from("ibs_sync_queue")
@@ -2275,16 +3392,22 @@ serve(async (req) => {
         .select("*")
         .order("created_at", { ascending: false })
         .range(offset, offset + 49);
-      if (payload.status_filter) query = query.eq("status", payload.status_filter);
+      if (payload.status_filter)
+        query = query.eq("status", payload.status_filter);
 
       const { data: promos, error } = await query;
       if (error) return json({ error: error.message }, 500);
 
       const userIds = [...new Set((promos || []).map((p: any) => p.user_id))];
       const emailsMap = await getAllEmailsMap();
-      const { data: profiles } = await admin.from("profiles").select("user_id, display_name").in("user_id", userIds);
+      const { data: profiles } = await admin
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
       const namesMap: Record<string, string> = {};
-      (profiles || []).forEach((p: any) => { namesMap[p.user_id] = p.display_name; });
+      (profiles || []).forEach((p: any) => {
+        namesMap[p.user_id] = p.display_name;
+      });
 
       const enriched = (promos || []).map((p: any) => ({
         ...p,
@@ -2297,10 +3420,20 @@ serve(async (req) => {
 
     // ── update_premium_promo_status ───────────────────────────────
     if (action === "update_premium_promo_status") {
-      const { promo_id, new_status, rejection_reason, ig_url, tiktok_url } = payload;
-      if (!promo_id || !new_status) return json({ error: "promo_id and new_status required" }, 400);
-      const validStatuses = ["submitted", "under_review", "approved", "scheduled", "published", "rejected"];
-      if (!validStatuses.includes(new_status)) return json({ error: "Invalid status" }, 400);
+      const { promo_id, new_status, rejection_reason, ig_url, tiktok_url } =
+        payload;
+      if (!promo_id || !new_status)
+        return json({ error: "promo_id and new_status required" }, 400);
+      const validStatuses = [
+        "submitted",
+        "under_review",
+        "approved",
+        "scheduled",
+        "published",
+        "rejected",
+      ];
+      if (!validStatuses.includes(new_status))
+        return json({ error: "Invalid status" }, 400);
 
       const { data: promo, error: fetchErr } = await admin
         .from("premium_social_promotions")
@@ -2309,7 +3442,10 @@ serve(async (req) => {
         .single();
       if (fetchErr || !promo) return json({ error: "Promo not found" }, 404);
 
-      const updateData: Record<string, unknown> = { status: new_status, updated_at: new Date().toISOString() };
+      const updateData: Record<string, unknown> = {
+        status: new_status,
+        updated_at: new Date().toISOString(),
+      };
       if (new_status === "rejected" && rejection_reason) {
         updateData.team_notes = rejection_reason;
       }
@@ -2323,11 +3459,21 @@ serve(async (req) => {
       await audit({
         action: "update_premium_promo",
         target_user_id: promo.user_id,
-        details: { promo_id, old_status: promo.status, new_status, ...(rejection_reason ? { rejection_reason } : {}), ...(ig_url ? { ig_url } : {}), ...(tiktok_url ? { tiktok_url } : {}) },
+        details: {
+          promo_id,
+          old_status: promo.status,
+          new_status,
+          ...(rejection_reason ? { rejection_reason } : {}),
+          ...(ig_url ? { ig_url } : {}),
+          ...(tiktok_url ? { tiktok_url } : {}),
+        },
       });
 
       // Clean up media file when approved or rejected
-      if ((new_status === "approved" || new_status === "rejected") && promo.media_file_path) {
+      if (
+        (new_status === "approved" || new_status === "rejected") &&
+        promo.media_file_path
+      ) {
         try {
           const { error: delErr } = await admin.storage
             .from("premium-promo-media")
@@ -2335,7 +3481,9 @@ serve(async (req) => {
           if (delErr) {
             console.error("[ADMIN] Failed to delete promo media:", delErr);
           } else {
-            console.log(`[ADMIN] Deleted promo media: ${promo.media_file_path}`);
+            console.log(
+              `[ADMIN] Deleted promo media: ${promo.media_file_path}`,
+            );
             await admin
               .from("premium_social_promotions")
               .update({ media_file_path: null })
@@ -2347,11 +3495,16 @@ serve(async (req) => {
       }
 
       // Helper to send promo email
-      async function sendPromoEmail(emailContent: { subject: string; html: string }) {
+      async function sendPromoEmail(emailContent: {
+        subject: string;
+        html: string;
+      }) {
         const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
         if (!RESEND_API_KEY) return;
         try {
-          const { data: targetAuth } = await admin.auth.admin.getUserById(promo.user_id);
+          const { data: targetAuth } = await admin.auth.admin.getUserById(
+            promo.user_id,
+          );
           const userEmail = targetAuth?.user?.email;
           if (!userEmail) return;
           await fetch("https://api.resend.com/emails", {
@@ -2369,14 +3522,24 @@ serve(async (req) => {
           });
           console.log(`[ADMIN] Promo ${new_status} email sent to ${userEmail}`);
         } catch (emailErr) {
-          console.error(`[ADMIN] Failed to send ${new_status} promo email:`, emailErr);
+          console.error(
+            `[ADMIN] Failed to send ${new_status} promo email:`,
+            emailErr,
+          );
         }
       }
 
       // Get user profile for emails
-      const { data: userProfile } = await admin.from("profiles").select("display_name, language").eq("user_id", promo.user_id).single();
-      const { data: targetAuth } = await admin.auth.admin.getUserById(promo.user_id);
-      const displayName = userProfile?.display_name || targetAuth?.user?.email || "Artista";
+      const { data: userProfile } = await admin
+        .from("profiles")
+        .select("display_name, language")
+        .eq("user_id", promo.user_id)
+        .single();
+      const { data: targetAuth } = await admin.auth.admin.getUserById(
+        promo.user_id,
+      );
+      const displayName =
+        userProfile?.display_name || targetAuth?.user?.email || "Artista";
 
       // Send approval email
       if (new_status === "approved") {
@@ -2452,9 +3615,16 @@ serve(async (req) => {
         .list(folder, { search: filename, limit: 1 });
       if (listErr) return json({ error: listErr.message }, 500);
 
-      const match = (items || []).find((item) => item.name === filename) || items?.[0];
+      const match =
+        (items || []).find((item) => item.name === filename) || items?.[0];
       const metadata = match?.metadata || {};
-      const filesize = Number(metadata.size || metadata.contentLength || metadata.content_length || metadata.ContentLength) || null;
+      const filesize =
+        Number(
+          metadata.size ||
+            metadata.contentLength ||
+            metadata.content_length ||
+            metadata.ContentLength,
+        ) || null;
 
       return json({ filename, filesize });
     }
@@ -2472,7 +3642,9 @@ serve(async (req) => {
         .single();
       if (fetchErr || !work) return json({ error: "Work not found" }, 404);
 
-      const { data: targetAuth } = await admin.auth.admin.getUserById(work.user_id);
+      const { data: targetAuth } = await admin.auth.admin.getUserById(
+        work.user_id,
+      );
       const targetEmail = targetAuth?.user?.email || "";
 
       // Delete related managed_works
@@ -2491,7 +3663,10 @@ serve(async (req) => {
       }
 
       // Delete the work itself
-      const { error: delErr } = await admin.from("works").delete().eq("id", work_id);
+      const { error: delErr } = await admin
+        .from("works")
+        .delete()
+        .eq("id", work_id);
       if (delErr) return json({ error: delErr.message }, 500);
 
       // Refund credits if work never reached 'registered' (i.e. cancelled while stuck)
@@ -2513,7 +3688,10 @@ serve(async (req) => {
         if (prof) {
           await admin
             .from("profiles")
-            .update({ available_credits: (prof.available_credits || 0) + creditCost, updated_at: new Date().toISOString() })
+            .update({
+              available_credits: (prof.available_credits || 0) + creditCost,
+              updated_at: new Date().toISOString(),
+            })
             .eq("user_id", work.user_id);
           await admin.from("credit_transactions").insert({
             user_id: work.user_id,
@@ -2529,7 +3707,13 @@ serve(async (req) => {
         action: "delete_work",
         target_user_id: work.user_id,
         target_email: targetEmail,
-        details: { work_id, title: work.title, type: work.type, status: work.status, refunded },
+        details: {
+          work_id,
+          title: work.title,
+          type: work.type,
+          status: work.status,
+          refunded,
+        },
       });
 
       return json({ success: true, refunded });
@@ -2547,7 +3731,21 @@ serve(async (req) => {
 
     // ── save_campaign ─────────────────────────────────────────────
     if (action === "save_campaign") {
-      const { id: campId, name, type, owner, cost, start_date, end_date, coupon_code, utm_source, utm_medium, utm_campaign, notes, is_active } = payload;
+      const {
+        id: campId,
+        name,
+        type,
+        owner,
+        cost,
+        start_date,
+        end_date,
+        coupon_code,
+        utm_source,
+        utm_medium,
+        utm_campaign,
+        notes,
+        is_active,
+      } = payload;
       if (!name) return json({ error: "name is required" }, 400);
 
       const campData: Record<string, any> = {
@@ -2567,11 +3765,19 @@ serve(async (req) => {
       };
 
       if (campId) {
-        const { error } = await admin.from("marketing_campaigns").update(campData).eq("id", campId);
+        const { error } = await admin
+          .from("marketing_campaigns")
+          .update(campData)
+          .eq("id", campId);
         if (error) return json({ error: error.message }, 500);
-        await audit({ action: "update_campaign", details: { campaign_id: campId, name } });
+        await audit({
+          action: "update_campaign",
+          details: { campaign_id: campId, name },
+        });
       } else {
-        const { error } = await admin.from("marketing_campaigns").insert(campData);
+        const { error } = await admin
+          .from("marketing_campaigns")
+          .insert(campData);
         if (error) return json({ error: error.message }, 500);
         await audit({ action: "create_campaign", details: { name } });
       }
@@ -2590,7 +3796,10 @@ serve(async (req) => {
       const couponAliases: Record<string, string> = {
         BABYCOMEBAKC: "BABYCOMEBACK",
       };
-      const legacyCouponMetrics: Record<string, { total_clients: number; current_roi: number }> = {
+      const legacyCouponMetrics: Record<
+        string,
+        { total_clients: number; current_roi: number }
+      > = {
         FAEL20: { total_clients: 89, current_roi: 11.38 },
         MUSIC20: { total_clients: 32, current_roi: 5.14 },
         NICOMUSIC20: { total_clients: 42, current_roi: 2.61 },
@@ -2600,12 +3809,16 @@ serve(async (req) => {
         MISSAO20: { total_clients: 1, current_roi: -0.89 },
       };
       const canonicalCouponCode = (value: unknown) => {
-        const code = String(value || "").trim().toUpperCase();
+        const code = String(value || "")
+          .trim()
+          .toUpperCase();
         return couponAliases[code] || code;
       };
       const couponCodeVariants = (canonical: string) => [
         canonical,
-        ...Object.entries(couponAliases).filter(([, target]) => target === canonical).map(([alias]) => alias),
+        ...Object.entries(couponAliases)
+          .filter(([, target]) => target === canonical)
+          .map(([alias]) => alias),
       ];
 
       // 1. cargar cupones existentes (case-insensitive)
@@ -2616,7 +3829,9 @@ serve(async (req) => {
       const existingByCode = new Map<string, any>();
       (existing || []).forEach((c: any) => {
         const canonical = canonicalCouponCode(c.coupon_code);
-        const raw = String(c.coupon_code || "").trim().toUpperCase();
+        const raw = String(c.coupon_code || "")
+          .trim()
+          .toUpperCase();
         const current = existingByCode.get(canonical);
         if (!current || raw === canonical) existingByCode.set(canonical, c);
       });
@@ -2676,16 +3891,28 @@ serve(async (req) => {
         const upper = canonicalCouponCode(pc.code);
         if (!upper) continue;
         const coupon = pc.coupon || {};
-        const timesRedeemed = Number(pc.times_redeemed || coupon.times_redeemed || 0);
+        const timesRedeemed = Number(
+          pc.times_redeemed || coupon.times_redeemed || 0,
+        );
         const current = consolidatedByCode.get(upper);
         if (!current) {
-          consolidatedByCode.set(upper, { ...pc, code: upper, times_redeemed: timesRedeemed });
+          consolidatedByCode.set(upper, {
+            ...pc,
+            code: upper,
+            times_redeemed: timesRedeemed,
+          });
           continue;
         }
-        current.times_redeemed = Math.max(Number(current.times_redeemed || 0), timesRedeemed);
+        current.times_redeemed = Math.max(
+          Number(current.times_redeemed || 0),
+          timesRedeemed,
+        );
         current.active = current.active !== false || pc.active !== false;
         current.expires_at = current.expires_at || pc.expires_at;
-        current.created = Math.min(Number(current.created || pc.created || 0), Number(pc.created || current.created || 0));
+        current.created = Math.min(
+          Number(current.created || pc.created || 0),
+          Number(pc.created || current.created || 0),
+        );
       }
       const syncCodes = [...consolidatedByCode.values()];
 
@@ -2697,9 +3924,14 @@ serve(async (req) => {
         if (!code) continue;
         const upper = canonicalCouponCode(code);
         const coupon = pc.coupon || {};
-        const timesRedeemed = Number(pc.times_redeemed || coupon.times_redeemed || 0);
+        const timesRedeemed = Number(
+          pc.times_redeemed || coupon.times_redeemed || 0,
+        );
         const couponFilters = couponCodeVariants(upper)
-          .flatMap((variant) => [`coupon_code.ilike.${variant}`, `promotion_code.ilike.${variant}`])
+          .flatMap((variant) => [
+            `coupon_code.ilike.${variant}`,
+            `promotion_code.ilike.${variant}`,
+          ])
           .join(",");
         const paidOrders = await admin
           .from("orders")
@@ -2707,19 +3939,33 @@ serve(async (req) => {
           .eq("order_status", "paid")
           .or(couponFilters);
         const paidRows = paidOrders.data || [];
-        const totalClients = new Set(paidRows.map((o: any) => o.user_id).filter(Boolean)).size;
-        const totalRevenue = paidRows.reduce((sum: number, o: any) => sum + (Number(o.amount_gross) || 0), 0);
+        const totalClients = new Set(
+          paidRows.map((o: any) => o.user_id).filter(Boolean),
+        ).size;
+        const totalRevenue = paidRows.reduce(
+          (sum: number, o: any) => sum + (Number(o.amount_gross) || 0),
+          0,
+        );
 
         const existingCampaign = existingByCode.get(upper);
         if (existingCampaign) {
           const campaignCost = Number(existingCampaign.cost) || 0;
           const fallbackMetrics = legacyCouponMetrics[upper];
-          const resolvedClients = totalClients > 0
-            ? totalClients
-            : Math.max(Number(existingCampaign.total_clients) || 0, fallbackMetrics?.total_clients || 0);
-          const resolvedRoi = totalClients > 0 && campaignCost > 0
-            ? Number(((totalRevenue - campaignCost) / campaignCost).toFixed(2))
-            : (fallbackMetrics?.current_roi ?? Number(existingCampaign.current_roi) ?? 0);
+          const resolvedClients =
+            totalClients > 0
+              ? totalClients
+              : Math.max(
+                  Number(existingCampaign.total_clients) || 0,
+                  fallbackMetrics?.total_clients || 0,
+                );
+          const resolvedRoi =
+            totalClients > 0 && campaignCost > 0
+              ? Number(
+                  ((totalRevenue - campaignCost) / campaignCost).toFixed(2),
+                )
+              : (fallbackMetrics?.current_roi ??
+                Number(existingCampaign.current_roi) ??
+                0);
           const { error: updErr } = await admin
             .from("marketing_campaigns")
             .update({
@@ -2751,8 +3997,12 @@ serve(async (req) => {
           total_registrations: timesRedeemed,
           total_clients: totalClients,
           current_roi: 0,
-          start_date: pc.created ? new Date(pc.created * 1000).toISOString().slice(0, 10) : null,
-          end_date: pc.expires_at ? new Date(pc.expires_at * 1000).toISOString().slice(0, 10) : null,
+          start_date: pc.created
+            ? new Date(pc.created * 1000).toISOString().slice(0, 10)
+            : null,
+          end_date: pc.expires_at
+            ? new Date(pc.expires_at * 1000).toISOString().slice(0, 10)
+            : null,
           notes: `Auto-importado desde Stripe${desc ? ` · ${desc}` : ""} · promo_id=${pc.id}`,
           updated_at: new Date().toISOString(),
         });
@@ -2760,11 +4010,16 @@ serve(async (req) => {
 
       let inserted = 0;
       if (toInsert.length > 0) {
-        const { error: insErr } = await admin.from("marketing_campaigns").insert(toInsert);
+        const { error: insErr } = await admin
+          .from("marketing_campaigns")
+          .insert(toInsert);
         if (insErr) return json({ error: insErr.message }, 500);
         inserted = toInsert.length;
       }
-      await audit({ action: "sync_stripe_coupons", details: { inserted, updated, total_stripe: syncCodes.length } });
+      await audit({
+        action: "sync_stripe_coupons",
+        details: { inserted, updated, total_stripe: syncCodes.length },
+      });
 
       return json({
         success: true,
@@ -2792,7 +4047,8 @@ serve(async (req) => {
         we.setDate(we.getDate() + 7);
         rangeEnd = we.toISOString();
       } else if (periodType === "month" && month && year) {
-        const y = parseInt(year), m = parseInt(month);
+        const y = parseInt(year),
+          m = parseInt(month);
         rangeStart = new Date(y, m - 1, 1).toISOString();
         rangeEnd = new Date(y, m, 1).toISOString();
       } else if (periodType === "year" && year) {
@@ -2801,8 +4057,16 @@ serve(async (req) => {
         rangeEnd = new Date(y + 1, 0, 1).toISOString();
       } else {
         // Default: current month
-        rangeStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        rangeEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+        rangeStart = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          1,
+        ).toISOString();
+        rangeEnd = new Date(
+          now.getFullYear(),
+          now.getMonth() + 1,
+          1,
+        ).toISOString();
       }
 
       // Fetch orders in range
@@ -2814,17 +4078,27 @@ serve(async (req) => {
         .eq("order_status", "paid");
 
       // Fetch campaigns catalog
-      const { data: campaigns } = await admin.from("marketing_campaigns").select("*");
+      const { data: campaigns } = await admin
+        .from("marketing_campaigns")
+        .select("*");
       const campaignMap: Record<string, any> = {};
-      (campaigns || []).forEach((c: any) => { campaignMap[c.id] = c; });
+      (campaigns || []).forEach((c: any) => {
+        campaignMap[c.id] = c;
+      });
 
       // Fetch user_attribution for users in orders
       const userIds = [...new Set((orders || []).map((o: any) => o.user_id))];
-      const { data: attributions } = userIds.length > 0
-        ? await admin.from("user_attribution").select("*").in("user_id", userIds)
-        : { data: [] };
+      const { data: attributions } =
+        userIds.length > 0
+          ? await admin
+              .from("user_attribution")
+              .select("*")
+              .in("user_id", userIds)
+          : { data: [] };
       const attrMap: Record<string, any> = {};
-      (attributions || []).forEach((a: any) => { attrMap[a.user_id] = a; });
+      (attributions || []).forEach((a: any) => {
+        attrMap[a.user_id] = a;
+      });
 
       // Fetch registrations in range (for attributed_registered_users)
       const { data: newProfiles } = await admin
@@ -2832,31 +4106,55 @@ serve(async (req) => {
         .select("user_id")
         .gte("created_at", rangeStart)
         .lt("created_at", rangeEnd);
-      const newProfileIds = new Set((newProfiles || []).map((p: any) => p.user_id));
+      const newProfileIds = new Set(
+        (newProfiles || []).map((p: any) => p.user_id),
+      );
 
       // Fetch user_attribution for new profiles
       const newProfileIdsList = [...newProfileIds];
-      const { data: newAttrs } = newProfileIdsList.length > 0
-        ? await admin.from("user_attribution").select("*").in("user_id", newProfileIdsList)
-        : { data: [] };
+      const { data: newAttrs } =
+        newProfileIdsList.length > 0
+          ? await admin
+              .from("user_attribution")
+              .select("*")
+              .in("user_id", newProfileIdsList)
+          : { data: [] };
 
       // Build per-campaign metrics
-      const campMetrics: Record<string, {
-        name: string; type: string; registered: number; new_customers: number;
-        returning_customers: number; orders_count: number; revenue: number;
-        cost: number; coupon_uses: number; revenue_by_product: Record<string, number>;
-        units_by_product: Record<string, number>;
-      }> = {};
+      const campMetrics: Record<
+        string,
+        {
+          name: string;
+          type: string;
+          registered: number;
+          new_customers: number;
+          returning_customers: number;
+          orders_count: number;
+          revenue: number;
+          cost: number;
+          coupon_uses: number;
+          revenue_by_product: Record<string, number>;
+          units_by_product: Record<string, number>;
+        }
+      > = {};
 
       function ensureCamp(name: string) {
         if (!campMetrics[name]) {
-          const matchedCamp = (campaigns || []).find((c: any) => c.name === name);
+          const matchedCamp = (campaigns || []).find(
+            (c: any) => c.name === name,
+          );
           campMetrics[name] = {
             name,
             type: matchedCamp?.type || "unknown",
-            registered: 0, new_customers: 0, returning_customers: 0,
-            orders_count: 0, revenue: 0, cost: matchedCamp ? parseFloat(matchedCamp.cost) : 0,
-            coupon_uses: 0, revenue_by_product: {}, units_by_product: {},
+            registered: 0,
+            new_customers: 0,
+            returning_customers: 0,
+            orders_count: 0,
+            revenue: 0,
+            cost: matchedCamp ? parseFloat(matchedCamp.cost) : 0,
+            coupon_uses: 0,
+            revenue_by_product: {},
+            units_by_product: {},
           };
         }
         return campMetrics[name];
@@ -2864,16 +4162,25 @@ serve(async (req) => {
 
       // Count registrations by campaign
       (newAttrs || []).forEach((a: any) => {
-        const campName = a.attributed_campaign_name || a.first_campaign || "unattributed";
+        const campName =
+          a.attributed_campaign_name || a.first_campaign || "unattributed";
         ensureCamp(campName).registered++;
       });
 
       // Process orders
       // First, find which users had orders before the range (for returning detection)
-      const { data: priorOrders } = userIds.length > 0
-        ? await admin.from("orders").select("user_id").lt("paid_at", rangeStart).eq("order_status", "paid").in("user_id", userIds)
-        : { data: [] };
-      const usersWithPriorOrders = new Set((priorOrders || []).map((o: any) => o.user_id));
+      const { data: priorOrders } =
+        userIds.length > 0
+          ? await admin
+              .from("orders")
+              .select("user_id")
+              .lt("paid_at", rangeStart)
+              .eq("order_status", "paid")
+              .in("user_id", userIds)
+          : { data: [] };
+      const usersWithPriorOrders = new Set(
+        (priorOrders || []).map((o: any) => o.user_id),
+      );
 
       // Track unique new/returning per campaign
       const campNewCustomers: Record<string, Set<string>> = {};
@@ -2887,7 +4194,8 @@ serve(async (req) => {
         if (o.coupon_code) m.coupon_uses++;
 
         const pt = o.product_type || "unknown";
-        m.revenue_by_product[pt] = (m.revenue_by_product[pt] || 0) + (parseFloat(o.amount_gross) || 0);
+        m.revenue_by_product[pt] =
+          (m.revenue_by_product[pt] || 0) + (parseFloat(o.amount_gross) || 0);
         m.units_by_product[pt] = (m.units_by_product[pt] || 0) + 1;
 
         // New vs returning
@@ -2905,16 +4213,28 @@ serve(async (req) => {
       Object.keys(campMetrics).forEach((name) => {
         campMetrics[name].new_customers = campNewCustomers[name]?.size || 0;
         campMetrics[name].returning_customers = campReturning[name]?.size || 0;
-        campMetrics[name].revenue = Math.round(campMetrics[name].revenue * 100) / 100;
+        campMetrics[name].revenue =
+          Math.round(campMetrics[name].revenue * 100) / 100;
       });
 
       // Build result array with derived metrics
-      const result = Object.values(campMetrics).map((c) => ({
-        ...c,
-        roi: c.cost > 0 ? parseFloat((((c.revenue - c.cost) / c.cost) * 100).toFixed(1)) : null,
-        cac: c.new_customers > 0 ? parseFloat((c.cost / c.new_customers).toFixed(2)) : null,
-        conversion_rate: c.registered > 0 ? parseFloat(((c.new_customers / c.registered) * 100).toFixed(1)) : null,
-      })).sort((a, b) => b.revenue - a.revenue);
+      const result = Object.values(campMetrics)
+        .map((c) => ({
+          ...c,
+          roi:
+            c.cost > 0
+              ? parseFloat((((c.revenue - c.cost) / c.cost) * 100).toFixed(1))
+              : null,
+          cac:
+            c.new_customers > 0
+              ? parseFloat((c.cost / c.new_customers).toFixed(2))
+              : null,
+          conversion_rate:
+            c.registered > 0
+              ? parseFloat(((c.new_customers / c.registered) * 100).toFixed(1))
+              : null,
+        }))
+        .sort((a, b) => b.revenue - a.revenue);
 
       // Summary KPIs
       const totalRevenue = result.reduce((s, c) => s + c.revenue, 0);
@@ -2929,8 +4249,16 @@ serve(async (req) => {
           total_cost: Math.round(totalCost * 100) / 100,
           total_new_customers: totalNewCustomers,
           total_registered: totalRegistered,
-          overall_roi: totalCost > 0 ? parseFloat((((totalRevenue - totalCost) / totalCost) * 100).toFixed(1)) : null,
-          overall_cac: totalNewCustomers > 0 ? parseFloat((totalCost / totalNewCustomers).toFixed(2)) : null,
+          overall_roi:
+            totalCost > 0
+              ? parseFloat(
+                  (((totalRevenue - totalCost) / totalCost) * 100).toFixed(1),
+                )
+              : null,
+          overall_cac:
+            totalNewCustomers > 0
+              ? parseFloat((totalCost / totalNewCustomers).toFixed(2))
+              : null,
         },
         range: { start: rangeStart, end: rangeEnd },
       });
@@ -2960,7 +4288,9 @@ serve(async (req) => {
       // Get attributed users
       const { data: attrUsers } = await admin
         .from("user_attribution")
-        .select("user_id, first_source, first_medium, first_landing_path, created_at")
+        .select(
+          "user_id, first_source, first_medium, first_landing_path, created_at",
+        )
         .eq("attributed_campaign_name", campaign_name)
         .limit(200);
 
@@ -2978,6 +4308,16 @@ serve(async (req) => {
 
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
       const dryRun = payload.dry_run === true;
+      const rawLimit =
+        typeof payload.limit === "number"
+          ? payload.limit
+          : Number(payload.limit || 0);
+      const candidateLimit =
+        Number.isFinite(rawLimit) && rawLimit > 0
+          ? Math.min(Math.floor(rawLimit), dryRun ? 250 : 1000)
+          : null;
+      const startedAt = Date.now();
+      const timeBudgetMs = dryRun ? 75_000 : 130_000;
 
       const stats = {
         invoices_found: 0,
@@ -3000,13 +4340,18 @@ serve(async (req) => {
         skipped_failed: 0,
         skipped_voided: 0,
         skipped_disputed: 0,
+        limit_applied: candidateLimit || 0,
+        scan_limited: false,
+        time_budget_reached: false,
         errors: 0,
       };
 
       // Load all existing orders (full row for matching + update decisions)
       const { data: existingOrders } = await admin
         .from("orders")
-        .select("id, user_id, stripe_invoice_id, stripe_charge_id, stripe_checkout_session_id, amount_gross, amount_net, stripe_fee, product_type, product_code, order_status, paid_at, created_at");
+        .select(
+          "id, user_id, stripe_invoice_id, stripe_charge_id, stripe_checkout_session_id, amount_gross, amount_net, stripe_fee, product_type, product_code, order_status, paid_at, created_at",
+        );
 
       // Index by stripe refs
       const byInvoiceId = new Map<string, any>();
@@ -3017,8 +4362,13 @@ serve(async (req) => {
       (existingOrders || []).forEach((o: any) => {
         if (o.stripe_invoice_id) byInvoiceId.set(o.stripe_invoice_id, o);
         if (o.stripe_charge_id) byChargeId.set(o.stripe_charge_id, o);
-        if (o.stripe_checkout_session_id) bySessionId.set(o.stripe_checkout_session_id, o);
-        if (!o.stripe_invoice_id && !o.stripe_charge_id && !o.stripe_checkout_session_id) {
+        if (o.stripe_checkout_session_id)
+          bySessionId.set(o.stripe_checkout_session_id, o);
+        if (
+          !o.stripe_invoice_id &&
+          !o.stripe_charge_id &&
+          !o.stripe_checkout_session_id
+        ) {
           const arr = orphansByUser.get(o.user_id) || [];
           arr.push(o);
           orphansByUser.set(o.user_id, arr);
@@ -3026,36 +4376,51 @@ serve(async (req) => {
       });
 
       // Build email -> user_id map
-      const { data: { users: allAuthUsers } } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      const {
+        data: { users: allAuthUsers },
+      } = await admin.auth.admin.listUsers({ perPage: 1000 });
       const emailToUserId: Record<string, string> = {};
-      (allAuthUsers || []).forEach((u: any) => { if (u.email) emailToUserId[u.email.toLowerCase()] = u.id; });
+      (allAuthUsers || []).forEach((u: any) => {
+        if (u.email) emailToUserId[u.email.toLowerCase()] = u.id;
+      });
 
       // Build stripe_customer_id -> user_id map from profiles
-      const { data: allProfiles } = await admin.from("profiles").select("user_id, stripe_customer_id");
+      const { data: allProfiles } = await admin
+        .from("profiles")
+        .select("user_id, stripe_customer_id");
       const custToUserId: Record<string, string> = {};
-      (allProfiles || []).forEach((p: any) => { if (p.stripe_customer_id) custToUserId[p.stripe_customer_id] = p.user_id; });
+      (allProfiles || []).forEach((p: any) => {
+        if (p.stripe_customer_id)
+          custToUserId[p.stripe_customer_id] = p.user_id;
+      });
 
-      // Preload Stripe customers (paginated) into custId->email map to avoid
-      // per-record stripe.customers.retrieve() calls that blow the 150s timeout.
-      const custIdToEmail: Record<string, string> = {};
-      {
-        let hasMore = true;
-        let startingAfter: string | undefined;
-        while (hasMore) {
-          const params: any = { limit: 100 };
-          if (startingAfter) params.starting_after = startingAfter;
-          const page = await stripe.customers.list(params);
-          for (const c of page.data) {
-            if (c.email) custIdToEmail[c.id] = c.email.toLowerCase();
+      const customerEmailCache: Record<string, string | null> = {};
+
+      async function resolveUserId(
+        customerId: string,
+      ): Promise<{ userId: string | null; via: string }> {
+        if (custToUserId[customerId])
+          return {
+            userId: custToUserId[customerId],
+            via: "stripe_customer_id",
+          };
+        if (!(customerId in customerEmailCache)) {
+          try {
+            const customer = await stripe.customers.retrieve(customerId);
+            customerEmailCache[customerId] =
+              !customer.deleted && customer.email
+                ? customer.email.toLowerCase()
+                : null;
+          } catch (err) {
+            console.warn(
+              "[BACKFILL] Unable to retrieve Stripe customer",
+              customerId,
+              err,
+            );
+            customerEmailCache[customerId] = null;
           }
-          hasMore = page.has_more;
-          if (page.data.length > 0) startingAfter = page.data[page.data.length - 1].id;
         }
-      }
-
-      function resolveUserId(customerId: string): { userId: string | null; via: string } {
-        if (custToUserId[customerId]) return { userId: custToUserId[customerId], via: "stripe_customer_id" };
-        const email = custIdToEmail[customerId];
+        const email = customerEmailCache[customerId];
         if (email) {
           const uid = emailToUserId[email];
           if (uid) {
@@ -3068,19 +4433,19 @@ serve(async (req) => {
 
       // Price -> plan ID mapping (same as stripe-webhook)
       const BACKFILL_PRICE_TO_PLAN: Record<string, string> = {
-        "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": "annual_legacy",
-        "price_1THT7cF9ZCIiqrz6sWS67Q4V": "annual_100",
-        "price_1THT7gF9ZCIiqrz6Acb2CkDC": "annual_200",
-        "price_1THT7jF9ZCIiqrz6i02J4bj4": "annual_300",
-        "price_1THT7nF9ZCIiqrz6r1ZcqH8L": "annual_500",
-        "price_1THT7rF9ZCIiqrz6UmJDkBNZ": "annual_1000",
-        "price_1T9SZvF9ZCIiqrz6TWLtfMBs": "monthly",
-        "price_1THULsF9ZCIiqrz64SbA3AK6": "individual",
-        "price_1THT7xF9ZCIiqrz60FfiGbfv": "topup_10",
-        "price_1THT80F9ZCIiqrz6H31dYDMG": "topup_25",
-        "price_1THT83F9ZCIiqrz6BD2wmUaO": "topup_50",
-        "price_1THT86F9ZCIiqrz6C548DJnT": "topup_100",
-        "price_1THT8AF9ZCIiqrz626wSH9Rz": "topup_200",
+        price_1T9TnyF9ZCIiqrz6ruOlBcnZ: "annual_legacy",
+        price_1THT7cF9ZCIiqrz6sWS67Q4V: "annual_100",
+        price_1THT7gF9ZCIiqrz6Acb2CkDC: "annual_200",
+        price_1THT7jF9ZCIiqrz6i02J4bj4: "annual_300",
+        price_1THT7nF9ZCIiqrz6r1ZcqH8L: "annual_500",
+        price_1THT7rF9ZCIiqrz6UmJDkBNZ: "annual_1000",
+        price_1T9SZvF9ZCIiqrz6TWLtfMBs: "monthly",
+        price_1THULsF9ZCIiqrz64SbA3AK6: "individual",
+        price_1THT7xF9ZCIiqrz60FfiGbfv: "topup_10",
+        price_1THT80F9ZCIiqrz6H31dYDMG: "topup_25",
+        price_1THT83F9ZCIiqrz6BD2wmUaO: "topup_50",
+        price_1THT86F9ZCIiqrz6C548DJnT: "topup_100",
+        price_1THT8AF9ZCIiqrz626wSH9Rz: "topup_200",
       };
 
       function bfGetProductType(planId: string): string {
@@ -3091,19 +4456,54 @@ serve(async (req) => {
         return "legacy_unknown";
       }
 
-      function inferProductType(priceId: string | null, interval: string | null, _amount: number): { productType: string; productCode: string; billingInterval: string | null; isSub: boolean } {
+      function inferProductType(
+        priceId: string | null,
+        interval: string | null,
+        _amount: number,
+      ): {
+        productType: string;
+        productCode: string;
+        billingInterval: string | null;
+        isSub: boolean;
+      } {
         if (priceId && BACKFILL_PRICE_TO_PLAN[priceId]) {
           const planId = BACKFILL_PRICE_TO_PLAN[priceId];
           const pt = bfGetProductType(planId);
-          return { productType: pt, productCode: planId, billingInterval: pt === "annual" ? "yearly" : pt === "monthly" ? "monthly" : null, isSub: pt === "annual" || pt === "monthly" };
+          return {
+            productType: pt,
+            productCode: planId,
+            billingInterval:
+              pt === "annual" ? "yearly" : pt === "monthly" ? "monthly" : null,
+            isSub: pt === "annual" || pt === "monthly",
+          };
         }
-        if (interval === "year") return { productType: "annual", productCode: "annual_unknown", billingInterval: "yearly", isSub: true };
-        if (interval === "month") return { productType: "monthly", productCode: "monthly", billingInterval: "monthly", isSub: true };
-        return { productType: "legacy_unknown", productCode: "legacy_unknown", billingInterval: null, isSub: false };
+        if (interval === "year")
+          return {
+            productType: "annual",
+            productCode: "annual_unknown",
+            billingInterval: "yearly",
+            isSub: true,
+          };
+        if (interval === "month")
+          return {
+            productType: "monthly",
+            productCode: "monthly",
+            billingInterval: "monthly",
+            isSub: true,
+          };
+        return {
+          productType: "legacy_unknown",
+          productCode: "legacy_unknown",
+          billingInterval: null,
+          isSub: false,
+        };
       }
 
       // Compute amount_net: prefer stripe net (pre-tax), fallback to gross/1.21
-      function computeAmountNet(stripeNet: number | null, gross: number): number {
+      function computeAmountNet(
+        stripeNet: number | null,
+        gross: number,
+      ): number {
         if (stripeNet != null && stripeNet > 0) return stripeNet;
         return Math.round((gross / 1.21) * 100) / 100;
       }
@@ -3112,12 +4512,27 @@ serve(async (req) => {
       // - exact match by stripe_invoice_id or stripe_charge_id → UPDATE
       // - else fuzzy match orphan by user_id + amount ±10% + paid_at ±24h (exactly one) → UPDATE
       // - else → INSERT
-      function findMatch(candidate: any): { kind: "update_ref" | "update_fuzzy" | "insert" | "ambiguous"; existing?: any } {
-        if (candidate.stripe_invoice_id && byInvoiceId.has(candidate.stripe_invoice_id)) {
-          return { kind: "update_ref", existing: byInvoiceId.get(candidate.stripe_invoice_id) };
+      function findMatch(candidate: any): {
+        kind: "update_ref" | "update_fuzzy" | "insert" | "ambiguous";
+        existing?: any;
+      } {
+        if (
+          candidate.stripe_invoice_id &&
+          byInvoiceId.has(candidate.stripe_invoice_id)
+        ) {
+          return {
+            kind: "update_ref",
+            existing: byInvoiceId.get(candidate.stripe_invoice_id),
+          };
         }
-        if (candidate.stripe_charge_id && byChargeId.has(candidate.stripe_charge_id)) {
-          return { kind: "update_ref", existing: byChargeId.get(candidate.stripe_charge_id) };
+        if (
+          candidate.stripe_charge_id &&
+          byChargeId.has(candidate.stripe_charge_id)
+        ) {
+          return {
+            kind: "update_ref",
+            existing: byChargeId.get(candidate.stripe_charge_id),
+          };
         }
         const orphans = orphansByUser.get(candidate.user_id) || [];
         if (orphans.length === 0) return { kind: "insert" };
@@ -3132,7 +4547,8 @@ serve(async (req) => {
           if (Math.abs(oTs - candTs) > tolMs) return false;
           return true;
         });
-        if (matches.length === 1) return { kind: "update_fuzzy", existing: matches[0] };
+        if (matches.length === 1)
+          return { kind: "update_fuzzy", existing: matches[0] };
         if (matches.length > 1) return { kind: "ambiguous" };
         return { kind: "insert" };
       }
@@ -3140,7 +4556,27 @@ serve(async (req) => {
       // Track charge IDs linked to invoices to prevent double-counting
       const invoiceLinkedChargeIds = new Set<string>();
       const ordersToInsert: any[] = [];
-      const ordersToUpdate: { id: string; matched_via: "stripe_ref" | "fuzzy"; updates: any; candidate: any }[] = [];
+      const ordersToUpdate: {
+        id: string;
+        matched_via: "stripe_ref" | "fuzzy";
+        updates: any;
+        candidate: any;
+      }[] = [];
+
+      function shouldStopScanning() {
+        if (
+          candidateLimit &&
+          ordersToInsert.length + ordersToUpdate.length >= candidateLimit
+        ) {
+          stats.scan_limited = true;
+          return true;
+        }
+        if (Date.now() - startedAt > timeBudgetMs) {
+          stats.time_budget_reached = true;
+          return true;
+        }
+        return false;
+      }
 
       function queueCandidate(candidate: any) {
         const m = findMatch(candidate);
@@ -3162,13 +4598,19 @@ serve(async (req) => {
           order_status: candidate.order_status,
         };
         // If existing row has unknown/legacy product, also enrich product_code/billing_interval
-        if (!m.existing.product_code || m.existing.product_code === "legacy_unknown" || m.existing.product_code === "unknown") {
+        if (
+          !m.existing.product_code ||
+          m.existing.product_code === "legacy_unknown" ||
+          m.existing.product_code === "unknown"
+        ) {
           updates.product_code = candidate.product_code;
           updates.billing_interval = candidate.billing_interval;
         }
         // Backfill stripe refs if missing (fuzzy match path)
-        if (!m.existing.stripe_invoice_id && candidate.stripe_invoice_id) updates.stripe_invoice_id = candidate.stripe_invoice_id;
-        if (!m.existing.stripe_charge_id && candidate.stripe_charge_id) updates.stripe_charge_id = candidate.stripe_charge_id;
+        if (!m.existing.stripe_invoice_id && candidate.stripe_invoice_id)
+          updates.stripe_invoice_id = candidate.stripe_invoice_id;
+        if (!m.existing.stripe_charge_id && candidate.stripe_charge_id)
+          updates.stripe_charge_id = candidate.stripe_charge_id;
         ordersToUpdate.push({
           id: m.existing.id,
           matched_via: m.kind === "update_ref" ? "stripe_ref" : "fuzzy",
@@ -3180,7 +4622,10 @@ serve(async (req) => {
         // Remove from orphans pool so we don't double-match
         if (m.kind === "update_fuzzy") {
           const arr = orphansByUser.get(candidate.user_id) || [];
-          orphansByUser.set(candidate.user_id, arr.filter((o) => o.id !== m.existing!.id));
+          orphansByUser.set(
+            candidate.user_id,
+            arr.filter((o) => o.id !== m.existing!.id),
+          );
         }
       }
 
@@ -3188,25 +4633,42 @@ serve(async (req) => {
       let hasMoreInv = true;
       let startingAfterInv: string | undefined;
 
-      while (hasMoreInv) {
-        const params: any = { limit: 100, status: "paid", expand: ["data.charge.balance_transaction"] };
+      while (hasMoreInv && !shouldStopScanning()) {
+        const params: any = {
+          limit: 100,
+          status: "paid",
+          expand: ["data.charge.balance_transaction"],
+        };
         if (startingAfterInv) params.starting_after = startingAfterInv;
         const invoices = await stripe.invoices.list(params);
 
         for (const inv of invoices.data) {
+          if (shouldStopScanning()) break;
           stats.invoices_found++;
 
-          const chargeObj: any = inv.charge && typeof inv.charge === "object" ? inv.charge : null;
-          const chargeId = typeof inv.charge === "string" ? inv.charge : chargeObj?.id || null;
+          const chargeObj: any =
+            inv.charge && typeof inv.charge === "object" ? inv.charge : null;
+          const chargeId =
+            typeof inv.charge === "string" ? inv.charge : chargeObj?.id || null;
           if (chargeId) invoiceLinkedChargeIds.add(chargeId);
-          const bt: any = chargeObj?.balance_transaction && typeof chargeObj.balance_transaction === "object" ? chargeObj.balance_transaction : null;
+          const bt: any =
+            chargeObj?.balance_transaction &&
+            typeof chargeObj.balance_transaction === "object"
+              ? chargeObj.balance_transaction
+              : null;
           const stripeFee = bt && typeof bt.fee === "number" ? bt.fee / 100 : 0;
 
-          const customerId = typeof inv.customer === "string" ? inv.customer : (inv.customer as any)?.id;
+          const customerId =
+            typeof inv.customer === "string"
+              ? inv.customer
+              : (inv.customer as any)?.id;
           if (!customerId) continue;
 
-          const { userId, via } = resolveUserId(customerId);
-          if (!userId) { stats.missing_user++; continue; }
+          const { userId, via } = await resolveUserId(customerId);
+          if (!userId) {
+            stats.missing_user++;
+            continue;
+          }
           if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
           else if (via === "email_fallback") stats.resolved_by_email_fallback++;
 
@@ -3214,12 +4676,18 @@ serve(async (req) => {
           const priceId = lineItem?.price?.id || null;
           const interval = lineItem?.price?.recurring?.interval || null;
           const amount = (inv.amount_paid || 0) / 100;
-          const stripeNet = typeof inv.subtotal === "number" ? inv.subtotal / 100 : null;
+          const stripeNet =
+            typeof inv.subtotal === "number" ? inv.subtotal / 100 : null;
 
-          const { productType, productCode, billingInterval, isSub } = inferProductType(priceId, interval, amount);
+          const { productType, productCode, billingInterval, isSub } =
+            inferProductType(priceId, interval, amount);
           if (productType === "legacy_unknown") stats.unknown_product_type++;
 
-          const isRenewal = isSub && !!inv.subscription && (inv.billing_reason === "subscription_cycle" || inv.billing_reason === "subscription_update");
+          const isRenewal =
+            isSub &&
+            !!inv.subscription &&
+            (inv.billing_reason === "subscription_cycle" ||
+              inv.billing_reason === "subscription_update");
 
           const paidAtTs = inv.status_transitions?.paid_at || inv.created;
           const paidAt = new Date(paidAtTs * 1000).toISOString();
@@ -3227,7 +4695,8 @@ serve(async (req) => {
           const candidate = {
             user_id: userId,
             stripe_invoice_id: inv.id,
-            stripe_subscription_id: typeof inv.subscription === "string" ? inv.subscription : null,
+            stripe_subscription_id:
+              typeof inv.subscription === "string" ? inv.subscription : null,
             stripe_charge_id: chargeId,
             order_status: "paid",
             product_type: productType,
@@ -3241,9 +4710,17 @@ serve(async (req) => {
             is_renewal: isRenewal,
             is_first_purchase: false,
             coupon_code: inv.discount?.coupon?.id || null,
-            promotion_code: inv.discount?.promotion_code ? (typeof inv.discount.promotion_code === "string" ? inv.discount.promotion_code : inv.discount.promotion_code.code) : null,
+            promotion_code: inv.discount?.promotion_code
+              ? typeof inv.discount.promotion_code === "string"
+                ? inv.discount.promotion_code
+                : inv.discount.promotion_code.code
+              : null,
             paid_at: paidAt,
-            metadata: { backfill: true, backfill_source: "stripe_invoice", resolved_user_via: via },
+            metadata: {
+              backfill: true,
+              backfill_source: "stripe_invoice",
+              resolved_user_via: via,
+            },
           };
 
           queueCandidate(candidate);
@@ -3251,37 +4728,66 @@ serve(async (req) => {
         }
 
         hasMoreInv = invoices.has_more;
-        if (invoices.data.length > 0) startingAfterInv = invoices.data[invoices.data.length - 1].id;
+        if (invoices.data.length > 0)
+          startingAfterInv = invoices.data[invoices.data.length - 1].id;
       }
 
       // ── 2) Process standalone charges not linked to invoices ──
       let hasMoreCh = true;
       let startingAfterCh: string | undefined;
 
-      while (hasMoreCh) {
-        const params: any = { limit: 100, expand: ["data.balance_transaction"] };
+      while (hasMoreCh && !shouldStopScanning()) {
+        const params: any = {
+          limit: 100,
+          expand: ["data.balance_transaction"],
+        };
         if (startingAfterCh) params.starting_after = startingAfterCh;
         const charges = await stripe.charges.list(params);
 
         for (const ch of charges.data) {
+          if (shouldStopScanning()) break;
           stats.charges_found++;
 
           // Skip charges already linked to an invoice we processed (avoids double processing)
-          if (invoiceLinkedChargeIds.has(ch.id)) { stats.duplicates_skipped++; continue; }
+          if (invoiceLinkedChargeIds.has(ch.id)) {
+            stats.duplicates_skipped++;
+            continue;
+          }
           if (ch.invoice) {
-            const invId = typeof ch.invoice === "string" ? ch.invoice : (ch.invoice as any).id;
-            if (byInvoiceId.has(invId)) { stats.duplicates_skipped++; continue; }
+            const invId =
+              typeof ch.invoice === "string"
+                ? ch.invoice
+                : (ch.invoice as any).id;
+            if (byInvoiceId.has(invId)) {
+              stats.duplicates_skipped++;
+              continue;
+            }
           }
 
-          if (ch.status !== "succeeded") { stats.skipped_failed++; continue; }
-          if (ch.refunded) { stats.skipped_refunded++; continue; }
-          if (ch.disputed) { stats.skipped_disputed++; continue; }
+          if (ch.status !== "succeeded") {
+            stats.skipped_failed++;
+            continue;
+          }
+          if (ch.refunded) {
+            stats.skipped_refunded++;
+            continue;
+          }
+          if (ch.disputed) {
+            stats.skipped_disputed++;
+            continue;
+          }
 
-          const customerId = typeof ch.customer === "string" ? ch.customer : (ch.customer as any)?.id;
+          const customerId =
+            typeof ch.customer === "string"
+              ? ch.customer
+              : (ch.customer as any)?.id;
           if (!customerId) continue;
 
-          const { userId, via } = resolveUserId(customerId);
-          if (!userId) { stats.missing_user++; continue; }
+          const { userId, via } = await resolveUserId(customerId);
+          if (!userId) {
+            stats.missing_user++;
+            continue;
+          }
           if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
           else if (via === "email_fallback") stats.resolved_by_email_fallback++;
 
@@ -3291,8 +4797,12 @@ serve(async (req) => {
           if (pt === "legacy_unknown") stats.unknown_product_type++;
 
           const paidAt = new Date(ch.created * 1000).toISOString();
-          const btCh: any = ch.balance_transaction && typeof ch.balance_transaction === "object" ? ch.balance_transaction : null;
-          const stripeFeeCh = btCh && typeof btCh.fee === "number" ? btCh.fee / 100 : 0;
+          const btCh: any =
+            ch.balance_transaction && typeof ch.balance_transaction === "object"
+              ? ch.balance_transaction
+              : null;
+          const stripeFeeCh =
+            btCh && typeof btCh.fee === "number" ? btCh.fee / 100 : 0;
 
           const candidate = {
             user_id: userId,
@@ -3300,7 +4810,8 @@ serve(async (req) => {
             order_status: "paid",
             product_type: pt,
             product_code: planId || "legacy_unknown",
-            billing_interval: pt === "annual" ? "yearly" : pt === "monthly" ? "monthly" : null,
+            billing_interval:
+              pt === "annual" ? "yearly" : pt === "monthly" ? "monthly" : null,
             amount_gross: amount,
             amount_net: computeAmountNet(null, amount),
             stripe_fee: stripeFeeCh,
@@ -3310,7 +4821,11 @@ serve(async (req) => {
             is_first_purchase: false,
             coupon_code: ch.metadata?.coupon_code || null,
             paid_at: paidAt,
-            metadata: { backfill: true, backfill_source: "stripe_charge", resolved_user_via: via },
+            metadata: {
+              backfill: true,
+              backfill_source: "stripe_charge",
+              resolved_user_via: via,
+            },
           };
 
           queueCandidate(candidate);
@@ -3318,11 +4833,14 @@ serve(async (req) => {
         }
 
         hasMoreCh = charges.has_more;
-        if (charges.data.length > 0) startingAfterCh = charges.data[charges.data.length - 1].id;
+        if (charges.data.length > 0)
+          startingAfterCh = charges.data[charges.data.length - 1].id;
       }
 
       // ── 3) Calculate is_first_purchase using paid_at timestamp (only for INSERTs) ──
-      ordersToInsert.sort((a, b) => new Date(a.paid_at).getTime() - new Date(b.paid_at).getTime());
+      ordersToInsert.sort(
+        (a, b) => new Date(a.paid_at).getTime() - new Date(b.paid_at).getTime(),
+      );
       const userFirstSeen = new Set<string>();
 
       const { data: earliestExisting } = await admin
@@ -3330,7 +4848,9 @@ serve(async (req) => {
         .select("user_id, paid_at")
         .eq("order_status", "paid")
         .order("paid_at", { ascending: true });
-      (earliestExisting || []).forEach((o: any) => userFirstSeen.add(o.user_id));
+      (earliestExisting || []).forEach((o: any) =>
+        userFirstSeen.add(o.user_id),
+      );
 
       for (const order of ordersToInsert) {
         if (!userFirstSeen.has(order.user_id)) {
@@ -3356,7 +4876,10 @@ serve(async (req) => {
           }
         }
         for (const u of ordersToUpdate) {
-          const { error: updErr } = await admin.from("orders").update(u.updates).eq("id", u.id);
+          const { error: updErr } = await admin
+            .from("orders")
+            .update(u.updates)
+            .eq("id", u.id);
           if (updErr) {
             console.error("[BACKFILL] Update error for", u.id, updErr);
             stats.errors++;
@@ -3378,7 +4901,7 @@ serve(async (req) => {
         success: true,
         dry_run: dryRun,
         stats,
-        sample_inserts: ordersToInsert.slice(0, 5).map(o => ({
+        sample_inserts: ordersToInsert.slice(0, 5).map((o) => ({
           user_id: o.user_id,
           product_type: o.product_type,
           product_code: o.product_code,
@@ -3389,44 +4912,47 @@ serve(async (req) => {
           backfill_source: o.metadata?.backfill_source,
           resolved_user_via: o.metadata?.resolved_user_via,
         })),
-        sample_updates: ordersToUpdate.slice(0, 5).map(u => ({
+        sample_updates: ordersToUpdate.slice(0, 5).map((u) => ({
           order_id: u.id,
           matched_via: u.matched_via,
           updates: u.updates,
         })),
-        report: dryRun ? {
-          inserts: ordersToInsert.map(o => ({
-            user_id: o.user_id,
-            stripe_invoice_id: o.stripe_invoice_id || null,
-            stripe_charge_id: o.stripe_charge_id || null,
-            product_type: o.product_type,
-            product_code: o.product_code,
-            billing_interval: o.billing_interval,
-            amount_gross: o.amount_gross,
-            amount_net: o.amount_net,
-            currency: o.currency,
-            paid_at: o.paid_at,
-            is_first_purchase: o.is_first_purchase,
-            backfill_source: o.metadata?.backfill_source,
-            resolved_user_via: o.metadata?.resolved_user_via,
-            reason: "no_match_found_will_insert",
-          })),
-          updates: ordersToUpdate.map(u => ({
-            order_id: u.id,
-            matched_via: u.matched_via,
-            match_reason: u.matched_via === "stripe_ref"
-              ? "exact_match_by_stripe_invoice_or_charge_id"
-              : "fuzzy_match_user_amount_pm10pct_paidat_pm24h",
-            user_id: u.candidate.user_id,
-            stripe_invoice_id: u.candidate.stripe_invoice_id || null,
-            stripe_charge_id: u.candidate.stripe_charge_id || null,
-            new_amount_gross: u.updates.amount_gross,
-            new_amount_net: u.updates.amount_net,
-            new_product_type: u.updates.product_type,
-            new_order_status: u.updates.order_status,
-            paid_at: u.candidate.paid_at,
-          })),
-        } : undefined,
+        report: dryRun
+          ? {
+              inserts: ordersToInsert.map((o) => ({
+                user_id: o.user_id,
+                stripe_invoice_id: o.stripe_invoice_id || null,
+                stripe_charge_id: o.stripe_charge_id || null,
+                product_type: o.product_type,
+                product_code: o.product_code,
+                billing_interval: o.billing_interval,
+                amount_gross: o.amount_gross,
+                amount_net: o.amount_net,
+                currency: o.currency,
+                paid_at: o.paid_at,
+                is_first_purchase: o.is_first_purchase,
+                backfill_source: o.metadata?.backfill_source,
+                resolved_user_via: o.metadata?.resolved_user_via,
+                reason: "no_match_found_will_insert",
+              })),
+              updates: ordersToUpdate.map((u) => ({
+                order_id: u.id,
+                matched_via: u.matched_via,
+                match_reason:
+                  u.matched_via === "stripe_ref"
+                    ? "exact_match_by_stripe_invoice_or_charge_id"
+                    : "fuzzy_match_user_amount_pm10pct_paidat_pm24h",
+                user_id: u.candidate.user_id,
+                stripe_invoice_id: u.candidate.stripe_invoice_id || null,
+                stripe_charge_id: u.candidate.stripe_charge_id || null,
+                new_amount_gross: u.updates.amount_gross,
+                new_amount_net: u.updates.amount_net,
+                new_product_type: u.updates.product_type,
+                new_order_status: u.updates.order_status,
+                paid_at: u.candidate.paid_at,
+              })),
+            }
+          : undefined,
       });
     }
 
@@ -3435,16 +4961,25 @@ serve(async (req) => {
       if (!user_id) return json({ error: "user_id required" }, 400);
 
       const [ordersRes, evidencesRes, usageRes] = await Promise.all([
-        admin.from("orders")
-          .select("id, product_label, product_type, product_code, amount_gross, currency, order_status, is_renewal, is_first_purchase, paid_at, stripe_payment_intent_id, stripe_checkout_session_id, stripe_invoice_id")
+        admin
+          .from("orders")
+          .select(
+            "id, product_label, product_type, product_code, amount_gross, currency, order_status, is_renewal, is_first_purchase, paid_at, stripe_payment_intent_id, stripe_checkout_session_id, stripe_invoice_id",
+          )
           .eq("user_id", user_id)
           .order("paid_at", { ascending: false }),
-        admin.from("purchase_evidences")
-          .select("id, product_name, amount, currency, payment_status, certification_status, ibs_transaction_id, certificate_pdf_url, payment_intent_id, created_at")
+        admin
+          .from("purchase_evidences")
+          .select(
+            "id, product_name, amount, currency, payment_status, certification_status, ibs_transaction_id, certificate_pdf_url, payment_intent_id, created_at",
+          )
           .eq("user_id", user_id)
           .order("created_at", { ascending: false }),
-        admin.from("purchase_usage_evidences")
-          .select("id, event_type, event_timestamp, certification_status, ibs_transaction_id, ip_address")
+        admin
+          .from("purchase_usage_evidences")
+          .select(
+            "id, event_type, event_timestamp, certification_status, ibs_transaction_id, ip_address",
+          )
           .eq("user_id", user_id)
           .order("event_timestamp", { ascending: false })
           .limit(20),
@@ -3457,7 +4992,9 @@ serve(async (req) => {
 
       const ordersEnriched = (ordersRes.data || []).map((o: any) => ({
         ...o,
-        linked_evidence: o.stripe_payment_intent_id ? (evidencesByPI[o.stripe_payment_intent_id] || null) : null,
+        linked_evidence: o.stripe_payment_intent_id
+          ? evidencesByPI[o.stripe_payment_intent_id] || null
+          : null,
       }));
 
       return json({
@@ -3473,17 +5010,25 @@ serve(async (req) => {
       if (!user_id) return json({ error: "user_id required" }, 400);
 
       const [profileRes, genCountRes] = await Promise.all([
-        admin.from("profiles")
-          .select("library_status, library_status_since, free_downloads_used, subscription_plan, available_credits")
-          .eq("user_id", user_id).single(),
-        admin.from("ai_generations")
+        admin
+          .from("profiles")
+          .select(
+            "library_status, library_status_since, free_downloads_used, subscription_plan, available_credits",
+          )
+          .eq("user_id", user_id)
+          .single(),
+        admin
+          .from("ai_generations")
           .select("id", { count: "exact", head: true })
           .eq("user_id", user_id),
       ]);
 
       const profile = profileRes.data;
       const daysInactive = profile?.library_status_since
-        ? Math.floor((Date.now() - new Date(profile.library_status_since).getTime()) / 86400000)
+        ? Math.floor(
+            (Date.now() - new Date(profile.library_status_since).getTime()) /
+              86400000,
+          )
         : null;
 
       return json({
@@ -3504,14 +5049,20 @@ serve(async (req) => {
       // Join orders with purchase_evidences to find mismatches
       const { data: orders } = await admin
         .from("orders")
-        .select("id, user_id, stripe_payment_intent_id, stripe_checkout_session_id, amount_gross, currency, order_status, paid_at, product_type")
+        .select(
+          "id, user_id, stripe_payment_intent_id, stripe_checkout_session_id, amount_gross, currency, order_status, paid_at, product_type",
+        )
         .order("paid_at", { ascending: false })
         .limit(limit);
 
-      const piIds = (orders || []).map((o: any) => o.stripe_payment_intent_id).filter(Boolean);
+      const piIds = (orders || [])
+        .map((o: any) => o.stripe_payment_intent_id)
+        .filter(Boolean);
       const { data: evidences } = await admin
         .from("purchase_evidences")
-        .select("id, payment_intent_id, amount, currency, payment_status, certification_status")
+        .select(
+          "id, payment_intent_id, amount, currency, payment_status, certification_status",
+        )
         .in("payment_intent_id", piIds.length ? piIds : ["__none__"]);
 
       const evidenceMap: Record<string, any> = {};
@@ -3521,14 +5072,24 @@ serve(async (req) => {
 
       const emailsMap = await getAllEmailsMap();
 
-      const gaps = (orders || []).map((o: any) => {
-        const ev = o.stripe_payment_intent_id ? evidenceMap[o.stripe_payment_intent_id] : null;
-        let status = "ok";
-        if (!ev) status = "missing_evidence";
-        else if (ev.payment_status !== "paid") status = "evidence_unpaid";
-        else if (Math.abs(Number(ev.amount) - Number(o.amount_gross)) > 0.01) status = "amount_mismatch";
-        return { ...o, evidence: ev || null, consistency_status: status, user_email: emailsMap[o.user_id] || "" };
-      }).filter((g: any) => g.consistency_status !== "ok");
+      const gaps = (orders || [])
+        .map((o: any) => {
+          const ev = o.stripe_payment_intent_id
+            ? evidenceMap[o.stripe_payment_intent_id]
+            : null;
+          let status = "ok";
+          if (!ev) status = "missing_evidence";
+          else if (ev.payment_status !== "paid") status = "evidence_unpaid";
+          else if (Math.abs(Number(ev.amount) - Number(o.amount_gross)) > 0.01)
+            status = "amount_mismatch";
+          return {
+            ...o,
+            evidence: ev || null,
+            consistency_status: status,
+            user_email: emailsMap[o.user_id] || "",
+          };
+        })
+        .filter((g: any) => g.consistency_status !== "ok");
 
       return json({ gaps, total: gaps.length });
     }
@@ -3538,11 +5099,17 @@ serve(async (req) => {
       const { dataset } = payload;
 
       if (dataset === "orders") {
-        const { data: orders } = await admin.from("orders").select("*").order("paid_at", { ascending: false }).limit(1000);
+        const { data: orders } = await admin
+          .from("orders")
+          .select("*")
+          .order("paid_at", { ascending: false })
+          .limit(1000);
         const emailsMap = await getAllEmailsMap();
-        const header = "email,product_label,product_type,amount_gross,currency,order_status,is_renewal,paid_at";
-        const rows = (orders || []).map((o: any) =>
-          `${emailsMap[o.user_id] || ""},"${(o.product_label || "").replace(/"/g, '""')}",${o.product_type},${o.amount_gross},${o.currency},${o.order_status},${o.is_renewal},${o.paid_at}`
+        const header =
+          "email,product_label,product_type,amount_gross,currency,order_status,is_renewal,paid_at";
+        const rows = (orders || []).map(
+          (o: any) =>
+            `${emailsMap[o.user_id] || ""},"${(o.product_label || "").replace(/"/g, '""')}",${o.product_type},${o.amount_gross},${o.currency},${o.order_status},${o.is_renewal},${o.paid_at}`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
@@ -3567,9 +5134,13 @@ serve(async (req) => {
 
       // Metrics
       const now = new Date();
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const monthStart = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        1,
+      ).toISOString();
       const thisMonthSurveys = (surveys || []).filter(
-        (s: any) => s.created_at >= monthStart && s.is_account_deletion
+        (s: any) => s.created_at >= monthStart && s.is_account_deletion,
       );
 
       const reasonCounts: Record<string, number> = {};
@@ -3580,8 +5151,10 @@ serve(async (req) => {
         planCounts[plan] = (planCounts[plan] || 0) + 1;
       }
 
-      const topReason = Object.entries(reasonCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
-      const topPlan = Object.entries(planCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+      const topReason =
+        Object.entries(reasonCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+      const topPlan =
+        Object.entries(planCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
 
       return json({
         surveys: enriched,
@@ -3601,11 +5174,17 @@ serve(async (req) => {
       const { data: targetAuth } = await admin.auth.admin.getUserById(user_id);
       const targetEmail = targetAuth?.user?.email || "";
 
-      const { data: profile } = await admin
+      const { data: profile } = (await admin
         .from("profiles")
         .select("subscription_plan, available_credits, stripe_customer_id")
         .eq("user_id", user_id)
-        .single() as { data: { subscription_plan: string; available_credits: number; stripe_customer_id: string | null } | null };
+        .single()) as {
+        data: {
+          subscription_plan: string;
+          available_credits: number;
+          stripe_customer_id: string | null;
+        } | null;
+      };
 
       // Import the deletion logic inline (same steps as delete-account)
       const errors: string[] = [];
@@ -3615,60 +5194,153 @@ serve(async (req) => {
         if (profile?.stripe_customer_id) {
           const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
           if (stripeKey) {
-            const stripe = new Stripe(stripeKey, { apiVersion: "2025-03-31.basil" });
-            const subs = await stripe.subscriptions.list({ customer: (profile as any).stripe_customer_id, status: "active" });
+            const stripe = new Stripe(stripeKey, {
+              apiVersion: "2025-03-31.basil",
+            });
+            const subs = await stripe.subscriptions.list({
+              customer: (profile as any).stripe_customer_id,
+              status: "active",
+            });
             for (const sub of subs.data) {
-              await stripe.subscriptions.update(sub.id, { cancel_at_period_end: true });
+              await stripe.subscriptions.update(sub.id, {
+                cancel_at_period_end: true,
+              });
             }
           }
         }
-      } catch (e) { errors.push(`stripe: ${e}`); }
+      } catch (e) {
+        errors.push(`stripe: ${e}`);
+      }
 
       // Anonymize blockchain works
       try {
-        await admin.from("works").update({ user_id: null, author: "Usuario eliminado", updated_at: new Date().toISOString() }).eq("user_id", user_id).not("blockchain_hash", "is", null);
-      } catch (e) { errors.push(`anon_works: ${e}`); }
+        await admin
+          .from("works")
+          .update({
+            user_id: null,
+            author: "Usuario eliminado",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", user_id)
+          .not("blockchain_hash", "is", null);
+      } catch (e) {
+        errors.push(`anon_works: ${e}`);
+      }
 
       // Anonymize orders/evidences
-      try { await admin.from("orders").update({ user_id: null }).eq("user_id", user_id); } catch (e) { errors.push(`anon_orders: ${e}`); }
-      try { await admin.from("purchase_evidences").update({ user_id: null }).eq("user_id", user_id); } catch (e) { errors.push(`anon_pe: ${e}`); }
-      try { await admin.from("purchase_usage_evidences").update({ user_id: null }).eq("user_id", user_id); } catch (e) { errors.push(`anon_pue: ${e}`); }
+      try {
+        await admin
+          .from("orders")
+          .update({ user_id: null })
+          .eq("user_id", user_id);
+      } catch (e) {
+        errors.push(`anon_orders: ${e}`);
+      }
+      try {
+        await admin
+          .from("purchase_evidences")
+          .update({ user_id: null })
+          .eq("user_id", user_id);
+      } catch (e) {
+        errors.push(`anon_pe: ${e}`);
+      }
+      try {
+        await admin
+          .from("purchase_usage_evidences")
+          .update({ user_id: null })
+          .eq("user_id", user_id);
+      } catch (e) {
+        errors.push(`anon_pue: ${e}`);
+      }
 
       // Delete tables
       const tables = [
-        "voice_clones", "ai_generations", "lyrics_generations", "generation_jobs",
-        "social_promotions", "premium_social_promotions", "press_releases",
-        "video_generations", "auphonic_productions", "user_artist_profiles",
-        "user_attribution", "audiomack_connections", "audiomack_metrics",
-        "product_events", "notification_log", "ai_rate_limits", "promotion_requests",
-        "managed_works", "managed_artists", "ibs_signatures", "library_deletion_queue",
-        "user_roles", "cancellation_tracking", "credit_transactions",
+        "voice_clones",
+        "ai_generations",
+        "lyrics_generations",
+        "generation_jobs",
+        "social_promotions",
+        "premium_social_promotions",
+        "press_releases",
+        "video_generations",
+        "auphonic_productions",
+        "user_artist_profiles",
+        "user_attribution",
+        "audiomack_connections",
+        "audiomack_metrics",
+        "product_events",
+        "notification_log",
+        "ai_rate_limits",
+        "promotion_requests",
+        "managed_works",
+        "managed_artists",
+        "ibs_signatures",
+        "library_deletion_queue",
+        "user_roles",
+        "cancellation_tracking",
+        "credit_transactions",
       ];
       for (const t of tables) {
-        try { await admin.from(t).delete().eq("user_id", user_id); } catch (e) { errors.push(`del_${t}: ${e}`); }
+        try {
+          await admin.from(t).delete().eq("user_id", user_id);
+        } catch (e) {
+          errors.push(`del_${t}: ${e}`);
+        }
       }
 
-      try { await admin.from("ibs_sync_queue").delete().eq("user_id", user_id).neq("status", "resolved"); } catch (e) { errors.push(`del_ibs_sync: ${e}`); }
-      try { await admin.from("works").delete().eq("user_id", user_id).is("blockchain_hash", null); } catch (e) { errors.push(`del_works: ${e}`); }
+      try {
+        await admin
+          .from("ibs_sync_queue")
+          .delete()
+          .eq("user_id", user_id)
+          .neq("status", "resolved");
+      } catch (e) {
+        errors.push(`del_ibs_sync: ${e}`);
+      }
+      try {
+        await admin
+          .from("works")
+          .delete()
+          .eq("user_id", user_id)
+          .is("blockchain_hash", null);
+      } catch (e) {
+        errors.push(`del_works: ${e}`);
+      }
 
       // Mark surveys as deleted
       try {
-        await admin.from("cancellation_surveys").update({ account_deleted_at: new Date().toISOString() }).eq("user_id", user_id);
-      } catch (e) { errors.push(`mark_surveys: ${e}`); }
+        await admin
+          .from("cancellation_surveys")
+          .update({ account_deleted_at: new Date().toISOString() })
+          .eq("user_id", user_id);
+      } catch (e) {
+        errors.push(`mark_surveys: ${e}`);
+      }
 
       // Delete profile
-      try { await admin.from("profiles").delete().eq("user_id", user_id); } catch (e) { errors.push(`del_profile: ${e}`); }
+      try {
+        await admin.from("profiles").delete().eq("user_id", user_id);
+      } catch (e) {
+        errors.push(`del_profile: ${e}`);
+      }
 
       // Audit
       await audit({
         action: "force_delete_user",
         target_user_id: user_id,
         target_email: targetEmail,
-        details: { plan: profile?.subscription_plan, errors: errors.length > 0 ? errors : undefined },
+        details: {
+          plan: profile?.subscription_plan,
+          errors: errors.length > 0 ? errors : undefined,
+        },
       });
 
       // Delete auth user
-      try { await admin.auth.admin.deleteUser(user_id); } catch (e) { errors.push(`del_auth: ${e}`); }
+      try {
+        await admin.auth.admin.deleteUser(user_id);
+      } catch (e) {
+        errors.push(`del_auth: ${e}`);
+      }
 
       return json({ success: true, errors });
     }
@@ -3676,6 +5348,9 @@ serve(async (req) => {
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
     console.error("[ADMIN-ACTION] Error:", e);
-    return json({ error: e instanceof Error ? e.message : "Internal error" }, 500);
+    return json(
+      { error: e instanceof Error ? e.message : "Internal error" },
+      500,
+    );
   }
 });

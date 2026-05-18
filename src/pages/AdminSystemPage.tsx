@@ -1,55 +1,98 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { adminApi } from '@/services/adminApi';
-import { toast } from 'sonner';
-import { Settings2, Shield, UserPlus, ScrollText, Download, ChevronLeft, ChevronRight, Database } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { adminApi } from "@/services/adminApi";
+import { toast } from "sonner";
+import {
+  Settings2,
+  Shield,
+  UserPlus,
+  ScrollText,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  Database,
+} from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const ACTION_LABELS: Record<string, string> = {
-  adjust_credits: 'Ajuste créditos',
-  set_kyc: 'Cambio KYC',
-  block_user: 'Bloqueo usuario',
-  unblock_user: 'Desbloqueo usuario',
-  grant_admin: 'Otorgar admin',
-  revoke_admin: 'Revocar admin',
+  adjust_credits: "Ajuste créditos",
+  set_kyc: "Cambio KYC",
+  block_user: "Bloqueo usuario",
+  unblock_user: "Desbloqueo usuario",
+  grant_admin: "Otorgar admin",
+  revoke_admin: "Revocar admin",
 };
 
-type CsvValue = string | number | boolean | null | undefined | Record<string, unknown> | unknown[];
+type CsvValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | Record<string, unknown>
+  | unknown[];
 type CsvRow = Record<string, CsvValue>;
 
 function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : 'Error inesperado';
+  return error instanceof Error ? error.message : "Error inesperado";
 }
 
 function toCsv(rows: CsvRow[]) {
-  if (!rows.length) return '';
+  if (!rows.length) return "";
 
   const headerSet = new Set<string>();
-  rows.forEach(row => Object.keys(row).forEach(key => headerSet.add(key)));
+  rows.forEach((row) => Object.keys(row).forEach((key) => headerSet.add(key)));
   const headers = Array.from(headerSet);
   const escapeValue = (value: CsvValue) => {
-    if (value === null || value === undefined) return '';
-    const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    if (value === null || value === undefined) return "";
+    const text =
+      typeof value === "object" ? JSON.stringify(value) : String(value);
     return /[",\n;]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
   };
 
-  return [headers.join(','), ...rows.map(row => headers.map(header => escapeValue(row[header])).join(','))].join('\n');
+  return [
+    headers.join(","),
+    ...rows.map((row) =>
+      headers.map((header) => escapeValue(row[header])).join(","),
+    ),
+  ].join("\n");
 }
 
 function createCsvObjectUrl(csv: string) {
-  if (!csv.trim()) throw new Error('El reporte CSV está vacío. No hay filas para descargar.');
-  if (!window.URL?.createObjectURL) throw new Error('El navegador no permite crear el archivo de descarga.');
+  if (!csv.trim())
+    throw new Error("El reporte CSV está vacío. No hay filas para descargar.");
+  if (!window.URL?.createObjectURL)
+    throw new Error("El navegador no permite crear el archivo de descarga.");
 
-  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
-  if (!blob.size) throw new Error('No se pudo crear el Blob del CSV.');
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  if (!blob.size) throw new Error("No se pudo crear el Blob del CSV.");
 
   return window.URL.createObjectURL(blob);
 }
@@ -57,17 +100,17 @@ function createCsvObjectUrl(csv: string) {
 function downloadCsv(filename: string, csv: string) {
   const url = createCsvObjectUrl(csv);
 
-  const anchor = document.createElement('a');
+  const anchor = document.createElement("a");
 
   try {
     anchor.href = url;
     anchor.download = filename;
-    anchor.rel = 'noopener';
-    anchor.style.display = 'none';
+    anchor.rel = "noopener";
+    anchor.style.display = "none";
     document.body.appendChild(anchor);
     anchor.click();
   } catch (error) {
-    window.open(url, '_blank', 'noopener,noreferrer');
+    window.open(url, "_blank", "noopener,noreferrer");
     throw error;
   } finally {
     window.setTimeout(() => {
@@ -77,8 +120,33 @@ function downloadCsv(filename: string, csv: string) {
   }
 }
 
+async function withTimeout<T>(
+  promise: Promise<T>,
+  ms: number,
+  message: string,
+) {
+  let timeoutId: number | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => reject(new Error(message)), ms);
+      }),
+    ]);
+  } finally {
+    if (timeoutId) window.clearTimeout(timeoutId);
+  }
+}
+
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleString("es-ES", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export default function AdminSystemPage() {
@@ -86,14 +154,17 @@ export default function AdminSystemPage() {
   const [admins, setAdmins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [addModal, setAddModal] = useState(false);
-  const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [newAdminEmail, setNewAdminEmail] = useState("");
   const [backfillDryRunLoading, setBackfillDryRunLoading] = useState(false);
-  const [backfillCsvLink, setBackfillCsvLink] = useState<{ url: string; filename: string } | null>(null);
+  const [backfillCsvLink, setBackfillCsvLink] = useState<{
+    url: string;
+    filename: string;
+  } | null>(null);
 
   // Audit log state
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [auditLoading, setAuditLoading] = useState(true);
-  const [auditFilter, setAuditFilter] = useState('');
+  const [auditFilter, setAuditFilter] = useState("");
   const [auditPage, setAuditPage] = useState(0);
   const [auditHasMore, setAuditHasMore] = useState(false);
   const AUDIT_PAGE_SIZE = 20;
@@ -103,94 +174,156 @@ export default function AdminSystemPage() {
     try {
       const res = await adminApi.getAdmins();
       setAdmins(res.admins || []);
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      toast.error(e.message);
+    }
     setLoading(false);
   };
 
   const loadAudit = useCallback(async () => {
     setAuditLoading(true);
     try {
-      const res = await adminApi.getAuditLog(auditPage * AUDIT_PAGE_SIZE, auditFilter);
+      const res = await adminApi.getAuditLog(
+        auditPage * AUDIT_PAGE_SIZE,
+        auditFilter,
+      );
       const logs = res.logs || [];
       setAuditLogs(logs);
       setAuditHasMore(logs.length >= AUDIT_PAGE_SIZE);
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      toast.error(e.message);
+    }
     setAuditLoading(false);
   }, [auditPage, auditFilter]);
 
-  useEffect(() => { load(); }, []);
-  useEffect(() => { loadAudit(); }, [loadAudit]);
-  useEffect(() => () => {
-    if (backfillCsvLink?.url) window.URL.revokeObjectURL(backfillCsvLink.url);
-  }, [backfillCsvLink]);
+  useEffect(() => {
+    load();
+  }, []);
+  useEffect(() => {
+    loadAudit();
+  }, [loadAudit]);
+  useEffect(
+    () => () => {
+      if (backfillCsvLink?.url) window.URL.revokeObjectURL(backfillCsvLink.url);
+    },
+    [backfillCsvLink],
+  );
 
   const handleAddAdmin = async () => {
     if (!newAdminEmail.trim()) return;
     try {
       const res = await adminApi.searchUserByEmail(newAdminEmail);
-      if (!res.user) { toast.error('Usuario no encontrado'); return; }
+      if (!res.user) {
+        toast.error("Usuario no encontrado");
+        return;
+      }
       await adminApi.setAdminRole(res.user.user_id, true);
-      toast.success('Admin añadido');
+      toast.success("Admin añadido");
       setAddModal(false);
-      setNewAdminEmail('');
+      setNewAdminEmail("");
       load();
       loadAudit();
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   const handleRevoke = async (userId: string) => {
-    if (!confirm('¿Revocar acceso de administrador?')) return;
+    if (!confirm("¿Revocar acceso de administrador?")) return;
     try {
       await adminApi.setAdminRole(userId, false);
-      toast.success('Admin revocado');
+      toast.success("Admin revocado");
       load();
       loadAudit();
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   const handleExportAudit = async () => {
     try {
-      const res = await adminApi.exportCsv('audit');
-      downloadCsv(`musicdibs-audit-${new Date().toISOString().slice(0, 10)}.csv`, String(res.csv || ''));
-    } catch (error) { toast.error(`No se pudo descargar el CSV: ${getErrorMessage(error)}`); }
+      const res = await adminApi.exportCsv("audit");
+      downloadCsv(
+        `musicdibs-audit-${new Date().toISOString().slice(0, 10)}.csv`,
+        String(res.csv || ""),
+      );
+    } catch (error) {
+      toast.error(`No se pudo descargar el CSV: ${getErrorMessage(error)}`);
+    }
   };
 
   const handleBackfillDryRunCsv = async () => {
     if (backfillDryRunLoading) return;
 
     setBackfillDryRunLoading(true);
-    toast.info('Ejecutando dry-run…');
+    toast.info("Ejecutando dry-run…");
 
     try {
-      const res = await adminApi.backfillOrdersFromStripe(true);
+      const res = await withTimeout(
+        adminApi.backfillOrdersFromStripe(true, 200),
+        90_000,
+        "El dry-run está tardando demasiado. Se ha cancelado la espera para no dejar el botón bloqueado; inténtalo de nuevo con menos datos o revisa Stripe/Supabase.",
+      );
       const stats = res.stats || {};
       const report = res.report || { inserts: [], updates: [] };
-      if (!res.report || (!Array.isArray(report.updates) && !Array.isArray(report.inserts))) {
-        throw new Error('La Edge Function no devolvió el reporte de dry-run. Revisa que admin-action esté desplegada con el campo report.');
+      if (
+        !res.report ||
+        (!Array.isArray(report.updates) && !Array.isArray(report.inserts))
+      ) {
+        throw new Error(
+          "La Edge Function no devolvió el reporte de dry-run. Revisa que admin-action esté desplegada con el campo report.",
+        );
       }
       const updates = Array.isArray(report.updates) ? report.updates : [];
       const inserts = Array.isArray(report.inserts) ? report.inserts : [];
-      const rows: CsvRow[] = updates.length || inserts.length ? [
-        ...updates.map((update: CsvRow) => ({ action: 'UPDATE', ...update })),
-        ...inserts.map((insert: CsvRow) => ({ action: 'INSERT', ...insert })),
-      ] : [{ action: 'NO_ROWS', reason: 'dry_run_without_insert_or_update_candidates', orders_to_update: stats.orders_to_update || 0, orders_to_create: stats.orders_to_create || 0 }];
+      const rows: CsvRow[] =
+        updates.length || inserts.length
+          ? [
+              ...updates.map((update: CsvRow) => ({
+                action: "UPDATE",
+                ...update,
+              })),
+              ...inserts.map((insert: CsvRow) => ({
+                action: "INSERT",
+                ...insert,
+              })),
+            ]
+          : [
+              {
+                action: "NO_ROWS",
+                reason: "dry_run_without_insert_or_update_candidates",
+                orders_to_update: stats.orders_to_update || 0,
+                orders_to_create: stats.orders_to_create || 0,
+              },
+            ];
 
-      console.info('[BACKFILL DRY-RUN]', res);
+      console.info("[BACKFILL DRY-RUN]", res);
       console.table(stats);
-      console.info('[BACKFILL DRY-RUN CSV ROWS]', rows.length);
+      console.info("[BACKFILL DRY-RUN CSV ROWS]", rows.length);
 
-      toast.success(`Dry-run: ${stats.orders_to_create || 0} a insertar, ${stats.orders_to_update || 0} a actualizar (${stats.updated_by_stripe_ref || 0} por ref Stripe + ${stats.updated_by_fuzzy_match || 0} fuzzy), ${stats.missing_user || 0} sin usuario`);
+      toast.success(
+        `Dry-run: ${stats.orders_to_create || 0} a insertar, ${stats.orders_to_update || 0} a actualizar (${stats.updated_by_stripe_ref || 0} por ref Stripe + ${stats.updated_by_fuzzy_match || 0} fuzzy), ${stats.missing_user || 0} sin usuario`,
+      );
+      if (stats.scan_limited || stats.time_budget_reached) {
+        toast.warning(
+          "CSV parcial generado para evitar timeout. Puedes repetir el dry-run si necesitas seguir revisando más registros.",
+        );
+      }
 
-      const filename = `backfill-dryrun-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
+      const filename = `backfill-dryrun-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-")}.csv`;
       const csv = toCsv(rows);
       if (backfillCsvLink?.url) window.URL.revokeObjectURL(backfillCsvLink.url);
       const csvUrl = createCsvObjectUrl(csv);
       setBackfillCsvLink({ url: csvUrl, filename });
       downloadCsv(filename, csv);
-      toast.success(`CSV descargado: ${updates.length} updates + ${inserts.length} inserts`);
+      toast.success(
+        `CSV descargado: ${updates.length} updates + ${inserts.length} inserts`,
+      );
     } catch (error) {
-      console.error('[BACKFILL DRY-RUN CSV ERROR]', error);
-      toast.error(`No se pudo generar o descargar el CSV: ${getErrorMessage(error)}`);
+      console.error("[BACKFILL DRY-RUN CSV ERROR]", error);
+      toast.error(
+        `No se pudo generar o descargar el CSV: ${getErrorMessage(error)}`,
+      );
     } finally {
       setBackfillDryRunLoading(false);
     }
@@ -198,14 +331,14 @@ export default function AdminSystemPage() {
 
   function renderDetails(log: any) {
     const d = log.details || {};
-    if (log.action === 'adjust_credits') {
-      return `${d.amount > 0 ? '+' : ''}${d.amount} créditos — "${d.reason}"`;
+    if (log.action === "adjust_credits") {
+      return `${d.amount > 0 ? "+" : ""}${d.amount} créditos — "${d.reason}"`;
     }
-    if (log.action === 'set_kyc') return `KYC → ${d.new_status}`;
-    if (log.action === 'block_user') return 'Bloqueado';
-    if (log.action === 'unblock_user') return 'Desbloqueado';
-    if (log.action === 'grant_admin') return 'Rol admin otorgado';
-    if (log.action === 'revoke_admin') return 'Rol admin revocado';
+    if (log.action === "set_kyc") return `KYC → ${d.new_status}`;
+    if (log.action === "block_user") return "Bloqueado";
+    if (log.action === "unblock_user") return "Desbloqueado";
+    if (log.action === "grant_admin") return "Rol admin otorgado";
+    if (log.action === "revoke_admin") return "Rol admin revocado";
     return JSON.stringify(d);
   }
 
@@ -214,7 +347,9 @@ export default function AdminSystemPage() {
       <div className="flex items-center gap-3">
         <Settings2 className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Sistema</h1>
-        <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">Admin</Badge>
+        <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">
+          Admin
+        </Badge>
       </div>
 
       {/* Administradores */}
@@ -237,23 +372,36 @@ export default function AdminSystemPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={2} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
-              ) : admins.map(a => (
-                <TableRow key={a.user_id}>
-                  <TableCell className="font-medium">{a.email}</TableCell>
-                  <TableCell>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      disabled={a.user_id === user?.id}
-                      onClick={() => handleRevoke(a.user_id)}
-                    >
-                      Revocar
-                    </Button>
-                    {a.user_id === user?.id && <span className="text-xs text-muted-foreground ml-2">(tú)</span>}
+                <TableRow>
+                  <TableCell
+                    colSpan={2}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    Cargando...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                admins.map((a) => (
+                  <TableRow key={a.user_id}>
+                    <TableCell className="font-medium">{a.email}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={a.user_id === user?.id}
+                        onClick={() => handleRevoke(a.user_id)}
+                      >
+                        Revocar
+                      </Button>
+                      {a.user_id === user?.id && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          (tú)
+                        </span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -266,7 +414,13 @@ export default function AdminSystemPage() {
             <ScrollText className="h-4 w-4" /> Log de auditoría
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Select value={auditFilter || 'all'} onValueChange={v => { setAuditFilter(v === 'all' ? '' : v); setAuditPage(0); }}>
+            <Select
+              value={auditFilter || "all"}
+              onValueChange={(v) => {
+                setAuditFilter(v === "all" ? "" : v);
+                setAuditPage(0);
+              }}
+            >
               <SelectTrigger className="w-[180px] h-8 text-sm">
                 <SelectValue placeholder="Todas las acciones" />
               </SelectTrigger>
@@ -298,22 +452,44 @@ export default function AdminSystemPage() {
             </TableHeader>
             <TableBody>
               {auditLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
-              ) : auditLogs.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Sin registros de auditoría</TableCell></TableRow>
-              ) : auditLogs.map(log => (
-                <TableRow key={log.id}>
-                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{formatDate(log.created_at)}</TableCell>
-                  <TableCell className="text-sm">{log.admin_email}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs">
-                      {ACTION_LABELS[log.action] || log.action}
-                    </Badge>
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    Cargando...
                   </TableCell>
-                  <TableCell className="text-sm">{log.target_email || '—'}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground max-w-[300px] truncate">{renderDetails(log)}</TableCell>
                 </TableRow>
-              ))}
+              ) : auditLogs.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center py-8 text-muted-foreground"
+                  >
+                    Sin registros de auditoría
+                  </TableCell>
+                </TableRow>
+              ) : (
+                auditLogs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                      {formatDate(log.created_at)}
+                    </TableCell>
+                    <TableCell className="text-sm">{log.admin_email}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {ACTION_LABELS[log.action] || log.action}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {log.target_email || "—"}
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground max-w-[300px] truncate">
+                      {renderDetails(log)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
 
@@ -327,7 +503,7 @@ export default function AdminSystemPage() {
                 variant="outline"
                 size="sm"
                 disabled={auditPage === 0}
-                onClick={() => setAuditPage(p => p - 1)}
+                onClick={() => setAuditPage((p) => p - 1)}
               >
                 <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
               </Button>
@@ -335,7 +511,7 @@ export default function AdminSystemPage() {
                 variant="outline"
                 size="sm"
                 disabled={!auditHasMore}
-                onClick={() => setAuditPage(p => p + 1)}
+                onClick={() => setAuditPage((p) => p + 1)}
               >
                 Siguiente <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
@@ -353,9 +529,11 @@ export default function AdminSystemPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            Genera registros en la tabla <code>orders</code> a partir de invoices y charges existentes en Stripe.
-            Marca <code>is_first_purchase</code> automáticamente. UTMs quedan como null para datos históricos.
-            Excluye pagos reembolsados, fallidos, disputados o anulados.
+            Genera registros en la tabla <code>orders</code> a partir de
+            invoices y charges existentes en Stripe. Marca{" "}
+            <code>is_first_purchase</code> automáticamente. UTMs quedan como
+            null para datos históricos. Excluye pagos reembolsados, fallidos,
+            disputados o anulados.
           </p>
           <div className="flex gap-2">
             <Button
@@ -363,20 +541,31 @@ export default function AdminSystemPage() {
               onClick={handleBackfillDryRunCsv}
               disabled={backfillDryRunLoading}
             >
-              {backfillDryRunLoading ? 'Generando CSV…' : 'Dry-run + descargar CSV'}
+              {backfillDryRunLoading
+                ? "Generando CSV…"
+                : "Dry-run + descargar CSV"}
             </Button>
             <Button
               variant="default"
               onClick={async () => {
-                if (!confirm('¿Ejecutar backfill REAL? Se crearán orders en la base de datos.')) return;
-                toast.info('Ejecutando backfill real…');
+                if (
+                  !confirm(
+                    "¿Ejecutar backfill REAL? Se crearán orders en la base de datos.",
+                  )
+                )
+                  return;
+                toast.info("Ejecutando backfill real…");
                 try {
                   const res = await adminApi.backfillOrdersFromStripe(false);
                   const s = res.stats || {};
-                  toast.success(`Backfill: ${s.orders_created || 0} creados (${s.invoice_based || 0} inv + ${s.charge_based || 0} ch), ${s.duplicates_skipped || 0} dup, ${s.unknown_product_type || 0} unknown`);
-                  console.log('[BACKFILL]', res);
+                  toast.success(
+                    `Backfill: ${s.orders_created || 0} creados (${s.invoice_based || 0} inv + ${s.charge_based || 0} ch), ${s.duplicates_skipped || 0} dup, ${s.unknown_product_type || 0} unknown`,
+                  );
+                  console.log("[BACKFILL]", res);
                   console.table(s);
-                } catch (e: any) { toast.error(e.message); }
+                } catch (e: any) {
+                  toast.error(e.message);
+                }
               }}
             >
               Ejecutar backfill real
@@ -384,8 +573,12 @@ export default function AdminSystemPage() {
           </div>
           {backfillCsvLink && (
             <p className="text-sm text-muted-foreground">
-              Si la descarga automática no se abre,{' '}
-              <a className="font-medium text-primary underline-offset-4 hover:underline" href={backfillCsvLink.url} download={backfillCsvLink.filename}>
+              Si la descarga automática no se abre,{" "}
+              <a
+                className="font-medium text-primary underline-offset-4 hover:underline"
+                href={backfillCsvLink.url}
+                download={backfillCsvLink.filename}
+              >
                 descarga el CSV manualmente
               </a>
               .
@@ -395,18 +588,26 @@ export default function AdminSystemPage() {
       </Card>
       <Dialog open={addModal} onOpenChange={setAddModal}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Añadir administrador</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Añadir administrador</DialogTitle>
+          </DialogHeader>
           <div>
             <Label>Email del usuario</Label>
-            <Input value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} placeholder="usuario@email.com" onKeyDown={e => e.key === 'Enter' && handleAddAdmin()} />
+            <Input
+              value={newAdminEmail}
+              onChange={(e) => setNewAdminEmail(e.target.value)}
+              placeholder="usuario@email.com"
+              onKeyDown={(e) => e.key === "Enter" && handleAddAdmin()}
+            />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setAddModal(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setAddModal(false)}>
+              Cancelar
+            </Button>
             <Button onClick={handleAddAdmin}>Añadir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }
