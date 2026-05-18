@@ -697,7 +697,8 @@ serve(async (req) => {
             }
           }
 
-          const credits = priceId ? (PRICE_CREDITS[priceId] || 0) : 0;
+          const { credits, source: creditsSource, tier: dbTier } = await resolveCreditsForUser(supabase, profile.user_id, priceId);
+          console.log(`[WEBHOOK] subscription_cycle: credits=${credits} source=${creditsSource} tier=${dbTier} price=${priceId}`);
 
           if (credits > 0) {
             const { data: rProf } = await supabase.from("profiles").select("permanent_credits").eq("user_id", profile.user_id).single();
