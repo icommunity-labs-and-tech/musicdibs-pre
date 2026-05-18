@@ -3035,18 +3035,34 @@ serve(async (req) => {
       const custToUserId: Record<string, string> = {};
       (allProfiles || []).forEach((p: any) => { if (p.stripe_customer_id) custToUserId[p.stripe_customer_id] = p.user_id; });
 
-      async function resolveUserId(customerId: string): Promise<{ userId: string | null; via: string }> {
-        if (custToUserId[customerId]) return { userId: custToUserId[customerId], via: "stripe_customer_id" };
-        try {
-          const cust = await stripe.customers.retrieve(customerId) as any;
-          if (cust.email) {
-            const uid = emailToUserId[cust.email.toLowerCase()];
-            if (uid) {
-              custToUserId[customerId] = uid;
-              return { userId: uid, via: "email_fallback" };
-            }
+      // Preload Stripe customers (paginated) into custId->email map to avoid
+      // per-record stripe.customers.retrieve() calls that blow the 150s timeout.
+      const custIdToEmail: Record<string, string> = {};
+      {
+        let hasMore = true;
+        let startingAfter: string | undefined;
+        while (hasMore) {
+          const params: any = { limit: 100 };
+          if (startingAfter) params.starting_after = startingAfter;
+          const page = await stripe.customers.list(params);
+          for (const c of page.data) {
+            if (c.email) custIdToEmail[c.id] = c.email.toLowerCase();
           }
-        } catch { /* deleted customer */ }
+          hasMore = page.has_more;
+          if (page.data.length > 0) startingAfter = page.data[page.data.length - 1].id;
+        }
+      }
+
+      function resolveUserId(customerId: string): { userId: string | null; via: string } {
+        if (custToUserId[customerId]) return { userId: custToUserId[customerId], via: "stripe_customer_id" };
+        const email = custIdToEmail[customerId];
+        if (email) {
+          const uid = emailToUserId[email];
+          if (uid) {
+            custToUserId[customerId] = uid;
+            return { userId: uid, via: "email_fallback" };
+          }
+        }
         return { userId: null, via: "none" };
       }
 
@@ -3189,7 +3205,7 @@ serve(async (req) => {
           const customerId = typeof inv.customer === "string" ? inv.customer : (inv.customer as any)?.id;
           if (!customerId) continue;
 
-          const { userId, via } = await resolveUserId(customerId);
+          const { userId, via } = resolveUserId(customerId);
           if (!userId) { stats.missing_user++; continue; }
           if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
           else if (via === "email_fallback") stats.resolved_by_email_fallback++;
@@ -3264,7 +3280,7 @@ serve(async (req) => {
           const customerId = typeof ch.customer === "string" ? ch.customer : (ch.customer as any)?.id;
           if (!customerId) continue;
 
-          const { userId, via } = await resolveUserId(customerId);
+          const { userId, via } = resolveUserId(customerId);
           if (!userId) { stats.missing_user++; continue; }
           if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
           else if (via === "email_fallback") stats.resolved_by_email_fallback++;
