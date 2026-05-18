@@ -2929,9 +2929,6 @@ serve(async (req) => {
             : 0;
 
         // Gross / IVA / Stripe fees breakdown for the period (excluding refunded)
-        var periodGross = 0;
-        var periodIva = 0;
-        var periodFees = 0;
         ordersData.forEach((o: any) => {
           if (o.order_status === "refunded") return;
           const gross = parseFloat(o.amount_gross) || 0;
