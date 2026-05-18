@@ -22,6 +22,53 @@ const ACTION_LABELS: Record<string, string> = {
   revoke_admin: 'Revocar admin',
 };
 
+type CsvValue = string | number | boolean | null | undefined | Record<string, unknown> | unknown[];
+type CsvRow = Record<string, CsvValue>;
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Error inesperado';
+}
+
+function toCsv(rows: CsvRow[]) {
+  if (!rows.length) return '';
+
+  const headerSet = new Set<string>();
+  rows.forEach(row => Object.keys(row).forEach(key => headerSet.add(key)));
+  const headers = Array.from(headerSet);
+  const escapeValue = (value: CsvValue) => {
+    if (value === null || value === undefined) return '';
+    const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    return /[",\n;]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  };
+
+  return [headers.join(','), ...rows.map(row => headers.map(header => escapeValue(row[header])).join(','))].join('\n');
+}
+
+function downloadCsv(filename: string, csv: string) {
+  if (!csv.trim()) throw new Error('El reporte CSV está vacío. No hay filas para descargar.');
+
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+  const url = window.URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+
+  try {
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.rel = 'noopener';
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+  } catch (error) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    throw error;
+  } finally {
+    window.setTimeout(() => {
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    }, 1_000);
+  }
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
@@ -32,6 +79,7 @@ export default function AdminSystemPage() {
   const [loading, setLoading] = useState(true);
   const [addModal, setAddModal] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [backfillDryRunLoading, setBackfillDryRunLoading] = useState(false);
 
   // Audit log state
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
