@@ -122,8 +122,67 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <ShoppingCart className="w-3.5 h-3.5" /> Ventas
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <TrendKpi label="Revenue neto periodo" value={`€${salesRevenue.toLocaleString()}`} icon={DollarSign} change={m.mrrChange || 0} />
+        {/* Revenue breakdown stack */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+          <KpiCard
+            label="Bruto"
+            value={`€${periodGross.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            icon={DollarSign}
+            sub="Total facturado"
+          />
+          <KpiCard
+            label="IVA (21%)"
+            value={`€${periodIva.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+            icon={BarChart3}
+            sub="Impuesto incluido"
+          />
+          <Card className="border-border/40">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs flex items-center gap-1">
+                <DollarSign className="w-3 h-3" />
+                Comisiones Stripe
+                {feesPending && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs">Datos pendientes de sincronización con Stripe</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <span className="text-2xl font-bold">
+                €{periodFees.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+              <div className={`text-xs mt-1 ${feesPending ? 'text-amber-500' : 'text-muted-foreground'}`}>
+                {feesPending ? 'Pendiente sincronización' : 'Descontado del neto'}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-green-500/40 bg-green-500/5">
+            <CardHeader className="pb-2">
+              <CardDescription className="text-xs flex items-center gap-1 text-green-700 dark:text-green-400">
+                <CheckCircle2 className="w-3 h-3" />
+                Neto
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <span className="text-2xl font-bold text-green-700 dark:text-green-400">
+                €{periodNet.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+              <div className="text-xs mt-1 text-green-700/70 dark:text-green-400/70">
+                Pre-IVA − Stripe fees
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        {/* Volumen */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <KpiCard label="Órdenes" value={m.totalOrders ?? 0} icon={ShoppingCart} sub="En el periodo" />
           <KpiCard label="Suscripciones anuales" value={m.unitsSoldAnnual ?? 0} icon={BarChart3}
             sub={m.revenueAnnual ? `€${m.revenueAnnual.toLocaleString()}` : undefined}
