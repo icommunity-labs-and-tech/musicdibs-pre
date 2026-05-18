@@ -385,11 +385,31 @@ serve(async (req) => {
       }
 
       // PASO 3: Confirmar evidencia en iBS (síncrono)
+      // GUARDIA ANTI-DUPLICADO: si el work ya tiene un evidence_id distinto, no reprocesar
+      const { data: freshWork } = await supabaseAdmin
+        .from("works").select("ibs_evidence_id").eq("id", workId).single();
+      if (freshWork?.ibs_evidence_id && freshWork.ibs_evidence_id !== sessionId) {
+        console.log(`[IBS] PASO 3 skipped — work ${workId} ya tiene evidence ${freshWork.ibs_evidence_id}`);
+        return new Response(
+          JSON.stringify({ success: true, workId, status: "already_registered",
+                           evidenceId: freshWork.ibs_evidence_id }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       console.log(`[IBS] PASO 3 síncrono — llamando /complete para sesión ${sessionId}`);
-      const completeRes = await fetch(
-        `${IBS_API_URL}/evidences/uploads/${sessionId}/complete`,
-        { method: "POST", headers: ibsHeaders, body: JSON.stringify({}) }
-      );
+      let completeRes!: Response;
+      let attempt = 0;
+      while (attempt < 3) {
+        completeRes = await fetch(
+          `${IBS_API_URL}/evidences/uploads/${sessionId}/complete`,
+          { method: "POST", headers: ibsHeaders, body: JSON.stringify({}) }
+        );
+        if (completeRes.ok) break;
+        attempt++;
+        if (attempt < 3) await new Promise((r) => setTimeout(r, 1000 * attempt));
+        console.warn(`[IBS] PASO 3 intento ${attempt} fallido [${completeRes.status}]`);
+      }
 
       if (!completeRes.ok) {
         const errText = await completeRes.text().catch(() => "unknown");
