@@ -2978,6 +2978,10 @@ serve(async (req) => {
 
       const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
       const dryRun = payload.dry_run === true;
+      const rawLimit = typeof payload.limit === "number" ? payload.limit : Number(payload.limit || 0);
+      const candidateLimit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(Math.floor(rawLimit), dryRun ? 250 : 1000) : null;
+      const startedAt = Date.now();
+      const timeBudgetMs = dryRun ? 75_000 : 130_000;
 
       const stats = {
         invoices_found: 0,
@@ -3000,6 +3004,9 @@ serve(async (req) => {
         skipped_failed: 0,
         skipped_voided: 0,
         skipped_disputed: 0,
+        limit_applied: candidateLimit || 0,
+        scan_limited: false,
+        time_budget_reached: false,
         errors: 0,
       };
 
@@ -3035,27 +3042,20 @@ serve(async (req) => {
       const custToUserId: Record<string, string> = {};
       (allProfiles || []).forEach((p: any) => { if (p.stripe_customer_id) custToUserId[p.stripe_customer_id] = p.user_id; });
 
-      // Preload Stripe customers (paginated) into custId->email map to avoid
-      // per-record stripe.customers.retrieve() calls that blow the 150s timeout.
-      const custIdToEmail: Record<string, string> = {};
-      {
-        let hasMore = true;
-        let startingAfter: string | undefined;
-        while (hasMore) {
-          const params: any = { limit: 100 };
-          if (startingAfter) params.starting_after = startingAfter;
-          const page = await stripe.customers.list(params);
-          for (const c of page.data) {
-            if (c.email) custIdToEmail[c.id] = c.email.toLowerCase();
-          }
-          hasMore = page.has_more;
-          if (page.data.length > 0) startingAfter = page.data[page.data.length - 1].id;
-        }
-      }
+      const customerEmailCache: Record<string, string | null> = {};
 
-      function resolveUserId(customerId: string): { userId: string | null; via: string } {
+      async function resolveUserId(customerId: string): Promise<{ userId: string | null; via: string }> {
         if (custToUserId[customerId]) return { userId: custToUserId[customerId], via: "stripe_customer_id" };
-        const email = custIdToEmail[customerId];
+        if (!(customerId in customerEmailCache)) {
+          try {
+            const customer = await stripe.customers.retrieve(customerId);
+            customerEmailCache[customerId] = !customer.deleted && customer.email ? customer.email.toLowerCase() : null;
+          } catch (err) {
+            console.warn("[BACKFILL] Unable to retrieve Stripe customer", customerId, err);
+            customerEmailCache[customerId] = null;
+          }
+        }
+        const email = customerEmailCache[customerId];
         if (email) {
           const uid = emailToUserId[email];
           if (uid) {
