@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardDescription } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   TrendingUp, TrendingDown, Users, UserPlus, Activity, ShieldCheck,
   Music, ShoppingBag, Zap, DollarSign, BarChart3, Target, ShoppingCart,
-  Repeat, XCircle, ArrowRightLeft, CheckCircle2,
+  Repeat, XCircle, ArrowRightLeft, CheckCircle2, AlertTriangle,
 } from 'lucide-react';
 
 interface KpiGridProps {
