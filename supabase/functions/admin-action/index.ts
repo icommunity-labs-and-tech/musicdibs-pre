@@ -1951,7 +1951,7 @@ serve(async (req) => {
         }
 
         totalOrders = ordersData.length;
-        const orderRevenue = ordersData.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
+        orderRevenue = ordersData.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
         averageOrderValue = totalOrders > 0 ? parseFloat((orderRevenue / totalOrders).toFixed(2)) : 0;
 
         // Units/revenue by product type
