@@ -46,8 +46,11 @@ function toCsv(rows: CsvRow[]) {
 
 function downloadCsv(filename: string, csv: string) {
   if (!csv.trim()) throw new Error('El reporte CSV está vacío. No hay filas para descargar.');
+  if (!window.URL?.createObjectURL) throw new Error('El navegador no permite crear el archivo de descarga.');
 
   const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+  if (!blob.size) throw new Error('No se pudo crear el Blob del CSV.');
+
   const url = window.URL.createObjectURL(blob);
   const anchor = document.createElement('a');
 
