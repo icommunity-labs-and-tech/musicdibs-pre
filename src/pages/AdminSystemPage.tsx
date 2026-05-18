@@ -165,12 +165,15 @@ export default function AdminSystemPage() {
       const res = await adminApi.backfillOrdersFromStripe(true);
       const stats = res.stats || {};
       const report = res.report || { inserts: [], updates: [] };
+      if (!res.report || (!Array.isArray(report.updates) && !Array.isArray(report.inserts))) {
+        throw new Error('La Edge Function no devolvió el reporte de dry-run. Revisa que admin-action esté desplegada con el campo report.');
+      }
       const updates = Array.isArray(report.updates) ? report.updates : [];
       const inserts = Array.isArray(report.inserts) ? report.inserts : [];
-      const rows: CsvRow[] = [
+      const rows: CsvRow[] = updates.length || inserts.length ? [
         ...updates.map((update: CsvRow) => ({ action: 'UPDATE', ...update })),
         ...inserts.map((insert: CsvRow) => ({ action: 'INSERT', ...insert })),
-      ];
+      ] : [{ action: 'NO_ROWS', reason: 'dry_run_without_insert_or_update_candidates', orders_to_update: stats.orders_to_update || 0, orders_to_create: stats.orders_to_create || 0 }];
 
       console.info('[BACKFILL DRY-RUN]', res);
       console.table(stats);
@@ -179,10 +182,11 @@ export default function AdminSystemPage() {
       toast.success(`Dry-run: ${stats.orders_to_create || 0} a insertar, ${stats.orders_to_update || 0} a actualizar (${stats.updated_by_stripe_ref || 0} por ref Stripe + ${stats.updated_by_fuzzy_match || 0} fuzzy), ${stats.missing_user || 0} sin usuario`);
 
       const filename = `backfill-dryrun-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
+      const csv = toCsv(rows);
       if (backfillCsvLink?.url) window.URL.revokeObjectURL(backfillCsvLink.url);
-      const csvUrl = createCsvObjectUrl(toCsv(rows));
+      const csvUrl = createCsvObjectUrl(csv);
       setBackfillCsvLink({ url: csvUrl, filename });
-      downloadCsv(filename, toCsv(rows));
+      downloadCsv(filename, csv);
       toast.success(`CSV descargado: ${updates.length} updates + ${inserts.length} inserts`);
     } catch (error) {
       console.error('[BACKFILL DRY-RUN CSV ERROR]', error);
