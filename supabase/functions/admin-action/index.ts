@@ -2067,7 +2067,7 @@ serve(async (req) => {
           const sIso = b.start.toISOString();
           const eIso = b.end.toISOString();
           const bOrders = ordersData.filter((o: any) => o.paid_at >= sIso && o.paid_at < eIso);
-          const bRev = bOrders.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
+          const bRev = bOrders.reduce((s: number, o: any) => s + netRev(o), 0);
           timeSeries.revenue.push({ label: b.label, value: Math.round(bRev * 100) / 100 });
           timeSeries.orders.push({ label: b.label, value: bOrders.length });
 
