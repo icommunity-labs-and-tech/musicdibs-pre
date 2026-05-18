@@ -729,7 +729,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       regenerate: 'Regenerate',
       registerWork: 'Register work',
       createWithAI: 'Create music with AI',
-      createDesc: 'Describe your song and choose the style. The more detailed, the better the result.',
+      createDesc: 'Describe your song: genre (pop, rap, reggaeton, rock, etc) rhythm... Include lyrics if you have them. IMPORTANT: some famous people\'s names may be blocked by copyright and cause errors.',
       artistProfile: 'Artist profile',
       manageProfiles: 'Manage profiles →',
       noProfile: '— No profile (free configuration) —',
