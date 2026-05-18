@@ -3205,7 +3205,7 @@ serve(async (req) => {
           const customerId = typeof inv.customer === "string" ? inv.customer : (inv.customer as any)?.id;
           if (!customerId) continue;
 
-          const { userId, via } = await resolveUserId(customerId);
+          const { userId, via } = resolveUserId(customerId);
           if (!userId) { stats.missing_user++; continue; }
           if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
           else if (via === "email_fallback") stats.resolved_by_email_fallback++;
@@ -3280,7 +3280,7 @@ serve(async (req) => {
           const customerId = typeof ch.customer === "string" ? ch.customer : (ch.customer as any)?.id;
           if (!customerId) continue;
 
-          const { userId, via } = await resolveUserId(customerId);
+          const { userId, via } = resolveUserId(customerId);
           if (!userId) { stats.missing_user++; continue; }
           if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
           else if (via === "email_fallback") stats.resolved_by_email_fallback++;
