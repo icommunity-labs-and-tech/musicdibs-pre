@@ -356,12 +356,6 @@ serve(async (req) => {
                     .update({ kyc_status: "verified", ibs_signature_id: sig.ibs_signature_id, updated_at: new Date().toISOString() })
                     .eq("user_id", user.id);
                 }
-              }
-            }
-          } catch (err) {
-            console.warn(`[IBS-SIG] Failed to sync ${sig.ibs_signature_id}:`, err);
-          }
-        }
               } else {
                 // Touch updated_at para que el throttle de 5 min funcione aunque el status no cambie
                 await supabaseAdmin
@@ -369,6 +363,12 @@ serve(async (req) => {
                   .update({ updated_at: new Date().toISOString() })
                   .eq("ibs_signature_id", sig.ibs_signature_id);
               }
+            }
+          } catch (err) {
+            console.warn(`[IBS-SIG] Failed to sync ${sig.ibs_signature_id}:`, err);
+          }
+        }
+      }
 
       return new Response(JSON.stringify({ synced: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
