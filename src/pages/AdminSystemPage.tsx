@@ -78,7 +78,7 @@ function downloadCsv(filename: string, csv: string) {
 }
 
 async function withTimeout<T>(promise: Promise<T>, ms: number, message: string) {
-  let timeoutId: ReturnType<typeof window.setTimeout> | undefined;
+  let timeoutId: number | undefined;
 
   try {
     return await Promise.race([
