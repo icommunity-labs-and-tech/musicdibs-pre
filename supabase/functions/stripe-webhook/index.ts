@@ -171,6 +171,22 @@ async function getSubscriptionPriceId(stripe: any, subscriptionId: string): Prom
   }
 }
 
+// ── Get Stripe fee (in EUR) from a charge — never throws ──
+async function getStripeFee(stripe: any, chargeId?: string | null): Promise<number> {
+  if (!chargeId) return 0;
+  try {
+    const charge = await stripe.charges.retrieve(chargeId, { expand: ["balance_transaction"] });
+    const bt = charge?.balance_transaction;
+    if (bt && typeof bt === "object" && typeof bt.fee === "number") {
+      return bt.fee / 100;
+    }
+    return 0;
+  } catch (err) {
+    console.warn(`[WEBHOOK] getStripeFee failed for charge ${chargeId}:`, (err as any)?.message || err);
+    return 0;
+  }
+}
+
 // ── Create order record in orders table ──
 async function createOrderRecord(
   supabase: any,
@@ -187,6 +203,7 @@ async function createOrderRecord(
     billingInterval: string | null;
     amountGross: number;
     amountNet?: number;
+    stripeFee?: number;
     currency: string;
     isSubscription: boolean;
     isRenewal: boolean;
@@ -241,6 +258,7 @@ async function createOrderRecord(
       quantity: 1,
       amount_gross: params.amountGross,
       amount_net: params.amountNet || null,
+      stripe_fee: params.stripeFee || 0,
       currency: params.currency,
       is_subscription: params.isSubscription,
       is_renewal: params.isRenewal,
@@ -498,16 +516,31 @@ serve(async (req) => {
           }
         } catch { /* ignore */ }
 
+        // Derive chargeId from PaymentIntent for fee lookup
+        let checkoutChargeId: string | null = null;
+        if (paymentIntentId) {
+          try {
+            const pi = await stripe.paymentIntents.retrieve(paymentIntentId, { expand: ["latest_charge"] });
+            const lc = (pi as any)?.latest_charge;
+            checkoutChargeId = typeof lc === "string" ? lc : (lc?.id ?? null);
+          } catch (err) {
+            console.warn(`[WEBHOOK] failed to retrieve PI ${paymentIntentId} for fee:`, (err as any)?.message || err);
+          }
+        }
+        const checkoutStripeFee = await getStripeFee(stripe, checkoutChargeId);
+
         const order = await createOrderRecord(supabase, {
           userId,
           stripeCheckoutSessionId: session.id,
           stripeSubscriptionId: stripeSubId,
           stripePaymentIntentId: paymentIntentId,
+          stripeChargeId: checkoutChargeId || undefined,
           productType: sessionMeta.product_type || getProductType(planId),
           productCode: sessionMeta.product_code || planId,
           productLabel: sessionMeta.product_label || planId,
           billingInterval: sessionMeta.billing_interval || null,
           amountGross: amountTotal,
+          stripeFee: checkoutStripeFee,
           currency: session.currency || "eur",
           isSubscription: !!stripeSubId,
           isRenewal: false,
@@ -649,6 +682,7 @@ serve(async (req) => {
       let subscriptionId: string | undefined;
       let invoiceAmount = 0;
       let invoiceCurrency = "eur";
+      let chargeId: string | null = null;
 
       if (event.type === "invoice_payment.paid") {
         const invId = typeof obj.invoice === "string" ? obj.invoice : obj.invoice?.id;
@@ -661,6 +695,7 @@ serve(async (req) => {
           subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : (invoice.subscription as any)?.id;
           invoiceAmount = (invoice.amount_paid || 0) / 100;
           invoiceCurrency = invoice.currency || "eur";
+          chargeId = typeof (invoice as any).charge === "string" ? (invoice as any).charge : ((invoice as any).charge?.id ?? null);
         } else {
           console.warn("[WEBHOOK] invoice_payment.paid: no invoice ID found");
           return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -674,6 +709,7 @@ serve(async (req) => {
         subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
         invoiceAmount = (invoice.amount_paid || 0) / 100;
         invoiceCurrency = invoice.currency || "eur";
+        chargeId = typeof invoice.charge === "string" ? invoice.charge : (invoice.charge?.id ?? null);
       }
 
       if (billingReason === "subscription_cycle") {
@@ -717,15 +753,18 @@ serve(async (req) => {
           const productType = getProductType(resolvedPlanId);
           const planLabel = PLAN_ID_TO_PLAN_NAME[resolvedPlanId] ? `Renovación ${resolvedPlanId}` : `Renovación ${resolvedPlanId}`;
 
+          const renewalStripeFee = await getStripeFee(stripe, chargeId);
           const renewalOrder = await createOrderRecord(supabase, {
             userId: profile.user_id,
             stripeInvoiceId: invoiceId,
+            stripeChargeId: chargeId || undefined,
             stripeSubscriptionId: subscriptionId,
             productType,
             productCode: resolvedPlanId,
             productLabel: planLabel,
             billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
+            stripeFee: renewalStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,
             isRenewal: true,
@@ -801,15 +840,18 @@ serve(async (req) => {
           // ── Create order record for plan change ──
           const planId = resolvedPlanId || "unknown";
           const productType = getProductType(planId);
+          const changeStripeFee = await getStripeFee(stripe, chargeId);
           const changeOrder = await createOrderRecord(supabase, {
             userId: profile.user_id,
             stripeInvoiceId: invoiceId,
+            stripeChargeId: chargeId || undefined,
             stripeSubscriptionId: subscriptionId,
             productType,
             productCode: planId,
             productLabel: `Cambio a ${planName || planId}`,
             billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
+            stripeFee: changeStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,
             isRenewal: false,
