@@ -3219,6 +3219,7 @@ serve(async (req) => {
             billing_interval: billingInterval,
             amount_gross: amount,
             amount_net: computeAmountNet(stripeNet, amount),
+            stripe_fee: stripeFee,
             currency: inv.currency || "eur",
             is_subscription: isSub,
             is_renewal: isRenewal,
