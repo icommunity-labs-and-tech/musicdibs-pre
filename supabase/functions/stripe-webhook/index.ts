@@ -187,6 +187,7 @@ async function createOrderRecord(
     billingInterval: string | null;
     amountGross: number;
     amountNet?: number;
+    stripeFee?: number;
     currency: string;
     isSubscription: boolean;
     isRenewal: boolean;
