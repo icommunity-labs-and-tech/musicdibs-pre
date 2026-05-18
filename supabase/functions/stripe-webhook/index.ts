@@ -171,6 +171,22 @@ async function getSubscriptionPriceId(stripe: any, subscriptionId: string): Prom
   }
 }
 
+// ── Get Stripe fee (in EUR) from a charge — never throws ──
+async function getStripeFee(stripe: any, chargeId?: string | null): Promise<number> {
+  if (!chargeId) return 0;
+  try {
+    const charge = await stripe.charges.retrieve(chargeId, { expand: ["balance_transaction"] });
+    const bt = charge?.balance_transaction;
+    if (bt && typeof bt === "object" && typeof bt.fee === "number") {
+      return bt.fee / 100;
+    }
+    return 0;
+  } catch (err) {
+    console.warn(`[WEBHOOK] getStripeFee failed for charge ${chargeId}:`, (err as any)?.message || err);
+    return 0;
+  }
+}
+
 // ── Create order record in orders table ──
 async function createOrderRecord(
   supabase: any,
@@ -242,6 +258,7 @@ async function createOrderRecord(
       quantity: 1,
       amount_gross: params.amountGross,
       amount_net: params.amountNet || null,
+      stripe_fee: params.stripeFee || 0,
       currency: params.currency,
       is_subscription: params.isSubscription,
       is_renewal: params.isRenewal,
