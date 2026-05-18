@@ -3142,6 +3142,18 @@ serve(async (req) => {
       const ordersToInsert: any[] = [];
       const ordersToUpdate: { id: string; matched_via: "stripe_ref" | "fuzzy"; updates: any; candidate: any }[] = [];
 
+      function shouldStopScanning() {
+        if (candidateLimit && ordersToInsert.length + ordersToUpdate.length >= candidateLimit) {
+          stats.scan_limited = true;
+          return true;
+        }
+        if (Date.now() - startedAt > timeBudgetMs) {
+          stats.time_budget_reached = true;
+          return true;
+        }
+        return false;
+      }
+
       function queueCandidate(candidate: any) {
         const m = findMatch(candidate);
         if (m.kind === "ambiguous") {
@@ -3188,12 +3200,13 @@ serve(async (req) => {
       let hasMoreInv = true;
       let startingAfterInv: string | undefined;
 
-      while (hasMoreInv) {
+      while (hasMoreInv && !shouldStopScanning()) {
         const params: any = { limit: 100, status: "paid", expand: ["data.charge.balance_transaction"] };
         if (startingAfterInv) params.starting_after = startingAfterInv;
         const invoices = await stripe.invoices.list(params);
 
         for (const inv of invoices.data) {
+          if (shouldStopScanning()) break;
           stats.invoices_found++;
 
           const chargeObj: any = inv.charge && typeof inv.charge === "object" ? inv.charge : null;
@@ -3205,7 +3218,7 @@ serve(async (req) => {
           const customerId = typeof inv.customer === "string" ? inv.customer : (inv.customer as any)?.id;
           if (!customerId) continue;
 
-          const { userId, via } = resolveUserId(customerId);
+          const { userId, via } = await resolveUserId(customerId);
           if (!userId) { stats.missing_user++; continue; }
           if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
           else if (via === "email_fallback") stats.resolved_by_email_fallback++;
@@ -3258,12 +3271,13 @@ serve(async (req) => {
       let hasMoreCh = true;
       let startingAfterCh: string | undefined;
 
-      while (hasMoreCh) {
+      while (hasMoreCh && !shouldStopScanning()) {
         const params: any = { limit: 100, expand: ["data.balance_transaction"] };
         if (startingAfterCh) params.starting_after = startingAfterCh;
         const charges = await stripe.charges.list(params);
 
         for (const ch of charges.data) {
+          if (shouldStopScanning()) break;
           stats.charges_found++;
 
           // Skip charges already linked to an invoice we processed (avoids double processing)
@@ -3280,7 +3294,7 @@ serve(async (req) => {
           const customerId = typeof ch.customer === "string" ? ch.customer : (ch.customer as any)?.id;
           if (!customerId) continue;
 
-          const { userId, via } = resolveUserId(customerId);
+          const { userId, via } = await resolveUserId(customerId);
           if (!userId) { stats.missing_user++; continue; }
           if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
           else if (via === "email_fallback") stats.resolved_by_email_fallback++;
