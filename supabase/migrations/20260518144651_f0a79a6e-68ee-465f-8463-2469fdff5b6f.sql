@@ -1,0 +1,1 @@
+DELETE FROM public.ibs_signatures WHERE ibs_signature_id = 'sig_VjbzynBKxL6FXb7DzNxtcG';
