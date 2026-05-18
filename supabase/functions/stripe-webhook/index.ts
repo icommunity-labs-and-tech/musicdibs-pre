@@ -735,6 +735,7 @@ serve(async (req) => {
 
           const { credits, source: creditsSource, tier: dbTier } = await resolveCreditsForUser(supabase, profile.user_id, priceId);
           console.log(`[WEBHOOK] subscription_cycle: credits=${credits} source=${creditsSource} tier=${dbTier} price=${priceId}`);
+          console.log(`[WEBHOOK] credits resolved via: ${dbTier ? "subscription_tier=" + dbTier : "PRICE_CREDITS=" + priceId} → ${credits} credits`);
 
           if (credits > 0) {
             const { data: rProf } = await supabase.from("profiles").select("permanent_credits").eq("user_id", profile.user_id).single();
@@ -810,6 +811,7 @@ serve(async (req) => {
 
           const { credits, source: creditsSource, tier: dbTier } = await resolveCreditsForUser(supabase, profile.user_id, actualPriceId);
           console.log(`[WEBHOOK] subscription_update: credits=${credits} source=${creditsSource} tier=${dbTier} price=${actualPriceId}`);
+          console.log(`[WEBHOOK] credits resolved via: ${dbTier ? "subscription_tier=" + dbTier : "PRICE_CREDITS=" + actualPriceId} → ${credits} credits`);
 
           if (credits > 0) {
             await addCredits(supabase, profile.user_id, credits, `Cambio de plan: +${credits} créditos acumulados`);
