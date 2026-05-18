@@ -2896,14 +2896,6 @@ serve(async (req) => {
       };
 
       try {
-        // Customers total = unique users with at least one paid order ever
-        const { data: custRows } = await admin
-          .from("orders")
-          .select("user_id")
-          .eq("order_status", "paid");
-        customersTotal = new Set((custRows || []).map((r: any) => r.user_id))
-          .size;
-
         // Orders in the period
         if (filterStart && filterEnd) {
           const { data: periodOrders } = await admin
@@ -2918,7 +2910,20 @@ serve(async (req) => {
             .limit(5000);
           ordersData = periodOrders || [];
         }
-        totalOrders = ordersData.length;
+        // Clientes totales del periodo = únicos con compra en el periodo
+        customersTotal = new Set(
+          ordersData.map((o: any) => o.user_id).filter(Boolean),
+        ).size;
+        // Órdenes del periodo = solo product_types contables (anual+mensual+single+topup)
+        const COUNTABLE_TYPES = new Set([
+          "annual",
+          "monthly",
+          "single",
+          "topup",
+        ]);
+        totalOrders = ordersData.filter((o: any) =>
+          COUNTABLE_TYPES.has(o.product_type),
+        ).length;
         orderRevenue = ordersData.reduce(
           (s: number, o: any) => s + netRev(o),
           0,
