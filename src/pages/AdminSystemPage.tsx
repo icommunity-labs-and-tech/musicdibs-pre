@@ -270,13 +270,44 @@ export default function AdminSystemPage() {
                 try {
                   const res = await adminApi.backfillOrdersFromStripe(true);
                   const s = res.stats || {};
-                  toast.success(`Dry-run: ${s.orders_to_create || 0} orders se crearían, ${s.duplicates_skipped || 0} duplicados, ${s.missing_user || 0} sin usuario`);
+                  const r = res.report || { inserts: [], updates: [] };
+                  toast.success(`Dry-run: ${s.orders_to_create || 0} a insertar, ${s.orders_to_update || 0} a actualizar (${s.updated_by_stripe_ref || 0} por ref Stripe + ${s.updated_by_fuzzy_match || 0} fuzzy), ${s.missing_user || 0} sin usuario`);
                   console.log('[BACKFILL DRY-RUN]', res);
                   console.table(s);
+
+                  // Build CSV report
+                  const toCsv = (rows: Record<string, any>[]) => {
+                    if (!rows.length) return '';
+                    const headerSet = new Set<string>();
+                    rows.forEach(row => Object.keys(row).forEach(k => headerSet.add(k)));
+                    const headers = Array.from(headerSet);
+                    const esc = (v: any) => {
+                      if (v === null || v === undefined) return '';
+                      const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+                      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+                    };
+                    return [headers.join(','), ...rows.map(row => headers.map(h => esc(row[h])).join(','))].join('\n');
+                  };
+
+                  // Merge with common header set
+                  const all = [
+                    ...(r.updates || []).map((u: any) => ({ action: 'UPDATE', ...u })),
+                    ...(r.inserts || []).map((i: any) => ({ action: 'INSERT', ...i })),
+                  ];
+                  const fullCsv = toCsv(all);
+
+                  const blob = new Blob([fullCsv], { type: 'text/csv;charset=utf-8' });
+                  const url = window.URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `backfill-dryrun-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
+                  a.click();
+                  window.URL.revokeObjectURL(url);
+                  toast.success(`CSV descargado: ${(r.updates || []).length} updates + ${(r.inserts || []).length} inserts`);
                 } catch (e: any) { toast.error(e.message); }
               }}
             >
-              Dry-run (simulación)
+              Dry-run + descargar CSV
             </Button>
             <Button
               variant="default"
