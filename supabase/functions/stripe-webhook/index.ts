@@ -57,6 +57,33 @@ const PRICE_CREDITS: Record<string, number> = {
   "price_1THT8AF9ZCIiqrz626wSH9Rz": 200,
 };
 
+const TIER_CREDITS: Record<string, number> = {
+  annual_100: 100,
+  annual_200: 200,
+  annual_300: 300,
+  annual_500: 500,
+  annual_1000: 1000,
+  monthly: 8,
+};
+
+async function resolveCreditsForUser(
+  supabase: any,
+  userId: string,
+  priceId: string | null | undefined,
+): Promise<{ credits: number; source: "tier" | "price" | "none"; tier: string | null }> {
+  const { data: prof } = await supabase
+    .from("profiles")
+    .select("subscription_tier")
+    .eq("user_id", userId)
+    .maybeSingle();
+  const tier = prof?.subscription_tier ?? null;
+  if (tier && TIER_CREDITS[tier] != null) {
+    return { credits: TIER_CREDITS[tier], source: "tier", tier };
+  }
+  const fallback = priceId ? (PRICE_CREDITS[priceId] || 0) : 0;
+  return { credits: fallback, source: fallback > 0 ? "price" : "none", tier };
+}
+
 const PRICE_PLAN: Record<string, string> = {
   "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": "Annual",
   "price_1THT7cF9ZCIiqrz6sWS67Q4V": "Annual",
