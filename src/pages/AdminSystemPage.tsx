@@ -120,6 +120,9 @@ export default function AdminSystemPage() {
 
   useEffect(() => { load(); }, []);
   useEffect(() => { loadAudit(); }, [loadAudit]);
+  useEffect(() => () => {
+    if (backfillCsvLink?.url) window.URL.revokeObjectURL(backfillCsvLink.url);
+  }, [backfillCsvLink]);
 
   const handleAddAdmin = async () => {
     if (!newAdminEmail.trim()) return;
@@ -375,6 +378,15 @@ export default function AdminSystemPage() {
               Ejecutar backfill real
             </Button>
           </div>
+          {backfillCsvLink && (
+            <p className="text-sm text-muted-foreground">
+              Si la descarga automática no se abre,{' '}
+              <a className="font-medium text-primary underline-offset-4 hover:underline" href={backfillCsvLink.url} download={backfillCsvLink.filename}>
+                descarga el CSV manualmente
+              </a>
+              .
+            </p>
+          )}
         </CardContent>
       </Card>
       <Dialog open={addModal} onOpenChange={setAddModal}>
