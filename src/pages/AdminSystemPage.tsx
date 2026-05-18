@@ -88,6 +88,7 @@ export default function AdminSystemPage() {
   const [addModal, setAddModal] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [backfillDryRunLoading, setBackfillDryRunLoading] = useState(false);
+  const [backfillCsvLink, setBackfillCsvLink] = useState<{ url: string; filename: string } | null>(null);
 
   // Audit log state
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -175,6 +176,9 @@ export default function AdminSystemPage() {
       toast.success(`Dry-run: ${stats.orders_to_create || 0} a insertar, ${stats.orders_to_update || 0} a actualizar (${stats.updated_by_stripe_ref || 0} por ref Stripe + ${stats.updated_by_fuzzy_match || 0} fuzzy), ${stats.missing_user || 0} sin usuario`);
 
       const filename = `backfill-dryrun-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
+      if (backfillCsvLink?.url) window.URL.revokeObjectURL(backfillCsvLink.url);
+      const csvUrl = createCsvObjectUrl(toCsv(rows));
+      setBackfillCsvLink({ url: csvUrl, filename });
       downloadCsv(filename, toCsv(rows));
       toast.success(`CSV descargado: ${updates.length} updates + ${inserts.length} inserts`);
     } catch (error) {
