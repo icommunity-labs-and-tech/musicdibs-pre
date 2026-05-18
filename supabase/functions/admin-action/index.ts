@@ -4794,8 +4794,42 @@ serve(async (req) => {
           if (shouldStopScanning()) break;
           stats.charges_found++;
 
-          // Skip charges already linked to an invoice we processed (avoids double processing)
+          // Enrich existing invoice-linked orders with stripe_fee / stripe_charge_id.
+          // In Stripe API 2025-08-27.basil, invoice.charge is no longer exposed, so the
+          // invoices loop above can't compute stripe_fee. We patch it here from the charge.
+          const enrichLinkedOrder = (existing: any): boolean => {
+            const btCh: any =
+              ch.balance_transaction &&
+              typeof ch.balance_transaction === "object"
+                ? ch.balance_transaction
+                : null;
+            const fee =
+              btCh && typeof btCh.fee === "number" ? btCh.fee / 100 : 0;
+            const needsFee =
+              existing.stripe_fee == null ||
+              Number(existing.stripe_fee) === 0;
+            const needsChargeId = !existing.stripe_charge_id;
+            if (fee > 0 && needsFee) {
+              const updates: any = { stripe_fee: fee };
+              if (needsChargeId) updates.stripe_charge_id = ch.id;
+              ordersToUpdate.push({
+                id: existing.id,
+                matched_via: "stripe_ref",
+                updates,
+                candidate: { stripe_charge_id: ch.id, stripe_fee: fee },
+              });
+              stats.stripe_fee_enriched =
+                (stats.stripe_fee_enriched || 0) + 1;
+              return true;
+            }
+            return false;
+          };
+
+          // Skip charges already linked to an invoice we processed (avoids double processing),
+          // but first try to enrich stripe_fee on the matching order.
           if (invoiceLinkedChargeIds.has(ch.id)) {
+            const existing = byChargeId.get(ch.id);
+            if (existing) enrichLinkedOrder(existing);
             stats.duplicates_skipped++;
             continue;
           }
@@ -4804,7 +4838,9 @@ serve(async (req) => {
               typeof ch.invoice === "string"
                 ? ch.invoice
                 : (ch.invoice as any).id;
-            if (byInvoiceId.has(invId)) {
+            const existingByInv = byInvoiceId.get(invId);
+            if (existingByInv) {
+              enrichLinkedOrder(existingByInv);
               stats.duplicates_skipped++;
               continue;
             }
