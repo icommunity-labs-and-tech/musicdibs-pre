@@ -18,7 +18,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       regenerate: 'Regenerar',
       registerWork: 'Registrar obra',
       createWithAI: 'Crear música con IA',
-      createDesc: 'Describe tu canción: género (pop, rap, reggaeton, rock, etc) estilo, ritmo... Incluye la letra si la tienes. Cuanto más detallado, mejor resultado.',
+      createDesc: 'Describe tu canción: género (pop, rap, reggaeton, rock, etc) ritmo... Incluye la letra si la tienes. IMPORTANTE: algunos nombres de personajes famosos pueden ser bloqueados por copyright y dar error.',
       artistProfile: 'Perfil de artista',
       manageProfiles: 'Gestionar perfiles →',
       noProfile: '— Sin perfil (configuración libre) —',
