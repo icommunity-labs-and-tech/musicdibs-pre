@@ -3173,7 +3173,7 @@ serve(async (req) => {
       let startingAfterInv: string | undefined;
 
       while (hasMoreInv) {
-        const params: any = { limit: 100, status: "paid" };
+        const params: any = { limit: 100, status: "paid", expand: ["data.charge.balance_transaction"] };
         if (startingAfterInv) params.starting_after = startingAfterInv;
         const invoices = await stripe.invoices.list(params);
 
