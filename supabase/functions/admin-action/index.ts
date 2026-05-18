@@ -3180,8 +3180,11 @@ serve(async (req) => {
         for (const inv of invoices.data) {
           stats.invoices_found++;
 
-          const chargeId = typeof inv.charge === "string" ? inv.charge : null;
+          const chargeObj: any = inv.charge && typeof inv.charge === "object" ? inv.charge : null;
+          const chargeId = typeof inv.charge === "string" ? inv.charge : chargeObj?.id || null;
           if (chargeId) invoiceLinkedChargeIds.add(chargeId);
+          const bt: any = chargeObj?.balance_transaction && typeof chargeObj.balance_transaction === "object" ? chargeObj.balance_transaction : null;
+          const stripeFee = bt && typeof bt.fee === "number" ? bt.fee / 100 : 0;
 
           const customerId = typeof inv.customer === "string" ? inv.customer : (inv.customer as any)?.id;
           if (!customerId) continue;
