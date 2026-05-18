@@ -3114,9 +3114,22 @@ serve(async (req) => {
             (o: any) => o.paid_at >= sIso && o.paid_at < eIso,
           );
           const bRev = bOrders.reduce((s: number, o: any) => s + netRev(o), 0);
+          let bGross = 0, bIva = 0, bFee = 0;
+          bOrders.forEach((o: any) => {
+            if (o.order_status === "refunded") return;
+            const g = parseFloat(o.amount_gross) || 0;
+            const nv = parseFloat(o.amount_net);
+            const nb = !isNaN(nv) && nv > 0 ? nv : g / 1.21;
+            bGross += g;
+            bIva += Math.max(0, g - nb);
+            bFee += parseFloat(o.stripe_fee) || 0;
+          });
           timeSeries.revenue.push({
             label: b.label,
             value: Math.round(bRev * 100) / 100,
+            gross: Math.round(bGross * 100) / 100,
+            iva: Math.round(bIva * 100) / 100,
+            fee: Math.round(bFee * 100) / 100,
           });
           timeSeries.orders.push({ label: b.label, value: bOrders.length });
 
