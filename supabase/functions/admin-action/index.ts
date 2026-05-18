@@ -4615,12 +4615,23 @@ serve(async (req) => {
 
       function queueCandidate(candidate: any) {
         const m = findMatch(candidate);
+        // Skip INSERTs for €0 invoices (trial subscriptions, no real charge).
+        // UPDATEs are unaffected.
+        const isZeroAmount = (Number(candidate.amount_gross) || 0) === 0;
         if (m.kind === "ambiguous") {
           stats.fuzzy_ambiguous_skipped++;
+          if (isZeroAmount) {
+            stats.zero_amount_skipped = (stats.zero_amount_skipped || 0) + 1;
+            return;
+          }
           ordersToInsert.push(candidate);
           return;
         }
         if (m.kind === "insert") {
+          if (isZeroAmount) {
+            stats.zero_amount_skipped = (stats.zero_amount_skipped || 0) + 1;
+            return;
+          }
           ordersToInsert.push(candidate);
           return;
         }
