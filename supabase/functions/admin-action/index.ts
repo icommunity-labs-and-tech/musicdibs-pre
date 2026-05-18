@@ -3243,7 +3243,7 @@ serve(async (req) => {
       let startingAfterCh: string | undefined;
 
       while (hasMoreCh) {
-        const params: any = { limit: 100 };
+        const params: any = { limit: 100, expand: ["data.balance_transaction"] };
         if (startingAfterCh) params.starting_after = startingAfterCh;
         const charges = await stripe.charges.list(params);
 
