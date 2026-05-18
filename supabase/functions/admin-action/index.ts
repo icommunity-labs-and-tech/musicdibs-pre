@@ -1921,6 +1921,7 @@ serve(async (req) => {
       let revenueMonthly = 0;
       let revenueSingle = 0;
       let revenueTopup = 0;
+      let orderRevenue = 0;
       let renewalsMonthlyCount = 0;
       let renewalsAnnualCount = 0;
       const productBreakdown: { name: string; units: number; revenue: number }[] = [];
@@ -2089,7 +2090,7 @@ serve(async (req) => {
       }
 
       // Period revenue = sum of all order revenue inside the selected period
-      const periodRevenue = Math.round((revenueAnnual + revenueMonthly + revenueSingle + revenueTopup) * 100) / 100;
+      const periodRevenue = Math.round(orderRevenue * 100) / 100;
 
       const creditsPercentage = periodRevenue > 0 ? parseFloat((((revenueSingle + revenueTopup) / periodRevenue) * 100).toFixed(1)) : 0;
 
