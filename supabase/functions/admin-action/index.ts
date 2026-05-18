@@ -1937,13 +1937,24 @@ serve(async (req) => {
             .from("orders")
             .select("user_id, paid_at, amount_gross, amount_net, stripe_fee, order_status, product_type, is_renewal, billing_interval, attributed_campaign_name")
             .eq("order_status", "paid")
+            .gte("paid_at", filterStart)
+            .lte("paid_at", filterEnd)
             .order("paid_at", { ascending: false })
-            .limit(1000);
-          ordersData = allOrders || [];
+            .limit(5000);
+          ordersData = periodOrders || [];
         }
 
+        // Net revenue helper: amount_net (pre-IVA) − stripe_fee, excluding refunded orders
+        const netRev = (o: any): number => {
+          if (o.order_status === "refunded") return 0;
+          const net = parseFloat(o.amount_net);
+          const base = !isNaN(net) && net > 0 ? net : (parseFloat(o.amount_gross) || 0) / 1.21;
+          const fee = parseFloat(o.stripe_fee) || 0;
+          return Math.max(0, base - fee);
+        };
+
         totalOrders = ordersData.length;
-        orderRevenue = ordersData.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
+        orderRevenue = ordersData.reduce((s: number, o: any) => s + netRev(o), 0);
         averageOrderValue = totalOrders > 0 ? parseFloat((orderRevenue / totalOrders).toFixed(2)) : 0;
 
         // Units/revenue by product type
@@ -1952,7 +1963,7 @@ serve(async (req) => {
           const pt = o.product_type || "unknown";
           if (!byType[pt]) byType[pt] = { units: 0, revenue: 0 };
           byType[pt].units++;
-          byType[pt].revenue += parseFloat(o.amount_gross) || 0;
+          byType[pt].revenue += netRev(o);
           if (o.is_renewal) {
             if (o.billing_interval === "yearly") renewalsAnnualCount++;
             else renewalsMonthlyCount++;
