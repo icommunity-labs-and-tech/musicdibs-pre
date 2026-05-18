@@ -1926,6 +1926,15 @@ serve(async (req) => {
       let renewalsAnnualCount = 0;
       const productBreakdown: { name: string; units: number; revenue: number }[] = [];
 
+      // Net revenue helper: amount_net (pre-IVA) − stripe_fee, excluding refunded orders
+      const netRev = (o: any): number => {
+        if (o.order_status === "refunded") return 0;
+        const net = parseFloat(o.amount_net);
+        const base = !isNaN(net) && net > 0 ? net : (parseFloat(o.amount_gross) || 0) / 1.21;
+        const fee = parseFloat(o.stripe_fee) || 0;
+        return Math.max(0, base - fee);
+      };
+
       try {
         // Customers total = unique users with at least one paid order ever
         const { data: custRows } = await admin.from("orders").select("user_id").eq("order_status", "paid");
@@ -1935,23 +1944,16 @@ serve(async (req) => {
         if (filterStart && filterEnd) {
           const { data: periodOrders } = await admin
             .from("orders")
-            .select("user_id, paid_at, amount_gross, product_type, is_renewal, billing_interval, attributed_campaign_name")
-            .gte("paid_at", filterStart)
-            .lt("paid_at", filterEnd)
-            .eq("order_status", "paid");
-          ordersData = periodOrders || [];
-        } else {
-          const { data: allOrders } = await admin
-            .from("orders")
-            .select("user_id, paid_at, amount_gross, product_type, is_renewal, billing_interval, attributed_campaign_name")
+            .select("user_id, paid_at, amount_gross, amount_net, stripe_fee, order_status, product_type, is_renewal, billing_interval, attributed_campaign_name")
             .eq("order_status", "paid")
+            .gte("paid_at", filterStart)
+            .lte("paid_at", filterEnd)
             .order("paid_at", { ascending: false })
-            .limit(1000);
-          ordersData = allOrders || [];
+            .limit(5000);
+          ordersData = periodOrders || [];
         }
-
         totalOrders = ordersData.length;
-        orderRevenue = ordersData.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
+        orderRevenue = ordersData.reduce((s: number, o: any) => s + netRev(o), 0);
         averageOrderValue = totalOrders > 0 ? parseFloat((orderRevenue / totalOrders).toFixed(2)) : 0;
 
         // Units/revenue by product type
@@ -1960,7 +1962,7 @@ serve(async (req) => {
           const pt = o.product_type || "unknown";
           if (!byType[pt]) byType[pt] = { units: 0, revenue: 0 };
           byType[pt].units++;
-          byType[pt].revenue += parseFloat(o.amount_gross) || 0;
+          byType[pt].revenue += netRev(o);
           if (o.is_renewal) {
             if (o.billing_interval === "yearly") renewalsAnnualCount++;
             else renewalsMonthlyCount++;
@@ -2013,7 +2015,7 @@ serve(async (req) => {
         const campRevMap: Record<string, number> = {};
         ordersData.forEach((o: any) => {
           const cn = o.attributed_campaign_name;
-          if (cn) campRevMap[cn] = (campRevMap[cn] || 0) + (parseFloat(o.amount_gross) || 0);
+          if (cn) campRevMap[cn] = (campRevMap[cn] || 0) + netRev(o);
         });
         marketingSummary.top_campaigns = Object.entries(campRevMap)
           .map(([name, revenue]) => ({ name, revenue: Math.round(revenue * 100) / 100 }))
@@ -2065,7 +2067,7 @@ serve(async (req) => {
           const sIso = b.start.toISOString();
           const eIso = b.end.toISOString();
           const bOrders = ordersData.filter((o: any) => o.paid_at >= sIso && o.paid_at < eIso);
-          const bRev = bOrders.reduce((s: number, o: any) => s + (parseFloat(o.amount_gross) || 0), 0);
+          const bRev = bOrders.reduce((s: number, o: any) => s + netRev(o), 0);
           timeSeries.revenue.push({ label: b.label, value: Math.round(bRev * 100) / 100 });
           timeSeries.orders.push({ label: b.label, value: bOrders.length });
 
@@ -3004,7 +3006,7 @@ serve(async (req) => {
       // Load all existing orders (full row for matching + update decisions)
       const { data: existingOrders } = await admin
         .from("orders")
-        .select("id, user_id, stripe_invoice_id, stripe_charge_id, stripe_checkout_session_id, amount_gross, amount_net, product_type, product_code, order_status, paid_at, created_at");
+        .select("id, user_id, stripe_invoice_id, stripe_charge_id, stripe_checkout_session_id, amount_gross, amount_net, stripe_fee, product_type, product_code, order_status, paid_at, created_at");
 
       // Index by stripe refs
       const byInvoiceId = new Map<string, any>();
@@ -3139,6 +3141,7 @@ serve(async (req) => {
         const updates: any = {
           amount_gross: candidate.amount_gross,
           amount_net: candidate.amount_net,
+          stripe_fee: candidate.stripe_fee,
           product_type: candidate.product_type,
           order_status: candidate.order_status,
         };
@@ -3170,15 +3173,18 @@ serve(async (req) => {
       let startingAfterInv: string | undefined;
 
       while (hasMoreInv) {
-        const params: any = { limit: 100, status: "paid" };
+        const params: any = { limit: 100, status: "paid", expand: ["data.charge.balance_transaction"] };
         if (startingAfterInv) params.starting_after = startingAfterInv;
         const invoices = await stripe.invoices.list(params);
 
         for (const inv of invoices.data) {
           stats.invoices_found++;
 
-          const chargeId = typeof inv.charge === "string" ? inv.charge : null;
+          const chargeObj: any = inv.charge && typeof inv.charge === "object" ? inv.charge : null;
+          const chargeId = typeof inv.charge === "string" ? inv.charge : chargeObj?.id || null;
           if (chargeId) invoiceLinkedChargeIds.add(chargeId);
+          const bt: any = chargeObj?.balance_transaction && typeof chargeObj.balance_transaction === "object" ? chargeObj.balance_transaction : null;
+          const stripeFee = bt && typeof bt.fee === "number" ? bt.fee / 100 : 0;
 
           const customerId = typeof inv.customer === "string" ? inv.customer : (inv.customer as any)?.id;
           if (!customerId) continue;
@@ -3213,6 +3219,7 @@ serve(async (req) => {
             billing_interval: billingInterval,
             amount_gross: amount,
             amount_net: computeAmountNet(stripeNet, amount),
+            stripe_fee: stripeFee,
             currency: inv.currency || "eur",
             is_subscription: isSub,
             is_renewal: isRenewal,
@@ -3236,7 +3243,7 @@ serve(async (req) => {
       let startingAfterCh: string | undefined;
 
       while (hasMoreCh) {
-        const params: any = { limit: 100 };
+        const params: any = { limit: 100, expand: ["data.balance_transaction"] };
         if (startingAfterCh) params.starting_after = startingAfterCh;
         const charges = await stripe.charges.list(params);
 
@@ -3268,6 +3275,8 @@ serve(async (req) => {
           if (pt === "legacy_unknown") stats.unknown_product_type++;
 
           const paidAt = new Date(ch.created * 1000).toISOString();
+          const btCh: any = ch.balance_transaction && typeof ch.balance_transaction === "object" ? ch.balance_transaction : null;
+          const stripeFeeCh = btCh && typeof btCh.fee === "number" ? btCh.fee / 100 : 0;
 
           const candidate = {
             user_id: userId,
@@ -3278,6 +3287,7 @@ serve(async (req) => {
             billing_interval: pt === "annual" ? "yearly" : pt === "monthly" ? "monthly" : null,
             amount_gross: amount,
             amount_net: computeAmountNet(null, amount),
+            stripe_fee: stripeFeeCh,
             currency: ch.currency || "eur",
             is_subscription: pt === "annual" || pt === "monthly",
             is_renewal: false,
