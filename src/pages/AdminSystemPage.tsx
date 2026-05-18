@@ -139,14 +139,42 @@ export default function AdminSystemPage() {
   const handleExportAudit = async () => {
     try {
       const res = await adminApi.exportCsv('audit');
-      const blob = new Blob([res.csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `musicdibs-audit-${new Date().toISOString().slice(0, 10)}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (e: any) { toast.error(e.message); }
+      downloadCsv(`musicdibs-audit-${new Date().toISOString().slice(0, 10)}.csv`, String(res.csv || ''));
+    } catch (error) { toast.error(`No se pudo descargar el CSV: ${getErrorMessage(error)}`); }
+  };
+
+  const handleBackfillDryRunCsv = async () => {
+    if (backfillDryRunLoading) return;
+
+    setBackfillDryRunLoading(true);
+    toast.info('Ejecutando dry-run…');
+
+    try {
+      const res = await adminApi.backfillOrdersFromStripe(true);
+      const stats = res.stats || {};
+      const report = res.report || { inserts: [], updates: [] };
+      const updates = Array.isArray(report.updates) ? report.updates : [];
+      const inserts = Array.isArray(report.inserts) ? report.inserts : [];
+      const rows: CsvRow[] = [
+        ...updates.map((update: CsvRow) => ({ action: 'UPDATE', ...update })),
+        ...inserts.map((insert: CsvRow) => ({ action: 'INSERT', ...insert })),
+      ];
+
+      console.info('[BACKFILL DRY-RUN]', res);
+      console.table(stats);
+      console.info('[BACKFILL DRY-RUN CSV ROWS]', rows.length);
+
+      toast.success(`Dry-run: ${stats.orders_to_create || 0} a insertar, ${stats.orders_to_update || 0} a actualizar (${stats.updated_by_stripe_ref || 0} por ref Stripe + ${stats.updated_by_fuzzy_match || 0} fuzzy), ${stats.missing_user || 0} sin usuario`);
+
+      const filename = `backfill-dryrun-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
+      downloadCsv(filename, toCsv(rows));
+      toast.success(`CSV descargado: ${updates.length} updates + ${inserts.length} inserts`);
+    } catch (error) {
+      console.error('[BACKFILL DRY-RUN CSV ERROR]', error);
+      toast.error(`No se pudo generar o descargar el CSV: ${getErrorMessage(error)}`);
+    } finally {
+      setBackfillDryRunLoading(false);
+    }
   };
 
   function renderDetails(log: any) {
