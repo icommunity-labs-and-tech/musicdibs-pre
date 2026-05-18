@@ -327,11 +327,14 @@ serve(async (req) => {
 
     // ── SYNC (update local status from iBS) ──────────────────
     if (action === "sync") {
+      // Throttle: no re-pollear a iBS si la firma se sincronizó hace <5 min
+      const throttleCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       const { data: sigs } = await supabaseUser
         .from("ibs_signatures")
-        .select("ibs_signature_id, status")
+        .select("ibs_signature_id, status, updated_at")
         .eq("user_id", user.id)
-        .in("status", ["pending", "created", "initiated"]);
+        .in("status", ["pending", "created", "initiated"])
+        .lt("updated_at", throttleCutoff);
 
       if (sigs && sigs.length > 0) {
         for (const sig of sigs) {
@@ -353,6 +356,12 @@ serve(async (req) => {
                     .update({ kyc_status: "verified", ibs_signature_id: sig.ibs_signature_id, updated_at: new Date().toISOString() })
                     .eq("user_id", user.id);
                 }
+              } else {
+                // Touch updated_at para que el throttle de 5 min funcione aunque el status no cambie
+                await supabaseAdmin
+                  .from("ibs_signatures")
+                  .update({ updated_at: new Date().toISOString() })
+                  .eq("ibs_signature_id", sig.ibs_signature_id);
               }
             }
           } catch (err) {
