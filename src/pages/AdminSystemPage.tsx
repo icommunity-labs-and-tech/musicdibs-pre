@@ -22,6 +22,61 @@ const ACTION_LABELS: Record<string, string> = {
   revoke_admin: 'Revocar admin',
 };
 
+type CsvValue = string | number | boolean | null | undefined | Record<string, unknown> | unknown[];
+type CsvRow = Record<string, CsvValue>;
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : 'Error inesperado';
+}
+
+function toCsv(rows: CsvRow[]) {
+  if (!rows.length) return '';
+
+  const headerSet = new Set<string>();
+  rows.forEach(row => Object.keys(row).forEach(key => headerSet.add(key)));
+  const headers = Array.from(headerSet);
+  const escapeValue = (value: CsvValue) => {
+    if (value === null || value === undefined) return '';
+    const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    return /[",\n;]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+  };
+
+  return [headers.join(','), ...rows.map(row => headers.map(header => escapeValue(row[header])).join(','))].join('\n');
+}
+
+function createCsvObjectUrl(csv: string) {
+  if (!csv.trim()) throw new Error('El reporte CSV está vacío. No hay filas para descargar.');
+  if (!window.URL?.createObjectURL) throw new Error('El navegador no permite crear el archivo de descarga.');
+
+  const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+  if (!blob.size) throw new Error('No se pudo crear el Blob del CSV.');
+
+  return window.URL.createObjectURL(blob);
+}
+
+function downloadCsv(filename: string, csv: string) {
+  const url = createCsvObjectUrl(csv);
+
+  const anchor = document.createElement('a');
+
+  try {
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.rel = 'noopener';
+    anchor.style.display = 'none';
+    document.body.appendChild(anchor);
+    anchor.click();
+  } catch (error) {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    throw error;
+  } finally {
+    window.setTimeout(() => {
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+    }, 1_000);
+  }
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
@@ -32,6 +87,8 @@ export default function AdminSystemPage() {
   const [loading, setLoading] = useState(true);
   const [addModal, setAddModal] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [backfillDryRunLoading, setBackfillDryRunLoading] = useState(false);
+  const [backfillCsvLink, setBackfillCsvLink] = useState<{ url: string; filename: string } | null>(null);
 
   // Audit log state
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
@@ -63,6 +120,9 @@ export default function AdminSystemPage() {
 
   useEffect(() => { load(); }, []);
   useEffect(() => { loadAudit(); }, [loadAudit]);
+  useEffect(() => () => {
+    if (backfillCsvLink?.url) window.URL.revokeObjectURL(backfillCsvLink.url);
+  }, [backfillCsvLink]);
 
   const handleAddAdmin = async () => {
     if (!newAdminEmail.trim()) return;
@@ -91,14 +151,49 @@ export default function AdminSystemPage() {
   const handleExportAudit = async () => {
     try {
       const res = await adminApi.exportCsv('audit');
-      const blob = new Blob([res.csv], { type: 'text/csv' });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `musicdibs-audit-${new Date().toISOString().slice(0, 10)}.csv`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (e: any) { toast.error(e.message); }
+      downloadCsv(`musicdibs-audit-${new Date().toISOString().slice(0, 10)}.csv`, String(res.csv || ''));
+    } catch (error) { toast.error(`No se pudo descargar el CSV: ${getErrorMessage(error)}`); }
+  };
+
+  const handleBackfillDryRunCsv = async () => {
+    if (backfillDryRunLoading) return;
+
+    setBackfillDryRunLoading(true);
+    toast.info('Ejecutando dry-run…');
+
+    try {
+      const res = await adminApi.backfillOrdersFromStripe(true);
+      const stats = res.stats || {};
+      const report = res.report || { inserts: [], updates: [] };
+      if (!res.report || (!Array.isArray(report.updates) && !Array.isArray(report.inserts))) {
+        throw new Error('La Edge Function no devolvió el reporte de dry-run. Revisa que admin-action esté desplegada con el campo report.');
+      }
+      const updates = Array.isArray(report.updates) ? report.updates : [];
+      const inserts = Array.isArray(report.inserts) ? report.inserts : [];
+      const rows: CsvRow[] = updates.length || inserts.length ? [
+        ...updates.map((update: CsvRow) => ({ action: 'UPDATE', ...update })),
+        ...inserts.map((insert: CsvRow) => ({ action: 'INSERT', ...insert })),
+      ] : [{ action: 'NO_ROWS', reason: 'dry_run_without_insert_or_update_candidates', orders_to_update: stats.orders_to_update || 0, orders_to_create: stats.orders_to_create || 0 }];
+
+      console.info('[BACKFILL DRY-RUN]', res);
+      console.table(stats);
+      console.info('[BACKFILL DRY-RUN CSV ROWS]', rows.length);
+
+      toast.success(`Dry-run: ${stats.orders_to_create || 0} a insertar, ${stats.orders_to_update || 0} a actualizar (${stats.updated_by_stripe_ref || 0} por ref Stripe + ${stats.updated_by_fuzzy_match || 0} fuzzy), ${stats.missing_user || 0} sin usuario`);
+
+      const filename = `backfill-dryrun-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
+      const csv = toCsv(rows);
+      if (backfillCsvLink?.url) window.URL.revokeObjectURL(backfillCsvLink.url);
+      const csvUrl = createCsvObjectUrl(csv);
+      setBackfillCsvLink({ url: csvUrl, filename });
+      downloadCsv(filename, csv);
+      toast.success(`CSV descargado: ${updates.length} updates + ${inserts.length} inserts`);
+    } catch (error) {
+      console.error('[BACKFILL DRY-RUN CSV ERROR]', error);
+      toast.error(`No se pudo generar o descargar el CSV: ${getErrorMessage(error)}`);
+    } finally {
+      setBackfillDryRunLoading(false);
+    }
   };
 
   function renderDetails(log: any) {
@@ -265,49 +360,10 @@ export default function AdminSystemPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={async () => {
-                toast.info('Ejecutando dry-run…');
-                try {
-                  const res = await adminApi.backfillOrdersFromStripe(true);
-                  const s = res.stats || {};
-                  const r = res.report || { inserts: [], updates: [] };
-                  toast.success(`Dry-run: ${s.orders_to_create || 0} a insertar, ${s.orders_to_update || 0} a actualizar (${s.updated_by_stripe_ref || 0} por ref Stripe + ${s.updated_by_fuzzy_match || 0} fuzzy), ${s.missing_user || 0} sin usuario`);
-                  console.log('[BACKFILL DRY-RUN]', res);
-                  console.table(s);
-
-                  // Build CSV report
-                  const toCsv = (rows: Record<string, any>[]) => {
-                    if (!rows.length) return '';
-                    const headerSet = new Set<string>();
-                    rows.forEach(row => Object.keys(row).forEach(k => headerSet.add(k)));
-                    const headers = Array.from(headerSet);
-                    const esc = (v: any) => {
-                      if (v === null || v === undefined) return '';
-                      const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
-                      return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-                    };
-                    return [headers.join(','), ...rows.map(row => headers.map(h => esc(row[h])).join(','))].join('\n');
-                  };
-
-                  // Merge with common header set
-                  const all = [
-                    ...(r.updates || []).map((u: any) => ({ action: 'UPDATE', ...u })),
-                    ...(r.inserts || []).map((i: any) => ({ action: 'INSERT', ...i })),
-                  ];
-                  const fullCsv = toCsv(all);
-
-                  const blob = new Blob([fullCsv], { type: 'text/csv;charset=utf-8' });
-                  const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `backfill-dryrun-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
-                  a.click();
-                  window.URL.revokeObjectURL(url);
-                  toast.success(`CSV descargado: ${(r.updates || []).length} updates + ${(r.inserts || []).length} inserts`);
-                } catch (e: any) { toast.error(e.message); }
-              }}
+              onClick={handleBackfillDryRunCsv}
+              disabled={backfillDryRunLoading}
             >
-              Dry-run + descargar CSV
+              {backfillDryRunLoading ? 'Generando CSV…' : 'Dry-run + descargar CSV'}
             </Button>
             <Button
               variant="default"
@@ -326,6 +382,15 @@ export default function AdminSystemPage() {
               Ejecutar backfill real
             </Button>
           </div>
+          {backfillCsvLink && (
+            <p className="text-sm text-muted-foreground">
+              Si la descarga automática no se abre,{' '}
+              <a className="font-medium text-primary underline-offset-4 hover:underline" href={backfillCsvLink.url} download={backfillCsvLink.filename}>
+                descarga el CSV manualmente
+              </a>
+              .
+            </p>
+          )}
         </CardContent>
       </Card>
       <Dialog open={addModal} onOpenChange={setAddModal}>
