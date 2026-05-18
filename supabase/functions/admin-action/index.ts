@@ -3367,6 +3367,39 @@ serve(async (req) => {
           matched_via: u.matched_via,
           updates: u.updates,
         })),
+        report: dryRun ? {
+          inserts: ordersToInsert.map(o => ({
+            user_id: o.user_id,
+            stripe_invoice_id: o.stripe_invoice_id || null,
+            stripe_charge_id: o.stripe_charge_id || null,
+            product_type: o.product_type,
+            product_code: o.product_code,
+            billing_interval: o.billing_interval,
+            amount_gross: o.amount_gross,
+            amount_net: o.amount_net,
+            currency: o.currency,
+            paid_at: o.paid_at,
+            is_first_purchase: o.is_first_purchase,
+            backfill_source: o.metadata?.backfill_source,
+            resolved_user_via: o.metadata?.resolved_user_via,
+            reason: "no_match_found_will_insert",
+          })),
+          updates: ordersToUpdate.map(u => ({
+            order_id: u.id,
+            matched_via: u.matched_via,
+            match_reason: u.matched_via === "stripe_ref"
+              ? "exact_match_by_stripe_invoice_or_charge_id"
+              : "fuzzy_match_user_amount_pm10pct_paidat_pm24h",
+            user_id: u.candidate.user_id,
+            stripe_invoice_id: u.candidate.stripe_invoice_id || null,
+            stripe_charge_id: u.candidate.stripe_charge_id || null,
+            new_amount_gross: u.updates.amount_gross,
+            new_amount_net: u.updates.amount_net,
+            new_product_type: u.updates.product_type,
+            new_order_status: u.updates.order_status,
+            paid_at: u.candidate.paid_at,
+          })),
+        } : undefined,
       });
     }
 
