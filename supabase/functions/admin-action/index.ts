@@ -1926,6 +1926,15 @@ serve(async (req) => {
       let renewalsAnnualCount = 0;
       const productBreakdown: { name: string; units: number; revenue: number }[] = [];
 
+      // Net revenue helper: amount_net (pre-IVA) − stripe_fee, excluding refunded orders
+      const netRev = (o: any): number => {
+        if (o.order_status === "refunded") return 0;
+        const net = parseFloat(o.amount_net);
+        const base = !isNaN(net) && net > 0 ? net : (parseFloat(o.amount_gross) || 0) / 1.21;
+        const fee = parseFloat(o.stripe_fee) || 0;
+        return Math.max(0, base - fee);
+      };
+
       try {
         // Customers total = unique users with at least one paid order ever
         const { data: custRows } = await admin.from("orders").select("user_id").eq("order_status", "paid");
