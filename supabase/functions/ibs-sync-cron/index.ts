@@ -102,14 +102,14 @@ serve(async (req) => {
       .select("*")
       .eq("status", "pending_complete")
       .order("created_at", { ascending: true })
-      .limit(5);
+      .limit(10);
     if (targetUserId) pcQuery = pcQuery.eq("user_id", targetUserId);
     const { data: pendingComplete } = await pcQuery;
 
     for (let i = 0; i < (pendingComplete?.length || 0); i++) {
       const item = pendingComplete![i];
       // delay entre confirmaciones para no saturar iBS (no en la primera)
-      if (i > 0) await new Promise((r) => setTimeout(r, 10000));
+      if (i > 0) await new Promise((r) => setTimeout(r, 5000));
 
       try {
         const completeRes = await fetch(
