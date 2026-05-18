@@ -2872,6 +2872,9 @@ serve(async (req) => {
       let revenueSingle = 0;
       let revenueTopup = 0;
       let orderRevenue = 0;
+      let periodGross = 0;
+      let periodIva = 0;
+      let periodFees = 0;
       let renewalsMonthlyCount = 0;
       let renewalsAnnualCount = 0;
       const productBreakdown: {
@@ -2924,6 +2927,22 @@ serve(async (req) => {
           totalOrders > 0
             ? parseFloat((orderRevenue / totalOrders).toFixed(2))
             : 0;
+
+        // Gross / IVA / Stripe fees breakdown for the period (excluding refunded)
+        ordersData.forEach((o: any) => {
+          if (o.order_status === "refunded") return;
+          const gross = parseFloat(o.amount_gross) || 0;
+          const netVal = parseFloat(o.amount_net);
+          const netBase =
+            !isNaN(netVal) && netVal > 0 ? netVal : gross / 1.21;
+          const fee = parseFloat(o.stripe_fee) || 0;
+          periodGross += gross;
+          periodIva += Math.max(0, gross - netBase);
+          periodFees += fee;
+        });
+        periodGross = Math.round(periodGross * 100) / 100;
+        periodIva = Math.round(periodIva * 100) / 100;
+        periodFees = Math.round(periodFees * 100) / 100;
 
         // Units/revenue by product type
         const byType: Record<string, { units: number; revenue: number }> = {};
@@ -3095,9 +3114,22 @@ serve(async (req) => {
             (o: any) => o.paid_at >= sIso && o.paid_at < eIso,
           );
           const bRev = bOrders.reduce((s: number, o: any) => s + netRev(o), 0);
+          let bGross = 0, bIva = 0, bFee = 0;
+          bOrders.forEach((o: any) => {
+            if (o.order_status === "refunded") return;
+            const g = parseFloat(o.amount_gross) || 0;
+            const nv = parseFloat(o.amount_net);
+            const nb = !isNaN(nv) && nv > 0 ? nv : g / 1.21;
+            bGross += g;
+            bIva += Math.max(0, g - nb);
+            bFee += parseFloat(o.stripe_fee) || 0;
+          });
           timeSeries.revenue.push({
             label: b.label,
             value: Math.round(bRev * 100) / 100,
+            gross: Math.round(bGross * 100) / 100,
+            iva: Math.round(bIva * 100) / 100,
+            fee: Math.round(bFee * 100) / 100,
           });
           timeSeries.orders.push({ label: b.label, value: bOrders.length });
 
@@ -3250,6 +3282,9 @@ serve(async (req) => {
         planBreakdown: plans,
         totalRevenue,
         periodRevenue,
+        periodGross,
+        periodIva,
+        periodFees,
         annualRevenue: Math.round(stripeAnnualRevenue * 100) / 100,
         monthlyRevenue: Math.round(stripeMonthlyRevenue * 100) / 100,
         annualPercentage: annualSubPct,

@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AlertTriangle } from 'lucide-react';
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend,
@@ -42,13 +44,32 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
                 {m._dataSource === "stripe_real" && (
                   <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-500">Stripe Live</Badge>
                 )}
+                {(() => {
+                  const totalFee = revenueTimeSeries.reduce((s: number, p: any) => s + (Number(p.fee) || 0), 0);
+                  const totalGross = revenueTimeSeries.reduce((s: number, p: any) => s + (Number(p.gross) || 0), 0);
+                  if (totalFee === 0 && totalGross > 0) {
+                    return (
+                      <TooltipProvider>
+                        <UITooltip>
+                          <TooltipTrigger asChild>
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-xs">Comisiones Stripe pendientes de sincronización</p>
+                          </TooltipContent>
+                        </UITooltip>
+                      </TooltipProvider>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
               <div className="text-right">
                 <p className="text-lg font-bold">€{Math.round(periodRevenueSum).toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground">Total del periodo</p>
+                <p className="text-[10px] text-muted-foreground">Neto del periodo</p>
               </div>
             </div>
-            <CardDescription>Ingresos en el periodo</CardDescription>
+            <CardDescription>Bruto, IVA, comisiones Stripe y neto</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -56,8 +77,15 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
-                <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: 'hsl(var(--primary))' }} name="Revenue €" />
+                <Tooltip
+                  contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }}
+                  formatter={(val: any, name: string) => [`€${Number(val).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, name]}
+                />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Line type="monotone" dataKey="gross" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} strokeDasharray="4 2" dot={false} name="Bruto" />
+                <Line type="monotone" dataKey="iva" stroke="hsl(38, 92%, 50%)" strokeWidth={1.5} dot={false} name="IVA" />
+                <Line type="monotone" dataKey="fee" stroke="hsl(262, 83%, 58%)" strokeWidth={1.5} dot={false} name="Stripe" />
+                <Line type="monotone" dataKey="value" stroke="hsl(142, 76%, 36%)" strokeWidth={2.5} dot={{ fill: 'hsl(142, 76%, 36%)' }} name="Neto" />
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
