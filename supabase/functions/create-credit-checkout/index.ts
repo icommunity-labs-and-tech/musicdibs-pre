@@ -288,11 +288,78 @@ serve(async (req) => {
 
         const actualPlanName = actualProductType === "annual" ? "Annual" : "Monthly";
 
-        await supabaseAdmin.from("profiles").update({
-          subscription_plan: actualPlanName,
-          available_credits: actualCredits,
-          updated_at: new Date().toISOString(),
-        }).eq("user_id", user.id);
+        // ─── Tier-based credit resolution (DB is source of truth for migrated users) ───
+        // Read subscription_tier + available_credits from profiles. If the user already
+        // has a tier set in DB, that tier dictates credits — NOT the frontend planId
+        // (which may be stale/wrong for migrated users whose Stripe price_ids don't
+        // match the canonical live IDs).
+        const TIER_CREDITS: Record<string, number> = {
+          annual_100: 100,
+          annual_200: 200,
+          annual_300: 300,
+          annual_500: 500,
+          annual_1000: 1000,
+          monthly: 8,
+        };
+        const TIER_LABELS: Record<string, string> = {
+          annual_100: "Anual 100 créditos",
+          annual_200: "Anual 200 créditos",
+          annual_300: "Anual 300 créditos",
+          annual_500: "Anual 500 créditos",
+          annual_1000: "Anual 1000 créditos",
+          monthly: "Mensual 8 créditos",
+        };
+
+        const { data: profileRow } = await supabaseAdmin
+          .from("profiles")
+          .select("subscription_tier, available_credits")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        const dbTier = profileRow?.subscription_tier as string | null | undefined;
+        const dbCredits = Number(profileRow?.available_credits ?? 0);
+
+        let resolvedCredits = actualCredits;
+        let resolvedLabel = actualLabel;
+        let resolvedPlanName = actualPlanName;
+        let creditsSource: "subscription_tier" | "stripe_price" = "stripe_price";
+
+        if (dbTier && TIER_CREDITS[dbTier] !== undefined) {
+          resolvedCredits = TIER_CREDITS[dbTier];
+          resolvedLabel = TIER_LABELS[dbTier] ?? resolvedLabel;
+          resolvedPlanName = dbTier.startsWith("annual") ? "Annual" : "Monthly";
+          creditsSource = "subscription_tier";
+        }
+
+        // ─── Guard: do NOT reset credits on a non-renewal trialing/past_due sub ───
+        // If the user has 0 credits AND a tier set AND the Stripe sub is in trialing
+        // or past_due (i.e. not actually renewed yet), this is NOT a real renewal —
+        // credits should only be reset by stripe-webhook on billing_reason='subscription_cycle'.
+        const subStatus = String(updatedSub.status ?? "");
+        const shouldSkipCreditReset =
+          dbCredits === 0 &&
+          !!dbTier &&
+          (subStatus === "trialing" || subStatus === "past_due");
+
+        console.log(
+          `[CHECKOUT] credits resolved via: ${
+            creditsSource === "subscription_tier" ? `subscription_tier=${dbTier}` : `stripe_price=${actualPriceId}`
+          } → ${resolvedCredits} credits (subStatus=${subStatus}, dbCredits=${dbCredits}, skipReset=${shouldSkipCreditReset})`,
+        );
+
+        if (shouldSkipCreditReset) {
+          // Update plan label only — preserve credits (will be set by webhook on real renewal).
+          await supabaseAdmin.from("profiles").update({
+            subscription_plan: resolvedPlanName,
+            updated_at: new Date().toISOString(),
+          }).eq("user_id", user.id);
+        } else {
+          await supabaseAdmin.from("profiles").update({
+            subscription_plan: resolvedPlanName,
+            available_credits: resolvedCredits,
+            updated_at: new Date().toISOString(),
+          }).eq("user_id", user.id);
+        }
 
         // Persist the actual price id so the webhook can detect real plan changes.
         const periodStart = (updatedSub as any).current_period_start
@@ -306,20 +373,31 @@ serve(async (req) => {
           stripe_customer_id: customerId,
           stripe_subscription_id: updatedSub.id,
           stripe_price_id: actualPriceId,
-          plan: actualPlanName,
+          plan: resolvedPlanName,
           status: "active",
           current_period_start: periodStart,
           current_period_end: periodEnd,
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
 
-        await supabaseAdmin.from("credit_transactions").insert({
-          user_id: user.id,
-          amount: actualCredits,
-          type: "subscription",
-          description: `Cambio de plan: ${actualLabel}`,
+        if (!shouldSkipCreditReset) {
+          await supabaseAdmin.from("credit_transactions").insert({
+            user_id: user.id,
+            amount: resolvedCredits,
+            type: "subscription",
+            description: `Cambio de plan: ${resolvedLabel}`,
+          });
+        }
+        return json({
+          switched: true,
+          message: shouldSkipCreditReset
+            ? `Plan actualizado a ${resolvedLabel}. Créditos se asignarán en la próxima renovación.`
+            : `Plan cambiado a ${resolvedLabel}.`,
+          plan: resolvedPlanName,
+          credits: shouldSkipCreditReset ? dbCredits : resolvedCredits,
+          credits_source: creditsSource,
+          skipped_credit_reset: shouldSkipCreditReset,
         });
-        return json({ switched: true, message: `Plan cambiado a ${actualLabel}.`, plan: actualPlanName, credits: actualCredits });
       }
     }
 
