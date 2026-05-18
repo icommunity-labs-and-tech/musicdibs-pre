@@ -276,12 +276,11 @@ export default function AdminSystemPage() {
                   console.table(s);
 
                   // Build CSV report
-                  const toCsv = (rows: any[]) => {
+                  const toCsv = (rows: Record<string, any>[]) => {
                     if (!rows.length) return '';
-                    const headers = Array.from(rows.reduce((set: Set<string>, row) => {
-                      Object.keys(row).forEach(k => set.add(k));
-                      return set;
-                    }, new Set<string>()));
+                    const headerSet = new Set<string>();
+                    rows.forEach(row => Object.keys(row).forEach(k => headerSet.add(k)));
+                    const headers = Array.from(headerSet);
                     const esc = (v: any) => {
                       if (v === null || v === undefined) return '';
                       const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
@@ -290,8 +289,6 @@ export default function AdminSystemPage() {
                     return [headers.join(','), ...rows.map(row => headers.map(h => esc(row[h])).join(','))].join('\n');
                   };
 
-                  const updatesCsv = toCsv((r.updates || []).map((u: any) => ({ action: 'UPDATE', ...u })));
-                  const insertsCsv = toCsv((r.inserts || []).map((i: any) => ({ action: 'INSERT', ...i })));
                   // Merge with common header set
                   const all = [
                     ...(r.updates || []).map((u: any) => ({ action: 'UPDATE', ...u })),
