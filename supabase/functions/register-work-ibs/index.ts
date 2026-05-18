@@ -384,18 +384,31 @@ serve(async (req) => {
         console.log(`[IBS] ${fileMeta.name} subido a GCS ✅ (${gcsRes.status})`);
       }
 
-      // PASO 3: ENCOLAR para confirmar de forma diferida (evita saturar iBS)
-      // El cron `ibs-sync-cron` procesará pending_complete con delay entre ítems.
-      console.log(`[IBS] PASO 3 diferido — encolando sesión ${sessionId} en ibs_sync_queue`);
+      // PASO 3: Confirmar evidencia en iBS (síncrono)
+      console.log(`[IBS] PASO 3 síncrono — llamando /complete para sesión ${sessionId}`);
+      const completeRes = await fetch(
+        `${IBS_API_URL}/evidences/uploads/${sessionId}/complete`,
+        { method: "POST", headers: ibsHeaders, body: JSON.stringify({}) }
+      );
 
-      await supabaseAdmin.from("ibs_sync_queue").insert({
-        work_id: workId,
-        user_id: user.id,
-        ibs_evidence_id: sessionId, // session id (evd_xxx) hasta que el /complete devuelva el id final
-        status: "pending_complete",
-      });
+      if (!completeRes.ok) {
+        const errText = await completeRes.text().catch(() => "unknown");
+        console.error(`[IBS] PASO 3 fallido [${completeRes.status}]: ${errText.slice(0, 300)}`);
+        await handleIbsFailure(supabaseAdmin, workId, user.id, work.title,
+          `complete error ${completeRes.status}`, creditCost);
+        ctx.deducted = false;
+        return new Response(
+          JSON.stringify({ success: false, error: "IBS complete failed", workId, status: "failed", refunded: true }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const completeResult = await completeRes.json();
+      const finalEvidenceId = completeResult.id;
+      console.log(`[IBS] PASO 3 OK — evidenceId: ${finalEvidenceId}`);
 
       await supabaseAdmin.from("works").update({
+        ibs_evidence_id: finalEvidenceId,
         ibs_signature_id: signatureId,
         file_hash: work.file_hash || "",
         ibs_payload_checksum: work.file_hash_sha512_b64 || "",
@@ -403,10 +416,18 @@ serve(async (req) => {
         updated_at: new Date().toISOString(),
       }).eq("id", workId);
 
-      console.log(`[IBS] Work ${workId} encolado para complete diferido ✅`);
+      // Insertar en ibs_sync_queue con status "waiting" para el polling de certificación
+      await supabaseAdmin.from("ibs_sync_queue").insert({
+        work_id: workId,
+        user_id: user.id,
+        ibs_evidence_id: finalEvidenceId,
+        status: "waiting",
+      });
+
+      console.log(`[IBS] Work ${workId} → evidence ${finalEvidenceId} registrado síncronamente ✅`);
 
       return new Response(
-        JSON.stringify({ success: true, workId, status: "queued", sessionId }),
+        JSON.stringify({ success: true, workId, status: "processing", evidenceId: finalEvidenceId }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
