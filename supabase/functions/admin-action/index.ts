@@ -2016,7 +2016,7 @@ serve(async (req) => {
         const campRevMap: Record<string, number> = {};
         ordersData.forEach((o: any) => {
           const cn = o.attributed_campaign_name;
-          if (cn) campRevMap[cn] = (campRevMap[cn] || 0) + (parseFloat(o.amount_gross) || 0);
+          if (cn) campRevMap[cn] = (campRevMap[cn] || 0) + netRev(o);
         });
         marketingSummary.top_campaigns = Object.entries(campRevMap)
           .map(([name, revenue]) => ({ name, revenue: Math.round(revenue * 100) / 100 }))
