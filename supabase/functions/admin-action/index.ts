@@ -3275,6 +3275,8 @@ serve(async (req) => {
           if (pt === "legacy_unknown") stats.unknown_product_type++;
 
           const paidAt = new Date(ch.created * 1000).toISOString();
+          const btCh: any = ch.balance_transaction && typeof ch.balance_transaction === "object" ? ch.balance_transaction : null;
+          const stripeFeeCh = btCh && typeof btCh.fee === "number" ? btCh.fee / 100 : 0;
 
           const candidate = {
             user_id: userId,
@@ -3285,6 +3287,7 @@ serve(async (req) => {
             billing_interval: pt === "annual" ? "yearly" : pt === "monthly" ? "monthly" : null,
             amount_gross: amount,
             amount_net: computeAmountNet(null, amount),
+            stripe_fee: stripeFeeCh,
             currency: ch.currency || "eur",
             is_subscription: pt === "annual" || pt === "monthly",
             is_renewal: false,
