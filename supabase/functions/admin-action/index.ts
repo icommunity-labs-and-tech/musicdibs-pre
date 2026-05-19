@@ -4407,7 +4407,7 @@ serve(async (req) => {
       const startedAt = Date.now();
       const timeBudgetMs = dryRun ? 75_000 : 130_000;
 
-      const stats = {
+      const stats: any = {
         invoices_found: 0,
         charges_found: 0,
         orders_to_create: 0,
@@ -4419,6 +4419,9 @@ serve(async (req) => {
         fuzzy_ambiguous_skipped: 0,
         duplicates_skipped: 0,
         missing_user: 0,
+        historical_inserted: 0,
+        skipped_certyfile: 0,
+        skipped_non_musicdibs: 0,
         resolved_by_customer_id: 0,
         resolved_by_email_fallback: 0,
         unknown_product_type: 0,
