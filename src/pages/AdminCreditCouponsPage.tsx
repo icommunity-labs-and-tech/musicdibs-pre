@@ -162,29 +162,64 @@ export default function AdminCreditCouponsPage() {
               <div className="space-y-3">
                 <div>
                   <Label>Código</Label>
-                  <Input value={form.code} onChange={(e) => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="REGALO10" />
+                  <Input
+                    value={form.code}
+                    onChange={(e) => { setForm(f => ({ ...f, code: e.target.value.replace(/\s+/g, '').toUpperCase() })); if (errors.code) setErrors(p => ({ ...p, code: '' })); }}
+                    onBlur={(e) => setForm(f => ({ ...f, code: e.target.value.trim().toUpperCase() }))}
+                    placeholder="REGALO10"
+                    maxLength={32}
+                    aria-invalid={!!errors.code}
+                  />
+                  {errors.code && <p className="text-xs text-destructive mt-1">{errors.code}</p>}
                 </div>
                 <div>
                   <Label>Nombre de campaña</Label>
-                  <Input value={form.campaign_name} onChange={(e) => setForm(f => ({ ...f, campaign_name: e.target.value }))} placeholder="Reto Canciones Mayo" />
+                  <Input
+                    value={form.campaign_name}
+                    onChange={(e) => { setForm(f => ({ ...f, campaign_name: e.target.value })); if (errors.campaign_name) setErrors(p => ({ ...p, campaign_name: '' })); }}
+                    onBlur={(e) => setForm(f => ({ ...f, campaign_name: e.target.value.trim() }))}
+                    placeholder="Reto Canciones Mayo"
+                    maxLength={120}
+                    aria-invalid={!!errors.campaign_name}
+                  />
+                  {errors.campaign_name && <p className="text-xs text-destructive mt-1">{errors.campaign_name}</p>}
                 </div>
                 <div>
                   <Label>Colaborador (opcional)</Label>
-                  <Input value={form.collaborator_name} onChange={(e) => setForm(f => ({ ...f, collaborator_name: e.target.value }))} placeholder="Academia Juan Pérez" />
+                  <Input
+                    value={form.collaborator_name}
+                    onChange={(e) => setForm(f => ({ ...f, collaborator_name: e.target.value }))}
+                    onBlur={(e) => setForm(f => ({ ...f, collaborator_name: e.target.value.trim() }))}
+                    placeholder="Academia Juan Pérez"
+                    maxLength={120}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Créditos</Label>
-                    <Input type="number" min={1} value={form.credits} onChange={(e) => setForm(f => ({ ...f, credits: e.target.value }))} />
+                    <Input type="number" min={1} max={10000} value={form.credits}
+                      onChange={(e) => { setForm(f => ({ ...f, credits: e.target.value })); if (errors.credits) setErrors(p => ({ ...p, credits: '' })); }}
+                      aria-invalid={!!errors.credits}
+                    />
+                    {errors.credits && <p className="text-xs text-destructive mt-1">{errors.credits}</p>}
                   </div>
                   <div>
                     <Label>Máximo usos</Label>
-                    <Input type="number" min={1} value={form.max_redemptions} onChange={(e) => setForm(f => ({ ...f, max_redemptions: e.target.value }))} placeholder="Ilimitado" />
+                    <Input type="number" min={1} value={form.max_redemptions}
+                      onChange={(e) => { setForm(f => ({ ...f, max_redemptions: e.target.value })); if (errors.max_redemptions) setErrors(p => ({ ...p, max_redemptions: '' })); }}
+                      placeholder="Ilimitado"
+                      aria-invalid={!!errors.max_redemptions}
+                    />
+                    {errors.max_redemptions && <p className="text-xs text-destructive mt-1">{errors.max_redemptions}</p>}
                   </div>
                 </div>
                 <div>
                   <Label>Fecha de expiración</Label>
-                  <Input type="datetime-local" value={form.expires_at} onChange={(e) => setForm(f => ({ ...f, expires_at: e.target.value }))} />
+                  <Input type="datetime-local" value={form.expires_at}
+                    onChange={(e) => { setForm(f => ({ ...f, expires_at: e.target.value })); if (errors.expires_at) setErrors(p => ({ ...p, expires_at: '' })); }}
+                    aria-invalid={!!errors.expires_at}
+                  />
+                  {errors.expires_at && <p className="text-xs text-destructive mt-1">{errors.expires_at}</p>}
                 </div>
               </div>
               <DialogFooter>
