@@ -55,6 +55,8 @@ const PRICE_CREDITS: Record<string, number> = {
   "price_1THT83F9ZCIiqrz6BD2wmUaO": 50,
   "price_1THT86F9ZCIiqrz6C548DJnT": 100,
   "price_1THT8AF9ZCIiqrz626wSH9Rz": 200,
+  "price_1T8n6CFULeu7PzK6vs7NZyiJ": 100, // annual_100 legacy
+  "price_1T8n6lFULeu7PzK60TbO76hE": 8,   // monthly legacy
 };
 
 const TIER_CREDITS: Record<string, number> = {
@@ -92,6 +94,8 @@ const PRICE_PLAN: Record<string, string> = {
   "price_1THT7nF9ZCIiqrz6r1ZcqH8L": "Annual",
   "price_1THT7rF9ZCIiqrz6UmJDkBNZ": "Annual",
   "price_1T9SZvF9ZCIiqrz6TWLtfMBs": "Monthly",
+  "price_1T8n6CFULeu7PzK6vs7NZyiJ": "Annual",
+  "price_1T8n6lFULeu7PzK60TbO76hE": "Monthly",
 };
 
 const PRICE_TO_PLAN_ID: Record<string, string> = {
@@ -108,11 +112,14 @@ const PRICE_TO_PLAN_ID: Record<string, string> = {
   "price_1THT83F9ZCIiqrz6BD2wmUaO": "topup_50",
   "price_1THT86F9ZCIiqrz6C548DJnT": "topup_100",
   "price_1THT8AF9ZCIiqrz626wSH9Rz": "topup_200",
+  "price_1T8n6CFULeu7PzK6vs7NZyiJ": "annual_100",
+  "price_1T8n6lFULeu7PzK60TbO76hE": "monthly",
 };
 
 const PLAN_ID_TO_PLAN_NAME: Record<string, string> = {
   annual_100: "Annual", annual_200: "Annual", annual_300: "Annual",
   annual_500: "Annual", annual_1000: "Annual", monthly: "Monthly",
+  annual_legacy: "Annual",
 };
 
 function getProductType(planId: string): string {
