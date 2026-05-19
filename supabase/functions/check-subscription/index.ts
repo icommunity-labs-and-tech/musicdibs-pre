@@ -97,7 +97,7 @@ serve(async (req) => {
 
     if (customers.data.length === 0) {
       logStep("No Stripe customer found, setting Free plan");
-      await supabaseClient.from("profiles").update({ subscription_plan: "Free" }).eq("user_id", userId);
+      await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", userId);
       return new Response(JSON.stringify({ subscribed: false, plan: "Free", cancel_at_period_end: false, subscription_end: null }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
