@@ -203,6 +203,7 @@ serve(async (req) => {
 
     const priceId = subscription.items.data[0]?.price?.id;
     const plan = priceId ? (PRICE_TO_PLAN[priceId] || "Monthly") : "Monthly";
+    const tier = priceId ? (PRICE_TO_TIER[priceId] || null) : null;
     const cancelAtPeriodEnd = subscription.cancel_at_period_end === true;
 
     // In Clover API, current_period_end moved to subscription items level
@@ -213,6 +214,7 @@ serve(async (req) => {
     logStep("Subscription resolved", {
       status: subscription.status,
       plan,
+      tier,
       priceId,
       cancelAtPeriodEnd,
       periodEndRaw,
@@ -221,7 +223,7 @@ serve(async (req) => {
 
     await supabaseClient
       .from("profiles")
-      .update({ subscription_plan: plan })
+      .update({ subscription_plan: plan, subscription_tier: tier })
       .eq("user_id", userId);
 
     return new Response(JSON.stringify({
