@@ -495,8 +495,8 @@ serve(async (req) => {
         const planName = PLAN_ID_TO_PLAN_NAME[planId];
         // Guard: topups e individuales NUNCA deben sobrescribir subscription_plan
         if (planName && !planId.startsWith("topup_") && planId !== "individual") {
-          await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", userId);
-          console.log(`[WEBHOOK] Updated subscription_plan to ${planName} for user ${userId}`);
+          await supabase.from("profiles").update({ subscription_plan: planName, subscription_tier: planId }).eq("user_id", userId);
+          console.log(`[WEBHOOK] Updated subscription_plan to ${planName} (tier=${planId}) for user ${userId}`);
         } else if (planName) {
           console.log(`[WEBHOOK] Skipping subscription_plan update for ${planId} (topup/individual)`);
         }
@@ -834,8 +834,8 @@ serve(async (req) => {
           const resolvedPlanId = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
           const planName = resolvedPlanId ? (PLAN_ID_TO_PLAN_NAME[resolvedPlanId] || null) : null;
           if (planName) {
-            await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", profile.user_id);
-            console.log(`[WEBHOOK] Plan change: updated plan to ${planName} for user ${profile.user_id}`);
+            await supabase.from("profiles").update({ subscription_plan: planName, subscription_tier: resolvedPlanId }).eq("user_id", profile.user_id);
+            console.log(`[WEBHOOK] Plan change: updated plan to ${planName} (tier=${resolvedPlanId}) for user ${profile.user_id}`);
             // Sync MailerLite: move to new plan group
             const { data: { user: changeUser } } = await supabase.auth.admin.getUserById(profile.user_id);
             if (changeUser?.email) {
@@ -970,16 +970,17 @@ serve(async (req) => {
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
       if (profile) {
         const planName = priceId ? (PRICE_PLAN[priceId] || null) : null;
+        const planTier = priceId ? (PRICE_TO_PLAN_ID[priceId] || null) : null;
         if (status === "active" && planName) {
-          await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", profile.user_id);
-          console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} for user ${profile.user_id}`);
+          await supabase.from("profiles").update({ subscription_plan: planName, subscription_tier: planTier }).eq("user_id", profile.user_id);
+          console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} (tier=${planTier}) for user ${profile.user_id}`);
         } else if (status === "past_due" || status === "unpaid") {
           await supabase.from("credit_transactions").insert({
             user_id: profile.user_id, amount: 0, type: "subscription_issue",
             description: `Suscripción en estado "${status}". Se requiere acción de pago.`,
           });
         } else if (status === "canceled" || status === "incomplete_expired") {
-          await supabase.from("profiles").update({ subscription_plan: "Free" }).eq("user_id", profile.user_id);
+          await supabase.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", profile.user_id);
         }
 
         // ── Sincronizar tabla subscriptions local ──
@@ -1003,11 +1004,11 @@ serve(async (req) => {
 
         if (subStatus === "active" && planName) {
           await supabase.from("profiles")
-            .update({ subscription_plan: planName, updated_at: new Date().toISOString() })
+            .update({ subscription_plan: planName, subscription_tier: planTier, updated_at: new Date().toISOString() })
             .eq("user_id", profile.user_id);
         } else if (["cancelled", "expired"].includes(subStatus)) {
           await supabase.from("profiles")
-            .update({ subscription_plan: "Free", updated_at: new Date().toISOString() })
+            .update({ subscription_plan: "Free", subscription_tier: null, updated_at: new Date().toISOString() })
             .eq("user_id", profile.user_id);
         }
 
@@ -1024,7 +1025,7 @@ serve(async (req) => {
       if (profile) {
         const { data: cancelProfile } = await supabase.from("profiles").select("subscription_plan, language").eq("user_id", profile.user_id).single();
         const oldPlan = cancelProfile?.subscription_plan;
-        await supabase.from("profiles").update({ subscription_plan: "Free" }).eq("user_id", profile.user_id);
+        await supabase.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", profile.user_id);
         console.log(`[WEBHOOK] Reset to Free for user ${profile.user_id} (cancellation)`);
 
         // ── Sincronizar tabla subscriptions local ──

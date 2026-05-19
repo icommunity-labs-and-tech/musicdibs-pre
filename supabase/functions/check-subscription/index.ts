@@ -23,6 +23,15 @@ const PRICE_TO_PLAN: Record<string, string> = {
   "price_1T8n6lFULeu7PzK60TbO76hE": "Monthly",
 };
 
+const PRICE_TO_TIER: Record<string, string> = {
+  "price_1T8n6CFULeu7PzK6vs7NZyiJ": "annual_100",
+  "price_1TMapTFULeu7PzK640B5uuEq": "annual_200",
+  "price_1TMapTFULeu7PzK6D4GnB3Il": "annual_300",
+  "price_1TMapTFULeu7PzK6cNJMf2oL": "annual_400",
+  "price_1TMapTFULeu7PzK6ziUW5fLn": "annual_500",
+  "price_1T8n6lFULeu7PzK60TbO76hE": "monthly",
+};
+
 const ACTIVE_SUB_STATUSES = new Set(["active", "trialing", "past_due", "unpaid"]);
 
 const toIsoDate = (value: unknown): string | null => {
@@ -88,7 +97,7 @@ serve(async (req) => {
 
     if (customers.data.length === 0) {
       logStep("No Stripe customer found, setting Free plan");
-      await supabaseClient.from("profiles").update({ subscription_plan: "Free" }).eq("user_id", userId);
+      await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", userId);
       return new Response(JSON.stringify({ subscribed: false, plan: "Free", cancel_at_period_end: false, subscription_end: null }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -167,7 +176,7 @@ serve(async (req) => {
 
         await supabaseClient
           .from("profiles")
-          .update({ subscription_plan: "Free", updated_at: new Date().toISOString() })
+          .update({ subscription_plan: "Free", subscription_tier: null, updated_at: new Date().toISOString() })
           .eq("user_id", staleSub.user_id)
           .neq("subscription_plan", "Free");
 
@@ -178,7 +187,7 @@ serve(async (req) => {
       logStep("No valid subscription found, setting Free plan");
       await supabaseClient
         .from("profiles")
-        .update({ subscription_plan: "Free" })
+        .update({ subscription_plan: "Free", subscription_tier: null })
         .eq("user_id", userId);
 
       return new Response(
@@ -194,6 +203,7 @@ serve(async (req) => {
 
     const priceId = subscription.items.data[0]?.price?.id;
     const plan = priceId ? (PRICE_TO_PLAN[priceId] || "Monthly") : "Monthly";
+    const tier = priceId ? (PRICE_TO_TIER[priceId] || null) : null;
     const cancelAtPeriodEnd = subscription.cancel_at_period_end === true;
 
     // In Clover API, current_period_end moved to subscription items level
@@ -204,6 +214,7 @@ serve(async (req) => {
     logStep("Subscription resolved", {
       status: subscription.status,
       plan,
+      tier,
       priceId,
       cancelAtPeriodEnd,
       periodEndRaw,
@@ -212,7 +223,7 @@ serve(async (req) => {
 
     await supabaseClient
       .from("profiles")
-      .update({ subscription_plan: plan })
+      .update({ subscription_plan: plan, subscription_tier: tier })
       .eq("user_id", userId);
 
     return new Response(JSON.stringify({
