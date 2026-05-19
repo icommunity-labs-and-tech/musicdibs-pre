@@ -157,7 +157,7 @@ export default function AdminCreditCouponsPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Nuevo cupón de créditos</DialogTitle>
+                <DialogTitle>Nuevo cupón regalo</DialogTitle>
               </DialogHeader>
               <div className="space-y-3">
                 <div>
