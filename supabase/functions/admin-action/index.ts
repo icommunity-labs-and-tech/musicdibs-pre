@@ -5564,6 +5564,132 @@ serve(async (req) => {
       return json({ success: true, errors });
     }
 
+    if (action === "list_credit_coupons") {
+      const { data, error } = await admin
+        .from("coupons")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) return json({ error: error.message }, 500);
+      return json({ coupons: data || [] });
+    }
+
+    if (action === "create_credit_coupon") {
+      const {
+        code,
+        campaign_name,
+        collaborator_name = null,
+        credits = 1,
+        max_redemptions = null,
+        expires_at = null,
+      } = payload as Record<string, any>;
+
+      if (!code || !campaign_name) {
+        return json({ error: "code y campaign_name son requeridos" }, 400);
+      }
+      const normalizedCode = String(code).trim().toUpperCase();
+      if (!normalizedCode) return json({ error: "Código inválido" }, 400);
+
+      const { data, error } = await admin
+        .from("coupons")
+        .insert({
+          code: normalizedCode,
+          campaign_name: String(campaign_name).trim(),
+          collaborator_name: collaborator_name ? String(collaborator_name).trim() : null,
+          credits: Math.max(1, parseInt(String(credits)) || 1),
+          max_redemptions: max_redemptions ? parseInt(String(max_redemptions)) : null,
+          expires_at: expires_at || null,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        const msg = String(error.message || "");
+        if (msg.toLowerCase().includes("duplicate")) {
+          return json({ error: "Ya existe un cupón con ese código" }, 400);
+        }
+        return json({ error: msg }, 500);
+      }
+
+      await audit({
+        action: "create_credit_coupon",
+        details: { code: normalizedCode, campaign_name, credits },
+      });
+      return json({ coupon: data });
+    }
+
+    if (action === "toggle_credit_coupon") {
+      const { coupon_id, is_active } = payload as Record<string, any>;
+      if (!coupon_id) return json({ error: "coupon_id requerido" }, 400);
+      const { data, error } = await admin
+        .from("coupons")
+        .update({ is_active: !!is_active })
+        .eq("id", coupon_id)
+        .select()
+        .single();
+      if (error) return json({ error: error.message }, 500);
+      await audit({
+        action: "toggle_credit_coupon",
+        details: { coupon_id, is_active },
+      });
+      return json({ coupon: data });
+    }
+
+    if (action === "get_credit_coupon_conversions") {
+      // Per-coupon conversion metrics
+      const { data: coupons } = await admin
+        .from("coupons")
+        .select("id, code, campaign_name, collaborator_name, credits, redemptions_count, max_redemptions, expires_at, is_active, created_at")
+        .order("created_at", { ascending: false });
+
+      const results: any[] = [];
+      for (const c of coupons || []) {
+        const { data: reds } = await admin
+          .from("coupon_redemptions")
+          .select("user_id, redeemed_at")
+          .eq("coupon_id", c.id);
+
+        const userIds = (reds || []).map((r: any) => r.user_id);
+        let buyers = 0;
+        let revenue = 0;
+
+        if (userIds.length > 0) {
+          const { data: orders } = await admin
+            .from("orders")
+            .select("user_id, amount_gross, paid_at")
+            .in("user_id", userIds)
+            .eq("order_status", "paid")
+            .not("paid_at", "is", null);
+
+          const redemptionByUser = new Map<string, string>();
+          for (const r of reds || []) redemptionByUser.set(r.user_id, r.redeemed_at);
+
+          const buyerSet = new Set<string>();
+          for (const o of orders || []) {
+            const rTime = redemptionByUser.get(o.user_id);
+            if (!rTime) continue;
+            if (new Date(o.paid_at) > new Date(rTime)) {
+              buyerSet.add(o.user_id);
+              revenue += Number(o.amount_gross || 0);
+            }
+          }
+          buyers = buyerSet.size;
+        }
+
+        const total = c.redemptions_count || 0;
+        const conversion_pct = total > 0 ? Math.round((buyers / total) * 1000) / 10 : 0;
+
+        results.push({
+          ...c,
+          total_canjes: total,
+          compraron: buyers,
+          conversion_pct,
+          revenue: Math.round(revenue * 100) / 100,
+        });
+      }
+
+      return json({ conversions: results });
+    }
+
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
     console.error("[ADMIN-ACTION] Error:", e);
