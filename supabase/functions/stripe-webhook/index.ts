@@ -1025,7 +1025,7 @@ serve(async (req) => {
       if (profile) {
         const { data: cancelProfile } = await supabase.from("profiles").select("subscription_plan, language").eq("user_id", profile.user_id).single();
         const oldPlan = cancelProfile?.subscription_plan;
-        await supabase.from("profiles").update({ subscription_plan: "Free" }).eq("user_id", profile.user_id);
+        await supabase.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", profile.user_id);
         console.log(`[WEBHOOK] Reset to Free for user ${profile.user_id} (cancellation)`);
 
         // ── Sincronizar tabla subscriptions local ──
