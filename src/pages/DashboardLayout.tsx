@@ -74,6 +74,7 @@ export default function DashboardLayout() {
                 <DashboardThemeToggle theme={theme} onToggle={toggleTheme} />
                 <CreditBadge />
                 <NotificationBell />
+                <UserProfileDropdown />
               </div>
             </header>
             <PastDueBanner />
