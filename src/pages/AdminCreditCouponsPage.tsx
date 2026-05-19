@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Switch } from '@/components/ui/switch';
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
-import { Loader2, Plus, RefreshCw, Gift, TrendingUp } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, Gift, TrendingUp, Sparkles } from 'lucide-react';
 
 interface Coupon {
   id: string;
