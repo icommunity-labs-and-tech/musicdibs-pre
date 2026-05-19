@@ -2499,6 +2499,39 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_backfill_state: {
+        Row: {
+          charges_processed: number | null
+          completed: boolean | null
+          id: number
+          last_charge_id: string | null
+          orders_inserted: number | null
+          orders_skipped: number | null
+          started_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          charges_processed?: number | null
+          completed?: boolean | null
+          id?: number
+          last_charge_id?: string | null
+          orders_inserted?: number | null
+          orders_skipped?: number | null
+          started_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          charges_processed?: number | null
+          completed?: boolean | null
+          id?: number
+          last_charge_id?: string | null
+          orders_inserted?: number | null
+          orders_skipped?: number | null
+          started_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           amount: number | null
