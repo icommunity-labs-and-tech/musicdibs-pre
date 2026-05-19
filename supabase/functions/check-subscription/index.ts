@@ -23,6 +23,15 @@ const PRICE_TO_PLAN: Record<string, string> = {
   "price_1T8n6lFULeu7PzK60TbO76hE": "Monthly",
 };
 
+const PRICE_TO_TIER: Record<string, string> = {
+  "price_1T8n6CFULeu7PzK6vs7NZyiJ": "annual_100",
+  "price_1TMapTFULeu7PzK640B5uuEq": "annual_200",
+  "price_1TMapTFULeu7PzK6D4GnB3Il": "annual_300",
+  "price_1TMapTFULeu7PzK6cNJMf2oL": "annual_400",
+  "price_1TMapTFULeu7PzK6ziUW5fLn": "annual_500",
+  "price_1T8n6lFULeu7PzK60TbO76hE": "monthly",
+};
+
 const ACTIVE_SUB_STATUSES = new Set(["active", "trialing", "past_due", "unpaid"]);
 
 const toIsoDate = (value: unknown): string | null => {
