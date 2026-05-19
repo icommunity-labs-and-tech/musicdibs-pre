@@ -43,23 +43,37 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string)
   return Promise.race([promise, timeoutPromise]).finally(() => window.clearTimeout(timeoutId));
 }
 
+// Format a Date as YYYY-MM-DD in local time (avoids UTC shift)
+function toLocalISODate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// Parse a YYYY-MM-DD string as a local Date (avoids UTC shift)
+function parseLocalDate(s: string): Date {
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 // Get Monday of the current week
 function getCurrentMonday(): string {
   const d = new Date();
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(d.setDate(diff));
-  return monday.toISOString().slice(0, 10);
+  d.setDate(diff);
+  return toLocalISODate(d);
 }
 
 function shiftWeek(weekStart: string, delta: number): string {
-  const d = new Date(weekStart);
+  const d = parseLocalDate(weekStart);
   d.setDate(d.getDate() + 7 * delta);
-  return d.toISOString().slice(0, 10);
+  return toLocalISODate(d);
 }
 
 function formatWeekLabel(weekStart: string): string {
-  const start = new Date(weekStart);
+  const start = parseLocalDate(weekStart);
   const end = new Date(start);
   end.setDate(end.getDate() + 6);
   const fmt = (d: Date) => d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
