@@ -2914,16 +2914,43 @@ serve(async (req) => {
         customersTotal = new Set(
           ordersData.map((o: any) => o.user_id).filter(Boolean),
         ).size;
-        // Órdenes del periodo = solo product_types contables (anual+mensual+single+topup)
+
+        // Robust classifier: prefer product_type, fallback to product_code,
+        // billing_interval and amount heuristic. This recovers legacy_unknown
+        // rows (creadas por backfill desde charges sin metadata) que tienen
+        // contraparte 'duplicate' con la clasificación correcta.
+        const classifyOrder = (
+          o: any,
+        ): "annual" | "monthly" | "single" | "topup" | null => {
+          const type = String(o.product_type || "");
+          const code = String(o.product_code || "");
+          if (type === "annual" || code.startsWith("annual")) return "annual";
+          if (type === "monthly" || code === "monthly") return "monthly";
+          if (type === "single" || code === "individual") return "single";
+          if (type === "topup" || code.startsWith("topup")) return "topup";
+          const interval = o.billing_interval;
+          if (interval === "yearly") return "annual";
+          if (interval === "monthly") return "monthly";
+          // Heurística por importe (legacy_unknown sin metadata)
+          const gross = parseFloat(o.amount_gross) || 0;
+          if (gross >= 90) return "topup"; // topup_100/200 (~119/238€)
+          if (gross >= 30) return "annual"; // anual_100+ (41-72€)
+          if (gross > 0 && gross < 7.5 && gross !== 7) return "monthly"; // 4.83/6.9
+          if (gross === 7) return "single"; // individual exacto
+          if (gross >= 7.5 && gross < 15) return "monthly"; // 8.35/8.47
+          return null;
+        };
+
         const COUNTABLE_TYPES = new Set([
           "annual",
           "monthly",
           "single",
           "topup",
         ]);
-        totalOrders = ordersData.filter((o: any) =>
-          COUNTABLE_TYPES.has(o.product_type),
-        ).length;
+        totalOrders = ordersData.filter((o: any) => {
+          const k = classifyOrder(o);
+          return k !== null && COUNTABLE_TYPES.has(k);
+        }).length;
         orderRevenue = ordersData.reduce(
           (s: number, o: any) => s + netRev(o),
           0,
@@ -2949,16 +2976,16 @@ serve(async (req) => {
         periodIva = Math.round(periodIva * 100) / 100;
         periodFees = Math.round(periodFees * 100) / 100;
 
-        // Units/revenue by product type
+        // Units/revenue por tipo clasificado (incluye legacy_unknown reclasificado)
         const byType: Record<string, { units: number; revenue: number }> = {};
         ordersData.forEach((o: any) => {
-          const pt = o.product_type || "unknown";
+          const pt = classifyOrder(o) || "unknown";
           if (!byType[pt]) byType[pt] = { units: 0, revenue: 0 };
           byType[pt].units++;
           byType[pt].revenue += netRev(o);
           if (o.is_renewal) {
-            if (o.billing_interval === "yearly") renewalsAnnualCount++;
-            else renewalsMonthlyCount++;
+            if (pt === "annual") renewalsAnnualCount++;
+            else if (pt === "monthly") renewalsMonthlyCount++;
           }
         });
         unitsSoldAnnual = byType["annual"]?.units || 0;
