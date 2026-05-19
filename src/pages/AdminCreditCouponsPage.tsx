@@ -143,7 +143,7 @@ export default function AdminCreditCouponsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Gift className="h-6 w-6" /> Cupones regalo
+            <Sparkles className="h-6 w-6" /> Proveedores IA
           </h1>
           <p className="text-sm text-muted-foreground">Campañas de growth con cupones de créditos gratuitos.</p>
         </div>
