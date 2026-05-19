@@ -4623,8 +4623,7 @@ serve(async (req) => {
         if (!text.trim()) return { ok: true }; // no description → allow
         if (text.includes("certyfile")) return { ok: false, reason: "certyfile" };
         if (text.includes("musicdibs")) return { ok: true };
-        // No explicit Musicdibs mention and no Certyfile → allow (historical pre-brand)
-        return { ok: true };
+        return { ok: false, reason: "non_musicdibs" };
       }
 
       // Compute amount_net: prefer stripe net (pre-tax), fallback to gross/1.21
