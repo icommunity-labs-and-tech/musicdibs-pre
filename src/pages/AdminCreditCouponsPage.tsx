@@ -108,7 +108,7 @@ export default function AdminCreditCouponsPage() {
         max_redemptions: form.max_redemptions ? parseInt(form.max_redemptions) : null,
         expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
       });
-      toast.success('Cupón creado');
+      toast.success('Cupón regalo creado');
       setShowNew(false);
       setErrors({});
       setForm({ code: '', campaign_name: '', collaborator_name: '', credits: '1', max_redemptions: '', expires_at: '' });
@@ -143,7 +143,7 @@ export default function AdminCreditCouponsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Gift className="h-6 w-6" /> Cupones de Crédito
+            <Gift className="h-6 w-6" /> Cupones regalo
           </h1>
           <p className="text-sm text-muted-foreground">Campañas de growth con cupones de créditos gratuitos.</p>
         </div>
@@ -157,11 +157,11 @@ export default function AdminCreditCouponsPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Nuevo cupón de créditos</DialogTitle>
+                <DialogTitle>Nuevo cupón regalo</DialogTitle>
               </DialogHeader>
               <div className="space-y-3">
                 <div>
-                  <Label>Código</Label>
+                  <Label>Código del cupón</Label>
                   <Input
                     value={form.code}
                     onChange={(e) => { setForm(f => ({ ...f, code: e.target.value.replace(/\s+/g, '').toUpperCase() })); if (errors.code) setErrors(p => ({ ...p, code: '' })); }}
