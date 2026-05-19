@@ -4547,10 +4547,28 @@ serve(async (req) => {
         return "legacy_unknown";
       }
 
+      // Amount heuristic for legacy/historical orders without metadata
+      function classifyByAmount(
+        amount: number,
+      ): { productType: string; productCode: string; billingInterval: string | null; isSub: boolean } | null {
+        if (!(amount > 0)) return null;
+        if (amount >= 90)
+          return { productType: "topup", productCode: "topup_legacy", billingInterval: null, isSub: false };
+        if (amount >= 30)
+          return { productType: "annual", productCode: "annual_legacy", billingInterval: "yearly", isSub: true };
+        if (amount === 7)
+          return { productType: "single", productCode: "individual", billingInterval: null, isSub: false };
+        if (amount < 7.5)
+          return { productType: "monthly", productCode: "monthly", billingInterval: "monthly", isSub: true };
+        if (amount < 15)
+          return { productType: "monthly", productCode: "monthly", billingInterval: "monthly", isSub: true };
+        return null;
+      }
+
       function inferProductType(
         priceId: string | null,
         interval: string | null,
-        _amount: number,
+        amount: number,
       ): {
         productType: string;
         productCode: string;
@@ -4582,12 +4600,31 @@ serve(async (req) => {
             billingInterval: "monthly",
             isSub: true,
           };
+        const byAmount = classifyByAmount(amount);
+        if (byAmount) return byAmount;
         return {
           productType: "legacy_unknown",
           productCode: "legacy_unknown",
           billingInterval: null,
           isSub: false,
         };
+      }
+
+      // Only process Musicdibs charges. Exclude Certyfile. Allow charges without description.
+      function isMusicdibsCharge(ch: any): { ok: boolean; reason?: string } {
+        const parts: string[] = [];
+        if (ch.description) parts.push(String(ch.description));
+        if (ch.statement_descriptor) parts.push(String(ch.statement_descriptor));
+        if (ch.calculated_statement_descriptor)
+          parts.push(String(ch.calculated_statement_descriptor));
+        const meta = ch.metadata || {};
+        for (const k of Object.keys(meta)) parts.push(String(meta[k] ?? ""));
+        const text = parts.join(" | ").toLowerCase();
+        if (!text.trim()) return { ok: true }; // no description → allow
+        if (text.includes("certyfile")) return { ok: false, reason: "certyfile" };
+        if (text.includes("musicdibs")) return { ok: true };
+        // No explicit Musicdibs mention and no Certyfile → allow (historical pre-brand)
+        return { ok: true };
       }
 
       // Compute amount_net: prefer stripe net (pre-tax), fallback to gross/1.21
