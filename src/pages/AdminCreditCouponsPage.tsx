@@ -1,0 +1,259 @@
+import { useEffect, useState, useCallback } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { Switch } from '@/components/ui/switch';
+import { adminApi } from '@/services/adminApi';
+import { toast } from 'sonner';
+import { Loader2, Plus, RefreshCw, Gift, TrendingUp } from 'lucide-react';
+
+interface Coupon {
+  id: string;
+  code: string;
+  campaign_name: string;
+  collaborator_name: string | null;
+  credits: number;
+  redemptions_count: number;
+  max_redemptions: number | null;
+  expires_at: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+interface CouponConversion extends Coupon {
+  total_canjes: number;
+  compraron: number;
+  conversion_pct: number;
+  revenue: number;
+}
+
+export default function AdminCreditCouponsPage() {
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [conversions, setConversions] = useState<CouponConversion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showNew, setShowNew] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [form, setForm] = useState({
+    code: '',
+    campaign_name: '',
+    collaborator_name: '',
+    credits: '1',
+    max_redemptions: '',
+    expires_at: '',
+  });
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [{ coupons: list }, { conversions: convs }] = await Promise.all([
+        adminApi.listCreditCoupons(),
+        adminApi.getCreditCouponConversions(),
+      ]);
+      setCoupons(list || []);
+      setConversions(convs || []);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al cargar cupones');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const handleCreate = async () => {
+    if (!form.code.trim() || !form.campaign_name.trim()) {
+      toast.error('Código y campaña son requeridos');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await adminApi.createCreditCoupon({
+        code: form.code.trim().toUpperCase(),
+        campaign_name: form.campaign_name.trim(),
+        collaborator_name: form.collaborator_name.trim() || null,
+        credits: parseInt(form.credits) || 1,
+        max_redemptions: form.max_redemptions ? parseInt(form.max_redemptions) : null,
+        expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
+      });
+      toast.success('Cupón creado');
+      setShowNew(false);
+      setForm({ code: '', campaign_name: '', collaborator_name: '', credits: '1', max_redemptions: '', expires_at: '' });
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error al crear cupón');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggle = async (coupon: Coupon) => {
+    try {
+      await adminApi.toggleCreditCoupon(coupon.id, !coupon.is_active);
+      toast.success(coupon.is_active ? 'Cupón desactivado' : 'Cupón activado');
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Error');
+    }
+  };
+
+  const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString('es-ES') : '—';
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Gift className="h-6 w-6" /> Cupones de Crédito
+          </h1>
+          <p className="text-sm text-muted-foreground">Campañas de growth con cupones de créditos gratuitos.</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Refrescar
+          </Button>
+          <Dialog open={showNew} onOpenChange={setShowNew}>
+            <DialogTrigger asChild>
+              <Button size="sm"><Plus className="h-4 w-4 mr-2" /> Nuevo cupón</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nuevo cupón de créditos</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div>
+                  <Label>Código</Label>
+                  <Input value={form.code} onChange={(e) => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="REGALO10" />
+                </div>
+                <div>
+                  <Label>Nombre de campaña</Label>
+                  <Input value={form.campaign_name} onChange={(e) => setForm(f => ({ ...f, campaign_name: e.target.value }))} placeholder="Reto Canciones Mayo" />
+                </div>
+                <div>
+                  <Label>Colaborador (opcional)</Label>
+                  <Input value={form.collaborator_name} onChange={(e) => setForm(f => ({ ...f, collaborator_name: e.target.value }))} placeholder="Academia Juan Pérez" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Créditos</Label>
+                    <Input type="number" min={1} value={form.credits} onChange={(e) => setForm(f => ({ ...f, credits: e.target.value }))} />
+                  </div>
+                  <div>
+                    <Label>Máximo usos</Label>
+                    <Input type="number" min={1} value={form.max_redemptions} onChange={(e) => setForm(f => ({ ...f, max_redemptions: e.target.value }))} placeholder="Ilimitado" />
+                  </div>
+                </div>
+                <div>
+                  <Label>Fecha de expiración</Label>
+                  <Input type="datetime-local" value={form.expires_at} onChange={(e) => setForm(f => ({ ...f, expires_at: e.target.value }))} />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowNew(false)} disabled={submitting}>Cancelar</Button>
+                <Button onClick={handleCreate} disabled={submitting}>
+                  {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Crear
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Cupones</CardTitle>
+          <CardDescription>Gestión de cupones activos e inactivos.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="py-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
+          ) : coupons.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">No hay cupones todavía.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Campaña</TableHead>
+                  <TableHead>Colaborador</TableHead>
+                  <TableHead>Créditos</TableHead>
+                  <TableHead>Canjes / Máx</TableHead>
+                  <TableHead>Expira</TableHead>
+                  <TableHead>Estado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {coupons.map(c => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-mono font-semibold">{c.code}</TableCell>
+                    <TableCell>{c.campaign_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{c.collaborator_name || '—'}</TableCell>
+                    <TableCell>{c.credits}</TableCell>
+                    <TableCell>{c.redemptions_count} / {c.max_redemptions ?? '∞'}</TableCell>
+                    <TableCell>{fmtDate(c.expires_at)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Switch checked={c.is_active} onCheckedChange={() => handleToggle(c)} />
+                        <Badge variant={c.is_active ? 'default' : 'secondary'}>
+                          {c.is_active ? 'Activo' : 'Inactivo'}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5" /> Métricas de conversión</CardTitle>
+          <CardDescription>Usuarios que compraron después de canjear el cupón.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="py-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
+          ) : conversions.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">Sin datos.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Campaña</TableHead>
+                  <TableHead>Colab.</TableHead>
+                  <TableHead>Canjes</TableHead>
+                  <TableHead>Compraron</TableHead>
+                  <TableHead>% Conv.</TableHead>
+                  <TableHead>Revenue €</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {conversions.map(c => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-mono">{c.code}</TableCell>
+                    <TableCell>{c.campaign_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{c.collaborator_name || '—'}</TableCell>
+                    <TableCell>{c.total_canjes}</TableCell>
+                    <TableCell>{c.compraron}</TableCell>
+                    <TableCell>
+                      <Badge variant={c.conversion_pct >= 10 ? 'default' : 'secondary'}>
+                        {c.conversion_pct}%
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-semibold">{c.revenue.toFixed(2)} €</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
