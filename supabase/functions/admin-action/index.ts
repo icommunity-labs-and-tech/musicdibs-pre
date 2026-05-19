@@ -3138,13 +3138,34 @@ serve(async (req) => {
           }
         }
 
+        // Madrid timezone offset helper (handles DST). Returns ms offset from UTC.
+        const madridOffsetMs = (d: Date) => {
+          const parts = new Intl.DateTimeFormat("en-US", {
+            timeZone: "Europe/Madrid",
+            timeZoneName: "shortOffset",
+          }).formatToParts(d);
+          const tz = parts.find((p) => p.type === "timeZoneName")?.value || "GMT+1";
+          const m = /GMT([+-]?\d+)(?::(\d+))?/.exec(tz);
+          const h = m ? parseInt(m[1], 10) : 1;
+          const mm = m && m[2] ? parseInt(m[2], 10) : 0;
+          return (h * 60 + Math.sign(h || 1) * mm) * 60000;
+        };
+        const toMadridIso = (iso: string) => {
+          const d = new Date(iso);
+          return new Date(d.getTime() + madridOffsetMs(d)).toISOString();
+        };
+
         // Aggregate revenue + orders per bucket
+        // NOTE: bucket assignment uses paid_at in Europe/Madrid (real cash-in day).
+        // Orders with paid_at IS NULL are excluded from the chart.
         for (const b of buckets) {
           const sIso = b.start.toISOString();
           const eIso = b.end.toISOString();
-          const bOrders = ordersData.filter(
-            (o: any) => o.paid_at >= sIso && o.paid_at < eIso,
-          );
+          const bOrders = ordersData.filter((o: any) => {
+            if (!o.paid_at) return false;
+            const localPaid = toMadridIso(o.paid_at);
+            return localPaid >= sIso && localPaid < eIso;
+          });
           const bRev = bOrders.reduce((s: number, o: any) => s + netRev(o), 0);
           let bGross = 0, bIva = 0, bFee = 0;
           bOrders.forEach((o: any) => {
