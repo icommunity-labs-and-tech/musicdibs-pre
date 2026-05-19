@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.stripe-historical-backfill]
 verify_jwt = false
+
+[functions.redeem-coupon]
+verify_jwt = true
