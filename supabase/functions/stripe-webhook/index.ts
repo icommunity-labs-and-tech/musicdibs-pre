@@ -970,16 +970,17 @@ serve(async (req) => {
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
       if (profile) {
         const planName = priceId ? (PRICE_PLAN[priceId] || null) : null;
+        const planTier = priceId ? (PRICE_TO_PLAN_ID[priceId] || null) : null;
         if (status === "active" && planName) {
-          await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", profile.user_id);
-          console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} for user ${profile.user_id}`);
+          await supabase.from("profiles").update({ subscription_plan: planName, subscription_tier: planTier }).eq("user_id", profile.user_id);
+          console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} (tier=${planTier}) for user ${profile.user_id}`);
         } else if (status === "past_due" || status === "unpaid") {
           await supabase.from("credit_transactions").insert({
             user_id: profile.user_id, amount: 0, type: "subscription_issue",
             description: `Suscripción en estado "${status}". Se requiere acción de pago.`,
           });
         } else if (status === "canceled" || status === "incomplete_expired") {
-          await supabase.from("profiles").update({ subscription_plan: "Free" }).eq("user_id", profile.user_id);
+          await supabase.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", profile.user_id);
         }
 
         // ── Sincronizar tabla subscriptions local ──
