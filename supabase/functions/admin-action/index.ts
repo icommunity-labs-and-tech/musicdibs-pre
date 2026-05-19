@@ -5071,6 +5071,7 @@ serve(async (req) => {
       );
 
       for (const order of ordersToInsert) {
+        if (!order.user_id) continue; // historical without user → leave is_first_purchase=false
         if (!userFirstSeen.has(order.user_id)) {
           order.is_first_purchase = true;
           userFirstSeen.add(order.user_id);
