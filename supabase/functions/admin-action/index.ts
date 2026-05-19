@@ -4951,24 +4951,63 @@ serve(async (req) => {
             continue;
           }
 
+          // Filter Musicdibs-only charges (exclude Certyfile / non-Musicdibs)
+          const brandCheck = isMusicdibsCharge(ch);
+          if (!brandCheck.ok) {
+            if (brandCheck.reason === "certyfile") stats.skipped_certyfile++;
+            else stats.skipped_non_musicdibs++;
+            continue;
+          }
+
           const customerId =
             typeof ch.customer === "string"
               ? ch.customer
               : (ch.customer as any)?.id;
-          if (!customerId) continue;
 
-          const { userId, via } = await resolveUserId(customerId);
-          if (!userId) {
-            stats.missing_user++;
-            continue;
+          let userId: string | null = null;
+          let via = "none";
+          if (customerId) {
+            const r = await resolveUserId(customerId);
+            userId = r.userId;
+            via = r.via;
           }
-          if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
-          else if (via === "email_fallback") stats.resolved_by_email_fallback++;
+          if (userId) {
+            if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
+            else if (via === "email_fallback")
+              stats.resolved_by_email_fallback++;
+          } else {
+            stats.missing_user++;
+          }
 
           const amount = ch.amount / 100;
           const planId = ch.metadata?.plan_id || "";
-          const pt = planId ? bfGetProductType(planId) : "legacy_unknown";
-          if (pt === "legacy_unknown") stats.unknown_product_type++;
+          let productType: string;
+          let productCode: string;
+          let billingInterval: string | null;
+          let isSub: boolean;
+          if (planId) {
+            productType = bfGetProductType(planId);
+            productCode = planId;
+            billingInterval =
+              productType === "annual"
+                ? "yearly"
+                : productType === "monthly"
+                  ? "monthly"
+                  : null;
+            isSub = productType === "annual" || productType === "monthly";
+          } else {
+            const heur = classifyByAmount(amount) || {
+              productType: "legacy_unknown",
+              productCode: "legacy_unknown",
+              billingInterval: null,
+              isSub: false,
+            };
+            productType = heur.productType;
+            productCode = heur.productCode;
+            billingInterval = heur.billingInterval;
+            isSub = heur.isSub;
+          }
+          if (productType === "legacy_unknown") stats.unknown_product_type++;
 
           const paidAt = new Date(ch.created * 1000).toISOString();
           const btCh: any =
@@ -4978,31 +5017,36 @@ serve(async (req) => {
           const stripeFeeCh =
             btCh && typeof btCh.fee === "number" ? btCh.fee / 100 : 0;
 
+          const isHistorical = !userId;
+
           const candidate = {
             user_id: userId,
             stripe_charge_id: ch.id,
             order_status: "paid",
-            product_type: pt,
-            product_code: planId || "legacy_unknown",
-            billing_interval:
-              pt === "annual" ? "yearly" : pt === "monthly" ? "monthly" : null,
+            product_type: productType,
+            product_code: productCode,
+            billing_interval: billingInterval,
             amount_gross: amount,
             amount_net: computeAmountNet(null, amount),
             stripe_fee: stripeFeeCh,
             currency: ch.currency || "eur",
-            is_subscription: pt === "annual" || pt === "monthly",
+            is_subscription: isSub,
             is_renewal: false,
             is_first_purchase: false,
             coupon_code: ch.metadata?.coupon_code || null,
             paid_at: paidAt,
             metadata: {
               backfill: true,
-              backfill_source: "stripe_charge",
+              backfill_source: isHistorical
+                ? "stripe_charge_historical"
+                : "stripe_charge",
               resolved_user_via: via,
+              stripe_customer_id: customerId || null,
             },
           };
 
           queueCandidate(candidate);
+          if (isHistorical) stats.historical_inserted++;
           stats.charge_based++;
         }
 
