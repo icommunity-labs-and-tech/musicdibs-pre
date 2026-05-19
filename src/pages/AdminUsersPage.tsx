@@ -143,6 +143,10 @@ export default function AdminUsersPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    // Invalidar estado local antes del refetch — evita mostrar datos cacheados obsoletos
+    // tras acciones del admin (ajuste de créditos, notificación de pago, etc.)
+    setUsers([]);
+    setTotal(0);
     try {
       const res = await adminApi.getUsers(page * pageSize, search, pageSize, {
         kyc_filter: kycFilter === 'all' ? '' : kycFilter,
