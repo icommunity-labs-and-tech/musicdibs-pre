@@ -88,6 +88,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.works', 'Obras'), url: '/dashboard/admin/works', icon: Music },
     { title: tr('dashboard.sidebar.metrics', 'Métricas'), url: '/dashboard/admin/metrics', icon: BarChart3 },
     { title: tr('dashboard.sidebar.campaigns', 'Campañas'), url: '/dashboard/admin/campaigns', icon: Megaphone },
+    { title: '🎁 Cupones de crédito', url: '/dashboard/admin/credit-coupons', icon: Sparkles },
     { title: tr('dashboard.sidebar.system', 'Sistema'), url: '/dashboard/admin/system', icon: Settings2 },
     { title: tr('dashboard.sidebar.premiumPromos', 'Promos Premium'), url: '/dashboard/admin/premium-promos', icon: Megaphone },
     { title: tr('dashboard.sidebar.featureCosts', 'Costes de operaciones'), url: '/dashboard/admin/feature-costs', icon: Settings2 },
