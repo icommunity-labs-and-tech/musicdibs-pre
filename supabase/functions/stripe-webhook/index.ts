@@ -495,8 +495,8 @@ serve(async (req) => {
         const planName = PLAN_ID_TO_PLAN_NAME[planId];
         // Guard: topups e individuales NUNCA deben sobrescribir subscription_plan
         if (planName && !planId.startsWith("topup_") && planId !== "individual") {
-          await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", userId);
-          console.log(`[WEBHOOK] Updated subscription_plan to ${planName} for user ${userId}`);
+          await supabase.from("profiles").update({ subscription_plan: planName, subscription_tier: planId }).eq("user_id", userId);
+          console.log(`[WEBHOOK] Updated subscription_plan to ${planName} (tier=${planId}) for user ${userId}`);
         } else if (planName) {
           console.log(`[WEBHOOK] Skipping subscription_plan update for ${planId} (topup/individual)`);
         }
