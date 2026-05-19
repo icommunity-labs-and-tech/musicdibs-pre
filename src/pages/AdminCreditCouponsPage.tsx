@@ -161,7 +161,7 @@ export default function AdminCreditCouponsPage() {
               </DialogHeader>
               <div className="space-y-3">
                 <div>
-                  <Label>Código</Label>
+                  <Label>Código del cupón</Label>
                   <Input
                     value={form.code}
                     onChange={(e) => { setForm(f => ({ ...f, code: e.target.value.replace(/\s+/g, '').toUpperCase() })); if (errors.code) setErrors(p => ({ ...p, code: '' })); }}
