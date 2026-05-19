@@ -1004,11 +1004,11 @@ serve(async (req) => {
 
         if (subStatus === "active" && planName) {
           await supabase.from("profiles")
-            .update({ subscription_plan: planName, updated_at: new Date().toISOString() })
+            .update({ subscription_plan: planName, subscription_tier: planTier, updated_at: new Date().toISOString() })
             .eq("user_id", profile.user_id);
         } else if (["cancelled", "expired"].includes(subStatus)) {
           await supabase.from("profiles")
-            .update({ subscription_plan: "Free", updated_at: new Date().toISOString() })
+            .update({ subscription_plan: "Free", subscription_tier: null, updated_at: new Date().toISOString() })
             .eq("user_id", profile.user_id);
         }
 
