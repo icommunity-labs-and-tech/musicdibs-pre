@@ -501,12 +501,25 @@ const AIStudioCreate = () => {
           track('generation_completed', { feature: 'create_music', metadata: { async: true } });
           sessionStorage.setItem('md_last_generation', Date.now().toString());
         } else if (failedEarly) {
-          // KIE rejected the generation (artist name, prompt too long, etc.) — credits refunded by backend
-          toast({
-            title: 'Error en la generación',
-            description: 'El proveedor rechazó la solicitud. Tus créditos han sido devueltos. Intenta simplificar el prompt.',
-            variant: 'destructive',
-          });
+          // KIE rejected the generation — credits refunded by backend
+          const errMsg = String((await supabase.from('ai_generation_logs').select('error_message').eq('id', logId!).maybeSingle()).data?.error_message || '');
+          const artistMatch = errMsg.match(/artist name\s+([^\-\n]+?)\s*-\s*we don't reference/i);
+          if (artistMatch || /we don't reference specific artists/i.test(errMsg)) {
+            const name = artistMatch?.[1]?.trim();
+            toast({
+              title: t('aiCreate.artistRejectedTitle'),
+              description: name
+                ? t('aiCreate.artistRejectedDesc', { name })
+                : t('aiCreate.artistRejectedDescGeneric'),
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: 'Error en la generación',
+              description: 'El proveedor rechazó la solicitud. Tus créditos han sido devueltos. Intenta simplificar el prompt.',
+              variant: 'destructive',
+            });
+          }
         } else {
           toast({
             title: 'Aún en proceso',
