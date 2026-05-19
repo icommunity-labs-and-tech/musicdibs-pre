@@ -88,6 +88,7 @@ const PressPage = lazyWithRetry(() => import("./pages/PressPage"));
 const AdminCampaignMetricsPage = lazyWithRetry(() => import("./pages/AdminCampaignMetricsPage"));
 const AdminChurnPage = lazyWithRetry(() => import("./pages/AdminChurnPage"));
 const AdminAIModelsPage = lazyWithRetry(() => import("./pages/AdminAIModelsPage"));
+const AdminCreditCouponsPage = lazyWithRetry(() => import("./pages/AdminCreditCouponsPage"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
