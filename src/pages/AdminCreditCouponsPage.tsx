@@ -108,7 +108,7 @@ export default function AdminCreditCouponsPage() {
         max_redemptions: form.max_redemptions ? parseInt(form.max_redemptions) : null,
         expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
       });
-      toast.success('Cupón creado');
+      toast.success('Cupón regalo creado');
       setShowNew(false);
       setErrors({});
       setForm({ code: '', campaign_name: '', collaborator_name: '', credits: '1', max_redemptions: '', expires_at: '' });
