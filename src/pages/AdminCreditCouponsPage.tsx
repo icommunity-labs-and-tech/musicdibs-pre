@@ -37,6 +37,7 @@ export default function AdminCreditCouponsPage() {
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [form, setForm] = useState({
     code: '',
     campaign_name: '',
@@ -64,11 +65,39 @@ export default function AdminCreditCouponsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const handleCreate = async () => {
-    if (!form.code.trim() || !form.campaign_name.trim()) {
-      toast.error('Código y campaña son requeridos');
-      return;
+  const validate = () => {
+    const errs: Record<string, string> = {};
+    const code = form.code.trim().toUpperCase();
+    const campaign = form.campaign_name.trim();
+    const credits = parseInt(form.credits);
+    const maxRed = form.max_redemptions ? parseInt(form.max_redemptions) : null;
+
+    if (!code) errs.code = 'El código es requerido';
+    else if (code.length < 3) errs.code = 'Mínimo 3 caracteres';
+    else if (code.length > 32) errs.code = 'Máximo 32 caracteres';
+    else if (!/^[A-Z0-9_-]+$/.test(code)) errs.code = 'Solo letras, números, guiones y guiones bajos';
+    else if (coupons.some(c => c.code.toUpperCase() === code)) errs.code = 'Ya existe un cupón con ese código';
+
+    if (!campaign) errs.campaign_name = 'El nombre de campaña es requerido';
+    else if (campaign.length > 120) errs.campaign_name = 'Máximo 120 caracteres';
+
+    if (!credits || credits < 1) errs.credits = 'Mínimo 1 crédito';
+    else if (credits > 10000) errs.credits = 'Máximo 10.000';
+
+    if (maxRed !== null && (isNaN(maxRed) || maxRed < 1)) errs.max_redemptions = 'Debe ser mayor que 0';
+
+    if (form.expires_at) {
+      const exp = new Date(form.expires_at);
+      if (isNaN(exp.getTime())) errs.expires_at = 'Fecha inválida';
+      else if (exp.getTime() < Date.now()) errs.expires_at = 'Debe ser futura';
     }
+
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleCreate = async () => {
+    if (!validate()) return;
     setSubmitting(true);
     try {
       await adminApi.createCreditCoupon({
@@ -81,10 +110,17 @@ export default function AdminCreditCouponsPage() {
       });
       toast.success('Cupón creado');
       setShowNew(false);
+      setErrors({});
       setForm({ code: '', campaign_name: '', collaborator_name: '', credits: '1', max_redemptions: '', expires_at: '' });
       load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Error al crear cupón');
+      const msg = e instanceof Error ? e.message : 'Error al crear cupón';
+      if (/duplicate|already exists|unique|23505/i.test(msg)) {
+        setErrors(prev => ({ ...prev, code: 'Ya existe un cupón con ese código' }));
+        toast.error('Ya existe un cupón con ese código');
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -126,29 +162,64 @@ export default function AdminCreditCouponsPage() {
               <div className="space-y-3">
                 <div>
                   <Label>Código</Label>
-                  <Input value={form.code} onChange={(e) => setForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="REGALO10" />
+                  <Input
+                    value={form.code}
+                    onChange={(e) => { setForm(f => ({ ...f, code: e.target.value.replace(/\s+/g, '').toUpperCase() })); if (errors.code) setErrors(p => ({ ...p, code: '' })); }}
+                    onBlur={(e) => setForm(f => ({ ...f, code: e.target.value.trim().toUpperCase() }))}
+                    placeholder="REGALO10"
+                    maxLength={32}
+                    aria-invalid={!!errors.code}
+                  />
+                  {errors.code && <p className="text-xs text-destructive mt-1">{errors.code}</p>}
                 </div>
                 <div>
                   <Label>Nombre de campaña</Label>
-                  <Input value={form.campaign_name} onChange={(e) => setForm(f => ({ ...f, campaign_name: e.target.value }))} placeholder="Reto Canciones Mayo" />
+                  <Input
+                    value={form.campaign_name}
+                    onChange={(e) => { setForm(f => ({ ...f, campaign_name: e.target.value })); if (errors.campaign_name) setErrors(p => ({ ...p, campaign_name: '' })); }}
+                    onBlur={(e) => setForm(f => ({ ...f, campaign_name: e.target.value.trim() }))}
+                    placeholder="Reto Canciones Mayo"
+                    maxLength={120}
+                    aria-invalid={!!errors.campaign_name}
+                  />
+                  {errors.campaign_name && <p className="text-xs text-destructive mt-1">{errors.campaign_name}</p>}
                 </div>
                 <div>
                   <Label>Colaborador (opcional)</Label>
-                  <Input value={form.collaborator_name} onChange={(e) => setForm(f => ({ ...f, collaborator_name: e.target.value }))} placeholder="Academia Juan Pérez" />
+                  <Input
+                    value={form.collaborator_name}
+                    onChange={(e) => setForm(f => ({ ...f, collaborator_name: e.target.value }))}
+                    onBlur={(e) => setForm(f => ({ ...f, collaborator_name: e.target.value.trim() }))}
+                    placeholder="Academia Juan Pérez"
+                    maxLength={120}
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label>Créditos</Label>
-                    <Input type="number" min={1} value={form.credits} onChange={(e) => setForm(f => ({ ...f, credits: e.target.value }))} />
+                    <Input type="number" min={1} max={10000} value={form.credits}
+                      onChange={(e) => { setForm(f => ({ ...f, credits: e.target.value })); if (errors.credits) setErrors(p => ({ ...p, credits: '' })); }}
+                      aria-invalid={!!errors.credits}
+                    />
+                    {errors.credits && <p className="text-xs text-destructive mt-1">{errors.credits}</p>}
                   </div>
                   <div>
                     <Label>Máximo usos</Label>
-                    <Input type="number" min={1} value={form.max_redemptions} onChange={(e) => setForm(f => ({ ...f, max_redemptions: e.target.value }))} placeholder="Ilimitado" />
+                    <Input type="number" min={1} value={form.max_redemptions}
+                      onChange={(e) => { setForm(f => ({ ...f, max_redemptions: e.target.value })); if (errors.max_redemptions) setErrors(p => ({ ...p, max_redemptions: '' })); }}
+                      placeholder="Ilimitado"
+                      aria-invalid={!!errors.max_redemptions}
+                    />
+                    {errors.max_redemptions && <p className="text-xs text-destructive mt-1">{errors.max_redemptions}</p>}
                   </div>
                 </div>
                 <div>
                   <Label>Fecha de expiración</Label>
-                  <Input type="datetime-local" value={form.expires_at} onChange={(e) => setForm(f => ({ ...f, expires_at: e.target.value }))} />
+                  <Input type="datetime-local" value={form.expires_at}
+                    onChange={(e) => { setForm(f => ({ ...f, expires_at: e.target.value })); if (errors.expires_at) setErrors(p => ({ ...p, expires_at: '' })); }}
+                    aria-invalid={!!errors.expires_at}
+                  />
+                  {errors.expires_at && <p className="text-xs text-destructive mt-1">{errors.expires_at}</p>}
                 </div>
               </div>
               <DialogFooter>
