@@ -176,7 +176,7 @@ serve(async (req) => {
 
         await supabaseClient
           .from("profiles")
-          .update({ subscription_plan: "Free", updated_at: new Date().toISOString() })
+          .update({ subscription_plan: "Free", subscription_tier: null, updated_at: new Date().toISOString() })
           .eq("user_id", staleSub.user_id)
           .neq("subscription_plan", "Free");
 
@@ -187,7 +187,7 @@ serve(async (req) => {
       logStep("No valid subscription found, setting Free plan");
       await supabaseClient
         .from("profiles")
-        .update({ subscription_plan: "Free" })
+        .update({ subscription_plan: "Free", subscription_tier: null })
         .eq("user_id", userId);
 
       return new Response(
