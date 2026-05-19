@@ -143,6 +143,10 @@ export default function AdminUsersPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
+    // Invalidar estado local antes del refetch — evita mostrar datos cacheados obsoletos
+    // tras acciones del admin (ajuste de créditos, notificación de pago, etc.)
+    setUsers([]);
+    setTotal(0);
     try {
       const res = await adminApi.getUsers(page * pageSize, search, pageSize, {
         kyc_filter: kycFilter === 'all' ? '' : kycFilter,
@@ -510,8 +514,11 @@ export default function AdminUsersPage() {
                   <div className="flex flex-col gap-1">
                     <Badge variant="outline">{(() => {
                       const tier = (u as any).subscription_tier as string | null | undefined;
-                      if (tier) return tier.charAt(0).toUpperCase() + tier.slice(1).replace(/_/g, ' ');
-                      return u.subscription_plan;
+                      // Guarda: si hay tier, NUNCA dejar que subscription_plan sobrescriba la visualización
+                      if (tier && tier.trim() !== '') {
+                        return tier.charAt(0).toUpperCase() + tier.slice(1).replace(/_/g, ' ');
+                      }
+                      return u.subscription_plan || 'Free';
                     })()}</Badge>
                     {u.payment_grace_expires_at && (
                       new Date(u.payment_grace_expires_at) > new Date()
