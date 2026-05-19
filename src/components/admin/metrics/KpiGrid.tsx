@@ -190,7 +190,7 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
           <KpiCard label="Suscripciones mensuales" value={m.unitsSoldMonthly ?? 0} icon={BarChart3}
             sub={m.revenueMonthly ? `€${m.revenueMonthly.toLocaleString()}` : undefined}
           />
-          <KpiCard label="Singles / Topups" value={(m.unitsSoldSingle ?? 0) + (m.unitsSoldTopup ?? 0)} icon={Zap}
+          <KpiCard label="Free (individuales + topups)" value={(m.unitsSoldSingle ?? 0) + (m.unitsSoldTopup ?? 0)} icon={Zap}
             sub={`€${((m.revenueSingle ?? 0) + (m.revenueTopup ?? 0)).toLocaleString()}`}
           />
         </div>
