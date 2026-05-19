@@ -834,8 +834,8 @@ serve(async (req) => {
           const resolvedPlanId = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
           const planName = resolvedPlanId ? (PLAN_ID_TO_PLAN_NAME[resolvedPlanId] || null) : null;
           if (planName) {
-            await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", profile.user_id);
-            console.log(`[WEBHOOK] Plan change: updated plan to ${planName} for user ${profile.user_id}`);
+            await supabase.from("profiles").update({ subscription_plan: planName, subscription_tier: resolvedPlanId }).eq("user_id", profile.user_id);
+            console.log(`[WEBHOOK] Plan change: updated plan to ${planName} (tier=${resolvedPlanId}) for user ${profile.user_id}`);
             // Sync MailerLite: move to new plan group
             const { data: { user: changeUser } } = await supabase.auth.admin.getUserById(profile.user_id);
             if (changeUser?.email) {
