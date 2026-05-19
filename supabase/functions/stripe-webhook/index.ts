@@ -486,9 +486,12 @@ serve(async (req) => {
         }
 
         const planName = PLAN_ID_TO_PLAN_NAME[planId];
-        if (planName) {
+        // Guard: topups e individuales NUNCA deben sobrescribir subscription_plan
+        if (planName && !planId.startsWith("topup_") && planId !== "individual") {
           await supabase.from("profiles").update({ subscription_plan: planName }).eq("user_id", userId);
           console.log(`[WEBHOOK] Updated subscription_plan to ${planName} for user ${userId}`);
+        } else if (planName) {
+          console.log(`[WEBHOOK] Skipping subscription_plan update for ${planId} (topup/individual)`);
         }
 
         // Save stripe_customer_id
