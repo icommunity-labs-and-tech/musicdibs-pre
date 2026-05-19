@@ -4407,7 +4407,7 @@ serve(async (req) => {
       const startedAt = Date.now();
       const timeBudgetMs = dryRun ? 75_000 : 130_000;
 
-      const stats = {
+      const stats: any = {
         invoices_found: 0,
         charges_found: 0,
         orders_to_create: 0,
@@ -4419,6 +4419,9 @@ serve(async (req) => {
         fuzzy_ambiguous_skipped: 0,
         duplicates_skipped: 0,
         missing_user: 0,
+        historical_inserted: 0,
+        skipped_certyfile: 0,
+        skipped_non_musicdibs: 0,
         resolved_by_customer_id: 0,
         resolved_by_email_fallback: 0,
         unknown_product_type: 0,
@@ -4544,10 +4547,28 @@ serve(async (req) => {
         return "legacy_unknown";
       }
 
+      // Amount heuristic for legacy/historical orders without metadata
+      function classifyByAmount(
+        amount: number,
+      ): { productType: string; productCode: string; billingInterval: string | null; isSub: boolean } | null {
+        if (!(amount > 0)) return null;
+        if (amount >= 90)
+          return { productType: "topup", productCode: "topup_legacy", billingInterval: null, isSub: false };
+        if (amount >= 30)
+          return { productType: "annual", productCode: "annual_legacy", billingInterval: "yearly", isSub: true };
+        if (amount === 7)
+          return { productType: "single", productCode: "individual", billingInterval: null, isSub: false };
+        if (amount < 7.5)
+          return { productType: "monthly", productCode: "monthly", billingInterval: "monthly", isSub: true };
+        if (amount < 15)
+          return { productType: "monthly", productCode: "monthly", billingInterval: "monthly", isSub: true };
+        return null;
+      }
+
       function inferProductType(
         priceId: string | null,
         interval: string | null,
-        _amount: number,
+        amount: number,
       ): {
         productType: string;
         productCode: string;
@@ -4579,12 +4600,30 @@ serve(async (req) => {
             billingInterval: "monthly",
             isSub: true,
           };
+        const byAmount = classifyByAmount(amount);
+        if (byAmount) return byAmount;
         return {
           productType: "legacy_unknown",
           productCode: "legacy_unknown",
           billingInterval: null,
           isSub: false,
         };
+      }
+
+      // Only process Musicdibs charges. Exclude Certyfile. Allow charges without description.
+      function isMusicdibsCharge(ch: any): { ok: boolean; reason?: string } {
+        const parts: string[] = [];
+        if (ch.description) parts.push(String(ch.description));
+        if (ch.statement_descriptor) parts.push(String(ch.statement_descriptor));
+        if (ch.calculated_statement_descriptor)
+          parts.push(String(ch.calculated_statement_descriptor));
+        const meta = ch.metadata || {};
+        for (const k of Object.keys(meta)) parts.push(String(meta[k] ?? ""));
+        const text = parts.join(" | ").toLowerCase();
+        if (!text.trim()) return { ok: true }; // no description → allow
+        if (text.includes("certyfile")) return { ok: false, reason: "certyfile" };
+        if (text.includes("musicdibs")) return { ok: true };
+        return { ok: false, reason: "non_musicdibs" };
       }
 
       // Compute amount_net: prefer stripe net (pre-tax), fallback to gross/1.21
@@ -4912,24 +4951,63 @@ serve(async (req) => {
             continue;
           }
 
+          // Filter Musicdibs-only charges (exclude Certyfile / non-Musicdibs)
+          const brandCheck = isMusicdibsCharge(ch);
+          if (!brandCheck.ok) {
+            if (brandCheck.reason === "certyfile") stats.skipped_certyfile++;
+            else stats.skipped_non_musicdibs++;
+            continue;
+          }
+
           const customerId =
             typeof ch.customer === "string"
               ? ch.customer
               : (ch.customer as any)?.id;
-          if (!customerId) continue;
 
-          const { userId, via } = await resolveUserId(customerId);
-          if (!userId) {
-            stats.missing_user++;
-            continue;
+          let userId: string | null = null;
+          let via = "none";
+          if (customerId) {
+            const r = await resolveUserId(customerId);
+            userId = r.userId;
+            via = r.via;
           }
-          if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
-          else if (via === "email_fallback") stats.resolved_by_email_fallback++;
+          if (userId) {
+            if (via === "stripe_customer_id") stats.resolved_by_customer_id++;
+            else if (via === "email_fallback")
+              stats.resolved_by_email_fallback++;
+          } else {
+            stats.missing_user++;
+          }
 
           const amount = ch.amount / 100;
           const planId = ch.metadata?.plan_id || "";
-          const pt = planId ? bfGetProductType(planId) : "legacy_unknown";
-          if (pt === "legacy_unknown") stats.unknown_product_type++;
+          let productType: string;
+          let productCode: string;
+          let billingInterval: string | null;
+          let isSub: boolean;
+          if (planId) {
+            productType = bfGetProductType(planId);
+            productCode = planId;
+            billingInterval =
+              productType === "annual"
+                ? "yearly"
+                : productType === "monthly"
+                  ? "monthly"
+                  : null;
+            isSub = productType === "annual" || productType === "monthly";
+          } else {
+            const heur = classifyByAmount(amount) || {
+              productType: "legacy_unknown",
+              productCode: "legacy_unknown",
+              billingInterval: null,
+              isSub: false,
+            };
+            productType = heur.productType;
+            productCode = heur.productCode;
+            billingInterval = heur.billingInterval;
+            isSub = heur.isSub;
+          }
+          if (productType === "legacy_unknown") stats.unknown_product_type++;
 
           const paidAt = new Date(ch.created * 1000).toISOString();
           const btCh: any =
@@ -4939,31 +5017,36 @@ serve(async (req) => {
           const stripeFeeCh =
             btCh && typeof btCh.fee === "number" ? btCh.fee / 100 : 0;
 
+          const isHistorical = !userId;
+
           const candidate = {
             user_id: userId,
             stripe_charge_id: ch.id,
             order_status: "paid",
-            product_type: pt,
-            product_code: planId || "legacy_unknown",
-            billing_interval:
-              pt === "annual" ? "yearly" : pt === "monthly" ? "monthly" : null,
+            product_type: productType,
+            product_code: productCode,
+            billing_interval: billingInterval,
             amount_gross: amount,
             amount_net: computeAmountNet(null, amount),
             stripe_fee: stripeFeeCh,
             currency: ch.currency || "eur",
-            is_subscription: pt === "annual" || pt === "monthly",
+            is_subscription: isSub,
             is_renewal: false,
             is_first_purchase: false,
             coupon_code: ch.metadata?.coupon_code || null,
             paid_at: paidAt,
             metadata: {
               backfill: true,
-              backfill_source: "stripe_charge",
+              backfill_source: isHistorical
+                ? "stripe_charge_historical"
+                : "stripe_charge",
               resolved_user_via: via,
+              stripe_customer_id: customerId || null,
             },
           };
 
           queueCandidate(candidate);
+          if (isHistorical) stats.historical_inserted++;
           stats.charge_based++;
         }
 
@@ -4988,6 +5071,7 @@ serve(async (req) => {
       );
 
       for (const order of ordersToInsert) {
+        if (!order.user_id) continue; // historical without user → leave is_first_purchase=false
         if (!userFirstSeen.has(order.user_id)) {
           order.is_first_purchase = true;
           userFirstSeen.add(order.user_id);

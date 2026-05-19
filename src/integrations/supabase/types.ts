@@ -1749,7 +1749,7 @@ export type Database = {
           stripe_payment_intent_id: string | null
           stripe_subscription_id: string | null
           updated_at: string
-          user_id: string
+          user_id: string | null
           utm_campaign: string | null
           utm_content: string | null
           utm_medium: string | null
@@ -1787,7 +1787,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
@@ -1825,7 +1825,7 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
