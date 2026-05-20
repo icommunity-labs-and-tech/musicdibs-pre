@@ -2602,6 +2602,7 @@ serve(async (req) => {
           : 0;
 
       // MRR change (compare this month charges vs last month)
+      const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
       const lastMonthKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
       const thisMonthRev =
