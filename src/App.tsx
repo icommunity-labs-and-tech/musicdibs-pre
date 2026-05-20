@@ -58,6 +58,7 @@ const AIStudio = lazyWithRetry(() => import("./pages/AIStudio"));
 const AIStudioCreate = lazyWithRetry(() => import("./pages/AIStudioCreate"));
 const AIStudioEdit = lazyWithRetry(() => import("./pages/AIStudioEdit"));
 const AIStudioInspire = lazyWithRetry(() => import("./pages/AIStudioInspire"));
+const AIEnhance = lazyWithRetry(() => import("./pages/AIEnhance"));
 const AIStudioVideo = lazyWithRetry(() => import("./pages/AIStudioVideo"));
 const AIStudioCovers = lazyWithRetry(() => import("./pages/AIStudioCovers"));
 const AIStudioVocal = lazyWithRetry(() => import("./pages/AIStudioVocal"));
@@ -243,6 +244,7 @@ const App = () => (
               <Route path="/ai-studio/create" element={<AIStudioCreate />} />
               <Route path="/ai-studio/edit" element={<AIStudioEdit />} />
               <Route path="/ai-studio/inspire" element={<AIStudioInspire />} />
+              <Route path="/ai-studio/enhance" element={<AIEnhance />} />
               <Route path="/ai-studio/video" element={<AIStudioVideo />} />
               <Route path="/ai-studio/covers" element={<AIStudioCovers />} />
               <Route path="/ai-studio/vocal" element={<AIStudioVocal />} />

@@ -1675,6 +1675,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
         createCovers: { title: 'Material promocional', desc: 'Crea portadas, flyers, posts y todo lo que necesitas para promocionar tu música.' },
         singYourSong: { title: 'Herramientas de Voz', desc: 'Tu estudio vocal IA: clona tu voz, canta en 29 idiomas, traduce audios y mucho más' },
         virtualArtists: { title: 'Mis Artistas Virtuales', desc: 'Guarda la configuración de voz y estilo de tus artistas para crear canciones coherentes.' },
+        enhance: { title: 'Mejorar demo con IA', desc: 'Sube tu demo y la IA añade producción, extiende tu idea o genera nuevas versiones.' },
       },
       features: {
         highQuality: { title: 'Alta calidad', desc: 'Resultados listos para iterar, presentar o publicar.' },
@@ -1724,6 +1725,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
         createCovers: { title: 'Promotional Material', desc: 'Create covers, flyers, posts and everything you need to promote your music.' },
         singYourSong: { title: 'Voice Tools', desc: 'Your AI vocal studio: clone your voice, sing in 29 languages, translate audio and much more' },
         virtualArtists: { title: 'My Virtual Artists', desc: 'Save your voice and style settings to create consistent songs with your artists.' },
+        enhance: { title: 'Improve demo with AI', desc: 'Upload your demo and let AI add production, extend your idea or generate new versions.' },
       },
       features: {
         highQuality: { title: 'High quality', desc: 'Results ready to iterate, pitch or publish.' },
@@ -1773,6 +1775,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
         createCovers: { title: 'Material promocional', desc: 'Crie capas, flyers, posts e tudo o que você precisa para promover sua música.' },
         singYourSong: { title: 'Ferramentas de Voz', desc: 'Seu estúdio vocal IA: clone sua voz, cante em 29 idiomas, traduza áudios e muito mais' },
         virtualArtists: { title: 'Meus Artistas Virtuais', desc: 'Salve a configuração de voz e estilo dos seus artistas para criar músicas consistentes.' },
+        enhance: { title: 'Melhorar demo com IA', desc: 'Envie sua demo e a IA adiciona produção, estende sua ideia ou gera novas versões.' },
       },
       features: {
         highQuality: { title: 'Alta qualidade', desc: 'Resultados prontos para iterar, apresentar ou publicar.' },

@@ -4,7 +4,7 @@ import { useProductTracking } from "@/hooks/useProductTracking";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, Sparkles, Music, AlertTriangle, ArrowLeft, Zap, Edit3, Lightbulb, Coins, Image, Users } from "lucide-react";
+import { Wand2, Sparkles, Music, AlertTriangle, ArrowLeft, Zap, Edit3, Lightbulb, Coins, Image, Users, Mic2 } from "lucide-react";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { Navbar } from "@/components/Navbar";
 import { AIStudioThemeBar } from "@/components/ai-studio/AIStudioThemeBar";
@@ -84,6 +84,16 @@ const AIStudio = () => {
       costsCredits: true,
       featureKey: 'inspiration' as const,
       color: "from-amber-500 to-orange-500"
+    },
+    {
+      titleKey: "aiStudio.modules.enhance.title",
+      descKey: "aiStudio.modules.enhance.desc",
+      icon: Mic2,
+      href: "/ai-studio/enhance",
+      available: true,
+      costsCredits: true,
+      featureKey: 'enhance_audio' as const,
+      color: "from-violet-500 to-purple-600"
     },
   ];
 
