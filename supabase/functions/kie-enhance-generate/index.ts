@@ -72,12 +72,20 @@ serve(async (req) => {
     if (genre) promptParts.push(`Genre: ${genre}`);
     if (mood) promptParts.push(`Mood: ${mood}`);
     if (intensity) promptParts.push(`Intensity: ${intensity}`);
-    const finalPrompt = promptParts.join(". ").slice(0, 500) ||
-      (enhanceMode === "instrumental"
+    const enhanceMode_ = mode as EnhanceMode;
+    // Force preservation of the source vocal language whenever the result may include vocals.
+    const willHaveVocals = enhanceMode_ !== "instrumental" && voice_type !== "none";
+    if (willHaveVocals) {
+      promptParts.push(
+        "IMPORTANT: Detect the language of the vocals in the uploaded source audio and keep the new vocals in that EXACT same language. Do not translate the lyrics to English or any other language. Preserve the original singing language at all costs."
+      );
+    }
+    const finalPrompt = promptParts.join(". ").slice(0, 800) ||
+      (enhanceMode_ === "instrumental"
         ? "Add full instrumentation, professional production"
-        : enhanceMode === "cover"
-        ? "Reinterpret as a modern polished version"
-        : "Continue and extend the song coherently");
+        : enhanceMode_ === "cover"
+        ? "Reinterpret as a modern polished version, keeping the original vocal language of the source audio"
+        : "Continue and extend the song coherently, keeping the original vocal language of the source audio");
 
     // Idempotency
     const idempotencyKey: string =

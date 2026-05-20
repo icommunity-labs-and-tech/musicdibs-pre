@@ -533,6 +533,16 @@ const AIEnhance = () => {
                 <p className="text-xs text-muted-foreground">
                   💡 ¿No es exactamente lo que querías? Regenera con un prompt más específico.
                 </p>
+                <Alert className="border-primary/30 bg-primary/5">
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                  <AlertDescription className="text-xs">
+                    Esta nueva versión queda guardada para siempre en tu{" "}
+                    <Link to="/dashboard/media-library" className="text-primary font-medium hover:underline">
+                      biblioteca de medios
+                    </Link>
+                    . Podrás escucharla, descargarla o usarla en futuros registros cuando quieras.
+                  </AlertDescription>
+                </Alert>
               </motion.div>
             )}
           </AnimatePresence>
