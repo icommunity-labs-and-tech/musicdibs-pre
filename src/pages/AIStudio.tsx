@@ -124,14 +124,16 @@ const AIStudio = () => {
           <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${module.color} flex items-center justify-center mb-4`}>
             <module.icon className="w-6 h-6 text-white" />
           </div>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 mb-2">
             {t(module.titleKey)}
           </CardTitle>
-          <CardDescription>{t(module.descKey)}</CardDescription>
+          <CardDescription className="mb-4">{t(module.descKey)}</CardDescription>
           {module.costsCredits && cost > 0 ? (
-            <span className="mt-1"><PricingLink /></span>
+            <div className="mt-auto pt-2"><PricingLink /></div>
           ) : module.costsCredits === false ? (
-            <span className="mt-1 self-start inline-flex items-center rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-bold text-white shadow-sm">{t('aiStudio.free', 'Gratis')}</span>
+            <div className="mt-auto pt-2">
+              <span className="inline-flex items-center rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-bold text-white shadow-sm">{t('aiStudio.free', 'Gratis')}</span>
+            </div>
           ) : null}
         </CardHeader>
         <CardContent>
