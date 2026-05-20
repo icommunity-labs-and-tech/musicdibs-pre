@@ -11,6 +11,7 @@ import { adminApi } from '@/services/adminApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, RefreshCw, Gift, TrendingUp } from 'lucide-react';
+import { emitCouponVisibilityChange } from '@/hooks/useCouponRedemption';
 
 interface Coupon {
   id: string;
@@ -75,6 +76,7 @@ export default function AdminCreditCouponsPage() {
       toast.error('No se pudo guardar el ajuste');
       return;
     }
+    emitCouponVisibilityChange(enabled);
     toast.success(enabled ? 'Campo de cupón visible para todos' : 'Campo de cupón oculto para todos');
   };
 

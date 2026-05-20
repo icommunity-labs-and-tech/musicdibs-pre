@@ -3,22 +3,52 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 
+const COUPON_FLAG_EVENT = 'coupon-visibility-changed';
+
+export function emitCouponVisibilityChange(enabled: boolean) {
+  window.dispatchEvent(new CustomEvent(COUPON_FLAG_EVENT, { detail: { enabled } }));
+}
+
 export function useCouponAlwaysVisible() {
   const [alwaysVisible, setAlwaysVisible] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from('app_settings')
-        .select('value')
-        .eq('key', 'coupon_redemption_always_visible')
-        .maybeSingle();
-      if (cancelled) return;
-      const v = (data?.value as { enabled?: boolean } | null)?.enabled;
-      setAlwaysVisible(Boolean(v));
-    })();
-    return () => { cancelled = true; };
+
+  const fetchFlag = useCallback(async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'coupon_redemption_always_visible')
+      .maybeSingle();
+    const v = (data?.value as { enabled?: boolean } | null)?.enabled;
+    setAlwaysVisible(Boolean(v));
   }, []);
+
+  useEffect(() => {
+    fetchFlag();
+
+    // Realtime: cambios desde otra pestaña/usuario
+    const channel = supabase
+      .channel('app_settings_coupon_flag')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'app_settings', filter: 'key=eq.coupon_redemption_always_visible' },
+        () => { fetchFlag(); }
+      )
+      .subscribe();
+
+    // Evento local: cambios desde el admin en la misma pestaña (instantáneo)
+    const onLocal = (e: Event) => {
+      const detail = (e as CustomEvent<{ enabled: boolean }>).detail;
+      if (detail && typeof detail.enabled === 'boolean') setAlwaysVisible(detail.enabled);
+      else fetchFlag();
+    };
+    window.addEventListener(COUPON_FLAG_EVENT, onLocal);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener(COUPON_FLAG_EVENT, onLocal);
+    };
+  }, [fetchFlag]);
+
   return alwaysVisible;
 }
 
