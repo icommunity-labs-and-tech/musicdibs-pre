@@ -175,7 +175,7 @@ const AIEnhance = () => {
 
   // ── Track page view ───────────────────────────────────────────────────────────
   useEffect(() => {
-    track("ai_studio_entered", { feature: "enhance" });
+    track("ai_studio_entered", { feature: "enhance_audio" });
   }, []);
 
   // ── Extraer duración al seleccionar audio ─────────────────────────────────────
@@ -209,7 +209,7 @@ const AIEnhance = () => {
             setJobStatus("completed");
             setGeneratedAudioUrl(updated.output_url as string);
             toast.success("¡Tu versión IA está lista!");
-            track("enhance_completed", { mode: selectedMode, logId });
+            track("enhance_audio_completed", { feature: "enhance_audio", metadata: { mode: selectedMode, logId } });
           } else if (updated.status === "failed") {
             setJobStatus("failed");
             setGenError("La generación ha fallado. Puedes intentarlo de nuevo.");
@@ -254,7 +254,7 @@ const AIEnhance = () => {
       const sourceAudioUrl = await uploadAudio(audioFile);
 
       setJobStatus("processing");
-      track("enhance_started", { mode: selectedMode });
+      track("enhance_audio_started", { feature: "enhance_audio", metadata: { mode: selectedMode } });
 
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
@@ -286,7 +286,7 @@ const AIEnhance = () => {
 
       if (!response.ok) {
         const parsed = parseAiError(data);
-        throw new Error(parsed.message || data.error || "Error al iniciar generación");
+        throw new Error(parsed.userMessage || data.error || "Error al iniciar generación");
       }
 
       setLogId(data.logId);
@@ -297,7 +297,7 @@ const AIEnhance = () => {
       setJobStatus("failed");
       setGenError(errMsg);
       toast.error(errMsg);
-      track("enhance_error", { mode: selectedMode, error: errMsg });
+      track("enhance_audio_failed", { feature: "enhance_audio", metadata: { mode: selectedMode, error: errMsg } });
     }
   };
 
@@ -383,8 +383,7 @@ const AIEnhance = () => {
           {/* ── Sin créditos ─────────────────────────────────────────────────── */}
           {!hasEnough(creditsRequired) && (
             <NoCreditsAlert
-              creditsNeeded={creditsRequired}
-              currentCredits={credits ?? 0}
+              cost={creditsRequired}
             />
           )}
 
@@ -655,9 +654,7 @@ const AIEnhance = () => {
           {/* ── Link comprar créditos ─────────────────────────────────────────── */}
           {!hasEnough(creditsRequired) && credits !== null && (
             <p className="text-center text-sm text-muted-foreground">
-              <PricingLink className="text-primary hover:underline">
-                Consigue más créditos
-              </PricingLink>
+              <PricingLink className="text-primary hover:underline" />
               {" "}para usar esta función
             </p>
           )}

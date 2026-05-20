@@ -287,6 +287,63 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_music_enhance_projects: {
+        Row: {
+          created_at: string
+          genre: string | null
+          id: string
+          intensity: string | null
+          log_id: string | null
+          mode: string
+          mood: string | null
+          prompt: string | null
+          result_audio_url: string | null
+          source_audio_url: string
+          source_duration: number | null
+          source_filename: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          voice_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          genre?: string | null
+          id?: string
+          intensity?: string | null
+          log_id?: string | null
+          mode: string
+          mood?: string | null
+          prompt?: string | null
+          result_audio_url?: string | null
+          source_audio_url: string
+          source_duration?: number | null
+          source_filename?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          voice_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          genre?: string | null
+          id?: string
+          intensity?: string | null
+          log_id?: string | null
+          mode?: string
+          mood?: string | null
+          prompt?: string | null
+          result_audio_url?: string | null
+          source_audio_url?: string
+          source_duration?: number | null
+          source_filename?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          voice_type?: string | null
+        }
+        Relationships: []
+      }
       ai_provider_settings: {
         Row: {
           config_json: Json
