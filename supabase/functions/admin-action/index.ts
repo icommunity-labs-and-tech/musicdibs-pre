@@ -1957,6 +1957,7 @@ serve(async (req) => {
         console.warn("[get_saas_metrics] period parse failed:", (e as any)?.message);
       }
       const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
+      const todayStr = new Date().toISOString().slice(0, 10);
 
       // ── Cache layer (5 min TTL per filter combination) ──
       const cacheKey = `saas_metrics_cache_v5:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
