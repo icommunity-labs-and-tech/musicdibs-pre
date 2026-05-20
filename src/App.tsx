@@ -58,6 +58,7 @@ const AIStudio = lazyWithRetry(() => import("./pages/AIStudio"));
 const AIStudioCreate = lazyWithRetry(() => import("./pages/AIStudioCreate"));
 const AIStudioEdit = lazyWithRetry(() => import("./pages/AIStudioEdit"));
 const AIStudioInspire = lazyWithRetry(() => import("./pages/AIStudioInspire"));
+const AIEnhance = lazyWithRetry(() => import("./pages/AIEnhance"));
 const AIStudioVideo = lazyWithRetry(() => import("./pages/AIStudioVideo"));
 const AIStudioCovers = lazyWithRetry(() => import("./pages/AIStudioCovers"));
 const AIStudioVocal = lazyWithRetry(() => import("./pages/AIStudioVocal"));
