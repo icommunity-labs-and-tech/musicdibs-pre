@@ -2422,39 +2422,24 @@ serve(async (req) => {
             )
           : 0;
 
-      // Churn evolution from Stripe (real cancelled subs per month)
+      // Churn evolution from local subscriptions table (last 12 months)
       const churnEvolution: { month: string; churn: number }[] = [];
-      if (stripe) {
-        for (let i = 11; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const mStart = Math.floor(d.getTime() / 1000);
-          const mEnd = Math.floor(
-            new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() / 1000,
-          );
-          const label = d.toLocaleDateString("es-ES", {
-            month: "short",
-            year: "2-digit",
-          });
-          // Count cancelled in this month using full 12-month cancelled list
-          const cancelledInMonth = allCancelledSubs.filter(
-            (s: any) => s.canceled_at >= mStart && s.canceled_at < mEnd,
-          ).length;
-          const baseForMonth = activeSubsCount + cancelledInMonth;
-          const monthChurn =
-            baseForMonth > 0
-              ? parseFloat(((cancelledInMonth / baseForMonth) * 100).toFixed(1))
-              : 0;
-          churnEvolution.push({ month: label, churn: monthChurn });
-        }
-      } else {
-        for (let i = 11; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const label = d.toLocaleDateString("es-ES", {
-            month: "short",
-            year: "2-digit",
-          });
-          churnEvolution.push({ month: label, churn: 0 });
-        }
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const mStart = Math.floor(d.getTime() / 1000);
+        const mEnd = Math.floor(
+          new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() / 1000,
+        );
+        const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
+        const cancelledInMonth = allCancelledSubs.filter(
+          (s: any) => s.canceled_at >= mStart && s.canceled_at < mEnd,
+        ).length;
+        const baseForMonth = activeSubsCount + cancelledInMonth;
+        const monthChurn =
+          baseForMonth > 0
+            ? parseFloat(((cancelledInMonth / baseForMonth) * 100).toFixed(1))
+            : 0;
+        churnEvolution.push({ month: label, churn: monthChurn });
       }
 
       // Cohort retention — real activity-based
