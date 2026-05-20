@@ -509,8 +509,8 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
     aiCovers: {
       backToStudio: 'Volver a AI Music Studio',
       poweredBy: 'IA generativa',
-      title: 'Generador de Portadas',
-      subtitle: 'Crea portadas profesionales para tu single o álbum con IA.',
+      title: 'Mejora tus canciones',
+      subtitle: 'Sube tus demos y añade producción, extiende tu idea a una canción completa o genera nuevas versiones.',
       configTitle: 'Configura tu portada',
       configDesc: 'Cuanto más detallado seas, mejor será el resultado',
       artistName: 'Nombre del artista',
@@ -1219,8 +1219,8 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
     aiCovers: {
       backToStudio: 'Back to AI Music Studio',
       poweredBy: 'IA generativa',
-      title: 'Cover Generator',
-      subtitle: 'Create professional covers for your single or album with AI.',
+      title: 'Enhance your songs',
+      subtitle: 'Upload your demos and add production, extend your idea to a full song, or generate new versions.',
       configTitle: 'Configure your cover',
       configDesc: 'The more detailed you are, the better the result',
       artistName: 'Artist name',
