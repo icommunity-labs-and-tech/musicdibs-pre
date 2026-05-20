@@ -39,6 +39,8 @@ export default function AdminCreditCouponsPage() {
   const [showNew, setShowNew] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [alwaysVisible, setAlwaysVisible] = useState(false);
+  const [savingFlag, setSavingFlag] = useState(false);
   const [form, setForm] = useState({
     code: '',
     campaign_name: '',
@@ -47,6 +49,34 @@ export default function AdminCreditCouponsPage() {
     max_redemptions: '',
     expires_at: '',
   });
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'coupon_redemption_always_visible')
+        .maybeSingle();
+      const v = (data?.value as { enabled?: boolean } | null)?.enabled;
+      setAlwaysVisible(Boolean(v));
+    })();
+  }, []);
+
+  const handleToggleAlwaysVisible = async (enabled: boolean) => {
+    setSavingFlag(true);
+    const prev = alwaysVisible;
+    setAlwaysVisible(enabled);
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ key: 'coupon_redemption_always_visible', value: { enabled } }, { onConflict: 'key' });
+    setSavingFlag(false);
+    if (error) {
+      setAlwaysVisible(prev);
+      toast.error('No se pudo guardar el ajuste');
+      return;
+    }
+    toast.success(enabled ? 'Campo de cupón siempre visible' : 'Campo de cupón oculto si ya se canjeó');
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
