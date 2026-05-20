@@ -75,7 +75,7 @@ export default function AdminCreditCouponsPage() {
       toast.error('No se pudo guardar el ajuste');
       return;
     }
-    toast.success(enabled ? 'Campo de cupón siempre visible' : 'Campo de cupón oculto si ya se canjeó');
+    toast.success(enabled ? 'Campo de cupón visible para todos' : 'Campo de cupón oculto para todos');
   };
 
   const load = useCallback(async () => {
