@@ -85,7 +85,7 @@ serve(async (req) => {
         .from("ai_generation_logs")
         .update({
           status: "failed",
-          error_message: body?.msg || `code=${code}`,
+          error_message: `code=${code ?? 'unknown'}: ${body?.msg || body?.data?.errorMessage || 'KIE generation failed'}`.slice(0, 500),
           response_payload: body,
           completed_at: new Date().toISOString(),
         })
