@@ -42,14 +42,14 @@ const AIStudio = () => {
       color: "from-purple-500 to-pink-500"
     },
     {
-      titleKey: "aiStudio.modules.editModify.title",
-      descKey: "aiStudio.modules.editModify.desc",
-      icon: Edit3,
-      href: "/ai-studio/edit",
+      titleKey: "aiStudio.modules.enhance.title",
+      descKey: "aiStudio.modules.enhance.desc",
+      icon: Mic2,
+      href: "/ai-studio/enhance",
       available: true,
       costsCredits: true,
-      featureKey: 'edit_audio' as const,
-      color: "from-blue-500 to-cyan-500"
+      featureKey: 'enhance_audio' as const,
+      color: "from-violet-500 to-purple-600"
     },
   ];
 
@@ -86,14 +86,14 @@ const AIStudio = () => {
       color: "from-amber-500 to-orange-500"
     },
     {
-      titleKey: "aiStudio.modules.enhance.title",
-      descKey: "aiStudio.modules.enhance.desc",
-      icon: Mic2,
-      href: "/ai-studio/enhance",
+      titleKey: "aiStudio.modules.editModify.title",
+      descKey: "aiStudio.modules.editModify.desc",
+      icon: Edit3,
+      href: "/ai-studio/edit",
       available: true,
       costsCredits: true,
-      featureKey: 'enhance_audio' as const,
-      color: "from-violet-500 to-purple-600"
+      featureKey: 'edit_audio' as const,
+      color: "from-blue-500 to-cyan-500"
     },
   ];
 
