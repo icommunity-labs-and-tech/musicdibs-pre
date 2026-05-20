@@ -1926,6 +1926,37 @@ serve(async (req) => {
         payload || {};
       const now = new Date();
 
+      // ── Period boundaries ─────────────────────────────────────────
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+
+      // filterStart / filterEnd derived from period selector
+      let filterStart: string | null = null;
+      let filterEnd: string | null = null;
+      try {
+        if (periodType === "week" && weekStart) {
+          const s = new Date(weekStart);
+          const e = new Date(s);
+          e.setDate(e.getDate() + 7);
+          filterStart = s.toISOString();
+          filterEnd = e.toISOString();
+        } else if (periodType === "month" && month) {
+          const [y, m] = String(month).split("-").map(Number);
+          if (y && m) {
+            filterStart = new Date(y, m - 1, 1).toISOString();
+            filterEnd = new Date(y, m, 1).toISOString();
+          }
+        } else if (periodType === "year" && year) {
+          const y = Number(year);
+          if (y) {
+            filterStart = new Date(y, 0, 1).toISOString();
+            filterEnd = new Date(y + 1, 0, 1).toISOString();
+          }
+        }
+      } catch (e) {
+        console.warn("[get_saas_metrics] period parse failed:", (e as any)?.message);
+      }
+
       // ── Cache layer (5 min TTL per filter combination) ──
       const cacheKey = `saas_metrics_cache_v5:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
