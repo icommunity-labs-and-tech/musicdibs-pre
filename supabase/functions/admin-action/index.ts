@@ -1953,6 +1953,7 @@ serve(async (req) => {
             filterEnd = new Date(y + 1, 0, 1).toISOString();
           }
         }
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
       } catch (e) {
         console.warn("[get_saas_metrics] period parse failed:", (e as any)?.message);
       }
