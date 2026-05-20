@@ -212,7 +212,10 @@ export default function AdminMetricsPage() {
           <BarChart3 className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">SaaS Analytics</h1>
           <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">Admin</Badge>
-          <span className="ml-auto text-xs text-muted-foreground">{periodLabel}</span>
+          <span className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+            {refreshing && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />}
+            {periodLabel}
+          </span>
         </div>
 
         {/* Period selector */}
