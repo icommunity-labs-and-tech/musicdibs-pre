@@ -2236,11 +2236,20 @@ serve(async (req) => {
             }
           }
 
-          const allSubs = stripeBundle.allSubs;
-          const cancelledSubsRaw = stripeBundle.cancelledSubsRaw;
-          const allCharges = stripeBundle.allCharges;
+          if (!stripeBundle) {
+            console.warn(
+              "[get_saas_metrics] stripeBundle is null after fetch — Stripe call likely timed out or errored. Churn/MRR will fall back to 0.",
+            );
+            throw new Error("stripe_bundle_missing");
+          }
+          const allSubs = stripeBundle.allSubs || [];
+          const cancelledSubsRaw = stripeBundle.cancelledSubsRaw || [];
+          const allCharges = stripeBundle.allCharges || [];
           const productNames: Record<string, string> =
             stripeBundle.productNames || {};
+          console.log(
+            `[get_saas_metrics] Stripe bundle: ${allSubs.length} active, ${cancelledSubsRaw.length} cancelled/unpaid/expired, ${allCharges.length} charges`,
+          );
 
           const thisMonthTs = Math.floor(
             new Date(thisMonthStart).getTime() / 1000,
