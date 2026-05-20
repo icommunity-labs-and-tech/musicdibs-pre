@@ -184,8 +184,10 @@ const AIEnhance = () => {
             toast.success("¡Tu versión IA está lista!");
           } else if (updated.status === "failed") {
             setJobStatus("failed");
-            setGenError("La generación ha fallado. Puedes intentarlo de nuevo.");
-            toast.error("La generación ha fallado.");
+            const raw = (updated.error_message as string) || "";
+            const { userMessage } = parseAiError(new Error(raw));
+            setGenError(userMessage);
+            toast.error(userMessage);
           }
         }
       )
