@@ -244,6 +244,7 @@ const App = () => (
               <Route path="/ai-studio/create" element={<AIStudioCreate />} />
               <Route path="/ai-studio/edit" element={<AIStudioEdit />} />
               <Route path="/ai-studio/inspire" element={<AIStudioInspire />} />
+              <Route path="/ai-studio/enhance" element={<AIEnhance />} />
               <Route path="/ai-studio/video" element={<AIStudioVideo />} />
               <Route path="/ai-studio/covers" element={<AIStudioCovers />} />
               <Route path="/ai-studio/vocal" element={<AIStudioVocal />} />
