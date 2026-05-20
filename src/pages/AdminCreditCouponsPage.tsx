@@ -267,9 +267,9 @@ export default function AdminCreditCouponsPage() {
       <Card>
         <CardContent className="py-4 flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-medium">Campo de canje de cupón siempre visible</p>
+            <p className="text-sm font-medium">Mostrar campo de canje de cupón</p>
             <p className="text-xs text-muted-foreground">
-              Si está activado, todos los usuarios verán el campo para introducir un cupón aunque ya hayan canjeado otro (útil para retos y campañas recurrentes).
+              ON: el campo de introducción de cupón es visible para todos los usuarios. OFF: el campo queda oculto para todos, hayan canjeado o no.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
