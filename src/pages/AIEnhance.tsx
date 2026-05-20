@@ -184,14 +184,38 @@ const AIEnhance = () => {
             toast.success("¡Tu versión IA está lista!");
           } else if (updated.status === "failed") {
             setJobStatus("failed");
-            setGenError("La generación ha fallado. Puedes intentarlo de nuevo.");
-            toast.error("La generación ha fallado.");
+            const raw = (updated.error_message as string) || "";
+            const { userMessage } = parseAiError(new Error(raw));
+            setGenError(userMessage);
+            toast.error(userMessage);
           }
         }
       )
       .subscribe();
+
+    // Polling fallback in case Realtime UPDATE never arrives.
+    const poll = setInterval(async () => {
+      const { data } = await supabase
+        .from("ai_generation_logs")
+        .select("status, output_url, error_message")
+        .eq("id", logId)
+        .maybeSingle();
+      if (!data) return;
+      if (data.status === "completed" && data.output_url) {
+        setJobStatus("completed");
+        setGeneratedAudioUrl(data.output_url);
+        toast.success("¡Tu versión IA está lista!");
+      } else if (data.status === "failed") {
+        setJobStatus("failed");
+        const { userMessage } = parseAiError(new Error(data.error_message || ""));
+        setGenError(userMessage);
+        toast.error(userMessage);
+      }
+    }, 8000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(poll);
     };
   }, [logId, jobStatus]);
 

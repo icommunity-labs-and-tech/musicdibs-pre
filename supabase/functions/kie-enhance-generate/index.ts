@@ -65,27 +65,91 @@ serve(async (req) => {
 
     const enhanceMode = mode as EnhanceMode;
     const featureKey = MODE_FEATURE_KEY[enhanceMode];
+    const instrumentalFlag = enhanceMode === "instrumental" || voice_type === "none";
+    const willHaveVocals = !instrumentalFlag;
 
-    // Build prompt — combine user prompt with style hints
-    const promptParts: string[] = [];
-    if (prompt && typeof prompt === "string") promptParts.push(prompt.trim());
-    if (genre) promptParts.push(`Genre: ${genre}`);
-    if (mood) promptParts.push(`Mood: ${mood}`);
-    if (intensity) promptParts.push(`Intensity: ${intensity}`);
-    const enhanceMode_ = mode as EnhanceMode;
-    // Force preservation of the source vocal language whenever the result may include vocals.
-    const willHaveVocals = enhanceMode_ !== "instrumental" && voice_type !== "none";
+    // For cover/extend modes with vocals, try to transcribe the source audio with
+    // ElevenLabs scribe_v1 so we can pass real lyrics to KIE (extend especially
+    // fails with code 531 when no lyrics are provided).
+    let transcribedLyrics = "";
+    let detectedLanguage = "";
     if (willHaveVocals) {
-      promptParts.push(
-        "IMPORTANT: Detect the language of the vocals in the uploaded source audio and keep the new vocals in that EXACT same language. Do not translate the lyrics to English or any other language. Preserve the original singing language at all costs."
-      );
+      try {
+        const ELEVEN_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+        if (ELEVEN_KEY) {
+          const audioRes = await fetch(source_audio_url);
+          if (audioRes.ok) {
+            const blob = await audioRes.blob();
+            const form = new FormData();
+            form.append("file", blob, source_filename || "audio.mp3");
+            form.append("model_id", "scribe_v1");
+            const sttRes = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
+              method: "POST",
+              headers: { "xi-api-key": ELEVEN_KEY },
+              body: form,
+            });
+            if (sttRes.ok) {
+              const sttJson = await sttRes.json();
+              transcribedLyrics = String(sttJson?.text || "").trim();
+              detectedLanguage = String(sttJson?.language_code || sttJson?.language || "").trim();
+              console.log("[kie-enhance-generate] STT ok", {
+                chars: transcribedLyrics.length,
+                lang: detectedLanguage,
+              });
+            } else {
+              console.warn("[kie-enhance-generate] STT failed", sttRes.status, await sttRes.text());
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[kie-enhance-generate] STT exception", (e as Error).message);
+      }
     }
-    const finalPrompt = promptParts.join(". ").slice(0, 800) ||
-      (enhanceMode_ === "instrumental"
-        ? "Add full instrumentation, professional production"
-        : enhanceMode_ === "cover"
-        ? "Reinterpret as a modern polished version, keeping the original vocal language of the source audio"
-        : "Continue and extend the song coherently, keeping the original vocal language of the source audio");
+
+    // Build description block (style/mood/intensity + user description)
+    const descParts: string[] = [];
+    if (prompt && typeof prompt === "string") descParts.push(prompt.trim());
+    if (genre) descParts.push(`Genre: ${genre}`);
+    if (mood) descParts.push(`Mood: ${mood}`);
+    if (intensity) descParts.push(`Intensity: ${intensity}`);
+    const description = descParts.join(". ");
+
+    // KIE prompt:
+    // - extend: must contain lyrics structure to avoid code 531
+    // - cover: lyrics greatly improve fidelity to source vocal language
+    // - instrumental: free-form description
+    let finalPrompt = "";
+    const langNote = detectedLanguage
+      ? ` Keep ALL lyrics in ${detectedLanguage} — do NOT translate.`
+      : willHaveVocals
+        ? " Detect the vocal language of the source audio and keep ALL lyrics in that exact same language — do NOT translate."
+        : "";
+
+    if (enhanceMode === "extend") {
+      if (transcribedLyrics) {
+        // Provide the original lyrics inside a [Verse] block so KIE can continue them.
+        finalPrompt =
+          `[Verse]\n${transcribedLyrics}\n\n[Continue the song coherently from here in the same vocal language and style.]${langNote}`;
+      } else if (instrumentalFlag) {
+        finalPrompt = description || "Continue and extend the instrumental coherently in the same style.";
+      } else {
+        // No lyrics could be transcribed — fall back to a minimal lyric scaffold to avoid 531.
+        finalPrompt =
+          `[Verse]\nLa la la, continue the melody\n\n[Chorus]\nLa la la, follow the original mood\n\n` +
+          `Continue and extend the song coherently.${langNote} ${description}`.trim();
+      }
+    } else if (enhanceMode === "cover") {
+      if (transcribedLyrics) {
+        finalPrompt =
+          `[Lyrics]\n${transcribedLyrics}\n\nReinterpret as: ${description || "modern polished version"}.${langNote}`;
+      } else {
+        finalPrompt = `${description || "Reinterpret as a modern polished version of the source audio"}.${langNote}`;
+      }
+    } else {
+      // instrumental
+      finalPrompt = description || "Add full instrumentation, professional production";
+    }
+    finalPrompt = finalPrompt.slice(0, 2900);
 
     // Idempotency
     const idempotencyKey: string =
@@ -180,7 +244,7 @@ serve(async (req) => {
     const callBackUrl =
       `${SUPABASE_URL}/functions/v1/kie-suno-callback?logId=${logId}&token=${callbackToken}`;
 
-    const instrumentalFlag = enhanceMode === "instrumental" || voice_type === "none";
+    // instrumentalFlag computed above
 
     // Pick endpoint
     const endpoint = enhanceMode === "extend"
