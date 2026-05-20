@@ -1953,10 +1953,10 @@ serve(async (req) => {
             filterEnd = new Date(y + 1, 0, 1).toISOString();
           }
         }
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
       } catch (e) {
         console.warn("[get_saas_metrics] period parse failed:", (e as any)?.message);
       }
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
 
       // ── Cache layer (5 min TTL per filter combination) ──
       const cacheKey = `saas_metrics_cache_v5:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
