@@ -97,11 +97,23 @@ Deno.serve(async (req) => {
     }
 
     // 3. Fetch Stripe page
+    const rangeStart = (state as any).range_start ?? null;
+    const rangeEnd = (state as any).range_end ?? null;
+
     const listParams: Stripe.ChargeListParams = {
       limit: 50,
-      created: { lte: PRE_MIGRATION_CUTOFF },
       expand: ["data.balance_transaction"],
     };
+
+    if (rangeStart) {
+      listParams.created = {
+        gte: rangeStart,
+        lte: rangeEnd ?? Math.floor(Date.now() / 1000),
+      };
+    } else {
+      listParams.created = { lte: PRE_MIGRATION_CUTOFF };
+    }
+
     if (state.last_charge_id) {
       listParams.starting_after = state.last_charge_id;
     }
