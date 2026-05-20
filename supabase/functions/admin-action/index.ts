@@ -1927,9 +1927,27 @@ serve(async (req) => {
       const now = new Date();
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v4:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v5:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+      // force_refresh → trigger incremental Stripe→orders sync first, then recompute from DB.
+      if (force_refresh) {
+        try {
+          const cronSecret = Deno.env.get("CRON_SECRET");
+          const supaUrl = Deno.env.get("SUPABASE_URL");
+          if (cronSecret && supaUrl) {
+            const r = await fetch(`${supaUrl}/functions/v1/stripe-daily-sync`, {
+              method: "POST",
+              headers: { "x-cron-secret": cronSecret, "Content-Type": "application/json" },
+            });
+            console.log("[get_saas_metrics] daily-sync status:", r.status);
+          }
+        } catch (e: any) {
+          console.warn("[get_saas_metrics] daily-sync trigger failed:", e?.message);
+        }
+      }
+
       if (!force_refresh) {
         try {
           const { data: cacheRow } = await admin
@@ -1940,19 +1958,10 @@ serve(async (req) => {
           if (cacheRow?.value && cacheRow?.updated_at) {
             const age = Date.now() - new Date(cacheRow.updated_at).getTime();
             if (age < CACHE_TTL_MS) {
-              return json({
-                ...(cacheRow.value as any),
-                _cached: true,
-                _cache_age_ms: age,
-              });
+              return json({ ...(cacheRow.value as any), _cached: true, _cache_age_ms: age });
             }
             if (age < STALE_CACHE_TTL_MS) {
-              return json({
-                ...(cacheRow.value as any),
-                _cached: true,
-                _stale: true,
-                _cache_age_ms: age,
-              });
+              return json({ ...(cacheRow.value as any), _cached: true, _stale: true, _cache_age_ms: age });
             }
           }
         } catch {
@@ -1960,55 +1969,9 @@ serve(async (req) => {
         }
       }
 
-      const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-      let stripe: any = null;
-      if (stripeKey) {
-        stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-      }
-
-      // Build date range from new period filters
-      let filterStart: string | null = null;
-      let filterEnd: string | null = null;
-
-      if (periodType === "week" && weekStart) {
-        const ws = new Date(weekStart + "T00:00:00Z");
-        filterStart = ws.toISOString();
-        const we = new Date(ws);
-        we.setDate(we.getDate() + 7);
-        filterEnd = we.toISOString();
-      } else if (periodType === "year" && year) {
-        const y = parseInt(year);
-        filterStart = new Date(y, 0, 1).toISOString();
-        filterEnd = new Date(y + 1, 0, 1).toISOString();
-      } else if (
-        (periodType === "month" || !periodType) &&
-        month &&
-        month !== "all" &&
-        year &&
-        year !== "all"
-      ) {
-        const y = parseInt(year),
-          m = parseInt(month);
-        filterStart = new Date(y, m - 1, 1).toISOString();
-        filterEnd = new Date(y, m, 1).toISOString();
-      } else if (month && month !== "all" && (!year || year === "all")) {
-        const y = now.getFullYear(),
-          m = parseInt(month);
-        filterStart = new Date(y, m - 1, 1).toISOString();
-        filterEnd = new Date(y, m, 1).toISOString();
-      } else if (year && year !== "all") {
-        const y = parseInt(year);
-        filterStart = new Date(y, 0, 1).toISOString();
-        filterEnd = new Date(y + 1, 0, 1).toISOString();
-      }
-
-      const thisMonthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01T00:00:00Z`;
-      const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const lastMonthStart = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}-01T00:00:00Z`;
-      const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
-      const todayStr = now.toISOString().slice(0, 10);
-
-      // ── Stripe: Real subscription & revenue data ──
+      // ── Subscriptions & revenue metrics from local DB (no Stripe API calls) ──
+      // Source of truth: public.subscriptions (synced by stripe-webhook) for MRR/churn,
+      // public.orders (synced by stripe-webhook + stripe-daily-sync) for revenue.
       let stripeMrr = 0;
       let stripeArr = 0;
       let activeSubsCount = 0;
@@ -2018,325 +1981,106 @@ serve(async (req) => {
       let stripeMonthlyRevenue = 0;
       let totalStripeRevenue = 0;
       let oneTimeRevenue = 0;
-      const stripePlanBreakdown: Record<
-        string,
-        { count: number; mrr: number }
-      > = {};
+      const stripePlanBreakdown: Record<string, { count: number; mrr: number }> = {};
       let mrrEvolution: { month: string; mrr: number }[] = [];
       let cancelledSubs: any[] = [];
       let allCancelledSubs: any[] = [];
+      let subsDataAvailable = false;
 
-      if (stripe) {
-        // ── Stripe heavy-data cache (filter-independent, 15 min TTL) ──
-        const STRIPE_CACHE_KEY = "saas_metrics_stripe_cache_v3";
-        const STRIPE_CACHE_TTL_MS = 15 * 60 * 1000;
-        const STRIPE_STALE_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-        const STRIPE_FETCH_TIMEOUT_MS = 8_000;
-        let stripeBundle: any = null;
-        let staleStripeBundle: any = null;
-        try {
-          const { data: scRow } = await admin
-            .from("app_settings")
-            .select("value, updated_at")
-            .eq("key", STRIPE_CACHE_KEY)
-            .maybeSingle();
-          if (scRow?.value && scRow?.updated_at) {
-            const age = Date.now() - new Date(scRow.updated_at).getTime();
-            if (age < STRIPE_CACHE_TTL_MS) {
-              stripeBundle = scRow.value;
-            } else if (age < STRIPE_STALE_CACHE_TTL_MS) {
-              staleStripeBundle = scRow.value;
-            }
-          }
-        } catch {
-          /* cache miss is non-fatal */
+      try {
+        // Active subscriptions → MRR / ARR / plan breakdown
+        const { data: activeSubs } = await admin
+          .from("subscriptions")
+          .select("plan, plan_type, amount")
+          .eq("status", "active");
+        const subs = activeSubs || [];
+        activeSubsCount = subs.length;
+        for (const s of subs) {
+          const amt = parseFloat(String((s as any).amount ?? 0)) || 0;
+          const planLabel = String((s as any).plan || (s as any).plan_type || "unknown");
+          const isAnnual =
+            /annual|year/i.test(planLabel) ||
+            /annual|year/i.test(String((s as any).plan_type || ""));
+          const monthlyAmount = isAnnual ? amt / 12 : amt;
+          stripeMrr += monthlyAmount;
+          if (isAnnual) stripeAnnualRevenue += monthlyAmount;
+          else stripeMonthlyRevenue += monthlyAmount;
+          if (!stripePlanBreakdown[planLabel])
+            stripePlanBreakdown[planLabel] = { count: 0, mrr: 0 };
+          stripePlanBreakdown[planLabel].count += 1;
+          stripePlanBreakdown[planLabel].mrr += monthlyAmount;
         }
-        if (!stripeBundle && staleStripeBundle) {
-          stripeBundle = staleStripeBundle;
-        }
+        stripeArr = stripeMrr * 12;
 
-        try {
-          if (!stripeBundle) {
-            // Helper: paginate a Stripe list endpoint until exhausted (or until shouldStop returns true)
-            const paginateAll = async (
-              listFn: (params: any) => Promise<any>,
-              baseParams: any,
-              shouldStop?: (lastItem: any) => boolean,
-            ): Promise<any[]> => {
-              const out: any[] = [];
-              let hasMore = true;
-              let startingAfter: string | undefined;
-              while (hasMore) {
-                const params: any = { ...baseParams, limit: 100 };
-                if (startingAfter) params.starting_after = startingAfter;
-                const batch = await listFn(params);
-                out.push(...batch.data);
-                if (batch.data.length === 0) break;
-                if (shouldStop && shouldStop(batch.data[batch.data.length - 1]))
-                  break;
-                hasMore = batch.has_more;
-                startingAfter = batch.data[batch.data.length - 1].id;
-              }
-              return out;
-            };
-
-            const lastMonthTs = Math.floor(
-              new Date(lastMonthStart).getTime() / 1000,
-            );
-            const twelveMonthsAgoTs = Math.floor(
-              new Date(now.getFullYear(), now.getMonth() - 11, 1).getTime() /
-                1000,
-            );
-
-            // Run the heavy Stripe queries in parallel, but never let Stripe block the dashboard.
-            // Helper: fetch terminated subs for a given status (canceled, unpaid, incomplete_expired, paused)
-            // and normalize to a common shape. Stripe sets `ended_at` when a sub terminates for any reason
-            // (user cancel, payment failure, dunning exhaustion, expiration, pause, etc.).
-            // NOTE: stripe.subscriptions.list sorts by `created` desc, NOT by `ended_at`/`canceled_at`.
-            // A sub created 2 years ago but canceled last week would be skipped if we stopped early
-            // based on `ended_at`. With our low cancellation volume, just paginate everything (max ~few pages).
-            const fetchTerminated = (status: string) =>
-              paginateAll((p) => stripe.subscriptions.list(p), { status });
-
-            console.log(
-              "[get_saas_metrics] Fetching Stripe data (active + canceled + unpaid + incomplete_expired + paused + charges)…",
-            );
-            const [
-              allSubs,
-              canceledRaw,
-              unpaidRaw,
-              incompleteExpiredRaw,
-              pausedRaw,
-              allCharges,
-            ] = await withTimeout(
-              Promise.all([
-                paginateAll((p) => stripe.subscriptions.list(p), {
-                  status: "active",
-                  expand: ["data.items.data.price"],
-                }),
-                fetchTerminated("canceled"),
-                fetchTerminated("unpaid"),
-                fetchTerminated("incomplete_expired"),
-                fetchTerminated("paused").catch(() => []), // paused only on some accounts
-                paginateAll((p) => stripe.charges.list(p), {
-                  created: { gte: twelveMonthsAgoTs },
-                }),
-              ]),
-              20_000,
-              "stripe_metrics_timeout",
-            );
-            console.log(
-              `[get_saas_metrics] Stripe fetch OK: active=${allSubs.length}, canceled=${canceledRaw.length}, unpaid=${unpaidRaw.length}, incomplete_expired=${incompleteExpiredRaw.length}, paused=${(pausedRaw as any[]).length}, charges=${allCharges.length}`,
-            );
-
-            // Merge all terminal-state subs into a single "churned" list.
-            // Use ended_at when present, fall back to canceled_at. Tag the reason for visibility.
-            const cancelledSubsRaw = [
-              ...canceledRaw.map((s: any) => ({
-                ended_at: s.ended_at || s.canceled_at,
-                reason: s.cancellation_details?.reason || "user_canceled",
-                status: "canceled",
-              })),
-              ...unpaidRaw.map((s: any) => ({
-                ended_at: s.ended_at || s.canceled_at,
-                reason: "payment_failed",
-                status: "unpaid",
-              })),
-              ...incompleteExpiredRaw.map((s: any) => ({
-                ended_at: s.ended_at || s.canceled_at || s.created,
-                reason: "incomplete_expired",
-                status: "incomplete_expired",
-              })),
-              ...(pausedRaw as any[]).map((s: any) => ({
-                ended_at: s.ended_at || s.canceled_at,
-                reason: "paused",
-                status: "paused",
-              })),
-            ].filter((s: any) => !!s.ended_at);
-
-            // Resolve product names in parallel
-            const productIds = new Set<string>();
-            for (const sub of allSubs) {
-              for (const item of sub.items.data) {
-                const prodId =
-                  typeof item.price.product === "string"
-                    ? item.price.product
-                    : item.price.product?.id;
-                if (prodId) productIds.add(prodId);
-              }
-            }
-            const productNames: Record<string, string> = {};
-            try {
-              await withTimeout(
-                Promise.all(
-                  [...productIds].map(async (pid) => {
-                    try {
-                      const prod = await stripe.products.retrieve(pid);
-                      productNames[pid] = prod.name || pid;
-                    } catch {
-                      productNames[pid] = pid;
-                    }
-                  }),
-                ),
-                3_000,
-                "stripe_products_timeout",
-              );
-            } catch {
-              for (const pid of productIds) productNames[pid] ||= pid;
-            }
-
-            // Slim down: keep only fields we actually use, to keep cache row small
-            const slimSubs = allSubs.map((s: any) => ({
-              items: {
-                data: s.items.data.map((it: any) => ({
-                  price: {
-                    unit_amount: it.price.unit_amount,
-                    recurring: it.price.recurring,
-                    nickname: it.price.nickname,
-                    product:
-                      typeof it.price.product === "string"
-                        ? it.price.product
-                        : it.price.product?.id,
-                  },
-                })),
-              },
-            }));
-            const slimCancelled = cancelledSubsRaw.map((s: any) => ({
-              canceled_at: s.ended_at,
-              reason: s.reason,
+        // Cancelled / terminated subs (12 months) → churn windows + churnEvolution
+        const twelveMonthsAgoIso = new Date(
+          now.getFullYear(),
+          now.getMonth() - 11,
+          1,
+        ).toISOString();
+        const { data: cancelledRows } = await admin
+          .from("subscriptions")
+          .select("status, canceled_at, updated_at")
+          .in("status", ["canceled", "cancelled", "unpaid", "incomplete_expired", "paused"])
+          .gte("updated_at", twelveMonthsAgoIso);
+        allCancelledSubs = (cancelledRows || [])
+          .map((s: any) => {
+            const endIso = s.canceled_at || s.updated_at;
+            if (!endIso) return null;
+            return {
+              canceled_at: Math.floor(new Date(endIso).getTime() / 1000),
+              reason: s.status,
               status: s.status,
-            }));
-            const slimCharges = allCharges
-              .filter((c: any) => c.status === "succeeded" && !c.refunded)
-              .map((c: any) => ({
-                created: c.created,
-                amount: c.amount,
-                invoice: !!c.invoice,
-              }));
-
-            stripeBundle = {
-              allSubs: slimSubs,
-              cancelledSubsRaw: slimCancelled,
-              allCharges: slimCharges,
-              productNames,
             };
+          })
+          .filter(Boolean);
 
-            // Best-effort cache write
-            try {
-              await admin
-                .from("app_settings")
-                .upsert(
-                  {
-                    key: STRIPE_CACHE_KEY,
-                    value: stripeBundle,
-                    updated_at: new Date().toISOString(),
-                  },
-                  { onConflict: "key" },
-                );
-            } catch {
-              /* non-fatal */
-            }
-          }
+        const thisMonthTs = Math.floor(new Date(thisMonthStart).getTime() / 1000);
+        const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
+        cancelledSubs = allCancelledSubs.filter((s: any) => s.canceled_at >= lastMonthTs);
+        cancelledSubsThisMonth = cancelledSubs.filter(
+          (s: any) => s.canceled_at >= thisMonthTs,
+        ).length;
+        cancelledSubsLastMonth = cancelledSubs.filter(
+          (s: any) => s.canceled_at >= lastMonthTs && s.canceled_at < thisMonthTs,
+        ).length;
 
-          if (!stripeBundle) {
-            console.warn(
-              "[get_saas_metrics] stripeBundle is null after fetch — Stripe call likely timed out or errored. Churn/MRR will fall back to 0.",
-            );
-            throw new Error("stripe_bundle_missing");
-          }
-          const allSubs = stripeBundle.allSubs || [];
-          const cancelledSubsRaw = stripeBundle.cancelledSubsRaw || [];
-          const allCharges = stripeBundle.allCharges || [];
-          const productNames: Record<string, string> =
-            stripeBundle.productNames || {};
-          console.log(
-            `[get_saas_metrics] Stripe bundle: ${allSubs.length} active, ${cancelledSubsRaw.length} cancelled/unpaid/expired, ${allCharges.length} charges`,
-          );
-
-          const thisMonthTs = Math.floor(
-            new Date(thisMonthStart).getTime() / 1000,
-          );
-          const lastMonthTs = Math.floor(
-            new Date(lastMonthStart).getTime() / 1000,
-          );
-
-          activeSubsCount = allSubs.length;
-
-          for (const sub of allSubs) {
-            for (const item of sub.items.data) {
-              const price = item.price;
-              const unitAmount = (price.unit_amount || 0) / 100;
-              const interval = price.recurring?.interval;
-              const monthlyAmount =
-                interval === "year" ? unitAmount / 12 : unitAmount;
-              stripeMrr += monthlyAmount;
-
-              const prodId =
-                typeof price.product === "string"
-                  ? price.product
-                  : price.product?.id || "unknown";
-              const planName = price.nickname || productNames[prodId] || prodId;
-              if (!stripePlanBreakdown[planName])
-                stripePlanBreakdown[planName] = { count: 0, mrr: 0 };
-              stripePlanBreakdown[planName].count += 1;
-              stripePlanBreakdown[planName].mrr += monthlyAmount;
-
-              if (interval === "year") {
-                stripeAnnualRevenue += monthlyAmount;
-              } else {
-                stripeMonthlyRevenue += monthlyAmount;
-              }
-            }
-          }
-          stripeArr = stripeMrr * 12;
-
-          // Cancelled subs in last 2 months (for KPI deltas); full list available in allCancelledSubs for chart
-          allCancelledSubs = cancelledSubsRaw.filter(
-            (s: any) => !!s.canceled_at,
-          );
-          cancelledSubs = allCancelledSubs.filter(
-            (s: any) => s.canceled_at >= lastMonthTs,
-          );
-          cancelledSubsThisMonth = cancelledSubs.filter(
-            (s: any) => s.canceled_at >= thisMonthTs,
-          ).length;
-          cancelledSubsLastMonth = cancelledSubs.filter(
-            (s: any) =>
-              s.canceled_at >= lastMonthTs && s.canceled_at < thisMonthTs,
-          ).length;
-
-          // Aggregate charges by month
-          const chargesByMonth: Record<string, number> = {};
-          for (const charge of allCharges) {
-            const d = new Date(charge.created * 1000);
-            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-            chargesByMonth[key] =
-              (chargesByMonth[key] || 0) + charge.amount / 100;
-            totalStripeRevenue += charge.amount / 100;
-            if (!charge.invoice) {
-              oneTimeRevenue += charge.amount / 100;
-            }
-          }
-
-          // Build MRR evolution from real charges
-          mrrEvolution = [];
-          for (let i = 11; i >= 0; i--) {
-            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-            const label = d.toLocaleDateString("es-ES", {
-              month: "short",
-              year: "2-digit",
-            });
-            mrrEvolution.push({
-              month: label,
-              mrr: Math.round((chargesByMonth[key] || 0) * 100) / 100,
-            });
-          }
-        } catch (stripeErr: any) {
-          console.error("[get_saas_metrics] Stripe error:", stripeErr.message);
-          // Fall back to estimated values below
+        // Revenue evolution (12 months) — from orders table, net per month
+        const { data: revRows } = await admin
+          .from("orders")
+          .select("paid_at, amount_net, amount_gross, stripe_fee, order_status, is_subscription")
+          .eq("order_status", "paid")
+          .gte("paid_at", twelveMonthsAgoIso)
+          .limit(20000);
+        const chargesByMonth: Record<string, number> = {};
+        (revRows || []).forEach((o: any) => {
+          if (!o.paid_at) return;
+          const d = new Date(o.paid_at);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          const net = parseFloat(o.amount_net);
+          const gross = parseFloat(o.amount_gross) || 0;
+          const base = !isNaN(net) && net > 0 ? net : gross / 1.21;
+          const fee = parseFloat(o.stripe_fee) || 0;
+          const value = Math.max(0, base - fee);
+          chargesByMonth[key] = (chargesByMonth[key] || 0) + value;
+          totalStripeRevenue += value;
+          if (o.is_subscription === false) oneTimeRevenue += value;
+        });
+        mrrEvolution = [];
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+          const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
+          mrrEvolution.push({
+            month: label,
+            mrr: Math.round((chargesByMonth[key] || 0) * 100) / 100,
+          });
         }
+        subsDataAvailable = true;
+      } catch (subsErr: any) {
+        console.error("[get_saas_metrics] subscriptions/orders error:", subsErr?.message);
       }
+
 
       // ── DB queries ──
       // "Registrados totales" must always reflect the full lifetime count, never the period filter.
@@ -2678,39 +2422,24 @@ serve(async (req) => {
             )
           : 0;
 
-      // Churn evolution from Stripe (real cancelled subs per month)
+      // Churn evolution from local subscriptions table (last 12 months)
       const churnEvolution: { month: string; churn: number }[] = [];
-      if (stripe) {
-        for (let i = 11; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const mStart = Math.floor(d.getTime() / 1000);
-          const mEnd = Math.floor(
-            new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() / 1000,
-          );
-          const label = d.toLocaleDateString("es-ES", {
-            month: "short",
-            year: "2-digit",
-          });
-          // Count cancelled in this month using full 12-month cancelled list
-          const cancelledInMonth = allCancelledSubs.filter(
-            (s: any) => s.canceled_at >= mStart && s.canceled_at < mEnd,
-          ).length;
-          const baseForMonth = activeSubsCount + cancelledInMonth;
-          const monthChurn =
-            baseForMonth > 0
-              ? parseFloat(((cancelledInMonth / baseForMonth) * 100).toFixed(1))
-              : 0;
-          churnEvolution.push({ month: label, churn: monthChurn });
-        }
-      } else {
-        for (let i = 11; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-          const label = d.toLocaleDateString("es-ES", {
-            month: "short",
-            year: "2-digit",
-          });
-          churnEvolution.push({ month: label, churn: 0 });
-        }
+      for (let i = 11; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const mStart = Math.floor(d.getTime() / 1000);
+        const mEnd = Math.floor(
+          new Date(d.getFullYear(), d.getMonth() + 1, 1).getTime() / 1000,
+        );
+        const label = d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
+        const cancelledInMonth = allCancelledSubs.filter(
+          (s: any) => s.canceled_at >= mStart && s.canceled_at < mEnd,
+        ).length;
+        const baseForMonth = activeSubsCount + cancelledInMonth;
+        const monthChurn =
+          baseForMonth > 0
+            ? parseFloat(((cancelledInMonth / baseForMonth) * 100).toFixed(1))
+            : 0;
+        churnEvolution.push({ month: label, churn: monthChurn });
       }
 
       // Cohort retention — real activity-based
@@ -3391,7 +3120,7 @@ serve(async (req) => {
           { feature: "Promociones", uses: socialPromo.count || 0 },
           { feature: "Letras", uses: lyricsGen.count || 0 },
         ].sort((a, b) => b.uses - a.uses),
-        _dataSource: stripe ? "stripe_real" : "estimated",
+        _dataSource: subsDataAvailable ? "db_local" : "estimated",
       };
 
       // Persist to cache (best-effort, non-blocking semantics not needed: we already have the result)
