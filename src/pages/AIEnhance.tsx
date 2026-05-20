@@ -200,11 +200,11 @@ const AIEnhance = () => {
     const path = `${user!.id}/${Date.now()}.${ext}`;
     setUploadProgress(30);
     const { data, error } = await supabase.storage
-      .from("ai-music-uploads")
-      .upload(path, file, { contentType: file.type, upsert: false });
+      .from("ai-generations")
+      .upload(`enhance/${path}`, file, { contentType: file.type, upsert: false });
     if (error) throw new Error(`Upload fallido: ${error.message}`);
     setUploadProgress(90);
-    const { data: urlData } = supabase.storage.from("ai-music-uploads").getPublicUrl(data.path);
+    const { data: urlData } = supabase.storage.from("ai-generations").getPublicUrl(data.path);
     setUploadProgress(100);
     return urlData.publicUrl;
   };
