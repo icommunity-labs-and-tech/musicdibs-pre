@@ -1725,6 +1725,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
         createCovers: { title: 'Promotional Material', desc: 'Create covers, flyers, posts and everything you need to promote your music.' },
         singYourSong: { title: 'Voice Tools', desc: 'Your AI vocal studio: clone your voice, sing in 29 languages, translate audio and much more' },
         virtualArtists: { title: 'My Virtual Artists', desc: 'Save your voice and style settings to create consistent songs with your artists.' },
+        enhance: { title: 'Improve demo with AI', desc: 'Upload your demo and let AI add production, extend your idea or generate new versions.' },
       },
       features: {
         highQuality: { title: 'High quality', desc: 'Results ready to iterate, pitch or publish.' },
