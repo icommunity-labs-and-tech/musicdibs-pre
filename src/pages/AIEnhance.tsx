@@ -501,12 +501,10 @@ const AIEnhance = () => {
           )}
 
           {!hasEnough(creditsRequired) && credits !== null && (
-            <p className="text-center text-sm text-muted-foreground">
-              <PricingLink className="text-primary hover:underline">
-                Consigue más créditos
-              </PricingLink>{" "}
-              para usar esta función
-            </p>
+            <div className="text-center text-sm text-muted-foreground">
+              <PricingLink className="text-primary hover:underline" />
+              <span className="ml-1">para usar esta función</span>
+            </div>
           )}
         </div>
       </main>
