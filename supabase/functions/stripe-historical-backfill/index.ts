@@ -173,13 +173,13 @@ Deno.serve(async (req) => {
         stripe_fee: stripeFee,
         product_type: productType,
         product_code: productCode,
+        order_source: "stripe_historical",
         order_status: "paid",
         stripe_charge_id: charge.id,
-        stripe_customer_id: customerId,
         paid_at: new Date(charge.created * 1000).toISOString(),
-        currency: charge.currency,
-        backfill_source: "stripe_historical",
+        currency: charge.currency.toUpperCase(),
       });
+
 
       if (insErr) {
         console.error("[backfill] insert error", charge.id, insErr.message);
