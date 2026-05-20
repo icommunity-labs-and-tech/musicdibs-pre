@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { supabase } from "@/integrations/supabase/client";
-import { parseAiError } from "@/lib/aiErrorHandler";
+
 import { useProductTracking } from "@/hooks/useProductTracking";
 
 import { Navbar } from "@/components/Navbar";
