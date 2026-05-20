@@ -717,7 +717,7 @@ const resources = {
         terms: 'Terms & Conditions',
       },
       hero: {
-        title: 'Create. Protect. Distribute.', highlight: 'Promote.', subtitle_prefix: 'The all-in-one platform for artists: create your music with AI, register it with legal validity and', subtitle_strong: 'launch it to the world in minutes.', legal_more: '+info', cta_start: '🚀 Create free account', cta_how: '▶ See how it works in 20s',
+        title: 'Create. Protect. Distribute.', highlight: 'Promote.', subtitle_prefix: 'The all-in-one platform for artists: create or improve your music, register it with legal validity and', subtitle_strong: 'launch it to the world in minutes.', legal_more: '+info', cta_start: '🚀 Create free account', cta_how: '▶ See how it works in 20s',
       },
       why: {
         heading: 'The all-in-one platform for independent artists',
