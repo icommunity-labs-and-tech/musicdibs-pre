@@ -72,6 +72,7 @@ export default function DashboardLayout() {
                   <Plus className="h-3.5 w-3.5 mr-1" />
                   {tr('dashboard.sidebar.registerWork', 'Registrar obra')}
                 </Button>
+                <CouponRedeemButton />
                 <DashboardThemeToggle theme={theme} onToggle={toggleTheme} />
                 <CreditBadge />
                 <NotificationBell />
