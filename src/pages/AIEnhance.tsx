@@ -265,8 +265,8 @@ const AIEnhance = () => {
   return (
     <>
       <SEO
-        title="Mejorar demo con IA"
-        description="Sube tu demo y la IA añade producción, extiende tu idea o genera nuevas versiones."
+        title="Mejora tus canciones"
+        description="Sube tus demos y añade producción, extiende tu idea a una canción completa o genera nuevas versiones."
         path="/ai-studio/enhance"
       />
       <Navbar />
@@ -281,7 +281,7 @@ const AIEnhance = () => {
               >
                 <ArrowLeft className="w-4 h-4" /> AI Studio
               </Link>
-              <h1 className="text-3xl md:text-4xl font-bold">🎼 Mejorar demo con IA</h1>
+              <h1 className="text-3xl md:text-4xl font-bold">🎼 Mejora tus canciones</h1>
               <p className="text-muted-foreground mt-1">
                 Trabaja sobre ideas musicales reales creadas por ti.
               </p>
