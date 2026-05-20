@@ -5,6 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { parseAiError } from "@/lib/aiErrorHandler";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
@@ -35,7 +37,7 @@ import { getFeatureCost } from "@/lib/featureCosts";
 import {
   ArrowLeft, Wand2, Loader2, Play, Pause,
   Download, RefreshCw, CheckCircle2, X,
-  Layers, Repeat2, Expand, AlertTriangle, BookOpen,
+  Layers, Repeat2, Expand, AlertTriangle, BookOpen, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -125,6 +127,7 @@ function AudioPlayer({ src, label }: { src: string; label: string }) {
 }
 
 const AIEnhance = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { credits, hasEnough } = useCredits();
   const { track } = useProductTracking();
@@ -133,6 +136,7 @@ const AIEnhance = () => {
   const [selectedMode, setSelectedMode] = useState<EnhanceMode>("instrumental");
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [audioDuration, setAudioDuration] = useState<number | null>(null);
+  const [isImprovingPrompt, setIsImprovingPrompt] = useState(false);
   const [prompt, setPrompt] = useState("");
   const [genre, setGenre] = useState("");
   const [mood, setMood] = useState("");
@@ -244,6 +248,32 @@ const AIEnhance = () => {
       setJobStatus("failed");
       setGenError(errMsg);
       toast.error(errMsg);
+    }
+  };
+
+  const handleImprovePrompt = async () => {
+    if (!prompt.trim() || isImprovingPrompt) return;
+    setIsImprovingPrompt(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('improve-prompt', {
+        body: {
+          prompt: prompt.trim(),
+          genre: genre || undefined,
+          mood: mood || undefined,
+          mode: 'audio_enhance',
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.improved) {
+        setPrompt(data.improved.slice(0, 500));
+        toast.success(t('aiCreate.promptImproved', 'Prompt mejorado'));
+      }
+    } catch (e: any) {
+      const { userMessage } = parseAiError(e);
+      toast.error(userMessage);
+    } finally {
+      setIsImprovingPrompt(false);
     }
   };
 
@@ -375,7 +405,28 @@ const AIEnhance = () => {
               <label className="text-sm font-semibold">
                 Describe el resultado (opcional pero recomendado)
               </label>
-              <span className="text-xs text-muted-foreground">{prompt.length}/500</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleImprovePrompt}
+                  disabled={!prompt.trim() || isImprovingPrompt || isProcessing}
+                  className="h-7 px-2 text-[10px] sm:text-xs text-primary hover:text-primary/80 hover:bg-primary/10 gap-1.5 border border-primary/20 bg-primary/5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md"
+                >
+                  {isImprovingPrompt ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      {t('aiCreate.improving', 'Mejorando...')}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles style={{ width: 14, height: 14, color: 'hsl(var(--primary))' }} />
+                      {t('aiCreate.improveWithAI', 'Mejorar con IA')}
+                    </>
+                  )}
+                </Button>
+                <span className="text-xs text-muted-foreground">{prompt.length}/500</span>
+              </div>
             </div>
             <Textarea
               value={prompt}
@@ -520,7 +571,7 @@ const AIEnhance = () => {
               size="lg"
             >
               <Wand2 className="w-5 h-5" />
-              Generar versión con IA
+              Generar versión
             </Button>
           )}
 
