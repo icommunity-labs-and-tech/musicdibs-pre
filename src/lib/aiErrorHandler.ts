@@ -30,7 +30,7 @@ const KNOWN_ERRORS: Array<[RegExp, string]> = [
   [/providers? failed|auphonic_service_unavailable/i, 'aiShared.aiServiceDown'],
   [/auphonic_invalid_audio|invalid.?audio|unsupported.?format/i, 'aiShared.aiInvalidAudio'],
   // KIE Suno-specific errors
-  [/\b531\b|extending lyrics are empty|lyrics field|lyrics.*(empty|short|malformed)/i, 'aiShared.aiShared.aiLyricsRequired'.replace('aiShared.aiShared.', 'aiShared.')],
+  [/\b531\b|extending lyrics are empty|lyrics field|lyrics.*(empty|short|malformed)/i, 'aiShared.aiLyricsRequired'],
   [/\b505\b|\b532\b|copyright|theme violation/i, 'aiShared.aiCopyrightBlocked'],
   [/\b451\b|download failed|upload.*failed|invalid.*audio.*url/i, 'aiShared.aiDownloadFailed'],
   [/audio.*(too short|too small)|duration.*(short|small)/i, 'aiShared.aiAudioTooShort'],
