@@ -17,7 +17,7 @@ const DEFAULT_COSTS: Record<string, number> = {
   generate_audio_song: 3,
   generate_audio_elevenlabs: 5,
   edit_audio: 2,
-  enhance_audio: 2,
+  enhance_audio: 3,
   generate_cover: 1,
   inspiration: 2,
   generate_video: 3,
