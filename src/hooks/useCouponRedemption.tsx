@@ -38,8 +38,8 @@ export function useCouponVisibility() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  // Visible si admin lo fuerza, o si el usuario no ha canjeado nunca
-  const visible = alwaysVisible || hasRedeemed === false;
+  // El switch admin controla totalmente la visibilidad: ON = visible para todos, OFF = oculto para todos
+  const visible = alwaysVisible;
   return { visible, hasRedeemed, refresh };
 }
 
