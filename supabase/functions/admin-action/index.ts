@@ -3120,7 +3120,7 @@ serve(async (req) => {
           { feature: "Promociones", uses: socialPromo.count || 0 },
           { feature: "Letras", uses: lyricsGen.count || 0 },
         ].sort((a, b) => b.uses - a.uses),
-        _dataSource: stripe ? "stripe_real" : "estimated",
+        _dataSource: subsDataAvailable ? "db_local" : "estimated",
       };
 
       // Persist to cache (best-effort, non-blocking semantics not needed: we already have the result)
