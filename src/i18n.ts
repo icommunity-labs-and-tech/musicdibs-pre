@@ -1668,7 +1668,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       legalTitle: 'Uso responsable y derechos',
       legalText: 'Asegúrate de tener derechos sobre el contenido que subas o generes antes de registrarlo, distribuirlo o publicarlo.',
       modules: {
-        createMusic: { title: 'Crea desde cero', desc: 'Genera canciones completas o bases instrumentales a partir de una descripción.' },
+        createMusic: { title: 'Crea canciones', desc: 'Genera canciones completas o bases instrumentales a partir de una descripción.' },
         editModify: { title: 'Masterizado profesional con IA', desc: 'Consigue un sonido listo para Spotify: más volumen, claridad y potencia en segundos.' },
         inspire: { title: 'Crear en 1 click 🎵', desc: '¿No sabes por dónde empezar? Genera una canción automáticamente y empieza a crear al instante.' },
         createVideoclips: { title: 'Videoclips', desc: 'Genera vídeos musicales y fusiónalos con audio de tu historial.' },
