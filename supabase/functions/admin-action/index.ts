@@ -1927,9 +1927,27 @@ serve(async (req) => {
       const now = new Date();
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v4:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v5:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+      // force_refresh → trigger incremental Stripe→orders sync first, then recompute from DB.
+      if (force_refresh) {
+        try {
+          const cronSecret = Deno.env.get("CRON_SECRET");
+          const supaUrl = Deno.env.get("SUPABASE_URL");
+          if (cronSecret && supaUrl) {
+            const r = await fetch(`${supaUrl}/functions/v1/stripe-daily-sync`, {
+              method: "POST",
+              headers: { "x-cron-secret": cronSecret, "Content-Type": "application/json" },
+            });
+            console.log("[get_saas_metrics] daily-sync status:", r.status);
+          }
+        } catch (e: any) {
+          console.warn("[get_saas_metrics] daily-sync trigger failed:", e?.message);
+        }
+      }
+
       if (!force_refresh) {
         try {
           const { data: cacheRow } = await admin
@@ -1940,19 +1958,10 @@ serve(async (req) => {
           if (cacheRow?.value && cacheRow?.updated_at) {
             const age = Date.now() - new Date(cacheRow.updated_at).getTime();
             if (age < CACHE_TTL_MS) {
-              return json({
-                ...(cacheRow.value as any),
-                _cached: true,
-                _cache_age_ms: age,
-              });
+              return json({ ...(cacheRow.value as any), _cached: true, _cache_age_ms: age });
             }
             if (age < STALE_CACHE_TTL_MS) {
-              return json({
-                ...(cacheRow.value as any),
-                _cached: true,
-                _stale: true,
-                _cache_age_ms: age,
-              });
+              return json({ ...(cacheRow.value as any), _cached: true, _stale: true, _cache_age_ms: age });
             }
           }
         } catch {
