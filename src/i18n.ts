@@ -1668,14 +1668,14 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       legalTitle: 'Uso responsable y derechos',
       legalText: 'Asegúrate de tener derechos sobre el contenido que subas o generes antes de registrarlo, distribuirlo o publicarlo.',
       modules: {
-        createMusic: { title: 'Crear música', desc: 'Genera canciones completas o bases instrumentales a partir de una descripción.' },
+        createMusic: { title: 'Mejora tus canciones', desc: 'Genera canciones completas o bases instrumentales a partir de una descripción.' },
         editModify: { title: 'Masterizado profesional con IA', desc: 'Consigue un sonido listo para Spotify: más volumen, claridad y potencia en segundos.' },
         inspire: { title: 'Crear en 1 click 🎵', desc: '¿No sabes por dónde empezar? Genera una canción automáticamente y empieza a crear al instante.' },
         createVideoclips: { title: 'Videoclips', desc: 'Genera vídeos musicales y fusiónalos con audio de tu historial.' },
         createCovers: { title: 'Material promocional', desc: 'Crea portadas, flyers, posts y todo lo que necesitas para promocionar tu música.' },
         singYourSong: { title: 'Herramientas de Voz', desc: 'Tu estudio vocal IA: clona tu voz, canta en 29 idiomas, traduce audios y mucho más' },
         virtualArtists: { title: 'Mis Artistas Virtuales', desc: 'Guarda la configuración de voz y estilo de tus artistas para crear canciones coherentes.' },
-        enhance: { title: 'Mejorar demo con IA', desc: 'Sube tu demo y la IA añade producción, extiende tu idea o genera nuevas versiones.' },
+        enhance: { title: 'Mejora tus canciones', desc: 'Sube tus demos y añade producción, extiende tu idea a una canción completa o genera nuevas versiones.' },
       },
       features: {
         highQuality: { title: 'Alta calidad', desc: 'Resultados listos para iterar, presentar o publicar.' },
@@ -1718,14 +1718,14 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       legalTitle: 'Responsible use and rights',
       legalText: 'Make sure you own the rights to any content you upload or generate before registering, distributing or publishing it.',
       modules: {
-        createMusic: { title: 'Create music', desc: 'Generate songs or instrumentals from a text description.' },
+        createMusic: { title: 'Enhance your songs', desc: 'Generate songs or instrumentals from a text description.' },
         editModify: { title: 'Professional AI Mastering', desc: 'Get a Spotify-ready sound: more volume, clarity and power in seconds.' },
         inspire: { title: 'Create in 1 click 🎵', desc: "Don't know where to start? Generate a song automatically and start creating instantly." },
         createVideoclips: { title: 'Videoclips', desc: 'Generate music videos and merge them with audio from your history.' },
         createCovers: { title: 'Promotional Material', desc: 'Create covers, flyers, posts and everything you need to promote your music.' },
         singYourSong: { title: 'Voice Tools', desc: 'Your AI vocal studio: clone your voice, sing in 29 languages, translate audio and much more' },
         virtualArtists: { title: 'My Virtual Artists', desc: 'Save your voice and style settings to create consistent songs with your artists.' },
-        enhance: { title: 'Improve demo with AI', desc: 'Upload your demo and let AI add production, extend your idea or generate new versions.' },
+        enhance: { title: 'Enhance your songs', desc: 'Upload your demos and let AI add production, extend your idea or generate new versions.' },
       },
       features: {
         highQuality: { title: 'High quality', desc: 'Results ready to iterate, pitch or publish.' },
