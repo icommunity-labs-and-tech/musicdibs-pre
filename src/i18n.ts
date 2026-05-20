@@ -1668,7 +1668,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       legalTitle: 'Uso responsable y derechos',
       legalText: 'Asegúrate de tener derechos sobre el contenido que subas o generes antes de registrarlo, distribuirlo o publicarlo.',
       modules: {
-        createMusic: { title: 'Mejora tus canciones', desc: 'Genera canciones completas o bases instrumentales a partir de una descripción.' },
+        createMusic: { title: 'Crea desde cero', desc: 'Genera canciones completas o bases instrumentales a partir de una descripción.' },
         editModify: { title: 'Masterizado profesional con IA', desc: 'Consigue un sonido listo para Spotify: más volumen, claridad y potencia en segundos.' },
         inspire: { title: 'Crear en 1 click 🎵', desc: '¿No sabes por dónde empezar? Genera una canción automáticamente y empieza a crear al instante.' },
         createVideoclips: { title: 'Videoclips', desc: 'Genera vídeos musicales y fusiónalos con audio de tu historial.' },
@@ -1718,7 +1718,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       legalTitle: 'Responsible use and rights',
       legalText: 'Make sure you own the rights to any content you upload or generate before registering, distributing or publishing it.',
       modules: {
-        createMusic: { title: 'Enhance your songs', desc: 'Generate songs or instrumentals from a text description.' },
+        createMusic: { title: 'Create from scratch', desc: 'Generate songs or instrumentals from a text description.' },
         editModify: { title: 'Professional AI Mastering', desc: 'Get a Spotify-ready sound: more volume, clarity and power in seconds.' },
         inspire: { title: 'Create in 1 click 🎵', desc: "Don't know where to start? Generate a song automatically and start creating instantly." },
         createVideoclips: { title: 'Videoclips', desc: 'Generate music videos and merge them with audio from your history.' },
