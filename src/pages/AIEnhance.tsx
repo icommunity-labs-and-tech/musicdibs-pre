@@ -251,6 +251,32 @@ const AIEnhance = () => {
     }
   };
 
+  const handleImprovePrompt = async () => {
+    if (!prompt.trim() || isImprovingPrompt) return;
+    setIsImprovingPrompt(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('improve-prompt', {
+        body: {
+          prompt: prompt.trim(),
+          genre: genre || undefined,
+          mood: mood || undefined,
+          mode: 'audio_enhance',
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.improved) {
+        setPrompt(data.improved.slice(0, 500));
+        toast.success(t('aiCreate.promptImproved', 'Prompt mejorado'));
+      }
+    } catch (e: any) {
+      const { userMessage } = parseAiError(e);
+      toast.error(userMessage);
+    } finally {
+      setIsImprovingPrompt(false);
+    }
+  };
+
   const handleReset = () => {
     setAudioFile(null);
     setAudioDuration(null);
