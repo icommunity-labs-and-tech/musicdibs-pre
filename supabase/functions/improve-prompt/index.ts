@@ -254,6 +254,8 @@ serve(async (req) => {
     } else {
       const modeContext = mode === 'instrumental'
         ? 'an instrumental track (no lyrics, no voice)'
+        : mode === 'audio_enhance'
+        ? 'enhancing/producing an existing audio demo into a professional track'
         : 'a full song with vocals and lyrics';
 
       const contextParts = [];
