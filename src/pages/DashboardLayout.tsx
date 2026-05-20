@@ -9,6 +9,7 @@ import { NotificationBell } from '@/components/dashboard/NotificationBell';
 import { NotificationToaster } from '@/components/dashboard/NotificationToaster';
 import { CreditBadge } from '@/components/dashboard/CreditBadge';
 import { UserProfileDropdown } from '@/components/dashboard/UserProfileDropdown';
+import { CouponRedeemButton } from '@/components/dashboard/CouponRedeemButton';
 import { PastDueBanner } from '@/components/dashboard/PastDueBanner';
 import { DashboardTour } from '@/components/dashboard/DashboardTour';
 import { ReferralSourceModal } from '@/components/dashboard/ReferralSourceModal';
