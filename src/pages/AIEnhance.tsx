@@ -310,34 +310,44 @@ const AIEnhance = () => {
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               ¿Qué quieres hacer?
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  onClick={() => !isProcessing && setSelectedMode(mode.id)}
-                  disabled={isProcessing}
-                  className={cn(
-                    "relative p-4 rounded-2xl border text-left transition-all text-sm hover:border-primary/40",
-                    selectedMode === mode.id ? "border-primary bg-primary/5" : "border-border bg-card"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-3",
-                      mode.gradient
-                    )}
-                  >
-                    {mode.icon}
-                  </div>
-                  <p className="font-semibold">{mode.label}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{mode.tagline}</p>
-                  <Badge variant="secondary" className="absolute top-3 right-3 text-[10px]">
-                    {MODE_CREDITS[mode.id]} cr.
-                  </Badge>
-                </button>
-              ))}
-            </div>
+            <TooltipProvider delayDuration={150}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {MODES.map((mode) => (
+                  <Tooltip key={mode.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => !isProcessing && setSelectedMode(mode.id)}
+                        disabled={isProcessing}
+                        className={cn(
+                          "relative p-4 rounded-2xl border text-left transition-all text-sm hover:border-primary/40",
+                          selectedMode === mode.id ? "border-primary bg-primary/5" : "border-border bg-card"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-3",
+                            mode.gradient
+                          )}
+                        >
+                          {mode.icon}
+                        </div>
+                        <p className="font-semibold">{mode.label}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{mode.tagline}</p>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <p className="font-semibold mb-1">Úsalo para:</p>
+                      <ul className="list-disc pl-4 space-y-0.5 text-xs">
+                        {mode.useCases.map((u) => (
+                          <li key={u}>{u}</li>
+                        ))}
+                      </ul>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
+            </TooltipProvider>
           </div>
 
           <div className="space-y-3">
