@@ -26,14 +26,14 @@ export function useCouponAlwaysVisible() {
     fetchFlag();
 
     // Realtime: cambios desde otra pestaña/usuario
-    const channel = supabase
-      .channel('app_settings_coupon_flag')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'app_settings', filter: 'key=eq.coupon_redemption_always_visible' },
-        () => { fetchFlag(); }
-      )
-      .subscribe();
+    // Nombre único por instancia para evitar colisiones con múltiples montajes del hook
+    const channel = supabase.channel(`app_settings_coupon_flag_${Math.random().toString(36).slice(2)}`);
+    channel.on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'app_settings', filter: 'key=eq.coupon_redemption_always_visible' },
+      () => { fetchFlag(); }
+    );
+    channel.subscribe();
 
     // Evento local: cambios desde el admin en la misma pestaña (instantáneo)
     const onLocal = (e: Event) => {
