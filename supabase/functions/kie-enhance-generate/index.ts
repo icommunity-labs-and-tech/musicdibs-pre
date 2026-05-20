@@ -3,7 +3,7 @@
 // FIX: customMode: false — KIE generates continuation autonomously, no lyrics needed.
 // Eliminates ElevenLabs STT dependency and error 531.
 // Callback routed through kie-suno-callback (already handles enhance feature_keys).
-// v11 — model upgraded to V5
+// v12 — language preservation for vocal modes (cover/extend)
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
@@ -67,13 +67,27 @@ serve(async (req) => {
     const featureKey = MODE_FEATURE_KEY[enhanceMode];
     const instrumentalFlag = enhanceMode === "instrumental" || voice_type === "none";
 
-    // Build style prompt (no lyrics needed — customMode: false lets KIE generate autonomously)
+    // Build style prompt.
+    // For cover/extend modes: append a language-preservation instruction so KIE/Suno
+    // generates lyrics in the same language as the source audio (e.g. Spanish stays Spanish).
+    // customMode: false lets KIE analyse the source audio and generate autonomously,
+    // but without an explicit language hint it may default to English.
     const descParts: string[] = [];
     if (prompt && typeof prompt === "string") descParts.push(prompt.trim());
     if (genre)     descParts.push(`Genre: ${genre}`);
     if (mood)      descParts.push(`Mood: ${mood}`);
     if (intensity) descParts.push(`Intensity: ${intensity}`);
-    const finalPrompt = (descParts.join(". ") || defaultPromptForMode(enhanceMode)).slice(0, 500);
+
+    // Language preservation: only for vocal modes (cover / extend)
+    const needsLangHint = enhanceMode === "cover" || enhanceMode === "extend";
+    if (needsLangHint && !instrumentalFlag) {
+      descParts.push(
+        "IMPORTANT: detect the vocal language of the source audio and generate ALL lyrics " +
+        "in that exact same language — do NOT translate or switch to another language."
+      );
+    }
+
+    const finalPrompt = (descParts.join(". ") || defaultPromptForMode(enhanceMode)).slice(0, 600);
 
     // Idempotency
     const idempotencyKey: string =
