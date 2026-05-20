@@ -189,8 +189,11 @@ serve(async (req) => {
 
     const kiePayload: Record<string, unknown> = {
       uploadUrl: source_audio_url,
+      defaultParamFlag: true,
       prompt: finalPrompt,
-      customMode: false,
+      style: genre || "pop",
+      title: (source_filename || "Enhanced Track").slice(0, 80),
+      customMode: true,
       instrumental: instrumentalFlag,
       model: "V4_5",
       callBackUrl,
