@@ -2581,6 +2581,8 @@ export type Database = {
           last_charge_id: string | null
           orders_inserted: number | null
           orders_skipped: number | null
+          range_end: number | null
+          range_start: number | null
           started_at: string | null
           updated_at: string | null
         }
@@ -2591,6 +2593,8 @@ export type Database = {
           last_charge_id?: string | null
           orders_inserted?: number | null
           orders_skipped?: number | null
+          range_end?: number | null
+          range_start?: number | null
           started_at?: string | null
           updated_at?: string | null
         }
@@ -2601,6 +2605,8 @@ export type Database = {
           last_charge_id?: string | null
           orders_inserted?: number | null
           orders_skipped?: number | null
+          range_end?: number | null
+          range_start?: number | null
           started_at?: string | null
           updated_at?: string | null
         }
