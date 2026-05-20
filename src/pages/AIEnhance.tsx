@@ -29,6 +29,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getFeatureCost } from "@/lib/featureCosts";
 
 import {
   ArrowLeft, Wand2, Loader2, Play, Pause,
@@ -40,10 +42,10 @@ import { cn } from "@/lib/utils";
 type EnhanceMode = "instrumental" | "cover" | "extend";
 type JobStatus = "idle" | "uploading" | "processing" | "completed" | "failed";
 
-const MODE_CREDITS: Record<EnhanceMode, number> = {
-  instrumental: 3,
-  cover: 4,
-  extend: 3,
+const MODE_FEATURE_KEY: Record<EnhanceMode, string> = {
+  instrumental: "enhance_instrumental",
+  cover: "enhance_cover",
+  extend: "enhance_extend",
 };
 
 const MODES = [
@@ -54,6 +56,10 @@ const MODES = [
     icon: <Layers className="w-5 h-5" />,
     gradient: "from-violet-500 to-purple-600",
     placeholder: "Añade una producción pop electrónica con bajo potente, sintetizadores y batería energética.",
+    useCases: [
+      "Transformar una melodía simple en una completa",
+      "Añadir producción e instrumentos",
+    ],
   },
   {
     id: "cover" as EnhanceMode,
@@ -62,6 +68,12 @@ const MODES = [
     icon: <Repeat2 className="w-5 h-5" />,
     gradient: "from-pink-500 to-rose-500",
     placeholder: "Convierte esta demo en una balada pop cinematográfica con piano emocional y voz femenina.",
+    useCases: [
+      "Rehacer demo",
+      "Reinterpretar una idea",
+      "Cambiar estilo musical",
+      "Producir encima de una melodía existente",
+    ],
   },
   {
     id: "extend" as EnhanceMode,
@@ -70,6 +82,11 @@ const MODES = [
     icon: <Expand className="w-5 h-5" />,
     gradient: "from-blue-500 to-cyan-500",
     placeholder: "Extiende esta intro añadiendo una sección principal y coro con el mismo mood oscuro.",
+    useCases: [
+      "Continuar una demo",
+      "Ampliar una intro",
+      "Transformar una idea corta en canción completa",
+    ],
   },
 ];
 
@@ -129,7 +146,7 @@ const AIEnhance = () => {
   const [genError, setGenError] = useState<string | null>(null);
 
   const currentMode = MODES.find((m) => m.id === selectedMode)!;
-  const creditsRequired = MODE_CREDITS[selectedMode];
+  const creditsRequired = getFeatureCost(MODE_FEATURE_KEY[selectedMode]);
   const canGenerate = !!audioFile && hasEnough(creditsRequired);
   const isProcessing = jobStatus === "uploading" || jobStatus === "processing";
 
