@@ -85,6 +85,16 @@ const AIStudio = () => {
       featureKey: 'inspiration' as const,
       color: "from-amber-500 to-orange-500"
     },
+    {
+      titleKey: "aiStudio.modules.enhance.title",
+      descKey: "aiStudio.modules.enhance.desc",
+      icon: Mic2,
+      href: "/ai-studio/enhance",
+      available: true,
+      costsCredits: true,
+      featureKey: 'enhance_audio' as const,
+      color: "from-violet-500 to-purple-600"
+    },
   ];
 
   const renderModuleCard = (module: any, extraClass = "") => {
