@@ -218,8 +218,7 @@ const AIEnhance = () => {
       );
       const data = await response.json();
       if (!response.ok) {
-        const parsed = parseAiError(data);
-        throw new Error(parsed.message || data.error || "Error al iniciar generación");
+        throw new Error(data?.error || "Error al iniciar generación");
       }
       setLogId(data.logId);
       toast.info("Generación iniciada. No cierres esta pestaña.");
