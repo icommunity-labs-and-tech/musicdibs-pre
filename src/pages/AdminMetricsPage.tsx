@@ -135,14 +135,13 @@ export default function AdminMetricsPage() {
     return { periodType, year: selectedYear };
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
-  const loadMetrics = useCallback(async (showRefresh = false) => {
-    if (showRefresh) setRefreshing(true);
-    else setLoading(true);
+  const loadMetrics = useCallback(async (forceRefresh = false) => {
+    setRefreshing(true);
     setErrorMessage(null);
     void loadIbsQueue();
     try {
       const data = await withTimeout(
-        adminApi.getSaasMetrics({ ...filters, force_refresh: showRefresh }),
+        adminApi.getSaasMetrics({ ...filters, force_refresh: forceRefresh }),
         METRICS_TIMEOUT_MS,
         'Las métricas están tardando demasiado en responder. Inténtalo de nuevo en unos segundos.'
       );
@@ -159,7 +158,8 @@ export default function AdminMetricsPage() {
     }
   }, [filters]);
 
-  useEffect(() => { loadMetrics(); }, [loadMetrics]);
+  // Auto-reload on any filter change (period type, week, month, year)
+  useEffect(() => { loadMetrics(false); }, [loadMetrics]);
 
   const handleExport = async (dataset: string) => {
     try {
