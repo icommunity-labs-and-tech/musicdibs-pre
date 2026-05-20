@@ -175,7 +175,7 @@ const AIEnhance = () => {
 
   // ── Track page view ───────────────────────────────────────────────────────────
   useEffect(() => {
-    track("ai_studio_entered", { feature: "enhance" });
+    track("ai_studio_entered", { feature: "enhance_audio" });
   }, []);
 
   // ── Extraer duración al seleccionar audio ─────────────────────────────────────
