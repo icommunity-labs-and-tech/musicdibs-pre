@@ -29,6 +29,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getFeatureCost } from "@/lib/featureCosts";
 
 import {
   ArrowLeft, Wand2, Loader2, Play, Pause,
@@ -40,10 +42,10 @@ import { cn } from "@/lib/utils";
 type EnhanceMode = "instrumental" | "cover" | "extend";
 type JobStatus = "idle" | "uploading" | "processing" | "completed" | "failed";
 
-const MODE_CREDITS: Record<EnhanceMode, number> = {
-  instrumental: 3,
-  cover: 4,
-  extend: 3,
+const MODE_FEATURE_KEY: Record<EnhanceMode, string> = {
+  instrumental: "enhance_instrumental",
+  cover: "enhance_cover",
+  extend: "enhance_extend",
 };
 
 const MODES = [
@@ -54,6 +56,10 @@ const MODES = [
     icon: <Layers className="w-5 h-5" />,
     gradient: "from-violet-500 to-purple-600",
     placeholder: "Añade una producción pop electrónica con bajo potente, sintetizadores y batería energética.",
+    useCases: [
+      "Transformar una melodía simple en una completa",
+      "Añadir producción e instrumentos",
+    ],
   },
   {
     id: "cover" as EnhanceMode,
@@ -62,6 +68,12 @@ const MODES = [
     icon: <Repeat2 className="w-5 h-5" />,
     gradient: "from-pink-500 to-rose-500",
     placeholder: "Convierte esta demo en una balada pop cinematográfica con piano emocional y voz femenina.",
+    useCases: [
+      "Rehacer demo",
+      "Reinterpretar una idea",
+      "Cambiar estilo musical",
+      "Producir encima de una melodía existente",
+    ],
   },
   {
     id: "extend" as EnhanceMode,
@@ -70,6 +82,11 @@ const MODES = [
     icon: <Expand className="w-5 h-5" />,
     gradient: "from-blue-500 to-cyan-500",
     placeholder: "Extiende esta intro añadiendo una sección principal y coro con el mismo mood oscuro.",
+    useCases: [
+      "Continuar una demo",
+      "Ampliar una intro",
+      "Transformar una idea corta en canción completa",
+    ],
   },
 ];
 
@@ -129,7 +146,7 @@ const AIEnhance = () => {
   const [genError, setGenError] = useState<string | null>(null);
 
   const currentMode = MODES.find((m) => m.id === selectedMode)!;
-  const creditsRequired = MODE_CREDITS[selectedMode];
+  const creditsRequired = getFeatureCost(MODE_FEATURE_KEY[selectedMode]);
   const canGenerate = !!audioFile && hasEnough(creditsRequired);
   const isProcessing = jobStatus === "uploading" || jobStatus === "processing";
 
@@ -293,34 +310,44 @@ const AIEnhance = () => {
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
               ¿Qué quieres hacer?
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {MODES.map((mode) => (
-                <button
-                  key={mode.id}
-                  type="button"
-                  onClick={() => !isProcessing && setSelectedMode(mode.id)}
-                  disabled={isProcessing}
-                  className={cn(
-                    "relative p-4 rounded-2xl border text-left transition-all text-sm hover:border-primary/40",
-                    selectedMode === mode.id ? "border-primary bg-primary/5" : "border-border bg-card"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-3",
-                      mode.gradient
-                    )}
-                  >
-                    {mode.icon}
-                  </div>
-                  <p className="font-semibold">{mode.label}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{mode.tagline}</p>
-                  <Badge variant="secondary" className="absolute top-3 right-3 text-[10px]">
-                    {MODE_CREDITS[mode.id]} cr.
-                  </Badge>
-                </button>
-              ))}
-            </div>
+            <TooltipProvider delayDuration={150}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {MODES.map((mode) => (
+                  <Tooltip key={mode.id}>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={() => !isProcessing && setSelectedMode(mode.id)}
+                        disabled={isProcessing}
+                        className={cn(
+                          "relative p-4 rounded-2xl border text-left transition-all text-sm hover:border-primary/40",
+                          selectedMode === mode.id ? "border-primary bg-primary/5" : "border-border bg-card"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-3",
+                            mode.gradient
+                          )}
+                        >
+                          {mode.icon}
+                        </div>
+                        <p className="font-semibold">{mode.label}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{mode.tagline}</p>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="max-w-xs">
+                      <p className="font-semibold mb-1">Úsalo para:</p>
+                      <ul className="list-disc pl-4 space-y-0.5 text-xs">
+                        {mode.useCases.map((u) => (
+                          <li key={u}>{u}</li>
+                        ))}
+                      </ul>
+                    </TooltipContent>
+                  </Tooltip>
+                ))}
+              </div>
+            </TooltipProvider>
           </div>
 
           <div className="space-y-3">
@@ -494,18 +521,13 @@ const AIEnhance = () => {
             >
               <Wand2 className="w-5 h-5" />
               Generar versión con IA
-              <Badge variant="secondary" className="ml-1 text-xs">
-                {creditsRequired} créditos
-              </Badge>
             </Button>
           )}
 
-          {!hasEnough(creditsRequired) && credits !== null && (
-            <div className="text-center text-sm text-muted-foreground">
-              <PricingLink className="text-primary hover:underline" />
-              <span className="ml-1">para usar esta función</span>
-            </div>
-          )}
+          <div className="text-center text-xs text-muted-foreground">
+            <PricingLink className="text-primary hover:underline" />
+            <span className="ml-1">Consulta el detalle de créditos por operación</span>
+          </div>
         </div>
       </main>
       <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
