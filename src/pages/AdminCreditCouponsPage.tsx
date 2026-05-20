@@ -265,6 +265,22 @@ export default function AdminCreditCouponsPage() {
       </div>
 
       <Card>
+        <CardContent className="py-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium">Campo de canje de cupón siempre visible</p>
+            <p className="text-xs text-muted-foreground">
+              Si está activado, todos los usuarios verán el campo para introducir un cupón aunque ya hayan canjeado otro (útil para retos y campañas recurrentes).
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {savingFlag && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            <Switch checked={alwaysVisible} onCheckedChange={handleToggleAlwaysVisible} disabled={savingFlag} />
+            <Badge variant={alwaysVisible ? 'default' : 'secondary'}>{alwaysVisible ? 'ON' : 'OFF'}</Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
         <CardHeader>
           <CardTitle>Cupones</CardTitle>
           <CardDescription>Gestión de cupones activos e inactivos.</CardDescription>
