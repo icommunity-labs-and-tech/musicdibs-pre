@@ -5,6 +5,8 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
+import { parseAiError } from "@/lib/aiErrorHandler";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
@@ -35,7 +37,7 @@ import { getFeatureCost } from "@/lib/featureCosts";
 import {
   ArrowLeft, Wand2, Loader2, Play, Pause,
   Download, RefreshCw, CheckCircle2, X,
-  Layers, Repeat2, Expand, AlertTriangle, BookOpen,
+  Layers, Repeat2, Expand, AlertTriangle, BookOpen, Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -125,6 +127,7 @@ function AudioPlayer({ src, label }: { src: string; label: string }) {
 }
 
 const AIEnhance = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { credits, hasEnough } = useCredits();
   const { track } = useProductTracking();
