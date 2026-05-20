@@ -29,6 +29,12 @@ const KNOWN_ERRORS: Array<[RegExp, string]> = [
   [/unauthorized|jwt/i, 'aiShared.aiSessionExpired'],
   [/providers? failed|auphonic_service_unavailable/i, 'aiShared.aiServiceDown'],
   [/auphonic_invalid_audio|invalid.?audio|unsupported.?format/i, 'aiShared.aiInvalidAudio'],
+  // KIE Suno-specific errors
+  [/\b531\b|extending lyrics are empty|lyrics field|lyrics.*(empty|short|malformed)/i, 'aiShared.aiShared.aiLyricsRequired'.replace('aiShared.aiShared.', 'aiShared.')],
+  [/\b505\b|\b532\b|copyright|theme violation/i, 'aiShared.aiCopyrightBlocked'],
+  [/\b451\b|download failed|upload.*failed|invalid.*audio.*url/i, 'aiShared.aiDownloadFailed'],
+  [/audio.*(too short|too small)|duration.*(short|small)/i, 'aiShared.aiAudioTooShort'],
+  [/\b501\b|task failed|generation failed/i, 'aiShared.aiTaskFailed'],
   [/auphonic_error/i, 'aiShared.aiServiceDown'],
 ];
 
