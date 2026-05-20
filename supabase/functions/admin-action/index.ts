@@ -2092,16 +2092,15 @@ serve(async (req) => {
             // Helper: fetch terminated subs for a given status (canceled, unpaid, incomplete_expired, paused)
             // and normalize to a common shape. Stripe sets `ended_at` when a sub terminates for any reason
             // (user cancel, payment failure, dunning exhaustion, expiration, pause, etc.).
+            // NOTE: stripe.subscriptions.list sorts by `created` desc, NOT by `ended_at`/`canceled_at`.
+            // A sub created 2 years ago but canceled last week would be skipped if we stopped early
+            // based on `ended_at`. With our low cancellation volume, just paginate everything (max ~few pages).
             const fetchTerminated = (status: string) =>
-              paginateAll(
-                (p) => stripe.subscriptions.list(p),
-                { status },
-                (last) => {
-                  const ts = last.ended_at || last.canceled_at;
-                  return ts && ts < twelveMonthsAgoTs;
-                },
-              );
+              paginateAll((p) => stripe.subscriptions.list(p), { status });
 
+            console.log(
+              "[get_saas_metrics] Fetching Stripe data (active + canceled + unpaid + incomplete_expired + paused + charges)…",
+            );
             const [
               allSubs,
               canceledRaw,
@@ -2123,8 +2122,11 @@ serve(async (req) => {
                   created: { gte: twelveMonthsAgoTs },
                 }),
               ]),
-              STRIPE_FETCH_TIMEOUT_MS,
+              20_000,
               "stripe_metrics_timeout",
+            );
+            console.log(
+              `[get_saas_metrics] Stripe fetch OK: active=${allSubs.length}, canceled=${canceledRaw.length}, unpaid=${unpaidRaw.length}, incomplete_expired=${incompleteExpiredRaw.length}, paused=${(pausedRaw as any[]).length}, charges=${allCharges.length}`,
             );
 
             // Merge all terminal-state subs into a single "churned" list.
@@ -2236,11 +2238,20 @@ serve(async (req) => {
             }
           }
 
-          const allSubs = stripeBundle.allSubs;
-          const cancelledSubsRaw = stripeBundle.cancelledSubsRaw;
-          const allCharges = stripeBundle.allCharges;
+          if (!stripeBundle) {
+            console.warn(
+              "[get_saas_metrics] stripeBundle is null after fetch — Stripe call likely timed out or errored. Churn/MRR will fall back to 0.",
+            );
+            throw new Error("stripe_bundle_missing");
+          }
+          const allSubs = stripeBundle.allSubs || [];
+          const cancelledSubsRaw = stripeBundle.cancelledSubsRaw || [];
+          const allCharges = stripeBundle.allCharges || [];
           const productNames: Record<string, string> =
             stripeBundle.productNames || {};
+          console.log(
+            `[get_saas_metrics] Stripe bundle: ${allSubs.length} active, ${cancelledSubsRaw.length} cancelled/unpaid/expired, ${allCharges.length} charges`,
+          );
 
           const thisMonthTs = Math.floor(
             new Date(thisMonthStart).getTime() / 1000,

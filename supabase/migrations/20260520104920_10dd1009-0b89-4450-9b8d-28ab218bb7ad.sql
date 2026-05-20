@@ -1,0 +1,1 @@
+DELETE FROM public.app_settings WHERE key LIKE 'saas_metrics_cache%' OR key LIKE 'saas_metrics_stripe_cache%';
