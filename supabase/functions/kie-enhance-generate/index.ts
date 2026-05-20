@@ -244,7 +244,7 @@ serve(async (req) => {
     const callBackUrl =
       `${SUPABASE_URL}/functions/v1/kie-suno-callback?logId=${logId}&token=${callbackToken}`;
 
-    const instrumentalFlag = enhanceMode === "instrumental" || voice_type === "none";
+    // instrumentalFlag computed above
 
     // Pick endpoint
     const endpoint = enhanceMode === "extend"
