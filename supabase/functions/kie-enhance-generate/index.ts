@@ -1,5 +1,9 @@
-// KIE Suno enhance — 3 modes: instrumental (add instrumentation), cover (new version), extend.
-// Uses KIE upload-cover and upload-extend endpoints with async callback to kie-suno-callback.
+// supabase/functions/kie-enhance-generate/index.ts
+// KIE Suno enhance — 3 modes: instrumental, cover, extend.
+// FIX: customMode: false — KIE generates continuation autonomously, no lyrics needed.
+// Eliminates ElevenLabs STT dependency and error 531.
+// Callback routed through kie-suno-callback (already handles enhance feature_keys).
+// v11 — model upgraded to V5
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
@@ -12,16 +16,12 @@ const corsHeaders = {
 
 type EnhanceMode = "instrumental" | "cover" | "extend";
 
+const MODEL = "V5";
+
 const MODE_FEATURE_KEY: Record<EnhanceMode, string> = {
   instrumental: "enhance_instrumental",
-  cover: "enhance_cover",
-  extend: "enhance_extend",
-};
-
-const MODE_OP_KEY: Record<EnhanceMode, string> = {
-  instrumental: "enhance_instrumental",
-  cover: "enhance_cover",
-  extend: "enhance_extend",
+  cover:        "enhance_cover",
+  extend:       "enhance_extend",
 };
 
 serve(async (req) => {
@@ -66,90 +66,14 @@ serve(async (req) => {
     const enhanceMode = mode as EnhanceMode;
     const featureKey = MODE_FEATURE_KEY[enhanceMode];
     const instrumentalFlag = enhanceMode === "instrumental" || voice_type === "none";
-    const willHaveVocals = !instrumentalFlag;
 
-    // For cover/extend modes with vocals, try to transcribe the source audio with
-    // ElevenLabs scribe_v1 so we can pass real lyrics to KIE (extend especially
-    // fails with code 531 when no lyrics are provided).
-    let transcribedLyrics = "";
-    let detectedLanguage = "";
-    if (willHaveVocals) {
-      try {
-        const ELEVEN_KEY = Deno.env.get("ELEVENLABS_API_KEY");
-        if (ELEVEN_KEY) {
-          const audioRes = await fetch(source_audio_url);
-          if (audioRes.ok) {
-            const blob = await audioRes.blob();
-            const form = new FormData();
-            form.append("file", blob, source_filename || "audio.mp3");
-            form.append("model_id", "scribe_v1");
-            const sttRes = await fetch("https://api.elevenlabs.io/v1/speech-to-text", {
-              method: "POST",
-              headers: { "xi-api-key": ELEVEN_KEY },
-              body: form,
-            });
-            if (sttRes.ok) {
-              const sttJson = await sttRes.json();
-              transcribedLyrics = String(sttJson?.text || "").trim();
-              detectedLanguage = String(sttJson?.language_code || sttJson?.language || "").trim();
-              console.log("[kie-enhance-generate] STT ok", {
-                chars: transcribedLyrics.length,
-                lang: detectedLanguage,
-              });
-            } else {
-              console.warn("[kie-enhance-generate] STT failed", sttRes.status, await sttRes.text());
-            }
-          }
-        }
-      } catch (e) {
-        console.warn("[kie-enhance-generate] STT exception", (e as Error).message);
-      }
-    }
-
-    // Build description block (style/mood/intensity + user description)
+    // Build style prompt (no lyrics needed — customMode: false lets KIE generate autonomously)
     const descParts: string[] = [];
     if (prompt && typeof prompt === "string") descParts.push(prompt.trim());
-    if (genre) descParts.push(`Genre: ${genre}`);
-    if (mood) descParts.push(`Mood: ${mood}`);
+    if (genre)     descParts.push(`Genre: ${genre}`);
+    if (mood)      descParts.push(`Mood: ${mood}`);
     if (intensity) descParts.push(`Intensity: ${intensity}`);
-    const description = descParts.join(". ");
-
-    // KIE prompt:
-    // - extend: must contain lyrics structure to avoid code 531
-    // - cover: lyrics greatly improve fidelity to source vocal language
-    // - instrumental: free-form description
-    let finalPrompt = "";
-    const langNote = detectedLanguage
-      ? ` Keep ALL lyrics in ${detectedLanguage} — do NOT translate.`
-      : willHaveVocals
-        ? " Detect the vocal language of the source audio and keep ALL lyrics in that exact same language — do NOT translate."
-        : "";
-
-    if (enhanceMode === "extend") {
-      if (transcribedLyrics) {
-        // Provide the original lyrics inside a [Verse] block so KIE can continue them.
-        finalPrompt =
-          `[Verse]\n${transcribedLyrics}\n\n[Continue the song coherently from here in the same vocal language and style.]${langNote}`;
-      } else if (instrumentalFlag) {
-        finalPrompt = description || "Continue and extend the instrumental coherently in the same style.";
-      } else {
-        // No lyrics could be transcribed — fall back to a minimal lyric scaffold to avoid 531.
-        finalPrompt =
-          `[Verse]\nLa la la, continue the melody\n\n[Chorus]\nLa la la, follow the original mood\n\n` +
-          `Continue and extend the song coherently.${langNote} ${description}`.trim();
-      }
-    } else if (enhanceMode === "cover") {
-      if (transcribedLyrics) {
-        finalPrompt =
-          `[Lyrics]\n${transcribedLyrics}\n\nReinterpret as: ${description || "modern polished version"}.${langNote}`;
-      } else {
-        finalPrompt = `${description || "Reinterpret as a modern polished version of the source audio"}.${langNote}`;
-      }
-    } else {
-      // instrumental
-      finalPrompt = description || "Add full instrumentation, professional production";
-    }
-    finalPrompt = finalPrompt.slice(0, 2900);
+    const finalPrompt = (descParts.join(". ") || defaultPromptForMode(enhanceMode)).slice(0, 500);
 
     // Idempotency
     const idempotencyKey: string =
@@ -176,15 +100,13 @@ serve(async (req) => {
       }
     }
 
-    // Resolve credit cost
-    const operationKey = MODE_OP_KEY[enhanceMode];
+    // Resolve credit cost from operation_pricing, fallback to feature_costs
     const { data: pricingRow } = await supabaseAdmin
       .from("operation_pricing")
       .select("credits_cost")
-      .eq("operation_key", operationKey)
+      .eq("operation_key", featureKey)
       .eq("is_active", true)
       .maybeSingle();
-    // Fallback to feature_costs, then 1
     let creditsCost = pricingRow?.credits_cost ?? null;
     if (creditsCost == null) {
       const { data: fc } = await supabaseAdmin
@@ -195,7 +117,7 @@ serve(async (req) => {
       creditsCost = fc?.credit_cost ?? 1;
     }
 
-    // Atomic debit
+    // Atomic credit debit
     const { error: debitErr } = await supabaseAdmin.rpc("debit_user_credits", {
       p_user_id: user.id,
       p_amount: creditsCost,
@@ -218,7 +140,7 @@ serve(async (req) => {
         user_id: user.id,
         feature_key: featureKey,
         provider: "kie_suno",
-        model: "V4_5",
+        model: MODEL,
         status: "pending",
         request_payload: {
           mode: enhanceMode,
@@ -241,37 +163,37 @@ serve(async (req) => {
     }
     const logId = logInsert.id;
 
+    // Route callback through existing kie-suno-callback
     const callBackUrl =
       `${SUPABASE_URL}/functions/v1/kie-suno-callback?logId=${logId}&token=${callbackToken}`;
 
-    // instrumentalFlag computed above
-
-    // Pick endpoint
+    // KIE endpoints: upload-extend for extend, upload-cover for cover+instrumental
     const endpoint = enhanceMode === "extend"
       ? "https://api.kie.ai/api/v1/generate/upload-extend"
       : "https://api.kie.ai/api/v1/generate/upload-cover";
 
+    // customMode: false → KIE generates autonomously without requiring user lyrics.
+    // This is the native fix for error 531. No ElevenLabs STT needed.
     const kiePayload: Record<string, unknown> = {
-      uploadUrl: source_audio_url,
+      uploadUrl:        source_audio_url,
       defaultParamFlag: true,
-      prompt: finalPrompt,
-      style: genre || "pop",
-      title: (source_filename || "Enhanced Track").slice(0, 80),
-      customMode: true,
-      instrumental: instrumentalFlag,
-      model: "V4_5",
+      prompt:           finalPrompt,
+      style:            genre || "pop",
+      title:            (source_filename || "Enhanced Track").slice(0, 80),
+      customMode:       false,
+      instrumental:     instrumentalFlag,
+      model:            MODEL,
       callBackUrl,
     };
 
     if (enhanceMode === "extend" && typeof source_duration_sec === "number") {
-      // KIE upload-extend uses continueAt to mark where to continue from
       kiePayload.continueAt = Math.max(0, Math.floor(source_duration_sec) - 1);
     }
     if (voice_type === "m" || voice_type === "f") {
       kiePayload.vocalGender = voice_type;
     }
 
-    console.log("[kie-enhance-generate] dispatching", { mode: enhanceMode, logId, endpoint });
+    console.log("[kie-enhance-generate] dispatching", { mode: enhanceMode, logId, endpoint, model: MODEL });
 
     const kieRes = await fetch(endpoint, {
       method: "POST",
@@ -319,6 +241,12 @@ serve(async (req) => {
     return json({ error: (err as Error).message }, 500);
   }
 });
+
+function defaultPromptForMode(mode: EnhanceMode): string {
+  if (mode === "cover") return "Keep the original essence, enhance production quality";
+  if (mode === "extend") return "Continue naturally maintaining style and tempo";
+  return "Add professional production and instrumentation";
+}
 
 function json(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {
