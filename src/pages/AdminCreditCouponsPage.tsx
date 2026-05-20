@@ -76,6 +76,7 @@ export default function AdminCreditCouponsPage() {
       toast.error('No se pudo guardar el ajuste');
       return;
     }
+    emitCouponVisibilityChange(enabled);
     toast.success(enabled ? 'Campo de cupón visible para todos' : 'Campo de cupón oculto para todos');
   };
 
