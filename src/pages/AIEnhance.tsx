@@ -521,18 +521,13 @@ const AIEnhance = () => {
             >
               <Wand2 className="w-5 h-5" />
               Generar versión con IA
-              <Badge variant="secondary" className="ml-1 text-xs">
-                {creditsRequired} créditos
-              </Badge>
             </Button>
           )}
 
-          {!hasEnough(creditsRequired) && credits !== null && (
-            <div className="text-center text-sm text-muted-foreground">
-              <PricingLink className="text-primary hover:underline" />
-              <span className="ml-1">para usar esta función</span>
-            </div>
-          )}
+          <div className="text-center text-xs text-muted-foreground">
+            <PricingLink className="text-primary hover:underline" />
+            <span className="ml-1">Consulta el detalle de créditos por operación</span>
+          </div>
         </div>
       </main>
       <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
