@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { adminApi } from '@/services/adminApi';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, RefreshCw, Gift, TrendingUp } from 'lucide-react';
 
@@ -38,6 +39,8 @@ export default function AdminCreditCouponsPage() {
   const [showNew, setShowNew] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [alwaysVisible, setAlwaysVisible] = useState(false);
+  const [savingFlag, setSavingFlag] = useState(false);
   const [form, setForm] = useState({
     code: '',
     campaign_name: '',
@@ -46,6 +49,34 @@ export default function AdminCreditCouponsPage() {
     max_redemptions: '',
     expires_at: '',
   });
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'coupon_redemption_always_visible')
+        .maybeSingle();
+      const v = (data?.value as { enabled?: boolean } | null)?.enabled;
+      setAlwaysVisible(Boolean(v));
+    })();
+  }, []);
+
+  const handleToggleAlwaysVisible = async (enabled: boolean) => {
+    setSavingFlag(true);
+    const prev = alwaysVisible;
+    setAlwaysVisible(enabled);
+    const { error } = await supabase
+      .from('app_settings')
+      .upsert({ key: 'coupon_redemption_always_visible', value: { enabled } }, { onConflict: 'key' });
+    setSavingFlag(false);
+    if (error) {
+      setAlwaysVisible(prev);
+      toast.error('No se pudo guardar el ajuste');
+      return;
+    }
+    toast.success(enabled ? 'Campo de cupón siempre visible' : 'Campo de cupón oculto si ya se canjeó');
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -232,6 +263,22 @@ export default function AdminCreditCouponsPage() {
           </Dialog>
         </div>
       </div>
+
+      <Card>
+        <CardContent className="py-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium">Campo de canje de cupón siempre visible</p>
+            <p className="text-xs text-muted-foreground">
+              Si está activado, todos los usuarios verán el campo para introducir un cupón aunque ya hayan canjeado otro (útil para retos y campañas recurrentes).
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {savingFlag && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+            <Switch checked={alwaysVisible} onCheckedChange={handleToggleAlwaysVisible} disabled={savingFlag} />
+            <Badge variant={alwaysVisible ? 'default' : 'secondary'}>{alwaysVisible ? 'ON' : 'OFF'}</Badge>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

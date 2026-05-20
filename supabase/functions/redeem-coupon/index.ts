@@ -68,20 +68,20 @@ serve(async (req) => {
       return json({ error: "Cupón agotado" }, 400);
     }
 
-    // User must not have redeemed any coupon before
-    const { data: prevRedemptions, error: prevErr } = await admin
+    // A user can only redeem each coupon once, but may redeem different coupons over time
+    const { data: prevRedemption, error: prevErr } = await admin
       .from("coupon_redemptions")
-      .select("id, coupon_id")
-      .eq("user_id", userId);
+      .select("id")
+      .eq("user_id", userId)
+      .eq("coupon_id", coupon.id)
+      .maybeSingle();
 
     if (prevErr) {
       console.error("[redeem-coupon] prev check error", prevErr);
       return json({ error: "Error al validar el cupón" }, 500);
     }
-    if (prevRedemptions && prevRedemptions.length > 0) {
-      const already = prevRedemptions.some((r) => r.coupon_id === coupon.id);
-      if (already) return json({ error: "Ya has utilizado este cupón" }, 400);
-      return json({ error: "Solo se puede canjear un cupón por cuenta" }, 400);
+    if (prevRedemption) {
+      return json({ error: "Ya has utilizado este cupón" }, 400);
     }
 
     // Insert redemption (unique constraint protects races)
