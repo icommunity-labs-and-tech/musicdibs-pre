@@ -90,10 +90,10 @@ const AIStudio = () => {
       descKey: "aiStudio.modules.editModify.desc",
       icon: Edit3,
       href: "/ai-studio/edit",
-      available: true,
+      available: false,
       costsCredits: true,
       featureKey: 'edit_audio' as const,
-      color: "from-blue-500 to-cyan-500"
+      color: "from-gray-400 to-gray-500"
     },
   ];
 
