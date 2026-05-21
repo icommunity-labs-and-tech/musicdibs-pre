@@ -314,9 +314,15 @@ const AIEnhance = () => {
             intensity: intensity || undefined,
             voice_type: selectedMode === "cover" ? (voiceType || undefined) : undefined,
             source_language: sourceLanguage !== "auto" ? sourceLanguage : undefined,
-            // ── quality params: instrumental + extend ─────────────────────────
+            // ── quality params: instrumental + extend (with vocalGender toggle) ──
             ...((selectedMode === "instrumental" || selectedMode === "extend") && {
               vocal_gender: vocalGender,
+              audio_weight: FIDELITY_PRESETS[fidelityPreset].audio_weight,
+              style_weight: FIDELITY_PRESETS[fidelityPreset].style_weight,
+              weirdness_constraint: FIDELITY_PRESETS[fidelityPreset].weirdness_constraint,
+            }),
+            // ── quality params: cover (voice_type sent separately, no vocal_gender) ─
+            ...(selectedMode === "cover" && {
               audio_weight: FIDELITY_PRESETS[fidelityPreset].audio_weight,
               style_weight: FIDELITY_PRESETS[fidelityPreset].style_weight,
               weirdness_constraint: FIDELITY_PRESETS[fidelityPreset].weirdness_constraint,
@@ -779,11 +785,11 @@ const AIEnhance = () => {
             ) : null}
           </div>
 
-          {/* ── Fidelidad al original (instrumental + extend) ───────────────── */}
-          {(selectedMode === "instrumental" || selectedMode === "extend") && (
+          {/* ── Fidelidad al original (instrumental + extend + cover) ─────────── */}
+          {(selectedMode === "instrumental" || selectedMode === "extend" || selectedMode === "cover") && (
             <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground">
-                {selectedMode === "extend" ? "Estilo de extensión" : "Fidelidad al original"}
+                {selectedMode === "extend" ? "Estilo de extensión" : selectedMode === "cover" ? "Estilo de la versión" : "Fidelidad al original"}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {(Object.entries(FIDELITY_PRESETS) as [FidelityPreset, typeof FIDELITY_PRESETS[FidelityPreset]][]).map(([key, preset]) => (
