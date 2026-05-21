@@ -40,23 +40,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     )
-    let activeProvider = "anthropic"
-    let activeModel = "claude-haiku-4-5-20251001"
-    try {
-      const { data: setting } = await supabaseAdmin
-        .from("ai_provider_settings")
-        .select("provider, model")
-        .eq("feature_key", "lyrics_generation")
-        .eq("is_active", true)
-        .eq("is_enabled", true)
-        .maybeSingle()
-      if (setting?.provider) {
-        activeProvider = setting.provider
-        activeModel = setting.model || activeModel
-      }
-    } catch (e) {
-      console.warn("[LYRICS] provider lookup failed, using default:", e)
-    }
+    // Lyrics generation is text-only — always use Anthropic (fast & reliable).
+    // KIE Suno lyrics endpoint is unreliable (timeouts / 500s) and unnecessary for plain text.
+    const activeProvider = "anthropic"
+    const activeModel = "claude-haiku-4-5-20251001"
     console.log(`[LYRICS] Using provider=${activeProvider} model=${activeModel}`)
 
     if (activeProvider === "anthropic" && !ANTHROPIC_API_KEY) {
