@@ -1,12 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "../_shared/supabase-client.ts"
+import { getOperationCost } from "../_shared/operation-pricing.ts"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 }
 
-const CREDITS_COST = 1
 
 const ASPECT_RATIOS: Record<string, string> = {
   feed: "1:1",
