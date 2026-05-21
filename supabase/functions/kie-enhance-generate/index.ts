@@ -231,7 +231,8 @@ serve(async (req) => {
       defaultPromptForMode(mode);
 
     const allParts = [...langParts, styleParts];
-    const finalPrompt = allParts.join(" ").slice(0, 600);
+    // KIE non-custom mode: prompt max 500 chars (hard limit, returns 422 otherwise)
+    const finalPrompt = allParts.join(" ").slice(0, 500);
 
     // ── Payload KIE — mode-specific ───────────────────────────────────────────
     // add-instrumental (/add-instrumental) has its own schema:
@@ -278,4 +279,104 @@ serve(async (req) => {
         negativeTags,
         prompt: finalPrompt,
         customMode: false,
+        instrumental: false,
+        defaultParamFlag: false,
+        model: MODEL_COVER_EXTEND,
+        callBackUrl,
+      };
+    }
+
+    console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost} model=${kiePayload.model}`);
+
+    const kieRes = await fetch(KIE_ENDPOINTS[mode], {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${KIE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(kiePayload),
+    });
+
+    const kieData = await kieRes.json().catch(() => ({}));
+
+    if (!kieRes.ok || (kieData?.code && kieData.code !== 200)) {
+      console.error(`[kie-enhance-generate] KIE error ${kieRes.status}`, kieData);
+      await supabaseAdmin
+        .from("ai_generation_logs")
+        .update({
+          status: "failed",
+          error_message: kieData?.msg || `KIE error ${kieRes.status}`,
+          response_payload: kieData,
+        })
+        .eq("id", logId);
+      await refund(supabaseAdmin, user.id, creditsCost, `KIE error: ${kieData?.msg || kieRes.status}`);
+      return json({
+        error: "provider_error",
+        message: kieData?.msg || `KIE error ${kieRes.status}`,
+      }, 502);
+    }
+
+    const taskId = kieData?.data?.taskId || kieData?.data?.task_id || null;
+
+    await supabaseAdmin
+      .from("ai_generation_logs")
+      .update({
+        status: "processing",
+        provider_task_id: taskId,
+        response_payload: kieData,
+      })
+      .eq("id", logId);
+
+    return json({ ok: true, logId, taskId, status: "processing" });
+  } catch (err) {
+    console.error("[kie-enhance-generate] unexpected error", err);
+    return json({ error: "internal_error", message: (err as Error).message }, 500);
+  }
+});
+
+function defaultPromptForMode(mode: string): string {
+  if (mode === "cover") return "high quality cover version, same melody, professional production";
+  if (mode === "extend") return "natural continuation of the song, same style and mood";
+  return "instrumental backing track, professional production";
+}
+
+async function refund(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  amount: number,
+  reason: string,
+) {
+  try {
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("available_credits")
+      .eq("user_id", userId)
+      .single();
+    if (!p) return;
+    await supabase
+      .from("profiles")
+      .update({
+        available_credits: (p.available_credits ?? 0) + amount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+    await supabase.from("credit_transactions").insert({
+      user_id: userId,
+      amount,
+      type: "refund",
+      description: `Reembolso (enhance): ${reason}`.slice(0, 200),
+    });
+  } catch (e) {
+    console.error("[kie-enhance-generate] refund failed", e);
+  }
+}
+
+function json(payload: unknown, status = 200, isOptions = false): Response {
+  if (isOptions) return new Response(null, { status, headers: corsHeaders });
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
      
