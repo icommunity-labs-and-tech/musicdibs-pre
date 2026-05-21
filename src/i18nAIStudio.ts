@@ -1068,9 +1068,9 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
     },
     aiInspire: {
       backToStudio: 'Back to AI Music Studio',
-      badge: '1-click create',
-      title: 'Create in 1 click',
-      subtitle: "Don't know where to start? Generate a song automatically and start creating instantly.",
+      badge: 'Give songs',
+      title: 'Give songs',
+      subtitle: 'Generate a song automatically and give them as a gift',
       surpriseMe: '🎲 Surprise me',
       generateChip: '🎲 Generate {{label}}',
       generatingShort: 'Generating...',
