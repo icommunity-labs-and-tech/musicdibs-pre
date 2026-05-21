@@ -77,6 +77,9 @@ serve(async (req) => {
       )
     }
 
+    // Credit cost from operation_pricing
+    const CREDITS_COST = await getOperationCost(supabaseAdmin, 'instagram_creative', 1)
+
     // Credit check
     const { data: profile } = await supabaseAdmin
       .from("profiles")
