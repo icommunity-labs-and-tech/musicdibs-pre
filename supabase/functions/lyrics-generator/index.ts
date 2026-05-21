@@ -68,6 +68,7 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
     }
 
+
     const {
       description,
       genre,
@@ -138,7 +139,89 @@ Devuelve SOLO la letra con sus etiquetas de sección entre paréntesis, lista pa
     }
 
     let lyrics = ""
-    if (activeProvider === "gemini") {
+    if (activeProvider === "kie_suno" || activeProvider === "kie") {
+      const KIE_API_KEY = Deno.env.get("KIE_API_KEY")
+      if (!KIE_API_KEY) {
+        return new Response(JSON.stringify({ error: "KIE_API_KEY not configured" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      }
+
+      // Build a compact prompt for Suno (max ~400 chars works best)
+      const kiePromptParts: string[] = []
+      if (regenerateSection && existingLyrics) {
+        kiePromptParts.push(`Regenerate only the (${regenerateSection}) section of these lyrics, keep rest intact:\n${existingLyrics}`)
+      } else {
+        if (description) kiePromptParts.push(description)
+        if (theme)       kiePromptParts.push(`theme: ${theme}`)
+        if (genre)       kiePromptParts.push(`genre: ${genre}`)
+        if (mood)        kiePromptParts.push(`mood: ${mood}`)
+        if (style)       kiePromptParts.push(`style: ${style}`)
+        if (language)    kiePromptParts.push(`language: ${language}`)
+        if (rhymeScheme) kiePromptParts.push(`rhyme: ${rhymeScheme}`)
+        if (pov)         kiePromptParts.push(`POV: ${pov}`)
+        if (artistRefs?.length) kiePromptParts.push(`like ${artistRefs.join(", ")}`)
+      }
+      const kiePrompt = kiePromptParts.join(". ").slice(0, 380) || "Original song lyrics"
+
+      // 1) Submit task
+      const submitResp = await fetch("https://api.kie.ai/api/v1/lyrics", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${KIE_API_KEY}`,
+        },
+        body: JSON.stringify({ prompt: kiePrompt }),
+      })
+      if (!submitResp.ok) {
+        const errText = await submitResp.text()
+        console.error("[LYRICS] KIE submit error:", submitResp.status, errText)
+        return new Response(JSON.stringify({ error: "Error al generar letra" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      }
+      const submitData = await submitResp.json()
+      const taskId = submitData?.data?.taskId || submitData?.data?.task_id
+      if (!taskId) {
+        console.error("[LYRICS] KIE no taskId:", JSON.stringify(submitData))
+        return new Response(JSON.stringify({ error: "Error al generar letra" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      }
+      console.log(`[LYRICS] KIE taskId=${taskId}`)
+
+      // 2) Poll for result (max ~60s)
+      const maxAttempts = 30
+      for (let i = 0; i < maxAttempts; i++) {
+        await new Promise((r) => setTimeout(r, 2000))
+        const pollResp = await fetch(
+          `https://api.kie.ai/api/v1/lyrics/record-info?taskId=${encodeURIComponent(taskId)}`,
+          { headers: { "Authorization": `Bearer ${KIE_API_KEY}` } }
+        )
+        if (!pollResp.ok) {
+          console.warn(`[LYRICS] KIE poll ${i} status=${pollResp.status}`)
+          continue
+        }
+        const pollData = await pollResp.json()
+        const status = pollData?.data?.status
+        const items = pollData?.data?.response?.lyricsData
+                   || pollData?.data?.lyricsData
+                   || []
+        if (status === "SUCCESS" || (Array.isArray(items) && items.length > 0)) {
+          const completed = items.find((x: any) => x?.status === "complete" && x?.text) || items[0]
+          lyrics = completed?.text || ""
+          break
+        }
+        if (status === "FAILED" || status === "CREATE_TASK_FAILED" || status === "GENERATE_LYRICS_FAILED") {
+          console.error("[LYRICS] KIE task failed:", JSON.stringify(pollData))
+          return new Response(JSON.stringify({ error: "Error al generar letra" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+        }
+      }
+
+      if (!lyrics) {
+        console.error("[LYRICS] KIE timeout waiting for lyrics")
+        return new Response(JSON.stringify({ error: "Timeout al generar letra, intenta de nuevo" }),
+          { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      }
+    } else if (activeProvider === "gemini") {
       const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${GEMINI_API_KEY}`
       const gResp = await fetch(geminiUrl, {
         method: "POST",
@@ -192,6 +275,7 @@ Devuelve SOLO la letra con sus etiquetas de sección entre paréntesis, lista pa
       const data = await response.json()
       lyrics = data.content?.[0]?.text || ""
     }
+
 
     console.log(`[LYRICS] Generated for user ${user.id}, ${lyrics.length} chars`)
 
