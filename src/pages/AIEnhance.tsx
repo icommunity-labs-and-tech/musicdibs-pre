@@ -985,7 +985,7 @@ const AIEnhance = () => {
                       {midiStatus === "loading"
                         ? <Loader2 className="w-4 h-4 animate-spin" />
                         : <FileMusic className="w-4 h-4" />}
-                      {midiStatus === "loading" ? "Generando MIDI..." : "MIDI (2 cr)"}
+                      {midiStatus === "loading" ? "Generando MIDI..." : `MIDI${getFeatureCost("midi_generate") > 0 ? ` (${getFeatureCost("midi_generate")} cr)` : ""}`}
                     </Button>
                   )}
                 </div>
