@@ -891,6 +891,21 @@ const AIEnhance = () => {
             </div>
           )}
 
+
+          {/* ── Botón principal de generación ───────────────────────────────── */}
+          <Button
+            onClick={handleGenerate}
+            disabled={!canGenerate || isProcessing}
+            className="w-full gap-2"
+            size="lg"
+          >
+            {isProcessing
+              ? <Loader2 className="w-4 h-4 animate-spin" />
+              : <Wand2 className="w-4 h-4" />}
+            {isProcessing
+              ? "Generando..."
+              : `Generar versión (${creditsRequired} cr)`}
+          </Button>
           {isProcessing && <GenerationWarning />}
 
           <AnimatePresence>
