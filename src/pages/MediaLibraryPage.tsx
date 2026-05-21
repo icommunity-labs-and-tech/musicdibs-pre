@@ -12,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Download, Music, Mic, Loader2, Search,
   CheckSquare, Square, Package, Play, Pause, Trash2, X,
-  Film, ImageIcon, FolderOpen, Lock, Pencil, Check
+  Film, ImageIcon, FolderOpen, Lock, Pencil, Check,
+  FileMusic2, FileAudio,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLibraryAccess, registerFreeDownload } from "@/hooks/useLibraryAccess";
@@ -31,7 +32,12 @@ interface MediaAsset {
   meta?: Record<string, string>;
   /** Source info for delete mapping + lazy URL resolution */
   source: "ai_generations" | "video_generations" | "social_promotions" | "voice_clones" | "storage";
+  /** KIE task ID — present for KIE/Suno-generated tracks. Needed for MIDI export. */
+  provider_task_id?: string | null;
 }
+
+// ── Per-asset export job state ──
+type ExportJobState = "idle" | "loading" | "done" | "error";
 
 // Per-source row cap for the initial listing — keeps payload small & fast.
 const PAGE_LIMIT = 100;
@@ -64,6 +70,9 @@ export default function MediaLibraryPage() {
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [midiJobs, setMidiJobs] = useState<Record<string, ExportJobState>>({});
+  const [wavJobs, setWavJobs] = useState<Record<string, ExportJobState>>({});
+  const exportPollsRef = useRef<Map<string, ReturnType<typeof setInterval>>>(new Map());
   const [customNames, setCustomNames] = useState<Record<string, string>>(() => {
     try {
       return JSON.parse(localStorage.getItem("media_library_names") || "{}");
@@ -107,7 +116,7 @@ export default function MediaLibraryPage() {
     const [songsRes, videosRes, promosRes, coverFilesRes, clonesRes] = await Promise.all([
       supabase
         .from("ai_generations")
-        .select("id, prompt, genre, mood, created_at")
+        .select("id, prompt, genre, mood, created_at, provider_task_id")
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(PAGE_LIMIT),
@@ -148,6 +157,7 @@ export default function MediaLibraryPage() {
           url: null, createdAt: s.created_at,
           meta: { genre: s.genre || "", mood: s.mood || "" },
           source: "ai_generations",
+          provider_task_id: s.provider_task_id || null,
         });
       }
     }
@@ -369,6 +379,172 @@ export default function MediaLibraryPage() {
       toast({ title: tr("dashboard.mediaLibrary.zipError", "Error al crear ZIP"), variant: "destructive" });
     }
     setDownloadingZip(false);
+  };
+
+  // ── WAV export ─────────────────────────────────────────────────────────────
+  const exportWav = async (asset: MediaAsset) => {
+    if (wavJobs[asset.id] === "loading") return;
+    setWavJobs((prev) => ({ ...prev, [asset.id]: "loading" }));
+
+    try {
+      const audioUrl = await resolveAssetUrl(asset);
+      if (!audioUrl) throw new Error("URL de audio no disponible");
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUrl = (supabase as any).supabaseUrl as string ||
+        (window as any).__SUPABASE_URL__ ||
+        import.meta.env.VITE_SUPABASE_URL;
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/kie-wav-generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ audio_url: audioUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.message || "Error iniciando conversión WAV");
+
+      // Descarga síncrona
+      if (data.status === "completed" && data.wav_url) {
+        triggerBlobDownload(data.wav_url, `${getDisplayName(asset)}.wav`);
+        setWavJobs((prev) => ({ ...prev, [asset.id]: "done" }));
+        setTimeout(() => setWavJobs((prev) => ({ ...prev, [asset.id]: "idle" })), 3000);
+        return;
+      }
+
+      // Polling asíncrono
+      const wavLogId = data.logId;
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        if (attempts > 40) {
+          clearInterval(poll);
+          exportPollsRef.current.delete(asset.id + "_wav");
+          setWavJobs((prev) => ({ ...prev, [asset.id]: "error" }));
+          toast({ title: "Conversión WAV tardó demasiado", variant: "destructive" });
+          return;
+        }
+        const { data: row } = await supabase
+          .from("ai_generation_logs")
+          .select("status, output_url")
+          .eq("id", wavLogId)
+          .single();
+        if (row?.status === "completed" && row?.output_url) {
+          clearInterval(poll);
+          exportPollsRef.current.delete(asset.id + "_wav");
+          triggerBlobDownload(row.output_url as string, `${getDisplayName(asset)}.wav`);
+          setWavJobs((prev) => ({ ...prev, [asset.id]: "done" }));
+          setTimeout(() => setWavJobs((prev) => ({ ...prev, [asset.id]: "idle" })), 3000);
+        } else if (row?.status === "failed") {
+          clearInterval(poll);
+          exportPollsRef.current.delete(asset.id + "_wav");
+          setWavJobs((prev) => ({ ...prev, [asset.id]: "error" }));
+          toast({ title: "Error al convertir a WAV", variant: "destructive" });
+        }
+      }, 5000);
+      exportPollsRef.current.set(asset.id + "_wav", poll);
+    } catch (e: any) {
+      setWavJobs((prev) => ({ ...prev, [asset.id]: "error" }));
+      toast({ title: e?.message || "Error al exportar WAV", variant: "destructive" });
+    }
+  };
+
+  // ── MIDI export ─────────────────────────────────────────────────────────────
+  const exportMidi = async (asset: MediaAsset) => {
+    if (midiJobs[asset.id] === "loading") return;
+    if (!asset.provider_task_id) {
+      toast({ title: "MIDI solo disponible para tracks KIE/Suno", variant: "destructive" });
+      return;
+    }
+    setMidiJobs((prev) => ({ ...prev, [asset.id]: "loading" }));
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUrl = (supabase as any).supabaseUrl as string ||
+        (window as any).__SUPABASE_URL__ ||
+        import.meta.env.VITE_SUPABASE_URL;
+
+      const res = await fetch(`${supabaseUrl}/functions/v1/kie-midi-generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ source_generation_id: asset.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data?.error === "insufficient_credits") {
+          toast({ title: "Necesitas 2 créditos para exportar MIDI", variant: "destructive" });
+        } else {
+          throw new Error(data?.message || "Error iniciando MIDI");
+        }
+        setMidiJobs((prev) => ({ ...prev, [asset.id]: "error" }));
+        return;
+      }
+
+      const midiLogId = data.logId;
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        if (attempts > 48) {
+          clearInterval(poll);
+          exportPollsRef.current.delete(asset.id + "_midi");
+          setMidiJobs((prev) => ({ ...prev, [asset.id]: "error" }));
+          toast({ title: "MIDI tardó demasiado. Inténtalo de nuevo.", variant: "destructive" });
+          return;
+        }
+        const { data: row } = await supabase
+          .from("ai_generation_logs")
+          .select("status, output_url")
+          .eq("id", midiLogId)
+          .single();
+        if (row?.status === "completed" && row?.output_url) {
+          clearInterval(poll);
+          exportPollsRef.current.delete(asset.id + "_midi");
+          let midiUrl = row.output_url as string;
+          try {
+            const parsed = JSON.parse(midiUrl);
+            if (parsed?.midi_files?.[0]) midiUrl = parsed.midi_files[0];
+          } catch { /* URL directa */ }
+          const a = document.createElement("a");
+          a.href = midiUrl;
+          a.download = `${getDisplayName(asset)}.mid`;
+          a.target = "_blank";
+          a.click();
+          setMidiJobs((prev) => ({ ...prev, [asset.id]: "done" }));
+          toast({ title: "¡MIDI descargado!" });
+          setTimeout(() => setMidiJobs((prev) => ({ ...prev, [asset.id]: "idle" })), 4000);
+        } else if (row?.status === "failed") {
+          clearInterval(poll);
+          exportPollsRef.current.delete(asset.id + "_midi");
+          setMidiJobs((prev) => ({ ...prev, [asset.id]: "error" }));
+          toast({ title: "Error al generar MIDI. Créditos no descontados.", variant: "destructive" });
+        }
+      }, 5000);
+      exportPollsRef.current.set(asset.id + "_midi", poll);
+    } catch (e: any) {
+      setMidiJobs((prev) => ({ ...prev, [asset.id]: "error" }));
+      toast({ title: e?.message || "Error al exportar MIDI", variant: "destructive" });
+    }
+  };
+
+  // ── Blob download helper ───────────────────────────────────────────────────
+  const triggerBlobDownload = (url: string, filename: string) => {
+    fetch(url)
+      .then((r) => r.blob())
+      .then((blob) => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      })
+      .catch(() => window.open(url, "_blank"));
   };
 
   // ── Delete single ──
@@ -605,125 +781,4 @@ export default function MediaLibraryPage() {
                         <div className="flex-1 min-w-0">
                           {editingId === asset.id ? (
                             <div className="flex items-center gap-1">
-                              <Input
-                                ref={editInputRef}
-                                value={editValue}
-                                onChange={(e) => setEditValue(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") confirmRename(asset.id);
-                                  if (e.key === "Escape") setEditingId(null);
-                                }}
-                                className="h-6 text-sm py-0 px-1"
-                                autoFocus
-                              />
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => confirmRename(asset.id)}>
-                                <Check className="h-3.5 w-3.5 text-primary" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setEditingId(null)}>
-                                <X className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <p
-                              className="text-sm font-medium truncate cursor-pointer hover:text-primary transition-colors"
-                              onDoubleClick={() => startEditing(asset)}
-                              title={tr("dashboard.mediaLibrary.renameHint", "Doble clic para renombrar")}
-                            >
-                              {getDisplayName(asset)}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${typeBadgeColor(asset.type)}`}>
-                              {typeLabel(asset.type)}
-                            </Badge>
-                            <span className="text-[10px] text-muted-foreground">
-                              {new Date(asset.createdAt).toLocaleDateString(i18n.resolvedLanguage || i18n.language, { day: "2-digit", month: "short", year: "numeric" })}
-                            </span>
-                          </div>
-                          {asset.meta && Object.values(asset.meta).filter(Boolean).length > 0 && (
-                            <p className="text-[10px] text-muted-foreground mt-1 truncate">
-                              {Object.values(asset.meta).filter(Boolean).join(" · ")}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-1 mt-3 pt-3 border-t border-border/40">
-                        {(asset.type === "song" || asset.type === "vocal") && (
-                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => togglePlay(asset)}>
-                            {playingId === asset.id ? <Pause className="h-3.5 w-3.5 mr-1" /> : <Play className="h-3.5 w-3.5 mr-1" />}
-                            {playingId === asset.id ? tr("dashboard.mediaLibrary.stop", "Parar") : tr("dashboard.mediaLibrary.listen", "Escuchar")}
-                          </Button>
-                        )}
-                        {asset.type === "video" && (
-                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={async () => {
-                            const url = await resolveAssetUrl(asset);
-                            if (url) window.open(url, "_blank");
-                            else toast({ title: tr("dashboard.mediaLibrary.videoUnavailable", "Vídeo no disponible"), variant: "destructive" });
-                          }}>
-                            <Play className="h-3.5 w-3.5 mr-1" />
-                            {tr("dashboard.mediaLibrary.view", "Ver")}
-                          </Button>
-                        )}
-                        {asset.type === "cover" && asset.url && (
-                          <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => window.open(asset.url!, "_blank")}>
-                            <ImageIcon className="h-3.5 w-3.5 mr-1" />
-                            {tr("dashboard.mediaLibrary.view", "Ver")}
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => startEditing(asset)} title={tr("dashboard.mediaLibrary.rename", "Renombrar")}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <div className="flex-1" />
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-7 text-xs text-destructive hover:text-destructive" disabled={deleting === asset.id}>
-                              {deleting === asset.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>{tr("dashboard.mediaLibrary.deleteAssetTitle", "¿Eliminar este asset?")}</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                {tr("dashboard.mediaLibrary.deleteAssetDesc", "\"{{name}}\" se eliminará permanentemente.", { name: getDisplayName(asset).substring(0, 60) })}
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>{tr("dashboard.mediaLibrary.cancel", "Cancelar")}</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteAsset(asset)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                                {tr("dashboard.mediaLibrary.delete", "Eliminar")}
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                        {libraryAccess.canDownload ? (
-                          <Button variant="ghost" size="sm" className="h-7 text-xs" disabled={(asset.type === "cover" && !asset.url) || downloading === asset.id} onClick={() => downloadSingle(asset)}>
-                            {downloading === asset.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
-                          </Button>
-                        ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-7 text-xs opacity-50" disabled>
-                                  <Lock className="h-3.5 w-3.5" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{tr("dashboard.mediaLibrary.reactivateToDownload", "Reactiva tu plan para descargar")}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
-    </div>
-  );
-}
+                              
