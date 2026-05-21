@@ -341,16 +341,30 @@ function defaultPromptForMode(mode: string): string {
 }
 
 async function refund(
-  supabaseAdmin: ReturnType<typeof createClient>,
+  supabase: ReturnType<typeof createClient>,
   userId: string,
   amount: number,
   reason: string,
-): Promise<void> {
+) {
   try {
-    await supabaseAdmin.rpc("credit_user_credits", {
-      p_user_id: userId,
-      p_amount: amount,
-      p_description: `Refund (enhance): ${reason}`.slice(0, 200),
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("available_credits")
+      .eq("user_id", userId)
+      .single();
+    if (!p) return;
+    await supabase
+      .from("profiles")
+      .update({
+        available_credits: (p.available_credits ?? 0) + amount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+    await supabase.from("credit_transactions").insert({
+      user_id: userId,
+      amount,
+      type: "refund",
+      description: `Reembolso (enhance): ${reason}`.slice(0, 200),
     });
   } catch (e) {
     console.error("[kie-enhance-generate] refund failed", e);
