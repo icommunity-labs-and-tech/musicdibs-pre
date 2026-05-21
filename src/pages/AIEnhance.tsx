@@ -949,3 +949,5 @@ const AIEnhance = () => {
     </>
   );
 }
+
+export default AIEnhance;
