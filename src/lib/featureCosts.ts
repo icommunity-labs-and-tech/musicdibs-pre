@@ -79,6 +79,11 @@ export function getFeatureCost(key: string): number {
 }
 
 // ── Legacy export (backwards-compatible) ───────────────────
-export const FEATURE_COSTS = DEFAULT_COSTS;
+/** @deprecated Use getFeatureCost(key) instead */
+export const FEATURE_COSTS = new Proxy(DEFAULT_COSTS, {
+  get(target, prop: string) {
+    return getFeatureCost(prop);
+  }
+});
 
-export type FeatureKey = keyof typeof DEFAULT_COSTS;
+export type FeatureKey = string;
