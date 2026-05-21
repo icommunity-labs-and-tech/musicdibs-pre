@@ -122,6 +122,7 @@ const MODES = [
 function AudioPlayer({ src, label }: { src: string; label: string }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [loadError, setLoadError] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const toggle = () => {
@@ -137,11 +138,13 @@ function AudioPlayer({ src, label }: { src: string; label: string }) {
         ref={audioRef}
         src={src}
         onEnded={() => setPlaying(false)}
+        onError={() => setLoadError(true)}
         onTimeUpdate={() => {
           const a = audioRef.current;
           if (a?.duration) setProgress((a.currentTime / a.duration) * 100);
         }}
       />
+
       <Button
         size="icon"
         variant={loadError ? "outline" : "default"}
