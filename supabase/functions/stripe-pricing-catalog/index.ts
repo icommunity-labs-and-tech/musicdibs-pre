@@ -160,8 +160,34 @@ serve(async (req) => {
 
     const prices = await stripe.prices.list({ active: true, limit: 100, expand: ["data.product"] });
 
+    // Assign each Stripe price to at most ONE plan definition.
+    // First pass: strict matches (explicit metadata/lookup_key).
+    // Second pass: loose matches by explicit credits count, skipping already-used prices.
+    const usedPriceIds = new Set<string>();
+    const matched = new Map<string, Stripe.Price>();
+
+    for (const definition of PLAN_DEFINITIONS) {
+      const price = prices.data.find(
+        (c) => !usedPriceIds.has(c.id) && matchesDefinitionStrict(c, definition),
+      );
+      if (price) {
+        matched.set(definition.planId, price);
+        usedPriceIds.add(price.id);
+      }
+    }
+    for (const definition of PLAN_DEFINITIONS) {
+      if (matched.has(definition.planId)) continue;
+      const price = prices.data.find(
+        (c) => !usedPriceIds.has(c.id) && matchesDefinitionLoose(c, definition),
+      );
+      if (price) {
+        matched.set(definition.planId, price);
+        usedPriceIds.add(price.id);
+      }
+    }
+
     const plans = PLAN_DEFINITIONS.map((definition) => {
-      const price = prices.data.find((candidate: Stripe.Price) => matchesDefinition(candidate, definition));
+      const price = matched.get(definition.planId);
       if (!price || price.unit_amount === null) return null;
 
       const credits = resolveCredits(price, definition);
@@ -185,6 +211,7 @@ serve(async (req) => {
         sortOrder: definition.sortOrder,
       };
     }).filter((plan): plan is NonNullable<typeof plan> => plan !== null);
+
 
     return json({ plans, generatedAt: new Date().toISOString() });
   } catch (error: unknown) {
