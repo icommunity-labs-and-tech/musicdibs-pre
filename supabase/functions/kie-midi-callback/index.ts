@@ -349,3 +349,105 @@ function ok(payload: unknown): Response {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Encoder MIDI (Type-1) a partir del JSON de instrumentos/notas de KIE.
+// Notas: { start, end, pitch, velocity (0-1) } — start/end en segundos.
+// Tempo fijo 120 BPM (500000 us/qn), división 480 ticks/quarter
+//   → 1 segundo = 960 ticks.
+// ─────────────────────────────────────────────────────────────────────────────
+function encodeMidiFromInstruments(
+  instruments: Array<{ name?: string; notes?: Array<{ start: number; end: number; pitch: number; velocity: number }> }>
+): Uint8Array {
+  const TICKS_PER_QUARTER = 480;
+  const TICKS_PER_SECOND = 960; // 120 BPM
+
+  const validInstruments = instruments.filter((i) => Array.isArray(i.notes) && i.notes.length > 0);
+  const numTracks = validInstruments.length || 1;
+
+  const chunks: number[][] = [];
+
+  // Header
+  chunks.push([
+    0x4d, 0x54, 0x68, 0x64, // "MThd"
+    0x00, 0x00, 0x00, 0x06, // length 6
+    0x00, 0x01,             // format 1
+    (numTracks >> 8) & 0xff, numTracks & 0xff,
+    (TICKS_PER_QUARTER >> 8) & 0xff, TICKS_PER_QUARTER & 0xff,
+  ]);
+
+  // Conductor track (tempo)
+  // Actually, format 1 typically has tempo in track 0. Add a tempo-only track first
+  // and increment the track count above? Simpler: embed tempo in the first instrument track.
+
+  validInstruments.forEach((inst, idx) => {
+    const events: Array<{ tick: number; data: number[]; order: number }> = [];
+    const channel = idx % 16;
+
+    // Tempo only on first track
+    if (idx === 0) {
+      events.push({ tick: 0, order: 0, data: [0xff, 0x51, 0x03, 0x07, 0xa1, 0x20] }); // 500000 us/qn
+    }
+
+    // Optional track name
+    if (inst.name) {
+      const nameBytes = new TextEncoder().encode(inst.name.slice(0, 64));
+      events.push({
+        tick: 0,
+        order: 1,
+        data: [0xff, 0x03, ...vlq(nameBytes.length), ...Array.from(nameBytes)],
+      });
+    }
+
+    for (const note of inst.notes || []) {
+      const startTick = Math.max(0, Math.round(note.start * TICKS_PER_SECOND));
+      const endTick = Math.max(startTick + 1, Math.round(note.end * TICKS_PER_SECOND));
+      const pitch = Math.max(0, Math.min(127, Math.round(note.pitch)));
+      const velRaw = typeof note.velocity === "number" ? note.velocity : 0.8;
+      const velocity = Math.max(1, Math.min(127, Math.round(velRaw <= 1 ? velRaw * 127 : velRaw)));
+      events.push({ tick: startTick, order: 2, data: [0x90 | channel, pitch, velocity] });
+      events.push({ tick: endTick, order: 2, data: [0x80 | channel, pitch, 0] });
+    }
+
+    // End of track
+    events.sort((a, b) => a.tick - b.tick || a.order - b.order);
+
+    const trackBytes: number[] = [];
+    let lastTick = 0;
+    for (const ev of events) {
+      const delta = ev.tick - lastTick;
+      lastTick = ev.tick;
+      trackBytes.push(...vlq(delta), ...ev.data);
+    }
+    // End-of-track meta
+    trackBytes.push(0x00, 0xff, 0x2f, 0x00);
+
+    const len = trackBytes.length;
+    chunks.push([
+      0x4d, 0x54, 0x72, 0x6b, // "MTrk"
+      (len >>> 24) & 0xff, (len >>> 16) & 0xff, (len >>> 8) & 0xff, len & 0xff,
+      ...trackBytes,
+    ]);
+  });
+
+  const total = chunks.reduce((s, c) => s + c.length, 0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) {
+    out.set(c, off);
+    off += c.length;
+  }
+  return out;
+}
+
+function vlq(value: number): number[] {
+  const buffer: number[] = [];
+  let v = value & 0x0fffffff;
+  buffer.push(v & 0x7f);
+  v >>= 7;
+  while (v > 0) {
+    buffer.push((v & 0x7f) | 0x80);
+    v >>= 7;
+  }
+  return buffer.reverse();
+}
