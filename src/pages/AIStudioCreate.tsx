@@ -1000,6 +1000,7 @@ const AIStudioCreate = () => {
 
   // ── "Crear canción con esta letra" from compositor ──
   const sendLyricsToMusic = () => {
+    setLyrics(generatedLyrics.slice(0, 3000));
     setLyricsText(generatedLyrics);
     setLyricsExpanded(true);
     if (lyricsDesc) setPrompt(lyricsDesc.slice(0, 2500));
