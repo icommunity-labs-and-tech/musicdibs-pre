@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useLibraryAccess, registerFreeDownload } from "@/hooks/useLibraryAccess";
 import LibraryAccessBanner from "@/components/library/LibraryAccessBanner";
 import { useTranslation } from "react-i18next";
+import { getFeatureCost } from "@/lib/featureCosts";
 import JSZip from "jszip";
 
 // ── Types ──
