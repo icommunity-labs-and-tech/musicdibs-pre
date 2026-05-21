@@ -245,7 +245,7 @@ serve(async (req) => {
 
         // ── Refund credits if processing failed ──
         if (errored) {
-          const CREDITS_COST = 1
+          const CREDITS_COST = await getOperationCost(supabaseAdmin, 'enhance_audio', 1)
           const { data: p } = await supabaseAdmin.from("profiles").select("available_credits").eq("user_id", user.id).single()
           if (p) {
             await supabaseAdmin.from("profiles").update({
