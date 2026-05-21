@@ -498,7 +498,7 @@ export default function MediaLibraryPage() {
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-midi-generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ source_generation_id: asset.id }),
+        body: JSON.stringify({ source_log_id: asset.id }),
       });
       const data = await res.json();
       if (!res.ok) {
