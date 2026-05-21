@@ -2156,7 +2156,7 @@ const creditPricingTranslations: Record<string, any> = {
         register_work: 'Registro de direitos autorais com validade mundial',
         generate_audio: 'Geração de áudio instrumental com IA',
         generate_audio_song: 'Geração de música com voz com IA',
-        one_click_create: 'Gera uma música automaticamente com um clique',
+        one_click_create: 'Quer surpreender alguém? Gere uma música automaticamente e presenteie.',
         enhance_audio: 'Masterização profissional',
         generate_cover: 'Geração de capa com IA',
         instagram_creative: 'Gerar imagem criativa para Instagram',
