@@ -565,30 +565,61 @@ const AIEnhance = () => {
               ¿Qué quieres hacer?
             </h2>
             <TooltipProvider delayDuration={150}>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {MODES.map((mode) => (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:items-stretch">
+                {MODES.map((mode) => {
+                  const isFeatured = mode.id === "instrumental";
+                  const isSelected = selectedMode === mode.id;
+                  return (
                   <Tooltip key={mode.id}>
                     <TooltipTrigger asChild>
-                      <button
-                        type="button"
-                        onClick={() => !isProcessing && setSelectedMode(mode.id)}
-                        disabled={isProcessing}
-                        className={cn(
-                          "relative p-4 rounded-2xl border text-left transition-all text-sm hover:border-primary/40",
-                          selectedMode === mode.id ? "border-primary bg-primary/5" : "border-border bg-card"
+                      <div className={cn("relative group", isFeatured && "sm:-my-1")}>
+                        {isFeatured && (
+                          <>
+                            {/* Glow halo animado */}
+                            <div
+                              aria-hidden
+                              className="pointer-events-none absolute -inset-[3px] rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-purple-600 opacity-70 blur-md animate-pulse"
+                            />
+                            {/* Borde gradiente nítido */}
+                            <div
+                              aria-hidden
+                              className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-purple-600"
+                            />
+                            {/* Badge Recomendado */}
+                            <div className="absolute -top-2.5 left-3 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg shadow-violet-500/40">
+                              <Sparkles className="h-3 w-3" />
+                              Recomendado
+                            </div>
+                          </>
                         )}
-                      >
-                        <div
+                        <button
+                          type="button"
+                          onClick={() => !isProcessing && setSelectedMode(mode.id)}
+                          disabled={isProcessing}
                           className={cn(
-                            "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-3",
-                            mode.gradient
+                            "relative w-full h-full p-4 rounded-2xl border text-left transition-all text-sm hover:border-primary/40",
+                            isFeatured
+                              ? "bg-gradient-to-br from-violet-50 via-card to-fuchsia-50 dark:from-violet-950/40 dark:via-card dark:to-fuchsia-950/30 border-transparent shadow-xl shadow-violet-500/20 hover:shadow-violet-500/40 hover:-translate-y-0.5"
+                              : isSelected
+                                ? "border-primary bg-primary/5"
+                                : "border-border bg-card"
                           )}
                         >
-                          {mode.icon}
-                        </div>
-                        <p className="font-semibold">{mode.label}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{mode.tagline}</p>
-                      </button>
+                          <div
+                            className={cn(
+                              "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-3 transition-transform",
+                              mode.gradient,
+                              isFeatured && "w-12 h-12 shadow-lg shadow-violet-500/40 group-hover:scale-110 group-hover:rotate-3"
+                            )}
+                          >
+                            {mode.icon}
+                          </div>
+                          <p className={cn("font-semibold", isFeatured && "text-base bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent")}>
+                            {mode.label}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">{mode.tagline}</p>
+                        </button>
+                      </div>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs">
                       <p className="font-semibold mb-1">Úsalo para:</p>
@@ -599,9 +630,11 @@ const AIEnhance = () => {
                       </ul>
                     </TooltipContent>
                   </Tooltip>
-                ))}
+                  );
+                })}
               </div>
             </TooltipProvider>
+
           </div>
 
           {/* ── Upload ──────────────────────────────────────────────────────── */}
