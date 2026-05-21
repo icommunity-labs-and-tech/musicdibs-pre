@@ -8,7 +8,6 @@
 // v16 — tags field: KIE customMode:false requires "tags" (style descriptor) in addition to
 //        prompt. Missing tags causes 502 "Please enter tags." on upload-instrumental.
 //        tags = styleParts (genre+mood+style), prompt = langInstruction + styleParts.
-// v17 — negativeTags: "" (required by KIE, empty = no exclusions). Duplicate key cleanup.
 // Deploy: supabase functions deploy kie-enhance-generate
 //
 // Patrón idéntico a kie-suno-generate:
@@ -229,10 +228,13 @@ serve(async (req) => {
     //   Missing causes 502 "Please enter tags." on upload-instrumental (and likely others).
     //   tags = styleParts only; prompt = langInstruction + styleParts (for cover/extend).
     const MODEL = "V5";
+    const baseName = (typeof source_filename === "string" ? source_filename.replace(/\.[^/.]+$/, "") : "").trim();
+    const title = (baseName || `Enhanced ${mode}`).slice(0, 80);
     const kiePayload: Record<string, unknown> = {
       uploadUrl: source_audio_url,
+      title,
       tags: styleParts,
-      negativeTags: "",
+      negativeTags: "low quality, distorted, noisy",
       prompt: finalPrompt,
       customMode: false,
       defaultParamFlag: false,
@@ -305,4 +307,44 @@ serve(async (req) => {
   }
 });
 
-// ── Helpers ─────────────────────────────────────────
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function defaultPromptForMode(mode: string): string {
+  if (mode === "cover") return "Keep the original essence, enhance production quality";
+  if (mode === "extend") return "Continue naturally maintaining style and tempo";
+  return "Add professional production and instrumentation";
+}
+
+function json(payload: unknown, status = 200, noBody = false): Response {
+  if (noBody) return new Response(null, { status, headers: corsHeaders });
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function refund(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  amount: number,
+  reason: string,
+) {
+  const { data: p } = await supabase
+    .from("profiles")
+    .select("available_credits")
+    .eq("user_id", userId)
+    .single();
+  if (!p) return;
+  await supabase
+    .from("profiles")
+    .update({
+      available_credits: p.available_credits + amount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+  await supabase.from("credit_transactions").insert({
+    user_id: userId,
+    amount,
+    type: "refund",
+    description: `Reembolso: ${reason}`.slice(0, 200),
+  });
+}
