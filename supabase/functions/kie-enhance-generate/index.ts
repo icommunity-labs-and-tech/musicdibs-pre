@@ -231,7 +231,8 @@ serve(async (req) => {
       defaultPromptForMode(mode);
 
     const allParts = [...langParts, styleParts];
-    const finalPrompt = allParts.join(" ").slice(0, 600);
+    // KIE non-custom mode: prompt max 500 chars (hard limit, returns 422 otherwise)
+    const finalPrompt = allParts.join(" ").slice(0, 500);
 
     // ── Payload KIE — mode-specific ───────────────────────────────────────────
     // add-instrumental (/add-instrumental) has its own schema:
