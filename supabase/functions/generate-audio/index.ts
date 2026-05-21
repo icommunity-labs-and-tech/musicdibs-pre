@@ -357,7 +357,7 @@ serve(async (req) => {
     }
 
     // ── Request body ──
-    const { prompt, lyrics, genre, mood, duration, mode, generation_priority, original_description, original_lyrics } = await req.json();
+    const { prompt, lyrics, genre, mood, duration, mode, generation_priority, original_description, original_lyrics, title, negativeTags, vocalGender, styleWeight, weirdnessConstraint, audioWeight } = await req.json();
 
     if (!prompt) {
       return new Response(JSON.stringify({ error: 'Prompt required' }), {
@@ -544,6 +544,15 @@ serve(async (req) => {
           kiePayload.prompt = noLyricsPrompt.slice(0, 500);
           kiePayload.customMode = false;
         }
+        // Optional quality params forwarded from frontend
+        if (title) kiePayload.title = title;
+        if (negativeTags) kiePayload.negativeTags = negativeTags;
+        if (kiePayload.customMode !== false && vocalGender && (vocalGender === 'm' || vocalGender === 'f')) {
+          kiePayload.vocalGender = vocalGender;
+        }
+        if (typeof styleWeight === 'number') kiePayload.styleWeight = styleWeight;
+        if (typeof weirdnessConstraint === 'number') kiePayload.weirdnessConstraint = weirdnessConstraint;
+        if (typeof audioWeight === 'number') kiePayload.audioWeight = audioWeight;
         const idemKey = crypto.randomUUID();
         const supaUrl = Deno.env.get('SUPABASE_URL')!;
         const dispatchRes = await fetch(`${supaUrl}/functions/v1/kie-suno-generate`, {
