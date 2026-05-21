@@ -249,22 +249,55 @@ serve(async (req) => {
     // ETAPA 2: MIDI COMPLETADO → extraer URL y marcar completado
     // ════════════════════════════════════════════════════════════════════════════
     if (stage === "midi") {
-      // KIE devuelve las URLs de los archivos MIDI generados
-      // Estructura esperada: body.data.data[].midi_url o body.data.midi_url
+      // KIE puede devolver:
+      //   (a) body.data.midi_url / body.data.data[].midi_url   → URL directa
+      //   (b) body.data.instruments[].notes[]                  → JSON con notas (formato actual)
+      // Si recibimos (b), codificamos un .mid binario y lo subimos a Storage.
+
       const tracks: Array<Record<string, unknown>> = Array.isArray(body?.data?.data)
         ? body.data.data
         : [];
-
       const firstTrack = tracks[0] || body?.data || {};
-      const midiUrl: string | null =
+      let midiUrl: string | null =
         (firstTrack.midi_url as string) ||
         (firstTrack.midiUrl as string) ||
         (body?.data?.midi_url as string) ||
         (body?.data?.midiUrl as string) ||
         null;
 
+      const instruments: Array<{ name?: string; notes?: Array<{ start: number; end: number; pitch: number; velocity: number }> }> =
+        (body?.data?.instruments as any) || (firstTrack.instruments as any) || [];
+
+      if (!midiUrl && Array.isArray(instruments) && instruments.length > 0) {
+        try {
+          const midiBytes = encodeMidiFromInstruments(instruments);
+          const objectPath = `${userId}/midi/${logId}.mid`;
+          const { error: upErr } = await supabase.storage
+            .from("ai-generations")
+            .upload(objectPath, midiBytes, {
+              contentType: "audio/midi",
+              upsert: true,
+            });
+          if (upErr) throw upErr;
+          const { data: pub } = supabase.storage.from("ai-generations").getPublicUrl(objectPath);
+          midiUrl = pub?.publicUrl || null;
+          console.log("[kie-midi-callback] MIDI encoded & uploaded", { logId, objectPath, size: midiBytes.length });
+        } catch (e) {
+          console.error("[kie-midi-callback] failed to encode/upload MIDI", e);
+          await supabase
+            .from("ai_generation_logs")
+            .update({
+              status: "failed",
+              error_message: `Failed to encode MIDI: ${(e as Error).message}`,
+              response_payload: body,
+            })
+            .eq("id", logId);
+          return ok({ warning: "midi_encode_failed" });
+        }
+      }
+
       if (!midiUrl) {
-        console.warn("[kie-midi-callback] no midi_url in payload", JSON.stringify(body).slice(0, 400));
+        console.warn("[kie-midi-callback] no midi_url and no instruments in payload", JSON.stringify(body).slice(0, 400));
         await supabase
           .from("ai_generation_logs")
           .update({
@@ -276,11 +309,9 @@ serve(async (req) => {
         return ok({ warning: "no midi_url" });
       }
 
-      // Construir output: si hay múltiples tracks, guardamos JSON con todas las URLs
       const allMidiUrls = tracks
         .map((t) => (t.midi_url || t.midiUrl) as string)
         .filter(Boolean);
-
       const outputUrl =
         allMidiUrls.length > 1
           ? JSON.stringify({ midi_files: allMidiUrls })
@@ -295,7 +326,7 @@ serve(async (req) => {
         })
         .eq("id", logId);
 
-      console.log("[kie-midi-callback] MIDI completed", { logId, outputUrl, files: allMidiUrls.length });
+      console.log("[kie-midi-callback] MIDI completed", { logId, outputUrl });
       return ok({ ok: true, logId, midiUrl: outputUrl });
     }
 
