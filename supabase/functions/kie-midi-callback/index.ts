@@ -93,7 +93,7 @@ serve(async (req) => {
       return ok({ already: true });
     }
 
-    if (logRow.status === "failed") {
+    if (logRow.status === "failed" && logRow.error_message !== "No midi_url in KIE response") {
       console.log("[kie-midi-callback] already failed", logRow.id);
       return ok({ already: true, status: "failed" });
     }
