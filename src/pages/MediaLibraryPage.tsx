@@ -494,11 +494,30 @@ export default function MediaLibraryPage() {
     if (midiJobs[asset.id] === "loading") return;
     setMidiJobs((prev) => ({ ...prev, [asset.id]: "loading" }));
     try {
+      if (!asset.provider_task_id) {
+        setMidiJobs((prev) => ({ ...prev, [asset.id]: "error" }));
+        toast({ title: "MIDI no disponible", description: "MIDI solo está disponible para tracks generados con KIE/Suno.", variant: "destructive" });
+        return;
+      }
+      // Resolve ai_generation_logs id from provider_task_id (edge function expects source_log_id)
+      const { data: logRow } = await supabase
+        .from("ai_generation_logs")
+        .select("id")
+        .eq("provider_task_id", asset.provider_task_id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!logRow?.id) {
+        setMidiJobs((prev) => ({ ...prev, [asset.id]: "error" }));
+        toast({ title: "MIDI no disponible", description: "No se encontró el registro de generación original.", variant: "destructive" });
+        return;
+      }
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-midi-generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ source_log_id: asset.id }),
+        body: JSON.stringify({ source_log_id: logRow.id }),
       });
       const data = await res.json();
       if (!res.ok) {
