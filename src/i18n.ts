@@ -1670,7 +1670,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       modules: {
         createMusic: { title: 'Crea canciones', desc: 'Genera canciones completas o bases instrumentales a partir de una descripción y/o una letra. Si no tienes letra, también te ayudamos en eso' },
         editModify: { title: 'Masterizado profesional', desc: 'Consigue un sonido listo para Spotify: más volumen, claridad y potencia en segundos.' },
-        inspire: { title: 'Crear en 1 click 🎵', desc: '¿No sabes por dónde empezar? Genera una canción automáticamente y empieza a crear al instante.' },
+        inspire: { title: 'Regala canciones', desc: '¿Quieres sorprender a alguien? Genera una canción automáticamente y regalala.' },
         createVideoclips: { title: 'Videoclips', desc: 'Genera vídeos musicales y fusiónalos con audio de tu historial.' },
         createCovers: { title: 'Material promocional', desc: 'Crea portadas, flyers, posts y todo lo que necesitas para promocionar tu música.' },
         singYourSong: { title: 'Herramientas de Voz', desc: 'Tu estudio vocal IA: clona tu voz, canta en 29 idiomas, traduce audios y mucho más' },
