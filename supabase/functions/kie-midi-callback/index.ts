@@ -439,7 +439,7 @@ function ok(payload: unknown): Response {
 //   → 1 segundo = 960 ticks.
 // ─────────────────────────────────────────────────────────────────────────────
 function encodeMidiFromInstruments(
-  instruments: Array<{ name?: string; notes?: Array<{ start: number; end: number; pitch: number; velocity: number }> }>
+  instruments: Array<{ name?: string; notes?: Array<{ start: number | string; end: number | string; pitch: number | string; velocity: number | string }> }>
 ): Uint8Array {
   const TICKS_PER_QUARTER = 480;
   const TICKS_PER_SECOND = 960; // 120 BPM
@@ -482,10 +482,14 @@ function encodeMidiFromInstruments(
     }
 
     for (const note of inst.notes || []) {
-      const startTick = Math.max(0, Math.round(note.start * TICKS_PER_SECOND));
-      const endTick = Math.max(startTick + 1, Math.round(note.end * TICKS_PER_SECOND));
-      const pitch = Math.max(0, Math.min(127, Math.round(note.pitch)));
-      const velRaw = typeof note.velocity === "number" ? note.velocity : 0.8;
+      const start = Number(note.start);
+      const end = Number(note.end);
+      const pitchRaw = Number(note.pitch);
+      const velocityRaw = Number(note.velocity);
+      const startTick = Math.max(0, Math.round((Number.isFinite(start) ? start : 0) * TICKS_PER_SECOND));
+      const endTick = Math.max(startTick + 1, Math.round((Number.isFinite(end) ? end : start + 0.1) * TICKS_PER_SECOND));
+      const pitch = Math.max(0, Math.min(127, Math.round(Number.isFinite(pitchRaw) ? pitchRaw : 60)));
+      const velRaw = Number.isFinite(velocityRaw) ? velocityRaw : 0.8;
       const velocity = Math.max(1, Math.min(127, Math.round(velRaw <= 1 ? velRaw * 127 : velRaw)));
       events.push({ tick: startTick, order: 2, data: [0x90 | channel, pitch, velocity] });
       events.push({ tick: endTick, order: 2, data: [0x80 | channel, pitch, 0] });
