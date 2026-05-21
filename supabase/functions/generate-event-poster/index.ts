@@ -28,19 +28,22 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Credit cost from operation_pricing
+    const CREDITS_COST = await getOperationCost(supabaseAdmin, 'event_poster', 1);
+
     // Check credits
     const { data: profile } = await supabaseAdmin.from('profiles').select('available_credits').eq('user_id', user.id).single();
-    if (!profile || profile.available_credits < 1) {
-      return new Response(JSON.stringify({ error: 'Insufficient credits', needed: 1, current: profile?.available_credits || 0 }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!profile || profile.available_credits < CREDITS_COST) {
+      return new Response(JSON.stringify({ error: 'Insufficient credits', needed: CREDITS_COST, current: profile?.available_credits || 0 }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Deduct credit upfront
-    await supabaseAdmin.rpc('decrement_credits', { _user_id: user.id, _amount: 1 });
-    await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: -1, type: 'event_poster', description: `Event poster (${format}): ${artist_name} - ${event_title}` });
+    await supabaseAdmin.rpc('decrement_credits', { _user_id: user.id, _amount: CREDITS_COST });
+    await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: -CREDITS_COST, type: 'event_poster', description: `Event poster (${format}): ${artist_name} - ${event_title}` });
 
     const refundCredits = async () => {
       await supabaseAdmin.from('profiles').update({ available_credits: profile.available_credits }).eq('user_id', user.id);
-      await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: 1, type: 'refund', description: `Refund event poster: ${artist_name} - ${event_title}` });
+      await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: CREDITS_COST, type: 'refund', description: `Refund event poster: ${artist_name} - ${event_title}` });
     };
 
     try {
