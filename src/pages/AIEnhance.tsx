@@ -481,12 +481,12 @@ const AIEnhance = () => {
                     </>
                   )}
                 </Button>
-                <span className="text-xs text-muted-foreground">{prompt.length}/500</span>
+                <span className="text-xs text-muted-foreground">{prompt.length}/382</span>
               </div>
             </div>
             <Textarea
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value.slice(0, 500))}
+              onChange={(e) => setPrompt(e.target.value.slice(0, 382))}
               disabled={isProcessing}
               placeholder={currentMode.placeholder}
               className="resize-none h-24"
