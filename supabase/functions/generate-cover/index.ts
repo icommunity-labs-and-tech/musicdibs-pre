@@ -72,6 +72,9 @@ serve(async (req) => {
       )
     }
 
+    // ── Credit cost from operation_pricing ──────────────────────
+    const CREDITS_COST = await getOperationCost(supabaseAdmin, 'generate_cover', 1)
+
     // ── Credit check ────────────────────────────────────────────
     const { data: profile } = await supabaseAdmin
       .from("profiles")
