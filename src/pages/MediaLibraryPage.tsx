@@ -887,7 +887,7 @@ export default function MediaLibraryPage() {
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Exportar MIDI (2 créditos)</p>
+                                <p>Exportar MIDI${getFeatureCost("midi_generate") > 0 ? ` (${getFeatureCost("midi_generate")} créditos)` : ""}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
