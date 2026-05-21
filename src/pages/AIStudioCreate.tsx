@@ -1861,17 +1861,6 @@ const AIStudioCreate = () => {
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadLyrics(item.lyrics, item.theme || item.description || "letra")} title="Descargar .txt">
                               <Download className="h-3.5 w-3.5" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-primary"
-                              title="Cantar esta letra con mi voz"
-                              onClick={() => {
-                                window.open(`/ai-studio/vocal?lyrics=${encodeURIComponent(item.lyrics)}`, '_self');
-                              }}
-                            >
-                              <Mic className="h-3.5 w-3.5" />
-                            </Button>
                           </div>
                         </div>
                         <div className="rounded-lg bg-muted/40 p-3 font-mono text-xs leading-relaxed text-muted-foreground line-clamp-4 whitespace-pre-wrap">
@@ -2344,4 +2333,4 @@ const AIStudioCreate = () => {
 };
 
 export default AIStudioCreate;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+
