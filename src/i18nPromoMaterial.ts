@@ -1,7 +1,7 @@
 export const promoMaterialTranslations: Record<string, Record<string, any>> = {
   es: {
     promoMaterial: {
-      title: 'Material Promocional',
+      title: 'Impulsa tus canciones',
       subtitle: 'Crea portadas, videos, creatividades y todo el contenido visual para promocionar tu música',
       tabCovers: 'Portadas',
       tabCreatives: 'Creatividades',
@@ -349,7 +349,7 @@ export const promoMaterialTranslations: Record<string, Record<string, any>> = {
   },
   en: {
     promoMaterial: {
-      title: 'Promotional Material',
+      title: 'Boost your songs',
       subtitle: 'Create covers, videos, creatives and all visual content to promote your music',
       tabCovers: 'Covers',
       tabCreatives: 'Creatives',
@@ -697,7 +697,7 @@ export const promoMaterialTranslations: Record<string, Record<string, any>> = {
   },
   'pt-BR': {
     promoMaterial: {
-      title: 'Material Promocional',
+      title: 'Impulsione suas canções',
       subtitle: 'Crie capas, vídeos, criativos e todo o conteúdo visual para promover sua música',
       tabCovers: 'Capas',
       tabCreatives: 'Criativos',
