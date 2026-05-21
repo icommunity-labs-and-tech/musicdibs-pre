@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "../_shared/supabase-client.ts"
+import { getOperationCost } from "../_shared/operation-pricing.ts"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -245,7 +246,7 @@ serve(async (req) => {
 
         // ── Refund credits if processing failed ──
         if (errored) {
-          const CREDITS_COST = 1
+          const CREDITS_COST = await getOperationCost(supabaseAdmin, 'enhance_audio', 1)
           const { data: p } = await supabaseAdmin.from("profiles").select("available_credits").eq("user_id", user.id).single()
           if (p) {
             await supabaseAdmin.from("profiles").update({

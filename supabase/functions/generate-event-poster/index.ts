@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { getOperationCost } from "../_shared/operation-pricing.ts";
 
 const FAL_API_KEY = Deno.env.get('FAL_API_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -27,19 +28,22 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Credit cost from operation_pricing
+    const CREDITS_COST = await getOperationCost(supabaseAdmin, 'event_poster', 1);
+
     // Check credits
     const { data: profile } = await supabaseAdmin.from('profiles').select('available_credits').eq('user_id', user.id).single();
-    if (!profile || profile.available_credits < 1) {
-      return new Response(JSON.stringify({ error: 'Insufficient credits', needed: 1, current: profile?.available_credits || 0 }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!profile || profile.available_credits < CREDITS_COST) {
+      return new Response(JSON.stringify({ error: 'Insufficient credits', needed: CREDITS_COST, current: profile?.available_credits || 0 }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Deduct credit upfront
-    await supabaseAdmin.rpc('decrement_credits', { _user_id: user.id, _amount: 1 });
-    await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: -1, type: 'event_poster', description: `Event poster (${format}): ${artist_name} - ${event_title}` });
+    await supabaseAdmin.rpc('decrement_credits', { _user_id: user.id, _amount: CREDITS_COST });
+    await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: -CREDITS_COST, type: 'event_poster', description: `Event poster (${format}): ${artist_name} - ${event_title}` });
 
     const refundCredits = async () => {
       await supabaseAdmin.from('profiles').update({ available_credits: profile.available_credits }).eq('user_id', user.id);
-      await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: 1, type: 'refund', description: `Refund event poster: ${artist_name} - ${event_title}` });
+      await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: CREDITS_COST, type: 'refund', description: `Refund event poster: ${artist_name} - ${event_title}` });
     };
 
     try {
@@ -114,7 +118,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Failed to save poster' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      return new Response(JSON.stringify({ success: true, image_path: fileName, credits_used: 1 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ success: true, image_path: fileName, credits_used: CREDITS_COST }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } catch (err) {
       console.error('Generation error:', err);

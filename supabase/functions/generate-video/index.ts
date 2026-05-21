@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
+import { getOperationCost } from "../_shared/operation-pricing.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -319,7 +320,7 @@ serve(async (req) => {
 
       await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
 
-      const CREDITS_COST = 3;
+      const CREDITS_COST = await getOperationCost(supabaseAdmin, 'generate_video', 3);
       const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('available_credits')

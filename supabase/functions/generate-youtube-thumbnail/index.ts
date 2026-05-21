@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from "../_shared/supabase-client.ts";
+import { getOperationCost } from "../_shared/operation-pricing.ts";
 
 const FAL_API_KEY = Deno.env.get('FAL_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
@@ -52,8 +53,8 @@ serve(async (req) => {
       );
     }
 
-    // Check credits
-    const creditsNeeded = 1;
+    // Check credits (cost from operation_pricing)
+    const creditsNeeded = await getOperationCost(supabaseAdmin, 'youtube_thumbnail', 1);
     const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('available_credits')
