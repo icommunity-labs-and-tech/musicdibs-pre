@@ -163,6 +163,13 @@ Devuelve SOLO la letra con sus etiquetas de sección entre paréntesis, lista pa
       }
       const kiePrompt = kiePromptParts.join(". ").slice(0, 380) || "Original song lyrics"
 
+      const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
+      const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-suno-callback?logId=lyrics-generator`
+      const kiePayload = {
+        prompt: kiePrompt,
+        callBackUrl,
+      }
+
       // 1) Submit task
       const submitResp = await fetch("https://api.kie.ai/api/v1/lyrics", {
         method: "POST",
@@ -170,15 +177,15 @@ Devuelve SOLO la letra con sus etiquetas de sección entre paréntesis, lista pa
           "Content-Type": "application/json",
           "Authorization": `Bearer ${KIE_API_KEY}`,
         },
-        body: JSON.stringify({ prompt: kiePrompt }),
+        body: JSON.stringify(kiePayload),
       })
-      if (!submitResp.ok) {
-        const errText = await submitResp.text()
-        console.error("[LYRICS] KIE submit error:", submitResp.status, errText)
-        return new Response(JSON.stringify({ error: "Error al generar letra" }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
+      const submitData = await submitResp.json().catch(async () => ({ msg: await submitResp.text().catch(() => "") }))
+      if (!submitResp.ok || (submitData?.code && submitData.code !== 200)) {
+        const providerMessage = submitData?.msg || submitData?.message || `HTTP ${submitResp.status}`
+        console.error("[LYRICS] KIE submit error:", submitResp.status, JSON.stringify(submitData))
+        return new Response(JSON.stringify({ error: providerMessage || "Error al generar letra" }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } })
       }
-      const submitData = await submitResp.json()
       const taskId = submitData?.data?.taskId || submitData?.data?.task_id
       if (!taskId) {
         console.error("[LYRICS] KIE no taskId:", JSON.stringify(submitData))
