@@ -197,6 +197,41 @@ serve(async (req) => {
       })
       .eq("id", logId);
 
+    // ── Registrar en la biblioteca (ai_generations) ───────────────────────────
+    // Para que la canción mejorada aparezca en /dashboard/library como un asset más.
+    try {
+      const reqPayload = (logRow.request_payload as Record<string, unknown>) || {};
+      const mode = (reqPayload.mode as string) || "enhance";
+      const promptText =
+        (reqPayload.prompt as string) ||
+        (reqPayload.source_filename as string) ||
+        `Versión IA (${mode})`;
+      const genre = (reqPayload.genre as string) || null;
+      const mood = (reqPayload.mood as string) || null;
+      const duration = Math.round((reqPayload.source_duration_sec as number) || 0);
+
+      const { error: insErr } = await supabase.from("ai_generations").insert({
+        user_id: userId,
+        prompt: promptText,
+        audio_url: outputUrl,
+        duration,
+        genre,
+        mood,
+        provider: "kie",
+        model: "enhance",
+        provider_task_id: taskId || null,
+        storage_bucket: "ai-generations",
+        storage_path: `enhance-results/${logId}.mp3`,
+        request_payload: reqPayload,
+        response_payload: body,
+      });
+      if (insErr) {
+        console.warn("[kie-enhance-callback] ai_generations insert failed", insErr);
+      }
+    } catch (libErr) {
+      console.warn("[kie-enhance-callback] library registration failed", libErr);
+    }
+
     console.log("[kie-enhance-callback] completed", { logId, outputUrl, fromStorage: outputUrl !== kieAudioUrl });
     return ok({ ok: true, logId, audioUrl: outputUrl });
 
