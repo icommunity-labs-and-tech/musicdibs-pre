@@ -310,7 +310,7 @@ serve(async (req) => {
       if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
       if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
       if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
-    } else {
+    } else if (mode === "extend") {
       // upload-extend — defaultParamFlag:true → custom params
       // style (not tags), continueAt strictly > 0 AND < duration.
       kiePayload = {
@@ -400,5 +400,4 @@ serve(async (req) => {
       })
       .eq("id", logId);
 
-    return json({ ok: true, logId, taskId, status: "processing" });
-  } catch
+    return json({ ok: true, logId, taskId, status: "pr
