@@ -943,4 +943,49 @@ const AIEnhance = () => {
                   <Button
                     variant="outline"
                     onClick={handleExportWav}
+                    disabled={wavStatus === "loading"}
+                    className="gap-2"
+                  >
+                    {wavStatus === "loading"
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <FileAudio className="w-4 h-4" />}
+                    {wavStatus === "loading" ? "Exportando..." : "WAV"}
+                  </Button>
+
+                  {/* ── MIDI export */}
+                  {midiDownloadUrl ? (
+                    <Button asChild variant="outline" className="gap-2">
+                      <a href={midiDownloadUrl} download>
+                        <FileMusic className="w-4 h-4" /> Descargar MIDI
+                      </a>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={handleExportMidi}
+                      disabled={midiStatus === "loading"}
+                      className="gap-2"
+                    >
+                      {midiStatus === "loading"
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <FileMusic className="w-4 h-4" />}
+                      {midiStatus === "loading" ? "Generando MIDI..." : "MIDI (2 cr)"}
+                    </Button>
+                  )}
+                </div>
+
+                <Button variant="ghost" size="sm" onClick={handleReset} className="gap-2">
+                  <RefreshCw className="w-4 h-4" /> Crear otra versión
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
+    </>
+  );
+};
+
+export default AIEnhance;
+
      
