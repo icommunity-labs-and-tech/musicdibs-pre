@@ -281,8 +281,12 @@ serve(async (req) => {
         (body?.data?.midiUrl as string) ||
         null;
 
-      const instruments: Array<{ name?: string; notes?: Array<{ start: number; end: number; pitch: number; velocity: number }> }> =
-        (body?.data?.instruments as any) || (firstTrack.instruments as any) || [];
+      let responsePayload = body;
+      let instruments: Array<{ name?: string; notes?: Array<{ start: number | string; end: number | string; pitch: number | string; velocity: number | string }> }> =
+        (body?.data?.instruments as Array<{ name?: string; notes?: Array<{ start: number | string; end: number | string; pitch: number | string; velocity: number | string }> }>) ||
+        (body?.data?.midiData?.instruments as Array<{ name?: string; notes?: Array<{ start: number | string; end: number | string; pitch: number | string; velocity: number | string }> }>) ||
+        (firstTrack.instruments as Array<{ name?: string; notes?: Array<{ start: number | string; end: number | string; pitch: number | string; velocity: number | string }> }>) ||
+        [];
 
       const charged = (logRow.user_credits_charged as number) || 0;
       const refundCredits = async (reason: string) => {
@@ -294,6 +298,54 @@ serve(async (req) => {
           });
         }
       };
+
+      // Algunos callbacks de KIE llegan solo con { taskId } aunque el resultado ya
+      // existe. Antes de fallar, consultamos el endpoint oficial de detalles MIDI.
+      if (!midiUrl && (!Array.isArray(instruments) || instruments.length === 0)) {
+        const midiTaskId = (body?.data?.task_id as string) || (body?.data?.taskId as string) || taskId;
+        if (midiTaskId) {
+          const detailRes = await fetch(
+            `https://api.kie.ai/api/v1/midi/record-info?taskId=${encodeURIComponent(midiTaskId)}`,
+            { headers: { Authorization: `Bearer ${KIE_API_KEY}` } },
+          );
+          const detailBody = await detailRes.json().catch(() => null);
+          console.log("[kie-midi-callback] MIDI record-info response", {
+            logId,
+            status: detailRes.status,
+            code: detailBody?.code,
+            successFlag: detailBody?.data?.successFlag,
+          });
+
+          if (detailRes.ok && detailBody?.code === 200) {
+            responsePayload = { callback: body, record_info: detailBody };
+            const midiData = detailBody?.data?.midiData || {};
+            instruments =
+              (midiData?.instruments as Array<{ name?: string; notes?: Array<{ start: number | string; end: number | string; pitch: number | string; velocity: number | string }> }>) ||
+              [];
+
+            if (detailBody?.data?.successFlag === 0) {
+              await supabase
+                .from("ai_generation_logs")
+                .update({ status: "pending_midi", response_payload: responsePayload })
+                .eq("id", logId);
+              return ok({ ok: true, pending: true, stage: "midi_record_info_pending" });
+            }
+
+            if (detailBody?.data?.successFlag && detailBody.data.successFlag !== 1) {
+              await refundCredits("Reembolso: KIE no pudo generar el MIDI");
+              await supabase
+                .from("ai_generation_logs")
+                .update({
+                  status: "failed",
+                  error_message: detailBody?.data?.errorMessage || "KIE MIDI generation failed",
+                  response_payload: responsePayload,
+                })
+                .eq("id", logId);
+              return ok({ ok: false, warning: "midi_record_info_failed", refunded: charged > 0 });
+            }
+          }
+        }
+      }
 
       if (!midiUrl && Array.isArray(instruments) && instruments.length > 0) {
         try {
@@ -317,7 +369,7 @@ serve(async (req) => {
             .update({
               status: "failed",
               error_message: `Failed to encode MIDI: ${(e as Error).message}`,
-              response_payload: body,
+              response_payload: responsePayload,
             })
             .eq("id", logId);
           return ok({ warning: "midi_encode_failed", refunded: charged > 0 });
@@ -332,7 +384,7 @@ serve(async (req) => {
           .update({
             status: "failed",
             error_message: "No midi_url in KIE response",
-            response_payload: body,
+            response_payload: responsePayload,
           })
           .eq("id", logId);
         return ok({ warning: "no midi_url", refunded: charged > 0 });
@@ -352,7 +404,7 @@ serve(async (req) => {
         .update({
           status: "completed",
           output_url: outputUrl,
-          response_payload: body,
+          response_payload: responsePayload,
         })
         .eq("id", logId);
 
