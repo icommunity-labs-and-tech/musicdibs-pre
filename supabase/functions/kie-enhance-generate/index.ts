@@ -13,6 +13,9 @@
 //        add-instrumental has its own schema: requires title, tags, negativeTags.
 //        Does NOT accept prompt/customMode/defaultParamFlag/instrumental fields.
 //        upload-cover/upload-extend: defaultParamFlag:false → only uploadUrl+prompt required.
+// v19 — add-instrumental quality params: vocalGender, styleWeight, audioWeight, weirdnessConstraint.
+//        Model upgraded to V5_5 for instrumental (latest, better than V5 for this endpoint).
+//        Frontend preset "fidelidad" maps to audioWeight/styleWeight/weirdnessConstraint combos.
 // Deploy: supabase functions deploy kie-enhance-generate
 //
 // Patrón idéntico a kie-suno-generate:
@@ -87,6 +90,11 @@ serve(async (req) => {
       voice_type,
       musical_style,
       source_language,
+      // add-instrumental quality params (v19)
+      vocal_gender,       // "m" | "f" — vocal register for backing track generation
+      style_weight,       // 0-1 — adherence to style tags
+      audio_weight,       // 0-1 — how much to follow the uploaded audio's characteristics
+      weirdness_constraint, // 0-1 — 0=conventional, 1=experimental
     } = body || {};
 
     if (!mode || !FEATURE_KEYS[mode]) {
@@ -171,6 +179,10 @@ serve(async (req) => {
           voice_type,
           musical_style,
           source_language,
+          vocal_gender,
+          style_weight,
+          audio_weight,
+          weirdness_constraint,
         },
         user_credits_charged: creditsCost,
         callback_token: callbackToken,
@@ -227,7 +239,10 @@ serve(async (req) => {
     //   does NOT accept: prompt, customMode, defaultParamFlag, instrumental
     // upload-cover / upload-extend (/upload-cover, /upload-extend):
     //   defaultParamFlag:false → only uploadUrl + prompt required
-    const MODEL = "V5";
+    // V5_5 for instrumental (newer, better vocal accompaniment generation)
+    // V5 for cover/extend (consistent with source music model version requirement)
+    const MODEL_INSTRUMENTAL = "V5_5";
+    const MODEL_COVER_EXTEND = "V5";
     const title = source_filename
       ? source_filename.replace(/\.[^.]+$/, "").slice(0, 80)
       : styleParts.slice(0, 80) || "Enhanced audio";
@@ -237,14 +252,23 @@ serve(async (req) => {
 
     if (mode === "instrumental") {
       // add-instrumental endpoint — clean schema, no prompt/customMode/defaultParamFlag
+      // Quality params: vocalGender critical for register matching; weights control style adherence
       kiePayload = {
         uploadUrl: source_audio_url,
         title,
         tags: styleParts,
         negativeTags,
-        model: MODEL,
+        model: MODEL_INSTRUMENTAL,
         callBackUrl,
       };
+      // vocalGender: helps Suno match the backing to the vocal register
+      if (vocal_gender === "m" || vocal_gender === "f") {
+        kiePayload.vocalGender = vocal_gender;
+      }
+      // Weight params: only send if explicitly provided (KIE uses its own defaults otherwise)
+      if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
+      if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
+      if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
     } else {
       // upload-cover / upload-extend — defaultParamFlag:false, prompt-based
       kiePayload = {
@@ -254,46 +278,4 @@ serve(async (req) => {
         negativeTags,
         prompt: finalPrompt,
         customMode: false,
-        defaultParamFlag: false,
-        model: MODEL,
-        instrumental: false,
-        callBackUrl,
-      };
-      if (mode === "cover") {
-        kiePayload.voiceType = voice_type || "auto";
-      }
-      if (mode === "extend" && source_duration_sec) {
-        kiePayload.continueAt = Math.floor(source_duration_sec * 0.85);
-      }
-    }
-
-    console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost} model=${MODEL}`);
-
-    // ── Llamar a KIE ──────────────────────────────────────────────────────────
-    const kieEndpoint = KIE_ENDPOINTS[mode];
-    const kieRes = await fetch(kieEndpoint, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${KIE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(kiePayload),
-    });
-
-    const kieJson = await kieRes.json().catch(() => ({}));
-
-    if (!kieRes.ok || (kieJson?.code && kieJson.code !== 200)) {
-      console.error("[kie-enhance-generate] KIE error", kieRes.status, kieJson);
-      await refund(supabaseAdmin, user.id, creditsCost, "KIE dispatch failed");
-      await supabaseAdmin
-        .from("ai_generation_logs")
-        .update({
-          status: "failed",
-          error_message: kieJson?.msg || `HTTP ${kieRes.status}`,
-          response_payload: kieJson,
-        })
-        .eq("id", logId);
-      return json({ error: "provider_error", message: kieJson?.msg || "KIE request failed" }, 502);
-    }
-
-    const taskId: string | undefined = kieJson?.data?.taskId |
+     
