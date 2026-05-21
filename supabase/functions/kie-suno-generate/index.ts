@@ -46,6 +46,10 @@ serve(async (req) => {
       negativeTags,
       instrumental = false,
       customMode = true,
+      vocalGender,
+      styleWeight,
+      weirdnessConstraint,
+      audioWeight,
     } = body || {};
     // adminTest is intentionally NOT read from body — admins use ai-provider-test.
 
@@ -153,7 +157,7 @@ serve(async (req) => {
         provider: "kie_suno",
         model,
         status: "pending",
-        request_payload: { prompt, title, style, instrumental, customMode, negativeTags },
+        request_payload: { prompt, title, style, instrumental, customMode, negativeTags, vocalGender, styleWeight, weirdnessConstraint, audioWeight },
         estimated_cost_usd: setting.cost_usd_estimate ?? null,
         user_credits_charged: creditsCost,
         callback_token: callbackToken,
@@ -180,6 +184,13 @@ serve(async (req) => {
     if (title) kiePayload.title = title;
     if (sanitizedStyle) kiePayload.style = sanitizedStyle;  // sanitized: artist refs stripped
     if (negativeTags) kiePayload.negativeTags = negativeTags;
+    // Quality params — only vocalGender is gated on customMode per KIE spec
+    if (customMode && vocalGender && (vocalGender === "m" || vocalGender === "f")) {
+      kiePayload.vocalGender = vocalGender;
+    }
+    if (typeof styleWeight === "number") kiePayload.styleWeight = styleWeight;
+    if (typeof weirdnessConstraint === "number") kiePayload.weirdnessConstraint = weirdnessConstraint;
+    if (typeof audioWeight === "number") kiePayload.audioWeight = audioWeight;
 
     console.log("[kie-suno-generate] dispatching task", { feature: featureKey, model, logId });
 
