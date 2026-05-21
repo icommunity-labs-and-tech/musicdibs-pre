@@ -944,7 +944,7 @@ const AIStudioCreate = () => {
         },
       });
       if (error || !data?.improved) throw new Error(error?.message || 'No response');
-      setLyricsDesc(data.improved.slice(0, 2500));
+      setLyricsDesc(data.improved.slice(0, 380));
       setImprovedLyricsDesc(true);
       toast({ title: t('aiCreate.lyricsDescImproved'), description: t('aiCreate.lyricsDescImprovedSub') });
     } catch {
