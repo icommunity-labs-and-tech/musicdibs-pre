@@ -52,23 +52,23 @@ const FIDELITY_PRESETS: Record<FidelityPreset, {
   audio_weight: number;
   style_weight: number;
   weirdness_constraint: number;
-  label: string;
-  description: string;
+  labelKey: string;
+  descKey: string;
 }> = {
   faithful: {
     audio_weight: 0.80, style_weight: 0.50, weirdness_constraint: 0.20,
-    label: "Fiel al original",
-    description: "Respeta el ritmo y carácter de tu voz",
+    labelKey: "aiEnhance.fidelityFaithfulLabel",
+    descKey: "aiEnhance.fidelityFaithfulDesc",
   },
   balanced: {
     audio_weight: 0.65, style_weight: 0.65, weirdness_constraint: 0.40,
-    label: "Equilibrado",
-    description: "Balance entre fidelidad y estilo",
+    labelKey: "aiEnhance.fidelityBalancedLabel",
+    descKey: "aiEnhance.fidelityBalancedDesc",
   },
   creative: {
     audio_weight: 0.40, style_weight: 0.80, weirdness_constraint: 0.75,
-    label: "Creativo",
-    description: "Más libertad para la IA",
+    labelKey: "aiEnhance.fidelityCreativeLabel",
+    descKey: "aiEnhance.fidelityCreativeDesc",
   },
 };
 
@@ -82,54 +82,54 @@ const MODE_FEATURE_KEY: Record<EnhanceMode, string> = {
 const MODES = [
   {
     id: "instrumental" as EnhanceMode,
-    label: "Añadir instrumentación",
-    tagline: "Transforma una melodía simple en una producción completa.",
+    labelKey: "aiEnhance.modeInstrumentalLabel",
+    taglineKey: "aiEnhance.modeInstrumentalTagline",
     icon: <Layers className="w-5 h-5" />,
     gradient: "from-violet-500 to-purple-600",
-    placeholder: "Añade una producción pop electrónica con bajo potente, sintetizadores y batería energética.",
-    useCases: [
-      "Transformar una melodía simple en una completa",
-      "Añadir producción e instrumentos",
+    placeholderKey: "aiEnhance.modeInstrumentalPlaceholder",
+    useCaseKeys: [
+      "aiEnhance.modeInstrumentalUseCase1",
+      "aiEnhance.modeInstrumentalUseCase2",
     ],
   },
   {
     id: "cover" as EnhanceMode,
-    label: "Nueva versión desde demo",
-    tagline: "La IA trabaja sobre tu idea. Tú mantienes la autoría.",
+    labelKey: "aiEnhance.modeCoverLabel",
+    taglineKey: "aiEnhance.modeCoverTagline",
     icon: <Repeat2 className="w-5 h-5" />,
     gradient: "from-pink-500 to-rose-500",
-    placeholder: "Convierte esta demo en una balada pop cinematográfica con piano emocional y voz femenina.",
-    useCases: [
-      "Rehacer demo",
-      "Reinterpretar una idea",
-      "Cambiar estilo musical",
-      "Producir encima de una melodía existente",
+    placeholderKey: "aiEnhance.modeCoverPlaceholder",
+    useCaseKeys: [
+      "aiEnhance.modeCoverUseCase1",
+      "aiEnhance.modeCoverUseCase2",
+      "aiEnhance.modeCoverUseCase3",
+      "aiEnhance.modeCoverUseCase4",
     ],
   },
   {
     id: "extend" as EnhanceMode,
-    label: "Extender canción",
-    tagline: "Convierte bocetos en temas completos.",
+    labelKey: "aiEnhance.modeExtendLabel",
+    taglineKey: "aiEnhance.modeExtendTagline",
     icon: <Expand className="w-5 h-5" />,
     gradient: "from-blue-500 to-cyan-500",
-    placeholder: "Extiende esta intro añadiendo una sección principal y coro con el mismo mood oscuro.",
-    useCases: [
-      "Continuar una demo",
-      "Ampliar una intro",
-      "Transformar una idea corta en canción completa",
+    placeholderKey: "aiEnhance.modeExtendPlaceholder",
+    useCaseKeys: [
+      "aiEnhance.modeExtendUseCase1",
+      "aiEnhance.modeExtendUseCase2",
+      "aiEnhance.modeExtendUseCase3",
     ],
   },
   {
     id: "add_vocals" as EnhanceMode,
-    label: "Añadir voz",
-    tagline: "Da vida a tu instrumental con una voz generada por IA.",
+    labelKey: "aiEnhance.modeAddVocalsLabel",
+    taglineKey: "aiEnhance.modeAddVocalsTagline",
     icon: <Mic className="w-5 h-5" />,
     gradient: "from-emerald-500 to-teal-500",
-    placeholder: "Voz femenina emotiva en español, estilo pop melancólico. Letra sobre soledad y esperanza.",
-    useCases: [
-      "Añadir voz cantada a un instrumental",
-      "Crear una maqueta vocal completa",
-      "Explorar distintos estilos vocales sobre tu música",
+    placeholderKey: "aiEnhance.modeAddVocalsPlaceholder",
+    useCaseKeys: [
+      "aiEnhance.modeAddVocalsUseCase1",
+      "aiEnhance.modeAddVocalsUseCase2",
+      "aiEnhance.modeAddVocalsUseCase3",
     ],
   },
 ];
