@@ -3,7 +3,8 @@
 // FIX: customMode: false — KIE generates continuation autonomously, no lyrics needed.
 // Eliminates ElevenLabs STT dependency and error 531.
 // Callback routed through kie-suno-callback (already handles enhance feature_keys).
-// v14 — uploadUrl (not audioUrl), model V5, defaultParamFlag: false, source_language
+// v15 — uploadUrl (not audioUrl), model V5, defaultParamFlag: false, source_language,
+//        instrumental: boolean (required by KIE for all upload-* endpoints, fixes code 422)
 // Deploy: supabase functions deploy kie-enhance-generate
 //
 // Patrón idéntico a kie-suno-generate:
@@ -212,26 +213,33 @@ serve(async (req) => {
     const allParts = [...langParts, styleParts];
     const finalPrompt = allParts.join(" ").slice(0, 600);
 
-    // KIE upload-cover / upload-extend required fields per docs:
-    // uploadUrl, prompt, customMode, instrumental, model.
-    // With customMode=false: only prompt + uploadUrl are content-required; style/title
-    // should be empty. `defaultParamFlag` does NOT exist on this endpoint.
+    // customMode: false → KIE/Suno generates autonomously, no lyrics required.
+    // Fixes error 531 without ElevenLabs STT dependency.
+    // uploadUrl = correct field for upload-cover / upload-extend / upload-instrumental.
+    // defaultParamFlag: false → our params (model, customMode…) are respected by KIE.
+    //   With true, KIE uses its own defaults and ignores model / other root params.
+    // instrumental: boolean — REQUIRED by KIE for all upload-* endpoints.
+    //   cover/extend → false (has vocals), instrumental → true (no vocals).
+    //   Missing this field causes 422 "instrumental cannot be null".
     const MODEL = "V5";
-    const instrumentalFlag = mode === "instrumental" || voice_type === "none";
     const kiePayload: Record<string, unknown> = {
       uploadUrl: source_audio_url,
       prompt: finalPrompt,
       customMode: false,
-      instrumental: instrumentalFlag,
+      defaultParamFlag: false,
       model: MODEL,
+      instrumental: mode === "instrumental",
       callBackUrl,
     };
 
-    if (mode === "cover" && (voice_type === "m" || voice_type === "f")) {
-      kiePayload.vocalGender = voice_type;
+    if (mode === "cover") {
+      kiePayload.voiceType = voice_type || "auto";
     }
     if (mode === "extend" && source_duration_sec) {
       kiePayload.continueAt = Math.floor(source_duration_sec * 0.85);
+    }
+    if (mode === "instrumental") {
+      kiePayload.intensity = intensity || "medium";
     }
 
     console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost} model=${MODEL}`);
@@ -304,32 +312,4 @@ function json(payload: unknown, status = 200, noBody = false): Response {
 }
 
 async function refund(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  amount: number,
-  reason: string,
-) {
-  try {
-    const { data: p } = await supabase
-      .from("profiles")
-      .select("available_credits")
-      .eq("user_id", userId)
-      .single();
-    if (!p) return;
-    await supabase
-      .from("profiles")
-      .update({
-        available_credits: p.available_credits + amount,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
-    await supabase.from("credit_transactions").insert({
-      user_id: userId,
-      amount,
-      type: "refund",
-      description: `Reembolso: ${reason}`.slice(0, 200),
-    });
-  } catch (e) {
-    console.error("[kie-enhance-generate] refund failed", e);
-  }
-}
+  sup
