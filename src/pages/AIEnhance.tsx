@@ -39,7 +39,7 @@ import {
   ArrowLeft, Wand2, Loader2, Play, Pause,
   Download, RefreshCw, CheckCircle2, X,
   Layers, Repeat2, Expand, AlertTriangle, BookOpen, Sparkles,
-  FileMusic2, FileAudio,
+  FileMusic, FileAudio,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -122,6 +122,7 @@ const MODES = [
 function AudioPlayer({ src, label }: { src: string; label: string }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [loadError, setLoadError] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const toggle = () => {
@@ -137,11 +138,13 @@ function AudioPlayer({ src, label }: { src: string; label: string }) {
         ref={audioRef}
         src={src}
         onEnded={() => setPlaying(false)}
+        onError={() => setLoadError(true)}
         onTimeUpdate={() => {
           const a = audioRef.current;
           if (a?.duration) setProgress((a.currentTime / a.duration) * 100);
         }}
       />
+
       <Button
         size="icon"
         variant={loadError ? "outline" : "default"}
@@ -902,7 +905,7 @@ const AIEnhance = () => {
                         a.click();
                       }}
                     >
-                      <FileMusic2 className="w-4 h-4" /> Descargar MIDI
+                      <FileMusic className="w-4 h-4" /> Descargar MIDI
                     </Button>
                   ) : (
                     <Button
@@ -913,7 +916,7 @@ const AIEnhance = () => {
                     >
                       {midiStatus === "loading"
                         ? <Loader2 className="w-4 h-4 animate-spin" />
-                        : <FileMusic2 className="w-4 h-4" />}
+                        : <FileMusic className="w-4 h-4" />}
                       {midiStatus === "loading" ? "Generando MIDI..." : midiStatus === "error" ? "Error MIDI" : "MIDI (2 créditos)"}
                     </Button>
                   )}

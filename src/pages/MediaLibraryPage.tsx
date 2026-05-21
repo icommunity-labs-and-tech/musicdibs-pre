@@ -13,7 +13,7 @@ import {
   Download, Music, Mic, Loader2, Search,
   CheckSquare, Square, Package, Play, Pause, Trash2, X,
   Film, ImageIcon, FolderOpen, Lock, Pencil, Check,
-  FileMusic2, FileAudio
+  FileMusic, FileAudio
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useLibraryAccess, registerFreeDownload } from "@/hooks/useLibraryAccess";
@@ -894,7 +894,7 @@ export default function MediaLibraryPage() {
                                     ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                     : midiJobs[asset.id] === "done"
                                       ? <Check className="h-3.5 w-3.5 text-green-500" />
-                                      : <FileMusic2 className="h-3.5 w-3.5" />}
+                                      : <FileMusic className="h-3.5 w-3.5" />}
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>
