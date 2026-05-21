@@ -201,9 +201,13 @@ const AIStudioCreate = () => {
   // ── Virtual Artist onboarding tip state ──
   const [showVirtualArtistTip, setShowVirtualArtistTip] = useState(false);
 
+  // ── Music generation genre / mood (for the main music tab) ──
+  const [musicGenre, setMusicGenre] = useState('');
+  const [musicMood, setMusicMood] = useState('');
+
   // ── Derived values ──
-  const selectedGenre: string | null = null;
-  const selectedMood: string | null = null;
+  const selectedGenre: string | null = musicGenre || null;
+  const selectedMood: string | null = musicMood || null;
   const currentCost = mode === 'song' ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio;
   const currentFeature = mode === 'song' ? 'generate_audio_song' : 'generate_audio';
   const modeLabel = mode === 'song' ? t('aiCreate.songWithVoice') : t('aiCreate.instrumentalBase');
@@ -414,6 +418,8 @@ const AIStudioCreate = () => {
           generation_priority: hasLyricsForCall ? generationPriority : (mode === 'song' ? 'creative' : 'creative'),
           original_description: prompt.trim(),
           original_lyrics: mode === 'song' ? lyrics.trim() : '',
+          ...(selectedGenre ? { genre: selectedGenre } : {}),
+          ...(selectedMood ? { mood: selectedMood } : {}),
           ...(duration ? { duration } : {}),
         }
       });
@@ -944,7 +950,7 @@ const AIStudioCreate = () => {
         },
       });
       if (error || !data?.improved) throw new Error(error?.message || 'No response');
-      setLyricsDesc(data.improved.slice(0, 200));
+      setLyricsDesc(data.improved.slice(0, 2500));
       setImprovedLyricsDesc(true);
       toast({ title: t('aiCreate.lyricsDescImproved'), description: t('aiCreate.lyricsDescImprovedSub') });
     } catch {
@@ -1535,6 +1541,25 @@ const AIStudioCreate = () => {
                       </div>
                       </div>{/* close data-tour="mc-settings" */}
 
+                      {/* Genre chips */}
+                      <div className="space-y-1.5">
+                        <Label className="text-sm">{t('aiCreate.genreLabel')}</Label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(GENRES as readonly string[]).slice(0, 8).map(g => (
+                            <Badge key={g} variant={musicGenre === g ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => setMusicGenre(musicGenre === g ? "" : g)}>{g}</Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Mood chips */}
+                      <div className="space-y-1.5">
+                        <Label className="text-sm">{t('aiCreate.moodLabel', 'Mood / Emoción')}</Label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {["Romántico", "Melancólico", "Alegre", "Emotivo", "Enérgico", "Relajado", "Nostálgico", "Épico"].map(m => (
+                            <Badge key={m} variant={musicMood === m ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => setMusicMood(musicMood === m ? "" : m)}>{m}</Badge>
+                          ))}
+                        </div>
+                      </div>
 
                       {/* Duration selector */}
                       <div className="space-y-2">
@@ -1656,13 +1681,13 @@ const AIStudioCreate = () => {
                           }
                         </button>
                       </div>
-                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="w-full max-w-full resize-none" maxLength={200} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
+                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="w-full max-w-full resize-none" maxLength={2500} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
                       {improvedLyricsDesc && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {t('aiCreate.lyricsDescImproved')} — {t('aiCreate.lyricsDescImprovedSub')}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground text-right">{lyricsDesc.length}/200</p>
+                      <p className="text-xs text-muted-foreground text-right">{lyricsDesc.length}/2500</p>
                     </div>
 
 
@@ -1860,6 +1885,17 @@ const AIStudioCreate = () => {
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadLyrics(item.lyrics, item.theme || item.description || "letra")} title="Descargar .txt">
                               <Download className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-primary"
+                              title="Cantar esta letra con mi voz"
+                              onClick={() => {
+                                window.open(`/ai-studio/vocal?lyrics=${encodeURIComponent(item.lyrics)}`, '_self');
+                              }}
+                            >
+                              <Mic className="h-3.5 w-3.5" />
                             </Button>
                           </div>
                         </div>
@@ -2297,40 +2333,4 @@ const AIStudioCreate = () => {
               <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
                 <Download className="h-3.5 w-3.5 text-muted-foreground" />
               </div>
-              <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
-                <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
-            <Button
-              variant="outline"
-              className="sm:order-1"
-              onClick={() => {
-                localStorage.setItem('virtual_artist_tip_shown', 'true');
-                setShowVirtualArtistTip(false);
-                navigate('/dashboard/artist-profiles');
-              }}
-            >
-              {t('aiCreate.onboardingTipViewArtists')}
-            </Button>
-            <Button
-              className="sm:order-2"
-              onClick={() => {
-                localStorage.setItem('virtual_artist_tip_shown', 'true');
-                setShowVirtualArtistTip(false);
-              }}
-            >
-              {t('aiCreate.onboardingTipGotIt')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-    </div>
-  );
-};
-
-export default AIStudioCreate;
-
+              <div className="h-8 w-8 rounded-md bg-muted flex item
