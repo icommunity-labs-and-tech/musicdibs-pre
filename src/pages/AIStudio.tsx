@@ -229,7 +229,7 @@ const AIStudio = () => {
             </div>
 
             {/* Row 2 */}
-            <div className="grid md:grid-cols-3 gap-6 mb-10">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
               {bottomRowModules.map((m) => renderModuleCard(m, "flex flex-col"))}
             </div>
 
