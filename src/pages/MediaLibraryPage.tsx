@@ -522,7 +522,8 @@ export default function MediaLibraryPage() {
       const data = await res.json();
       if (!res.ok) {
         if (data?.code === "insufficient_credits") {
-          toast({ title: "Créditos insuficientes", description: "Necesitas 2 créditos para exportar MIDI.", variant: "destructive" });
+          const midiCost = getFeatureCost("midi_generate");
+          toast({ title: "Créditos insuficientes", description: `Necesitas ${midiCost} créditos para exportar MIDI.`, variant: "destructive" });
         } else if (data?.code === "no_provider_task_id") {
           toast({ title: "MIDI no disponible", description: "MIDI solo está disponible para tracks generados con KIE/Suno.", variant: "destructive" });
         } else {
