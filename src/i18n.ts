@@ -1707,7 +1707,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       backToDashboard: 'Back to dashboard',
       poweredBy: 'AI-powered creative suite',
       pageTitle: 'AI Music Studio',
-      pageSubtitle: 'Create music, voices, covers and videoclips from one place.',
+      pageSubtitle: 'Create songs, covers and videoclips from one place.\nEnhance your songs and promote all your creations.',
       noCredits: 'No credits',
       comingSoon: 'Coming soon',
       creditPerUse: 'credit per use',
