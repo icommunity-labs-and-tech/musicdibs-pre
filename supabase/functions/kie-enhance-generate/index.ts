@@ -224,10 +224,14 @@ serve(async (req) => {
     const MODEL = "V5";
     const baseName = (typeof source_filename === "string" ? source_filename.replace(/\.[^/.]+$/, "") : "").trim();
     const title = (baseName || `Enhanced ${mode}`).slice(0, 80);
+    const tags = [genre, mood, musical_style].filter(Boolean).join(", ").slice(0, 200)
+      || defaultTagsForMode(mode);
     const kiePayload: Record<string, unknown> = {
       uploadUrl: source_audio_url,
       prompt: finalPrompt,
       title,
+      style: tags,
+      tags,
       customMode: false,
       defaultParamFlag: false,
       model: MODEL,
