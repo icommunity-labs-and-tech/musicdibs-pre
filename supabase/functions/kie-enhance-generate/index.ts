@@ -231,7 +231,6 @@ serve(async (req) => {
       prompt: finalPrompt,
       title,
       style: tags,
-      style: tags,
       tags,
       negativeTags: "",
       customMode: false,
