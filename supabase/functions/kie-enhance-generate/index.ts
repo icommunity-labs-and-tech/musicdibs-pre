@@ -318,4 +318,18 @@ async function refund(
     if (!p) return;
     await supabase
       .from("profiles")
-      .update({ available_credits: p.available_credits
+      .update({
+        available_credits: p.available_credits + amount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+    await supabase.from("credit_transactions").insert({
+      user_id: userId,
+      amount,
+      type: "refund",
+      description: `Reembolso: ${reason}`.slice(0, 200),
+    });
+  } catch (e) {
+    console.error("[kie-enhance-generate] refund failed", e);
+  }
+}
