@@ -232,6 +232,7 @@ serve(async (req) => {
       title,
       style: tags,
       tags,
+      negativeTags: "",
       customMode: false,
       defaultParamFlag: false,
       model: MODEL,
