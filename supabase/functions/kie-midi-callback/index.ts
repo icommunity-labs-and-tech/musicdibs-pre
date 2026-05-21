@@ -150,6 +150,14 @@ serve(async (req) => {
 
       if (!separationTaskId) {
         console.warn("[kie-midi-callback] no separation taskId in payload", JSON.stringify(body).slice(0, 300));
+        const charged = (logRow.user_credits_charged as number) || 0;
+        if (charged > 0) {
+          await supabase.rpc("refund_user_credits", {
+            p_user_id: userId,
+            p_amount: charged,
+            p_reason: "Reembolso: KIE no devolvió taskId de separación",
+          });
+        }
         await supabase
           .from("ai_generation_logs")
           .update({
@@ -158,7 +166,7 @@ serve(async (req) => {
             response_payload: body,
           })
           .eq("id", logId);
-        return ok({ warning: "no separation taskId" });
+        return ok({ warning: "no separation taskId", refunded: charged > 0 });
       }
 
       // Preparar callback para la etapa MIDI
@@ -268,6 +276,17 @@ serve(async (req) => {
       const instruments: Array<{ name?: string; notes?: Array<{ start: number; end: number; pitch: number; velocity: number }> }> =
         (body?.data?.instruments as any) || (firstTrack.instruments as any) || [];
 
+      const charged = (logRow.user_credits_charged as number) || 0;
+      const refundCredits = async (reason: string) => {
+        if (charged > 0) {
+          await supabase.rpc("refund_user_credits", {
+            p_user_id: userId,
+            p_amount: charged,
+            p_reason: reason,
+          });
+        }
+      };
+
       if (!midiUrl && Array.isArray(instruments) && instruments.length > 0) {
         try {
           const midiBytes = encodeMidiFromInstruments(instruments);
@@ -284,6 +303,7 @@ serve(async (req) => {
           console.log("[kie-midi-callback] MIDI encoded & uploaded", { logId, objectPath, size: midiBytes.length });
         } catch (e) {
           console.error("[kie-midi-callback] failed to encode/upload MIDI", e);
+          await refundCredits("Reembolso: fallo al codificar/subir MIDI");
           await supabase
             .from("ai_generation_logs")
             .update({
@@ -292,12 +312,13 @@ serve(async (req) => {
               response_payload: body,
             })
             .eq("id", logId);
-          return ok({ warning: "midi_encode_failed" });
+          return ok({ warning: "midi_encode_failed", refunded: charged > 0 });
         }
       }
 
       if (!midiUrl) {
         console.warn("[kie-midi-callback] no midi_url and no instruments in payload", JSON.stringify(body).slice(0, 400));
+        await refundCredits("Reembolso: KIE no devolvió MIDI ni notas inline");
         await supabase
           .from("ai_generation_logs")
           .update({
@@ -306,8 +327,9 @@ serve(async (req) => {
             response_payload: body,
           })
           .eq("id", logId);
-        return ok({ warning: "no midi_url" });
+        return ok({ warning: "no midi_url", refunded: charged > 0 });
       }
+
 
       const allMidiUrls = tracks
         .map((t) => (t.midi_url || t.midiUrl) as string)
