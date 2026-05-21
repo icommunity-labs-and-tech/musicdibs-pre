@@ -308,4 +308,43 @@ serve(async (req) => {
 });
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-function defaultPromptForMode(mode:
+function defaultPromptForMode(mode: string): string {
+  if (mode === "cover") return "Keep the original essence, enhance production quality";
+  if (mode === "extend") return "Continue naturally maintaining style and tempo";
+  return "Add professional production and instrumentation";
+}
+
+function json(payload: unknown, status = 200, noBody = false): Response {
+  if (noBody) return new Response(null, { status, headers: corsHeaders });
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function refund(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  amount: number,
+  reason: string,
+) {
+  const { data: p } = await supabase
+    .from("profiles")
+    .select("available_credits")
+    .eq("user_id", userId)
+    .single();
+  if (!p) return;
+  await supabase
+    .from("profiles")
+    .update({
+      available_credits: p.available_credits + amount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+  await supabase.from("credit_transactions").insert({
+    user_id: userId,
+    amount,
+    type: "refund",
+    description: `Reembolso: ${reason}`.slice(0, 200),
+  });
+}
