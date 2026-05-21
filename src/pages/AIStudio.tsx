@@ -51,9 +51,6 @@ const AIStudio = () => {
       featureKey: 'enhance_audio' as const,
       color: "from-violet-500 to-purple-600"
     },
-  ];
-
-  const bottomRowModules = [
     {
       titleKey: "aiStudio.modules.editModify.title",
       descKey: "aiStudio.modules.editModify.desc",
@@ -64,6 +61,9 @@ const AIStudio = () => {
       featureKey: 'edit_audio' as const,
       color: "from-fuchsia-500 to-purple-600"
     },
+  ];
+
+  const bottomRowModules = [
     {
       titleKey: "aiStudio.modules.createCovers.title",
       descKey: "aiStudio.modules.createCovers.desc",
