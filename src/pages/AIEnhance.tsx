@@ -936,4 +936,16 @@ const AIEnhance = () => {
                         a.click();
                       }}
                     >
-                      <FileMusic className="w-4 h-4
+                      <FileMusic className="w-4 h-4" />
+                      MIDI
+                    </Button>
+                  ) : null}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
+    </>
+  );
+}
