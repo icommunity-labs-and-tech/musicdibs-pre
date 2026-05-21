@@ -122,25 +122,13 @@ const MODES = [
 function AudioPlayer({ src, label }: { src: string; label: string }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [loadError, setLoadError] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const toggle = async () => {
+  const toggle = () => {
     const a = audioRef.current;
-    if (!a || loadError) return;
-    if (playing) {
-      a.pause();
-      setPlaying(false);
-    } else {
-      try {
-        await a.play();
-        setPlaying(true);
-      } catch (err) {
-        console.error("[AudioPlayer] play() failed:", err);
-        setLoadError(true);
-        toast.error("No se puede reproducir el audio. Usa el botón de descarga.");
-      }
-    }
+    if (!a) return;
+    if (playing) a.pause(); else a.play();
+    setPlaying(!playing);
   };
 
   return (
@@ -149,7 +137,6 @@ function AudioPlayer({ src, label }: { src: string; label: string }) {
         ref={audioRef}
         src={src}
         onEnded={() => setPlaying(false)}
-        onError={() => setLoadError(true)}
         onTimeUpdate={() => {
           const a = audioRef.current;
           if (a?.duration) setProgress((a.currentTime / a.duration) * 100);
@@ -194,6 +181,15 @@ const AIEnhance = () => {
   // ── idioma vocal + estado de descarga ────────────────────────────────────
   const [sourceLanguage, setSourceLanguage] = useState("auto");
   const [isDownloading, setIsDownloading] = useState(false);
+
+  // ── MIDI export ────────────────────────────────────────────────────────────
+  const [midiStatus, setMidiStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
+  const [midiDownloadUrl, setMidiDownloadUrl] = useState<string | null>(null);
+  const midiPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── WAV export ─────────────────────────────────────────────────────────────
+  const [wavStatus, setWavStatus] = useState<"idle" | "loading" | "error">("idle");
+  const wavPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // ── instrumental quality params ───────────────────────────────────────────
   const [vocalGender, setVocalGender] = useState<"m" | "f">("m");
   const [fidelityPreset, setFidelityPreset] = useState<FidelityPreset>("balanced");
@@ -203,15 +199,6 @@ const AIEnhance = () => {
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [genError, setGenError] = useState<string | null>(null);
-
-  // ── MIDI export ───────────────────────────────────────────────────────────────
-  const [midiStatus, setMidiStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
-  const [midiDownloadUrl, setMidiDownloadUrl] = useState<string | null>(null);
-  const midiPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // ── WAV export ────────────────────────────────────────────────────────────────
-  const [wavStatus, setWavStatus] = useState<"idle" | "loading" | "error">("idle");
-  const wavPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentMode = MODES.find((m) => m.id === selectedMode)!;
   const creditsRequired = getFeatureCost(MODE_FEATURE_KEY[selectedMode]);
@@ -373,7 +360,7 @@ const AIEnhance = () => {
     }
   };
 
-  // ── Descarga cross-origin segura (fetch → blob → diálogo nativo) ─────────────
+  // ── NEW: descarga cross-origin segura (fetch → blob → diálogo nativo) ─────────
   const handleDownload = async () => {
     if (!generatedAudioUrl) return;
     setIsDownloading(true);
@@ -395,35 +382,30 @@ const AIEnhance = () => {
     }
   };
 
-  // ── Descarga WAV on-demand ────────────────────────────────────────────────────
+  // ── Descarga WAV on-demand ───────────────────────────────────────────────────
   const handleExportWav = async () => {
     if (!generatedAudioUrl || wavStatus === "loading") return;
     setWavStatus("loading");
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-wav-generate`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({ audio_url: generatedAudioUrl }),
-        }
-      );
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-wav-generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ audio_url: generatedAudioUrl }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.message || "Error iniciando conversión WAV");
 
-      // Respuesta síncrona: KIE devolvió URL directamente
       if (data.status === "completed" && data.wav_url) {
         triggerWavDownload(data.wav_url);
         setWavStatus("idle");
         return;
       }
 
-      // Respuesta asíncrona: polling
-      const wavLogId = data.logId;
+      const logId = data.logId;
       let attempts = 0;
       wavPollRef.current = setInterval(async () => {
         attempts++;
@@ -436,67 +418,64 @@ const AIEnhance = () => {
         const { data: row } = await supabase
           .from("ai_generation_logs")
           .select("status, output_url")
-          .eq("id", wavLogId)
+          .eq("id", logId)
           .single();
-        if (row?.status === "completed" && row?.output_url) {
-          clearInterval(wavPollRef.current!);
-          triggerWavDownload(row.output_url as string);
-          setWavStatus("idle");
-        } else if (row?.status === "failed") {
+        if (row?.status === "failed") {
           clearInterval(wavPollRef.current!);
           setWavStatus("error");
           toast.error("Error al convertir a WAV. Inténtalo de nuevo.");
         }
+        if (row?.status === "completed" && row?.output_url) {
+          clearInterval(wavPollRef.current!);
+          triggerWavDownload(row.output_url as string);
+          setWavStatus("idle");
+        }
       }, 5000);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setWavStatus("error");
-      toast.error(e?.message || "Error al exportar WAV");
+      const err = e as Error;
+      toast.error(err?.message || "Error al exportar WAV");
     }
   };
 
   const triggerWavDownload = (url: string) => {
-    fetch(url)
-      .then((r) => r.blob())
-      .then((blob) => {
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `musicdibs-ai-enhance-${selectedMode}.wav`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(a.href);
-        toast.success("Archivo WAV descargado");
-      })
-      .catch(() => {
-        // Fallback: abrir en nueva pestaña
-        window.open(url, "_blank");
-        toast.success("WAV listo — revisa las descargas");
-      });
+    try {
+      fetch(url)
+        .then((r) => r.blob())
+        .then((blob) => {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "musicdibs-enhance.wav";
+          a.click();
+          URL.revokeObjectURL(a.href);
+          toast.success("Archivo WAV descargado");
+        });
+    } catch {
+      window.open(url, "_blank");
+      toast.success("WAV listo — revisa las descargas");
+    }
   };
 
-  // ── Exportar MIDI ─────────────────────────────────────────────────────────────
+  // ── Exportar MIDI ──────────────────────────────────────────────────────────
   const handleExportMidi = async () => {
     if (!logId || midiStatus === "loading") return;
     setMidiStatus("loading");
     setMidiDownloadUrl(null);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-midi-generate`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({ source_log_id: logId }),
-        }
-      );
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-midi-generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ source_log_id: logId }),
+      });
       const data = await res.json();
       if (!res.ok) {
-        if (data?.error === "insufficient_credits") {
+        if (data?.code === "insufficient_credits") {
           toast.error("No tienes suficientes créditos para exportar MIDI (2 créditos).");
-        } else if (data?.error === "midi_not_available") {
+        } else if (data?.code === "no_provider_task_id") {
           toast.error("MIDI solo está disponible para tracks generados con KIE/Suno.");
         } else {
           throw new Error(data?.message || "Error iniciando exportación MIDI");
@@ -509,7 +488,7 @@ const AIEnhance = () => {
       let attempts = 0;
       midiPollRef.current = setInterval(async () => {
         attempts++;
-        if (attempts > 48) { // 48 * 5s = 4 min
+        if (attempts > 48) {
           clearInterval(midiPollRef.current!);
           setMidiStatus("error");
           toast.error("La exportación MIDI tardó demasiado. Inténtalo de nuevo.");
@@ -520,26 +499,27 @@ const AIEnhance = () => {
           .select("status, output_url")
           .eq("id", midiLogId)
           .single();
-        if (row?.status === "completed" && row?.output_url) {
-          clearInterval(midiPollRef.current!);
-          // output_url puede ser URL directa o JSON con múltiples archivos
-          let midiUrl = row.output_url as string;
-          try {
-            const parsed = JSON.parse(midiUrl);
-            if (parsed?.midi_files?.[0]) midiUrl = parsed.midi_files[0];
-          } catch { /* URL directa, ok */ }
-          setMidiDownloadUrl(midiUrl);
-          setMidiStatus("ready");
-          toast.success("¡MIDI listo para descargar!");
-        } else if (row?.status === "failed") {
+        if (row?.status === "failed") {
           clearInterval(midiPollRef.current!);
           setMidiStatus("error");
           toast.error("Error al generar el MIDI. No se han descontado créditos.");
         }
+        if (row?.status === "completed" && row?.output_url) {
+          clearInterval(midiPollRef.current!);
+          let midiUrl = row.output_url as string;
+          try {
+            const parsed = JSON.parse(midiUrl);
+            if (parsed?.midi_files?.[0]) midiUrl = parsed.midi_files[0];
+          } catch { /* not JSON, use as-is */ }
+          setMidiDownloadUrl(midiUrl);
+          setMidiStatus("ready");
+          toast.success("¡MIDI listo para descargar!");
+        }
       }, 5000);
-    } catch (e: any) {
+    } catch (e: unknown) {
       setMidiStatus("error");
-      toast.error(e?.message || "Error al exportar MIDI");
+      const err = e as Error;
+      toast.error(err?.message || "Error al exportar MIDI");
     }
   };
 
@@ -559,11 +539,10 @@ const AIEnhance = () => {
     setGeneratedAudioUrl(null);
     setUploadProgress(0);
     setGenError(null);
-    // Reset export states
     setMidiStatus("idle");
     setMidiDownloadUrl(null);
-    setWavStatus("idle");
     if (midiPollRef.current) clearInterval(midiPollRef.current);
+    setWavStatus("idle");
     if (wavPollRef.current) clearInterval(wavPollRef.current);
   };
 
@@ -739,4 +718,240 @@ const AIEnhance = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={intensity} on
+            <Select value={intensity} onValueChange={setIntensity} disabled={isProcessing}>
+              <SelectTrigger className="h-9 text-sm">
+                <SelectValue placeholder="Intensidad" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Suave</SelectItem>
+                <SelectItem value="medium">Media</SelectItem>
+                <SelectItem value="high">Intensa</SelectItem>
+              </SelectContent>
+            </Select>
+            {selectedMode === "instrumental" ? (
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => !isProcessing && setVocalGender("m")}
+                  disabled={isProcessing}
+                  className={cn(
+                    "flex-1 h-9 rounded-md border text-sm font-medium transition-all",
+                    vocalGender === "m"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                  )}
+                >
+                  ♂ Hombre
+                </button>
+                <button
+                  type="button"
+                  onClick={() => !isProcessing && setVocalGender("f")}
+                  disabled={isProcessing}
+                  className={cn(
+                    "flex-1 h-9 rounded-md border text-sm font-medium transition-all",
+                    vocalGender === "f"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                  )}
+                >
+                  ♀ Mujer
+                </button>
+              </div>
+            ) : selectedMode !== "extend" ? (
+              <Select value={voiceType} onValueChange={setVoiceType} disabled={isProcessing}>
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Voz" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="female">Femenina</SelectItem>
+                  <SelectItem value="male">Masculina</SelectItem>
+                  <SelectItem value="none">Sin voz</SelectItem>
+                  <SelectItem value="auto">Auto</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : null}
+          </div>
+
+          {/* ── Fidelidad al original (solo instrumental) ───────────────────── */}
+          {selectedMode === "instrumental" && (
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-muted-foreground">
+                Fidelidad al original
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.entries(FIDELITY_PRESETS) as [FidelityPreset, typeof FIDELITY_PRESETS[FidelityPreset]][]).map(([key, preset]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => !isProcessing && setFidelityPreset(key)}
+                    disabled={isProcessing}
+                    className={cn(
+                      "p-3 rounded-xl border text-left transition-all",
+                      fidelityPreset === key
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card hover:border-primary/30"
+                    )}
+                  >
+                    <p className="text-sm font-semibold">{preset.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{preset.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Selector de idioma vocal (solo cover / extend) ───────────────── */}
+          {(selectedMode === "cover" || selectedMode === "extend") && (
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-muted-foreground">
+                Idioma de la voz en el audio
+              </label>
+              <Select value={sourceLanguage} onValueChange={setSourceLanguage} disabled={isProcessing}>
+                <SelectTrigger className="h-9 text-sm max-w-[240px]">
+                  <SelectValue placeholder="Idioma del audio" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">Detectar automáticamente</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="pt">Português</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="it">Italiano</SelectItem>
+                  <SelectItem value="ja">日本語</SelectItem>
+                  <SelectItem value="ko">한국어</SelectItem>
+                  <SelectItem value="zh">中文</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground/70">
+                Si tu audio tiene voz, selecciona el idioma para que la IA lo preserve en la versión generada.
+              </p>
+            </div>
+          )}
+
+          {isProcessing && <GenerationWarning />}
+
+          <AnimatePresence>
+            {isProcessing && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="rounded-xl border bg-card p-4 space-y-3"
+              >
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  {jobStatus === "uploading"
+                    ? "Subiendo tu audio..."
+                    : "La IA está trabajando sobre tu demo. Puede tardar 2-4 minutos..."}
+                </div>
+                <Progress
+                  value={jobStatus === "uploading" ? uploadProgress : undefined}
+                  className="h-1.5"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {jobStatus === "completed" && generatedAudioUrl && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-xl border border-green-500/30 bg-green-500/5 p-5 space-y-4"
+              >
+                <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold">
+                  <CheckCircle2 className="w-5 h-5" /> ¡Tu versión IA está lista!
+                </div>
+                <AudioPlayer src={generatedAudioUrl} label="Versión generada con IA" />
+                <div className="flex gap-2 flex-wrap">
+                  {/* ── MP3 download */}
+                  <Button
+                    onClick={handleDownload}
+                    disabled={isDownloading}
+                    className="gap-2"
+                  >
+                    {isDownloading
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <Download className="w-4 h-4" />}
+                    {isDownloading ? "Descargando..." : "MP3"}
+                  </Button>
+
+                  {/* ── WAV export */}
+                  <Button
+                    variant="outline"
+                    onClick={handleExportWav}
+                    disabled={wavStatus === "loading"}
+                    className="gap-2"
+                  >
+                    {wavStatus === "loading"
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <FileAudio className="w-4 h-4" />}
+                    {wavStatus === "loading" ? "Convirtiendo..." : wavStatus === "error" ? "Error WAV" : "WAV"}
+                  </Button>
+
+                  {/* ── MIDI export */}
+                  {midiStatus === "ready" && midiDownloadUrl ? (
+                    <Button
+                      variant="secondary"
+                      className="gap-2"
+                      onClick={() => {
+                        const a = document.createElement("a");
+                        a.href = midiDownloadUrl;
+                        a.download = "musicdibs-enhance.mid";
+                        a.click();
+                      }}
+                    >
+                      <FileMusic2 className="w-4 h-4" /> Descargar MIDI
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={handleExportMidi}
+                      disabled={midiStatus === "loading"}
+                      className="gap-2"
+                    >
+                      {midiStatus === "loading"
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <FileMusic2 className="w-4 h-4" />}
+                      {midiStatus === "loading" ? "Generando MIDI..." : midiStatus === "error" ? "Error MIDI" : "MIDI (2 créditos)"}
+                    </Button>
+                  )}
+
+                  <Button
+                    variant="ghost"
+                    onClick={handleReset}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" /> Nueva mejora
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {!isProcessing && jobStatus !== "completed" && (
+            <Button
+              onClick={handleGenerate}
+              disabled={!canGenerate || isProcessing}
+              className="w-full h-12 text-lg font-bold shadow-lg"
+            >
+              <Wand2 className="w-5 h-5 mr-2" />
+              {jobStatus === "idle" ? "Mejorar canción" : "Reintentar mejora"}
+            </Button>
+          )}
+
+          {genError && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{genError}</AlertDescription>
+            </Alert>
+          )}
+        </div>
+      </main>
+      <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
+    </>
+  );
+};
+
+export default AIEnhance;
