@@ -126,12 +126,13 @@ Devuelve SOLO la letra con sus etiquetas de sección entre paréntesis, lista pa
     if (structure) {
       userPrompt += `ESTRUCTURA: ${structure}\n`
     } else {
-      userPrompt += `ESTRUCTURA: Verso 1 + Coro + Verso 2 + Coro + Puente + Coro final\n`
+      userPrompt += `ESTRUCTURA: (Verse 1) + (Chorus) + (Verse 2) + (Chorus) + (Bridge) + (Chorus)\n`
     }
 
     if (regenerateSection && existingLyrics) {
       userPrompt = `Tengo esta letra:\n\n${existingLyrics}\n\n` +
-        `Regenera SOLO la sección [${regenerateSection}] manteniendo el resto intacto.\n` +
+        `Regenera SOLO la sección (${regenerateSection}) manteniendo el resto intacto.\n` +
+        `Usa SIEMPRE paréntesis () para las etiquetas de sección (formato Suno), nunca corchetes [].\n` +
         `Mantén el mismo esquema de rima, idioma y estilo.\n` +
         `Devuelve la letra COMPLETA con la sección regenerada.`
     }
