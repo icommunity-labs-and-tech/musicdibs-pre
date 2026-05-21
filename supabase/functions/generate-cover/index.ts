@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "../_shared/supabase-client.ts"
+import { getOperationCost } from "../_shared/operation-pricing.ts"
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 }
 
-const CREDITS_COST = 1
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
