@@ -734,7 +734,7 @@ const AIStudioCreate = () => {
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      track('audio_downloaded', { feature: 'create_music', format: 'wav' });
+      track('audio_downloaded', { feature: 'create_music' });
     } catch (e) {
       const err = e as Error;
       toast({ title: t('aiShared.error'), description: err?.message || 'Error al exportar WAV', variant: 'destructive' });
