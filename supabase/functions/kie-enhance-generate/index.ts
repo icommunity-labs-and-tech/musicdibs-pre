@@ -312,4 +312,28 @@ function json(payload: unknown, status = 200, noBody = false): Response {
 }
 
 async function refund(
-  sup
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  amount: number,
+  reason: string,
+) {
+  const { data: p } = await supabase
+    .from("profiles")
+    .select("available_credits")
+    .eq("user_id", userId)
+    .single();
+  if (!p) return;
+  await supabase
+    .from("profiles")
+    .update({
+      available_credits: p.available_credits + amount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+  await supabase.from("credit_transactions").insert({
+    user_id: userId,
+    amount,
+    type: "refund",
+    description: `Reembolso: ${reason}`.slice(0, 200),
+  });
+}
