@@ -661,7 +661,7 @@ const resources = {
         promoGroupTitle: 'Genera material promocional',
         modules: {
           createMusic: { title: 'Crea Música', desc: 'Genera música original desde cero usando IA. Describe el estilo, mood y características que deseas.' },
-          editModify: { title: 'Masterizado profesional con IA', desc: 'Consigue un sonido listo para Spotify: más volumen, claridad y potencia en segundos.' },
+          editModify: { title: 'Masterizado profesional con IA', desc: 'Consigue un sonido optimizado y listo para Spotify: más volumen, claridad y potencia en segundos. Lleva tus canciones al siguiente nivel.' },
           inspire: { title: 'Inspírate', desc: 'Obtén ideas, prompts sugeridos y descubre combinaciones de géneros y moods.' },
           createVideoclips: { title: 'Crea Videoclips', desc: 'Genera videoclips musicales con IA. Describe el estilo visual, sube una imagen o crea desde texto.' },
           createCovers: { title: 'Material promocional', desc: 'Crea portadas, flyers, posts y todo lo que necesitas para promocionar tu música.' },
@@ -1669,7 +1669,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       legalText: 'Asegúrate de tener derechos sobre el contenido que subas o generes antes de registrarlo, distribuirlo o publicarlo.',
       modules: {
         createMusic: { title: 'Crea canciones', desc: 'Genera canciones completas o bases instrumentales a partir de una descripción y/o una letra. Si no tienes letra, también te ayudamos.' },
-        editModify: { title: 'Masterizado profesional', desc: 'Consigue un sonido listo para Spotify: más volumen, claridad y potencia en segundos.' },
+        editModify: { title: 'Masterizado profesional', desc: 'Consigue un sonido optimizado y listo para Spotify: más volumen, claridad y potencia en segundos. Lleva tus canciones al siguiente nivel.' },
         inspire: { title: 'Improvisa y experimenta', desc: 'Crea con 1 solo click canciones aleatorias o temáticas' },
         createVideoclips: { title: 'Videoclips', desc: 'Genera vídeos musicales y fusiónalos con audio de tu historial.' },
         createCovers: { title: 'Material promocional', desc: 'Crea portadas, flyers, posts y todo lo que necesitas para promocionar tu música.' },
