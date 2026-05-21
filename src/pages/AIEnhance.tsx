@@ -904,7 +904,7 @@ const AIEnhance = () => {
               : <Wand2 className="w-4 h-4" />}
             {isProcessing
               ? "Generando..."
-              : `Generar versión (${creditsRequired} cr)`}
+              : `Generar versión${creditsRequired > 0 ? ` (${creditsRequired} cr)` : ""}`}
           </Button>
           {isProcessing && <GenerationWarning />}
 
