@@ -719,6 +719,30 @@ const AIStudioCreate = () => {
     track('audio_downloaded', { feature: 'create_music' });
   };
 
+  // ── Descarga WAV (client-side via Web Audio API) ──
+  const [wavJobs, setWavJobs] = useState<Record<string, 'idle' | 'loading'>>({});
+  const downloadWav = async (result: GenerationResult) => {
+    if (wavJobs[result.id] === 'loading') return;
+    setWavJobs((p) => ({ ...p, [result.id]: 'loading' }));
+    try {
+      const { audioUrlToWavBlob } = await import('@/lib/audioToWav');
+      const blob = await audioUrlToWavBlob(result.audioUrl);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `musicdibs-${mode}-${result.id.slice(0, 8)}.wav`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      track('audio_downloaded', { feature: 'create_music' });
+    } catch (e) {
+      const err = e as Error;
+      toast({ title: t('aiShared.error'), description: err?.message || 'Error al exportar WAV', variant: 'destructive' });
+    } finally {
+      setWavJobs((p) => ({ ...p, [result.id]: 'idle' }));
+    }
+  };
+
   // ── Save as Virtual Artist ──
   const handleSaveVirtualArtist = async () => {
     if (!saveArtistName.trim() || !user) return;
@@ -2073,7 +2097,23 @@ const AIStudioCreate = () => {
                                       <Download className="w-4 h-4" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent><p>{t('aiCreate.downloadAudio')}</p></TooltipContent>
+                                  <TooltipContent><p>MP3</p></TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-2 text-[11px] font-semibold"
+                                      onClick={() => downloadWav(result)}
+                                      disabled={wavJobs[result.id] === 'loading'}
+                                    >
+                                      {wavJobs[result.id] === 'loading'
+                                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        : 'WAV'}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent><p>Descargar WAV</p></TooltipContent>
                                 </Tooltip>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
