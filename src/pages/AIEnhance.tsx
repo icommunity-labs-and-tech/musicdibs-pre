@@ -251,7 +251,7 @@ const AIEnhance = () => {
           if (updated.status === "completed" && updated.output_url) {
             setJobStatus("completed");
             setGeneratedAudioUrl(updated.output_url as string);
-            toast.success("¡Tu versión IA está lista!");
+            toast.success(t('aiEnhance.toastReady'));
           } else if (updated.status === "failed") {
             setJobStatus("failed");
             const raw = (updated.error_message as string) || "";
@@ -274,7 +274,7 @@ const AIEnhance = () => {
       if (data.status === "completed" && data.output_url) {
         setJobStatus("completed");
         setGeneratedAudioUrl(data.output_url);
-        toast.success("¡Tu versión IA está lista!");
+        toast.success(t('aiEnhance.toastReady'));
       } else if (data.status === "failed") {
         setJobStatus("failed");
         const { userMessage } = parseAiError(new Error(data.error_message || ""));
@@ -296,7 +296,7 @@ const AIEnhance = () => {
     const { data, error } = await supabase.storage
       .from("ai-generations")
       .upload(`enhance/${path}`, file, { contentType: file.type, upsert: false });
-    if (error) throw new Error(`Upload fallido: ${error.message}`);
+    if (error) throw new Error(`Upload failed: ${error.message}`);
     setUploadProgress(90);
     const { data: urlData } = supabase.storage.from("ai-generations").getPublicUrl(data.path);
     setUploadProgress(100);
@@ -358,12 +358,12 @@ const AIEnhance = () => {
       );
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.error || "Error al iniciar generación");
+        throw new Error(data?.error || t('aiEnhance.errStartGen'));
       }
       setLogId(data.logId);
-      toast.info("Generación iniciada. No cierres esta pestaña.");
+      toast.info(t('aiEnhance.toastStarted'));
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Error inesperado";
+      const errMsg = err instanceof Error ? err.message : t('aiEnhance.errUnexpected');
       setJobStatus("failed");
       setGenError(errMsg);
       toast.error(errMsg);
@@ -412,7 +412,7 @@ const AIEnhance = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
     } catch {
-      toast.error("Error al descargar el archivo. Inténtalo de nuevo.");
+      toast.error(t('aiEnhance.errDownload'));
     } finally {
       setIsDownloading(false);
     }
@@ -431,11 +431,11 @@ const AIEnhance = () => {
       a.click();
       URL.revokeObjectURL(a.href);
       setWavStatus("idle");
-      toast.success("Archivo WAV descargado");
+      toast.success(t('aiEnhance.toastWavReady'));
     } catch (e: unknown) {
       setWavStatus("error");
       const err = e as Error;
-      toast.error(err?.message || "Error al exportar WAV");
+      toast.error(err?.message || t('aiEnhance.errExportWav'));
     }
   };
 
@@ -450,11 +450,11 @@ const AIEnhance = () => {
           a.download = "musicdibs-enhance.wav";
           a.click();
           URL.revokeObjectURL(a.href);
-          toast.success("Archivo WAV descargado");
+          toast.success(t('aiEnhance.toastWavReady'));
         });
     } catch {
       window.open(url, "_blank");
-      toast.success("WAV listo — revisa las descargas");
+      toast.success(t('aiEnhance.toastWavCheckDownloads'));
     }
   };
 
@@ -477,11 +477,11 @@ const AIEnhance = () => {
       if (!res.ok) {
         if (data?.code === "insufficient_credits") {
           const midiCost = getFeatureCost("midi_generate");
-          toast.error(`No tienes suficientes créditos para exportar MIDI (${midiCost} créditos).`);
+          toast.error(t('aiEnhance.errMidiInsufficient', { cost: midiCost }));
         } else if (data?.code === "no_provider_task_id") {
-          toast.error("MIDI solo está disponible para tracks generados con KIE/Suno.");
+          toast.error(t('aiEnhance.errMidiNoProvider'));
         } else {
-          throw new Error(data?.message || "Error iniciando exportación MIDI");
+          throw new Error(data?.message || t('aiEnhance.errMidiStart'));
         }
         setMidiStatus("error");
         return;
@@ -494,7 +494,7 @@ const AIEnhance = () => {
         if (attempts > 48) {
           clearInterval(midiPollRef.current!);
           setMidiStatus("error");
-          toast.error("La exportación MIDI tardó demasiado. Inténtalo de nuevo.");
+          toast.error(t('aiEnhance.errMidiTimeout'));
           return;
         }
         const { data: row } = await supabase
@@ -505,7 +505,7 @@ const AIEnhance = () => {
         if (row?.status === "failed") {
           clearInterval(midiPollRef.current!);
           setMidiStatus("error");
-          toast.error("Error al generar el MIDI. No se han descontado créditos.");
+          toast.error(t('aiEnhance.errMidiGen'));
         }
         if (row?.status === "completed" && row?.output_url) {
           clearInterval(midiPollRef.current!);
@@ -516,13 +516,13 @@ const AIEnhance = () => {
           } catch { /* not JSON, use as-is */ }
           setMidiDownloadUrl(midiUrl);
           setMidiStatus("ready");
-          toast.success("¡MIDI listo para descargar!");
+          toast.success(t('aiEnhance.toastMidiReady'));
         }
       }, 5000);
     } catch (e: unknown) {
       setMidiStatus("error");
       const err = e as Error;
-      toast.error(err?.message || "Error al exportar MIDI");
+      toast.error(err?.message || t('aiEnhance.errMidiExport'));
     }
   };
 
@@ -552,8 +552,8 @@ const AIEnhance = () => {
   return (
     <>
       <SEO
-        title="Mejora tus canciones"
-        description="Sube tus demos y añade producción, extiende tu idea a una canción completa o genera nuevas versiones."
+        title={t('aiEnhance.seoTitle')}
+        description={t('aiEnhance.seoDesc')}
         path="/ai-studio/enhance"
       />
       <Navbar />
@@ -566,11 +566,11 @@ const AIEnhance = () => {
                 to="/ai-studio"
                 className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-3"
               >
-                <ArrowLeft className="w-4 h-4" /> AI Studio
+                <ArrowLeft className="w-4 h-4" /> {t('aiEnhance.backLink')}
               </Link>
-              <h1 className="text-3xl md:text-4xl font-bold">🎼 Mejora tus canciones</h1>
+              <h1 className="text-3xl md:text-4xl font-bold">{t('aiEnhance.pageTitle')}</h1>
               <p className="text-muted-foreground mt-1">
-                Trabaja sobre ideas musicales reales creadas por ti.
+                {t('aiEnhance.pageSubtitle')}
               </p>
             </div>
             <Button
@@ -579,7 +579,7 @@ const AIEnhance = () => {
               onClick={() => setKnowledgeOpen(true)}
               className="gap-1.5 text-muted-foreground"
             >
-              <BookOpen className="w-4 h-4" /> Guía IA
+              <BookOpen className="w-4 h-4" /> {t('aiEnhance.guideBtn')}
             </Button>
           </div>
 
@@ -588,15 +588,14 @@ const AIEnhance = () => {
           <Alert>
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              La IA genera reinterpretaciones basadas en tu idea original. Los resultados pueden variar
-              ligeramente — eso forma parte del proceso creativo.
+              {t('aiEnhance.infoAlert')}
             </AlertDescription>
           </Alert>
 
           {/* ── Selector de modo con tooltips ───────────────────────────────── */}
           <div className="space-y-3">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              ¿Qué quieres hacer?
+              {t('aiEnhance.modeSectionTitle')}
             </h2>
             <TooltipProvider delayDuration={150}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:items-stretch">
@@ -622,7 +621,7 @@ const AIEnhance = () => {
                             {/* Badge Recomendado */}
                             <div className="absolute -top-2.5 left-3 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg shadow-violet-500/40">
                               <Sparkles className="h-3 w-3" />
-                              Recomendado
+                              {t('aiEnhance.recommendedBadge')}
                             </div>
                           </>
                         )}
@@ -674,7 +673,7 @@ const AIEnhance = () => {
           {/* ── Upload ──────────────────────────────────────────────────────── */}
           <div className="space-y-3">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Tu audio
+              {t('aiEnhance.audioSectionTitle')}
             </h2>
             <FileDropzone
               onFileSelect={handleFileSelect}
@@ -687,8 +686,8 @@ const AIEnhance = () => {
               currentFile={audioFile}
               fileType="audio"
               disabled={isProcessing}
-              label="Sube tu demo"
-              description="MP3, WAV, OGG o FLAC— hasta 50 MB"
+              label={t('aiEnhance.uploadLabel')}
+              description={t('aiEnhance.uploadDesc')}
             />
           </div>
 
@@ -697,8 +696,8 @@ const AIEnhance = () => {
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold">
                 {selectedMode === "instrumental"
-                  ? "Describe el estilo musical (opcional pero recomendado)"
-                  : "Describe el resultado (opcional pero recomendado)"}
+                  ? t('aiEnhance.promptLabelInstrumental')
+                  : t('aiEnhance.promptLabelOther')}
               </label>
               <div className="flex items-center gap-2">
                 <Button
@@ -736,7 +735,7 @@ const AIEnhance = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <Select value={genre} onValueChange={setGenre} disabled={isProcessing}>
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Género" />
+                <SelectValue placeholder={t('aiEnhance.genrePlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {["Pop","Rock","Electronic","Hip-hop","Jazz","Classical","Latin","R&B","Folk","Reggaeton"].map((g) => (
@@ -746,7 +745,7 @@ const AIEnhance = () => {
             </Select>
             <Select value={mood} onValueChange={setMood} disabled={isProcessing}>
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Mood" />
+                <SelectValue placeholder={t('aiEnhance.moodPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
                 {["Happy","Sad","Epic","Chill","Dark","Romantic","Energetic","Melancholic"].map((m) => (
@@ -756,12 +755,12 @@ const AIEnhance = () => {
             </Select>
             <Select value={intensity} onValueChange={setIntensity} disabled={isProcessing}>
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder="Intensidad" />
+                <SelectValue placeholder={t('aiEnhance.intensityPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Suave</SelectItem>
-                <SelectItem value="medium">Media</SelectItem>
-                <SelectItem value="high">Intensa</SelectItem>
+                <SelectItem value="low">{t('aiEnhance.intensityLow')}</SelectItem>
+                <SelectItem value="medium">{t('aiEnhance.intensityMedium')}</SelectItem>
+                <SelectItem value="high">{t('aiEnhance.intensityHigh')}</SelectItem>
               </SelectContent>
             </Select>
             {(selectedMode === "instrumental" || selectedMode === "extend" || selectedMode === "add_vocals") ? (
@@ -777,7 +776,7 @@ const AIEnhance = () => {
                       : "border-border bg-card text-muted-foreground hover:border-primary/40"
                   )}
                 >
-                  ♂ Hombre
+                  ♂ {t('aiEnhance.vocalGenderMale').replace('♂ ', '')}
                 </button>
                 <button
                   type="button"
@@ -790,19 +789,19 @@ const AIEnhance = () => {
                       : "border-border bg-card text-muted-foreground hover:border-primary/40"
                   )}
                 >
-                  ♀ Mujer
+                  ♀ {t('aiEnhance.vocalGenderFemale').replace('♀ ', '')}
                 </button>
               </div>
             ) : selectedMode === "cover" ? (
               <Select value={voiceType} onValueChange={setVoiceType} disabled={isProcessing}>
                 <SelectTrigger className="h-9 text-sm">
-                  <SelectValue placeholder="Voz" />
+                  <SelectValue placeholder={t('aiEnhance.voicePlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="female">Femenina</SelectItem>
-                  <SelectItem value="male">Masculina</SelectItem>
-                  <SelectItem value="none">Sin voz</SelectItem>
-                  <SelectItem value="auto">Auto</SelectItem>
+                  <SelectItem value="female">{t('aiEnhance.voiceFemale')}</SelectItem>
+                  <SelectItem value="male">{t('aiEnhance.voiceMale')}</SelectItem>
+                  <SelectItem value="none">{t('aiEnhance.voiceNone')}</SelectItem>
+                  <SelectItem value="auto">{t('aiEnhance.voiceAuto')}</SelectItem>
                 </SelectContent>
               </Select>
             ) : null}
@@ -812,7 +811,7 @@ const AIEnhance = () => {
           {(selectedMode === "instrumental" || selectedMode === "extend" || selectedMode === "cover" || selectedMode === "add_vocals") && (
             <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground">
-                {selectedMode === "extend" ? "Estilo de extensión" : selectedMode === "cover" ? "Estilo de la versión" : selectedMode === "add_vocals" ? "Estilo vocal" : "Fidelidad al original"}
+                {selectedMode === "extend" ? t('aiEnhance.fidelityLabelExtension') : selectedMode === "cover" ? t('aiEnhance.fidelityLabelCover') : selectedMode === "add_vocals" ? t('aiEnhance.fidelityLabelVocal') : t('aiEnhance.fidelityLabelDefault')}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {(Object.entries(FIDELITY_PRESETS) as [FidelityPreset, typeof FIDELITY_PRESETS[FidelityPreset]][]).map(([key, preset]) => (
@@ -841,10 +840,10 @@ const AIEnhance = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-sm font-semibold text-muted-foreground">
-                  Extender desde
+                  {t('aiEnhance.extendFrom')}
                 </label>
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  {continueAt !== null ? `${continueAt}s` : `${Math.floor(audioDuration * 0.9)}s (auto)`}
+                  {continueAt !== null ? `${continueAt}s` : t('aiEnhance.extendAuto', { sec: Math.floor(audioDuration * 0.9) })}
                 </span>
               </div>
               <input
@@ -858,7 +857,7 @@ const AIEnhance = () => {
                 className="w-full accent-primary"
               />
               <p className="text-xs text-muted-foreground/70">
-                La IA continuará el audio desde este segundo. Por defecto: 90% de la duración ({Math.floor(audioDuration * 0.9)}s de {Math.floor(audioDuration)}s).
+                {t('aiEnhance.extendHint', { sec: Math.floor(audioDuration * 0.9), total: Math.floor(audioDuration) })}
               </p>
             </div>
           )}
@@ -904,8 +903,8 @@ const AIEnhance = () => {
               ? <Loader2 className="w-4 h-4 animate-spin" />
               : <Wand2 className="w-4 h-4" />}
             {isProcessing
-              ? "Generando..."
-              : `Generar versión${creditsRequired > 0 ? ` (${creditsRequired} cr)` : ""}`}
+              ? t('aiEnhance.generating')
+              : creditsRequired > 0 ? t('aiEnhance.generateBtnWithCost', { cost: creditsRequired }) : t('aiEnhance.generateBtn')}
           </Button>
           {isProcessing && <GenerationWarning />}
 
@@ -920,8 +919,8 @@ const AIEnhance = () => {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin text-primary" />
                   {jobStatus === "uploading"
-                    ? "Subiendo tu audio..."
-                    : "La IA está trabajando sobre tu demo. Puede tardar 2-4 minutos..."}
+                    ? t('aiEnhance.uploadingAudio')
+                    : t('aiEnhance.workingMsg')}
                 </div>
                 <Progress
                   value={jobStatus === "uploading" ? uploadProgress : undefined}
@@ -939,9 +938,9 @@ const AIEnhance = () => {
                 className="rounded-xl border border-green-500/30 bg-green-500/5 p-5 space-y-4"
               >
                 <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold">
-                  <CheckCircle2 className="w-5 h-5" /> ¡Tu versión IA está lista!
+                  <CheckCircle2 className="w-5 h-5" /> {t('aiEnhance.readyTitle')}
                 </div>
-                <AudioPlayer src={generatedAudioUrl} label="Versión generada con IA" />
+                <AudioPlayer src={generatedAudioUrl} label={t('aiEnhance.generatedLabel')} />
                 <div className="flex gap-2 flex-wrap">
                   {/* ── MP3 download */}
                   <Button
@@ -952,7 +951,7 @@ const AIEnhance = () => {
                     {isDownloading
                       ? <Loader2 className="w-4 h-4 animate-spin" />
                       : <Download className="w-4 h-4" />}
-                    {isDownloading ? "Descargando..." : "MP3"}
+                    {isDownloading ? t('aiEnhance.downloading') : t('aiEnhance.btnMp3')}
                   </Button>
 
                   {/* ── WAV export */}
@@ -965,14 +964,14 @@ const AIEnhance = () => {
                     {wavStatus === "loading"
                       ? <Loader2 className="w-4 h-4 animate-spin" />
                       : <FileAudio className="w-4 h-4" />}
-                    {wavStatus === "loading" ? "Exportando..." : "WAV"}
+                    {wavStatus === "loading" ? t('aiEnhance.exporting') : t('aiEnhance.btnWav')}
                   </Button>
 
                   {/* ── MIDI export */}
                   {midiDownloadUrl ? (
                     <Button asChild variant="outline" className="gap-2">
                       <a href={midiDownloadUrl} download>
-                        <FileMusic className="w-4 h-4" /> Descargar MIDI
+                        <FileMusic className="w-4 h-4" /> {t('aiEnhance.downloadMidi')}
                       </a>
                     </Button>
                   ) : (
@@ -985,13 +984,13 @@ const AIEnhance = () => {
                       {midiStatus === "loading"
                         ? <Loader2 className="w-4 h-4 animate-spin" />
                         : <FileMusic className="w-4 h-4" />}
-                      {midiStatus === "loading" ? "Generando MIDI..." : `MIDI${getFeatureCost("midi_generate") > 0 ? ` (${getFeatureCost("midi_generate")} cr)` : ""}`}
+                      {midiStatus === "loading" ? t('aiEnhance.generatingMidi') : getFeatureCost("midi_generate") > 0 ? t('aiEnhance.btnMidiWithCost', { cost: getFeatureCost("midi_generate") }) : t('aiEnhance.btnMidi')}
                     </Button>
                   )}
                 </div>
 
                 <Button variant="ghost" size="sm" onClick={handleReset} className="gap-2">
-                  <RefreshCw className="w-4 h-4" /> Crear otra versión
+                  <RefreshCw className="w-4 h-4" /> {t('aiEnhance.createAnother')}
                 </Button>
               </motion.div>
             )}
