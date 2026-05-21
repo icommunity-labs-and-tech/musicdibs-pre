@@ -211,6 +211,7 @@ serve(async (req) => {
     // La separación necesita el taskId de KIE (provider_task_id del audio original)
     const kiePayload = {
       taskId: sourceLog.provider_task_id,
+      audioId,
       type: "separate_vocal", // 2 stems (vocal + instrumental), 10 KIE credits
       callBackUrl,
     };
