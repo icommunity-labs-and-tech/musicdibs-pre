@@ -284,6 +284,14 @@ serve(async (req) => {
         model: MODEL_COVER_EXTEND,
         callBackUrl,
       };
+      // upload-extend requires continueAt (seconds in source where continuation begins).
+      // Use the full source duration if known; default to 30s otherwise.
+      if (mode === "extend") {
+        const dur = typeof source_duration_sec === "number" && source_duration_sec > 0
+          ? source_duration_sec
+          : 30;
+        kiePayload.continueAt = Math.max(1, Math.floor(dur));
+      }
     }
 
     console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost} model=${kiePayload.model}`);
