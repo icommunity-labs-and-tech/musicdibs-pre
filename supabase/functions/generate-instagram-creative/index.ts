@@ -57,8 +57,8 @@ serve(async (req) => {
       );
     }
 
-    // Check credits
-    const creditsNeeded = 1;
+    // Check credits (cost from operation_pricing)
+    const creditsNeeded = await getOperationCost(supabaseAdmin, 'instagram_creative', 1);
     const { data: profile } = await supabaseAdmin
       .from('profiles')
       .select('available_credits')
