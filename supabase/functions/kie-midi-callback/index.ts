@@ -126,16 +126,24 @@ serve(async (req) => {
         }
       }
 
+      const friendlyMsg =
+        code === 413
+          ? "El audio contiene letras protegidas por copyright y KIE no permite extraer su MIDI."
+          : code === 451
+          ? "El contenido del audio fue bloqueado por el filtro de KIE."
+          : body?.msg || `KIE code ${code} at stage ${stage}`;
+
       await supabase
         .from("ai_generation_logs")
         .update({
           status: "failed",
-          error_message: body?.msg || `KIE code ${code} at stage ${stage}`,
+          error_message: friendlyMsg,
           response_payload: body,
         })
         .eq("id", logId);
 
       return ok({ ok: false, refunded: true });
+
     }
 
     // ════════════════════════════════════════════════════════════════════════════
