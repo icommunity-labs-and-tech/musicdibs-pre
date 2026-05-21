@@ -1,5 +1,5 @@
 // supabase/functions/kie-enhance-generate/index.ts
-// KIE Suno enhance — 3 modes: instrumental, cover, extend.
+// KIE Suno enhance — 4 modes: instrumental, cover, extend, add_vocals.
 // FIX: customMode: false — KIE generates continuation autonomously, no lyrics needed.
 // Eliminates ElevenLabs STT dependency and error 531.
 // Callback routed through kie-suno-callback (already handles enhance feature_keys).
@@ -18,6 +18,9 @@
 // v22 — all modes: intensity ("low"/"medium"/"high") now included in styleParts/tags (was silently dropped).
 //        Model upgraded to V5_5 for instrumental (latest, better than V5 for this endpoint).
 //        Frontend preset "fidelidad" maps to audioWeight/styleWeight/weirdnessConstraint combos.
+// v23 — add_vocals mode: /api/v1/generate/add-vocals — adds vocal singing to an instrumental.
+//        Required: uploadUrl, prompt, title, negativeTags, style, callBackUrl.
+//        Optional: model, vocalGender, styleWeight, weirdnessConstraint, audioWeight.
 // Deploy: supabase functions deploy kie-enhance-generate
 //
 // Patrón idéntico a kie-suno-generate:
@@ -41,6 +44,7 @@ const FEATURE_KEYS: Record<string, string> = {
   cover:        "enhance_cover",        // Upload And Cover Audio
   extend:       "enhance_extend",       // Extend Music
   instrumental: "enhance_instrumental", // Add Instrumental
+  add_vocals:   "enhance_add_vocals",   // Add Vocals to instrumental
 };
 
 // ── Costes por defecto (fallback si operation_pricing no tiene la fila) ────────
@@ -48,6 +52,7 @@ const DEFAULT_CREDITS: Record<string, number> = {
   cover:        4,
   extend:       3,
   instrumental: 3,
+  add_vocals:   4,
 };
 
 // ── KIE endpoints por modo ─────────────────────────────────────────────────────
@@ -56,6 +61,7 @@ const KIE_ENDPOINTS: Record<string, string> = {
   cover:        "https://api.kie.ai/api/v1/generate/upload-cover",
   extend:       "https://api.kie.ai/api/v1/generate/upload-extend",   // upload-extend (external audio), not /extend (taskId-based)
   instrumental: "https://api.kie.ai/api/v1/generate/add-instrumental", // add-instrumental, not /upload-instrumental
+  add_vocals:   "https://api.kie.ai/api/v1/generate/add-vocals",       // Add Vocals to Music
 };
 
 serve(async (req) => {
@@ -101,7 +107,7 @@ serve(async (req) => {
     } = body || {};
 
     if (!mode || !FEATURE_KEYS[mode]) {
-      return json({ error: "Invalid mode. Use: cover | extend | instrumental" }, 400);
+      return json({ error: "Invalid mode. Use: cover | extend | instrumental | add_vocals" }, 400);
     }
     if (!source_audio_url || typeof source_audio_url !== "string") {
       return json({ error: "source_audio_url is required" }, 400);
@@ -331,6 +337,26 @@ serve(async (req) => {
       if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
       if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
       if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
+    } else {
+      // add-vocals — /api/v1/generate/add-vocals
+      // Required: uploadUrl, prompt, title, negativeTags, style, callBackUrl
+      // No customMode / defaultParamFlag / instrumental fields for this endpoint.
+      // vocalGender controls the singing voice gender directly.
+      kiePayload = {
+        uploadUrl: source_audio_url,
+        title,
+        prompt: styleParts.slice(0, 500) || "Add beautiful vocals to this instrumental track",
+        style: styleParts || "pop vocal",
+        negativeTags,
+        model: MODEL_COVER_EXTEND, // V5 — good vocal quality
+        callBackUrl,
+      };
+      // vocalGender: direct control of the generated singing voice gender
+      if (vocal_gender === "m" || vocal_gender === "f") kiePayload.vocalGender = vocal_gender;
+      // Quality params
+      if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
+      if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
+      if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
     }
 
     console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost} model=${kiePayload.model}`);
@@ -375,55 +401,4 @@ serve(async (req) => {
       .eq("id", logId);
 
     return json({ ok: true, logId, taskId, status: "processing" });
-  } catch (err) {
-    console.error("[kie-enhance-generate] unexpected error", err);
-    return json({ error: "internal_error", message: (err as Error).message }, 500);
-  }
-});
-
-function defaultPromptForMode(mode: string): string {
-  if (mode === "cover") return "high quality cover version, same melody, professional production";
-  if (mode === "extend") return "natural continuation of the song, same style and mood";
-  return "instrumental backing track, professional production";
-}
-
-async function refund(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  amount: number,
-  reason: string,
-) {
-  try {
-    const { data: p } = await supabase
-      .from("profiles")
-      .select("available_credits")
-      .eq("user_id", userId)
-      .single();
-    if (!p) return;
-    await supabase
-      .from("profiles")
-      .update({
-        available_credits: (p.available_credits ?? 0) + amount,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId);
-    await supabase.from("credit_transactions").insert({
-      user_id: userId,
-      amount,
-      type: "refund",
-      description: `Reembolso (enhance): ${reason}`.slice(0, 200),
-    });
-  } catch (e) {
-    console.error("[kie-enhance-generate] refund failed", e);
-  }
-}
-
-function json(payload: unknown, status = 200, isOptions = false): Response {
-  if (isOptions) return new Response(null, { status, headers: corsHeaders });
-  return new Response(JSON.stringify(payload), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
-     
+  } catch
