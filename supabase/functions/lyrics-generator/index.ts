@@ -83,16 +83,16 @@ serve(async (req) => {
       existingLyrics,
     } = await req.json()
 
-    const systemPrompt = `Eres un compositor profesional de letras musicales con 20 años de experiencia.
+    const systemPrompt = `Eres un compositor profesional de letras musicales con 20 años de experiencia, especializado en formatear letras para SUNO AI.
 Generas letras originales, creativas y de alta calidad en cualquier idioma y género.
 
-REGLAS DE FORMATO:
-- Usa etiquetas claras: [Verso 1], [Coro], [Verso 2], [Puente], [Outro], etc.
-- Cada verso tiene entre 4 y 8 líneas
-- El coro se repite y debe ser memorable y pegadizo
-- Mantén coherencia temática y narrativa entre secciones
-- Respeta el esquema de rima indicado en TODOS los versos
-
+REGLAS DE FORMATO SUNO (OBLIGATORIO):
+- Usa SIEMPRE paréntesis () para todas las etiquetas de sección y marcas, NUNCA corchetes [].
+- Etiquetas de estructura en inglés y entre paréntesis: (Verse 1), (Chorus), (Verse 2), (Pre-Chorus), (Bridge), (Outro), (Intro), (Hook), (Drop), (Break), (Interlude).
+- Marcas de estilo, flow, instrumentación y dinámica también entre paréntesis cuando aporten valor, p. ej.: (soft piano), (heavy 808 bass), (whispered), (spoken word), (ad-lib), (harmonies), (guitar solo), (build up), (silence), (female vocal), (male vocal), (rap flow triplets), (echo), (fade out).
+- Cada verso entre 4 y 8 líneas; el coro repetible, memorable y pegadizo.
+- Mantén coherencia temática y narrativa entre secciones.
+- Respeta el esquema de rima indicado en TODOS los versos.
 
 ESQUEMAS DE RIMA:
 - ABAB: líneas alternas riman entre sí
@@ -101,11 +101,12 @@ ESQUEMAS DE RIMA:
 - Libre: sin rima obligatoria, prioriza fluidez y emoción
 
 PROHIBIDO ESTRICTAMENTE:
+- NO uses corchetes [] bajo ninguna circunstancia — Suno los ignora o malinterpreta.
 - NO añadas conteos de sílabas al final de las líneas (ej: "(9)", "(10)").
-- NO añadas números entre paréntesis ni ningún tipo de anotación numérica en las líneas.
-- NO añadas explicaciones, comentarios, análisis métrico ni introducciones.
+- NO añadas números al final de las líneas ni anotaciones métricas.
+- NO añadas explicaciones, comentarios, análisis ni introducciones.
 
-Devuelve SOLO la letra con sus etiquetas de sección, sin ningún número ni paréntesis al final de cada línea.`
+Devuelve SOLO la letra con sus etiquetas de sección entre paréntesis, lista para pegar en Suno.`
 
     let userPrompt = `Compón una letra musical con estas características:\n\n`
 
@@ -125,12 +126,13 @@ Devuelve SOLO la letra con sus etiquetas de sección, sin ningún número ni par
     if (structure) {
       userPrompt += `ESTRUCTURA: ${structure}\n`
     } else {
-      userPrompt += `ESTRUCTURA: Verso 1 + Coro + Verso 2 + Coro + Puente + Coro final\n`
+      userPrompt += `ESTRUCTURA: (Verse 1) + (Chorus) + (Verse 2) + (Chorus) + (Bridge) + (Chorus)\n`
     }
 
     if (regenerateSection && existingLyrics) {
       userPrompt = `Tengo esta letra:\n\n${existingLyrics}\n\n` +
-        `Regenera SOLO la sección [${regenerateSection}] manteniendo el resto intacto.\n` +
+        `Regenera SOLO la sección (${regenerateSection}) manteniendo el resto intacto.\n` +
+        `Usa SIEMPRE paréntesis () para las etiquetas de sección (formato Suno), nunca corchetes [].\n` +
         `Mantén el mismo esquema de rima, idioma y estilo.\n` +
         `Devuelve la letra COMPLETA con la sección regenerada.`
     }
