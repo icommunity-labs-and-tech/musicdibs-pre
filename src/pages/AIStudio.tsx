@@ -224,7 +224,7 @@ const AIStudio = () => {
             </div>
 
             {/* Row 1 */}
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
               {topRowModules.map((m) => renderModuleCard(m))}
             </div>
 
