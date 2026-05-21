@@ -46,9 +46,9 @@ const AIStudio = () => {
       descKey: "aiStudio.modules.enhance.desc",
       icon: Mic2,
       href: "/ai-studio/enhance",
-      available: false,
+      available: true,
       costsCredits: true,
-      beta: true,
+      featured: true,
       featureKey: 'enhance_audio' as const,
       color: "from-violet-500 to-purple-600"
     },
@@ -102,27 +102,57 @@ const AIStudio = () => {
     const cost = module.featureKey ? FEATURE_COSTS[module.featureKey] : 0;
     const disabled = !module.available || (module.costsCredits && !hasEnough(cost));
     const isInline = !!(module as any).inlineView;
+    const isFeatured = !!(module as any).featured;
 
-    return (
-      <Card key={module.titleKey} className={`relative overflow-hidden transition-all duration-300 ${extraClass} ${!module.available ? 'opacity-50 grayscale pointer-events-none' : disabled ? 'opacity-60 grayscale' : 'hover:shadow-lg hover:-translate-y-1'}`}>
-        {!module.available && (
+    const cardInner = (
+      <Card
+        key={module.titleKey}
+        className={`relative overflow-hidden transition-all duration-300 ${extraClass} ${
+          isFeatured
+            ? 'rounded-[10px] hover:shadow-2xl hover:-translate-y-1 border-0'
+            : !module.available
+              ? 'opacity-50 grayscale pointer-events-none'
+              : disabled
+                ? 'opacity-60 grayscale'
+                : 'hover:shadow-lg hover:-translate-y-1'
+        }`}
+      >
+        {/* ── Featured: glow strip + shimmer overlay */}
+        {isFeatured && (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-pink-500/5 pointer-events-none" />
+            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-violet-500 via-pink-400 to-fuchsia-500" />
+          </>
+        )}
+        {/* ── Non-featured color strip */}
+        {!isFeatured && (
+          <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${module.color}`} />
+        )}
+
+        {/* ── Badges */}
+        {isFeatured && (
+          <span className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+            ⚡ TOP
+          </span>
+        )}
+        {!isFeatured && !module.available && (
           <Badge variant="secondary" className="absolute top-3 right-3 z-10 text-[10px]">
             {t('aiStudio.comingSoon')}
           </Badge>
         )}
-        {module.available && module.costsCredits === false && (
+        {!isFeatured && module.available && module.costsCredits === false && (
           <Badge className="absolute top-3 right-3 z-10 text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white border-0">
             {t('aiStudio.free', 'Gratis')}
           </Badge>
         )}
-        {module.available && !hasEnough(cost) && module.costsCredits && (
+        {!isFeatured && module.available && !hasEnough(cost) && module.costsCredits && (
           <Badge variant="destructive" className="absolute top-3 right-3 z-10 text-[10px]">
             {t('aiStudio.noCredits')}
           </Badge>
         )}
-        <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${module.color}`} />
+
         <CardHeader className={extraClass ? "flex-1" : undefined}>
-          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${module.color} flex items-center justify-center mb-4`}>
+          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${module.color} flex items-center justify-center mb-4 ${isFeatured ? 'shadow-[0_4px_14px_rgba(139,92,246,0.45)]' : ''}`}>
             <module.icon className="w-6 h-6 text-white" />
           </div>
           <CardTitle className="flex items-center gap-2 mb-2">
@@ -159,7 +189,7 @@ const AIStudio = () => {
               {t('aiStudio.startBtn')}
             </Button>
           ) : (
-            <Button asChild className="w-full" variant="default">
+            <Button asChild className={`w-full ${isFeatured ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white border-0 shadow-[0_2px_10px_rgba(139,92,246,0.4)]' : ''}`} variant="default">
               <Link to={module.href}>
                 <Zap className="w-4 h-4 mr-2" />
                 {t('aiStudio.startBtn')}
@@ -169,6 +199,19 @@ const AIStudio = () => {
         </CardContent>
       </Card>
     );
+
+    if (isFeatured) {
+      return (
+        <div
+          key={module.titleKey}
+          className="relative p-[2px] rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 shadow-[0_0_28px_rgba(139,92,246,0.4),0_0_8px_rgba(139,92,246,0.2)]"
+        >
+          {cardInner}
+        </div>
+      );
+    }
+
+    return cardInner;
   };
 
   return (
