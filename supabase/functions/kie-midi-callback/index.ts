@@ -150,6 +150,14 @@ serve(async (req) => {
 
       if (!separationTaskId) {
         console.warn("[kie-midi-callback] no separation taskId in payload", JSON.stringify(body).slice(0, 300));
+        const charged = (logRow.user_credits_charged as number) || 0;
+        if (charged > 0) {
+          await supabase.rpc("refund_user_credits", {
+            p_user_id: userId,
+            p_amount: charged,
+            p_reason: "Reembolso: KIE no devolvió taskId de separación",
+          });
+        }
         await supabase
           .from("ai_generation_logs")
           .update({
@@ -158,7 +166,7 @@ serve(async (req) => {
             response_payload: body,
           })
           .eq("id", logId);
-        return ok({ warning: "no separation taskId" });
+        return ok({ warning: "no separation taskId", refunded: charged > 0 });
       }
 
       // Preparar callback para la etapa MIDI
