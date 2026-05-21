@@ -2097,7 +2097,23 @@ const AIStudioCreate = () => {
                                       <Download className="w-4 h-4" />
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent><p>{t('aiCreate.downloadAudio')}</p></TooltipContent>
+                                  <TooltipContent><p>MP3</p></TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 px-2 text-[11px] font-semibold"
+                                      onClick={() => downloadWav(result)}
+                                      disabled={wavJobs[result.id] === 'loading'}
+                                    >
+                                      {wavJobs[result.id] === 'loading'
+                                        ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        : 'WAV'}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent><p>Descargar WAV</p></TooltipContent>
                                 </Tooltip>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
