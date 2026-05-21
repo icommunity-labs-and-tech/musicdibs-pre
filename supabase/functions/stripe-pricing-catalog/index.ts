@@ -175,10 +175,8 @@ serve(async (req) => {
         usedPriceIds.add(price.id);
       }
     }
-    // Third pass: type/interval-only fallback for non-tiered plans
-    // (monthly, individual, and the first annual tier). Skips already-used
-    // prices so we never duplicate the same price across multiple tiers.
-    const fallbackEligible = new Set(["monthly", "individual", "annual_100"]);
+    // Third pass: type/interval-only fallback for monthly + individual.
+    const fallbackEligible = new Set(["monthly", "individual"]);
     for (const definition of PLAN_DEFINITIONS) {
       if (matched.has(definition.planId)) continue;
       if (!fallbackEligible.has(definition.planId)) continue;
@@ -195,6 +193,47 @@ serve(async (req) => {
         usedPriceIds.add(price.id);
       }
     }
+
+    // Fourth pass: annual tiers fallback when Stripe prices have no metadata.
+    // Since the Stripe "Plan Anual" product has multiple prices distinguished
+    // only by amount, sort the remaining yearly prices ASC by amount and
+    // assign them to annual_100, annual_200, annual_300, annual_500, annual_1000
+    // in that order (cheapest plan = fewest credits).
+    const annualTiers = PLAN_DEFINITIONS.filter(
+      (d) => d.productType === "annual" && !matched.has(d.planId),
+    );
+    if (annualTiers.length > 0) {
+      const candidates = prices.data.filter(
+        (p) =>
+          !usedPriceIds.has(p.id) &&
+          p.type === "recurring" &&
+          p.recurring?.interval === "year" &&
+          p.unit_amount !== null,
+      );
+      // Dedupe by unit_amount (keep first occurrence)
+      const seenAmounts = new Set<number>();
+      const uniqueByAmount = candidates.filter((p) => {
+        const amt = p.unit_amount as number;
+        if (seenAmounts.has(amt)) return false;
+        seenAmounts.add(amt);
+        return true;
+      });
+      // Sort DESC by amount, then keep the top N (most expensive ones,
+      // ignoring legacy/test cheap prices), then sort ASC for assignment.
+      const sortedDesc = [...uniqueByAmount].sort(
+        (a, b) => (b.unit_amount ?? 0) - (a.unit_amount ?? 0),
+      );
+      const topN = sortedDesc.slice(0, annualTiers.length);
+      const ascending = topN.sort((a, b) => (a.unit_amount ?? 0) - (b.unit_amount ?? 0));
+      annualTiers.forEach((definition, idx) => {
+        const price = ascending[idx];
+        if (price) {
+          matched.set(definition.planId, price);
+          usedPriceIds.add(price.id);
+        }
+      });
+    }
+
 
     const plans = PLAN_DEFINITIONS.map((definition) => {
       const price = matched.get(definition.planId);
