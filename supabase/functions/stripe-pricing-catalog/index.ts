@@ -92,17 +92,23 @@ function metadataMatchesPlan(price: Stripe.Price, planId: string) {
   );
 }
 
-function matchesDefinition(price: Stripe.Price, definition: PlanDefinition) {
+function matchesDefinitionStrict(price: Stripe.Price, definition: PlanDefinition) {
   if (definition.mode === "subscription") {
     const expectedInterval = definition.billingInterval === "yearly" ? "year" : "month";
     if (price.type !== "recurring" || price.recurring?.interval !== expectedInterval) return false;
-    if (metadataMatchesPlan(price, definition.planId)) return true;
-    // Only infer from explicit credits metadata/text — never fall back to definition.credits
-    const explicit = explicitCredits(price);
-    return explicit !== null && explicit === definition.credits;
+    return metadataMatchesPlan(price, definition.planId);
   }
   if (price.type !== "one_time") return false;
-  if (metadataMatchesPlan(price, definition.planId)) return true;
+  return metadataMatchesPlan(price, definition.planId);
+}
+
+function matchesDefinitionLoose(price: Stripe.Price, definition: PlanDefinition) {
+  if (definition.mode === "subscription") {
+    const expectedInterval = definition.billingInterval === "yearly" ? "year" : "month";
+    if (price.type !== "recurring" || price.recurring?.interval !== expectedInterval) return false;
+  } else {
+    if (price.type !== "one_time") return false;
+  }
   const explicit = explicitCredits(price);
   return explicit !== null && explicit === definition.credits;
 }
@@ -115,6 +121,12 @@ function explicitCredits(price: Stripe.Price): number | null {
   const inferredCredits = parseCreditsFromText(price.lookup_key, price.nickname, productName(price));
   return Number.isFinite(inferredCredits) && inferredCredits > 0 ? inferredCredits : null;
 }
+
+function resolveCredits(price: Stripe.Price, definition: PlanDefinition) {
+  const explicit = explicitCredits(price);
+  return explicit ?? definition.credits;
+}
+
 
 function resolveCredits(price: Stripe.Price, definition: PlanDefinition) {
   const productMetadata = getProductMetadata(price);
