@@ -162,9 +162,47 @@ export default function AdminApiCostsPage() {
     return <Badge variant="destructive">{fmtPct(pct)}</Badge>;
   };
 
+  // Aggregate daily data by date (total across all APIs/features)
+  interface DailyAggregate {
+    date: string;
+    total_uses: number;
+    total_credits_charged: number;
+    total_revenue_eur: number;
+    total_api_cost_eur: number;
+    gross_margin_eur: number;
+    margin_pct: number;
+    features_count: number;
+  }
+  const dailyAggregatedMap: Record<string, DailyAggregate> = {};
+  dailyData.forEach(d => {
+    if (!dailyAggregatedMap[d.date]) {
+      dailyAggregatedMap[d.date] = {
+        date: d.date,
+        total_uses: 0,
+        total_credits_charged: 0,
+        total_revenue_eur: 0,
+        total_api_cost_eur: 0,
+        gross_margin_eur: 0,
+        margin_pct: 0,
+        features_count: 0,
+      };
+    }
+    const a = dailyAggregatedMap[d.date];
+    a.total_uses += Number(d.total_uses);
+    a.total_credits_charged += Number(d.total_credits_charged);
+    a.total_revenue_eur += Number(d.total_revenue_eur);
+    a.total_api_cost_eur += Number(d.total_api_cost_eur);
+    a.gross_margin_eur += Number(d.gross_margin_eur);
+    a.features_count += 1;
+  });
+  const dailyAggregated = Object.values(dailyAggregatedMap)
+    .map(a => ({ ...a, margin_pct: a.total_revenue_eur > 0 ? (a.gross_margin_eur / a.total_revenue_eur) * 100 : 0 }))
+    .sort((x, y) => y.date.localeCompare(x.date));
+
   // Pagination
-  const totalPages = Math.max(1, Math.ceil(dailyData.length / PAGE_SIZE));
-  const paginatedDaily = dailyData.slice((dailyPage - 1) * PAGE_SIZE, dailyPage * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(dailyAggregated.length / PAGE_SIZE));
+  const paginatedDaily = dailyAggregated.slice((dailyPage - 1) * PAGE_SIZE, dailyPage * PAGE_SIZE);
+
 
   return (
     <div className="space-y-6">
