@@ -48,6 +48,7 @@ const AIStudio = () => {
       href: "/ai-studio/enhance",
       available: true,
       costsCredits: true,
+      beta: true,
       featureKey: 'enhance_audio' as const,
       color: "from-violet-500 to-purple-600"
     },
@@ -126,6 +127,9 @@ const AIStudio = () => {
           </div>
           <CardTitle className="flex items-center gap-2 mb-2">
             {t(module.titleKey)}
+            {module.beta && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">BETA</Badge>
+            )}
           </CardTitle>
           <CardDescription className="mb-4">{t(module.descKey)}</CardDescription>
           {module.costsCredits && cost > 0 ? (
