@@ -1,6 +1,7 @@
 // 🎼 Mejorar demo con IA — AI Enhance Module
 // Route: /ai-studio/enhance
 // v3 — vocalGender toggle + fidelity presets (faithful/balanced/creative) for instrumental mode
+// v4 — add_vocals mode: añadir voz a un instrumental via KIE /api/v1/generate/add-vocals
 
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -39,11 +40,11 @@ import {
   ArrowLeft, Wand2, Loader2, Play, Pause,
   Download, RefreshCw, CheckCircle2, X,
   Layers, Repeat2, Expand, AlertTriangle, BookOpen, Sparkles,
-  FileMusic, FileAudio,
+  FileMusic, FileAudio, Mic,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type EnhanceMode = "instrumental" | "cover" | "extend";
+type EnhanceMode = "instrumental" | "cover" | "extend" | "add_vocals";
 type JobStatus = "idle" | "uploading" | "processing" | "completed" | "failed";
 type FidelityPreset = "faithful" | "balanced" | "creative";
 
@@ -75,6 +76,7 @@ const MODE_FEATURE_KEY: Record<EnhanceMode, string> = {
   instrumental: "enhance_instrumental",
   cover: "enhance_cover",
   extend: "enhance_extend",
+  add_vocals: "enhance_add_vocals",
 };
 
 const MODES = [
@@ -115,6 +117,19 @@ const MODES = [
       "Continuar una demo",
       "Ampliar una intro",
       "Transformar una idea corta en canción completa",
+    ],
+  },
+  {
+    id: "add_vocals" as EnhanceMode,
+    label: "Añadir voz",
+    tagline: "Da vida a tu instrumental con una voz generada por IA.",
+    icon: <Mic className="w-5 h-5" />,
+    gradient: "from-emerald-500 to-teal-500",
+    placeholder: "Voz femenina emotiva en español, estilo pop melancólico. Letra sobre soledad y esperanza.",
+    useCases: [
+      "Añadir voz cantada a un instrumental",
+      "Crear una maqueta vocal completa",
+      "Explorar distintos estilos vocales sobre tu música",
     ],
   },
 ];
@@ -323,6 +338,13 @@ const AIEnhance = () => {
             }),
             // ── quality params: cover (voice_type sent separately, no vocal_gender) ─
             ...(selectedMode === "cover" && {
+              audio_weight: FIDELITY_PRESETS[fidelityPreset].audio_weight,
+              style_weight: FIDELITY_PRESETS[fidelityPreset].style_weight,
+              weirdness_constraint: FIDELITY_PRESETS[fidelityPreset].weirdness_constraint,
+            }),
+            // ── quality params: add_vocals (vocalGender controls singing voice gender) ─
+            ...(selectedMode === "add_vocals" && {
+              vocal_gender: vocalGender,
               audio_weight: FIDELITY_PRESETS[fidelityPreset].audio_weight,
               style_weight: FIDELITY_PRESETS[fidelityPreset].style_weight,
               weirdness_constraint: FIDELITY_PRESETS[fidelityPreset].weirdness_constraint,
@@ -741,7 +763,7 @@ const AIEnhance = () => {
                 <SelectItem value="high">Intensa</SelectItem>
               </SelectContent>
             </Select>
-            {(selectedMode === "instrumental" || selectedMode === "extend") ? (
+            {(selectedMode === "instrumental" || selectedMode === "extend" || selectedMode === "add_vocals") ? (
               <div className="flex gap-1.5">
                 <button
                   type="button"
@@ -785,11 +807,11 @@ const AIEnhance = () => {
             ) : null}
           </div>
 
-          {/* ── Fidelidad al original (instrumental + extend + cover) ─────────── */}
-          {(selectedMode === "instrumental" || selectedMode === "extend" || selectedMode === "cover") && (
+          {/* ── Fidelidad al original (todos los modos) ─────────────────────── */}
+          {(selectedMode === "instrumental" || selectedMode === "extend" || selectedMode === "cover" || selectedMode === "add_vocals") && (
             <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground">
-                {selectedMode === "extend" ? "Estilo de extensión" : selectedMode === "cover" ? "Estilo de la versión" : "Fidelidad al original"}
+                {selectedMode === "extend" ? "Estilo de extensión" : selectedMode === "cover" ? "Estilo de la versión" : selectedMode === "add_vocals" ? "Estilo vocal" : "Fidelidad al original"}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {(Object.entries(FIDELITY_PRESETS) as [FidelityPreset, typeof FIDELITY_PRESETS[FidelityPreset]][]).map(([key, preset]) => (
@@ -921,39 +943,4 @@ const AIEnhance = () => {
                   <Button
                     variant="outline"
                     onClick={handleExportWav}
-                    disabled={wavStatus === "loading"}
-                    className="gap-2"
-                  >
-                    {wavStatus === "loading"
-                      ? <Loader2 className="w-4 h-4 animate-spin" />
-                      : <FileAudio className="w-4 h-4" />}
-                    {wavStatus === "loading" ? "Convirtiendo..." : wavStatus === "error" ? "Error WAV" : "WAV"}
-                  </Button>
-
-                  {/* ── MIDI export */}
-                  {midiStatus === "ready" && midiDownloadUrl ? (
-                    <Button
-                      variant="secondary"
-                      className="gap-2"
-                      onClick={() => {
-                        const a = document.createElement("a");
-                        a.href = midiDownloadUrl;
-                        a.download = "musicdibs-enhance.mid";
-                        a.click();
-                      }}
-                    >
-                      <FileMusic className="w-4 h-4" />
-                      MIDI
-                    </Button>
-                  ) : null}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </main>
-    </>
-  );
-}
-
-export default AIEnhance;
+     
