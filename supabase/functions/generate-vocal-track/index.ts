@@ -29,7 +29,7 @@ serve(async (req) => {
     if (!lyrics?.trim()) return new Response(JSON.stringify({ error: 'lyrics is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     if (!voice_id) return new Response(JSON.stringify({ error: 'voice_id is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    const CREDITS_COST = 1;
+    const CREDITS_COST = await getOperationCost(supabase, 'generate_audio_elevenlabs', 1);
     const { data: profile } = await supabase.from('profiles').select('available_credits').eq('user_id', user.id).single();
     if (!profile || profile.available_credits < CREDITS_COST) return new Response(JSON.stringify({ error: 'insufficient_credits' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
