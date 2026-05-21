@@ -1800,15 +1800,6 @@ const AIStudioCreate = () => {
                         <RotateCcw className="h-3.5 w-3.5" />
                         {t('aiCreate.regenFull')}
                       </Button>
-                      <Link
-                        to={`/ai-studio/vocal?lyrics=${encodeURIComponent(generatedLyrics)}`}
-                        className="block mt-3"
-                      >
-                        <Button variant="outline" size="sm" className="w-full gap-2 border-primary/30 text-primary hover:bg-primary/10">
-                          <Mic className="w-3.5 h-3.5" />
-                          {t('aiCreate.singThisLyrics')}
-                        </Button>
-                      </Link>
                     </CardContent>
                   </Card>
                 )}
