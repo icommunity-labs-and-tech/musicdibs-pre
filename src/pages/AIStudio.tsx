@@ -55,15 +55,14 @@ const AIStudio = () => {
 
   const bottomRowModules = [
     {
-      titleKey: "aiStudio.modules.virtualArtists.title",
-      descKey: "aiStudio.modules.virtualArtists.desc",
-      icon: Users,
-      href: "__inline__",
+      titleKey: "aiStudio.modules.editModify.title",
+      descKey: "aiStudio.modules.editModify.desc",
+      icon: Edit3,
+      href: "/ai-studio/edit",
       available: true,
-      costsCredits: false,
-      featureKey: 'inspiration' as const,
-      color: "from-violet-500 to-purple-600",
-      inlineView: "virtual-artists" as ActiveView,
+      costsCredits: true,
+      featureKey: 'edit_audio' as const,
+      color: "from-fuchsia-500 to-purple-600"
     },
     {
       titleKey: "aiStudio.modules.createCovers.title",
@@ -86,14 +85,15 @@ const AIStudio = () => {
       color: "from-amber-500 to-orange-500"
     },
     {
-      titleKey: "aiStudio.modules.editModify.title",
-      descKey: "aiStudio.modules.editModify.desc",
-      icon: Edit3,
-      href: "/ai-studio/edit",
-      available: false,
-      costsCredits: true,
-      featureKey: 'edit_audio' as const,
-      color: "from-gray-400 to-gray-500"
+      titleKey: "aiStudio.modules.virtualArtists.title",
+      descKey: "aiStudio.modules.virtualArtists.desc",
+      icon: Users,
+      href: "__inline__",
+      available: true,
+      costsCredits: false,
+      featureKey: 'inspiration' as const,
+      color: "from-violet-500 to-purple-600",
+      inlineView: "virtual-artists" as ActiveView,
     },
   ];
 
