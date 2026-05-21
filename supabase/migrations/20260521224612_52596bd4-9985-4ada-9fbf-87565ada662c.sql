@@ -1,0 +1,1 @@
+SELECT public.refund_user_credits('1a3b50d8-704e-4694-b9a4-13f89e133d46'::uuid, 2, 'Reembolso manual: MIDI export fallido log f59cadac (sin midi_url)');
