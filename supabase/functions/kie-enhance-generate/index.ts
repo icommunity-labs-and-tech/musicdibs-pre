@@ -5,6 +5,9 @@
 // Callback routed through kie-suno-callback (already handles enhance feature_keys).
 // v15 — uploadUrl (not audioUrl), model V5, defaultParamFlag: false, source_language,
 //        instrumental: boolean (required by KIE for all upload-* endpoints, fixes code 422)
+// v16 — tags field: KIE customMode:false requires "tags" (style descriptor) in addition to
+//        prompt. Missing tags causes 502 "Please enter tags." on upload-instrumental.
+//        tags = styleParts (genre+mood+style), prompt = langInstruction + styleParts.
 // Deploy: supabase functions deploy kie-enhance-generate
 //
 // Patrón idéntico a kie-suno-generate:
@@ -41,8 +44,8 @@ const DEFAULT_CREDITS: Record<string, number> = {
 // Ajustar según documentación actual de KIE AI
 const KIE_ENDPOINTS: Record<string, string> = {
   cover:        "https://api.kie.ai/api/v1/generate/upload-cover",
-  extend:       "https://api.kie.ai/api/v1/generate/upload-extend",
-  instrumental: "https://api.kie.ai/api/v1/generate/add-instrumental",
+  extend:       "https://api.kie.ai/api/v1/generate/extend",
+  instrumental: "https://api.kie.ai/api/v1/generate/upload-instrumental",
 };
 
 serve(async (req) => {
@@ -211,7 +214,7 @@ serve(async (req) => {
       defaultPromptForMode(mode);
 
     const allParts = [...langParts, styleParts];
-    const finalPrompt = allParts.join(" ").slice(0, 500);
+    const finalPrompt = allParts.join(" ").slice(0, 600);
 
     // customMode: false → KIE/Suno generates autonomously, no lyrics required.
     // Fixes error 531 without ElevenLabs STT dependency.
@@ -221,17 +224,14 @@ serve(async (req) => {
     // instrumental: boolean — REQUIRED by KIE for all upload-* endpoints.
     //   cover/extend → false (has vocals), instrumental → true (no vocals).
     //   Missing this field causes 422 "instrumental cannot be null".
+    // tags — REQUIRED by KIE when customMode:false. Style descriptor (genre/mood/style).
+    //   Missing causes 502 "Please enter tags." on upload-instrumental (and likely others).
+    //   tags = styleParts only; prompt = langInstruction + styleParts (for cover/extend).
     const MODEL = "V5";
-    const baseName = (typeof source_filename === "string" ? source_filename.replace(/\.[^/.]+$/, "") : "").trim();
-    const title = (baseName || `Enhanced ${mode}`).slice(0, 80);
-    const tags = [genre, mood, musical_style].filter(Boolean).join(", ").slice(0, 200)
-      || defaultTagsForMode(mode);
     const kiePayload: Record<string, unknown> = {
       uploadUrl: source_audio_url,
+      tags: styleParts,
       prompt: finalPrompt,
-      title,
-      style: tags,
-      tags,
       customMode: false,
       defaultParamFlag: false,
       model: MODEL,
@@ -304,49 +304,4 @@ serve(async (req) => {
 });
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
-function defaultPromptForMode(mode: string): string {
-  if (mode === "cover") return "Keep the original essence, enhance production quality";
-  if (mode === "extend") return "Continue naturally maintaining style and tempo";
-  return "Add professional production and instrumentation";
-}
-
-function defaultTagsForMode(mode: string): string {
-  if (mode === "cover") return "pop, modern, polished";
-  if (mode === "extend") return "smooth, continuation, cohesive";
-  return "instrumental, cinematic, atmospheric";
-}
-
-function json(payload: unknown, status = 200, noBody = false): Response {
-  if (noBody) return new Response(null, { status, headers: corsHeaders });
-  return new Response(JSON.stringify(payload), {
-    status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
-
-async function refund(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  amount: number,
-  reason: string,
-) {
-  const { data: p } = await supabase
-    .from("profiles")
-    .select("available_credits")
-    .eq("user_id", userId)
-    .single();
-  if (!p) return;
-  await supabase
-    .from("profiles")
-    .update({
-      available_credits: p.available_credits + amount,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("user_id", userId);
-  await supabase.from("credit_transactions").insert({
-    user_id: userId,
-    amount,
-    type: "refund",
-    description: `Reembolso: ${reason}`.slice(0, 200),
-  });
-}
+function defaultPromptForMode(mode:
