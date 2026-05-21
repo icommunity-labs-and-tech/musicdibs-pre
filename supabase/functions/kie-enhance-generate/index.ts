@@ -222,9 +222,12 @@ serve(async (req) => {
     //   cover/extend → false (has vocals), instrumental → true (no vocals).
     //   Missing this field causes 422 "instrumental cannot be null".
     const MODEL = "V5";
+    const baseName = (typeof source_filename === "string" ? source_filename.replace(/\.[^/.]+$/, "") : "").trim();
+    const title = (baseName || `Enhanced ${mode}`).slice(0, 80);
     const kiePayload: Record<string, unknown> = {
       uploadUrl: source_audio_url,
       prompt: finalPrompt,
+      title,
       customMode: false,
       defaultParamFlag: false,
       model: MODEL,
