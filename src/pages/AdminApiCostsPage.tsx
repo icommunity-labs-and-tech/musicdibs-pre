@@ -389,11 +389,12 @@ export default function AdminApiCostsPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Métricas diarias</CardTitle>
-            {dailyData.length > 0 && (
-              <span className="text-xs text-muted-foreground">{dailyData.length.toLocaleString('de-DE')} registros</span>
+            <CardTitle className="text-lg">Métricas diarias (agregadas por día, todas las APIs)</CardTitle>
+            {dailyAggregated.length > 0 && (
+              <span className="text-xs text-muted-foreground">{dailyAggregated.length.toLocaleString('de-DE')} días</span>
             )}
           </div>
+
         </CardHeader>
         <CardContent>
           {loading ? (
