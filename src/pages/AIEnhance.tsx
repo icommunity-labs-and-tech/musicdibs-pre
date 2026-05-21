@@ -121,13 +121,25 @@ const MODES = [
 function AudioPlayer({ src, label }: { src: string; label: string }) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [loadError, setLoadError] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const toggle = () => {
+  const toggle = async () => {
     const a = audioRef.current;
-    if (!a) return;
-    if (playing) a.pause(); else a.play();
-    setPlaying(!playing);
+    if (!a || loadError) return;
+    if (playing) {
+      a.pause();
+      setPlaying(false);
+    } else {
+      try {
+        await a.play();
+        setPlaying(true);
+      } catch (err) {
+        console.error("[AudioPlayer] play() failed:", err);
+        setLoadError(true);
+        toast.error("No se puede reproducir el audio. Usa el botón de descarga.");
+      }
+    }
   };
 
   return (
@@ -136,17 +148,27 @@ function AudioPlayer({ src, label }: { src: string; label: string }) {
         ref={audioRef}
         src={src}
         onEnded={() => setPlaying(false)}
+        onError={() => setLoadError(true)}
         onTimeUpdate={() => {
           const a = audioRef.current;
           if (a?.duration) setProgress((a.currentTime / a.duration) * 100);
         }}
       />
-      <Button size="icon" variant="default" onClick={toggle} className="h-10 w-10 rounded-full shrink-0">
+      <Button
+        size="icon"
+        variant={loadError ? "outline" : "default"}
+        onClick={toggle}
+        disabled={loadError}
+        className="h-10 w-10 rounded-full shrink-0"
+      >
         {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
       </Button>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{label}</p>
-        <Progress value={progress} className="h-1 mt-1" />
+        {loadError
+          ? <p className="text-xs text-destructive mt-1">Error al cargar. Descarga el archivo.</p>
+          : <Progress value={progress} className="h-1 mt-1" />
+        }
       </div>
     </div>
   );
@@ -487,7 +509,7 @@ const AIEnhance = () => {
               fileType="audio"
               disabled={isProcessing}
               label="Sube tu demo"
-              description="MP3, WAV, OGG — hasta 50 MB"
+              description="MP3, WAV, M4A — hasta 50 MB"
             />
           </div>
 
@@ -695,56 +717,4 @@ const AIEnhance = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="rounded-xl border border-green-500/30 bg-green-500/5 p-5 space-y-4"
               >
-                <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold">
-                  <CheckCircle2 className="w-5 h-5" /> ¡Tu versión IA está lista!
-                </div>
-                <AudioPlayer src={generatedAudioUrl} label="Versión generada con IA" />
-                <div className="flex gap-2 flex-wrap">
-                  {/* ── NEW: blob download — abre diálogo nativo, no nueva pestaña */}
-                  <Button
-                    onClick={handleDownload}
-                    disabled={isDownloading}
-                    className="gap-2"
-                  >
-                    {isDownloading
-                      ? <Loader2 className="w-4 h-4 animate-spin" />
-                      : <Download className="w-4 h-4" />}
-                    {isDownloading ? "Descargando..." : "Descargar resultado"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleReset}
-                    className="gap-2"
-                  >
-                    <RefreshCw className="w-4 h-4" /> Nueva mejora
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {!isProcessing && jobStatus !== "completed" && (
-            <Button
-              onClick={handleGenerate}
-              disabled={!canGenerate || isProcessing}
-              className="w-full h-12 text-lg font-bold shadow-lg"
-            >
-              <Wand2 className="w-5 h-5 mr-2" />
-              {jobStatus === "idle" ? "Mejorar canción" : "Reintentar mejora"}
-            </Button>
-          )}
-
-          {genError && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{genError}</AlertDescription>
-            </Alert>
-          )}
-        </div>
-      </main>
-      <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
-    </>
-  );
-};
-
-export default AIEnhance;
+                <div className="flex items-center gap-2 text-green-600 dark:text-
