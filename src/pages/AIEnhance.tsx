@@ -385,61 +385,27 @@ const AIEnhance = () => {
     }
   };
 
-  // ── Descarga WAV on-demand ───────────────────────────────────────────────────
+  // ── Descarga WAV on-demand (conversión client-side con Web Audio API) ─────
   const handleExportWav = async () => {
     if (!generatedAudioUrl || wavStatus === "loading") return;
     setWavStatus("loading");
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-wav-generate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-        },
-        body: JSON.stringify({ audio_url: generatedAudioUrl }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || "Error iniciando conversión WAV");
-
-      if (data.status === "completed" && data.wav_url) {
-        triggerWavDownload(data.wav_url);
-        setWavStatus("idle");
-        return;
-      }
-
-      const logId = data.logId;
-      let attempts = 0;
-      wavPollRef.current = setInterval(async () => {
-        attempts++;
-        if (attempts > 40) {
-          clearInterval(wavPollRef.current!);
-          setWavStatus("error");
-          toast.error("La conversión WAV tardó demasiado. Inténtalo de nuevo.");
-          return;
-        }
-        const { data: row } = await supabase
-          .from("ai_generation_logs")
-          .select("status, output_url")
-          .eq("id", logId)
-          .single();
-        if (row?.status === "failed") {
-          clearInterval(wavPollRef.current!);
-          setWavStatus("error");
-          toast.error("Error al convertir a WAV. Inténtalo de nuevo.");
-        }
-        if (row?.status === "completed" && row?.output_url) {
-          clearInterval(wavPollRef.current!);
-          triggerWavDownload(row.output_url as string);
-          setWavStatus("idle");
-        }
-      }, 5000);
+      const { audioUrlToWavBlob } = await import("@/lib/audioToWav");
+      const blob = await audioUrlToWavBlob(generatedAudioUrl);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "musicdibs-enhance.wav";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setWavStatus("idle");
+      toast.success("Archivo WAV descargado");
     } catch (e: unknown) {
       setWavStatus("error");
       const err = e as Error;
       toast.error(err?.message || "Error al exportar WAV");
     }
   };
+
 
   const triggerWavDownload = (url: string) => {
     try {
