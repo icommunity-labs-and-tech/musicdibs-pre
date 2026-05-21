@@ -193,9 +193,10 @@ const AIEnhance = () => {
   // ── WAV export ─────────────────────────────────────────────────────────────
   const [wavStatus, setWavStatus] = useState<"idle" | "loading" | "error">("idle");
   const wavPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // ── instrumental quality params ───────────────────────────────────────────
+  // ── quality params — instrumental + extend ───────────────────────────────
   const [vocalGender, setVocalGender] = useState<"m" | "f">("m");
   const [fidelityPreset, setFidelityPreset] = useState<FidelityPreset>("balanced");
+  const [continueAt, setContinueAt] = useState<number | null>(null); // extend: punto de continuación (s)
 
   const [jobStatus, setJobStatus] = useState<JobStatus>("idle");
   const [logId, setLogId] = useState<string | null>(null);
@@ -311,14 +312,18 @@ const AIEnhance = () => {
             genre: genre || undefined,
             mood: mood || undefined,
             intensity: intensity || undefined,
-            voice_type: selectedMode !== "instrumental" ? (voiceType || undefined) : undefined,
+            voice_type: selectedMode === "cover" ? (voiceType || undefined) : undefined,
             source_language: sourceLanguage !== "auto" ? sourceLanguage : undefined,
-            // ── instrumental quality params ───────────────────────────────────
-            ...(selectedMode === "instrumental" && {
+            // ── quality params: instrumental + extend ─────────────────────────
+            ...((selectedMode === "instrumental" || selectedMode === "extend") && {
               vocal_gender: vocalGender,
               audio_weight: FIDELITY_PRESETS[fidelityPreset].audio_weight,
               style_weight: FIDELITY_PRESETS[fidelityPreset].style_weight,
               weirdness_constraint: FIDELITY_PRESETS[fidelityPreset].weirdness_constraint,
+            }),
+            // ── extend: punto de continuación personalizado ───────────────────
+            ...(selectedMode === "extend" && continueAt !== null && {
+              continue_at: continueAt,
             }),
           }),
         }
@@ -730,7 +735,7 @@ const AIEnhance = () => {
                 <SelectItem value="high">Intensa</SelectItem>
               </SelectContent>
             </Select>
-            {selectedMode === "instrumental" ? (
+            {(selectedMode === "instrumental" || selectedMode === "extend") ? (
               <div className="flex gap-1.5">
                 <button
                   type="button"
@@ -759,7 +764,7 @@ const AIEnhance = () => {
                   ♀ Mujer
                 </button>
               </div>
-            ) : selectedMode !== "extend" ? (
+            ) : selectedMode === "cover" ? (
               <Select value={voiceType} onValueChange={setVoiceType} disabled={isProcessing}>
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Voz" />
@@ -774,11 +779,11 @@ const AIEnhance = () => {
             ) : null}
           </div>
 
-          {/* ── Fidelidad al original (solo instrumental) ───────────────────── */}
-          {selectedMode === "instrumental" && (
+          {/* ── Fidelidad al original (instrumental + extend) ───────────────── */}
+          {(selectedMode === "instrumental" || selectedMode === "extend") && (
             <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground">
-                Fidelidad al original
+                {selectedMode === "extend" ? "Estilo de extensión" : "Fidelidad al original"}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {(Object.entries(FIDELITY_PRESETS) as [FidelityPreset, typeof FIDELITY_PRESETS[FidelityPreset]][]).map(([key, preset]) => (
@@ -799,6 +804,33 @@ const AIEnhance = () => {
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* ── Punto de continuación (solo extend, si conocemos duración) ────── */}
+          {selectedMode === "extend" && audioDuration !== null && audioDuration > 2 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-muted-foreground">
+                  Extender desde
+                </label>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {continueAt !== null ? `${continueAt}s` : `${Math.floor(audioDuration * 0.9)}s (auto)`}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={Math.floor(audioDuration - 1)}
+                step={1}
+                value={continueAt ?? Math.floor(audioDuration * 0.9)}
+                onChange={(e) => !isProcessing && setContinueAt(Number(e.target.value))}
+                disabled={isProcessing}
+                className="w-full accent-primary"
+              />
+              <p className="text-xs text-muted-foreground/70">
+                La IA continuará el audio desde este segundo. Por defecto: 90% de la duración ({Math.floor(audioDuration * 0.9)}s de {Math.floor(audioDuration)}s).
+              </p>
             </div>
           )}
 
@@ -904,56 +936,4 @@ const AIEnhance = () => {
                         a.click();
                       }}
                     >
-                      <FileMusic className="w-4 h-4" /> Descargar MIDI
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      onClick={handleExportMidi}
-                      disabled={midiStatus === "loading"}
-                      className="gap-2"
-                    >
-                      {midiStatus === "loading"
-                        ? <Loader2 className="w-4 h-4 animate-spin" />
-                        : <FileMusic className="w-4 h-4" />}
-                      {midiStatus === "loading" ? "Generando MIDI..." : midiStatus === "error" ? "Error MIDI" : "MIDI (2 créditos)"}
-                    </Button>
-                  )}
-
-                  <Button
-                    variant="ghost"
-                    onClick={handleReset}
-                    className="gap-2"
-                  >
-                    <RefreshCw className="w-4 h-4" /> Nueva mejora
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {!isProcessing && jobStatus !== "completed" && (
-            <Button
-              onClick={handleGenerate}
-              disabled={!canGenerate || isProcessing}
-              className="w-full h-12 text-lg font-bold shadow-lg"
-            >
-              <Wand2 className="w-5 h-5 mr-2" />
-              {jobStatus === "idle" ? "Mejorar canción" : "Reintentar mejora"}
-            </Button>
-          )}
-
-          {genError && (
-            <Alert variant="destructive">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>{genError}</AlertDescription>
-            </Alert>
-          )}
-        </div>
-      </main>
-      <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
-    </>
-  );
-};
-
-export default AIEnhance;
+                      <FileMusic className="w-4 h-4
