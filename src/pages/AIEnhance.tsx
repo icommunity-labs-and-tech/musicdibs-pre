@@ -476,7 +476,8 @@ const AIEnhance = () => {
       const data = await res.json();
       if (!res.ok) {
         if (data?.code === "insufficient_credits") {
-          toast.error("No tienes suficientes créditos para exportar MIDI (2 créditos).");
+          const midiCost = getFeatureCost("midi_generate");
+          toast.error(`No tienes suficientes créditos para exportar MIDI (${midiCost} créditos).`);
         } else if (data?.code === "no_provider_task_id") {
           toast.error("MIDI solo está disponible para tracks generados con KIE/Suno.");
         } else {
