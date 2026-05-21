@@ -224,10 +224,14 @@ serve(async (req) => {
     const MODEL = "V5";
     const baseName = (typeof source_filename === "string" ? source_filename.replace(/\.[^/.]+$/, "") : "").trim();
     const title = (baseName || `Enhanced ${mode}`).slice(0, 80);
+    const tags = [genre, mood, musical_style].filter(Boolean).join(", ").slice(0, 200)
+      || defaultTagsForMode(mode);
     const kiePayload: Record<string, unknown> = {
       uploadUrl: source_audio_url,
       prompt: finalPrompt,
       title,
+      style: tags,
+      tags,
       customMode: false,
       defaultParamFlag: false,
       model: MODEL,
@@ -304,6 +308,12 @@ function defaultPromptForMode(mode: string): string {
   if (mode === "cover") return "Keep the original essence, enhance production quality";
   if (mode === "extend") return "Continue naturally maintaining style and tempo";
   return "Add professional production and instrumentation";
+}
+
+function defaultTagsForMode(mode: string): string {
+  if (mode === "cover") return "pop, modern, polished";
+  if (mode === "extend") return "smooth, continuation, cohesive";
+  return "instrumental, cinematic, atmospheric";
 }
 
 function json(payload: unknown, status = 200, noBody = false): Response {
