@@ -3,7 +3,7 @@
 // FIX: customMode: false — KIE generates continuation autonomously, no lyrics needed.
 // Eliminates ElevenLabs STT dependency and error 531.
 // Callback routed through kie-suno-callback (already handles enhance feature_keys).
-// v13 — accept source_language param; explicit English lang instruction at prompt start
+// v14 — uploadUrl (not audioUrl), model V5, defaultParamFlag: false, source_language
 // Deploy: supabase functions deploy kie-enhance-generate
 //
 // Patrón idéntico a kie-suno-generate:
@@ -214,10 +214,16 @@ serve(async (req) => {
 
     // customMode: false → KIE/Suno generates autonomously, no lyrics required.
     // Fixes error 531 without ElevenLabs STT dependency.
+    // uploadUrl = correct field for upload-cover / upload-extend / upload-instrumental.
+    // defaultParamFlag: false → our params (model, customMode…) are respected by KIE.
+    //   With true, KIE uses its own defaults and ignores model / other root params.
+    const MODEL = "V5";
     const kiePayload: Record<string, unknown> = {
-      audioUrl: source_audio_url,
+      uploadUrl: source_audio_url,
       prompt: finalPrompt,
       customMode: false,
+      defaultParamFlag: false,
+      model: MODEL,
       callBackUrl,
     };
 
@@ -231,7 +237,7 @@ serve(async (req) => {
       kiePayload.intensity = intensity || "medium";
     }
 
-    console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost}`);
+    console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost} model=${MODEL}`);
 
     // ── Llamar a KIE ──────────────────────────────────────────────────────────
     const kieEndpoint = KIE_ENDPOINTS[mode];
@@ -315,15 +321,4 @@ async function refund(
     if (!p) return;
     await supabase
       .from("profiles")
-      .update({ available_credits: p.available_credits + amount, updated_at: new Date().toISOString() })
-      .eq("user_id", userId);
-    await supabase.from("credit_transactions").insert({
-      user_id: userId,
-      amount,
-      type: "refund",
-      description: `Reembolso enhance: ${reason}`.slice(0, 200),
-    });
-  } catch (e) {
-    console.error("[kie-enhance-generate] refund failed", e);
-  }
-}
+      .update({ available_credits: p.available_credits
