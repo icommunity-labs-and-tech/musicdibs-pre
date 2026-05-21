@@ -204,7 +204,7 @@ const AIStudio = () => {
               <h1 className="text-4xl md:text-5xl font-bold mb-4">
                 {t('aiStudio.pageTitle')}
               </h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto whitespace-pre-line">
                 {t('aiStudio.pageSubtitle')}
               </p>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
