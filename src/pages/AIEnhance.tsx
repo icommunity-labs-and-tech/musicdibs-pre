@@ -172,7 +172,7 @@ function AudioPlayer({ src, label }: { src: string; label: string }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{label}</p>
         {loadError
-          ? <p className="text-xs text-destructive mt-1">{/* @ts-expect-error */}Error al cargar. Descarga el archivo.</p>
+          ? <p className="text-xs text-destructive mt-1">{label}</p>
           : <Progress value={progress} className="h-1 mt-1" />
         }
       </div>
@@ -649,17 +649,17 @@ const AIEnhance = () => {
                             {mode.icon}
                           </div>
                           <p className={cn("font-semibold", isFeatured && "text-base bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent")}>
-                            {mode.label}
+                            {t(mode.labelKey)}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1">{mode.tagline}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{t(mode.taglineKey)}</p>
                         </button>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="max-w-xs">
-                      <p className="font-semibold mb-1">Úsalo para:</p>
+                      <p className="font-semibold mb-1">{t('aiEnhance.useFor')}</p>
                       <ul className="list-disc pl-4 space-y-0.5 text-xs">
-                        {mode.useCases.map((u) => (
-                          <li key={u}>{u}</li>
+                        {mode.useCaseKeys.map((u) => (
+                          <li key={u}>{t(u)}</li>
                         ))}
                       </ul>
                     </TooltipContent>
@@ -727,7 +727,7 @@ const AIEnhance = () => {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value.slice(0, 500))}
               disabled={isProcessing}
-              placeholder={currentMode.placeholder}
+              placeholder={t(currentMode.placeholderKey)}
               className="resize-none h-24"
             />
           </div>
@@ -828,8 +828,8 @@ const AIEnhance = () => {
                         : "border-border bg-card hover:border-primary/30"
                     )}
                   >
-                    <p className="text-sm font-semibold">{preset.label}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{preset.description}</p>
+                    <p className="text-sm font-semibold">{t(preset.labelKey)}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{t(preset.descKey)}</p>
                   </button>
                 ))}
               </div>
