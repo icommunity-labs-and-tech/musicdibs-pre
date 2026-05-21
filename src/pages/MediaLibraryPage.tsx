@@ -465,7 +465,7 @@ export default function MediaLibraryPage() {
   };
 
   // ── Icon for type ──
-  // ── WAV export ───────────────────────────────────────────────────────────────
+  // ── WAV export (conversión client-side con Web Audio API) ─────────────────
   const exportWav = async (asset: MediaAsset) => {
     if (wavJobs[asset.id] === "loading") return;
     setWavJobs((prev) => ({ ...prev, [asset.id]: "loading" }));
@@ -473,53 +473,21 @@ export default function MediaLibraryPage() {
       const audioUrl = await resolveAssetUrl(asset);
       if (!audioUrl) throw new Error("No se pudo obtener la URL de audio");
 
-      const { data: { session } } = await supabase.auth.getSession();
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-wav-generate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ audio_url: audioUrl }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || "Error iniciando conversión WAV");
-
-      if (data.status === "completed" && data.wav_url) {
-        await triggerBlobDownload(data.wav_url, `${asset.title.slice(0,40)}.wav`);
-        setWavJobs((prev) => ({ ...prev, [asset.id]: "done" }));
-        return;
-      }
-
-      const logId = data.logId;
-      let attempts = 0;
-      exportPollsRef.current[`wav_${asset.id}`] = setInterval(async () => {
-        attempts++;
-        if (attempts > 40) {
-          clearInterval(exportPollsRef.current[`wav_${asset.id}`]);
-          setWavJobs((prev) => ({ ...prev, [asset.id]: "error" }));
-          toast({ title: "Tiempo agotado", description: "La conversión WAV tardó demasiado.", variant: "destructive" });
-          return;
-        }
-        const { data: row } = await supabase
-          .from("ai_generation_logs")
-          .select("status, output_url")
-          .eq("id", logId)
-          .single();
-        if (row?.status === "failed") {
-          clearInterval(exportPollsRef.current[`wav_${asset.id}`]);
-          setWavJobs((prev) => ({ ...prev, [asset.id]: "error" }));
-          toast({ title: "Error WAV", description: "No se pudo convertir a WAV.", variant: "destructive" });
-        }
-        if (row?.status === "completed" && row?.output_url) {
-          clearInterval(exportPollsRef.current[`wav_${asset.id}`]);
-          await triggerBlobDownload(row.output_url as string, `${asset.title.slice(0,40)}.wav`);
-          setWavJobs((prev) => ({ ...prev, [asset.id]: "done" }));
-        }
-      }, 5000);
+      const { audioUrlToWavBlob } = await import("@/lib/audioToWav");
+      const blob = await audioUrlToWavBlob(audioUrl);
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${asset.title.slice(0, 40)}.wav`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setWavJobs((prev) => ({ ...prev, [asset.id]: "done" }));
     } catch (e: unknown) {
       setWavJobs((prev) => ({ ...prev, [asset.id]: "error" }));
       const err = e as Error;
       toast({ title: "Error WAV", description: err?.message || "Error al exportar WAV", variant: "destructive" });
     }
   };
+
 
   // ── MIDI export ───────────────────────────────────────────────────────────────
   const exportMidi = async (asset: MediaAsset) => {
