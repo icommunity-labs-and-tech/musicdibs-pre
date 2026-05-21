@@ -93,6 +93,11 @@ serve(async (req) => {
       return ok({ already: true });
     }
 
+    if (logRow.status === "failed") {
+      console.log("[kie-midi-callback] already failed", logRow.id);
+      return ok({ already: true, status: "failed" });
+    }
+
     const logId = logRow.id as string;
     const userId = logRow.user_id as string;
     const code = body?.code;
