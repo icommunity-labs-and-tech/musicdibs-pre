@@ -1662,7 +1662,7 @@ const AIStudioCreate = () => {
                           {t('aiCreate.lyricsDescImproved')} — {t('aiCreate.lyricsDescImprovedSub')}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground text-right">{lyricsDesc.length}/2500</p>
+                      <p className="text-xs text-muted-foreground text-right">{lyricsDesc.length}/380</p>
                     </div>
 
 
