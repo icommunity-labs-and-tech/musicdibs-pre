@@ -175,6 +175,26 @@ serve(async (req) => {
         usedPriceIds.add(price.id);
       }
     }
+    // Third pass: type/interval-only fallback for non-tiered plans
+    // (monthly, individual, and the first annual tier). Skips already-used
+    // prices so we never duplicate the same price across multiple tiers.
+    const fallbackEligible = new Set(["monthly", "individual", "annual_100"]);
+    for (const definition of PLAN_DEFINITIONS) {
+      if (matched.has(definition.planId)) continue;
+      if (!fallbackEligible.has(definition.planId)) continue;
+      const expectedInterval = definition.billingInterval === "yearly" ? "year" : "month";
+      const price = prices.data.find((c) => {
+        if (usedPriceIds.has(c.id)) return false;
+        if (definition.mode === "subscription") {
+          return c.type === "recurring" && c.recurring?.interval === expectedInterval;
+        }
+        return c.type === "one_time";
+      });
+      if (price) {
+        matched.set(definition.planId, price);
+        usedPriceIds.add(price.id);
+      }
+    }
 
     const plans = PLAN_DEFINITIONS.map((definition) => {
       const price = matched.get(definition.planId);
