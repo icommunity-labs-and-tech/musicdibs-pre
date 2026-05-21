@@ -78,7 +78,7 @@ serve(async (req) => {
     // ── Buscar el log de origen y su provider_task_id ─────────────────────────
     const { data: sourceLog, error: sourceErr } = await supabaseAdmin
       .from("ai_generation_logs")
-      .select("id, user_id, provider_task_id, feature_key, status, output_url")
+      .select("id, user_id, provider_task_id, feature_key, status, output_url, response_payload, structured_outputs")
       .eq("id", source_log_id)
       .maybeSingle();
 
@@ -104,6 +104,46 @@ serve(async (req) => {
       return json({
         error: "source_not_ready",
         message: "El audio de origen no ha terminado de procesarse.",
+      }, 422);
+    }
+
+    // ── Resolver audioId desde response_payload o vía KIE record-info ─────────
+    // KIE vocal-removal requiere taskId + audioId (id de la variante concreta).
+    const tracksFromPayload: any[] = Array.isArray(sourceLog.response_payload?.data?.data)
+      ? sourceLog.response_payload.data.data
+      : [];
+    let audioId: string | null =
+      tracksFromPayload[0]?.id ||
+      tracksFromPayload[0]?.audio_id ||
+      sourceLog.structured_outputs?.variants?.[0]?.audio_id ||
+      null;
+
+    if (!audioId) {
+      // Fallback: consultar KIE record-info para obtener los audioIds de la task
+      try {
+        const infoRes = await fetch(
+          `https://api.kie.ai/api/v1/generate/record-info?taskId=${encodeURIComponent(sourceLog.provider_task_id)}`,
+          { headers: { Authorization: `Bearer ${KIE_API_KEY}` } }
+        );
+        const infoBody = await infoRes.json().catch(() => ({}));
+        const items: any[] =
+          infoBody?.data?.response?.sunoData ||
+          infoBody?.data?.data ||
+          [];
+        audioId = items[0]?.id || items[0]?.audioId || null;
+        console.log("[kie-midi-generate] record-info lookup", {
+          taskId: sourceLog.provider_task_id,
+          found: !!audioId,
+        });
+      } catch (e) {
+        console.error("[kie-midi-generate] record-info failed", e);
+      }
+    }
+
+    if (!audioId) {
+      return json({
+        error: "audio_id_missing",
+        message: "No se pudo resolver el audioId del track original en KIE.",
       }, 422);
     }
 
