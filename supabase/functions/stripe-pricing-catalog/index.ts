@@ -128,16 +128,6 @@ function resolveCredits(price: Stripe.Price, definition: PlanDefinition) {
 }
 
 
-function resolveCredits(price: Stripe.Price, definition: PlanDefinition) {
-  const productMetadata = getProductMetadata(price);
-  const rawCredits = price.metadata.credits || productMetadata.credits;
-  const parsedCredits = rawCredits ? Number.parseInt(rawCredits, 10) : Number.NaN;
-  if (Number.isFinite(parsedCredits) && parsedCredits > 0) return parsedCredits;
-
-  const inferredCredits = parseCreditsFromText(price.lookup_key, price.nickname, productName(price));
-  return Number.isFinite(inferredCredits) && inferredCredits > 0 ? inferredCredits : definition.credits;
-}
-
 function formatMoney(unitAmount: number, currency: string, locale: string) {
   return new Intl.NumberFormat(locale, {
     style: "currency",
