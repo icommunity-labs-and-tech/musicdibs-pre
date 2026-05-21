@@ -364,7 +364,7 @@ const AIEnhance = () => {
               >
                 <ArrowLeft className="w-4 h-4" /> AI Studio
               </Link>
-              <h1 className="text-3xl md:text-4xl font-bold">🎼 Mejora tus canciones</h1>
+              <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-2">🎼 Mejora tus canciones <Badge variant="secondary" className="text-xs">BETA</Badge></h1>
               <p className="text-muted-foreground mt-1">
                 Trabaja sobre ideas musicales reales creadas por ti.
               </p>
