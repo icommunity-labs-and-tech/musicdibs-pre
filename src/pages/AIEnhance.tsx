@@ -172,7 +172,7 @@ function AudioPlayer({ src, label }: { src: string; label: string }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{label}</p>
         {loadError
-          ? <p className="text-xs text-destructive mt-1">Error al cargar. Descarga el archivo.</p>
+          ? <p className="text-xs text-destructive mt-1">{/* @ts-expect-error */}Error al cargar. Descarga el archivo.</p>
           : <Progress value={progress} className="h-1 mt-1" />
         }
       </div>
