@@ -2014,7 +2014,7 @@ const creditPricingTranslations: Record<string, any> = {
         generate_audio: 'Canción instrumental',
         generate_audio_song: 'Canción (sin letra propia y <3min)',
         generate_audio_elevenlabs: 'Canción (letra propia o >3min)',
-        one_click_create: 'Canción en 1 click',
+        one_click_create: 'Regala canciones',
         generate_lyrics: 'Crear letras',
         generate_press_release: 'Artistas Virtuales',
         improve_prompt: 'Mejorar descripción con IA',
