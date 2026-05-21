@@ -487,7 +487,7 @@ const AIEnhance = () => {
               fileType="audio"
               disabled={isProcessing}
               label="Sube tu demo"
-              description="MP3, WAV, M4A — hasta 50 MB"
+              description="MP3, WAV, OGG — hasta 50 MB"
             />
           </div>
 
