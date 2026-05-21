@@ -131,7 +131,7 @@ export default function AdminMetricsPage() {
   // Build filters based on period type
   const filters = useMemo(() => {
     if (periodType === 'week') return { periodType, weekStart };
-    if (periodType === 'month') return { periodType, month: selectedMonth, year: selectedYear };
+    if (periodType === 'month') return { periodType, month: `${selectedYear}-${selectedMonth}`, year: selectedYear };
     return { periodType, year: selectedYear };
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
