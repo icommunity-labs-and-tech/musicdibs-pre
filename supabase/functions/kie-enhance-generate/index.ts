@@ -8,6 +8,7 @@
 // v16 — tags field: KIE customMode:false requires "tags" (style descriptor) in addition to
 //        prompt. Missing tags causes 502 "Please enter tags." on upload-instrumental.
 //        tags = styleParts (genre+mood+style), prompt = langInstruction + styleParts.
+// v17 — negativeTags: "" (required by KIE, empty = no exclusions). Duplicate key cleanup.
 // Deploy: supabase functions deploy kie-enhance-generate
 //
 // Patrón idéntico a kie-suno-generate:
@@ -231,6 +232,7 @@ serve(async (req) => {
     const kiePayload: Record<string, unknown> = {
       uploadUrl: source_audio_url,
       tags: styleParts,
+      negativeTags: "",
       prompt: finalPrompt,
       customMode: false,
       defaultParamFlag: false,
@@ -303,5 +305,4 @@ serve(async (req) => {
   }
 });
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-function defaultPromptForMode(mode:
+// ── Helpers ─────────────────────────────────────────
