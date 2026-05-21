@@ -14,6 +14,7 @@
 //        Does NOT accept prompt/customMode/defaultParamFlag/instrumental fields.
 //        upload-cover/upload-extend: defaultParamFlag:false → only uploadUrl+prompt required.
 // v20 — extend mode fixes: defaultParamFlag:true, style (not tags), continueAt <duration, quality params, drop customMode.
+// v21 — cover mode fixes: customMode:true (not defaultParamFlag), map voice_type→vocalGender, add quality params for cover.
 //        Model upgraded to V5_5 for instrumental (latest, better than V5 for this endpoint).
 //        Frontend preset "fidelidad" maps to audioWeight/styleWeight/weirdnessConstraint combos.
 // Deploy: supabase functions deploy kie-enhance-generate
@@ -271,38 +272,55 @@ serve(async (req) => {
       if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
       if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
       if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
-    } else {
-      // upload-cover / upload-extend — defaultParamFlag:true → custom params
-      // style (not tags), title, prompt, negativeTags all respected by KIE
+    } else if (mode === "cover") {
+      // upload-cover — customMode:true (per KIE spec — different from extend which uses defaultParamFlag)
+      // style, title, negativeTags, prompt all applied when customMode=true.
+      // vocalGender only effective when customMode=true per docs.
       kiePayload = {
         uploadUrl: source_audio_url,
         title,
-        style: styleParts,          // correct field for upload-cover/upload-extend (not "tags")
+        style: styleParts,
         negativeTags,
         prompt: finalPrompt,
         instrumental: false,
-        defaultParamFlag: true,     // use custom params so style/title/negativeTags are applied
+        customMode: true,           // cover uses customMode, NOT defaultParamFlag
+        model: MODEL_COVER_EXTEND,
+        callBackUrl,
+      };
+      // Map frontend voice_type → KIE vocalGender ("female"→"f", "male"→"m")
+      const vg = voice_type === "female" ? "f" : voice_type === "male" ? "m" : null;
+      if (vg) kiePayload.vocalGender = vg;
+      // Quality params (fidelity presets — same optional fields as extend/instrumental)
+      if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
+      if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
+      if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
+    } else {
+      // upload-extend — defaultParamFlag:true → custom params
+      // style (not tags), continueAt strictly > 0 AND < duration.
+      kiePayload = {
+        uploadUrl: source_audio_url,
+        title,
+        style: styleParts,
+        negativeTags,
+        prompt: finalPrompt,
+        instrumental: false,
+        defaultParamFlag: true,
         model: MODEL_COVER_EXTEND,
         callBackUrl,
       };
       // extend: continueAt must be > 0 AND < duration.
-      // Use custom override if provided; otherwise default to 90% of duration (or duration-5s).
-      if (mode === "extend") {
-        const dur = typeof source_duration_sec === "number" && source_duration_sec > 0
-          ? source_duration_sec
-          : 30;
-        const customAt = typeof continue_at === "number" && continue_at > 0 && continue_at < dur
-          ? Math.floor(continue_at)
-          : Math.max(1, Math.floor(dur * 0.9));
-        kiePayload.continueAt = customAt;
-      }
-      // Quality params apply to extend too (same optional fields as instrumental)
-      if (mode === "extend") {
-        if (vocal_gender === "m" || vocal_gender === "f") kiePayload.vocalGender = vocal_gender;
-        if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
-        if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
-        if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
-      }
+      const dur = typeof source_duration_sec === "number" && source_duration_sec > 0
+        ? source_duration_sec
+        : 30;
+      const customAt = typeof continue_at === "number" && continue_at > 0 && continue_at < dur
+        ? Math.floor(continue_at)
+        : Math.max(1, Math.floor(dur * 0.9));
+      kiePayload.continueAt = customAt;
+      // Quality params for extend
+      if (vocal_gender === "m" || vocal_gender === "f") kiePayload.vocalGender = vocal_gender;
+      if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
+      if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
+      if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
     }
 
     console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost} model=${kiePayload.model}`);
