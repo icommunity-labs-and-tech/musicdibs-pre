@@ -36,7 +36,7 @@ let fetchPromise: Promise<void> | null = null;
 async function loadCosts(): Promise<void> {
   try {
     const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/feature_costs?select=feature_key,credit_cost`,
+      `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/operation_pricing?select=operation_key,credits_cost`,
       {
         headers: {
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
@@ -54,7 +54,7 @@ async function loadCosts(): Promise<void> {
 
     const map: Record<string, number> = { ...DEFAULT_COSTS };
     for (const row of data || []) {
-      map[row.feature_key] = row.credit_cost;
+      map[row.operation_key] = row.credits_cost;
     }
     cachedCosts = map;
   } catch {
@@ -79,6 +79,11 @@ export function getFeatureCost(key: string): number {
 }
 
 // ── Legacy export (backwards-compatible) ───────────────────
-export const FEATURE_COSTS = DEFAULT_COSTS;
+/** @deprecated Use getFeatureCost(key) instead */
+export const FEATURE_COSTS = new Proxy(DEFAULT_COSTS, {
+  get(target, prop: string) {
+    return getFeatureCost(prop);
+  }
+});
 
-export type FeatureKey = keyof typeof DEFAULT_COSTS;
+export type FeatureKey = string;

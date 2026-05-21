@@ -476,7 +476,8 @@ const AIEnhance = () => {
       const data = await res.json();
       if (!res.ok) {
         if (data?.code === "insufficient_credits") {
-          toast.error("No tienes suficientes créditos para exportar MIDI (2 créditos).");
+          const midiCost = getFeatureCost("midi_generate");
+          toast.error(`No tienes suficientes créditos para exportar MIDI (${midiCost} créditos).`);
         } else if (data?.code === "no_provider_task_id") {
           toast.error("MIDI solo está disponible para tracks generados con KIE/Suno.");
         } else {
@@ -904,7 +905,7 @@ const AIEnhance = () => {
               : <Wand2 className="w-4 h-4" />}
             {isProcessing
               ? "Generando..."
-              : `Generar versión (${creditsRequired} cr)`}
+              : `Generar versión${creditsRequired > 0 ? ` (${creditsRequired} cr)` : ""}`}
           </Button>
           {isProcessing && <GenerationWarning />}
 
@@ -984,7 +985,7 @@ const AIEnhance = () => {
                       {midiStatus === "loading"
                         ? <Loader2 className="w-4 h-4 animate-spin" />
                         : <FileMusic className="w-4 h-4" />}
-                      {midiStatus === "loading" ? "Generando MIDI..." : "MIDI (2 cr)"}
+                      {midiStatus === "loading" ? "Generando MIDI..." : `MIDI${getFeatureCost("midi_generate") > 0 ? ` (${getFeatureCost("midi_generate")} cr)` : ""}`}
                     </Button>
                   )}
                 </div>
