@@ -1670,7 +1670,7 @@ const aiStudioRootTranslations: Record<string, { aiStudio: Record<string, any> }
       modules: {
         createMusic: { title: 'Crea canciones', desc: 'Genera canciones completas o bases instrumentales a partir de una descripción y/o una letra. Si no tienes letra, también te ayudamos en eso' },
         editModify: { title: 'Masterizado profesional', desc: 'Consigue un sonido listo para Spotify: más volumen, claridad y potencia en segundos.' },
-        inspire: { title: 'Improvisa y experimenta', desc: 'Crea con 1 solo click canciones temáticas aleatorias.' },
+        inspire: { title: 'Improvisa y experimenta', desc: 'Crea con 1 solo click canciones aleatorias o temáticas' },
         createVideoclips: { title: 'Videoclips', desc: 'Genera vídeos musicales y fusiónalos con audio de tu historial.' },
         createCovers: { title: 'Material promocional', desc: 'Crea portadas, flyers, posts y todo lo que necesitas para promocionar tu música.' },
         singYourSong: { title: 'Herramientas de Voz', desc: 'Tu estudio vocal IA: clona tu voz, canta en 29 idiomas, traduce audios y mucho más' },
@@ -2038,7 +2038,7 @@ const creditPricingTranslations: Record<string, any> = {
         register_work: 'Registro de derechos de autor con validez mundial',
         generate_audio: 'Generación de audio instrumental con IA',
         generate_audio_song: 'Generación de canción con voz con IA',
-        one_click_create: 'Crea con 1 solo click canciones temáticas aleatorias.',
+        one_click_create: 'Crea con 1 solo click canciones aleatorias o temáticas',
         enhance_audio: 'Masterización profesional',
         generate_cover: 'Generación de portada con IA',
         instagram_creative: 'Generar imagen creativa para Instagram',

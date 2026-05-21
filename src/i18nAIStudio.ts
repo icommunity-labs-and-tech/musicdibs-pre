@@ -341,9 +341,9 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
     },
     aiInspire: {
       backToStudio: 'Volver a AI Music Studio',
-      badge: 'Regala canciones',
-      title: 'Regala canciones',
-      subtitle: '¿Quieres sorprender a alguien? Genera una canción automáticamente y regálala.',
+      badge: 'Improvisa y experimenta',
+      title: 'Improvisa y experimenta',
+      subtitle: 'Crea con 1 solo click canciones aleatorias o temáticas',
       surpriseMe: '🎲 Sorpréndeme',
       generateChip: '🎲 Generar {{label}}',
       generatingShort: 'Generando...',
