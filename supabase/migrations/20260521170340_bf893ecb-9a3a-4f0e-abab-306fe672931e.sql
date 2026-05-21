@@ -1,0 +1,1 @@
+ALTER TABLE public.voice_clones ADD COLUMN IF NOT EXISTS description TEXT;
