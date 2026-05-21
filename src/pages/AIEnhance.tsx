@@ -707,4 +707,44 @@ const AIEnhance = () => {
                     className="gap-2"
                   >
                     {isDownloading
-                      ? <Loader2 
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <Download className="w-4 h-4" />}
+                    {isDownloading ? "Descargando..." : "Descargar resultado"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleReset}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" /> Nueva mejora
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {!isProcessing && jobStatus !== "completed" && (
+            <Button
+              onClick={handleGenerate}
+              disabled={!canGenerate || isProcessing}
+              className="w-full h-12 text-lg font-bold shadow-lg"
+            >
+              <Wand2 className="w-5 h-5 mr-2" />
+              {jobStatus === "idle" ? "Mejorar canción" : "Reintentar mejora"}
+            </Button>
+          )}
+
+          {genError && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>{genError}</AlertDescription>
+            </Alert>
+          )}
+        </div>
+      </main>
+      <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
+    </>
+  );
+};
+
+export default AIEnhance;
