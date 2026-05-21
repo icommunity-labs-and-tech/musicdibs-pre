@@ -118,7 +118,7 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: 'Failed to save poster' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      return new Response(JSON.stringify({ success: true, image_path: fileName, credits_used: 1 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ success: true, image_path: fileName, credits_used: CREDITS_COST }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     } catch (err) {
       console.error('Generation error:', err);
