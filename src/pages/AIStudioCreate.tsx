@@ -2352,7 +2352,6 @@ const AIStudioCreate = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      </main>
     </div>
   );
 };
