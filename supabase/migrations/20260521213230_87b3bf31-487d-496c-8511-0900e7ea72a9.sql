@@ -1,0 +1,3 @@
+DELETE FROM ai_generation_logs WHERE id='40e9a4f8-6fae-4c2a-8bff-04b3efb4015b';
+UPDATE profiles SET available_credits = available_credits + 2, updated_at = now() WHERE user_id='1a3b50d8-704e-4694-b9a4-13f89e133d46';
+INSERT INTO credit_transactions (user_id, amount, type, description) VALUES ('1a3b50d8-704e-4694-b9a4-13f89e133d46', 2, 'refund', 'Reembolso: fallo previo en exportación MIDI (audioId)');
