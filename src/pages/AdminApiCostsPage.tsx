@@ -406,8 +406,8 @@ export default function AdminApiCostsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha</TableHead>
-                    <TableHead>Feature</TableHead>
-                    <TableHead className="text-right">Usos</TableHead>
+                    <TableHead className="text-right">APIs activas</TableHead>
+                    <TableHead className="text-right">Usos totales</TableHead>
                     <TableHead className="text-right">Créditos</TableHead>
                     <TableHead className="text-right">Ingresos €</TableHead>
                     <TableHead className="text-right">Coste API €</TableHead>
@@ -417,18 +417,19 @@ export default function AdminApiCostsPage() {
                 </TableHeader>
                 <TableBody>
                   {paginatedDaily.map(d => (
-                    <TableRow key={d.id}>
-                      <TableCell>{d.date}</TableCell>
-                      <TableCell>{configMap[d.feature_key]?.feature_label || d.feature_key}</TableCell>
+                    <TableRow key={d.date}>
+                      <TableCell className="font-medium">{d.date}</TableCell>
+                      <TableCell className="text-right">{d.features_count}</TableCell>
                       <TableCell className="text-right">{d.total_uses.toLocaleString('de-DE')}</TableCell>
                       <TableCell className="text-right">{d.total_credits_charged.toLocaleString('de-DE')}</TableCell>
-                      <TableCell className="text-right">{fmtEur(Number(d.total_revenue_eur), 4)}</TableCell>
-                      <TableCell className="text-right">{fmtEur(Number(d.total_api_cost_eur), 6)}</TableCell>
-                      <TableCell className="text-right">{fmtEur(Number(d.gross_margin_eur), 4)}</TableCell>
-                      <TableCell className="text-right">{marginBadge(Number(d.margin_pct))}</TableCell>
+                      <TableCell className="text-right">{fmtEur(d.total_revenue_eur, 2)}</TableCell>
+                      <TableCell className="text-right">{fmtEur(d.total_api_cost_eur, 4)}</TableCell>
+                      <TableCell className="text-right">{fmtEur(d.gross_margin_eur, 2)}</TableCell>
+                      <TableCell className="text-right">{marginBadge(d.margin_pct)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
+
               </Table>
 
               {totalPages > 1 && (
