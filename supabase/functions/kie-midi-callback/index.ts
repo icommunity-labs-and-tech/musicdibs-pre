@@ -296,10 +296,20 @@ serve(async (req) => {
       const charged = (logRow.user_credits_charged as number) || 0;
       const refundCredits = async (reason: string) => {
         if (charged > 0) {
+          const { data: existingRefund } = await supabase
+            .from("credit_transactions")
+            .select("id")
+            .eq("user_id", userId)
+            .eq("type", "refund")
+            .eq("amount", charged)
+            .ilike("description", `%${logId}%`)
+            .maybeSingle();
+          if (existingRefund) return;
+
           await supabase.rpc("refund_user_credits", {
             p_user_id: userId,
             p_amount: charged,
-            p_reason: reason,
+            p_reason: `${reason} (${logId})`,
           });
         }
       };
