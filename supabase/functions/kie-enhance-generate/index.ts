@@ -9,6 +9,10 @@
 //        prompt. Missing tags causes 502 "Please enter tags." on upload-instrumental.
 //        tags = styleParts (genre+mood+style), prompt = langInstruction + styleParts.
 // v17 — negativeTags: " " (required non-empty by KIE, space = no exclusions). Duplicate key cleanup.
+// v18 — Correct endpoints: extend→upload-extend, instrumental→add-instrumental (was upload-instrumental).
+//        add-instrumental has its own schema: requires title, tags, negativeTags.
+//        Does NOT accept prompt/customMode/defaultParamFlag/instrumental fields.
+//        upload-cover/upload-extend: defaultParamFlag:false → only uploadUrl+prompt required.
 // Deploy: supabase functions deploy kie-enhance-generate
 //
 // Patrón idéntico a kie-suno-generate:
@@ -45,8 +49,8 @@ const DEFAULT_CREDITS: Record<string, number> = {
 // Ajustar según documentación actual de KIE AI
 const KIE_ENDPOINTS: Record<string, string> = {
   cover:        "https://api.kie.ai/api/v1/generate/upload-cover",
-  extend:       "https://api.kie.ai/api/v1/generate/extend",
-  instrumental: "https://api.kie.ai/api/v1/generate/upload-instrumental",
+  extend:       "https://api.kie.ai/api/v1/generate/upload-extend",   // upload-extend (external audio), not /extend (taskId-based)
+  instrumental: "https://api.kie.ai/api/v1/generate/add-instrumental", // add-instrumental, not /upload-instrumental
 };
 
 serve(async (req) => {
@@ -217,38 +221,50 @@ serve(async (req) => {
     const allParts = [...langParts, styleParts];
     const finalPrompt = allParts.join(" ").slice(0, 600);
 
-    // customMode: false → KIE/Suno generates autonomously, no lyrics required.
-    // Fixes error 531 without ElevenLabs STT dependency.
-    // uploadUrl = correct field for upload-cover / upload-extend / upload-instrumental.
-    // defaultParamFlag: false → our params (model, customMode…) are respected by KIE.
-    //   With true, KIE uses its own defaults and ignores model / other root params.
-    // instrumental: boolean — REQUIRED by KIE for all upload-* endpoints.
-    //   cover/extend → false (has vocals), instrumental → true (no vocals).
-    //   Missing this field causes 422 "instrumental cannot be null".
-    // tags — REQUIRED by KIE when customMode:false. Style descriptor (genre/mood/style).
-    //   Missing causes 502 "Please enter tags." on upload-instrumental (and likely others).
-    //   tags = styleParts only; prompt = langInstruction + styleParts (for cover/extend).
+    // ── Payload KIE — mode-specific ───────────────────────────────────────────
+    // add-instrumental (/add-instrumental) has its own schema:
+    //   required: uploadUrl, title, tags, negativeTags, callBackUrl
+    //   does NOT accept: prompt, customMode, defaultParamFlag, instrumental
+    // upload-cover / upload-extend (/upload-cover, /upload-extend):
+    //   defaultParamFlag:false → only uploadUrl + prompt required
     const MODEL = "V5";
-    const kiePayload: Record<string, unknown> = {
-      uploadUrl: source_audio_url,
-      tags: styleParts,
-      negativeTags: " ",
-      prompt: finalPrompt,
-      customMode: false,
-      defaultParamFlag: false,
-      model: MODEL,
-      instrumental: mode === "instrumental",
-      callBackUrl,
-    };
+    const title = source_filename
+      ? source_filename.replace(/\.[^.]+$/, "").slice(0, 80)
+      : styleParts.slice(0, 80) || "Enhanced audio";
+    const negativeTags = "low quality, distorted, noisy";
 
-    if (mode === "cover") {
-      kiePayload.voiceType = voice_type || "auto";
-    }
-    if (mode === "extend" && source_duration_sec) {
-      kiePayload.continueAt = Math.floor(source_duration_sec * 0.85);
-    }
+    let kiePayload: Record<string, unknown>;
+
     if (mode === "instrumental") {
-      kiePayload.intensity = intensity || "medium";
+      // add-instrumental endpoint — clean schema, no prompt/customMode/defaultParamFlag
+      kiePayload = {
+        uploadUrl: source_audio_url,
+        title,
+        tags: styleParts,
+        negativeTags,
+        model: MODEL,
+        callBackUrl,
+      };
+    } else {
+      // upload-cover / upload-extend — defaultParamFlag:false, prompt-based
+      kiePayload = {
+        uploadUrl: source_audio_url,
+        title,
+        tags: styleParts,
+        negativeTags,
+        prompt: finalPrompt,
+        customMode: false,
+        defaultParamFlag: false,
+        model: MODEL,
+        instrumental: false,
+        callBackUrl,
+      };
+      if (mode === "cover") {
+        kiePayload.voiceType = voice_type || "auto";
+      }
+      if (mode === "extend" && source_duration_sec) {
+        kiePayload.continueAt = Math.floor(source_duration_sec * 0.85);
+      }
     }
 
     console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost} model=${MODEL}`);
@@ -280,29 +296,4 @@ serve(async (req) => {
       return json({ error: "provider_error", message: kieJson?.msg || "KIE request failed" }, 502);
     }
 
-    const taskId: string | undefined = kieJson?.data?.taskId || kieJson?.data?.task_id;
-    await supabaseAdmin
-      .from("ai_generation_logs")
-      .update({
-        provider_task_id: taskId ?? null,
-        status: "processing",
-        response_payload: kieJson,
-      })
-      .eq("id", logId);
-
-    return json({
-      ok: true,
-      logId,
-      taskId,
-      status: "processing",
-      credits_used: creditsCost,
-      mode,
-    });
-
-  } catch (err) {
-    console.error("[kie-enhance-generate] fatal", err);
-    return json({ error: (err as Error).message }, 500);
-  }
-});
-
-// ── Helpers ─────────────────────────────────────
+    const taskId: string | undefined = kieJson?.data?.taskId |
