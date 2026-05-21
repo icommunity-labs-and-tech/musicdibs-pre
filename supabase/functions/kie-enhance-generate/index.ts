@@ -211,7 +211,7 @@ serve(async (req) => {
       defaultPromptForMode(mode);
 
     const allParts = [...langParts, styleParts];
-    const finalPrompt = allParts.join(" ").slice(0, 600);
+    const finalPrompt = allParts.join(" ").slice(0, 500);
 
     // customMode: false → KIE/Suno generates autonomously, no lyrics required.
     // Fixes error 531 without ElevenLabs STT dependency.
