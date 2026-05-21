@@ -97,13 +97,23 @@ function matchesDefinition(price: Stripe.Price, definition: PlanDefinition) {
     const expectedInterval = definition.billingInterval === "yearly" ? "year" : "month";
     if (price.type !== "recurring" || price.recurring?.interval !== expectedInterval) return false;
     if (metadataMatchesPlan(price, definition.planId)) return true;
-    const inferredCredits = resolveCredits(price, definition);
-    return inferredCredits === definition.credits;
+    // Only infer from explicit credits metadata/text — never fall back to definition.credits
+    const explicit = explicitCredits(price);
+    return explicit !== null && explicit === definition.credits;
   }
   if (price.type !== "one_time") return false;
   if (metadataMatchesPlan(price, definition.planId)) return true;
-  const inferredCredits = resolveCredits(price, definition);
-  return inferredCredits === definition.credits;
+  const explicit = explicitCredits(price);
+  return explicit !== null && explicit === definition.credits;
+}
+
+function explicitCredits(price: Stripe.Price): number | null {
+  const productMetadata = getProductMetadata(price);
+  const rawCredits = price.metadata.credits || productMetadata.credits;
+  const parsedCredits = rawCredits ? Number.parseInt(rawCredits, 10) : Number.NaN;
+  if (Number.isFinite(parsedCredits) && parsedCredits > 0) return parsedCredits;
+  const inferredCredits = parseCreditsFromText(price.lookup_key, price.nickname, productName(price));
+  return Number.isFinite(inferredCredits) && inferredCredits > 0 ? inferredCredits : null;
 }
 
 function resolveCredits(price: Stripe.Price, definition: PlanDefinition) {
