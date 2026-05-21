@@ -40,20 +40,14 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     )
-    // Lyrics generation is text-only — always use Anthropic (fast & reliable).
-    // KIE Suno lyrics endpoint is unreliable (timeouts / 500s) and unnecessary for plain text.
-    const activeProvider = "anthropic"
-    const activeModel = "claude-haiku-4-5-20251001"
-    console.log(`[LYRICS] Using provider=${activeProvider} model=${activeModel}`)
-
-    if (activeProvider === "anthropic" && !ANTHROPIC_API_KEY) {
-      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
+    // Lyrics: Suno (KIE) is primary; Gemini Flash 2.5 is fallback on any failure/timeout.
+    const KIE_API_KEY = Deno.env.get("KIE_API_KEY")
+    const GEMINI_FALLBACK_MODEL = "gemini-2.5-flash"
+    if (!KIE_API_KEY && !GEMINI_API_KEY) {
+      return new Response(JSON.stringify({ error: "No lyrics provider configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
     }
-    if (activeProvider === "gemini" && !GEMINI_API_KEY) {
-      return new Response(JSON.stringify({ error: "GEMINI_API_KEY not configured" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
-    }
+    console.log(`[LYRICS] Primary=kie_suno Fallback=gemini(${GEMINI_FALLBACK_MODEL})`)
 
 
     const {
