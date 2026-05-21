@@ -46,7 +46,7 @@ const AIStudio = () => {
       descKey: "aiStudio.modules.enhance.desc",
       icon: Mic2,
       href: "/ai-studio/enhance",
-      available: true,
+      available: false,
       costsCredits: true,
       beta: true,
       featureKey: 'enhance_audio' as const,
