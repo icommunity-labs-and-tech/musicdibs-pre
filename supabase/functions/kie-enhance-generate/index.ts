@@ -15,6 +15,7 @@
 //        upload-cover/upload-extend: defaultParamFlag:false → only uploadUrl+prompt required.
 // v20 — extend mode fixes: defaultParamFlag:true, style (not tags), continueAt <duration, quality params, drop customMode.
 // v21 — cover mode fixes: customMode:true (not defaultParamFlag), map voice_type→vocalGender, add quality params for cover.
+// v22 — all modes: intensity ("low"/"medium"/"high") now included in styleParts/tags (was silently dropped).
 //        Model upgraded to V5_5 for instrumental (latest, better than V5 for this endpoint).
 //        Frontend preset "fidelidad" maps to audioWeight/styleWeight/weirdnessConstraint combos.
 // Deploy: supabase functions deploy kie-enhance-generate
@@ -229,7 +230,16 @@ serve(async (req) => {
       }
     }
 
-    const styleParts = [genre, mood, musical_style, prompt].filter(Boolean).join(", ") ||
+    // Map intensity values to descriptive tags Suno understands
+    const INTENSITY_MAP: Record<string, string> = {
+      low: "low energy, soft, gentle",
+      medium: "medium energy",
+      high: "high energy, intense, powerful",
+    };
+    const intensityTag = typeof intensity === "string" && INTENSITY_MAP[intensity]
+      ? INTENSITY_MAP[intensity] : null;
+
+    const styleParts = [genre, mood, intensityTag, musical_style, prompt].filter(Boolean).join(", ") ||
       defaultPromptForMode(mode);
 
     const allParts = [...langParts, styleParts];
