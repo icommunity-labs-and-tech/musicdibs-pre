@@ -188,9 +188,12 @@ serve(async (req) => {
 
     // customMode: false → KIE generates autonomously without requiring user lyrics.
     // This is the native fix for error 531. No ElevenLabs STT needed.
+    // KIE upload-cover/upload-extend: when defaultParamFlag=true, model/style/title are
+    // required at root. We pass defaultParamFlag=false to let KIE infer defaults from the
+    // source audio while still honoring our model and prompt.
     const kiePayload: Record<string, unknown> = {
       uploadUrl:        source_audio_url,
-      defaultParamFlag: true,
+      defaultParamFlag: false,
       prompt:           finalPrompt,
       style:            genre || "pop",
       title:            (source_filename || "Enhanced Track").slice(0, 80),
