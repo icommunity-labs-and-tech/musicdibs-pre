@@ -232,7 +232,7 @@ const resources = {
         world: { title: 'Distribución', desc: 'Publica tus canciones en más de 220 plataformas digitales y conserva hasta el 95% de tus royalties.', cta: 'Quiero distribuir mi música' },
         social: { title: 'Promoción en RRSS', desc: 'Da visibilidad a tu lanzamiento en nuestros canales de TikTok e Instagram, con +200.000 seguidores.', cta: 'Quiero promocionar mi lanzamiento' },
         market: { title: 'Marketplace', desc: 'Vende tus creaciones en nuestro marketplace y GANA dinero', cta: 'Accede a nuestro Market' },
-        nfts: { title: 'Material promocional', desc: 'Crea impresionantes portadas y vídeos para tus lanzamientos y campañas de marketing', cta: 'Saber más' },
+        nfts: { title: 'Impulsa tus canciones', desc: 'Crea impresionantes portadas y vídeos para tus lanzamientos y campañas de marketing', cta: 'Saber más' },
       },
       calculator: {
         badge: 'Calculadora de Royalties',
@@ -801,7 +801,7 @@ const resources = {
       },
       promoBanner: { text: "Valentine's Day: -20% on all subscriptions" },
       summerPromo: { title: "VALENTINE'S DAY", discount: '-20%', onAllSubs: 'On all subscriptions', enterCoupon: 'Enter the coupon at checkout.', discountCode: 'Discount code', code: 'LOVE20', footnote: '*Limited time offer' },
-      distro: { heading: 'Release your music and take it further', subheading: 'Distribute your songs across the major platforms and promote them on our socials to gain visibility from day one.', world: { title: 'Distribution', desc: 'Release your works worldwide on 220+ DSPs and EARN royalties', cta: 'Learn more' }, social: { title: 'Social Media Promotion', desc: 'Promote yourself on our socials with 300,000+ followers!', cta: 'Learn more' }, market: { title: 'Marketplace', desc: 'Sell your creations in our market and EARN money', cta: 'Go to our Market' }, nfts: { title: 'Promotional Material', desc: 'Create stunning covers and videos for your releases and marketing campaigns', cta: 'Learn more' } },
+      distro: { heading: 'Release your music and take it further', subheading: 'Distribute your songs across the major platforms and promote them on our socials to gain visibility from day one.', world: { title: 'Distribution', desc: 'Release your works worldwide on 220+ DSPs and EARN royalties', cta: 'Learn more' }, social: { title: 'Social Media Promotion', desc: 'Promote yourself on our socials with 300,000+ followers!', cta: 'Learn more' }, market: { title: 'Marketplace', desc: 'Sell your creations in our market and EARN money', cta: 'Go to our Market' }, nfts: { title: 'Boost your songs', desc: 'Create stunning covers and videos for your releases and marketing campaigns', cta: 'Learn more' } },
       calculator: {
         badge: 'Royalties Calculator',
         title: 'How much could you earn from your streams?',
@@ -1516,7 +1516,7 @@ const resources = {
           verifyRegistration: 'Verificar registro',
           verifyIdentity: 'Verificar identidade',
           premiumPromotion: 'Promoção Premium',
-          promoMaterial: 'Material Promocional',
+          promoMaterial: 'Impulsione suas canções',
           service: 'Serviço',
           distributeMusic: 'Distribuir sua música',
           socialPromo: 'Promoção nas redes',
@@ -2145,7 +2145,7 @@ const creditPricingTranslations: Record<string, any> = {
         youtube_thumbnail: 'Miniatura do YouTube',
         event_poster: 'Cartaz de evento',
         social_poster: 'Cartaz para redes',
-        social_video: 'Vídeo para redes sociais',
+        social_video: 'Vídeo para impulsionar canções',
         voice_translation_per_min: 'Tradução de voz (por min)',
       },
       descriptions: {
