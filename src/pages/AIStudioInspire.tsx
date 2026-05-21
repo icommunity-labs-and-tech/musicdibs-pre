@@ -313,7 +313,7 @@ const AIStudioInspire = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO title="Crear en 1 click" description="¿No sabes por dónde empezar? Genera una canción automáticamente y empieza a crear al instante con IA." path="/ai-studio/inspire" />
+      <SEO title="Regala canciones" description="¿Quieres sorprender a alguien? Genera una canción automáticamente y regálala." path="/ai-studio/inspire" />
       <Navbar />
       <AIStudioThemeBar />
 
@@ -333,7 +333,7 @@ const AIStudioInspire = () => {
           </div>
 
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            {t("aiInspire.title")} <span aria-hidden>🎵</span>
+            {t("aiInspire.title")}
           </h1>
           <p className="text-lg text-muted-foreground mb-10">
             {t("aiInspire.subtitle")}
