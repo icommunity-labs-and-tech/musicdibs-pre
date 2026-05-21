@@ -150,13 +150,10 @@ const AIStudioCreate = () => {
   const [lyricsLanguage, setLyricsLanguage] = useState("Español");
   const [lyricsRhyme, setLyricsRhyme] = useState("ABAB");
   const [lyricsStructure, setLyricsStructure] = useState("V+C+V+C+P+C");
-  const [lyricsArtistRefs, setLyricsArtistRefs] = useState<string[]>([]);
   const [lyricsPov, setLyricsPov] = useState("Primera persona");
-  const [_lyricsTheme] = useState(""); // kept for type compat
   const [generatedLyrics, setGeneratedLyrics] = useState("");
   const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
   const [lyricsError, setLyricsError] = useState<string | null>(null);
-  const [regenSection, setRegenSection] = useState("");
   const [copiedLyrics, setCopiedLyrics] = useState(false);
 
   // ── Lyrics history state ──
@@ -958,42 +955,35 @@ const AIStudioCreate = () => {
   };
 
   // ── Lyrics composer functions ──
-  const toggleArtistRef = (artist: string) => {
-    setLyricsArtistRefs(prev => prev.includes(artist) ? prev.filter(a => a !== artist) : [...prev, artist]);
-  };
-
-  const handleGenerateLyrics = async (regenerateSec?: string) => {
+  const handleGenerateLyrics = async () => {
     if (!lyricsDesc.trim()) {
       toast({ title: t('aiCreate.describeSongOrTheme'), variant: "destructive" });
       return;
     }
     setIsGeneratingLyrics(true);
     setLyricsError(null);
-    if (regenerateSec) setRegenSection(regenerateSec);
     try {
       const { data, error } = await supabase.functions.invoke("lyrics-generator", {
         body: {
-          description: lyricsDesc, genre: lyricsGenre, style: lyricsStyle,
-          rhymeScheme: lyricsRhyme, structure: lyricsStructure,
-          artistRefs: lyricsArtistRefs, pov: lyricsPov,
-          regenerateSection: regenerateSec || undefined,
-          existingLyrics: regenerateSec ? generatedLyrics : undefined,
+          description: lyricsDesc,
+          genre: lyricsGenre,
+          mood: lyricsMood,
+          style: lyricsStyle,
+          language: lyricsLanguage,
+          rhymeScheme: lyricsRhyme,
+          structure: lyricsStructure,
+          pov: lyricsPov,
         },
       });
       if (error || data?.error) throw new Error(data?.error || error?.message);
       setGeneratedLyrics(data.lyrics);
       loadLyricsHistory();
-      if (regenerateSec) {
-        toast({ title: t('aiCreate.sectionRegenerated'), description: `[${regenerateSec}]` });
-      } else {
-        toast({ title: t('aiCreate.lyricsGenerated'), description: t('aiCreate.lyricsGeneratedDesc') });
-        track('lyrics_generated', { feature: 'lyrics', metadata: { genre: lyricsGenre, mood: lyricsMood, language: lyricsLanguage } });
-      }
+      toast({ title: t('aiCreate.lyricsGenerated'), description: t('aiCreate.lyricsGeneratedDesc') });
+      track('lyrics_generated', { feature: 'lyrics', metadata: { genre: lyricsGenre, mood: lyricsMood, language: lyricsLanguage } });
     } catch (err: any) {
       setLyricsError(err.message || "Error al generar la letra");
     }
     setIsGeneratingLyrics(false);
-    setRegenSection("");
   };
 
   const copyLyrics = async () => {
@@ -1012,10 +1002,6 @@ const AIStudioCreate = () => {
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
     toast({ title: t('aiCreate.lyricsLoaded'), description: t('aiCreate.lyricsLoadedDesc') });
   };
-
-  const lyricsSections = generatedLyrics
-    ? [...generatedLyrics.matchAll(/\[([^\]]+)\]/g)].map(m => m[1])
-    : [];
 
   // ── Lyrics history ──
   const loadLyricsHistory = async () => {
@@ -1690,6 +1676,26 @@ const AIStudioCreate = () => {
                       </div>
                     </div>
 
+                    {/* Mood chips */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">{t('aiCreate.moodLabel', 'Mood / Emoción')}</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {["Romántico", "Melancólico", "Alegre", "Emotivo", "Enérgico", "Relajado", "Nostálgico", "Épico"].map(m => (
+                          <Badge key={m} variant={lyricsMood === m ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => setLyricsMood(lyricsMood === m ? "" : m)}>{m}</Badge>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Language chips */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">{t('aiCreate.languageLabel', 'Idioma')}</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {LYRIC_LANGUAGES.map(l => (
+                          <Badge key={l} variant={lyricsLanguage === l ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => setLyricsLanguage(l)}>{l}</Badge>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Advanced options */}
                     <Collapsible>
                       <CollapsibleTrigger className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors w-full py-1">
@@ -1780,21 +1786,6 @@ const AIStudioCreate = () => {
                       <div className="rounded-xl bg-muted/40 p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap max-h-[500px] overflow-y-auto">
                         {generatedLyrics}
                       </div>
-
-                      {lyricsSections.length > 0 && (
-                        <div className="space-y-2">
-                          <Label className="text-xs text-muted-foreground">{t('aiCreate.regenSection')}</Label>
-                          <div className="flex flex-wrap gap-1.5">
-                            {lyricsSections.map(section => (
-                              <Button key={section} variant="outline" size="sm" className="h-7 text-xs gap-1.5" disabled={isGeneratingLyrics} onClick={() => handleGenerateLyrics(section)}>
-                                {isGeneratingLyrics && regenSection === section ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
-                                {section}
-                              </Button>
-                            ))}
-                          </div>
-                          <p className="text-[11px] text-muted-foreground">{t('aiCreate.regenSectionNote')}</p>
-                        </div>
-                      )}
 
                       <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground gap-1.5" onClick={() => handleGenerateLyrics()} disabled={isGeneratingLyrics}>
                         <RotateCcw className="h-3.5 w-3.5" />
@@ -2353,3 +2344,4 @@ const AIStudioCreate = () => {
 };
 
 export default AIStudioCreate;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
