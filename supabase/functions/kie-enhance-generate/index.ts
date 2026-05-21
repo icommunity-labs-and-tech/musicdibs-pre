@@ -228,9 +228,13 @@ serve(async (req) => {
     //   Missing causes 502 "Please enter tags." on upload-instrumental (and likely others).
     //   tags = styleParts only; prompt = langInstruction + styleParts (for cover/extend).
     const MODEL = "V5";
+    const baseName = (typeof source_filename === "string" ? source_filename.replace(/\.[^/.]+$/, "") : "").trim();
+    const title = (baseName || `Enhanced ${mode}`).slice(0, 80);
     const kiePayload: Record<string, unknown> = {
       uploadUrl: source_audio_url,
+      title,
       tags: styleParts,
+      negativeTags: "low quality, distorted, noisy",
       prompt: finalPrompt,
       customMode: false,
       defaultParamFlag: false,
