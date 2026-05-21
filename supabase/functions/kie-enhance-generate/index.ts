@@ -310,6 +310,12 @@ function defaultPromptForMode(mode: string): string {
   return "Add professional production and instrumentation";
 }
 
+function defaultTagsForMode(mode: string): string {
+  if (mode === "cover") return "pop, modern, polished";
+  if (mode === "extend") return "smooth, continuation, cohesive";
+  return "instrumental, cinematic, atmospheric";
+}
+
 function json(payload: unknown, status = 200, noBody = false): Response {
   if (noBody) return new Response(null, { status, headers: corsHeaders });
   return new Response(JSON.stringify(payload), {
