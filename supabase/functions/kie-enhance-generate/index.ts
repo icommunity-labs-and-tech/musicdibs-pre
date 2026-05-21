@@ -41,8 +41,8 @@ const DEFAULT_CREDITS: Record<string, number> = {
 // Ajustar según documentación actual de KIE AI
 const KIE_ENDPOINTS: Record<string, string> = {
   cover:        "https://api.kie.ai/api/v1/generate/upload-cover",
-  extend:       "https://api.kie.ai/api/v1/generate/extend",
-  instrumental: "https://api.kie.ai/api/v1/generate/upload-instrumental",
+  extend:       "https://api.kie.ai/api/v1/generate/upload-extend",
+  instrumental: "https://api.kie.ai/api/v1/generate/add-instrumental",
 };
 
 serve(async (req) => {
