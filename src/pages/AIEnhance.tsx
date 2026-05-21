@@ -866,14 +866,14 @@ const AIEnhance = () => {
           {(selectedMode === "cover" || selectedMode === "extend") && (
             <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground">
-                Idioma de la voz en el audio
+                {t('aiEnhance.langLabel')}
               </label>
               <Select value={sourceLanguage} onValueChange={setSourceLanguage} disabled={isProcessing}>
                 <SelectTrigger className="h-9 text-sm max-w-[240px]">
-                  <SelectValue placeholder="Idioma del audio" />
+                  <SelectValue placeholder={t('aiEnhance.langPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="auto">Detectar automáticamente</SelectItem>
+                  <SelectItem value="auto">{t('aiEnhance.langAuto')}</SelectItem>
                   <SelectItem value="es">Español</SelectItem>
                   <SelectItem value="en">English</SelectItem>
                   <SelectItem value="fr">Français</SelectItem>
@@ -886,8 +886,7 @@ const AIEnhance = () => {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground/70">
-                Si tu audio tiene voz, selecciona el idioma para que la IA lo preserve en la versión generada.
-              </p>
+                {t('aiEnhance.langHint')}</p>
             </div>
           )}
 
