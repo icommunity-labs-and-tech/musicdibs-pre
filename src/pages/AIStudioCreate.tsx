@@ -2334,4 +2334,27 @@ const AIStudioCreate = () => {
               <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
                 <Download className="h-3.5 w-3.5 text-muted-foreground" />
               </div>
-              <div className="h-8 w-8 rounded-md bg-muted flex item
+              <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
+                <Music className="h-3.5 w-3.5 text-muted-foreground" />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                localStorage.setItem('virtual_artist_tip_shown', 'true');
+                setShowVirtualArtistTip(false);
+              }}
+            >
+              {t('aiCreate.onboardingTipCta', 'Entendido')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      </main>
+    </div>
+  );
+};
+
+export default AIStudioCreate;
