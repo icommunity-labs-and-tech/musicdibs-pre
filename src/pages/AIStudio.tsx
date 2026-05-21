@@ -51,9 +51,6 @@ const AIStudio = () => {
       featureKey: 'enhance_audio' as const,
       color: "from-violet-500 to-purple-600"
     },
-  ];
-
-  const bottomRowModules = [
     {
       titleKey: "aiStudio.modules.editModify.title",
       descKey: "aiStudio.modules.editModify.desc",
@@ -64,6 +61,9 @@ const AIStudio = () => {
       featureKey: 'edit_audio' as const,
       color: "from-fuchsia-500 to-purple-600"
     },
+  ];
+
+  const bottomRowModules = [
     {
       titleKey: "aiStudio.modules.createCovers.title",
       descKey: "aiStudio.modules.createCovers.desc",
@@ -224,12 +224,12 @@ const AIStudio = () => {
             </div>
 
             {/* Row 1 */}
-            <div className="grid md:grid-cols-2 gap-6 mb-6">
+            <div className="grid md:grid-cols-3 gap-6 mb-6">
               {topRowModules.map((m) => renderModuleCard(m))}
             </div>
 
             {/* Row 2 */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div className="grid md:grid-cols-3 gap-6 mb-10">
               {bottomRowModules.map((m) => renderModuleCard(m, "flex flex-col"))}
             </div>
 
