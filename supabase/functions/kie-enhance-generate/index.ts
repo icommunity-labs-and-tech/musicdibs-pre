@@ -13,7 +13,7 @@
 //        add-instrumental has its own schema: requires title, tags, negativeTags.
 //        Does NOT accept prompt/customMode/defaultParamFlag/instrumental fields.
 //        upload-cover/upload-extend: defaultParamFlag:false → only uploadUrl+prompt required.
-// v19 — add-instrumental quality params: vocalGender, styleWeight, audioWeight, weirdnessConstraint.
+// v20 — extend mode fixes: defaultParamFlag:true, style (not tags), continueAt <duration, quality params, drop customMode.
 //        Model upgraded to V5_5 for instrumental (latest, better than V5 for this endpoint).
 //        Frontend preset "fidelidad" maps to audioWeight/styleWeight/weirdnessConstraint combos.
 // Deploy: supabase functions deploy kie-enhance-generate
@@ -95,6 +95,7 @@ serve(async (req) => {
       style_weight,       // 0-1 — adherence to style tags
       audio_weight,       // 0-1 — how much to follow the uploaded audio's characteristics
       weirdness_constraint, // 0-1 — 0=conventional, 1=experimental
+      continue_at,        // number — custom continueAt override (seconds), for extend mode
     } = body || {};
 
     if (!mode || !FEATURE_KEYS[mode]) {
@@ -239,7 +240,7 @@ serve(async (req) => {
     //   required: uploadUrl, title, tags, negativeTags, callBackUrl
     //   does NOT accept: prompt, customMode, defaultParamFlag, instrumental
     // upload-cover / upload-extend (/upload-cover, /upload-extend):
-    //   defaultParamFlag:false → only uploadUrl + prompt required
+    //   defaultParamFlag:true → sends style, title, prompt, continueAt properly
     // V5_5 for instrumental (newer, better vocal accompaniment generation)
     // V5 for cover/extend (consistent with source music model version requirement)
     const MODEL_INSTRUMENTAL = "V5_5";
@@ -271,26 +272,36 @@ serve(async (req) => {
       if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
       if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
     } else {
-      // upload-cover / upload-extend — defaultParamFlag:false, prompt-based
+      // upload-cover / upload-extend — defaultParamFlag:true → custom params
+      // style (not tags), title, prompt, negativeTags all respected by KIE
       kiePayload = {
         uploadUrl: source_audio_url,
         title,
-        tags: styleParts,
+        style: styleParts,          // correct field for upload-cover/upload-extend (not "tags")
         negativeTags,
         prompt: finalPrompt,
-        customMode: false,
         instrumental: false,
-        defaultParamFlag: false,
+        defaultParamFlag: true,     // use custom params so style/title/negativeTags are applied
         model: MODEL_COVER_EXTEND,
         callBackUrl,
       };
-      // upload-extend requires continueAt (seconds in source where continuation begins).
-      // Use the full source duration if known; default to 30s otherwise.
+      // extend: continueAt must be > 0 AND < duration.
+      // Use custom override if provided; otherwise default to 90% of duration (or duration-5s).
       if (mode === "extend") {
         const dur = typeof source_duration_sec === "number" && source_duration_sec > 0
           ? source_duration_sec
           : 30;
-        kiePayload.continueAt = Math.max(1, Math.floor(dur));
+        const customAt = typeof continue_at === "number" && continue_at > 0 && continue_at < dur
+          ? Math.floor(continue_at)
+          : Math.max(1, Math.floor(dur * 0.9));
+        kiePayload.continueAt = customAt;
+      }
+      // Quality params apply to extend too (same optional fields as instrumental)
+      if (mode === "extend") {
+        if (vocal_gender === "m" || vocal_gender === "f") kiePayload.vocalGender = vocal_gender;
+        if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
+        if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
+        if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
       }
     }
 
