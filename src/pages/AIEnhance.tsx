@@ -1,6 +1,6 @@
 // 🎼 Mejorar demo con IA — AI Enhance Module
 // Route: /ai-studio/enhance
-// v2 — blob download fix + language selector (cover/extend) + source_language param
+// v3 — vocalGender toggle + fidelity presets (faithful/balanced/creative) for instrumental mode
 
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -44,6 +44,31 @@ import { cn } from "@/lib/utils";
 
 type EnhanceMode = "instrumental" | "cover" | "extend";
 type JobStatus = "idle" | "uploading" | "processing" | "completed" | "failed";
+type FidelityPreset = "faithful" | "balanced" | "creative";
+
+const FIDELITY_PRESETS: Record<FidelityPreset, {
+  audio_weight: number;
+  style_weight: number;
+  weirdness_constraint: number;
+  label: string;
+  description: string;
+}> = {
+  faithful: {
+    audio_weight: 0.80, style_weight: 0.50, weirdness_constraint: 0.20,
+    label: "Fiel al original",
+    description: "Respeta el ritmo y carácter de tu voz",
+  },
+  balanced: {
+    audio_weight: 0.65, style_weight: 0.65, weirdness_constraint: 0.40,
+    label: "Equilibrado",
+    description: "Balance entre fidelidad y estilo",
+  },
+  creative: {
+    audio_weight: 0.40, style_weight: 0.80, weirdness_constraint: 0.75,
+    label: "Creativo",
+    description: "Más libertad para la IA",
+  },
+};
 
 const MODE_FEATURE_KEY: Record<EnhanceMode, string> = {
   instrumental: "enhance_instrumental",
@@ -143,9 +168,12 @@ const AIEnhance = () => {
   const [mood, setMood] = useState("");
   const [intensity, setIntensity] = useState("");
   const [voiceType, setVoiceType] = useState("");
-  // ── NEW: idioma vocal + estado de descarga ────────────────────────────────────
+  // ── idioma vocal + estado de descarga ────────────────────────────────────
   const [sourceLanguage, setSourceLanguage] = useState("auto");
   const [isDownloading, setIsDownloading] = useState(false);
+  // ── instrumental quality params ───────────────────────────────────────────
+  const [vocalGender, setVocalGender] = useState<"m" | "f">("m");
+  const [fidelityPreset, setFidelityPreset] = useState<FidelityPreset>("balanced");
 
   const [jobStatus, setJobStatus] = useState<JobStatus>("idle");
   const [logId, setLogId] = useState<string | null>(null);
@@ -261,9 +289,15 @@ const AIEnhance = () => {
             genre: genre || undefined,
             mood: mood || undefined,
             intensity: intensity || undefined,
-            voice_type: voiceType || undefined,
-            // ── NEW: idioma vocal explícito para preservar idioma en cover/extend
+            voice_type: selectedMode !== "instrumental" ? (voiceType || undefined) : undefined,
             source_language: sourceLanguage !== "auto" ? sourceLanguage : undefined,
+            // ── instrumental quality params ───────────────────────────────────
+            ...(selectedMode === "instrumental" && {
+              vocal_gender: vocalGender,
+              audio_weight: FIDELITY_PRESETS[fidelityPreset].audio_weight,
+              style_weight: FIDELITY_PRESETS[fidelityPreset].style_weight,
+              weirdness_constraint: FIDELITY_PRESETS[fidelityPreset].weirdness_constraint,
+            }),
           }),
         }
       );
@@ -338,6 +372,8 @@ const AIEnhance = () => {
     setIntensity("");
     setVoiceType("");
     setSourceLanguage("auto");
+    setVocalGender("m");
+    setFidelityPreset("balanced");
     setJobStatus("idle");
     setLogId(null);
     setGeneratedAudioUrl(null);
@@ -364,7 +400,7 @@ const AIEnhance = () => {
               >
                 <ArrowLeft className="w-4 h-4" /> AI Studio
               </Link>
-              <h1 className="text-3xl md:text-4xl font-bold flex items-center gap-2">🎼 Mejora tus canciones <Badge variant="secondary" className="text-xs">BETA</Badge></h1>
+              <h1 className="text-3xl md:text-4xl font-bold">🎼 Mejora tus canciones</h1>
               <p className="text-muted-foreground mt-1">
                 Trabaja sobre ideas musicales reales creadas por ti.
               </p>
@@ -459,7 +495,9 @@ const AIEnhance = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold">
-                Describe el resultado (opcional pero recomendado)
+                {selectedMode === "instrumental"
+                  ? "Describe el estilo musical (opcional pero recomendado)"
+                  : "Describe el resultado (opcional pero recomendado)"}
               </label>
               <div className="flex items-center gap-2">
                 <Button
@@ -481,12 +519,12 @@ const AIEnhance = () => {
                     </>
                   )}
                 </Button>
-                <span className="text-xs text-muted-foreground">{prompt.length}/382</span>
+                <span className="text-xs text-muted-foreground">{prompt.length}/500</span>
               </div>
             </div>
             <Textarea
               value={prompt}
-              onChange={(e) => setPrompt(e.target.value.slice(0, 382))}
+              onChange={(e) => setPrompt(e.target.value.slice(0, 500))}
               disabled={isProcessing}
               placeholder={currentMode.placeholder}
               className="resize-none h-24"
@@ -525,7 +563,36 @@ const AIEnhance = () => {
                 <SelectItem value="high">Intensa</SelectItem>
               </SelectContent>
             </Select>
-            {selectedMode !== "extend" && (
+            {selectedMode === "instrumental" ? (
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => !isProcessing && setVocalGender("m")}
+                  disabled={isProcessing}
+                  className={cn(
+                    "flex-1 h-9 rounded-md border text-sm font-medium transition-all",
+                    vocalGender === "m"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                  )}
+                >
+                  ♂ Hombre
+                </button>
+                <button
+                  type="button"
+                  onClick={() => !isProcessing && setVocalGender("f")}
+                  disabled={isProcessing}
+                  className={cn(
+                    "flex-1 h-9 rounded-md border text-sm font-medium transition-all",
+                    vocalGender === "f"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                  )}
+                >
+                  ♀ Mujer
+                </button>
+              </div>
+            ) : selectedMode !== "extend" ? (
               <Select value={voiceType} onValueChange={setVoiceType} disabled={isProcessing}>
                 <SelectTrigger className="h-9 text-sm">
                   <SelectValue placeholder="Voz" />
@@ -537,10 +604,38 @@ const AIEnhance = () => {
                   <SelectItem value="auto">Auto</SelectItem>
                 </SelectContent>
               </Select>
-            )}
+            ) : null}
           </div>
 
-          {/* ── NEW: Selector de idioma vocal (solo cover / extend) ───────────── */}
+          {/* ── Fidelidad al original (solo instrumental) ───────────────────── */}
+          {selectedMode === "instrumental" && (
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-muted-foreground">
+                Fidelidad al original
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.entries(FIDELITY_PRESETS) as [FidelityPreset, typeof FIDELITY_PRESETS[FidelityPreset]][]).map(([key, preset]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => !isProcessing && setFidelityPreset(key)}
+                    disabled={isProcessing}
+                    className={cn(
+                      "p-3 rounded-xl border text-left transition-all",
+                      fidelityPreset === key
+                        ? "border-primary bg-primary/5"
+                        : "border-border bg-card hover:border-primary/30"
+                    )}
+                  >
+                    <p className="text-sm font-semibold">{preset.label}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{preset.description}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Selector de idioma vocal (solo cover / extend) ───────────────── */}
           {(selectedMode === "cover" || selectedMode === "extend") && (
             <div className="space-y-2">
               <label className="text-sm font-semibold text-muted-foreground">
@@ -612,78 +707,4 @@ const AIEnhance = () => {
                     className="gap-2"
                   >
                     {isDownloading
-                      ? <Loader2 className="w-4 h-4 animate-spin" />
-                      : <Download className="w-4 h-4" />}
-                    {isDownloading ? "Descargando..." : "Descargar"}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={handleReset} className="gap-2">
-                    <RefreshCw className="w-4 h-4" /> Nueva versión
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  💡 ¿No es exactamente lo que querías? Regenera con un prompt más específico.
-                </p>
-                <Alert className="border-primary/30 bg-primary/5">
-                  <CheckCircle2 className="h-4 w-4 text-primary" />
-                  <AlertDescription className="text-xs">
-                    Esta nueva versión queda guardada para siempre en tu{" "}
-                    <Link to="/dashboard/media-library" className="text-primary font-medium hover:underline">
-                      biblioteca de medios
-                    </Link>
-                    . Podrás escucharla, descargarla o usarla en futuros registros cuando quieras.
-                  </AlertDescription>
-                </Alert>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {jobStatus === "failed" && genError && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 flex items-start gap-3"
-              >
-                <X className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-destructive">{genError}</p>
-                  <p className="text-xs text-muted-foreground">
-                    No se han descontado créditos adicionales.
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleReset}
-                    className="gap-2 h-7 px-2 text-xs mt-1"
-                  >
-                    <RefreshCw className="w-3 h-3" /> Intentar de nuevo
-                  </Button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {jobStatus === "idle" && (
-            <Button
-              onClick={handleGenerate}
-              disabled={!canGenerate}
-              className="w-full h-12 gap-2 text-base font-semibold"
-              size="lg"
-            >
-              <Wand2 className="w-5 h-5" />
-              Generar versión
-            </Button>
-          )}
-
-          <div className="text-center text-xs text-muted-foreground">
-            <PricingLink className="text-primary hover:underline" />
-            <span className="ml-1">Consulta el detalle de créditos por operación</span>
-          </div>
-        </div>
-      </main>
-      <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
-    </>
-  );
-};
-
-export default AIEnhance;
+                      ? <Loader2 
