@@ -162,9 +162,47 @@ export default function AdminApiCostsPage() {
     return <Badge variant="destructive">{fmtPct(pct)}</Badge>;
   };
 
+  // Aggregate daily data by date (total across all APIs/features)
+  interface DailyAggregate {
+    date: string;
+    total_uses: number;
+    total_credits_charged: number;
+    total_revenue_eur: number;
+    total_api_cost_eur: number;
+    gross_margin_eur: number;
+    margin_pct: number;
+    features_count: number;
+  }
+  const dailyAggregatedMap: Record<string, DailyAggregate> = {};
+  dailyData.forEach(d => {
+    if (!dailyAggregatedMap[d.date]) {
+      dailyAggregatedMap[d.date] = {
+        date: d.date,
+        total_uses: 0,
+        total_credits_charged: 0,
+        total_revenue_eur: 0,
+        total_api_cost_eur: 0,
+        gross_margin_eur: 0,
+        margin_pct: 0,
+        features_count: 0,
+      };
+    }
+    const a = dailyAggregatedMap[d.date];
+    a.total_uses += Number(d.total_uses);
+    a.total_credits_charged += Number(d.total_credits_charged);
+    a.total_revenue_eur += Number(d.total_revenue_eur);
+    a.total_api_cost_eur += Number(d.total_api_cost_eur);
+    a.gross_margin_eur += Number(d.gross_margin_eur);
+    a.features_count += 1;
+  });
+  const dailyAggregated = Object.values(dailyAggregatedMap)
+    .map(a => ({ ...a, margin_pct: a.total_revenue_eur > 0 ? (a.gross_margin_eur / a.total_revenue_eur) * 100 : 0 }))
+    .sort((x, y) => y.date.localeCompare(x.date));
+
   // Pagination
-  const totalPages = Math.max(1, Math.ceil(dailyData.length / PAGE_SIZE));
-  const paginatedDaily = dailyData.slice((dailyPage - 1) * PAGE_SIZE, dailyPage * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(dailyAggregated.length / PAGE_SIZE));
+  const paginatedDaily = dailyAggregated.slice((dailyPage - 1) * PAGE_SIZE, dailyPage * PAGE_SIZE);
+
 
   return (
     <div className="space-y-6">
@@ -351,11 +389,12 @@ export default function AdminApiCostsPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Métricas diarias</CardTitle>
-            {dailyData.length > 0 && (
-              <span className="text-xs text-muted-foreground">{dailyData.length.toLocaleString('de-DE')} registros</span>
+            <CardTitle className="text-lg">Métricas diarias (agregadas por día, todas las APIs)</CardTitle>
+            {dailyAggregated.length > 0 && (
+              <span className="text-xs text-muted-foreground">{dailyAggregated.length.toLocaleString('de-DE')} días</span>
             )}
           </div>
+
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -368,8 +407,8 @@ export default function AdminApiCostsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha</TableHead>
-                    <TableHead>Feature</TableHead>
-                    <TableHead className="text-right">Usos</TableHead>
+                    <TableHead className="text-right">APIs activas</TableHead>
+                    <TableHead className="text-right">Usos totales</TableHead>
                     <TableHead className="text-right">Créditos</TableHead>
                     <TableHead className="text-right">Ingresos €</TableHead>
                     <TableHead className="text-right">Coste API €</TableHead>
@@ -379,18 +418,19 @@ export default function AdminApiCostsPage() {
                 </TableHeader>
                 <TableBody>
                   {paginatedDaily.map(d => (
-                    <TableRow key={d.id}>
-                      <TableCell>{d.date}</TableCell>
-                      <TableCell>{configMap[d.feature_key]?.feature_label || d.feature_key}</TableCell>
+                    <TableRow key={d.date}>
+                      <TableCell className="font-medium">{d.date}</TableCell>
+                      <TableCell className="text-right">{d.features_count}</TableCell>
                       <TableCell className="text-right">{d.total_uses.toLocaleString('de-DE')}</TableCell>
                       <TableCell className="text-right">{d.total_credits_charged.toLocaleString('de-DE')}</TableCell>
-                      <TableCell className="text-right">{fmtEur(Number(d.total_revenue_eur), 4)}</TableCell>
-                      <TableCell className="text-right">{fmtEur(Number(d.total_api_cost_eur), 6)}</TableCell>
-                      <TableCell className="text-right">{fmtEur(Number(d.gross_margin_eur), 4)}</TableCell>
-                      <TableCell className="text-right">{marginBadge(Number(d.margin_pct))}</TableCell>
+                      <TableCell className="text-right">{fmtEur(d.total_revenue_eur, 2)}</TableCell>
+                      <TableCell className="text-right">{fmtEur(d.total_api_cost_eur, 4)}</TableCell>
+                      <TableCell className="text-right">{fmtEur(d.gross_margin_eur, 2)}</TableCell>
+                      <TableCell className="text-right">{marginBadge(d.margin_pct)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
+
               </Table>
 
               {totalPages > 1 && (
