@@ -1656,7 +1656,7 @@ const AIStudioCreate = () => {
                           }
                         </button>
                       </div>
-                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="w-full max-w-full resize-none" maxLength={2500} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
+                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="w-full max-w-full resize-none" maxLength={380} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
                       {improvedLyricsDesc && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {t('aiCreate.lyricsDescImproved')} — {t('aiCreate.lyricsDescImprovedSub')}
