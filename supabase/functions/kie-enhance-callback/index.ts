@@ -185,12 +185,15 @@ serve(async (req) => {
     }
 
     // ── Marcar como completado ────────────────────────────────────────────────
+    // Guardamos provider_task_id para que kie-midi-generate pueda usar
+    // este resultado como fuente de separación de stems → MIDI.
     await supabase
       .from("ai_generation_logs")
       .update({
         status: "completed",
         output_url: outputUrl,
         response_payload: body,
+        ...(taskId ? { provider_task_id: taskId } : {}),
       })
       .eq("id", logId);
 
@@ -202,13 +205,4 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
-
-function ok(payload: unknown): Response {
-  return new Response(JSON.stringify(payload), {
-    status: 200,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-  });
-}
+    }
