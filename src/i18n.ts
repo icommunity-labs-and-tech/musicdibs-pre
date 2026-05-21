@@ -2132,7 +2132,7 @@ const creditPricingTranslations: Record<string, any> = {
         generate_audio: 'Música instrumental',
         generate_audio_song: 'Música (sem letra própria e <3min)',
         generate_audio_elevenlabs: 'Música (letra própria ou >3min)',
-        one_click_create: 'Música em 1 clique',
+        one_click_create: 'Presenteie canções',
         generate_lyrics: 'Criar letras',
         generate_press_release: 'Artistas Virtuais',
         improve_prompt: 'Melhorar descrição com IA',
