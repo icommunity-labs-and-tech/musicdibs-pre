@@ -146,7 +146,7 @@ Devuelve SOLO la letra con sus etiquetas de sección entre paréntesis, lista pa
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
       }
 
-      // Build a compact prompt for Suno (max ~400 chars works best)
+      // Build a compact prompt for Suno (max 200 chars enforced by KIE API)
       const kiePromptParts: string[] = []
       if (regenerateSection && existingLyrics) {
         kiePromptParts.push(`Regenerate only the (${regenerateSection}) section of these lyrics, keep rest intact:\n${existingLyrics}`)
@@ -161,7 +161,7 @@ Devuelve SOLO la letra con sus etiquetas de sección entre paréntesis, lista pa
         if (pov)         kiePromptParts.push(`POV: ${pov}`)
         if (artistRefs?.length) kiePromptParts.push(`like ${artistRefs.join(", ")}`)
       }
-      const kiePrompt = kiePromptParts.join(". ").slice(0, 380) || "Original song lyrics"
+      const kiePrompt = kiePromptParts.join(". ").slice(0, 200) || "Original song lyrics"
 
       const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!
       const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-suno-callback?logId=lyrics-generator`

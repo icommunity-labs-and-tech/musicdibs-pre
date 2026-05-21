@@ -944,7 +944,7 @@ const AIStudioCreate = () => {
         },
       });
       if (error || !data?.improved) throw new Error(error?.message || 'No response');
-      setLyricsDesc(data.improved.slice(0, 380));
+      setLyricsDesc(data.improved.slice(0, 200));
       setImprovedLyricsDesc(true);
       toast({ title: t('aiCreate.lyricsDescImproved'), description: t('aiCreate.lyricsDescImprovedSub') });
     } catch {
@@ -1656,13 +1656,13 @@ const AIStudioCreate = () => {
                           }
                         </button>
                       </div>
-                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="w-full max-w-full resize-none" maxLength={380} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
+                      <Textarea value={lyricsDesc} onChange={e => setLyricsDesc(e.target.value)} rows={3} className="w-full max-w-full resize-none" maxLength={200} placeholder={t('aiCreate.lyricsDescPlaceholder')} />
                       {improvedLyricsDesc && (
                         <p className="text-xs text-muted-foreground mt-1">
                           {t('aiCreate.lyricsDescImproved')} — {t('aiCreate.lyricsDescImprovedSub')}
                         </p>
                       )}
-                      <p className="text-xs text-muted-foreground text-right">{lyricsDesc.length}/380</p>
+                      <p className="text-xs text-muted-foreground text-right">{lyricsDesc.length}/200</p>
                     </div>
 
 
