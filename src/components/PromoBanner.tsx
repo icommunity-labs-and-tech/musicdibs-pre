@@ -27,6 +27,7 @@ const useCountdown = (target: Date) => {
 const pad = (n: number) => n.toString().padStart(2, "0");
 
 export const PromoBanner = () => {
+  const { t } = useTranslation();
   const { days, hours, minutes, seconds } = useCountdown(TARGET_DATE);
   const [copied, setCopied] = useState(false);
 
