@@ -219,7 +219,7 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
       },
       whyBadge: { comingSoon: 'Em breve' },
       artistsAB: { joinFreeToday: '🎵 Entre grátis hoje', startCareer: 'Comece sua carreira', whoTrusts: 'Veja quem confia em nós' },
-      promoBanner: { label: 'Dia dos Namorados' },
+      promoBanner: { label: 'Dia dos Namorados', title: 'Nova era da Musicdibs', offer: '-30% · Só em maio', copyAria: 'Copiar código', cta: 'Aproveitar oferta' },
       footerExtra: { web: 'Web', version: 'Versão 1.0.0' },
       calcStreams: { unit: 'streams' },
     },
