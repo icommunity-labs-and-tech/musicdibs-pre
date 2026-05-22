@@ -619,7 +619,7 @@ const AIEnhance = () => {
                               className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-purple-600"
                             />
                             {/* Badge Recomendado */}
-                            <div className="absolute -top-2.5 left-3 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg shadow-violet-500/40">
+                            <div className="absolute -top-2.5 right-3 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg shadow-violet-500/40">
                               <Sparkles className="h-3 w-3" />
                               {t('aiEnhance.recommendedBadge')}
                             </div>
