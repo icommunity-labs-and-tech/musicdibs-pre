@@ -129,22 +129,56 @@ export default function AdminProductMetrics() {
     }
     setLiveFeatureCounts(counts);
 
-    // Split create_music by mode (song vs instrumental) using product_events.metadata.mode
-    const { data: cmEvents } = await supabase
-      .from("product_events")
-      .select("metadata")
-      .eq("feature", "create_music")
-      .eq("event_name", "generation_completed")
-      .gte("created_at", `${fromStr}T00:00:00.000Z`)
-      .limit(10000);
-    const split = { song: 0, instrumental: 0, unknown: 0 };
-    for (const ev of cmEvents || []) {
-      const m = (ev.metadata as any)?.mode;
-      if (m === "song") split.song++;
-      else if (m === "instrumental") split.instrumental++;
-      else split.unknown++;
+    // Crear música — fuente autoritativa: ai_generation_logs (SUNO/KIE escribe aquí
+    // siempre, independientemente de que el navegador del usuario siga vivo).
+    // Se complementa con product_events para flujos legacy (ElevenLabs / Mureka)
+    // que no escriben en ai_generation_logs.
+    const sunoFeatureKeys = ["music_generation_vocal", "music_generation_instrumental"];
+    const [sunoSongRes, sunoInstRes, legacyEventsRes] = await Promise.all([
+      supabase
+        .from("ai_generation_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("feature_key", "music_generation_vocal")
+        .eq("status", "completed")
+        .gte("created_at", `${fromStr}T00:00:00.000Z`),
+      supabase
+        .from("ai_generation_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("feature_key", "music_generation_instrumental")
+        .eq("status", "completed")
+        .gte("created_at", `${fromStr}T00:00:00.000Z`),
+      supabase
+        .from("product_events")
+        .select("metadata")
+        .eq("feature", "create_music")
+        .eq("event_name", "generation_completed")
+        .gte("created_at", `${fromStr}T00:00:00.000Z`)
+        .limit(10000),
+    ]);
+
+    // Legacy split: contar product_events que vienen de proveedores != kie_suno
+    // (o eventos antiguos sin provider). Si el evento ya pertenece a una
+    // generación SUNO, se ignora aquí para no duplicar con ai_generation_logs.
+    let legacySong = 0, legacyInst = 0, legacyUnknown = 0;
+    for (const ev of legacyEventsRes.data || []) {
+      const meta = (ev.metadata as any) || {};
+      const prov = (meta.provider || "").toLowerCase();
+      if (prov === "kie_suno" || prov === "suno" || prov === "kie") continue;
+      const m = meta.mode;
+      if (m === "song") legacySong++;
+      else if (m === "instrumental") legacyInst++;
+      else legacyUnknown++;
     }
-    setCreateMusicSplit(split);
+
+    const songTotal = (sunoSongRes.count || 0) + legacySong;
+    const instTotal = (sunoInstRes.count || 0) + legacyInst;
+
+    // Sobreescribimos el contador "create_music" para que refleje la realidad
+    // (logs + legacy) en lugar del valor frontend-dependiente.
+    counts["create_music"] = songTotal + instTotal + legacyUnknown;
+    setLiveFeatureCounts({ ...counts });
+    setCreateMusicSplit({ song: songTotal, instrumental: instTotal, unknown: legacyUnknown });
+
 
     // Load cost config (credits_charged + price_per_credit) from api_cost_config
     const { data: costs } = await supabase
