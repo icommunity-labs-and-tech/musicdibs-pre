@@ -1,0 +1,1 @@
+UPDATE public.profiles SET subscription_plan='Monthly', subscription_tier='monthly', updated_at=now() WHERE user_id='651f67bf-1432-417b-97dc-e555eb04e3a2';
