@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Users, CreditCard, ShieldCheck, Sparkles, Music, ArrowDown, GitBranch } from "lucide-react";
@@ -8,15 +8,12 @@ import { Loader2, Users, CreditCard, ShieldCheck, Sparkles, Music, ArrowDown, Gi
 type Range = "7d" | "30d" | "90d";
 
 interface BehaviorFunnelData {
-  // Top funnel — totales acumulados (all-time)
-  totalUsers: number;
-  usersWithSub: number;
-  kycVerified: number;
-  // Rama A — AI Studio (period-scoped, desde product_metrics_daily)
+  newUsers: number;
+  newSubs: number;
+  newKyc: number;
   aiStudioEntries: number;
   aiFeatureUses: number;
   worksAfterAi: number;
-  // Rama B — Registro puro (all-time, works sin ai_generation_id)
   pureRegistrations: number;
 }
 
@@ -26,9 +23,7 @@ interface UserBehaviorFunnelProps {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function fmt(n: number) {
-  return n.toLocaleString("es-ES");
-}
+const fmt = (n: number) => n.toLocaleString("es-ES");
 
 function pct(value: number, base: number) {
   if (!base) return null;
@@ -39,16 +34,22 @@ function rangeDays(range: Range) {
   return range === "7d" ? 7 : range === "30d" ? 30 : 90;
 }
 
+function fromIso(range: Range) {
+  const d = new Date();
+  d.setDate(d.getDate() - rangeDays(range));
+  return d.toISOString(); // full ISO — compatible con timestamptz
+}
+
+function fromDate(range: Range) {
+  const d = new Date();
+  d.setDate(d.getDate() - rangeDays(range));
+  return d.toISOString().split("T")[0]; // YYYY-MM-DD — para columna date
+}
+
 // ─── Sub-components ────────────────────────────────────────────────────────
 
 function TopStep({
-  icon,
-  label,
-  value,
-  base,
-  color,
-  widthPct,
-  isLast,
+  icon, label, value, base, color, widthPct, isLast,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -58,12 +59,11 @@ function TopStep({
   widthPct: number;
   isLast?: boolean;
 }) {
-  const conversion = base != null ? pct(value, base) : null;
   return (
     <div className="flex flex-col items-center w-full">
       <div
         className={`flex items-center justify-between px-5 py-3 rounded-xl text-white ${color} transition-all duration-500`}
-        style={{ width: `${Math.max(40, widthPct)}%`, minWidth: 240 }}
+        style={{ width: `${Math.max(35, widthPct)}%`, minWidth: 240 }}
       >
         <div className="flex items-center gap-2">
           {icon}
@@ -71,13 +71,13 @@ function TopStep({
         </div>
         <div className="text-right">
           <span className="text-xl font-bold">{fmt(value)}</span>
-          {conversion && (
-            <span className="text-xs opacity-70 ml-2">({conversion})</span>
+          {base != null && base > 0 && (
+            <span className="text-xs opacity-70 ml-2">({pct(value, base)})</span>
           )}
         </div>
       </div>
       {!isLast && (
-        <div className="my-1 opacity-50">
+        <div className="my-1 opacity-40">
           <ArrowDown className="w-4 h-4 text-muted-foreground" />
         </div>
       )}
@@ -86,12 +86,7 @@ function TopStep({
 }
 
 function BranchStep({
-  icon,
-  label,
-  value,
-  base,
-  color,
-  isLast,
+  icon, label, value, base, color, isLast,
 }: {
   icon: React.ReactNode;
   label: string;
@@ -115,7 +110,7 @@ function BranchStep({
         </div>
       </div>
       {!isLast && (
-        <div className="my-1 opacity-50">
+        <div className="my-1 opacity-40">
           <ArrowDown className="w-4 h-4 text-muted-foreground" />
         </div>
       )}
@@ -131,90 +126,105 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchAll() {
       setLoading(true);
       setError(null);
+
+      const iso  = fromIso(range);   // para columnas timestamptz
+      const date = fromDate(range);  // para columna date en product_metrics_daily
+
       try {
-        const from = new Date();
-        from.setDate(from.getDate() - rangeDays(range));
-        const fromStr = from.toISOString().split("T")[0];
-
         const [
-          profilesRes,
-          subsRes,
-          kycRes,
+          newUsersRes,
+          newSubsRes,
+          newKycRes,
           metricsRes,
-          pureWorksRes,
+          worksAiRes,
+          worksPureRes,
         ] = await Promise.all([
-          // 1. Total usuarios (profiles 1:1 con auth.users)
-          supabase.from("profiles").select("*", { count: "exact", head: true }),
 
-          // 2. Suscriptores activos o past_due
-          supabase
-            .from("subscriptions")
-            .select("user_id", { count: "exact", head: true })
-            .in("status", ["active", "past_due"]),
-
-          // 3. KYC verificado
+          // 1. Nuevos registros en el período
           supabase
             .from("profiles")
             .select("*", { count: "exact", head: true })
-            .eq("kyc_status", "verified"),
+            .gte("created_at", iso),
 
-          // 4. Métricas diarias del período (AI Studio)
+          // 2. Nuevas compras (suscripciones creadas) en el período
+          supabase
+            .from("subscriptions")
+            .select("*", { count: "exact", head: true })
+            .gte("created_at", iso),
+
+          // 3. Verificaciones KYC en el período
+          //    Proxy: profiles actualizados con kyc_status=verified en el período.
+          //    Nota: updated_at cambia con cualquier edición del profile, no solo KYC.
+          //    Si se añade kyc_verified_at en el futuro, sustituir este filtro.
+          supabase
+            .from("profiles")
+            .select("*", { count: "exact", head: true })
+            .eq("kyc_status", "verified")
+            .gte("updated_at", iso),
+
+          // 4. Métricas AI Studio del período (desde product_metrics_daily)
           supabase
             .from("product_metrics_daily")
             .select(
               "ai_studio_entries, works_after_generation, uses_create_music, uses_lyrics, uses_vocal, uses_cover, uses_video, uses_enhance_audio, uses_voice_cloning, uses_register, uses_promotion, uses_press"
             )
-            .gte("date", fromStr),
+            .gte("date", date),
 
-          // 5. Works registradas sin IA (all-time, tipo audio)
+          // 5. Obras registradas tras IA en el período
           supabase
             .from("works")
-            .select("id", { count: "exact", head: true })
+            .select("*", { count: "exact", head: true })
+            .not("ai_generation_id", "is", null)
+            .gte("created_at", iso),
+
+          // 6. Obras registradas sin IA en el período
+          supabase
+            .from("works")
+            .select("*", { count: "exact", head: true })
             .is("ai_generation_id", null)
-            .eq("type", "audio"),
+            .eq("type", "audio")
+            .gte("created_at", iso),
         ]);
 
-        // Sumar columnas de métricas diarias
-        let aiStudioEntries = 0;
-        let worksAfterAi = 0;
-        let aiFeatureUses = 0;
+        if (cancelled) return;
 
+        // Agregar métricas diarias
+        let aiStudioEntries = 0, worksAfterAi = 0, aiFeatureUses = 0;
         for (const row of metricsRes.data ?? []) {
           aiStudioEntries += row.ai_studio_entries ?? 0;
           worksAfterAi    += row.works_after_generation ?? 0;
           aiFeatureUses   +=
-            (row.uses_create_music ?? 0) +
-            (row.uses_lyrics ?? 0) +
-            (row.uses_vocal ?? 0) +
-            (row.uses_cover ?? 0) +
-            (row.uses_video ?? 0) +
-            (row.uses_enhance_audio ?? 0) +
-            (row.uses_voice_cloning ?? 0) +
-            (row.uses_register ?? 0) +
-            (row.uses_promotion ?? 0) +
-            (row.uses_press ?? 0);
+            (row.uses_create_music  ?? 0) + (row.uses_lyrics   ?? 0) +
+            (row.uses_vocal         ?? 0) + (row.uses_cover    ?? 0) +
+            (row.uses_video         ?? 0) + (row.uses_enhance_audio ?? 0) +
+            (row.uses_voice_cloning ?? 0) + (row.uses_register ?? 0) +
+            (row.uses_promotion     ?? 0) + (row.uses_press    ?? 0);
         }
 
         setData({
-          totalUsers:       profilesRes.count ?? 0,
-          usersWithSub:     subsRes.count ?? 0,
-          kycVerified:      kycRes.count ?? 0,
+          newUsers:         newUsersRes.count  ?? 0,
+          newSubs:          newSubsRes.count   ?? 0,
+          newKyc:           newKycRes.count    ?? 0,
           aiStudioEntries,
           aiFeatureUses,
           worksAfterAi,
-          pureRegistrations: pureWorksRes.count ?? 0,
+          pureRegistrations: worksPureRes.count ?? 0,
         });
       } catch (e: any) {
-        setError(e?.message ?? "Error desconocido");
+        if (!cancelled) setError(e?.message ?? "Error desconocido");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
+
     fetchAll();
-  }, [range]);
+    return () => { cancelled = true; };
+  }, [range]); // ← re-ejecuta cuando cambia el rango
 
   if (loading) {
     return (
@@ -237,19 +247,21 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
     );
   }
 
-  // Proporciones visuales (top funnel sobre totalUsers)
-  const w = (n: number) => Math.max(35, Math.round((n / data.totalUsers) * 100));
+  // Anchura visual proporcional a nuevos registros del período
+  const w = (n: number) => data.newUsers > 0
+    ? Math.max(35, Math.round((n / data.newUsers) * 100))
+    : 50;
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2 text-lg">
             <GitBranch className="w-5 h-5" />
             Funnel de Comportamiento de Usuarios
           </CardTitle>
           <span className="text-xs text-muted-foreground">
-            Top funnel: totales acumulados · Ramas: últimos {rangeDays(range)} días
+            Período seleccionado: últimos {rangeDays(range)} días
           </span>
         </div>
       </CardHeader>
@@ -259,30 +271,30 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
         {/* ── TOP FUNNEL ──────────────────────────────────────────── */}
         <TopStep
           icon={<Users className="w-4 h-4 shrink-0" />}
-          label="Registros de nuevos usuarios"
-          value={data.totalUsers}
+          label="Nuevos registros"
+          value={data.newUsers}
           widthPct={100}
           color="bg-slate-600"
         />
         <TopStep
           icon={<CreditCard className="w-4 h-4 shrink-0" />}
-          label="Compras (suscripciones activas)"
-          value={data.usersWithSub}
-          base={data.totalUsers}
-          widthPct={w(data.usersWithSub)}
+          label="Compras (nuevas suscripciones)"
+          value={data.newSubs}
+          base={data.newUsers}
+          widthPct={w(data.newSubs)}
           color="bg-violet-600"
         />
         <TopStep
           icon={<ShieldCheck className="w-4 h-4 shrink-0" />}
           label="Identidad verificada (KYC)"
-          value={data.kycVerified}
-          base={data.totalUsers}
-          widthPct={w(data.kycVerified)}
+          value={data.newKyc}
+          base={data.newUsers}
+          widthPct={w(data.newKyc)}
           color="bg-blue-600"
           isLast
         />
 
-        {/* ── SEPARADOR BIFURCACIÓN ───────────────────────────────── */}
+        {/* ── SEPARADOR ───────────────────────────────────────────── */}
         <div className="w-full flex items-center gap-3 my-4">
           <div className="flex-1 border-t border-dashed border-muted-foreground/30" />
           <span className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase px-2">
@@ -291,7 +303,7 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
           <div className="flex-1 border-t border-dashed border-muted-foreground/30" />
         </div>
 
-        {/* ── DOS RAMAS ───────────────────────────────────────────── */}
+        {/* ── RAMAS ───────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-5 w-full">
 
           {/* RAMA A — Vía AI Studio */}
@@ -303,7 +315,7 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
               icon={<Sparkles className="w-4 h-4 shrink-0" />}
               label="Entradas al AI Studio"
               value={data.aiStudioEntries}
-              base={data.kycVerified}
+              base={data.newUsers}
               color="bg-amber-500"
             />
             <BranchStep
@@ -326,28 +338,4 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
           {/* RAMA B — Registro directo */}
           <div className="flex flex-col gap-0">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest text-center mb-3">
-              Registro directo (sin IA)
-            </p>
-            {/* Spacer para alinear visualmente con los 2 pasos de encima de Rama A */}
-            <div className="flex-1" />
-            <BranchStep
-              icon={<Music className="w-4 h-4 shrink-0" />}
-              label="Registro de obras"
-              value={data.pureRegistrations}
-              base={data.kycVerified}
-              color="bg-teal-600"
-              isLast
-            />
-          </div>
-
-        </div>
-
-        {/* ── NOTA PIE ────────────────────────────────────────────── */}
-        <p className="text-[11px] text-muted-foreground/60 mt-5 text-center max-w-lg">
-          Los % del top funnel son sobre el total de registros. Los % de las ramas son sobre el paso anterior de cada rama.
-        </p>
-
-      </CardContent>
-    </Card>
-  );
-}
+              Registro direct
