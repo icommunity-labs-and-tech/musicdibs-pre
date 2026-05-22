@@ -717,6 +717,21 @@ const AIEnhance = () => {
               label="Sube tu demo"
               description="MP3, WAV, OGG o FLAC— hasta 50 MB"
             />
+            {/* Aviso de límite de duración para add_vocals */}
+            {selectedMode === "add_vocals" && (
+              <div className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm ${
+                audioDuration && audioDuration > 90
+                  ? "border-destructive/50 bg-destructive/10 text-destructive"
+                  : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+              }`}>
+                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                <span>
+                  {audioDuration && audioDuration > 90
+                    ? `Tu audio tiene ${Math.round(audioDuration)}s — supera el límite de 90s para "Añadir voz". Recórtalo antes de continuar.`
+                    : "Esta función requiere un audio de máximo 90 segundos. Para mejores resultados usa el fragmento más representativo de tu instrumental."}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* ── Prompt + Mejorar con IA ──────────────────────────────────────── */}
@@ -915,27 +930,4 @@ const AIEnhance = () => {
                   <SelectItem value="zh">中文</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground/70">
-                Si tu audio tiene voz, selecciona el idioma para que la IA lo preserve en la versión generada.
-              </p>
-            </div>
-          )}
-
-          {isProcessing && <GenerationWarning />}
-
-          <AnimatePresence>
-            {isProcessing && (
-              <motion.div
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="rounded-xl border bg-card p-4 space-y-3"
-              >
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                  {jobStatus === "uploading"
-                    ? "Subiendo tu audio..."
-                    : "La IA está trabajando sobre tu demo. Puede tardar 2-4 minutos..."}
-                </div>
-                <Progress
-                  value={jo
+              <p className="t
