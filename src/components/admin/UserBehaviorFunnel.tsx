@@ -338,4 +338,19 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
           {/* RAMA B — Registro directo */}
           <div className="flex flex-col gap-0">
             <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest text-center mb-3">
-              Registro direct
+              Registro directo
+            </p>
+            <BranchStep
+              icon={<Music className="w-4 h-4 shrink-0" />}
+              label="Registro de obras (sin IA)"
+              value={Math.max(0, data.worksTotal - data.worksAfterAi)}
+              base={data.newUsers}
+              color="bg-emerald-600"
+              isLast
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
