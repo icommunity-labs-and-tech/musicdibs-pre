@@ -63,7 +63,7 @@ function TopStep({
     <div className="flex flex-col items-center w-full">
       <div
         className={`flex items-center justify-between px-5 py-3 rounded-xl text-white ${color} transition-all duration-500`}
-        style={{ width: `${Math.max(35, widthPct)}%`, minWidth: 240 }}
+        style={{ width: `${Math.min(100, Math.max(35, widthPct))}%`, maxWidth: '100%', minWidth: 240 }}
       >
         <div className="flex items-center gap-2">
           {icon}
