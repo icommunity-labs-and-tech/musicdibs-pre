@@ -247,9 +247,9 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
     );
   }
 
-  // Anchura visual proporcional a nuevos registros del período
+  // Anchura visual proporcional a nuevos registros del período (cap 100%)
   const w = (n: number) => data.newUsers > 0
-    ? Math.max(35, Math.round((n / data.newUsers) * 100))
+    ? Math.min(100, Math.max(35, Math.round((n / data.newUsers) * 100)))
     : 50;
 
   return (
