@@ -59,7 +59,7 @@ export const PromoBanner = () => {
           {/* Texto principal */}
           <div className="lg:flex-shrink-0 lg:pl-8 xl:pl-16">
             <span className="text-base md:text-lg lg:text-xl font-bold text-white leading-tight">
-              🚀 Nueva era de Musicdibs
+              🚀 {t("promoBanner.title", { defaultValue: "Nueva era de Musicdibs" })}
             </span>
           </div>
 
