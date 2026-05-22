@@ -103,7 +103,7 @@ export const PromoBanner = () => {
               onClick={scrollToPricing}
               className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-500 to-fuchsia-600 px-5 py-2.5 text-sm md:text-base font-bold text-white shadow-md transition hover:scale-105 hover:shadow-fuchsia-500/60 hover:shadow-xl whitespace-nowrap"
             >
-              🔥 Aprovechar oferta
+              🔥 {t("promoBanner.cta", { defaultValue: "Aprovechar oferta" })}
             </button>
           </div>
         </div>
