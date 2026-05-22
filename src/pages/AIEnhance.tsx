@@ -306,26 +306,6 @@ const AIEnhance = () => {
   const handleGenerate = async () => {
     if (!audioFile || !user) return;
     setGenError(null);
-
-    // ── Validación de duración ANTES de subir ─────────────────────────────────
-    // KIE add-vocals rechaza audios > 90s con error 413 genérico.
-    // Bloqueamos aquí para no cobrar créditos ni gastar el upload.
-    const MAX_DURATION_SEC: Record<string, number> = {
-      add_vocals: 90,
-      cover: 300,
-      extend: 300,
-      instrumental: 300,
-    };
-    if (audioDuration && audioDuration > MAX_DURATION_SEC[selectedMode]) {
-      const maxSec = MAX_DURATION_SEC[selectedMode];
-      setGenError(
-        selectedMode === "add_vocals"
-          ? `El audio es demasiado largo para "Añadir voz". KIE tiene un límite de ${maxSec} segundos. Tu audio tiene ${Math.round(audioDuration)}s — recórtalo antes de continuar.`
-          : `El audio supera el máximo permitido de ${maxSec} segundos para este modo.`
-      );
-      return;
-    }
-
     try {
       setJobStatus("uploading");
       setUploadProgress(10);
@@ -378,15 +358,7 @@ const AIEnhance = () => {
       );
       const data = await response.json();
       if (!response.ok) {
-        if (data?.error === "audio_too_long") {
-          throw new Error(data.message || `Audio demasiado largo para el modo "${selectedMode}". Recórtalo a menos de ${MAX_DURATION_SEC[selectedMode]}s.`);
-        }
-        if (data?.error === "insufficient_credits") {
-          setJobStatus("idle");
-          setGenError("No tienes créditos suficientes para esta operación.");
-          return;
-        }
-        throw new Error(data?.message || data?.error || "Error al iniciar generación");
+        throw new Error(data?.error || "Error al iniciar generación");
       }
       setLogId(data.logId);
       toast.info("Generación iniciada. No cierres esta pestaña.");
@@ -717,21 +689,6 @@ const AIEnhance = () => {
               label="Sube tu demo"
               description="MP3, WAV, OGG o FLAC— hasta 50 MB"
             />
-            {/* Aviso de límite de duración para add_vocals */}
-            {selectedMode === "add_vocals" && (
-              <div className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm ${
-                audioDuration && audioDuration > 90
-                  ? "border-destructive/50 bg-destructive/10 text-destructive"
-                  : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
-              }`}>
-                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>
-                  {audioDuration && audioDuration > 90
-                    ? `Tu audio tiene ${Math.round(audioDuration)}s — supera el límite de 90s para "Añadir voz". Recórtalo antes de continuar.`
-                    : "Esta función requiere un audio de máximo 90 segundos. Para mejores resultados usa el fragmento más representativo de tu instrumental."}
-                </span>
-              </div>
-            )}
           </div>
 
           {/* ── Prompt + Mejorar con IA ──────────────────────────────────────── */}
@@ -877,9 +834,6 @@ const AIEnhance = () => {
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground/80 mt-2">
-                {t('aiEnhance.fidelityPresetNote')}
-              </p>
             </div>
           )}
 
@@ -934,58 +888,57 @@ const AIEnhance = () => {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground/70">
-                Indica el idioma de la voz original para mejorar la transcripción y conversión.
+                Si tu audio tiene voz, selecciona el idioma para que la IA lo preserve en la versión generada.
               </p>
             </div>
           )}
 
-          {/* ── CTA ──────────────────────────────────────────────────────────── */}
-          <div className="space-y-2">
-            <Button
-              onClick={handleGenerate}
-              disabled={!canGenerate || isProcessing}
-              className="w-full h-12 text-base font-semibold"
-            >
-              {isProcessing ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Procesando...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generar ({creditsRequired} créditos)
-                </>
-              )}
-            </Button>
-            {genError && (
-              <p className="text-sm text-destructive">{genError}</p>
+          {isProcessing && <GenerationWarning />}
+
+          <AnimatePresence>
+            {isProcessing && (
+              <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="rounded-xl border bg-card p-4 space-y-3"
+              >
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  {jobStatus === "uploading"
+                    ? "Subiendo tu audio..."
+                    : "La IA está trabajando sobre tu demo. Puede tardar 2-4 minutos..."}
+                </div>
+                <Progress
+                  value={jobStatus === "uploading" ? uploadProgress : undefined}
+                  className="h-1.5"
+                />
+              </motion.div>
             )}
-          </div>
+          </AnimatePresence>
 
-          {/* ── Resultado ────────────────────────────────────────────────────── */}
-          {generatedAudioUrl && (
-            <div className="space-y-3 rounded-xl border border-border bg-card p-4">
-              <h3 className="text-sm font-semibold">Resultado</h3>
-              <audio src={generatedAudioUrl} controls className="w-full" />
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" variant="outline" onClick={handleDownload} disabled={isDownloading}>
-                  Descargar MP3
-                </Button>
-                <Button size="sm" variant="outline" onClick={handleExportWav} disabled={wavStatus === "loading"}>
-                  {wavStatus === "loading" ? "Generando WAV..." : "Descargar WAV"}
-                </Button>
-                <Button size="sm" variant="ghost" onClick={handleReset}>
-                  Nueva generación
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </main>
-      <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
-    </>
-  );
-};
+          <AnimatePresence>
+            {jobStatus === "completed" && generatedAudioUrl && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="rounded-xl border border-green-500/30 bg-green-500/5 p-5 space-y-4"
+              >
+                <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold">
+                  <CheckCircle2 className="w-5 h-5" /> ¡Tu versión IA está lista!
+                </div>
+                <AudioPlayer src={generatedAudioUrl} label="Versión generada con IA" />
+                <div className="flex gap-2 flex-wrap">
+                  {/* ── MP3 download */}
+                  <Button
+                    onClick={handleDownload}
+                    disabled={isDownloading}
+                    className="gap-2"
+                  >
+                    {isDownloading
+                      ? <Loader2 className="w-4 h-4 animate-spin" />
+                      : <Download className="w-4 h-4" />}
+                    {isDownloading ? "Descargando..." : "MP3"}
+                  </Button>
 
-export default AIEnhance;
+      

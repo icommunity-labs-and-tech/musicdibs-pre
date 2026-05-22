@@ -113,25 +113,6 @@ serve(async (req) => {
       return json({ error: "source_audio_url is required" }, 400);
     }
 
-    // ── Validación de duración máxima por modo ────────────────────────────────
-    // KIE add-vocals rechaza audios > ~90s con código 413 "We couldn't verify your audio"
-    // Los demás modos parecen tolerar hasta ~600s, pero limitamos a 300s por seguridad.
-    const MAX_DURATION: Record<string, number> = {
-      add_vocals:   90,   // KIE hard limit confirmado empíricamente (60s OK, 190s KO)
-      cover:       300,
-      extend:      300,
-      instrumental:300,
-    };
-    const maxDur = MAX_DURATION[mode];
-    if (typeof source_duration_sec === "number" && source_duration_sec > maxDur) {
-      return json({
-        error: "audio_too_long",
-        message: `El audio es demasiado largo para el modo "${mode}". Máximo: ${maxDur} segundos. Tu audio: ${Math.round(source_duration_sec)} segundos.`,
-        max_seconds: maxDur,
-        audio_seconds: Math.round(source_duration_sec),
-      }, 400);
-    }
-
     const featureKey = FEATURE_KEYS[mode];
 
     // ── Idempotency ────────────────────────────────────────────────────────────
@@ -385,4 +366,28 @@ serve(async (req) => {
       // vocalGender: direct control of the generated singing voice gender
       if (vocal_gender === "m" || vocal_gender === "f") kiePayload.vocalGender = vocal_gender;
       // Quality params
-    
+      if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
+      if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
+      if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
+    }
+
+    console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost} model=${kiePayload.model}`);
+
+    const kieRes = await fetch(KIE_ENDPOINTS[mode], {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${KIE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(kiePayload),
+    });
+
+    const kieData = await kieRes.json().catch(() => ({}));
+
+    if (!kieRes.ok || (kieData?.code && kieData.code !== 200)) {
+      console.error(`[kie-enhance-generate] KIE error ${kieRes.status}`, kieData);
+      await supabaseAdmin
+        .from("ai_generation_logs")
+        .update({
+          status: "failed",
+          error_message: kieData?
