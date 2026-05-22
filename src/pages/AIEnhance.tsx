@@ -598,7 +598,7 @@ const AIEnhance = () => {
               {t('aiEnhance.modeSectionTitle')}
             </h2>
             <TooltipProvider delayDuration={150}>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:items-stretch">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:items-stretch">
                 {MODES.map((mode) => {
                   const isFeatured = mode.id === "instrumental";
                   const isSelected = selectedMode === mode.id;
