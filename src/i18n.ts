@@ -94,7 +94,7 @@ const resources = {
         cookies: 'Política de cookies',
         terms: 'Términos y condiciones',
       },
-      promoBanner: { title: 'Nueva era de Musicdibs', offer: '-30% · Solo mayo', copyAria: 'Copiar código', cta: 'Aprovechar oferta' },
+      
       hero: {
         title: 'Crea. Protege. Distribuye.',
         highlight: 'Promociona.',
