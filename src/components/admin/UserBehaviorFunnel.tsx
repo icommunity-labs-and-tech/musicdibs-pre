@@ -157,15 +157,15 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
             .select("*", { count: "exact", head: true })
             .gte("created_at", iso),
 
-          // 3. Verificaciones KYC en el período
-          //    Proxy: profiles actualizados con kyc_status=verified en el período.
-          //    Nota: updated_at cambia con cualquier edición del profile, no solo KYC.
-          //    Si se añade kyc_verified_at en el futuro, sustituir este filtro.
+          // 3. Verificaciones KYC del cohort del período
+          //    Cuenta usuarios creados en el período que ya están verificados.
+          //    Así el valor es siempre ≤ newUsers y refleja la conversión real
+          //    del cohort (evita que la barra se salga de la pantalla).
           supabase
             .from("profiles")
             .select("*", { count: "exact", head: true })
             .eq("kyc_status", "verified")
-            .gte("updated_at", iso),
+            .gte("created_at", iso),
 
           // 4. Métricas AI Studio del período (desde product_metrics_daily)
           supabase
