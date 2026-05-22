@@ -996,6 +996,7 @@ const AIEnhance = () => {
           </AnimatePresence>
         </div>
       </main>
+      <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
     </>
   );
 };
