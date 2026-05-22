@@ -127,6 +127,15 @@ export default function AdminProductMetrics() {
     for (const { feature, count } of countResults) {
       counts[feature] = count;
     }
+
+    // Compositor de letras — fuente autoritativa: lyrics_generations (cada generación
+    // exitosa queda escrita por la edge function, no depende del navegador).
+    const { count: lyricsAuthCount } = await supabase
+      .from("lyrics_generations")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", `${fromStr}T00:00:00.000Z`);
+    counts["lyrics"] = Math.max(counts["lyrics"] || 0, lyricsAuthCount || 0);
+
     setLiveFeatureCounts(counts);
 
     // Crear música — fuente autoritativa: ai_generation_logs (SUNO/KIE escribe aquí
