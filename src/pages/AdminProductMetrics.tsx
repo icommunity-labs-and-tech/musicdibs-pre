@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, RefreshCw, ArrowRight, Star, AlertTriangle } from "lucide-react";
+import { UserBehaviorFunnel } from "@/components/admin/UserBehaviorFunnel";
 import { toast } from "sonner";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 
@@ -383,35 +384,8 @@ export default function AdminProductMetrics() {
           </Card>
         ) : (
           <>
-            {/* BLOCK 1 — Funnel AI Studio */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Funnel AI Studio</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[
-                    { label: "Entradas AI Studio", value: totals.aiStudioEntries, prev: null },
-                    { label: "Generaciones iniciadas", value: totals.generationsStarted, prev: totals.aiStudioEntries },
-                    { label: "Generaciones completadas", value: totals.generationsCompleted, prev: totals.generationsStarted },
-                    { label: "Descargas de audio", value: totals.audiosDownloaded, prev: totals.generationsCompleted },
-                  ].map((step, i) => (
-                    <div key={i} className="relative">
-                      <div className={`rounded-lg border p-4 text-center ${i === 0 ? "bg-primary/10 border-primary/30" : "bg-muted/30"}`}>
-                        <p className="text-2xl font-bold">{fmt(step.value)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{step.label}</p>
-                        {step.prev !== null && (
-                          <p className="text-xs mt-1 text-primary font-medium">{pct(step.value, step.prev)} del paso anterior</p>
-                        )}
-                      </div>
-                      {i < 3 && (
-                        <ArrowRight className="absolute -right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground hidden md:block z-10" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            {/* BLOCK 1 — Funnel de Comportamiento de Usuarios */}
+            <UserBehaviorFunnel range={range} />
 
             {/* BLOCK 2 — Conversión Generar → Registrar */}
             <Card>
