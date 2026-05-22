@@ -69,7 +69,7 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
       },
       whyBadge: { comingSoon: 'Próximamente' },
       artistsAB: { joinFreeToday: '🎵 Únete gratis hoy', startCareer: 'Comienza tu carrera', whoTrusts: 'Mira quién confía en nosotros' },
-      promoBanner: { label: 'San Valentín' },
+      promoBanner: { label: 'San Valentín', title: 'Nueva era de Musicdibs', offer: '-30% · Solo mayo', copyAria: 'Copiar código', cta: 'Aprovechar oferta' },
       footerExtra: { web: 'Web', version: 'Versión 1.0.0' },
       calcStreams: { unit: 'streams' },
     },
