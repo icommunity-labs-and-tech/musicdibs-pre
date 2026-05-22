@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Copy, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
 
 const TARGET_DATE = new Date("2026-05-31T23:59:59");
 const PROMO_CODE = "NEWMUSIC30";
@@ -25,6 +27,7 @@ const useCountdown = (target: Date) => {
 const pad = (n: number) => n.toString().padStart(2, "0");
 
 export const PromoBanner = () => {
+  const { t } = useTranslation();
   const { days, hours, minutes, seconds } = useCountdown(TARGET_DATE);
   const [copied, setCopied] = useState(false);
 
@@ -56,20 +59,20 @@ export const PromoBanner = () => {
           {/* Texto principal */}
           <div className="lg:flex-shrink-0 lg:pl-8 xl:pl-16">
             <span className="text-base md:text-lg lg:text-xl font-bold text-white leading-tight">
-              🚀 Nueva era de Musicdibs
+              🚀 {t("promoBanner.title", { defaultValue: "Nueva era de Musicdibs" })}
             </span>
           </div>
 
           {/* Oferta + Código + Countdown + CTA */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 md:gap-3">
             <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1.5 text-xs md:text-sm font-bold tracking-wider text-white border border-white/20 whitespace-nowrap">
-              🎁 -30% · Solo mayo
+              🎁 {t("promoBanner.offer", { defaultValue: "-30% · Solo mayo" })}
             </span>
 
             <button
               onClick={copyCode}
               className="group inline-flex items-center gap-2 rounded-md border border-white/25 bg-white/10 px-3.5 py-2 backdrop-blur-sm transition hover:bg-white/20"
-              aria-label="Copiar código"
+              aria-label={t("promoBanner.copyAria", { defaultValue: "Copiar código" })}
             >
               <span className="font-mono text-sm md:text-base font-bold text-white tracking-wider">
                 {PROMO_CODE}
@@ -100,7 +103,7 @@ export const PromoBanner = () => {
               onClick={scrollToPricing}
               className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-500 to-fuchsia-600 px-5 py-2.5 text-sm md:text-base font-bold text-white shadow-md transition hover:scale-105 hover:shadow-fuchsia-500/60 hover:shadow-xl whitespace-nowrap"
             >
-              🔥 Aprovechar oferta
+              🔥 {t("promoBanner.cta", { defaultValue: "Aprovechar oferta" })}
             </button>
           </div>
         </div>
