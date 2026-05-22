@@ -558,7 +558,7 @@ const AIEnhance = () => {
       />
       <Navbar />
       <AIStudioThemeBar />
-      <main className="container mx-auto px-4 py-6 pt-16 max-w-3xl">
+      <main className="container mx-auto px-4 py-6 pt-16 max-w-6xl">
         <div className="space-y-6">
           <div className="flex items-start justify-between gap-4">
             <div>
