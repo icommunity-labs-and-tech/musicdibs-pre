@@ -72,7 +72,7 @@ export const PromoBanner = () => {
             <button
               onClick={copyCode}
               className="group inline-flex items-center gap-2 rounded-md border border-white/25 bg-white/10 px-3.5 py-2 backdrop-blur-sm transition hover:bg-white/20"
-              aria-label="Copiar código"
+              aria-label={t("promoBanner.copyAria", { defaultValue: "Copiar código" })}
             >
               <span className="font-mono text-sm md:text-base font-bold text-white tracking-wider">
                 {PROMO_CODE}
