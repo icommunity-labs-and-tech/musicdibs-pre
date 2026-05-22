@@ -303,9 +303,25 @@ const AIEnhance = () => {
     return urlData.publicUrl;
   };
 
+  const MAX_DURATION_SEC: Record<string, number> = {
+    add_vocals: 90,
+    cover: 300,
+    extend: 300,
+    instrumental: 300,
+  };
+
   const handleGenerate = async () => {
     if (!audioFile || !user) return;
     setGenError(null);
+
+    // ── Client-side duration validation ──────────────────────────────────────
+    if (selectedMode === "add_vocals" && audioDuration !== null && audioDuration > 90) {
+      const msg = `Tu audio tiene ${Math.round(audioDuration)}s — supera el límite de 90s para "Añadir voz". Por favor usa un audio más corto.`;
+      setGenError(msg);
+      toast.error(msg);
+      return;
+    }
+
     try {
       setJobStatus("uploading");
       setUploadProgress(10);
@@ -358,6 +374,13 @@ const AIEnhance = () => {
       );
       const data = await response.json();
       if (!response.ok) {
+        if (data?.error === "audio_too_long") {
+          const msg = data.message || `El audio es demasiado largo para este modo. Máximo: ${data.max_seconds}s.`;
+          setJobStatus("failed");
+          setGenError(msg);
+          toast.error(msg);
+          return;
+        }
         throw new Error(data?.error || t('aiEnhance.errStartGen'));
       }
       setLogId(data.logId);
@@ -691,13 +714,31 @@ const AIEnhance = () => {
             />
           </div>
 
+          {/* ── Aviso duración máxima add_vocals ────────────────────────────── */}
+          {selectedMode === "add_vocals" && (
+            <div className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm ${
+              audioDuration && audioDuration > 90
+                ? "border-destructive/50 bg-destructive/10 text-destructive"
+                : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+            }`}>
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>
+                {audioDuration && audioDuration > 90
+                  ? `Tu audio tiene ${Math.round(audioDuration)}s — supera el límite de 90s para "Añadir voz". Por favor usa un audio más corto.`
+                  : 'Esta función requiere un audio de máximo 90 segundos. Audios más largos serán rechazados.'}
+              </span>
+            </div>
+          )}
+
           {/* ── Prompt + Mejorar con IA ──────────────────────────────────────── */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-semibold">
                 {selectedMode === "instrumental"
                   ? t('aiEnhance.promptLabelInstrumental')
-                  : t('aiEnhance.promptLabelOther')}
+                  : selectedMode === "add_vocals"
+                    ? t('aiEnhance.promptLabelAddVocals', 'Describe la letra y el tema vocal (opcional pero recomendado)')
+                    : t('aiEnhance.promptLabelOther')}
               </label>
               <div className="flex items-center gap-2">
                 <Button
