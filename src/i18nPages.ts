@@ -144,7 +144,7 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
       },
       whyBadge: { comingSoon: 'Coming soon' },
       artistsAB: { joinFreeToday: '🎵 Join free today', startCareer: 'Start your career', whoTrusts: 'See who trusts us' },
-      promoBanner: { label: "Valentine's Day" },
+      promoBanner: { label: "Valentine's Day", title: 'New Musicdibs era', offer: '-30% · May only', copyAria: 'Copy code', cta: 'Get the deal' },
       footerExtra: { web: 'Web', version: 'Version 1.0.0' },
       calcStreams: { unit: 'streams' },
     },
