@@ -280,6 +280,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       backLink: 'AI Studio',
       guideBtn: 'Guía IA',
       infoAlert: 'La IA genera reinterpretaciones basadas en tu idea original. Los resultados pueden variar ligeramente — eso forma parte del proceso creativo.',
+      fidelityPresetNote: 'Los presets influyen en el resultado, pero no garantizan una adherencia exacta. Es una limitación del modelo.',
       modeSectionTitle: '¿Qué quieres hacer?',
       recommendedBadge: 'Recomendado',
       useFor: 'Úsalo para:',
