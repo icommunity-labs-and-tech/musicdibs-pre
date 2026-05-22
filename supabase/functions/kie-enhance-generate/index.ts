@@ -342,11 +342,23 @@ serve(async (req) => {
       // Required: uploadUrl, prompt, title, negativeTags, style, callBackUrl
       // No customMode / defaultParamFlag / instrumental fields for this endpoint.
       // vocalGender controls the singing voice gender directly.
+      //
+      // KIE docs: "prompt defines lyric content and singing style"
+      //           "style and negativeTags are used to control music and vocal style"
+      //
+      // → style: genre presets + mood + intensity + vocal gender label (NO user text)
+      // → prompt: ONLY the user's description (KIE uses this to generate lyrics/singing topic)
+      const vocalGenderLabel = vocal_gender === "m" ? "male vocals" : vocal_gender === "f" ? "female vocals" : "";
+      const stylePartsVocal = [genre, mood, intensityTag, vocalGenderLabel].filter(Boolean).join(", ") || "pop vocal";
+      const promptVocal = (typeof prompt === "string" && prompt.trim())
+        ? prompt.slice(0, 500)
+        : "Add beautiful emotional vocals to this instrumental track";
+
       kiePayload = {
         uploadUrl: source_audio_url,
         title,
-        prompt: styleParts.slice(0, 500) || "Add beautiful vocals to this instrumental track",
-        style: styleParts || "pop vocal",
+        prompt: promptVocal,
+        style: stylePartsVocal,
         negativeTags,
         model: MODEL_COVER_EXTEND, // V5 — good vocal quality
         callBackUrl,
@@ -378,26 +390,4 @@ serve(async (req) => {
         .from("ai_generation_logs")
         .update({
           status: "failed",
-          error_message: kieData?.msg || `KIE error ${kieRes.status}`,
-          response_payload: kieData,
-        })
-        .eq("id", logId);
-      await refund(supabaseAdmin, user.id, creditsCost, `KIE error: ${kieData?.msg || kieRes.status}`);
-      return json({
-        error: "provider_error",
-        message: kieData?.msg || `KIE error ${kieRes.status}`,
-      }, 502);
-    }
-
-    const taskId = kieData?.data?.taskId || kieData?.data?.task_id || null;
-
-    await supabaseAdmin
-      .from("ai_generation_logs")
-      .update({
-        status: "processing",
-        provider_task_id: taskId,
-        response_payload: kieData,
-      })
-      .eq("id", logId);
-
-    return json({ ok: true, logId, taskId, status: "pr
+          error_message: kieData?
