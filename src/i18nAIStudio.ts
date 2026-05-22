@@ -1110,6 +1110,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       backLink: 'AI Studio',
       guideBtn: 'AI Guide',
       infoAlert: 'The AI generates reinterpretations based on your original idea. Results may vary slightly — that\'s part of the creative process.',
+      fidelityPresetNote: 'Presets influence the result, but do not guarantee exact adherence. This is a model limitation.',
       modeSectionTitle: 'What do you want to do?',
       recommendedBadge: 'Recommended',
       useFor: 'Use it for:',
