@@ -877,6 +877,9 @@ const AIEnhance = () => {
                   </button>
                 ))}
               </div>
+              <p className="text-xs text-muted-foreground/80 mt-2">
+                {t('aiEnhance.fidelityPresetNote')}
+              </p>
             </div>
           )}
 
@@ -930,4 +933,59 @@ const AIEnhance = () => {
                   <SelectItem value="zh">中文</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="t
+              <p className="text-xs text-muted-foreground/70">
+                Indica el idioma de la voz original para mejorar la transcripción y conversión.
+              </p>
+            </div>
+          )}
+
+          {/* ── CTA ──────────────────────────────────────────────────────────── */}
+          <div className="space-y-2">
+            <Button
+              onClick={handleGenerate}
+              disabled={!canGenerate || isProcessing}
+              className="w-full h-12 text-base font-semibold"
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generar ({creditsRequired} créditos)
+                </>
+              )}
+            </Button>
+            {genError && (
+              <p className="text-sm text-destructive">{genError}</p>
+            )}
+          </div>
+
+          {/* ── Resultado ────────────────────────────────────────────────────── */}
+          {generatedAudioUrl && (
+            <div className="space-y-3 rounded-xl border border-border bg-card p-4">
+              <h3 className="text-sm font-semibold">Resultado</h3>
+              <audio src={generatedAudioUrl} controls className="w-full" />
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={handleDownload} disabled={isDownloading}>
+                  Descargar MP3
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleExportWav} disabled={wavStatus === "loading"}>
+                  {wavStatus === "loading" ? "Generando WAV..." : "Descargar WAV"}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleReset}>
+                  Nueva generación
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+      <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
+    </>
+  );
+};
+
+export default AIEnhance;
