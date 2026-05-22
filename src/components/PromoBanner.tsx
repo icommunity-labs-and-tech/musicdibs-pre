@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Copy, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
+
 
 const TARGET_DATE = new Date("2026-05-31T23:59:59");
 const PROMO_CODE = "NEWMUSIC30";
