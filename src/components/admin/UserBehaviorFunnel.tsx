@@ -343,7 +343,7 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
             <BranchStep
               icon={<Music className="w-4 h-4 shrink-0" />}
               label="Registro de obras (sin IA)"
-              value={Math.max(0, data.worksTotal - data.worksAfterAi)}
+              value={data.worksAfterAi}
               base={data.newUsers}
               color="bg-emerald-600"
               isLast
