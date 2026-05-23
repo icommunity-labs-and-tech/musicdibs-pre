@@ -44,6 +44,7 @@ import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
+import { LyricsSectionsEditor } from "@/components/ai-studio/LyricsSectionsEditor";
 import { useProductTracking } from "@/hooks/useProductTracking";
 
 // ── Music tab constants ──
