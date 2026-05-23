@@ -10,8 +10,8 @@ interface SEOProps {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const BASE_URL = "https://musicdibs.com";
-const DEFAULT_OG_IMAGE = "/og-image.png";
+const BASE_URL = "https://www.musicdibs.com";
+const DEFAULT_OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/27fdd7c8-3e07-4d0d-886d-53859f68e5de";
 
 const LOCALE_MAP: Record<string, string> = {
   es: "es_ES",
