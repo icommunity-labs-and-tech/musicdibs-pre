@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, RotateCcw } from "lucide-react";
+import { Loader2, Pencil, RotateCcw, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,8 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Section {
   id: string;
-  label: string;        // e.g. "Verso 1", "Coro" — empty for pre-header content
-  open: "[" | "(";      // bracket style preserved
+  label: string;
+  open: "[" | "(";
   body: string;
 }
 
@@ -37,7 +37,7 @@ function parseLyrics(text: string): Section[] {
   const pushCurrent = () => {
     if (current) {
       current.body = current.body.replace(/\s+$/g, "");
-      sections.push(current);
+      if (current.label || current.body.trim()) sections.push(current);
     }
   };
   for (const line of lines) {
@@ -58,7 +58,6 @@ function parseLyrics(text: string): Section[] {
     }
   }
   pushCurrent();
-  // Trim leading blank lines in each body
   return sections.map((s) => ({ ...s, body: s.body.replace(/^\n+/, "") }));
 }
 
@@ -73,30 +72,41 @@ function assemble(sections: Section[]): string {
     .join("\n\n");
 }
 
+function preview(body: string): string {
+  const lines = body.split(/\r?\n/).filter((l) => l.trim().length > 0).slice(0, 2);
+  const text = lines.join(" · ");
+  return text.length > 90 ? text.slice(0, 87) + "…" : text;
+}
+
 export function LyricsSectionsEditor({ value, onChange, context }: Props) {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [sections, setSections] = useState<Section[]>(() => parseLyrics(value));
   const [regenIdx, setRegenIdx] = useState<number | null>(null);
+  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [draft, setDraft] = useState<string>("");
 
-  // Re-parse only when external value differs from our assembled value (new generation).
   const assembled = useMemo(() => assemble(sections), [sections]);
   useEffect(() => {
-    if (value !== assembled) {
-      setSections(parseLyrics(value));
-    }
+    if (value !== assembled) setSections(parseLyrics(value));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
-  // Propagate edits upward
   useEffect(() => {
     if (assembled !== value) onChange(assembled);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [assembled]);
 
-  const updateBody = (idx: number, body: string) => {
-    setSections((prev) => prev.map((s, i) => (i === idx ? { ...s, body } : s)));
+  const startEdit = (idx: number) => {
+    setEditIdx(idx);
+    setDraft(sections[idx].body);
   };
+  const saveEdit = () => {
+    if (editIdx === null) return;
+    setSections((prev) => prev.map((s, i) => (i === editIdx ? { ...s, body: draft } : s)));
+    setEditIdx(null);
+  };
+  const cancelEdit = () => setEditIdx(null);
 
   const regenerateSection = async (idx: number) => {
     const section = sections[idx];
@@ -116,21 +126,16 @@ export function LyricsSectionsEditor({ value, onChange, context }: Props) {
           existingLyrics: assembled,
         },
       });
-      if (error || (data as any)?.error) {
-        throw new Error((data as any)?.error || error?.message);
-      }
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
       const newFull: string = (data as any).lyrics || "";
       const parsed = parseLyrics(newFull);
-      // Find matching section by normalized label
       const norm = (s: string) => s.toLowerCase().replace(/\s+/g, "");
       const match = parsed.find((p) => norm(p.label) === norm(section.label));
       if (match) {
         setSections((prev) => prev.map((s, i) => (i === idx ? { ...s, body: match.body } : s)));
       } else {
-        // Fallback: replace whole lyrics
         setSections(parsed);
       }
-      toast({ title: t("aiCreate.lyricsGenerated") });
     } catch (e: any) {
       toast({ title: e.message || "Error", variant: "destructive" });
     } finally {
@@ -138,39 +143,76 @@ export function LyricsSectionsEditor({ value, onChange, context }: Props) {
     }
   };
 
+  if (sections.length === 0) return null;
+
   return (
-    <div className="space-y-3">
-      {sections.map((s, idx) => (
-        <div key={s.id} className="rounded-xl border border-border/40 bg-muted/30 p-3 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wide text-primary">
-              {s.label || "—"}
-            </span>
-            {s.label && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs gap-1.5"
-                onClick={() => regenerateSection(idx)}
-                disabled={regenIdx !== null}
-              >
-                {regenIdx === idx ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <RotateCcw className="h-3.5 w-3.5" />
-                )}
-                {t("aiCreate.regenSection").replace(":", "")}
-              </Button>
+    <div className="mt-3 rounded-lg border border-border/40 bg-muted/20 divide-y divide-border/40">
+      {sections.map((s, idx) => {
+        const isEditing = editIdx === idx;
+        const isRegen = regenIdx === idx;
+        return (
+          <div key={s.id} className="px-3 py-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-primary shrink-0 min-w-[64px]">
+                {s.label || "—"}
+              </span>
+              {!isEditing && (
+                <span className="text-xs text-muted-foreground truncate flex-1">
+                  {preview(s.body) || <em className="opacity-60">…</em>}
+                </span>
+              )}
+              {!isEditing && (
+                <div className="flex items-center gap-0.5 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => startEdit(idx)}
+                    disabled={regenIdx !== null}
+                    title={t("aiCreate.regenSection")?.replace(":", "") || "Edit"}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  {s.label && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => regenerateSection(idx)}
+                      disabled={regenIdx !== null}
+                      title="Regenerate"
+                    >
+                      {isRegen ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <RotateCcw className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+            {isEditing && (
+              <div className="mt-2 space-y-2">
+                <Textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  className="font-mono text-sm leading-relaxed min-h-[120px] bg-background"
+                  autoFocus
+                />
+                <div className="flex justify-end gap-1.5">
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={cancelEdit}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button size="sm" className="h-7 text-xs" onClick={saveEdit}>
+                    <Check className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
-          <Textarea
-            value={s.body}
-            onChange={(e) => updateBody(idx, e.target.value)}
-            className="font-mono text-sm leading-relaxed min-h-[100px] bg-background"
-            disabled={regenIdx === idx}
-          />
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
