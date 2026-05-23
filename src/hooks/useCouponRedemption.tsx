@@ -13,27 +13,19 @@ export function useCouponAlwaysVisible() {
   const [alwaysVisible, setAlwaysVisible] = useState(false);
 
   const fetchFlag = useCallback(async () => {
-    const { data } = await supabase
-      .from('app_settings')
-      .select('value')
-      .eq('key', 'coupon_redemption_always_visible')
-      .maybeSingle();
-    const v = (data?.value as { enabled?: boolean } | null)?.enabled;
+    // Uses RPC (SECURITY DEFINER) instead of direct table SELECT to avoid requiring RLS access
+    const { data } = await supabase.rpc('get_public_app_setting', {
+      setting_key: 'coupon_redemption_always_visible',
+    });
+    const v = (data as { enabled?: boolean } | null)?.enabled;
     setAlwaysVisible(Boolean(v));
   }, []);
 
   useEffect(() => {
     fetchFlag();
 
-    // Realtime: cambios desde otra pestaña/usuario
-    // Nombre único por instancia para evitar colisiones con múltiples montajes del hook
-    const channel = supabase.channel(`app_settings_coupon_flag_${Math.random().toString(36).slice(2)}`);
-    channel.on(
-      'postgres_changes',
-      { event: '*', schema: 'public', table: 'app_settings', filter: 'key=eq.coupon_redemption_always_visible' },
-      () => { fetchFlag(); }
-    );
-    channel.subscribe();
+    // Poll every 60s to catch cross-tab admin changes (realtime removed: no SELECT RLS for this table)
+    const interval = setInterval(fetchFlag, 60_000);
 
     // Evento local: cambios desde el admin en la misma pestaña (instantáneo)
     const onLocal = (e: Event) => {
@@ -44,7 +36,7 @@ export function useCouponAlwaysVisible() {
     window.addEventListener(COUPON_FLAG_EVENT, onLocal);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(interval);
       window.removeEventListener(COUPON_FLAG_EVENT, onLocal);
     };
   }, [fetchFlag]);
