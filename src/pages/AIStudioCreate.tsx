@@ -1832,8 +1832,9 @@ const AIStudioCreate = () => {
 
                       {(() => {
                         const sectionLabels = Array.from(
-                          generatedLyrics.matchAll(/^\s*\[\s*([^\]]{1,60})\s*\]\s*$/gm)
-                        ).map((m) => m[1].trim());
+                          generatedLyrics.matchAll(/^\s*[\[\(]\s*([^\]\)]{1,60})\s*[\]\)]\s*$/gm)
+                        ).map((m) => m[1].trim())
+                        .filter((v, i, arr) => arr.indexOf(v) === i); // deduplicar
                         if (sectionLabels.length === 0) return null;
                         return (
                           <div className="flex flex-wrap gap-1.5">
