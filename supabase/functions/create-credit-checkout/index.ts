@@ -407,7 +407,10 @@ serve(async (req) => {
       if (typeof value === "string" && value.trim()) attrMetadata[key] = value.slice(0, 500);
     }
 
-    const origin = req.headers.get("origin") || "https://musicdibs.com";
+    const ALLOWED_ORIGINS = new Set(["https://musicdibs.com","https://www.musicdibs.com","https://aimusicdibs.com","https://www.aimusicdibs.com","https://musicdibs-pre.lovable.app"]);
+    const rawOrigin = req.headers.get("origin") || "";
+    const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://musicdibs.com";
+
     const successUrl = isGuest
       ? `${origin}/auth/payment-success?session_id={CHECKOUT_SESSION_ID}`
       : `${origin}/dashboard/credits?payment=success&session_id={CHECKOUT_SESSION_ID}`;
