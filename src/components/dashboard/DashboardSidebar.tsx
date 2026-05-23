@@ -126,12 +126,13 @@ export function DashboardSidebar() {
 
     supabase
       .from('profiles')
-      .select('kyc_status, subscription_plan')
+      .select('kyc_status, subscription_plan, subscription_tier')
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => {
         setKycStatus(data?.kyc_status || 'unverified');
         setSubscriptionPlan(data?.subscription_plan || 'Free');
+        setSubscriptionTier((data as { subscription_tier?: string | null } | null)?.subscription_tier ?? null);
       });
 
     try {
@@ -145,6 +146,7 @@ export function DashboardSidebar() {
       }, (payload: SidebarProfilePayload) => {
         if (payload.new?.kyc_status) setKycStatus(payload.new.kyc_status);
         if (payload.new?.subscription_plan) setSubscriptionPlan(payload.new.subscription_plan);
+        if (payload.new?.subscription_tier !== undefined) setSubscriptionTier(payload.new.subscription_tier ?? null);
       });
 
       channel.subscribe((status, err) => {
