@@ -360,6 +360,10 @@ const AIEnhance = () => {
               audio_weight: FIDELITY_PRESETS[fidelityPreset].audio_weight,
               style_weight: FIDELITY_PRESETS[fidelityPreset].style_weight,
               weirdness_constraint: FIDELITY_PRESETS[fidelityPreset].weirdness_constraint,
+              // Si el usuario activa "letra propia", pasamos la letra literal (customMode en backend)
+              ...(useCustomLyrics && customLyrics.trim() && {
+                custom_lyrics: customLyrics.trim().slice(0, 3000),
+              }),
             }),
             // ── quality params: add_vocals (vocalGender controls singing voice gender) ─
             ...(selectedMode === "add_vocals" && {
