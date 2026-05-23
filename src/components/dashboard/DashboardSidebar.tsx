@@ -53,6 +53,7 @@ export function DashboardSidebar() {
   const [kycStatus, setKycStatus] = useState<string | null>(null);
   const [showDistributionModal, setShowDistributionModal] = useState(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>('Free');
+  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const { t } = useTranslation();
   const tr = (key: string, fallback: string) => String(t(key, { defaultValue: fallback }));
 
