@@ -737,7 +737,7 @@ const AIEnhance = () => {
                 {selectedMode === "instrumental"
                   ? t('aiEnhance.promptLabelInstrumental')
                   : selectedMode === "add_vocals"
-                    ? t('aiEnhance.promptLabelAddVocals', 'Describe la letra y el tema vocal (opcional pero recomendado)')
+                    ? t('aiEnhance.promptLabelAddVocals')
                     : t('aiEnhance.promptLabelOther')}
               </label>
               <div className="flex items-center gap-2">
