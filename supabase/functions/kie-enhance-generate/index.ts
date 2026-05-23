@@ -289,27 +289,30 @@ serve(async (req) => {
       if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
       if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
     } else if (mode === "cover") {
-      // upload-cover — customMode:true (per KIE spec — different from extend which uses defaultParamFlag)
-      // style, title, negativeTags, prompt all applied when customMode=true.
-      // vocalGender only effective when customMode=true per docs.
+      // upload-cover — Non-custom Mode (customMode:false) per KIE docs:
+      //   "Only `prompt` and `uploadUrl` are required, regardless of the `instrumental` setting.
+      //    `prompt` length limit: 500 characters. Other parameters should be left empty."
+      // The user's description ("convierte esta cumbia en un rap") is a transformation intent,
+      // NOT literal lyrics — so customMode:true would be wrong (it would sing the description).
+      // In non-custom mode, lyrics are auto-generated from `prompt`. We fold the genre/mood/
+      // intensity/style hints into the prompt itself so KIE has full context.
+      // v24 — fix: previously sent customMode:true with style=prompt=description, causing the
+      // description to be interpreted as both style and lyrics. Now correctly uses prompt-only.
       kiePayload = {
         uploadUrl: source_audio_url,
-        title,
-        style: styleParts,
-        negativeTags,
         prompt: finalPrompt,
         instrumental: false,
-        customMode: true,           // cover uses customMode, NOT defaultParamFlag
+        customMode: false,
         model: MODEL_COVER_EXTEND,
         callBackUrl,
       };
-      // Map frontend voice_type → KIE vocalGender ("female"→"f", "male"→"m")
+      // Optional params still accepted in non-custom mode per docs
       const vg = voice_type === "female" ? "f" : voice_type === "male" ? "m" : null;
       if (vg) kiePayload.vocalGender = vg;
-      // Quality params (fidelity presets — same optional fields as extend/instrumental)
       if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
       if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
       if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
+      if (typeof negativeTags === "string") kiePayload.negativeTags = negativeTags;
     } else if (mode === "extend") {
       // upload-extend — defaultParamFlag:true → custom params
       // style (not tags), continueAt strictly > 0 AND < duration.
