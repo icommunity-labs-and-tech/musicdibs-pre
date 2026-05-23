@@ -198,7 +198,7 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
                     {row.stripe_session_id}
                   </p>
                 )}
-                <p className="text-[10px] text-muted-foreground/50 mt-0.5">
+                <p className="text-[10px] text-muted-foreground mt-0.5">
                   {new Date(row.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}
                 </p>
               </div>
