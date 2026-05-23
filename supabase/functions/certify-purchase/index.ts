@@ -46,7 +46,8 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // If not a service call, validate the user JWT
+    // If not a service call, validate the user JWT and remember caller id for ownership check
+    let callerUserId: string | null = null;
     if (!isServiceCall) {
       const token = authHeader.replace("Bearer ", "");
       const { data: { user }, error: userErr } = await supabase.auth.getUser(token);
@@ -56,6 +57,7 @@ serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      callerUserId = user.id;
     }
 
     const { evidence_id } = await req.json();
@@ -79,6 +81,15 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Ownership check for user-authenticated callers
+    if (!isServiceCall && callerUserId && evidence.user_id !== callerUserId) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     if (evidence.certification_status === "certified") {
       return new Response(JSON.stringify({ already_certified: true, ibs_transaction_id: evidence.ibs_transaction_id }), {
