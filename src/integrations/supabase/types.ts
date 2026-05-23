@@ -1875,6 +1875,7 @@ export type Database = {
           referrer: string | null
           stripe_charge_id: string | null
           stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
           stripe_fee: number
           stripe_invoice_id: string | null
           stripe_payment_intent_id: string | null
@@ -1913,6 +1914,7 @@ export type Database = {
           referrer?: string | null
           stripe_charge_id?: string | null
           stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
           stripe_fee?: number
           stripe_invoice_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -1951,6 +1953,7 @@ export type Database = {
           referrer?: string | null
           stripe_charge_id?: string | null
           stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
           stripe_fee?: number
           stripe_invoice_id?: string | null
           stripe_payment_intent_id?: string | null
