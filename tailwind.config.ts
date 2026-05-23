@@ -19,7 +19,10 @@ export default {
 		},
 		extend: {
 			colors: {
-				page: {
+        'magenta': 'hsl(320 75% 56% / <alpha-value>)',
+				'magenta-glow': 'hsl(325 80% 67% / <alpha-value>)',
+				'deep': 'hsl(285 25% 7% / <alpha-value>)',
+								page: {
 					DEFAULT: 'hsl(var(--page-text))',
 					muted: 'hsl(var(--page-text-muted))'
 				},
