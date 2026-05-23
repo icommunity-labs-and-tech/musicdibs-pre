@@ -154,6 +154,7 @@ const AIStudioCreate = () => {
   const [lyricsPov, setLyricsPov] = useState("Primera persona");
   const [generatedLyrics, setGeneratedLyrics] = useState("");
   const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
+  const [regenSection, setRegenSection] = useState<string | null>(null);
   const [lyricsError, setLyricsError] = useState<string | null>(null);
   const [copiedLyrics, setCopiedLyrics] = useState(false);
 
