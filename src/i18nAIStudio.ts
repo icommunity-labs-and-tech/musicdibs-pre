@@ -1944,6 +1944,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       uploadLabel: 'Envie seu demo',
       uploadDesc: 'MP3, WAV, OGG ou FLAC — até 50 MB',
       promptLabelInstrumental: 'Descreva o estilo musical (opcional mas recomendado)',
+      promptLabelAddVocals: 'Letra que a voz vai cantar (este texto é cantado literalmente — use [Verso], [Refrão], [Pre-Chorus] para estruturar)',
       promptLabelOther: 'Descreva o resultado (opcional mas recomendado)',
       genrePlaceholder: 'Gênero',
       moodPlaceholder: 'Mood',
