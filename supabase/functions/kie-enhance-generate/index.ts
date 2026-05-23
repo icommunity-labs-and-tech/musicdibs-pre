@@ -389,8 +389,72 @@ serve(async (req) => {
 
     if (!kieRes.ok || (kieData?.code && kieData.code !== 200)) {
       console.error(`[kie-enhance-generate] KIE error ${kieRes.status}`, kieData);
+      await refund(supabaseAdmin, user.id, creditsCost, "KIE dispatch failed");
       await supabaseAdmin
         .from("ai_generation_logs")
         .update({
           status: "failed",
-          error_message: kieData?
+          error_message: kieData?.msg || `HTTP ${kieRes.status}`,
+          response_payload: kieData,
+        })
+        .eq("id", logId);
+      return json({ error: "provider_error", message: kieData?.msg || "KIE request failed" }, 502);
+    }
+
+    const taskId: string | undefined = kieData?.data?.taskId;
+    await supabaseAdmin
+      .from("ai_generation_logs")
+      .update({
+        provider_task_id: taskId ?? null,
+        status: "processing",
+        response_payload: kieData,
+      })
+      .eq("id", logId);
+
+    return json({
+      ok: true,
+      logId,
+      taskId,
+      status: "processing",
+      message: "Generation started. Audio will be available shortly.",
+    });
+  } catch (err) {
+    console.error("[kie-enhance-generate] fatal", err);
+    return json({ error: (err as Error).message }, 500);
+  }
+});
+
+function json(payload: unknown, status = 200, isOptions = false): Response {
+  if (isOptions) return new Response(null, { status, headers: corsHeaders });
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function refund(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  amount: number,
+  reason: string,
+) {
+  const { data: p } = await supabase
+    .from("profiles")
+    .select("available_credits")
+    .eq("user_id", userId)
+    .single();
+  if (!p) return;
+  await supabase
+    .from("profiles")
+    .update({
+      available_credits: p.available_credits + amount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+  await supabase.from("credit_transactions").insert({
+    user_id: userId,
+    amount,
+    type: "refund",
+    description: `Reembolso: ${reason}`.slice(0, 200),
+  });
+}
