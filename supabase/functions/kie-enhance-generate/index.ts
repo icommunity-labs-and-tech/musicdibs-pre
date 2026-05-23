@@ -458,3 +458,12 @@ async function refund(
     description: `Reembolso: ${reason}`.slice(0, 200),
   });
 }
+function defaultPromptForMode(mode: string): string {
+  switch (mode) {
+    case "cover":        return "Create a fresh cover version with a new style while keeping the melody";
+    case "extend":       return "Continue the song naturally in the same style";
+    case "instrumental": return "Add a fitting instrumental backing";
+    case "add_vocals":   return "Add beautiful emotional vocals";
+    default:             return "Enhance this audio";
+  }
+}
