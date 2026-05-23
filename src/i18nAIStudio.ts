@@ -1185,7 +1185,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       modeExtendUseCase3: 'Turn a short idea into a full song',
       modeAddVocalsLabel: 'Add vocals',
       modeAddVocalsTagline: 'Bring your instrumental to life with AI-generated vocals.',
-      modeAddVocalsPlaceholder: 'Emotional female vocals in Spanish, melancholic pop style. Lyrics about loneliness and hope.',
+      modeAddVocalsPlaceholder: '[Verse 1]\nWalking through the night, looking for a sign\nLights to guide me home, far from the end of time\n\n[Chorus]\nShout into the silence, let it hear you call\nFly toward the light, even when shadows fall',
       modeAddVocalsUseCase1: 'Add sung vocals to an instrumental',
       modeAddVocalsUseCase2: 'Create a full vocal demo',
       modeAddVocalsUseCase3: 'Explore different vocal styles over your music',
