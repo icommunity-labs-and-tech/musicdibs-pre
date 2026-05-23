@@ -1824,10 +1824,35 @@ const AIStudioCreate = () => {
                         }}
                       />
 
+                      {(() => {
+                        const sectionLabels = Array.from(
+                          generatedLyrics.matchAll(/^\s*\[\s*([^\]]{1,60})\s*\]\s*$/gm)
+                        ).map((m) => m[1].trim());
+                        if (sectionLabels.length === 0) return null;
+                        return (
+                          <div className="flex flex-wrap gap-1.5">
+                            {sectionLabels.map((label, i) => (
+                              <Button
+                                key={`${label}-${i}`}
+                                variant="outline"
+                                size="sm"
+                                className="h-7 text-xs gap-1.5"
+                                onClick={() => (handleGenerateLyrics as any)(label)}
+                                disabled={isGeneratingLyrics}
+                              >
+                                <RotateCcw className="h-3 w-3" />
+                                {label}
+                              </Button>
+                            ))}
+                          </div>
+                        );
+                      })()}
+
                       <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground gap-1.5" onClick={() => handleGenerateLyrics()} disabled={isGeneratingLyrics}>
                         <RotateCcw className="h-3.5 w-3.5" />
                         {t('aiCreate.regenFull')}
                       </Button>
+
                     </CardContent>
                   </Card>
                 )}
