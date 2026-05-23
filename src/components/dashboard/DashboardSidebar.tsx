@@ -39,6 +39,7 @@ type SidebarProfilePayload = {
   new?: {
     kyc_status?: string | null;
     subscription_plan?: string | null;
+    subscription_tier?: string | null;
   };
 };
 
