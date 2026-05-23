@@ -122,6 +122,15 @@ export default function ManagerLanding() {
         title="Managers y Agencias Musicales | Musicdibs"
         description="Gestiona la propiedad intelectual de toda tu cartera de artistas. Registro en blockchain, distribución y panel de control para managers y agencias."
         path="/manager"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqItems.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }}
       />
       <Navbar />
 
