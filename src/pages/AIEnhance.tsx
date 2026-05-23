@@ -196,6 +196,9 @@ const AIEnhance = () => {
   const [mood, setMood] = useState("");
   const [intensity, setIntensity] = useState("");
   const [voiceType, setVoiceType] = useState("");
+  // ── cover: opción de letra propia (customMode) ───────────────────────────
+  const [useCustomLyrics, setUseCustomLyrics] = useState(false);
+  const [customLyrics, setCustomLyrics] = useState("");
   // ── idioma vocal + estado de descarga ────────────────────────────────────
   const [sourceLanguage, setSourceLanguage] = useState("auto");
   const [isDownloading, setIsDownloading] = useState(false);
