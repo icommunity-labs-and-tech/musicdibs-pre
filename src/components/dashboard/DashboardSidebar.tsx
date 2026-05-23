@@ -181,7 +181,7 @@ export function DashboardSidebar() {
     const isKycGuarded = !!item.kycGuarded;
 
     if (isDistribute) {
-      const isAnnual = subscriptionPlan === 'Annual';
+      const isAnnual = subscriptionPlan === 'Annual' || (subscriptionTier?.startsWith('annual_') ?? false);
       return (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton asChild>
