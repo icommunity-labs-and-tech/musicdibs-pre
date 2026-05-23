@@ -2012,7 +2012,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       modeExtendUseCase3: 'Transformar uma ideia curta em música completa',
       modeAddVocalsLabel: 'Adicionar voz',
       modeAddVocalsTagline: 'Dê vida ao seu instrumental com uma voz gerada por IA.',
-      modeAddVocalsPlaceholder: 'Voz feminina emotiva em espanhol, estilo pop melancólico. Letra sobre solidão e esperança.',
+      modeAddVocalsPlaceholder: '[Verso 1]\nCaminhando pela noite, procurando um sinal\nLuzes que me guiem, longe do final\n\n[Refrão]\nGrite ao silêncio, deixe que ele te escute\nVoe até a luz, mesmo que a sombra empurre',
       modeAddVocalsUseCase1: 'Adicionar voz cantada a um instrumental',
       modeAddVocalsUseCase2: 'Criar uma maquete vocal completa',
       modeAddVocalsUseCase3: 'Explorar diferentes estilos vocais sobre sua música',
