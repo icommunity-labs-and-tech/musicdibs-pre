@@ -40,11 +40,27 @@ serve(async (req) => {
       const { audioUrl, filename, musicalStyle, desiredLoudness } = body;
       if (!audioUrl) return new Response(JSON.stringify({ error: 'audioUrl required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
+      // SSRF protection: reject internal/private addresses and non-http(s) schemes
+      const isAllowedUrl = (raw: string): boolean => {
+        try {
+          const u = new URL(raw);
+          if (!['https:', 'http:'].includes(u.protocol)) return false;
+          const host = u.hostname.toLowerCase();
+          if (/^(169\.254\.|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|0\.|::1|fc00:|fe80:)/.test(host)) return false;
+          if (host === 'localhost' || host.endsWith('.internal') || host.endsWith('.local')) return false;
+          return true;
+        } catch { return false; }
+      };
+      if (!isAllowedUrl(audioUrl)) {
+        return new Response(JSON.stringify({ error: 'invalid_audio_url' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
       const style = STYLES.includes(musicalStyle) ? musicalStyle : 'POP';
       const loudness = LOUDNESS.includes(desiredLoudness) ? desiredLoudness : 'MEDIUM';
 
       // 1) Descargar el audio del usuario
-      const audioRes = await fetch(audioUrl);
+      const audioRes = await fetch(audioUrl, { redirect: 'error' });
+
       if (!audioRes.ok) {
         return new Response(JSON.stringify({ error: 'cannot_fetch_source_audio' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
