@@ -737,7 +737,7 @@ const AIEnhance = () => {
                 {selectedMode === "instrumental"
                   ? t('aiEnhance.promptLabelInstrumental')
                   : selectedMode === "add_vocals"
-                    ? t('aiEnhance.promptLabelAddVocals', 'Describe la letra y el tema vocal (opcional pero recomendado)')
+                    ? t('aiEnhance.promptLabelAddVocals')
                     : t('aiEnhance.promptLabelOther')}
               </label>
               <div className="flex items-center gap-2">
@@ -768,7 +768,7 @@ const AIEnhance = () => {
               onChange={(e) => setPrompt(e.target.value.slice(0, 500))}
               disabled={isProcessing}
               placeholder={t(currentMode.placeholderKey)}
-              className="resize-none h-24"
+              className={`resize-none ${selectedMode === "add_vocals" ? "h-48 font-mono text-sm" : "h-24"}`}
             />
           </div>
 
