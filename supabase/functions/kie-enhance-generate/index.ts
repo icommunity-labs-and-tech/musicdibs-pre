@@ -290,30 +290,49 @@ serve(async (req) => {
       if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
       if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
     } else if (mode === "cover") {
-      // upload-cover — Non-custom Mode (customMode:false) per KIE docs:
-      //   "Only `prompt` and `uploadUrl` are required, regardless of the `instrumental` setting.
-      //    `prompt` length limit: 500 characters. Other parameters should be left empty."
-      // The user's description ("convierte esta cumbia en un rap") is a transformation intent,
-      // NOT literal lyrics — so customMode:true would be wrong (it would sing the description).
-      // In non-custom mode, lyrics are auto-generated from `prompt`. We fold the genre/mood/
-      // intensity/style hints into the prompt itself so KIE has full context.
-      // v24 — fix: previously sent customMode:true with style=prompt=description, causing the
-      // description to be interpreted as both style and lyrics. Now correctly uses prompt-only.
-      kiePayload = {
-        uploadUrl: source_audio_url,
-        prompt: finalPrompt,
-        instrumental: false,
-        customMode: false,
-        model: MODEL_COVER_EXTEND,
-        callBackUrl,
-      };
-      // Optional params still accepted in non-custom mode per docs
+      // upload-cover — two sub-modes per KIE docs:
+      //   (a) Non-custom (customMode:false): only `prompt` + `uploadUrl`. KIE auto-generates lyrics.
+      //   (b) Custom    (customMode:true) : `prompt` = literal lyrics, plus `style` + `title`.
+      // The user's "description" textarea is a transformation intent, NOT lyrics — so by default
+      // we run non-custom. If the user explicitly provides `custom_lyrics`, we switch to custom.
+      const hasCustomLyrics = typeof custom_lyrics === "string" && custom_lyrics.trim().length > 0;
+
+      if (hasCustomLyrics) {
+        // (b) Custom mode — sing the user's lyrics literally
+        const lyricsPrompt = custom_lyrics.trim().slice(0, 3000);
+        const coverStyle = styleParts.slice(0, 200);
+        const coverTitle = (typeof source_filename === "string" && source_filename.trim())
+          ? source_filename.replace(/\.[^.]+$/, "").slice(0, 80)
+          : "Cover";
+        kiePayload = {
+          uploadUrl: source_audio_url,
+          prompt: lyricsPrompt,
+          style: coverStyle,
+          title: coverTitle,
+          instrumental: false,
+          customMode: true,
+          model: MODEL_COVER_EXTEND,
+          negativeTags,
+          callBackUrl,
+        };
+      } else {
+        // (a) Non-custom — KIE auto-generates lyrics from the prompt description
+        kiePayload = {
+          uploadUrl: source_audio_url,
+          prompt: finalPrompt,
+          instrumental: false,
+          customMode: false,
+          model: MODEL_COVER_EXTEND,
+          negativeTags,
+          callBackUrl,
+        };
+      }
+      // Optional params accepted in both sub-modes
       const vg = voice_type === "female" ? "f" : voice_type === "male" ? "m" : null;
       if (vg) kiePayload.vocalGender = vg;
       if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
       if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
       if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
-      kiePayload.negativeTags = negativeTags;
     } else if (mode === "extend") {
       // upload-extend — defaultParamFlag:true → custom params
       // style (not tags), continueAt strictly > 0 AND < duration.
