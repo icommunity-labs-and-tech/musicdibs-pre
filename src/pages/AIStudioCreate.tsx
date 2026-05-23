@@ -154,6 +154,7 @@ const AIStudioCreate = () => {
   const [lyricsPov, setLyricsPov] = useState("Primera persona");
   const [generatedLyrics, setGeneratedLyrics] = useState("");
   const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
+  const [regenSection, setRegenSection] = useState<string | null>(null);
   const [lyricsError, setLyricsError] = useState<string | null>(null);
   const [copiedLyrics, setCopiedLyrics] = useState(false);
 
@@ -962,35 +963,40 @@ const AIStudioCreate = () => {
   };
 
   // ── Lyrics composer functions ──
-  const handleGenerateLyrics = async () => {
+  const handleGenerateLyrics = async (sectionLabel?: string) => {
     if (!lyricsDesc.trim()) {
       toast({ title: t('aiCreate.describeSongOrTheme'), variant: "destructive" });
       return;
     }
-    setIsGeneratingLyrics(true);
+    if (sectionLabel) setRegenSection(sectionLabel);
+    else setIsGeneratingLyrics(true);
     setLyricsError(null);
     try {
-      const { data, error } = await supabase.functions.invoke("lyrics-generator", {
-        body: {
-          description: lyricsDesc,
-          genre: lyricsGenre,
-          mood: lyricsMood,
-          style: lyricsStyle,
-          language: lyricsLanguage,
-          rhymeScheme: lyricsRhyme,
-          structure: lyricsStructure,
-          pov: lyricsPov,
-        },
-      });
+      const body: any = {
+        description: lyricsDesc,
+        genre: lyricsGenre,
+        mood: lyricsMood,
+        style: lyricsStyle,
+        language: lyricsLanguage,
+        rhymeScheme: lyricsRhyme,
+        structure: lyricsStructure,
+        pov: lyricsPov,
+      };
+      if (sectionLabel) {
+        body.regenerateSection = sectionLabel;
+        body.existingLyrics = generatedLyrics;
+      }
+      const { data, error } = await supabase.functions.invoke("lyrics-generator", { body });
       if (error || data?.error) throw new Error(data?.error || error?.message);
       setGeneratedLyrics(data.lyrics);
-      loadLyricsHistory();
+      if (!sectionLabel) loadLyricsHistory();
       toast({ title: t('aiCreate.lyricsGenerated'), description: t('aiCreate.lyricsGeneratedDesc') });
       track('lyrics_generated', { feature: 'lyrics', metadata: { genre: lyricsGenre, mood: lyricsMood, language: lyricsLanguage } });
     } catch (err: any) {
       setLyricsError(err.message || "Error al generar la letra");
     }
-    setIsGeneratingLyrics(false);
+    if (sectionLabel) setRegenSection(null);
+    else setIsGeneratingLyrics(false);
   };
 
   const copyLyrics = async () => {
@@ -1837,10 +1843,14 @@ const AIStudioCreate = () => {
                                 variant="outline"
                                 size="sm"
                                 className="h-7 text-xs gap-1.5"
-                                onClick={() => (handleGenerateLyrics as any)(label)}
-                                disabled={isGeneratingLyrics}
+                                onClick={() => handleGenerateLyrics(label)}
+                                disabled={isGeneratingLyrics || !!regenSection}
                               >
-                                <RotateCcw className="h-3 w-3" />
+                                {regenSection === label ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="h-3 w-3" />
+                                )}
                                 {label}
                               </Button>
                             ))}
