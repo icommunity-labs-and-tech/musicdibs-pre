@@ -196,6 +196,9 @@ const AIEnhance = () => {
   const [mood, setMood] = useState("");
   const [intensity, setIntensity] = useState("");
   const [voiceType, setVoiceType] = useState("");
+  // ── cover: opción de letra propia (customMode) ───────────────────────────
+  const [useCustomLyrics, setUseCustomLyrics] = useState(false);
+  const [customLyrics, setCustomLyrics] = useState("");
   // ── idioma vocal + estado de descarga ────────────────────────────────────
   const [sourceLanguage, setSourceLanguage] = useState("auto");
   const [isDownloading, setIsDownloading] = useState(false);
@@ -357,6 +360,10 @@ const AIEnhance = () => {
               audio_weight: FIDELITY_PRESETS[fidelityPreset].audio_weight,
               style_weight: FIDELITY_PRESETS[fidelityPreset].style_weight,
               weirdness_constraint: FIDELITY_PRESETS[fidelityPreset].weirdness_constraint,
+              // Si el usuario activa "letra propia", pasamos la letra literal (customMode en backend)
+              ...(useCustomLyrics && customLyrics.trim() && {
+                custom_lyrics: customLyrics.trim().slice(0, 3000),
+              }),
             }),
             // ── quality params: add_vocals (vocalGender controls singing voice gender) ─
             ...(selectedMode === "add_vocals" && {
@@ -930,6 +937,59 @@ const AIEnhance = () => {
                 {t('aiEnhance.langHint')}</p>
             </div>
           )}
+
+          {/* ── Cover: letra propia (customMode) ─────────────────────────────── */}
+          {selectedMode === "cover" && (
+            <div className="space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <label className="text-sm font-semibold">
+                    {t('aiEnhance.coverUseCustomLyricsLabel')}
+                  </label>
+                  <p className="text-xs text-muted-foreground/80 mt-0.5">
+                    {t('aiEnhance.coverUseCustomLyricsHint')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={useCustomLyrics}
+                  disabled={isProcessing}
+                  onClick={() => !isProcessing && setUseCustomLyrics((v) => !v)}
+                  className={cn(
+                    "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors",
+                    useCustomLyrics ? "bg-primary" : "bg-muted"
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow ring-0 transition-transform",
+                      useCustomLyrics ? "translate-x-5" : "translate-x-0"
+                    )}
+                  />
+                </button>
+              </div>
+              {useCustomLyrics && (
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">
+                    {t('aiEnhance.coverCustomLyricsLabel')}
+                  </label>
+                  <Textarea
+                    value={customLyrics}
+                    onChange={(e) => setCustomLyrics(e.target.value.slice(0, 3000))}
+                    disabled={isProcessing}
+                    placeholder={t('aiEnhance.coverCustomLyricsPlaceholder')}
+                    className="resize-none h-48 font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground/70 text-right">
+                    {customLyrics.length}/3000
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+
 
 
           {/* ── Botón principal de generación ───────────────────────────────── */}
