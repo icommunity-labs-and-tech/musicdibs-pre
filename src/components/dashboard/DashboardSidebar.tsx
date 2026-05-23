@@ -39,6 +39,7 @@ type SidebarProfilePayload = {
   new?: {
     kyc_status?: string | null;
     subscription_plan?: string | null;
+    subscription_tier?: string | null;
   };
 };
 
@@ -52,6 +53,7 @@ export function DashboardSidebar() {
   const [kycStatus, setKycStatus] = useState<string | null>(null);
   const [showDistributionModal, setShowDistributionModal] = useState(false);
   const [subscriptionPlan, setSubscriptionPlan] = useState<string>('Free');
+  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const { t } = useTranslation();
   const tr = (key: string, fallback: string) => String(t(key, { defaultValue: fallback }));
 
@@ -124,12 +126,13 @@ export function DashboardSidebar() {
 
     supabase
       .from('profiles')
-      .select('kyc_status, subscription_plan')
+      .select('kyc_status, subscription_plan, subscription_tier')
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => {
         setKycStatus(data?.kyc_status || 'unverified');
         setSubscriptionPlan(data?.subscription_plan || 'Free');
+        setSubscriptionTier((data as { subscription_tier?: string | null } | null)?.subscription_tier ?? null);
       });
 
     try {
@@ -143,6 +146,7 @@ export function DashboardSidebar() {
       }, (payload: SidebarProfilePayload) => {
         if (payload.new?.kyc_status) setKycStatus(payload.new.kyc_status);
         if (payload.new?.subscription_plan) setSubscriptionPlan(payload.new.subscription_plan);
+        if (payload.new?.subscription_tier !== undefined) setSubscriptionTier(payload.new.subscription_tier ?? null);
       });
 
       channel.subscribe((status, err) => {
@@ -177,7 +181,7 @@ export function DashboardSidebar() {
     const isKycGuarded = !!item.kycGuarded;
 
     if (isDistribute) {
-      const isAnnual = subscriptionPlan === 'Annual';
+      const isAnnual = subscriptionPlan === 'Annual' || (subscriptionTier?.startsWith('annual_') ?? false);
       return (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton asChild>

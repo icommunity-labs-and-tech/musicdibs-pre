@@ -26,11 +26,13 @@ export function DistributeButton({ workId, distributedAt, currentClicks = 0, var
     if (!user) return;
     supabase
       .from('profiles')
-      .select('subscription_plan')
+      .select('subscription_plan, subscription_tier')
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => {
-        setIsAnnual(data?.subscription_plan === 'Annual');
+        const plan = data?.subscription_plan;
+        const tier = (data as { subscription_tier?: string | null } | null)?.subscription_tier;
+        setIsAnnual(plan === 'Annual' || (typeof tier === 'string' && tier.startsWith('annual_')));
       });
   }, [user]);
 
