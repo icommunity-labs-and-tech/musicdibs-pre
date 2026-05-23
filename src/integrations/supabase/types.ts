@@ -3406,6 +3406,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_public_app_setting: { Args: { setting_key: string }; Returns: Json }
       get_sitemap_cron_secret: { Args: never; Returns: string }
       get_user_auth_data: {
         Args: { user_email: string }
