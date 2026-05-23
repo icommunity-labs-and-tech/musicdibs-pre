@@ -104,6 +104,7 @@ serve(async (req) => {
       audio_weight,       // 0-1 — how much to follow the uploaded audio's characteristics
       weirdness_constraint, // 0-1 — 0=conventional, 1=experimental
       continue_at,        // number — custom continueAt override (seconds), for extend mode
+      custom_lyrics,      // string — cover mode: user-supplied lyrics (enables customMode:true)
     } = body || {};
 
     if (!mode || !FEATURE_KEYS[mode]) {
