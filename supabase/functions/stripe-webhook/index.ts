@@ -214,6 +214,7 @@ async function createOrderRecord(
     currency: string;
     isSubscription: boolean;
     isRenewal: boolean;
+    stripeCustomerId?: string;
     couponCode?: string;
     promotionCode?: string;
     metadata?: Record<string, any>;
@@ -269,6 +270,7 @@ async function createOrderRecord(
       currency: params.currency,
       is_subscription: params.isSubscription,
       is_renewal: params.isRenewal,
+      stripe_customer_id: params.stripeCustomerId || null,
       is_first_purchase: isFirstPurchase,
       coupon_code: params.couponCode || null,
       promotion_code: params.promotionCode || null,
@@ -545,6 +547,7 @@ serve(async (req) => {
           stripeSubscriptionId: stripeSubId,
           stripePaymentIntentId: paymentIntentId,
           stripeChargeId: checkoutChargeId || undefined,
+          stripeCustomerId: resolvedCustomerId,
           productType: sessionMeta.product_type || getProductType(planId),
           productCode: sessionMeta.product_code || planId,
           productLabel: sessionMeta.product_label || planId,
@@ -770,6 +773,7 @@ serve(async (req) => {
             stripeInvoiceId: invoiceId,
             stripeChargeId: chargeId || undefined,
             stripeSubscriptionId: subscriptionId,
+            stripeCustomerId: customerId || undefined,
             productType,
             productCode: resolvedPlanId,
             productLabel: planLabel,
@@ -808,6 +812,22 @@ serve(async (req) => {
         const profile = await findProfileByCustomerId(supabase, stripe, customerId);
 
         if (profile) {
+          // ── Idempotency guard: skip if this plan-change invoice was already processed ──
+          if (invoiceId) {
+            const { data: existingUpdateOrder } = await supabase
+              .from("orders")
+              .select("id")
+              .eq("stripe_invoice_id", invoiceId)
+              .maybeSingle();
+
+            if (existingUpdateOrder) {
+              console.log(`[WEBHOOK] Duplicate subscription_update for invoice ${invoiceId} — skipping`);
+              return new Response(JSON.stringify({ received: true, duplicate: true }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+              });
+            }
+          }
+
           // For subscription_update, invoice line items contain proration entries
           // whose price is the OLD plan. Get the NEW plan's price from the subscription.
           let actualPriceId = priceId;
@@ -858,6 +878,7 @@ serve(async (req) => {
             stripeInvoiceId: invoiceId,
             stripeChargeId: chargeId || undefined,
             stripeSubscriptionId: subscriptionId,
+            stripeCustomerId: customerId || undefined,
             productType,
             productCode: planId,
             productLabel: `Cambio a ${planName || planId}`,
@@ -1091,3 +1112,4 @@ async function addCredits(supabase: any, userId: string, credits: number, descri
   }
   console.log(`[WEBHOOK] Added ${credits} credits to user ${userId}`);
 }
+
