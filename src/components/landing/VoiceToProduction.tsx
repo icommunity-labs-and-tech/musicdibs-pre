@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX, Sparkles, Mic, Wand2 } from "lucide-react";
-import voiceVideo from "@/assets/landing/voice-to-production.mp4";
+import voiceVideo from "@/assets/landing/promo/videoclip-before-forgetting-you.mp4";
 
 export function VoiceToProduction() {
   const videoRef = useRef<HTMLVideoElement>(null);
