@@ -144,7 +144,7 @@ export function WorkTimeline({ workStatus, createdAt, certifiedAt, ibsEvidenceId
                 <div className="flex h-7 w-7 items-center justify-center rounded-full shrink-0">
                   {state.status === 'done' && <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
                   {state.status === 'active' && <Loader2 className="h-5 w-5 text-amber-500 animate-spin" />}
-                  {state.status === 'pending' && <Circle className="h-5 w-5 text-muted-foreground/40" />}
+                  {state.status === 'pending' && <Circle className="h-5 w-5 text-muted-foreground" />}
                   {state.status === 'failed' && <XCircle className="h-5 w-5 text-destructive" />}
                 </div>
                 {!isLast && (

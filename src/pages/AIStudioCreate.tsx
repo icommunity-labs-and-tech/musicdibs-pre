@@ -1378,7 +1378,7 @@ const AIStudioCreate = () => {
                                 voiceTab === 'my_artists'
                                   ? "border-primary bg-primary/10 text-primary border-2"
                                   : vocalArtists.length === 0
-                                    ? "border-border text-muted-foreground/40 cursor-not-allowed"
+                                    ? "border-border text-muted-foreground cursor-not-allowed"
                                     : "border-border text-muted-foreground hover:border-primary/50"
                               )}
                             >
@@ -1407,7 +1407,7 @@ const AIStudioCreate = () => {
                                 voiceTab === 'my_presets'
                                   ? "border-primary bg-primary/10 text-primary border-2"
                                   : instrumentalPresets.length === 0
-                                    ? "border-border text-muted-foreground/40 cursor-not-allowed"
+                                    ? "border-border text-muted-foreground cursor-not-allowed"
                                     : "border-border text-muted-foreground hover:border-primary/50"
                               )}
                             >

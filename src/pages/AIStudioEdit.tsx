@@ -730,7 +730,7 @@ const AIStudioEdit = () => {
                       <div
                         key={step.key}
                         className={`flex items-center gap-3 text-sm transition-all duration-300 ${
-                          done ? 'text-primary' : active ? 'text-foreground' : 'text-muted-foreground/50'
+                          done ? 'text-primary' : active ? 'text-foreground' : 'text-muted-foreground'
                         }`}
                       >
                         {done ? (

@@ -461,7 +461,7 @@ export default function AdminUsersPage() {
                   <button type="button" onClick={() => toggleSort('available_credits')} className="flex items-center gap-1 hover:text-foreground">
                     Créditos <SortIcon k="available_credits" />
                   </button>
-                  <span className="text-muted-foreground/40">·</span>
+                  <span className="text-muted-foreground">·</span>
                   <button type="button" onClick={() => toggleSort('permanent_credits')} className="flex items-center gap-1 text-xs text-amber-500 hover:text-amber-400" title="Ordenar por créditos permanentes">
                     perm <SortIcon k="permanent_credits" />
                   </button>
