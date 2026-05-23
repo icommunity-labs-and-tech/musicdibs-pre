@@ -289,27 +289,30 @@ serve(async (req) => {
       if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
       if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
     } else if (mode === "cover") {
-      // upload-cover — customMode:true (per KIE spec — different from extend which uses defaultParamFlag)
-      // style, title, negativeTags, prompt all applied when customMode=true.
-      // vocalGender only effective when customMode=true per docs.
+      // upload-cover — Non-custom Mode (customMode:false) per KIE docs:
+      //   "Only `prompt` and `uploadUrl` are required, regardless of the `instrumental` setting.
+      //    `prompt` length limit: 500 characters. Other parameters should be left empty."
+      // The user's description ("convierte esta cumbia en un rap") is a transformation intent,
+      // NOT literal lyrics — so customMode:true would be wrong (it would sing the description).
+      // In non-custom mode, lyrics are auto-generated from `prompt`. We fold the genre/mood/
+      // intensity/style hints into the prompt itself so KIE has full context.
+      // v24 — fix: previously sent customMode:true with style=prompt=description, causing the
+      // description to be interpreted as both style and lyrics. Now correctly uses prompt-only.
       kiePayload = {
         uploadUrl: source_audio_url,
-        title,
-        style: styleParts,
-        negativeTags,
         prompt: finalPrompt,
         instrumental: false,
-        customMode: true,           // cover uses customMode, NOT defaultParamFlag
+        customMode: false,
         model: MODEL_COVER_EXTEND,
         callBackUrl,
       };
-      // Map frontend voice_type → KIE vocalGender ("female"→"f", "male"→"m")
+      // Optional params still accepted in non-custom mode per docs
       const vg = voice_type === "female" ? "f" : voice_type === "male" ? "m" : null;
       if (vg) kiePayload.vocalGender = vg;
-      // Quality params (fidelity presets — same optional fields as extend/instrumental)
       if (typeof style_weight === "number") kiePayload.styleWeight = style_weight;
       if (typeof audio_weight === "number") kiePayload.audioWeight = audio_weight;
       if (typeof weirdness_constraint === "number") kiePayload.weirdnessConstraint = weirdness_constraint;
+      kiePayload.negativeTags = negativeTags;
     } else if (mode === "extend") {
       // upload-extend — defaultParamFlag:true → custom params
       // style (not tags), continueAt strictly > 0 AND < duration.
@@ -386,8 +389,81 @@ serve(async (req) => {
 
     if (!kieRes.ok || (kieData?.code && kieData.code !== 200)) {
       console.error(`[kie-enhance-generate] KIE error ${kieRes.status}`, kieData);
+      await refund(supabaseAdmin, user.id, creditsCost, "KIE dispatch failed");
       await supabaseAdmin
         .from("ai_generation_logs")
         .update({
           status: "failed",
-          error_message: kieData?
+          error_message: kieData?.msg || `HTTP ${kieRes.status}`,
+          response_payload: kieData,
+        })
+        .eq("id", logId);
+      return json({ error: "provider_error", message: kieData?.msg || "KIE request failed" }, 502);
+    }
+
+    const taskId: string | undefined = kieData?.data?.taskId;
+    await supabaseAdmin
+      .from("ai_generation_logs")
+      .update({
+        provider_task_id: taskId ?? null,
+        status: "processing",
+        response_payload: kieData,
+      })
+      .eq("id", logId);
+
+    return json({
+      ok: true,
+      logId,
+      taskId,
+      status: "processing",
+      message: "Generation started. Audio will be available shortly.",
+    });
+  } catch (err) {
+    console.error("[kie-enhance-generate] fatal", err);
+    return json({ error: (err as Error).message }, 500);
+  }
+});
+
+function json(payload: unknown, status = 200, isOptions = false): Response {
+  if (isOptions) return new Response(null, { status, headers: corsHeaders });
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+async function refund(
+  supabase: ReturnType<typeof createClient>,
+  userId: string,
+  amount: number,
+  reason: string,
+) {
+  const { data: p } = await supabase
+    .from("profiles")
+    .select("available_credits")
+    .eq("user_id", userId)
+    .single();
+  if (!p) return;
+  await supabase
+    .from("profiles")
+    .update({
+      available_credits: p.available_credits + amount,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+  await supabase.from("credit_transactions").insert({
+    user_id: userId,
+    amount,
+    type: "refund",
+    description: `Reembolso: ${reason}`.slice(0, 200),
+  });
+}
+function defaultPromptForMode(mode: string): string {
+  switch (mode) {
+    case "cover":        return "Create a fresh cover version with a new style while keeping the melody";
+    case "extend":       return "Continue the song naturally in the same style";
+    case "instrumental": return "Add a fitting instrumental backing";
+    case "add_vocals":   return "Add beautiful emotional vocals";
+    default:             return "Enhance this audio";
+  }
+}
