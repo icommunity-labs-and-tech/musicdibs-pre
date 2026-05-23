@@ -159,17 +159,8 @@ export function LyricsSectionsEditor({ value, onChange, context }: Props) {
                   )}
                   {!isEditing && (
                     <div className="flex items-center gap-0.5 shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => startEdit(idx)}
-                        disabled={regenIdx !== null}
-                        title="Edit"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
                       {s.label && (
+
                         <Button
                           variant="ghost"
                           size="icon"
