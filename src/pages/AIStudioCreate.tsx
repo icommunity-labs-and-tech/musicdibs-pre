@@ -1810,9 +1810,19 @@ const AIStudioCreate = () => {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="rounded-xl bg-muted/40 p-4 font-mono text-sm leading-relaxed whitespace-pre-wrap max-h-[500px] overflow-y-auto">
-                        {generatedLyrics}
-                      </div>
+                      <LyricsSectionsEditor
+                        value={generatedLyrics}
+                        onChange={setGeneratedLyrics}
+                        context={{
+                          description: lyricsDesc,
+                          genre: lyricsGenre,
+                          mood: lyricsMood,
+                          style: lyricsStyle,
+                          language: lyricsLanguage,
+                          rhymeScheme: lyricsRhyme,
+                          pov: lyricsPov,
+                        }}
+                      />
 
                       <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground gap-1.5" onClick={() => handleGenerateLyrics()} disabled={isGeneratingLyrics}>
                         <RotateCcw className="h-3.5 w-3.5" />
