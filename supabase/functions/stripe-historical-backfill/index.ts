@@ -190,6 +190,7 @@ Deno.serve(async (req) => {
         stripe_charge_id: charge.id,
         paid_at: new Date(charge.created * 1000).toISOString(),
         currency: charge.currency.toUpperCase(),
+        stripe_customer_id: customerId ?? null,
       });
 
 
@@ -239,3 +240,4 @@ Deno.serve(async (req) => {
     });
   }
 });
+
