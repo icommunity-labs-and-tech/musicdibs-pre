@@ -2848,6 +2848,31 @@ serve(async (req) => {
           .slice(0, 5);
       } catch {}
 
+      // ── Period-specific queries for accurate timeSeries.userAcquisition ──
+      // These queries are scoped to [filterStart, filterEnd) to avoid:
+      // 1. The max_rows / range limit on the global `profiles` array
+      // 2. `activeTxRes` only covering the last 30 days (useless for historical periods)
+      let periodProfiles: Array<{ user_id: string; created_at: string }> = [];
+      let periodActiveTx: Array<{ user_id: string; created_at: string }> = [];
+      if (filterStart && filterEnd) {
+        const [periodProfilesRes, periodActiveTxRes] = await Promise.all([
+          admin
+            .from("profiles")
+            .select("user_id, created_at")
+            .gte("created_at", filterStart)
+            .lt("created_at", filterEnd)
+            .limit(50000),
+          admin
+            .from("credit_transactions")
+            .select("user_id, created_at")
+            .gte("created_at", filterStart)
+            .lt("created_at", filterEnd)
+            .limit(50000),
+        ]);
+        periodProfiles = periodProfilesRes.data || [];
+        periodActiveTx = periodActiveTxRes.data || [];
+      }
+
       // ── Time series for charts ──
       const timeSeries: any = {
         revenue: [],
@@ -2960,13 +2985,21 @@ serve(async (req) => {
           });
           timeSeries.orders.push({ label: b.label, value: bOrders.length });
 
-          // User acquisition: new registrations + active users (with credit tx) in bucket
-          const newInBucket = profiles.filter(
-            (p: any) => p.created_at >= sIso && p.created_at < eIso,
-          ).length;
+          // User acquisition: new registrations + active users (with credit tx) in bucket.
+          // Uses periodProfiles/periodActiveTx (period-scoped queries) to avoid:
+          // • max_rows truncation of the global profiles array
+          // • +00:00 vs Z string comparison mismatches at exact bucket boundaries
+          // • activeTxRes covering only the last 30 days (zero for historical periods)
+          const newInBucket = periodProfiles.filter((p: any) => {
+            const d = new Date(p.created_at);
+            return d >= b.start && d < b.end;
+          }).length;
           const activeInBucket = new Set(
-            (activeTxRes.data || [])
-              .filter((t: any) => t.created_at >= sIso && t.created_at < eIso)
+            periodActiveTx
+              .filter((t: any) => {
+                const d = new Date(t.created_at);
+                return d >= b.start && d < b.end;
+              })
               .map((t: any) => t.user_id),
           ).size;
           timeSeries.userAcquisition.push({
