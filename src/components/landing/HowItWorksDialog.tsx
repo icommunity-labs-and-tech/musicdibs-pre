@@ -160,7 +160,7 @@ const steps: Step[] = [
     ),
   },
   {
-    badge: "Paso 4 · Artistas virtuales",
+    badge: "Paso 5 · Artistas virtuales",
     title: "Diseña tus propios artistas con IA",
     description:
       "Crea avatares de artistas únicos, personaliza su estilo y úsalos en tus campañas.",
