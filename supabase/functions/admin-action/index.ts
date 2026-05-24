@@ -5153,9 +5153,47 @@ serve(async (req) => {
 
       const emailsMap = await getAllEmailsMap();
 
+      // Resolve concrete plan tier (e.g. annual_100) per user from subscriptions/profiles
+      const userIds = Array.from(
+        new Set((surveys || []).map((s: any) => s.user_id).filter(Boolean)),
+      );
+      const tierMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: subs } = await admin
+          .from("subscriptions")
+          .select("user_id, tier, plan")
+          .in("user_id", userIds);
+        for (const sub of subs || []) {
+          const t = (sub as any).tier || (sub as any).plan;
+          if (t && !tierMap[(sub as any).user_id]) {
+            tierMap[(sub as any).user_id] = String(t);
+          }
+        }
+        const { data: profs } = await admin
+          .from("profiles")
+          .select("user_id, subscription_tier, subscription_plan")
+          .in("user_id", userIds);
+        for (const p of profs || []) {
+          if (!tierMap[(p as any).user_id]) {
+            const t = (p as any).subscription_tier || (p as any).subscription_plan;
+            if (t) tierMap[(p as any).user_id] = String(t);
+          }
+        }
+      }
+
+      const resolvePlan = (s: any): string => {
+        const raw = String(s.plan_type || "").toLowerCase();
+        const tier = tierMap[s.user_id];
+        if (tier && (/^anual$|^annual$/i.test(raw) || !raw || raw === "free")) {
+          return tier;
+        }
+        return s.plan_type || tier || "Free";
+      };
+
       const enriched = (surveys || []).map((s: any) => ({
         ...s,
         email: emailsMap[s.user_id] || null,
+        plan_type: resolvePlan(s),
       }));
 
       // Metrics
@@ -5165,7 +5203,7 @@ serve(async (req) => {
         now.getMonth(),
         1,
       ).toISOString();
-      const thisMonthSurveys = (surveys || []).filter(
+      const thisMonthSurveys = enriched.filter(
         (s: any) => s.created_at >= monthStart && s.is_account_deletion,
       );
 
