@@ -924,7 +924,7 @@ serve(async (req) => {
               email: chUser?.email,
               displayName: chProfile?.display_name,
               productType,
-              productName: `Cambio a ${planName || planId}`,
+              productName: `Cambio a ${planId}`,
               amount: invoiceAmount,
               currency: invoiceCurrency,
               paymentStatus: "succeeded",
