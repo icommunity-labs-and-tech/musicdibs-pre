@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Rocket, Play } from "lucide-react";
-import { SongGenerator } from "./SongGenerator";
+import { PhoneVideoMockup } from "./PhoneVideoMockup";
 import { HowItWorksDialog } from "./HowItWorksDialog";
 
 export function Hero() {
@@ -58,7 +58,7 @@ export function Hero() {
           </div>
         </div>
 
-        <SongGenerator />
+        <PhoneVideoMockup />
       </div>
       <HowItWorksDialog open={howOpen} onOpenChange={setHowOpen} />
     </section>
