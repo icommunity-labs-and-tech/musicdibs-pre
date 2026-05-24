@@ -22,7 +22,7 @@ export function Navbar() {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] shadow-[var(--shadow-magenta)] transition-transform hover:scale-105"
         >
-          Probar IA Music Studio
+          Probar IA Music Studio GRATIS
         </a>
       </div>
     </header>

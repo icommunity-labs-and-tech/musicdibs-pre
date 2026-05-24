@@ -32,7 +32,7 @@ export function Hero() {
           <div id="cta" className="mt-9 flex flex-wrap items-center gap-4">
             <a href="https://www.musicdibs.com/login" target="_blank" rel="noopener noreferrer" className="btn-magenta inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold">
               <Rocket className="h-4 w-4" />
-              Probar IA Music Studio
+              Probar IA Music Studio GRATIS
             </a>
             <button onClick={() => setHowOpen(true)} className="btn-ghost inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold">
               <Play className="h-4 w-4" />

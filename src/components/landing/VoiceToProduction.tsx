@@ -162,7 +162,7 @@ export function VoiceToProduction() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-magenta to-pink px-8 py-4 text-base font-semibold text-white shadow-lg shadow-magenta/30 hover:shadow-magenta/50 hover:scale-[1.02] transition-all"
               >
-                Probar IA Music Studio
+                Probar IA Music Studio GRATIS
               </a>
             </div>
           </div>
