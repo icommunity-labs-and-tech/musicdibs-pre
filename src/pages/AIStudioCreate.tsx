@@ -1940,7 +1940,7 @@ const AIStudioCreate = () => {
                               className="h-7 w-7 text-primary"
                               title="Cantar esta letra con mi voz"
                               onClick={() => {
-                                window.open(`/ai-studio/vocal?lyrics=${encodeURIComponent(item.lyrics)}`, '_self');
+                                window.open(`/ai-studio/enhance?lyrics=${encodeURIComponent(item.lyrics)}`, '_self');
                               }}
                             >
                               <Mic className="h-3.5 w-3.5" />
