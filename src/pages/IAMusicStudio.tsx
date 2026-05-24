@@ -6,6 +6,7 @@ import { Hero } from "@/components/landing/Hero";
 import { VoiceToProduction } from "@/components/landing/VoiceToProduction";
 import { PromoVisualsShowcase } from "@/components/landing/PromoVisualsShowcase";
 import { SocialBanner } from "@/components/landing/SocialBanner";
+import { EcosystemContinuation } from "@/components/landing/EcosystemContinuation";
 import { Footer } from "@/components/landing/Footer";
 
 export default function IAMusicStudio() {
