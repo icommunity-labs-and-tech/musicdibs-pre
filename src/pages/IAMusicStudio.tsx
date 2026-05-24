@@ -40,6 +40,7 @@ export default function IAMusicStudio() {
           <Hero />
           <VoiceToProduction />
           <PromoVisualsShowcase />
+          <EcosystemContinuation />
           <SocialBanner />
           <Footer />
         </main>
