@@ -628,29 +628,28 @@ const AIEnhance = () => {
               {t('aiEnhance.modeSectionTitle')}
             </h2>
             <TooltipProvider delayDuration={150}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:items-stretch">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:items-stretch">
                 {MODES.map((mode) => {
                   const isFeatured = mode.id === "instrumental";
                   const isSelected = selectedMode === mode.id;
                   return (
                   <Tooltip key={mode.id}>
                     <TooltipTrigger asChild>
-                      <div className={cn("relative group", isFeatured && "sm:-my-1")}>
+                      <div className={cn("relative group", isFeatured && "lg:col-span-2 sm:col-span-2 lg:-my-1.5")}>
                         {isFeatured && (
                           <>
-                            {/* Glow halo animado */}
+                            {/* Glow halo animado más intenso */}
                             <div
                               aria-hidden
-                              className="pointer-events-none absolute -inset-[3px] rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-purple-600 opacity-70 blur-md animate-pulse"
+                              className="pointer-events-none absolute -inset-[5px] rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-500 opacity-80 blur-xl animate-pulse"
                             />
                             {/* Borde gradiente nítido */}
                             <div
                               aria-hidden
-                              className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-purple-600"
+                              className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-500"
                             />
-                            {/* Badge Recomendado */}
-                            <div className="absolute -top-2.5 right-3 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-lg shadow-violet-500/40">
-                              <Sparkles className="h-3 w-3" />
+                            {/* Badge MÁS POPULAR */}
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-500 via-fuchsia-600 to-violet-600 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(217,70,239,0.6)] ring-1 ring-white/20">
                               {t('aiEnhance.recommendedBadge')}
                             </div>
                           </>
@@ -660,27 +659,64 @@ const AIEnhance = () => {
                           onClick={() => !isProcessing && setSelectedMode(mode.id)}
                           disabled={isProcessing}
                           className={cn(
-                            "relative w-full h-full p-4 rounded-2xl border text-left transition-all text-sm hover:border-primary/40",
+                            "relative w-full h-full rounded-2xl border text-left transition-all duration-300 text-sm",
                             isFeatured
-                              ? "bg-gradient-to-br from-violet-50 via-card to-fuchsia-50 dark:from-violet-950/40 dark:via-card dark:to-fuchsia-950/30 border-transparent shadow-xl shadow-violet-500/20 hover:shadow-violet-500/40 hover:-translate-y-0.5"
+                              ? "p-5 bg-gradient-to-br from-violet-50 via-card to-fuchsia-50 dark:from-violet-950/50 dark:via-card dark:to-fuchsia-950/40 border-transparent shadow-2xl shadow-fuchsia-500/30 hover:shadow-fuchsia-500/60 hover:-translate-y-1 hover:scale-[1.015]"
                               : isSelected
-                                ? "border-primary bg-primary/5"
-                                : "border-border bg-card"
+                                ? "p-4 border-primary bg-primary/5 hover:border-primary/40"
+                                : "p-4 border-border bg-card hover:border-primary/40"
                           )}
                         >
-                          <div
-                            className={cn(
-                              "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-3 transition-transform",
-                              mode.gradient,
-                              isFeatured && "w-12 h-12 shadow-lg shadow-violet-500/40 group-hover:scale-110 group-hover:rotate-3"
-                            )}
-                          >
-                            {mode.icon}
-                          </div>
-                          <p className={cn("font-semibold", isFeatured && "text-base bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent")}>
-                            {t(mode.labelKey)}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">{t(mode.taglineKey)}</p>
+                          {isFeatured ? (
+                            <>
+                              <div className="flex items-start gap-3">
+                                <div className="relative shrink-0">
+                                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-fuchsia-500/50 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                                    <Mic2 className="w-7 h-7" />
+                                  </div>
+                                  <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-amber-300 drop-shadow-[0_0_6px_rgba(252,211,77,0.9)] animate-pulse" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="font-bold text-base sm:text-lg leading-tight bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 bg-clip-text text-transparent">
+                                    {t(mode.labelKey)}
+                                  </p>
+                                  <p className="text-xs sm:text-[13px] text-muted-foreground mt-1 leading-snug">
+                                    {t(mode.taglineKey)}
+                                  </p>
+                                </div>
+                              </div>
+                              {/* Mini flujo visual */}
+                              <div className="mt-3 flex items-center flex-wrap gap-1.5 text-[11px] font-medium">
+                                <span className="px-2 py-1 rounded-full bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-500/20">
+                                  {t('aiEnhance.modeInstrumentalFlow1')}
+                                </span>
+                                <ArrowRight className="w-3 h-3 text-fuchsia-500/70 shrink-0" />
+                                <span className="px-2 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-500/20">
+                                  {t('aiEnhance.modeInstrumentalFlow2')}
+                                </span>
+                                <ArrowRight className="w-3 h-3 text-orange-500/70 shrink-0" />
+                                <span className="px-2 py-1 rounded-full bg-orange-500/10 text-orange-700 dark:text-orange-300 border border-orange-500/20">
+                                  {t('aiEnhance.modeInstrumentalFlow3')}
+                                </span>
+                              </div>
+                              <p className="mt-2.5 text-[11px] font-semibold text-fuchsia-600 dark:text-fuchsia-300/90">
+                                {t('aiEnhance.modeInstrumentalMicro')}
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <div
+                                className={cn(
+                                  "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-3",
+                                  mode.gradient
+                                )}
+                              >
+                                {mode.icon}
+                              </div>
+                              <p className="font-semibold">{t(mode.labelKey)}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{t(mode.taglineKey)}</p>
+                            </>
+                          )}
                         </button>
                       </div>
                     </TooltipTrigger>
