@@ -340,7 +340,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       generatingMidi: 'Generando MIDI...',
       createAnother: 'Crear otra versión',
       modeInstrumentalLabel: '🎼 Convierte tu voz en un HIT',
-      modeInstrumentalTagline: 'Canta una idea o sube una melodía y deja que la IA cree una producción completa alrededor de tu voz.',
+      modeInstrumentalTagline: 'Canta a capela o sube una melodía y deja que la IA cree una producción completa alrededor de tu voz.',
       modeInstrumentalPlaceholder: 'Añade una producción pop electrónica con bajo potente, sintetizadores y batería energética.',
       modeInstrumentalUseCase1: 'Transformar una melodía simple en una completa',
       modeInstrumentalUseCase2: 'Añadir producción e instrumentos',
