@@ -1118,6 +1118,164 @@ serve(async (req) => {
       }
     }
 
+
+    // ── charge.dispute.created ──────────────────────────────────────────
+    if (event.type === "charge.dispute.created") {
+      const dispute = event.data.object as Stripe.Dispute;
+      const chargeId = typeof dispute.charge === "string" ? dispute.charge : (dispute.charge as any)?.id ?? "";
+      const disputeId = dispute.id;
+
+      console.log(`[WEBHOOK] Dispute created: ${disputeId} on charge ${chargeId}`);
+
+      try {
+        // Resolve customer from charge
+        const charge = await stripe.charges.retrieve(chargeId);
+        const customerId = typeof charge.customer === "string" ? charge.customer : (charge.customer as any)?.id ?? "";
+        if (customerId) {
+          const profile = await findProfileByCustomerId(supabase, stripe, customerId);
+          if (profile) {
+            await supabase.from("profiles").update({
+              has_open_dispute: true,
+              dispute_opened_at: new Date(dispute.created * 1000).toISOString(),
+              dispute_stripe_id: disputeId,
+              is_blocked: true,
+            }).eq("user_id", profile.user_id);
+
+            console.log(`[WEBHOOK] ✅ Dispute flagged on user ${profile.user_id} (${disputeId})`);
+
+            // Notificar al admin via notify-admin-alert
+            try {
+              const alertUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/notify-admin-alert`;
+              await fetch(alertUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                },
+                body: JSON.stringify({
+                  type: "dispute_opened",
+                  user_id: profile.user_id,
+                  dispute_id: disputeId,
+                  amount: dispute.amount,
+                  currency: dispute.currency,
+                  reason: dispute.reason,
+                }),
+              });
+            } catch (alertErr) {
+              console.warn("[WEBHOOK] notify-admin-alert error:", alertErr);
+            }
+          } else {
+            console.warn(`[WEBHOOK] No profile found for customer ${customerId} in dispute ${disputeId}`);
+          }
+        }
+      } catch (dispErr) {
+        console.error(`[WEBHOOK] Error processing dispute.created ${disputeId}:`, dispErr);
+      }
+    }
+
+    // ── charge.dispute.lost ─────────────────────────────────────────────
+    if (event.type === "charge.dispute.lost") {
+      const dispute = event.data.object as Stripe.Dispute;
+      const chargeId = typeof dispute.charge === "string" ? dispute.charge : (dispute.charge as any)?.id ?? "";
+      const disputeId = dispute.id;
+
+      console.log(`[WEBHOOK] Dispute LOST: ${disputeId}`);
+
+      try {
+        const charge = await stripe.charges.retrieve(chargeId);
+        const customerId = typeof charge.customer === "string" ? charge.customer : (charge.customer as any)?.id ?? "";
+        if (customerId) {
+          const profile = await findProfileByCustomerId(supabase, stripe, customerId);
+          if (profile) {
+            // Cancelar suscripción activa si Stripe no lo hizo automáticamente
+            const { data: subs } = await supabase
+              .from("subscriptions")
+              .select("stripe_subscription_id, status")
+              .eq("user_id", profile.user_id)
+              .in("status", ["active", "past_due"])
+              .limit(1);
+
+            if (subs && subs.length > 0 && subs[0].stripe_subscription_id) {
+              try {
+                await stripe.subscriptions.cancel(subs[0].stripe_subscription_id);
+                console.log(`[WEBHOOK] Subscription ${subs[0].stripe_subscription_id} cancelled due to lost dispute`);
+              } catch (cancelErr: any) {
+                // Ignorar si ya está cancelada
+                if (!cancelErr.message?.includes("No such subscription")) {
+                  console.warn("[WEBHOOK] Error cancelling sub on dispute lost:", cancelErr);
+                }
+              }
+            }
+
+            // Downgrade a Free y quitar créditos
+            await supabase.from("profiles").update({
+              subscription_plan: "Free",
+              subscription_tier: null,
+              available_credits: 0,
+              permanent_credits: 0,
+              has_open_dispute: true,
+              dispute_lost_at: new Date().toISOString(),
+              is_blocked: true,
+            }).eq("user_id", profile.user_id);
+
+            console.log(`[WEBHOOK] ✅ User ${profile.user_id} downgraded to Free after lost dispute ${disputeId}`);
+
+            // Notificar al admin
+            try {
+              const alertUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/notify-admin-alert`;
+              await fetch(alertUrl, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                },
+                body: JSON.stringify({
+                  type: "dispute_lost",
+                  user_id: profile.user_id,
+                  dispute_id: disputeId,
+                  amount: dispute.amount,
+                  currency: dispute.currency,
+                }),
+              });
+            } catch (alertErr) {
+              console.warn("[WEBHOOK] notify-admin-alert error:", alertErr);
+            }
+          }
+        }
+      } catch (dispErr) {
+        console.error(`[WEBHOOK] Error processing dispute.lost ${disputeId}:`, dispErr);
+      }
+    }
+
+    // ── charge.dispute.won ──────────────────────────────────────────────
+    if (event.type === "charge.dispute.won") {
+      const dispute = event.data.object as Stripe.Dispute;
+      const chargeId = typeof dispute.charge === "string" ? dispute.charge : (dispute.charge as any)?.id ?? "";
+      const disputeId = dispute.id;
+
+      console.log(`[WEBHOOK] Dispute WON: ${disputeId}`);
+
+      try {
+        const charge = await stripe.charges.retrieve(chargeId);
+        const customerId = typeof charge.customer === "string" ? charge.customer : (charge.customer as any)?.id ?? "";
+        if (customerId) {
+          const profile = await findProfileByCustomerId(supabase, stripe, customerId);
+          if (profile) {
+            // Limpiar flags de disputa (el bloqueo lo desactiva admin manualmente si procede)
+            await supabase.from("profiles").update({
+              has_open_dispute: false,
+              dispute_stripe_id: null,
+              dispute_opened_at: null,
+            }).eq("user_id", profile.user_id);
+
+            console.log(`[WEBHOOK] ✅ Dispute won — flags cleared for user ${profile.user_id}`);
+          }
+        }
+      } catch (dispErr) {
+        console.error(`[WEBHOOK] Error processing dispute.won ${disputeId}:`, dispErr);
+      }
+    }
+
     return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (error) {
