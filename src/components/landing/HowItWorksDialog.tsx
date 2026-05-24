@@ -137,7 +137,7 @@ const steps: Step[] = [
     ),
   },
   {
-    badge: "Paso 3 · Material visual",
+    badge: "Paso 4 · Material visual",
     title: "Genera todo el material promocional",
     description:
       "Portadas, posts, reels, flyers y vídeos creados automáticamente a partir de tu canción.",
