@@ -31,7 +31,31 @@ type Step = {
 
 const steps: Step[] = [
   {
-    badge: "Paso 1 · Crear",
+    badge: "Paso 1 · Empieza",
+    title: "🚀 Regístrate y entra en AI Music Studio",
+    description:
+      "Dentro del AI Music Studio encontrarás todas las funciones para crear y mejorar tu música.",
+    mockup: (
+      <div className="relative h-full w-full rounded-xl overflow-hidden border border-magenta/30 bg-background/70">
+        <div className="absolute inset-0 bg-gradient-to-br from-magenta/10 via-transparent to-pink/10 pointer-events-none" />
+        <img
+          src={dashboardAiStudio}
+          alt="Panel de Musicdibs destacando AI Music Studio"
+          loading="lazy"
+          className="w-full h-full object-contain"
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            boxShadow:
+              "inset 0 0 60px rgba(217,70,239,0.25), inset 0 0 120px rgba(168,85,247,0.15)",
+          }}
+        />
+      </div>
+    ),
+  },
+  {
+    badge: "Paso 2 · Crear",
     title: "Crea tu canción desde una idea o mejora tu voz",
     description:
       "Escribe la idea de tu canción o sube una grabación de tu voz. La IA se encarga del resto.",
