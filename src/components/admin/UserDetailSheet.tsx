@@ -1,7 +1,7 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { User, Mail, Phone, CreditCard, Shield, Calendar, Hash, FileText, Clock } from 'lucide-react';
+import { User, Mail, Phone, CreditCard, Shield, Calendar, Hash, FileText, Clock, AlertTriangle } from 'lucide-react';
 import UserPurchasesPanel from './UserPurchasesPanel';
 import UserUsagePanel from './UserUsagePanel';
 import DisputeTimeline from './DisputeTimeline';
@@ -54,6 +54,16 @@ export default function UserDetailSheet({ user, open, onOpenChange }: UserDetail
             {user.is_blocked
               ? <Badge className="bg-destructive/20 text-destructive">Bloqueado</Badge>
               : <Badge className="bg-green-500/20 text-green-400">Activo</Badge>}
+            {user.has_open_dispute && (
+              <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/40 font-bold flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3" /> DISPUTA ABIERTA
+              </Badge>
+            )}
+            {user.dispute_lost_at && (
+              <Badge className="bg-red-700/30 text-red-400 border-red-600/40 font-bold">
+                ❌ Disputa perdida
+              </Badge>
+            )}
             <Badge className={kycMap[user.kyc_status] || kycMap.unverified}>KYC: {user.kyc_status}</Badge>
           </div>
         </div>
@@ -139,6 +149,34 @@ export default function UserDetailSheet({ user, open, onOpenChange }: UserDetail
             <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono break-all">{user.id}</code>
           } badge />
         </div>
+
+        {/* Dispute info - only shown if active or lost */}
+        {(user.has_open_dispute || user.dispute_lost_at) && (
+          <>
+            <Separator className="my-4" />
+            <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-4 space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-orange-400 flex items-center gap-1.5 mb-3">
+                <AlertTriangle className="h-4 w-4" /> Información de disputa
+              </h3>
+              {user.dispute_stripe_id && (
+                <DetailRow icon={Hash} label="ID Stripe dispute" value={
+                  <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono break-all">{user.dispute_stripe_id}</code>
+                } badge />
+              )}
+              {user.dispute_opened_at && (
+                <DetailRow icon={Calendar} label="Disputa abierta" value={new Date(user.dispute_opened_at).toLocaleString('es-ES')} />
+              )}
+              {user.dispute_lost_at && (
+                <DetailRow icon={Calendar} label="Disputa perdida" value={new Date(user.dispute_lost_at).toLocaleString('es-ES')} />
+              )}
+              {user.has_open_dispute && !user.dispute_lost_at && (
+                <p className="text-xs text-orange-400/80 mt-2">
+                  ⚠️ El usuario está bloqueado y su acceso suspendido mientras la disputa esté activa.
+                </p>
+              )}
+            </div>
+          </>
+        )}
 
         <Separator className="my-4" />
 

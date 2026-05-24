@@ -374,6 +374,7 @@ serve(async (req) => {
       if (statusFilter === "blocked") query = query.eq("is_blocked", true);
       if (statusFilter === "active")
         query = query.or("is_blocked.is.null,is_blocked.eq.false");
+      if (statusFilter === "disputed") query = query.eq("has_open_dispute", true);
       if (roleUserIds) query = query.in("user_id", roleUserIds);
       if (creditsFilter === "has_permanent")
         query = query.gt("permanent_credits", 0);
@@ -1726,6 +1727,7 @@ serve(async (req) => {
         if (statusFilter === "blocked") query = query.eq("is_blocked", true);
         if (statusFilter === "active")
           query = query.or("is_blocked.is.null,is_blocked.eq.false");
+        if (statusFilter === "disputed") query = query.eq("has_open_dispute", true);
 
         const { data: profiles } = await query;
         let filtered = profiles || [];

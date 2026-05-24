@@ -404,6 +404,7 @@ export default function AdminUsersPage() {
             <SelectItem value="all">Todos los estados</SelectItem>
             <SelectItem value="active">Activos</SelectItem>
             <SelectItem value="blocked">Bloqueados</SelectItem>
+            <SelectItem value="disputed">⚠️ Con disputa</SelectItem>
           </SelectContent>
         </Select>
         <Select value={creditsFilter} onValueChange={v => { setCreditsFilter(v); setPage(0); }}>
@@ -506,7 +507,14 @@ export default function AdminUsersPage() {
                 </TableCell>
                 <TableCell>
                   <div>
-                    <p className="font-medium text-sm">{u.display_name || u.email?.split('@')[0] || '—'}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-medium text-sm">{u.display_name || u.email?.split('@')[0] || '—'}</p>
+                      {(u as any).has_open_dispute && (
+                        <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/40 text-[10px] px-1.5 py-0 font-bold animate-pulse" title={`Disputa abierta: ${(u as any).dispute_stripe_id || ''}`}>
+                          ⚠️ DISPUTA
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">{u.email}</p>
                   </div>
                 </TableCell>
@@ -578,9 +586,17 @@ export default function AdminUsersPage() {
                     : <span className="text-xs text-muted-foreground">—</span>}
                 </TableCell>
                 <TableCell>
-                  {u.is_blocked
-                    ? <Badge className="bg-destructive/20 text-destructive">Bloqueado</Badge>
-                    : <Badge className="bg-green-500/20 text-green-400">Activo</Badge>}
+                  <div className="flex flex-col gap-1">
+                    {u.is_blocked
+                      ? <Badge className="bg-destructive/20 text-destructive">Bloqueado</Badge>
+                      : <Badge className="bg-green-500/20 text-green-400">Activo</Badge>}
+                    {(u as any).has_open_dispute && !(u as any).dispute_lost_at && (
+                      <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/40 text-[10px]">⚠️ Disputa</Badge>
+                    )}
+                    {(u as any).dispute_lost_at && (
+                      <Badge className="bg-red-700/30 text-red-400 border-red-600/40 text-[10px]">❌ Perdida</Badge>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell onClick={e => e.stopPropagation()}>
                   <DropdownMenu>
