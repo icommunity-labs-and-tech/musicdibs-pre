@@ -69,7 +69,13 @@ export default function UserDetailSheet({ user, open, onOpenChange }: UserDetail
 
         <div className="space-y-1">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Suscripción y créditos</h3>
-          <DetailRow icon={CreditCard} label="Plan" value={<Badge variant="outline">{user.subscription_plan}</Badge>} badge />
+          <DetailRow icon={CreditCard} label="Plan" value={<Badge variant="outline">{(() => {
+            const tier = (user as any).subscription_tier as string | null | undefined;
+            if (tier && tier.trim() !== '') {
+              return tier.charAt(0).toUpperCase() + tier.slice(1).replace(/_/g, ' ');
+            }
+            return user.subscription_plan || 'Free';
+          })()}</Badge>} badge />
           <DetailRow icon={Hash} label="Créditos disponibles" value={(() => {
             const perm = (user as any).permanent_credits ?? 0;
             const total = user.available_credits ?? 0;
