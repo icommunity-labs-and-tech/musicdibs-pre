@@ -187,7 +187,7 @@ const steps: Step[] = [
   },
 ];
 
-const stepIcons = [Sparkles, Wand2, ImageIcon, UserSquare2];
+const stepIcons = [Rocket, Sparkles, Wand2, ImageIcon, UserSquare2];
 
 export function HowItWorksDialog({
   open,
