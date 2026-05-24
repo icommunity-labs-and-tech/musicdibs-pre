@@ -788,7 +788,7 @@ serve(async (req) => {
           // ── Create renewal order ──
           const resolvedPlanId = priceId ? (PRICE_TO_PLAN_ID[priceId] || "unknown") : "unknown";
           const productType = getProductType(resolvedPlanId);
-          const planLabel = PLAN_ID_TO_PLAN_NAME[resolvedPlanId] ? `Renovación ${resolvedPlanId}` : `Renovación ${resolvedPlanId}`;
+          const planLabel = `Renovación ${resolvedPlanId}`;
 
           const renewalStripeFee = await getStripeFee(stripe, chargeId);
           const renewalOrder = await createOrderRecord(supabase, {
