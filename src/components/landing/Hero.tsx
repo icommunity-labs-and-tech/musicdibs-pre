@@ -58,7 +58,7 @@ export function Hero() {
           </div>
         </div>
 
-        <SongGenerator />
+        <PhoneVideoMockup />
       </div>
       <HowItWorksDialog open={howOpen} onOpenChange={setHowOpen} />
     </section>
