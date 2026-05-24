@@ -350,6 +350,7 @@ export default function AdminCreditCouponsPage() {
                   <TableHead>Canjes / Máx</TableHead>
                   <TableHead>Expira</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead className="w-12">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -368,6 +369,11 @@ export default function AdminCreditCouponsPage() {
                           {c.is_active ? 'Activo' : 'Inactivo'}
                         </Badge>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(c)} title="Editar cupón">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
