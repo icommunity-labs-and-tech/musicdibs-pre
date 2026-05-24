@@ -2201,7 +2201,11 @@ export type Database = {
           available_credits: number
           created_at: string
           display_name: string | null
+          dispute_lost_at: string | null
+          dispute_opened_at: string | null
+          dispute_stripe_id: string | null
           free_downloads_used: number | null
+          has_open_dispute: boolean
           ibs_signature_id: string | null
           id: string
           is_blocked: boolean | null
@@ -2231,7 +2235,11 @@ export type Database = {
           available_credits?: number
           created_at?: string
           display_name?: string | null
+          dispute_lost_at?: string | null
+          dispute_opened_at?: string | null
+          dispute_stripe_id?: string | null
           free_downloads_used?: number | null
+          has_open_dispute?: boolean
           ibs_signature_id?: string | null
           id?: string
           is_blocked?: boolean | null
@@ -2261,7 +2269,11 @@ export type Database = {
           available_credits?: number
           created_at?: string
           display_name?: string | null
+          dispute_lost_at?: string | null
+          dispute_opened_at?: string | null
+          dispute_stripe_id?: string | null
           free_downloads_used?: number | null
+          has_open_dispute?: boolean
           ibs_signature_id?: string | null
           id?: string
           is_blocked?: boolean | null

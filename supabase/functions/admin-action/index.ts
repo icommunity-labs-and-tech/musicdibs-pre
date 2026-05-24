@@ -5441,6 +5441,53 @@ serve(async (req) => {
       return json({ coupon: data });
     }
 
+    if (action === "update_credit_coupon") {
+      const {
+        coupon_id,
+        code,
+        campaign_name,
+        collaborator_name = null,
+        credits,
+        max_redemptions,
+        expires_at,
+      } = payload as Record<string, any>;
+
+      if (!coupon_id) return json({ error: "coupon_id requerido" }, 400);
+
+      const updateData: Record<string, any> = {};
+      if (code !== undefined) updateData.code = String(code).trim().toUpperCase();
+      if (campaign_name !== undefined) updateData.campaign_name = String(campaign_name).trim();
+      if (collaborator_name !== undefined) updateData.collaborator_name = collaborator_name ? String(collaborator_name).trim() : null;
+      if (credits !== undefined) updateData.credits = Math.max(1, parseInt(String(credits)) || 1);
+      if (max_redemptions !== undefined) updateData.max_redemptions = max_redemptions ? parseInt(String(max_redemptions)) : null;
+      if (expires_at !== undefined) updateData.expires_at = expires_at || null;
+
+      if (Object.keys(updateData).length === 1 && updateData.code === undefined) {
+        return json({ error: "No hay campos para actualizar" }, 400);
+      }
+
+      const { data, error } = await admin
+        .from("coupons")
+        .update(updateData)
+        .eq("id", coupon_id)
+        .select()
+        .single();
+
+      if (error) {
+        const msg = String(error.message || "");
+        if (msg.toLowerCase().includes("duplicate")) {
+          return json({ error: "Ya existe un cupón con ese código" }, 400);
+        }
+        return json({ error: msg }, 500);
+      }
+
+      await audit({
+        action: "update_credit_coupon",
+        details: { coupon_id, ...updateData },
+      });
+      return json({ coupon: data });
+    }
+
     if (action === "get_credit_coupon_conversions") {
       // Per-coupon conversion metrics
       const { data: coupons } = await admin

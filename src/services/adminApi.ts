@@ -159,6 +159,7 @@ export const adminApi = {
   exportOrdersCsv: () => adminAction('export_csv', { dataset: 'orders' }),
   listCreditCoupons: () => adminAction('list_credit_coupons'),
   createCreditCoupon: (payload: { code: string; campaign_name: string; collaborator_name?: string | null; credits?: number; max_redemptions?: number | null; expires_at?: string | null }) => adminAction('create_credit_coupon', payload),
+  updateCreditCoupon: (payload: { coupon_id: string; code?: string; campaign_name?: string; collaborator_name?: string | null; credits?: number; max_redemptions?: number | null; expires_at?: string | null }) => adminAction('update_credit_coupon', payload),
   toggleCreditCoupon: (coupon_id: string, is_active: boolean) => adminAction('toggle_credit_coupon', { coupon_id, is_active }),
   getCreditCouponConversions: () => adminAction('get_credit_coupon_conversions'),
 };

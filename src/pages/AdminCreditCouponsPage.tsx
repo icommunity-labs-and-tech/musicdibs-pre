@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { adminApi } from '@/services/adminApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Plus, RefreshCw, Gift, TrendingUp } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, Gift, TrendingUp, Pencil } from 'lucide-react';
 import { emitCouponVisibilityChange } from '@/hooks/useCouponRedemption';
 
 interface Coupon {
@@ -38,6 +38,8 @@ export default function AdminCreditCouponsPage() {
   const [conversions, setConversions] = useState<CouponConversion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [alwaysVisible, setAlwaysVisible] = useState(false);
@@ -98,7 +100,7 @@ export default function AdminCreditCouponsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const validate = () => {
+  const validate = (forEdit = false) => {
     const errs: Record<string, string> = {};
     const code = form.code.trim().toUpperCase();
     const campaign = form.campaign_name.trim();
@@ -109,7 +111,7 @@ export default function AdminCreditCouponsPage() {
     else if (code.length < 3) errs.code = 'Mínimo 3 caracteres';
     else if (code.length > 32) errs.code = 'Máximo 32 caracteres';
     else if (!/^[A-Z0-9_-]+$/.test(code)) errs.code = 'Solo letras, números, guiones y guiones bajos';
-    else if (coupons.some(c => c.code.toUpperCase() === code)) errs.code = 'Ya existe un cupón con ese código';
+    else if (coupons.some(c => c.code.toUpperCase() === code && (!forEdit || c.id !== editingCoupon?.id))) errs.code = 'Ya existe un cupón con ese código';
 
     if (!campaign) errs.campaign_name = 'El nombre de campaña es requerido';
     else if (campaign.length > 120) errs.campaign_name = 'Máximo 120 caracteres';
@@ -122,7 +124,6 @@ export default function AdminCreditCouponsPage() {
     if (form.expires_at) {
       const exp = new Date(form.expires_at);
       if (isNaN(exp.getTime())) errs.expires_at = 'Fecha inválida';
-      else if (exp.getTime() < Date.now()) errs.expires_at = 'Debe ser futura';
     }
 
     setErrors(errs);
@@ -166,6 +167,52 @@ export default function AdminCreditCouponsPage() {
       load();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Error');
+    }
+  };
+
+  const openEdit = (coupon: Coupon) => {
+    setEditingCoupon(coupon);
+    setForm({
+      code: coupon.code,
+      campaign_name: coupon.campaign_name,
+      collaborator_name: coupon.collaborator_name || '',
+      credits: String(coupon.credits),
+      max_redemptions: coupon.max_redemptions ? String(coupon.max_redemptions) : '',
+      expires_at: coupon.expires_at ? new Date(coupon.expires_at).toISOString().slice(0, 16) : '',
+    });
+    setErrors({});
+    setShowEdit(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingCoupon) return;
+    if (!validate(true)) return;
+    setSubmitting(true);
+    try {
+      await adminApi.updateCreditCoupon({
+        coupon_id: editingCoupon.id,
+        code: form.code.trim().toUpperCase(),
+        campaign_name: form.campaign_name.trim(),
+        collaborator_name: form.collaborator_name.trim() || null,
+        credits: parseInt(form.credits) || 1,
+        max_redemptions: form.max_redemptions ? parseInt(form.max_redemptions) : null,
+        expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
+      });
+      toast.success('Cupón actualizado');
+      setShowEdit(false);
+      setEditingCoupon(null);
+      setErrors({});
+      load();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al actualizar cupón';
+      if (/duplicate|already exists|unique|23505/i.test(msg)) {
+        setErrors(prev => ({ ...prev, code: 'Ya existe un cupón con ese código' }));
+        toast.error('Ya existe un cupón con ese código');
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -263,6 +310,82 @@ export default function AdminCreditCouponsPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          <Dialog open={showEdit} onOpenChange={(open) => { if (!open) { setShowEdit(false); setEditingCoupon(null); setErrors({}); } }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Editar cupón</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div>
+                  <Label>Código del cupón</Label>
+                  <Input
+                    value={form.code}
+                    onChange={(e) => { setForm(f => ({ ...f, code: e.target.value.replace(/\s+/g, '').toUpperCase() })); if (errors.code) setErrors(p => ({ ...p, code: '' })); }}
+                    onBlur={(e) => setForm(f => ({ ...f, code: e.target.value.trim().toUpperCase() }))}
+                    placeholder="REGALO10"
+                    maxLength={32}
+                    aria-invalid={!!errors.code}
+                  />
+                  {errors.code && <p className="text-xs text-destructive mt-1">{errors.code}</p>}
+                </div>
+                <div>
+                  <Label>Nombre de campaña</Label>
+                  <Input
+                    value={form.campaign_name}
+                    onChange={(e) => { setForm(f => ({ ...f, campaign_name: e.target.value })); if (errors.campaign_name) setErrors(p => ({ ...p, campaign_name: '' })); }}
+                    onBlur={(e) => setForm(f => ({ ...f, campaign_name: e.target.value.trim() }))}
+                    placeholder="Reto Canciones Mayo"
+                    maxLength={120}
+                    aria-invalid={!!errors.campaign_name}
+                  />
+                  {errors.campaign_name && <p className="text-xs text-destructive mt-1">{errors.campaign_name}</p>}
+                </div>
+                <div>
+                  <Label>Colaborador (opcional)</Label>
+                  <Input
+                    value={form.collaborator_name}
+                    onChange={(e) => setForm(f => ({ ...f, collaborator_name: e.target.value }))}
+                    onBlur={(e) => setForm(f => ({ ...f, collaborator_name: e.target.value.trim() }))}
+                    placeholder="Academia Juan Pérez"
+                    maxLength={120}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Créditos</Label>
+                    <Input type="number" min={1} max={10000} value={form.credits}
+                      onChange={(e) => { setForm(f => ({ ...f, credits: e.target.value })); if (errors.credits) setErrors(p => ({ ...p, credits: '' })); }}
+                      aria-invalid={!!errors.credits}
+                    />
+                    {errors.credits && <p className="text-xs text-destructive mt-1">{errors.credits}</p>}
+                  </div>
+                  <div>
+                    <Label>Máximo usos</Label>
+                    <Input type="number" min={1} value={form.max_redemptions}
+                      onChange={(e) => { setForm(f => ({ ...f, max_redemptions: e.target.value })); if (errors.max_redemptions) setErrors(p => ({ ...p, max_redemptions: '' })); }}
+                      placeholder="Ilimitado"
+                      aria-invalid={!!errors.max_redemptions}
+                    />
+                    {errors.max_redemptions && <p className="text-xs text-destructive mt-1">{errors.max_redemptions}</p>}
+                  </div>
+                </div>
+                <div>
+                  <Label>Fecha de expiración</Label>
+                  <Input type="datetime-local" value={form.expires_at}
+                    onChange={(e) => { setForm(f => ({ ...f, expires_at: e.target.value })); if (errors.expires_at) setErrors(p => ({ ...p, expires_at: '' })); }}
+                    aria-invalid={!!errors.expires_at}
+                  />
+                  {errors.expires_at && <p className="text-xs text-destructive mt-1">{errors.expires_at}</p>}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => { setShowEdit(false); setEditingCoupon(null); setErrors({}); }} disabled={submitting}>Cancelar</Button>
+                <Button onClick={handleUpdate} disabled={submitting}>
+                  {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />} Guardar cambios
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -303,6 +426,7 @@ export default function AdminCreditCouponsPage() {
                   <TableHead>Canjes / Máx</TableHead>
                   <TableHead>Expira</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead className="w-12">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -321,6 +445,11 @@ export default function AdminCreditCouponsPage() {
                           {c.is_active ? 'Activo' : 'Inactivo'}
                         </Badge>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm" onClick={() => openEdit(c)} title="Editar cupón">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
