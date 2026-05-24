@@ -106,7 +106,7 @@ export function VoiceToProduction() {
               </div>
 
               {/* Caption below */}
-              <p className="mt-5 text-center text-xs text-muted-foreground">
+              <p className="mt-5 text-center text-xs text-white/70">
                 🔊 Activa el sonido y escucha la magia
               </p>
             </div>
@@ -114,14 +114,14 @@ export function VoiceToProduction() {
 
           {/* Text side */}
           <div className="order-1 lg:order-2">
-            <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs text-muted-foreground mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs text-white/70 mb-6">
               <span className="h-2 w-2 rounded-full bg-magenta animate-pulse" />
               Voz a producción · IA
             </div>
             <h2 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight">
               Tu pones la voz. <span className="text-gradient-brand">La IA crea el hit.</span>
             </h2>
-            <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
+            <p className="mt-6 text-lg text-white/70 leading-relaxed">
               ¿Cantas? Sube tu voz a capela y nuestra IA construye toda la producción a tu alrededor: afinación profesional, instrumentación, arreglos y mezcla profesional en minutos. Tú pones la semilla, el AI Music Studio hace la magia.
             </p>
 
@@ -132,7 +132,7 @@ export function VoiceToProduction() {
                 </span>
                 <div>
                   <p className="font-medium">Sube tu voz</p>
-                  <p className="text-sm text-muted-foreground">Una toma rápida desde el móvil es suficiente.</p>
+                  <p className="text-sm text-white/70">Una toma rápida desde el móvil es suficiente.</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -141,7 +141,7 @@ export function VoiceToProduction() {
                 </span>
                 <div>
                   <p className="font-medium">La IA produce</p>
-                  <p className="text-sm text-muted-foreground">Genera instrumentación, arreglos y mezcla a medida.</p>
+                  <p className="text-sm text-white/70">Genera instrumentación, arreglos y mezcla a medida.</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -150,7 +150,7 @@ export function VoiceToProduction() {
                 </span>
                 <div>
                   <p className="font-medium">Listo para publicar</p>
-                  <p className="text-sm text-muted-foreground">Exporta tu track terminado en minutos.</p>
+                  <p className="text-sm text-white/70">Exporta tu track terminado en minutos.</p>
                 </div>
               </li>
             </ul>
@@ -162,7 +162,7 @@ export function VoiceToProduction() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-magenta to-pink px-8 py-4 text-base font-semibold text-white shadow-lg shadow-magenta/30 hover:shadow-magenta/50 hover:scale-[1.02] transition-all"
               >
-                Probar IA Music Studio GRATIS
+                Crear mi canción
               </a>
             </div>
           </div>
