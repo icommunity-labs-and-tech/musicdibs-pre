@@ -65,6 +65,7 @@ const DeferredHomeSections = () => {
       <ArtistsBanner />
       <WhyChooseSection />
       <AIStudioShowcase />
+      <VoiceToProduction />
       <BridgeStatement />
       <MasteringHighlight />
       <PromoVisualsShowcase />
