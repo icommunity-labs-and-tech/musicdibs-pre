@@ -40,7 +40,17 @@ export default function IAMusicStudio() {
           <Hero />
           <VoiceToProduction />
           <PromoVisualsShowcase />
-          
+
+          <section className="relative py-10">
+            <div className="mx-auto max-w-4xl px-6 text-center">
+              <div className="glass rounded-2xl px-8 py-6 border border-white/5">
+                <p className="text-base sm:text-lg text-foreground/90 leading-relaxed">
+                  Recuerda que en Musicdibs también puedes registrar los derechos de autor de tu música y distribuirla internacionalmente cuando esté lista.
+                </p>
+              </div>
+            </div>
+          </section>
+
           <SocialBanner />
           <Footer />
         </main>
