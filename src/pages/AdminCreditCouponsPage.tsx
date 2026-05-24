@@ -100,7 +100,7 @@ export default function AdminCreditCouponsPage() {
 
   useEffect(() => { load(); }, [load]);
 
-  const validate = () => {
+  const validate = (forEdit = false) => {
     const errs: Record<string, string> = {};
     const code = form.code.trim().toUpperCase();
     const campaign = form.campaign_name.trim();
@@ -111,7 +111,7 @@ export default function AdminCreditCouponsPage() {
     else if (code.length < 3) errs.code = 'Mínimo 3 caracteres';
     else if (code.length > 32) errs.code = 'Máximo 32 caracteres';
     else if (!/^[A-Z0-9_-]+$/.test(code)) errs.code = 'Solo letras, números, guiones y guiones bajos';
-    else if (coupons.some(c => c.code.toUpperCase() === code)) errs.code = 'Ya existe un cupón con ese código';
+    else if (coupons.some(c => c.code.toUpperCase() === code && (!forEdit || c.id !== editingCoupon?.id))) errs.code = 'Ya existe un cupón con ese código';
 
     if (!campaign) errs.campaign_name = 'El nombre de campaña es requerido';
     else if (campaign.length > 120) errs.campaign_name = 'Máximo 120 caracteres';
@@ -124,7 +124,6 @@ export default function AdminCreditCouponsPage() {
     if (form.expires_at) {
       const exp = new Date(form.expires_at);
       if (isNaN(exp.getTime())) errs.expires_at = 'Fecha inválida';
-      else if (exp.getTime() < Date.now()) errs.expires_at = 'Debe ser futura';
     }
 
     setErrors(errs);
