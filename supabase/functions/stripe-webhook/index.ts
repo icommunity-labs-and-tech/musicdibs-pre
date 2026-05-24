@@ -479,13 +479,36 @@ serve(async (req) => {
           });
         }
 
-        // Fetch previous plan BEFORE updating (to detect first annual purchase)
+        // Fetch previous plan BEFORE updating (to detect first annual purchase + plan switch)
         const { data: prevProfile } = await supabase
-          .from("profiles").select("subscription_plan").eq("user_id", userId).single();
+          .from("profiles").select("subscription_plan, available_credits, permanent_credits").eq("user_id", userId).single();
         const previousPlan = prevProfile?.subscription_plan || "Free";
 
         // Topups and individual packs never expire: add to permanent_credits too
         const isPermaPurchase = planId.startsWith("topup_") || planId === "individual";
+        const isSubscriptionPurchase = !isPermaPurchase && !!PLAN_ID_TO_PLAN_NAME[planId];
+
+        // ── Plan switch/upgrade: discard leftover non-permanent credits from previous subscription ──
+        // When a user moves between subscription plans (e.g. Monthly → Annual_*), the remaining
+        // monthly credits must NOT carry over. Only permanent credits (topups/individual) survive.
+        if (isSubscriptionPurchase && previousPlan !== "Free") {
+          const prevAvail = prevProfile?.available_credits ?? 0;
+          const prevPerm = prevProfile?.permanent_credits ?? 0;
+          const leftover = Math.max(0, prevAvail - prevPerm);
+          if (leftover > 0) {
+            await supabase.from("profiles")
+              .update({ available_credits: prevPerm, updated_at: new Date().toISOString() })
+              .eq("user_id", userId);
+            await supabase.from("credit_transactions").insert({
+              user_id: userId,
+              amount: -leftover,
+              type: "plan_switch_reset",
+              description: `Cambio de plan (${previousPlan} → ${planId}): se descartan ${leftover} créditos no permanentes del plan anterior`,
+            });
+            console.log(`[WEBHOOK] Plan switch ${previousPlan} → ${planId}: discarded ${leftover} leftover credits for user ${userId}`);
+          }
+        }
+
         await addCredits(supabase, userId, credits, `Compra plan ${planId}: +${credits} créditos`);
         if (isPermaPurchase) {
           const { data: permProf } = await supabase.from("profiles").select("permanent_credits").eq("user_id", userId).single();
