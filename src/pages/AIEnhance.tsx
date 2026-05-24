@@ -39,7 +39,7 @@ import { getFeatureCost } from "@/lib/featureCosts";
 import {
   ArrowLeft, Wand2, Loader2, Play, Pause,
   Download, RefreshCw, CheckCircle2, X,
-  Layers, Repeat2, Expand, AlertTriangle, BookOpen, Sparkles,
+  Layers, Repeat2, Expand, AlertTriangle, BookOpen, Sparkles, Mic2, AudioLines, Music2, ArrowRight,
   FileMusic, FileAudio, Mic,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -84,7 +84,7 @@ const MODES = [
     id: "instrumental" as EnhanceMode,
     labelKey: "aiEnhance.modeInstrumentalLabel",
     taglineKey: "aiEnhance.modeInstrumentalTagline",
-    icon: <Layers className="w-5 h-5" />,
+    icon: <Mic2 className="w-6 h-6" />,
     gradient: "from-violet-500 to-purple-600",
     placeholderKey: "aiEnhance.modeInstrumentalPlaceholder",
     useCaseKeys: [
