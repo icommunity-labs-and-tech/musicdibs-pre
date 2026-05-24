@@ -49,13 +49,9 @@ export function EcosystemContinuation() {
                 <Sparkles className="h-3 w-3" />
                 Todo en un mismo lugar
               </div>
-              <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight">
-                Tu canción no termina cuando la <span className="text-gradient-brand">IA la crea.</span>
+              <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl leading-tight text-gradient-brand">
+                Recuerda que en Musicdibs también puedes registrar los derechos de autor de tu música y distribución internacional cuando esté lista.
               </h2>
-              <p className="mt-3 text-muted-foreground max-w-2xl mx-auto lg:mx-0">
-                Recuerda que en Musicdibs también puedes proteger legalmente los derechos copyright
-                de tu canción y distribuirla internacionalmente cuando esté lista.
-              </p>
             </div>
 
             <div className="flex flex-wrap justify-center gap-3 shrink-0">
