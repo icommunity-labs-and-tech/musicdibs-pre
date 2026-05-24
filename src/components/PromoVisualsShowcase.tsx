@@ -180,9 +180,20 @@ const PromoCardItem = ({ card }: { card: PromoCard }) => {
   );
 };
 
+type MixedItem =
+  | { kind: "cover"; card: CoverCard }
+  | { kind: "promo"; card: PromoCard };
+
 export const PromoVisualsShowcase = () => {
-  const loopedCovers = [...COVER_CARDS, ...COVER_CARDS];
-  const loopedPromos = [...PROMO_CARDS, ...PROMO_CARDS];
+  const covers: MixedItem[] = COVER_CARDS.map((card) => ({ kind: "cover", card }));
+  const promos: MixedItem[] = PROMO_CARDS.map((card) => ({ kind: "promo", card }));
+  const mixed: MixedItem[] = [];
+  const maxLen = Math.max(covers.length, promos.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (i < covers.length) mixed.push(covers[i]);
+    if (i < promos.length) mixed.push(promos[i]);
+  }
+  const loopedMixed = [...mixed, ...mixed];
 
   const scrollToPricing = () => {
     document
