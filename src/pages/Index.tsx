@@ -10,6 +10,7 @@ import { lazyWithRetry } from "@/lib/lazyWithRetry";
 // Lazy-load below-fold sections to reduce initial JS and improve TTI
 const WhyChooseSection = lazyWithRetry(() => import("@/components/WhyChooseSection").then(m => ({ default: m.WhyChooseSection })));
 const AIStudioShowcase = lazyWithRetry(() => import("@/components/AIStudioShowcase").then(m => ({ default: m.AIStudioShowcase })));
+const VoiceToProduction = lazyWithRetry(() => import("@/components/landing/VoiceToProduction").then(m => ({ default: m.VoiceToProduction })));
 const BridgeStatement = lazyWithRetry(() => import("@/components/BridgeStatement").then(m => ({ default: m.BridgeStatement })));
 const PromoVisualsShowcase = lazyWithRetry(() => import("@/components/PromoVisualsShowcase").then(m => ({ default: m.PromoVisualsShowcase })));
 const MasteringHighlight = lazyWithRetry(() => import("@/components/MasteringHighlight").then(m => ({ default: m.MasteringHighlight })));
@@ -64,6 +65,7 @@ const DeferredHomeSections = () => {
       <ArtistsBanner />
       <WhyChooseSection />
       <AIStudioShowcase />
+      <VoiceToProduction />
       <BridgeStatement />
       <MasteringHighlight />
       <PromoVisualsShowcase />
