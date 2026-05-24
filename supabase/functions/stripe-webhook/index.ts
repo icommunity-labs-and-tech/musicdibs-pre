@@ -904,7 +904,7 @@ serve(async (req) => {
             stripeCustomerId: customerId || undefined,
             productType,
             productCode: planId,
-            productLabel: `Cambio a ${planName || planId}`,
+            productLabel: `Cambio a ${planId}`,
             billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
             stripeFee: changeStripeFee,
