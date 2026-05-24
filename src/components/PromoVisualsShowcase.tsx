@@ -180,9 +180,20 @@ const PromoCardItem = ({ card }: { card: PromoCard }) => {
   );
 };
 
+type MixedItem =
+  | { kind: "cover"; card: CoverCard }
+  | { kind: "promo"; card: PromoCard };
+
 export const PromoVisualsShowcase = () => {
-  const loopedCovers = [...COVER_CARDS, ...COVER_CARDS];
-  const loopedPromos = [...PROMO_CARDS, ...PROMO_CARDS];
+  const covers: MixedItem[] = COVER_CARDS.map((card) => ({ kind: "cover", card }));
+  const promos: MixedItem[] = PROMO_CARDS.map((card) => ({ kind: "promo", card }));
+  const mixed: MixedItem[] = [];
+  const maxLen = Math.max(covers.length, promos.length);
+  for (let i = 0; i < maxLen; i++) {
+    if (i < covers.length) mixed.push(covers[i]);
+    if (i < promos.length) mixed.push(promos[i]);
+  }
+  const loopedMixed = [...mixed, ...mixed];
 
   const scrollToPricing = () => {
     document
@@ -226,14 +237,14 @@ export const PromoVisualsShowcase = () => {
         </ScrollReveal>
       </div>
 
-      {/* Bloque 1 — Portadas */}
+      {/* Carrusel único — portadas + piezas intercaladas */}
       <div className="container mx-auto px-4 relative">
         <ScrollReveal>
           <div className="flex items-center gap-2 mb-5 sm:mb-6">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/85 text-xs sm:text-[13px] font-medium tracking-wide">
               <ImageIcon className="w-3.5 h-3.5 text-pink-300" />
-              Portadas para tu lanzamiento
+              Portadas y piezas para tu lanzamiento
             </div>
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
           </div>
@@ -250,41 +261,16 @@ export const PromoVisualsShowcase = () => {
         }}
       >
         <div className="promo-marquee flex gap-5 py-6 w-max">
-          {loopedCovers.map((card, i) => (
-            <CoverCardItem key={`cover-${card.title}-${i}`} card={card} />
-          ))}
+          {loopedMixed.map((item, i) =>
+            item.kind === "cover" ? (
+              <CoverCardItem key={`cover-${item.card.title}-${i}`} card={item.card} />
+            ) : (
+              <PromoCardItem key={`promo-${item.card.title}-${i}`} card={item.card} />
+            )
+          )}
         </div>
       </div>
 
-      {/* Bloque 2 — Piezas para redes */}
-      <div className="container mx-auto px-4 relative mt-8 sm:mt-10">
-        <ScrollReveal>
-          <div className="flex items-center gap-2 mb-5 sm:mb-6">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/85 text-xs sm:text-[13px] font-medium tracking-wide">
-              <Film className="w-3.5 h-3.5 text-purple-300" />
-              Piezas para moverlo en redes
-            </div>
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-          </div>
-        </ScrollReveal>
-      </div>
-
-      <div
-        className="relative group/marquee2"
-        style={{
-          maskImage:
-            "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-          WebkitMaskImage:
-            "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
-        }}
-      >
-        <div className="promo-marquee-reverse flex gap-5 py-6 w-max">
-          {loopedPromos.map((card, i) => (
-            <PromoCardItem key={`promo-${card.title}-${i}`} card={card} />
-          ))}
-        </div>
-      </div>
 
       {/* CTA único */}
       <div className="container mx-auto px-4 relative">
