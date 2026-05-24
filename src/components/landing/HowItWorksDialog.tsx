@@ -11,7 +11,9 @@ import {
   Upload,
   Lightbulb,
   Check,
+  Rocket,
 } from "lucide-react";
+import dashboardAiStudio from "@/assets/landing/tutorial/dashboard-ai-studio.png";
 import coverNeonPulse from "@/assets/landing/covers/neon-pulse.webp";
 import coverFuegoLento from "@/assets/landing/covers/fuego-lento.webp";
 import coverCaminoDeAbril from "@/assets/landing/covers/camino-de-abril.webp";
