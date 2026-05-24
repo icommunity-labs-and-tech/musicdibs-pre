@@ -90,7 +90,7 @@ const steps: Step[] = [
     ),
   },
   {
-    badge: "Paso 2 · Masterizar",
+    badge: "Paso 3 · Masterizar",
     title: "Masterización profesional con un clic",
     description:
       "Sube tu mezcla y obtén un master con calidad de estudio listo para publicar.",
