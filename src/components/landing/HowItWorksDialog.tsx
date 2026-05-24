@@ -11,7 +11,9 @@ import {
   Upload,
   Lightbulb,
   Check,
+  Rocket,
 } from "lucide-react";
+import dashboardAiStudio from "@/assets/landing/tutorial/dashboard-ai-studio.png";
 import coverNeonPulse from "@/assets/landing/covers/neon-pulse.webp";
 import coverFuegoLento from "@/assets/landing/covers/fuego-lento.webp";
 import coverCaminoDeAbril from "@/assets/landing/covers/camino-de-abril.webp";
@@ -29,7 +31,31 @@ type Step = {
 
 const steps: Step[] = [
   {
-    badge: "Paso 1 · Crear",
+    badge: "Paso 1 · Empieza",
+    title: "🚀 Regístrate y entra en AI Music Studio",
+    description:
+      "Dentro del AI Music Studio encontrarás todas las funciones para crear y mejorar tu música.",
+    mockup: (
+      <div className="relative h-full w-full rounded-xl overflow-hidden border border-magenta/30 bg-background/70">
+        <div className="absolute inset-0 bg-gradient-to-br from-magenta/10 via-transparent to-pink/10 pointer-events-none" />
+        <img
+          src={dashboardAiStudio}
+          alt="Panel de Musicdibs destacando AI Music Studio"
+          loading="lazy"
+          className="w-full h-full object-contain"
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            boxShadow:
+              "inset 0 0 60px rgba(217,70,239,0.25), inset 0 0 120px rgba(168,85,247,0.15)",
+          }}
+        />
+      </div>
+    ),
+  },
+  {
+    badge: "Paso 2 · Crear",
     title: "Crea tu canción desde una idea o mejora tu voz",
     description:
       "Escribe la idea de tu canción o sube una grabación de tu voz. La IA se encarga del resto.",
@@ -64,7 +90,7 @@ const steps: Step[] = [
     ),
   },
   {
-    badge: "Paso 2 · Masterizar",
+    badge: "Paso 3 · Masterizar",
     title: "Masterización profesional con un clic",
     description:
       "Sube tu mezcla y obtén un master con calidad de estudio listo para publicar.",
@@ -111,7 +137,7 @@ const steps: Step[] = [
     ),
   },
   {
-    badge: "Paso 3 · Material visual",
+    badge: "Paso 4 · Material visual",
     title: "Genera todo el material promocional",
     description:
       "Portadas, posts, reels, flyers y vídeos creados automáticamente a partir de tu canción.",
@@ -134,7 +160,7 @@ const steps: Step[] = [
     ),
   },
   {
-    badge: "Paso 4 · Artistas virtuales",
+    badge: "Paso 5 · Artistas virtuales",
     title: "Diseña tus propios artistas con IA",
     description:
       "Crea avatares de artistas únicos, personaliza su estilo y úsalos en tus campañas.",
@@ -161,7 +187,7 @@ const steps: Step[] = [
   },
 ];
 
-const stepIcons = [Sparkles, Wand2, ImageIcon, UserSquare2];
+const stepIcons = [Rocket, Sparkles, Wand2, ImageIcon, UserSquare2];
 
 export function HowItWorksDialog({
   open,
