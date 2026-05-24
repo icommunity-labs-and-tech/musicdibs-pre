@@ -170,6 +170,52 @@ export default function AdminCreditCouponsPage() {
     }
   };
 
+  const openEdit = (coupon: Coupon) => {
+    setEditingCoupon(coupon);
+    setForm({
+      code: coupon.code,
+      campaign_name: coupon.campaign_name,
+      collaborator_name: coupon.collaborator_name || '',
+      credits: String(coupon.credits),
+      max_redemptions: coupon.max_redemptions ? String(coupon.max_redemptions) : '',
+      expires_at: coupon.expires_at ? new Date(coupon.expires_at).toISOString().slice(0, 16) : '',
+    });
+    setErrors({});
+    setShowEdit(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editingCoupon) return;
+    if (!validate(true)) return;
+    setSubmitting(true);
+    try {
+      await adminApi.updateCreditCoupon({
+        coupon_id: editingCoupon.id,
+        code: form.code.trim().toUpperCase(),
+        campaign_name: form.campaign_name.trim(),
+        collaborator_name: form.collaborator_name.trim() || null,
+        credits: parseInt(form.credits) || 1,
+        max_redemptions: form.max_redemptions ? parseInt(form.max_redemptions) : null,
+        expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
+      });
+      toast.success('Cupón actualizado');
+      setShowEdit(false);
+      setEditingCoupon(null);
+      setErrors({});
+      load();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al actualizar cupón';
+      if (/duplicate|already exists|unique|23505/i.test(msg)) {
+        setErrors(prev => ({ ...prev, code: 'Ya existe un cupón con ese código' }));
+        toast.error('Ya existe un cupón con ese código');
+      } else {
+        toast.error(msg);
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const fmtDate = (s: string | null) => s ? new Date(s).toLocaleDateString('es-ES') : '—';
 
   return (
