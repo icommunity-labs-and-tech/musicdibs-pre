@@ -41,13 +41,41 @@ export default function IAMusicStudio() {
           <VoiceToProduction />
           <PromoVisualsShowcase />
 
-          <section className="relative py-10">
-            <div className="mx-auto max-w-4xl px-6 text-center">
-              <div className="glass rounded-2xl px-8 py-6 border border-white/5">
-                <p className="text-base sm:text-lg text-foreground/90 leading-relaxed">
-                  Recuerda que en Musicdibs también puedes registrar los derechos de autor de tu música y distribuirla internacionalmente cuando esté lista.
-                </p>
-              </div>
+          <section className="relative py-28 sm:py-36">
+            <div className="mx-auto max-w-5xl px-6 text-center animate-fade-in">
+              <p
+                className="font-display font-semibold tracking-tight text-foreground/90 text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.15]"
+                style={{ textWrap: "balance" as any }}
+              >
+                Y cuando tu canción esté lista…{" "}
+                <span className="block sm:inline text-foreground/70 font-medium">
+                  también puedes{" "}
+                </span>
+                <span
+                  className="bg-clip-text text-transparent font-bold"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, oklch(0.85 0.25 322), oklch(0.72 0.28 295))",
+                    filter:
+                      "drop-shadow(0 0 24px oklch(0.68 0.27 322 / 0.45))",
+                  }}
+                >
+                  registrar sus derechos de autor
+                </span>
+                <span className="text-foreground/70 font-medium"> y </span>
+                <span
+                  className="bg-clip-text text-transparent font-semibold"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(90deg, oklch(0.92 0.05 322), oklch(0.85 0.12 295))",
+                  }}
+                >
+                  distribuirla internacionalmente
+                </span>
+                <span className="text-foreground/70 font-medium"> con </span>
+                <span className="text-foreground font-semibold">Musicdibs</span>
+                <span className="text-foreground/70">.</span>
+              </p>
             </div>
           </section>
 
