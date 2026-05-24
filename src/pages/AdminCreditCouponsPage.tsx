@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { adminApi } from '@/services/adminApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Plus, RefreshCw, Gift, TrendingUp } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, Gift, TrendingUp, Pencil } from 'lucide-react';
 import { emitCouponVisibilityChange } from '@/hooks/useCouponRedemption';
 
 interface Coupon {
