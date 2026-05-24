@@ -122,7 +122,7 @@ export function VoiceToProduction() {
               Tu pones la voz. <span className="text-gradient-brand">La IA crea el hit.</span>
             </h2>
             <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-              Sube tu voz a capela y nuestra IA construye toda la producción a tu alrededor: afinación profesional, instrumentación, arreglos y mezcla profesional en minutos. Tú pones la semilla, el AI Music Studio hace la magia.
+              ¿Cantas? Sube tu voz a capela y nuestra IA construye toda la producción a tu alrededor: afinación profesional, instrumentación, arreglos y mezcla profesional en minutos. Tú pones la semilla, el AI Music Studio hace la magia.
             </p>
 
             <ul className="mt-8 space-y-4">
