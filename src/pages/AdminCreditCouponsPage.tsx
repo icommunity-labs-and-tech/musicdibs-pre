@@ -38,6 +38,8 @@ export default function AdminCreditCouponsPage() {
   const [conversions, setConversions] = useState<CouponConversion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [alwaysVisible, setAlwaysVisible] = useState(false);
