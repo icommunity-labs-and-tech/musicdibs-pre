@@ -989,6 +989,171 @@ serve(async (req) => {
           console.warn(`[WEBHOOK] subscription_update: no profile found for customer ${customerId}`);
         }
       }
+
+      // ── Nueva suscripción creada directamente (sin Checkout Session) ─────
+      if (billingReason === "subscription_create") {
+        const profile = await findProfileByCustomerId(supabase, stripe, customerId);
+
+        if (profile) {
+          // Idempotency guard: skip if this create invoice was already processed
+          if (invoiceId) {
+            const { data: existingCreateOrder } = await supabase
+              .from("orders")
+              .select("id")
+              .eq("stripe_invoice_id", invoiceId)
+              .maybeSingle();
+
+            if (existingCreateOrder) {
+              console.log(`[WEBHOOK] Duplicate subscription_create for invoice ${invoiceId} — skipping`);
+              return new Response(JSON.stringify({ received: true, duplicate: true }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+              });
+            }
+          }
+
+          // Resolve price from subscription (more reliable than invoice line items)
+          let actualPriceId = priceId;
+          if (subscriptionId) {
+            const subPriceId = await getSubscriptionPriceId(stripe, subscriptionId);
+            if (subPriceId) {
+              actualPriceId = subPriceId;
+              console.log(`[WEBHOOK] subscription_create: resolved price ${actualPriceId} from subscription ${subscriptionId}`);
+            }
+          }
+
+          const resolvedPlanId = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
+          const planName = resolvedPlanId ? (PLAN_ID_TO_PLAN_NAME[resolvedPlanId] || null) : null;
+
+          // Update plan/tier in profile
+          if (planName && resolvedPlanId) {
+            await supabase.from("profiles")
+              .update({ subscription_plan: planName, subscription_tier: resolvedPlanId, updated_at: new Date().toISOString() })
+              .eq("user_id", profile.user_id);
+            console.log(`[WEBHOOK] subscription_create: set plan ${planName} (tier=${resolvedPlanId}) for user ${profile.user_id}`);
+          }
+
+          // Resolve credits (after setting tier so resolveCreditsForUser finds correct tier)
+          const { credits: createCredits, source: createSource, tier: createTier } = await resolveCreditsForUser(supabase, profile.user_id, actualPriceId);
+          console.log(`[WEBHOOK] subscription_create: credits=${createCredits} source=${createSource} tier=${createTier} price=${actualPriceId}`);
+
+          if (createCredits > 0) {
+            await addCredits(supabase, profile.user_id, createCredits, `Alta suscripción ${resolvedPlanId || actualPriceId}: +${createCredits} créditos`);
+            console.log(`[WEBHOOK] subscription_create: added ${createCredits} credits to user ${profile.user_id}`);
+          } else {
+            console.warn(`[WEBHOOK] subscription_create: no credits mapping for price ${actualPriceId} (tier=${createTier})`);
+          }
+
+          // Save stripe_customer_id
+          if (customerId) {
+            await supabase.from("profiles").update({ stripe_customer_id: customerId }).eq("user_id", profile.user_id);
+          }
+
+          // Create order record
+          const createProductType = resolvedPlanId ? getProductType(resolvedPlanId) : "unknown";
+          const createStripeFee = await getStripeFee(stripe, chargeId);
+          const createOrder = await createOrderRecord(supabase, {
+            userId: profile.user_id,
+            stripeInvoiceId: invoiceId,
+            stripeSubscriptionId: subscriptionId,
+            stripeChargeId: chargeId || undefined,
+            stripeCustomerId: customerId || undefined,
+            productType: createProductType,
+            productCode: resolvedPlanId || "unknown",
+            productLabel: `Nueva suscripción ${resolvedPlanId || "unknown"}`,
+            billingInterval: createProductType === "annual" ? "yearly" : createProductType === "monthly" ? "monthly" : null,
+            amountGross: invoiceAmount,
+            stripeFee: createStripeFee,
+            currency: invoiceCurrency,
+            isSubscription: true,
+            isRenewal: false,
+            metadata: {},
+          });
+
+          // Purchase evidence
+          {
+            const { data: { user: crUser } } = await supabase.auth.admin.getUserById(profile.user_id);
+            const { data: crProfile } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
+            await createPurchaseEvidence(supabase, {
+              userId: profile.user_id,
+              orderId: createOrder?.id,
+              email: crUser?.email,
+              displayName: crProfile?.display_name,
+              productType: createProductType,
+              productName: `Nueva suscripción ${resolvedPlanId || "unknown"}`,
+              amount: invoiceAmount,
+              currency: invoiceCurrency,
+              paymentStatus: "succeeded",
+            });
+          }
+
+          // MailerLite sync
+          try {
+            const { data: { user: crMlUser } } = await supabase.auth.admin.getUserById(profile.user_id);
+            if (crMlUser?.email) {
+              const { data: crMlProfile } = await supabase.from("profiles").select("language").eq("user_id", profile.user_id).single();
+              await syncMailerLite("purchase.completed", {
+                email: crMlUser.email,
+                locale: crMlProfile?.language || "es",
+                plan_type: planToMailerLiteType(planName || ""),
+                stripe_customer_id: customerId,
+              });
+            }
+          } catch (mlCreateErr) { console.warn("[WEBHOOK] subscription_create MailerLite error:", mlCreateErr); }
+
+          // Distribution emails for annual plans
+          const ANNUAL_IDS_CREATE = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
+          if (resolvedPlanId && ANNUAL_IDS_CREATE.includes(resolvedPlanId)) {
+            try {
+              const { data: { user: distUser } } = await supabase.auth.admin.getUserById(profile.user_id);
+              const distEmail = distUser?.email || "desconocido";
+              const { data: distProfile } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
+              const distName = distProfile?.display_name || distEmail.split("@")[0];
+
+              const distHtml = `<h2>🎵 Nuevo alta en Distribución</h2><p>Un usuario ha contratado su primera suscripción anual y necesita ser dado de alta en la plataforma de distribución.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${resolvedPlanId}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Créditos:</td><td style="padding:6px 12px;">${createCredits}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${profile.user_id}</td></tr></table><p>👉 <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
+              const distText = `Nuevo alta en Distribución
+Usuario: ${distName}
+Email: ${distEmail}
+Plan: ${resolvedPlanId}
+Créditos: ${createCredits}
+User ID: ${profile.user_id}
+Dar de alta en: https://musicdibs.sonosuite.com/`;
+
+              const distMsgId = crypto.randomUUID();
+              await supabase.from("email_send_log").insert({ message_id: distMsgId, template_name: "distribution_onboarding", recipient_email: "marketing@musicdibs.com", status: "pending" });
+              await supabase.rpc("enqueue_email", {
+                queue_name: "transactional_emails",
+                payload: {
+                  idempotency_key: `dist-onboard-${profile.user_id}-${resolvedPlanId}`, message_id: distMsgId,
+                  to: "marketing@musicdibs.com", cc: "info@musicdibs.com",
+                  from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
+                  subject: "Nuevo alta en Distribución", html: distHtml, text: distText,
+                  purpose: "transactional", label: "distribution_onboarding", queued_at: new Date().toISOString(),
+                },
+              });
+
+              const userMsgId = crypto.randomUUID();
+              const { data: distLangProfile } = await supabase.from("profiles").select("language").eq("user_id", profile.user_id).single();
+              const distLang = distLangProfile?.language || distUser?.user_metadata?.language || "es";
+              const distWelcome = distributionWelcomeEmail({ name: distName, email: distEmail, planId: resolvedPlanId, lang: distLang });
+              await supabase.from("email_send_log").insert({ message_id: userMsgId, template_name: "distribution_welcome", recipient_email: distEmail, status: "pending" });
+              await supabase.rpc("enqueue_email", {
+                queue_name: "transactional_emails",
+                payload: {
+                  to: distEmail, from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
+                  subject: distWelcome.subject, html: distWelcome.html, text: distWelcome.text,
+                  purpose: "transactional", idempotency_key: `dist-welcome-${profile.user_id}-${resolvedPlanId}`, message_id: userMsgId,
+                  label: "distribution_welcome", queued_at: new Date().toISOString(),
+                },
+              });
+              console.log(`[WEBHOOK] ✅ Distribution emails enqueued for ${distEmail} (subscription_create)`);
+            } catch (distCreateErr) {
+              console.error("[WEBHOOK] Error enqueuing distribution emails (subscription_create):", distCreateErr);
+            }
+          }
+        } else {
+          console.warn(`[WEBHOOK] subscription_create: no profile found for customer ${customerId}`);
+        }
+      }
     }
 
     // ── invoice.payment_failed / invoice_payment.failed ──────────────────
