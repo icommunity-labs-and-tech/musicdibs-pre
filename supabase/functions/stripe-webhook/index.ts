@@ -851,6 +851,14 @@ serve(async (req) => {
             }
           }
 
+          // Fetch previous plan BEFORE updating (to detect Monthly → Annual upgrade)
+          const { data: prevUpgradeProfile } = await supabase
+            .from("profiles")
+            .select("subscription_plan")
+            .eq("user_id", profile.user_id)
+            .single();
+          const previousPlanBeforeUpgrade = prevUpgradeProfile?.subscription_plan || "Free";
+
           // For subscription_update, invoice line items contain proration entries
           // whose price is the OLD plan. Get the NEW plan's price from the subscription.
           let actualPriceId = priceId;
@@ -889,6 +897,53 @@ serve(async (req) => {
                 plan_type: planToMailerLiteType(planName),
                 stripe_customer_id: customerId,
               });
+            }
+          }
+
+          // ── Distribution onboarding: upgrade Monthly → Annual ──
+          const ANNUAL_IDS_UP = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
+          if (resolvedPlanId && ANNUAL_IDS_UP.includes(resolvedPlanId) && previousPlanBeforeUpgrade !== "Annual") {
+            try {
+              const { data: { user: distUser } } = await supabase.auth.admin.getUserById(profile.user_id);
+              const distEmail = distUser?.email || "desconocido";
+              const { data: distProfile } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
+              const distName = distProfile?.display_name || distEmail.split("@")[0];
+
+              const distHtml = `<h2>🎵 Nuevo alta en Distribución (upgrade)</h2><p>Un usuario ha hecho upgrade a suscripción anual y necesita ser dado de alta en la plataforma de distribución.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${resolvedPlanId}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${profile.user_id}</td></tr></table><p>👉 <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
+              const distText = `Nuevo alta en Distribución (upgrade)\nUsuario: ${distName}\nEmail: ${distEmail}\nPlan: ${resolvedPlanId}\nUser ID: ${profile.user_id}\nDar de alta en: https://musicdibs.sonosuite.com/`;
+
+              const distMsgId = crypto.randomUUID();
+              await supabase.from("email_send_log").insert({ message_id: distMsgId, template_name: "distribution_onboarding", recipient_email: "marketing@musicdibs.com", status: "pending" });
+              await supabase.rpc("enqueue_email", {
+                queue_name: "transactional_emails",
+                payload: {
+                  idempotency_key: `dist-onboard-${profile.user_id}-${resolvedPlanId}`, message_id: distMsgId,
+                  to: "marketing@musicdibs.com", cc: "info@musicdibs.com",
+                  from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
+                  subject: "Nuevo alta en Distribución (upgrade)", html: distHtml, text: distText,
+                  purpose: "transactional", label: "distribution_onboarding", queued_at: new Date().toISOString(),
+                },
+              });
+              console.log(`[WEBHOOK] ✅ Distribution onboarding email enqueued (upgrade) for user ${distEmail}`);
+
+              // User-facing email: distribution access info
+              const userMsgId = crypto.randomUUID();
+              const { data: distLangProfile } = await supabase.from("profiles").select("language").eq("user_id", profile.user_id).single();
+              const distLang = distLangProfile?.language || distUser?.user_metadata?.language || "es";
+              const distWelcome = distributionWelcomeEmail({ name: distName, email: distEmail, planId: resolvedPlanId, lang: distLang });
+              await supabase.from("email_send_log").insert({ message_id: userMsgId, template_name: "distribution_welcome", recipient_email: distEmail, status: "pending" });
+              await supabase.rpc("enqueue_email", {
+                queue_name: "transactional_emails",
+                payload: {
+                  to: distEmail, from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
+                  subject: distWelcome.subject, html: distWelcome.html, text: distWelcome.text,
+                  purpose: "transactional", idempotency_key: `dist-welcome-${profile.user_id}-${resolvedPlanId}`, message_id: userMsgId,
+                  label: "distribution_welcome", queued_at: new Date().toISOString(),
+                },
+              });
+              console.log(`[WEBHOOK] ✅ Distribution welcome email enqueued (upgrade) for ${distEmail}`);
+            } catch (distUpgradeErr) {
+              console.error("[WEBHOOK] Error enqueuing distribution upgrade emails:", distUpgradeErr);
             }
           }
 
@@ -1230,109 +1285,4 @@ serve(async (req) => {
           const profile = await findProfileByCustomerId(supabase, stripe, customerId);
           if (profile) {
             // Cancelar suscripción activa si Stripe no lo hizo automáticamente
-            const { data: subs } = await supabase
-              .from("subscriptions")
-              .select("stripe_subscription_id, status")
-              .eq("user_id", profile.user_id)
-              .in("status", ["active", "past_due"])
-              .limit(1);
-
-            if (subs && subs.length > 0 && subs[0].stripe_subscription_id) {
-              try {
-                await stripe.subscriptions.cancel(subs[0].stripe_subscription_id);
-                console.log(`[WEBHOOK] Subscription ${subs[0].stripe_subscription_id} cancelled due to lost dispute`);
-              } catch (cancelErr: any) {
-                // Ignorar si ya está cancelada
-                if (!cancelErr.message?.includes("No such subscription")) {
-                  console.warn("[WEBHOOK] Error cancelling sub on dispute lost:", cancelErr);
-                }
-              }
-            }
-
-            // Downgrade a Free y quitar créditos
-            await supabase.from("profiles").update({
-              subscription_plan: "Free",
-              subscription_tier: null,
-              available_credits: 0,
-              permanent_credits: 0,
-              has_open_dispute: true,
-              dispute_lost_at: new Date().toISOString(),
-              is_blocked: true,
-            }).eq("user_id", profile.user_id);
-
-            console.log(`[WEBHOOK] ✅ User ${profile.user_id} downgraded to Free after lost dispute ${disputeId}`);
-
-            // Notificar al admin
-            try {
-              const alertUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/notify-admin-alert`;
-              await fetch(alertUrl, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-                },
-                body: JSON.stringify({
-                  type: "dispute_lost",
-                  user_id: profile.user_id,
-                  dispute_id: disputeId,
-                  amount: dispute.amount,
-                  currency: dispute.currency,
-                }),
-              });
-            } catch (alertErr) {
-              console.warn("[WEBHOOK] notify-admin-alert error:", alertErr);
-            }
-          }
-        }
-      } catch (dispErr) {
-        console.error(`[WEBHOOK] Error processing dispute.lost ${disputeId}:`, dispErr);
-      }
-    }
-
-    // ── charge.dispute.won ──────────────────────────────────────────────
-    if (event.type === "charge.dispute.won") {
-      const dispute = event.data.object as Stripe.Dispute;
-      const chargeId = typeof dispute.charge === "string" ? dispute.charge : (dispute.charge as any)?.id ?? "";
-      const disputeId = dispute.id;
-
-      console.log(`[WEBHOOK] Dispute WON: ${disputeId}`);
-
-      try {
-        const charge = await stripe.charges.retrieve(chargeId);
-        const customerId = typeof charge.customer === "string" ? charge.customer : (charge.customer as any)?.id ?? "";
-        if (customerId) {
-          const profile = await findProfileByCustomerId(supabase, stripe, customerId);
-          if (profile) {
-            // Limpiar flags de disputa (el bloqueo lo desactiva admin manualmente si procede)
-            await supabase.from("profiles").update({
-              has_open_dispute: false,
-              dispute_stripe_id: null,
-              dispute_opened_at: null,
-            }).eq("user_id", profile.user_id);
-
-            console.log(`[WEBHOOK] ✅ Dispute won — flags cleared for user ${profile.user_id}`);
-          }
-        }
-      } catch (dispErr) {
-        console.error(`[WEBHOOK] Error processing dispute.won ${disputeId}:`, dispErr);
-      }
-    }
-
-    return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("[WEBHOOK] Error:", msg);
-    return new Response(JSON.stringify({ error: msg }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 });
-  }
-});
-
-async function addCredits(supabase: any, userId: string, credits: number, description: string) {
-  await supabase.from("credit_transactions").insert({ user_id: userId, amount: credits, type: "purchase", description });
-  const { data: profile } = await supabase.from("profiles").select("available_credits").eq("user_id", userId).single();
-  if (profile) {
-    await supabase.from("profiles").update({ available_credits: profile.available_credits + credits }).eq("user_id", userId);
-  }
-  console.log(`[WEBHOOK] Added ${credits} credits to user ${userId}`);
-}
-
+            const { data: subs
