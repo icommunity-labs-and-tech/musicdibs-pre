@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 const AIMusicStudioPopup = () => {
   const items = [
-    { icon: Music, title: "De maqueta a canción profesional", desc: "Sube tu voz a capela, melodía o demo y deja que la IA cree una producción profesional en minutos. Y genera nuevas versiones.", color: "from-pink-500 to-fuchsia-500" },
+    { icon: Music, title: "Crear canciones", desc: "Canciones completas, instrumentales o con voz.", color: "from-pink-500 to-fuchsia-500" },
     { icon: Sliders, title: "Masterizar", desc: "Mejora el sonido y déjalo listo para plataformas.", color: "from-fuchsia-500 to-purple-500" },
     { icon: PenLine, title: "Crear letras", desc: "Genera ideas, letras y estructuras en segundos.", color: "from-purple-500 to-violet-500" },
     { icon: ImageIcon, title: "Diseñar portadas", desc: "Arte visual para singles, EPs y álbumes.", color: "from-violet-500 to-indigo-500" },
