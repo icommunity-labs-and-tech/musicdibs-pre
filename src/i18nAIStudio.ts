@@ -274,7 +274,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
     },
     aiEnhance: {
       seoTitle: 'De maqueta a canción profesional',
-      seoDesc: 'Sube tu voz, melodía o demo y deja que la IA cree una producción profesional. Extiende tus canciones o genera nuevas versiones.',
+      seoDesc: 'Sube tu voz a capela, melodía o demo y deja que la IA cree una producción profesional. Y genera nuevas versiones.',
       pageTitle: '🎼 De maqueta a canción profesional',
       pageSubtitle: 'Trabaja sobre ideas musicales reales creadas por ti.',
       backLink: 'AI Studio',
