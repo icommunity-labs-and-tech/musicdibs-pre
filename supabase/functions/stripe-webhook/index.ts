@@ -1173,14 +1173,15 @@ serve(async (req) => {
       }
     }
 
-    // ── charge.dispute.updated — safety net si created se perdió ───────
+
+    // -- charge.dispute.updated -- safety net si created se perdio ------
     if (event.type === "charge.dispute.updated") {
       const dispute = event.data.object as Stripe.Dispute;
       const chargeId = typeof dispute.charge === "string" ? dispute.charge : (dispute.charge as any)?.id ?? "";
       const disputeId = dispute.id;
       const disputeStatus = dispute.status;
 
-      // Solo actuar si la disputa sigue abierta (not won, not lost — esos los gestionan sus propios eventos)
+      // Solo actuar si la disputa sigue abierta (not won, not lost)
       if (disputeStatus !== "won" && disputeStatus !== "lost") {
         console.log(`[WEBHOOK] Dispute updated: ${disputeId} status=${disputeStatus}`);
         try {
@@ -1189,10 +1190,9 @@ serve(async (req) => {
           if (customerId) {
             const profile = await findProfileByCustomerId(supabase, stripe, customerId);
             if (profile) {
-              // Solo actualizar si aún no estaba marcado (evitar sobreescribir dispute_opened_at real)
               const { data: existing } = await supabase
                 .from("profiles")
-                .select("has_open_dispute, dispute_stripe_id, dispute_opened_at")
+                .select("has_open_dispute")
                 .eq("user_id", profile.user_id)
                 .single();
 
@@ -1203,9 +1203,9 @@ serve(async (req) => {
                   dispute_opened_at: new Date(dispute.created * 1000).toISOString(),
                   is_blocked: true,
                 }).eq("user_id", profile.user_id);
-                console.log(`[WEBHOOK] ✅ Dispute.updated safety net — flagged user ${profile.user_id} (${disputeId}, status=${disputeStatus})`);
+                console.log(`[WEBHOOK] Dispute.updated safety net -- flagged user ${profile.user_id} (${disputeId}, status=${disputeStatus})`);
               } else {
-                console.log(`[WEBHOOK] Dispute.updated — user ${profile.user_id} already flagged, skipping`);
+                console.log(`[WEBHOOK] Dispute.updated -- user ${profile.user_id} already flagged, skipping`);
               }
             }
           }
@@ -1289,4 +1289,50 @@ serve(async (req) => {
       }
     }
 
-    // ── charge.dispute.won ─────────────────────────────────────────�
+    // ── charge.dispute.won ──────────────────────────────────────────────
+    if (event.type === "charge.dispute.won") {
+      const dispute = event.data.object as Stripe.Dispute;
+      const chargeId = typeof dispute.charge === "string" ? dispute.charge : (dispute.charge as any)?.id ?? "";
+      const disputeId = dispute.id;
+
+      console.log(`[WEBHOOK] Dispute WON: ${disputeId}`);
+
+      try {
+        const charge = await stripe.charges.retrieve(chargeId);
+        const customerId = typeof charge.customer === "string" ? charge.customer : (charge.customer as any)?.id ?? "";
+        if (customerId) {
+          const profile = await findProfileByCustomerId(supabase, stripe, customerId);
+          if (profile) {
+            // Limpiar flags de disputa (el bloqueo lo desactiva admin manualmente si procede)
+            await supabase.from("profiles").update({
+              has_open_dispute: false,
+              dispute_stripe_id: null,
+              dispute_opened_at: null,
+            }).eq("user_id", profile.user_id);
+
+            console.log(`[WEBHOOK] ✅ Dispute won — flags cleared for user ${profile.user_id}`);
+          }
+        }
+      } catch (dispErr) {
+        console.error(`[WEBHOOK] Error processing dispute.won ${disputeId}:`, dispErr);
+      }
+    }
+
+    return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : "Unknown error";
+    console.error("[WEBHOOK] Error:", msg);
+    return new Response(JSON.stringify({ error: msg }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 });
+  }
+});
+
+async function addCredits(supabase: any, userId: string, credits: number, description: string) {
+  await supabase.from("credit_transactions").insert({ user_id: userId, amount: credits, type: "purchase", description });
+  const { data: profile } = await supabase.from("profiles").select("available_credits").eq("user_id", userId).single();
+  if (profile) {
+    await supabase.from("profiles").update({ available_credits: profile.available_credits + credits }).eq("user_id", userId);
+  }
+  console.log(`[WEBHOOK] Added ${credits} credits to user ${userId}`);
+}
+
