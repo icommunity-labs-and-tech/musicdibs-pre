@@ -1111,9 +1111,9 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       backToStudio: 'Back to AI Music Studio',
     },
     aiEnhance: {
-      seoTitle: 'Enhance your songs',
-      seoDesc: 'Upload your demos and add production, extend your idea into a full song or generate new versions.',
-      pageTitle: '🎼 Enhance your songs',
+      seoTitle: 'From demo to professional song',
+      seoDesc: 'Upload your voice, melody or demo and let AI create a professional production. Extend your songs or generate new versions.',
+      pageTitle: '🎼 From demo to professional song',
       pageSubtitle: 'Work on real musical ideas created by you.',
       backLink: 'AI Studio',
       guideBtn: 'AI Guide',
