@@ -370,7 +370,7 @@ export default function RegistroMusicalPage() {
                       border: "1px solid oklch(0.85 0.22 340 / 0.4)",
                       boxShadow:
                         "0 25px 50px -10px #8B5CF6, 0 0 30px -5px oklch(0.85 0.22 340 / 0.5)",
-                      transform: "rotate(-3deg)",
+                      transform: "rotate(3deg)",
                     }}
                   >
                     <div className="flex items-center gap-2 mb-2">
