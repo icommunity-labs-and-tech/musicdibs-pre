@@ -363,7 +363,7 @@ export default function RegistroMusicalPage() {
 
                   {/* Floating accent card (front) — Stats */}
                   <div
-                    className="absolute -bottom-6 -left-4 z-30 glass rounded-2xl px-4 py-3 w-[200px] hidden sm:block"
+                    className="absolute -bottom-8 -right-6 z-30 glass rounded-2xl px-4 py-3 w-[200px] hidden sm:block"
                     style={{
                       animation: "landing-orb-float 8s ease-in-out infinite",
                       animationDelay: "1.5s",
