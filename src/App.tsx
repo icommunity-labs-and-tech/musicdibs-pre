@@ -33,6 +33,7 @@ const RegisterASongPage = lazyWithRetry(() => import("./pages/RegisterASongPage"
 const AISongGeneratorPage = lazyWithRetry(() => import("./pages/AISongGeneratorPage"));
 const GeneradorCancionesIAPage = lazyWithRetry(() => import("./pages/GeneradorCancionesIAPage"));
 const CopyrightASongPage = lazyWithRetry(() => import("./pages/CopyrightASongPage"));
+const RegistroMusicalPage = lazyWithRetry(() => import("./pages/RegistroMusicalPage"));
 const News = lazyWithRetry(() => import("./pages/News"));
 const NewsArticle = lazyWithRetry(() => import("./pages/NewsArticle"));
 const AdminLogin = lazyWithRetry(() => import("./pages/AdminLogin"));
