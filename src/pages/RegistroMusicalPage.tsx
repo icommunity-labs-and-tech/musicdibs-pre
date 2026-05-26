@@ -1,66 +1,59 @@
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
-import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {
   ShieldCheck,
   Globe2,
-  Megaphone,
-  FileCheck,
-  Upload,
-  Rocket,
+  TrendingUp,
   ArrowRight,
-  Sparkles,
   CheckCircle2,
+  Sparkles,
+  ScrollText,
+  Lock,
+  Volume2,
   Music2,
+  Award,
 } from "lucide-react";
 
-const FEATURES = [
+/* ----------------------------- Tokens ----------------------------- */
+// Electric purple (#A855F7-ish), deep blue, neon green
+const PURPLE = "#A855F7";
+const PURPLE_GLOW = "rgba(168, 85, 247, 0.55)";
+const PURPLE_SOFT = "rgba(168, 85, 247, 0.18)";
+const BG = "#0d0d11";
+const BG_SOFT = "#15151c";
+const NEON = "#39FF8B";
+const BLUE = "#3B82F6";
+
+/* ----------------------------- Data ----------------------------- */
+const SERVICES = [
   {
     Icon: ShieldCheck,
-    title: "Registro de Obra",
-    desc: "Protege tu propiedad intelectual de forma digital, segura y con validez legal inmediata.",
+    sub: "Registro Digital de Obra",
+    title: "Protege tu propiedad intelectual",
+    desc: "De forma rápida, segura y legalmente vinculante. Certificación blockchain en minutos.",
   },
   {
     Icon: Globe2,
-    title: "Distribución Global",
-    desc: "Lleva tu música a más de 220 plataformas digitales (Spotify, Apple Music, TikTok, Amazon, etc.).",
+    sub: "Distribución a +220 Plataformas",
+    title: "Tu música en todo el mundo",
+    desc: "Spotify, Apple Music, TikTok, Amazon y muchas más, desde un solo panel.",
   },
   {
-    Icon: Megaphone,
-    title: "Promoción Musicdibs",
-    desc: "Impulsa tus lanzamientos en nuestros canales oficiales y llega a una comunidad de miles de oyentes y profesionales.",
+    Icon: TrendingUp,
+    sub: "Promoción Musicdibs",
+    title: "Llega a miles de oyentes",
+    desc: "Activa los canales oficiales de Musicdibs y nuestras herramientas de marketing.",
   },
 ];
 
-const STEPS = [
-  {
-    Icon: Upload,
-    title: "Sube y registra",
-    desc: "Subes tu tema y registras tus derechos de autor en minutos, con certificación blockchain.",
-  },
-  {
-    Icon: Globe2,
-    title: "Distribuimos por ti",
-    desc: "Nosotros nos encargamos de distribuirla a todo el mundo en más de 220 plataformas.",
-  },
-  {
-    Icon: Rocket,
-    title: "Promoción activada",
-    desc: "Activamos la maquinaria de promoción en los canales oficiales de Musicdibs.",
-  },
-];
+const PLATFORMS = ["Spotify", "Apple Music", "TikTok", "Amazon Music", "YouTube Music", "Deezer", "Tidal", "Pandora"];
 
-const STATS = [
-  { value: "+220", label: "Plataformas" },
-  { value: "100%", label: "Seguro y legal" },
-  { value: "Miles", label: "de oyentes alcanzados" },
-];
-
+/* ----------------------------- Page ----------------------------- */
 const RegistroMusicalPage = () => {
   return (
-    <div className="min-h-screen page-bg">
+    <div className="min-h-screen text-white" style={{ background: BG }}>
       <SEO
         title="Registro Musical — Protege, Distribuye y Promociona tu Música"
         description="Registra la propiedad intelectual de tus canciones, distribúyelas en +220 plataformas globales y haz crecer tu audiencia con Musicdibs."
@@ -68,121 +61,217 @@ const RegistroMusicalPage = () => {
       />
       <Navbar />
 
-      {/* HERO */}
-      <section className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-28">
+      {/* ============================= HERO ============================= */}
+      <section className="relative overflow-hidden pt-32 pb-24 sm:pt-40 sm:pb-32">
+        {/* glow backdrop */}
         <div
           className="absolute inset-0 pointer-events-none"
           aria-hidden
           style={{
-            background:
-              "radial-gradient(ellipse at 20% 10%, oklch(0.68 0.27 322 / 0.25), transparent 60%), radial-gradient(ellipse at 85% 30%, oklch(0.6 0.3 285 / 0.22), transparent 60%)",
+            background: `
+              radial-gradient(ellipse 50% 40% at 20% 10%, ${PURPLE_SOFT}, transparent 70%),
+              radial-gradient(ellipse 40% 35% at 90% 30%, rgba(59,130,246,0.15), transparent 70%),
+              radial-gradient(ellipse 30% 25% at 60% 90%, rgba(57,255,139,0.08), transparent 70%)
+            `,
           }}
         />
+        {/* subtle grid */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.04]"
+          aria-hidden
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, #fff 1px, transparent 1px), linear-gradient(to bottom, #fff 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+            maskImage: "radial-gradient(ellipse at center, black 30%, transparent 75%)",
+          }}
+        />
+
         <div className="relative mx-auto max-w-6xl px-6">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-[1.1fr_1fr] gap-14 items-center">
+            {/* Left: copy */}
             <div className="animate-fade-in">
-              <div className="inline-flex items-center gap-2 rounded-full border border-border bg-foreground/5 px-3 py-1 text-[11px] uppercase tracking-[0.22em] text-magenta-glow mb-6">
+              <div
+                className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.22em] mb-6"
+                style={{
+                  background: PURPLE_SOFT,
+                  border: `1px solid ${PURPLE_SOFT}`,
+                  color: PURPLE,
+                }}
+              >
                 <Sparkles className="h-3 w-3" />
-                Todo en un mismo lugar
+                Nuevo · Todo en uno
               </div>
-              <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-                Protege, distribuye y{" "}
-                <span className="text-gradient-brand">promociona tu música</span>{" "}
-                en un solo lugar.
+
+              <h1
+                className="font-display font-bold text-[2.6rem] sm:text-5xl lg:text-[3.6rem] leading-[1.05] tracking-tight text-white"
+                style={{ fontFamily: "Inter, ui-sans-serif, system-ui" }}
+              >
+                Protege, distribuye y promociona tu música a nivel{" "}
+                <span
+                  style={{
+                    color: PURPLE,
+                    textShadow: `0 0 30px ${PURPLE_GLOW}`,
+                  }}
+                >
+                  global
+                </span>
+                .
               </h1>
-              <p className="mt-6 text-lg text-muted-foreground max-w-xl">
-                Registra la propiedad intelectual de tus canciones, llega a más
-                de 220 plataformas globales y haz crecer tu audiencia con los
-                canales de Musicdibs.
+
+              <p className="mt-6 text-lg text-white/65 max-w-xl leading-relaxed">
+                Registra tus derechos de autor, lanza en +220 plataformas y haz
+                crecer tu audiencia con Musicdibs.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <Button
-                  asChild
-                  size="lg"
-                  className="rounded-full px-7 shadow-[var(--shadow-magenta)] hover:scale-105 transition-transform"
+
+              <div className="mt-9 flex flex-col sm:flex-row gap-3">
+                <Link
+                  to="/login"
+                  className="group inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold transition-all hover:scale-[1.03]"
+                  style={{
+                    background: PURPLE,
+                    color: "#fff",
+                    boxShadow: `0 0 0 1px ${PURPLE}, 0 10px 40px -8px ${PURPLE_GLOW}, 0 0 60px -10px ${PURPLE_GLOW}`,
+                  }}
                 >
-                  <Link to="/login">
-                    Empieza ahora gratis
-                    <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="rounded-full px-7"
+                  Empezar ahora gratis
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+                <a
+                  href="#servicios"
+                  className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold text-white/90 transition-all hover:bg-white/5"
+                  style={{ border: `1px solid rgba(255,255,255,0.15)` }}
                 >
-                  <a href="#como-funciona">Saber más</a>
-                </Button>
+                  Ver demo de registro
+                </a>
+              </div>
+
+              {/* small trust line */}
+              <div className="mt-8 flex items-center gap-5 text-xs text-white/45">
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5" style={{ color: NEON }} />
+                  Validez legal
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5" style={{ color: NEON }} />
+                  Blockchain
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5" style={{ color: NEON }} />
+                  +220 plataformas
+                </span>
               </div>
             </div>
 
-            {/* Visual mockup */}
+            {/* Right: License Certificate Mockup */}
             <div className="relative animate-fade-in">
+              {/* halo */}
               <div
-                className="absolute -inset-6 rounded-3xl opacity-50 blur-2xl pointer-events-none"
+                className="absolute -inset-10 rounded-[2rem] blur-3xl opacity-70 pointer-events-none"
                 style={{
-                  background:
-                    "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.5), oklch(0.6 0.3 285 / 0.5))",
+                  background: `radial-gradient(circle at 30% 30%, ${PURPLE_GLOW}, transparent 60%), radial-gradient(circle at 80% 70%, rgba(59,130,246,0.4), transparent 60%)`,
                 }}
               />
-              <div className="relative glass rounded-3xl p-6 sm:p-8 overflow-hidden">
-                <div className="flex items-center justify-between mb-5">
+
+              <div
+                className="relative rounded-[1.5rem] p-7 backdrop-blur-xl overflow-hidden"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  boxShadow: `0 30px 80px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(168,85,247,0.12), inset 0 1px 0 rgba(255,255,255,0.06)`,
+                }}
+              >
+                {/* header chips */}
+                <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-yellow-500/70" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-green-500/70" />
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#ff5f57" }} />
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#febc2e" }} />
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#28c840" }} />
                   </div>
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-magenta-glow">
-                    Certificado · Blockchain
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
+                    style={{
+                      background: "rgba(57,255,139,0.1)",
+                      color: NEON,
+                      border: `1px solid rgba(57,255,139,0.25)`,
+                    }}
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: NEON, boxShadow: `0 0 8px ${NEON}` }} />
+                    Registered
                   </span>
                 </div>
 
-                <div className="rounded-2xl border border-border bg-deep/40 p-5 mb-4">
-                  <div className="flex items-start gap-4">
-                    <span
-                      className="flex h-12 w-12 items-center justify-center rounded-xl shrink-0"
+                {/* certificate body */}
+                <div
+                  className="rounded-2xl p-6 relative overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${BG_SOFT} 0%, #1a1428 100%)`,
+                    border: "1px solid rgba(168,85,247,0.18)",
+                  }}
+                >
+                  {/* seal */}
+                  <div className="absolute top-5 right-5">
+                    <div
+                      className="relative h-16 w-16 rounded-full flex items-center justify-center"
                       style={{
-                        background:
-                          "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.3), oklch(0.6 0.25 285 / 0.3))",
-                        boxShadow: "0 0 24px -4px oklch(0.68 0.27 322 / 0.6)",
+                        background: `conic-gradient(from 0deg, ${PURPLE}, ${BLUE}, ${PURPLE})`,
+                        boxShadow: `0 0 30px -4px ${PURPLE_GLOW}`,
                       }}
                     >
-                      <FileCheck className="h-6 w-6 text-pink" style={{ color: "oklch(0.85 0.22 340)" }} />
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold truncate">Mi Nueva Canción.mp3</p>
-                      <p className="text-xs text-muted-foreground mt-0.5 font-mono truncate">
-                        0xA1f9…c4d2 · Sellado hoy
-                      </p>
-                      <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-                        Propiedad intelectual verificada
+                      <div
+                        className="absolute inset-1 rounded-full flex items-center justify-center"
+                        style={{ background: BG_SOFT }}
+                      >
+                        <Award className="h-7 w-7" style={{ color: PURPLE }} />
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  {["Spotify", "Apple Music", "TikTok"].map((p) => (
-                    <div
-                      key={p}
-                      className="rounded-xl border border-border bg-deep/40 p-3 text-center"
-                    >
-                      <Music2 className="h-4 w-4 mx-auto mb-1.5 text-magenta-glow" />
-                      <p className="text-[11px] font-medium">{p}</p>
-                      <p className="text-[10px] text-green-500 mt-0.5">Activo</p>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-white/50 mb-2">
+                    Music License Certificate
+                  </p>
+                  <h3 className="text-xl font-bold text-white pr-20 leading-tight">
+                    Midnight Echoes
+                  </h3>
+                  <p className="text-sm text-white/55 mt-1">por A. Morales</p>
+
+                  <div className="mt-6 grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <p className="text-white/40 uppercase tracking-wider text-[10px] mb-1">ID Registro</p>
+                      <p className="font-mono text-white/90">0xA1f9…c4d2</p>
                     </div>
-                  ))}
+                    <div>
+                      <p className="text-white/40 uppercase tracking-wider text-[10px] mb-1">Fecha</p>
+                      <p className="text-white/90">Hoy · 14:32</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 uppercase tracking-wider text-[10px] mb-1">Red</p>
+                      <p className="text-white/90">Polygon · iBS</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 uppercase tracking-wider text-[10px] mb-1">Estado</p>
+                      <p className="font-semibold" style={{ color: NEON }}>Verificado</p>
+                    </div>
+                  </div>
+
+                  {/* sig line */}
+                  <div className="mt-6 pt-5 border-t border-white/5 flex items-center gap-2">
+                    <Lock className="h-3.5 w-3.5" style={{ color: PURPLE }} />
+                    <span className="text-[11px] text-white/55">
+                      Firmado y sellado en blockchain
+                    </span>
+                  </div>
                 </div>
 
-                <div className="mt-4 rounded-xl border border-border bg-deep/40 p-3 flex items-center justify-between">
+                {/* mini distribution row */}
+                <div className="mt-4 flex items-center justify-between rounded-xl px-4 py-3"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <div className="flex items-center gap-2">
-                    <Megaphone className="h-4 w-4 text-magenta-glow" />
-                    <span className="text-xs font-medium">Promoción en redes</span>
+                    <Globe2 className="h-4 w-4" style={{ color: PURPLE }} />
+                    <span className="text-xs text-white/75">Distribuyendo a 220 plataformas</span>
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-green-500">
-                    En curso
+                  <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: NEON }}>
+                    Live
                   </span>
                 </div>
               </div>
@@ -191,147 +280,142 @@ const RegistroMusicalPage = () => {
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section id="caracteristicas" className="relative py-20">
+      {/* ============================= SERVICES ============================= */}
+      <section id="servicios" className="relative py-24">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs uppercase tracking-[0.22em] text-magenta-glow mb-3">
-              Características
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <p
+              className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
+              style={{ color: PURPLE }}
+            >
+              Servicios
             </p>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl leading-tight">
-              Todo lo que necesita tu música, en un solo flujo
+            <h2 className="font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-white">
+              Todo lo que tu música necesita,{" "}
+              <span style={{ color: PURPLE, textShadow: `0 0 20px ${PURPLE_GLOW}` }}>
+                en un solo lugar
+              </span>
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {FEATURES.map(({ Icon, title, desc }) => (
+            {SERVICES.map(({ Icon, sub, title, desc }) => (
               <div
                 key={title}
-                className="group relative glass rounded-2xl p-7 card-hover transition-all"
+                className="group relative rounded-2xl p-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(168,85,247,0.5)";
+                  e.currentTarget.style.boxShadow = `0 20px 60px -20px ${PURPLE_GLOW}, 0 0 0 1px rgba(168,85,247,0.35)`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
               >
-                <span
-                  className="inline-flex h-12 w-12 items-center justify-center rounded-xl mb-5 transition-all group-hover:scale-110"
+                {/* icon */}
+                <div
+                  className="inline-flex h-14 w-14 items-center justify-center rounded-2xl mb-6 transition-transform group-hover:scale-110"
                   style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.25), oklch(0.6 0.25 285 / 0.25))",
-                    boxShadow: "0 0 20px -4px oklch(0.68 0.27 322 / 0.6)",
+                    background: `linear-gradient(135deg, ${PURPLE_SOFT}, rgba(59,130,246,0.15))`,
+                    border: `1px solid rgba(168,85,247,0.3)`,
+                    boxShadow: `0 0 30px -8px ${PURPLE_GLOW}`,
                   }}
                 >
-                  <Icon className="h-6 w-6" style={{ color: "oklch(0.85 0.22 340)" }} />
-                </span>
-                <h3 className="font-display font-semibold text-xl mb-2">{title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section id="como-funciona" className="relative py-20">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <p className="text-xs uppercase tracking-[0.22em] text-magenta-glow mb-3">
-              Cómo funciona
-            </p>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl leading-tight">
-              De tu estudio al mundo en 3 pasos
-            </h2>
-          </div>
-
-          <div className="relative grid md:grid-cols-3 gap-6">
-            {STEPS.map(({ Icon, title, desc }, idx) => (
-              <div
-                key={title}
-                className="relative glass rounded-2xl p-7 text-center"
-              >
-                <span
-                  className="absolute -top-4 left-1/2 -translate-x-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold font-display"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.6 0.3 285))",
-                    color: "oklch(0.98 0.01 295)",
-                    boxShadow: "0 0 20px -2px oklch(0.68 0.27 322 / 0.8)",
-                  }}
-                >
-                  {idx + 1}
-                </span>
-                <span
-                  className="mt-3 inline-flex h-12 w-12 items-center justify-center rounded-xl mb-4"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.25), oklch(0.6 0.25 285 / 0.25))",
-                  }}
-                >
-                  <Icon className="h-6 w-6" style={{ color: "oklch(0.85 0.22 340)" }} />
-                </span>
-                <h3 className="font-display font-semibold text-lg mb-2">{title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <section className="relative py-14">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="glass rounded-3xl px-6 sm:px-10 py-10 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-magenta/10 via-transparent to-pink/10 pointer-events-none" />
-            <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-              {STATS.map((s) => (
-                <div key={s.label}>
-                  <p className="font-display font-bold text-4xl sm:text-5xl text-gradient-brand">
-                    {s.value}
-                  </p>
-                  <p className="mt-2 text-sm uppercase tracking-[0.18em] text-muted-foreground">
-                    {s.label}
-                  </p>
+                  <Icon className="h-6 w-6" style={{ color: PURPLE }} />
                 </div>
+
+                <p className="text-[11px] uppercase tracking-[0.22em] text-white/50 mb-2 font-semibold">
+                  {sub}
+                </p>
+                <h3 className="font-bold text-xl text-white mb-3 leading-tight">{title}</h3>
+                <p className="text-sm text-white/60 leading-relaxed">{desc}</p>
+
+                <div
+                  className="mt-6 inline-flex items-center gap-1.5 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ color: PURPLE }}
+                >
+                  Saber más <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* platforms ribbon */}
+          <div
+            id="plataformas"
+            className="mt-16 rounded-2xl px-6 py-5 backdrop-blur-xl"
+            style={{
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.06)",
+            }}
+          >
+            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+              <span className="text-[11px] uppercase tracking-[0.25em] text-white/40">
+                Distribuimos en
+              </span>
+              {PLATFORMS.map((p) => (
+                <span key={p} className="text-sm text-white/70 font-medium inline-flex items-center gap-1.5">
+                  <Music2 className="h-3.5 w-3.5" style={{ color: PURPLE }} />
+                  {p}
+                </span>
               ))}
+              <span className="text-sm font-semibold" style={{ color: NEON }}>
+                +212 más
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="relative py-20">
+      {/* ============================= FINAL CTA ============================= */}
+      <section className="relative py-24">
         <div className="mx-auto max-w-4xl px-6">
-          <div className="relative glass rounded-3xl px-6 sm:px-12 py-14 text-center overflow-hidden glow-magenta">
+          <div
+            className="relative rounded-[2rem] px-6 sm:px-14 py-16 text-center overflow-hidden backdrop-blur-xl"
+            style={{
+              background: `linear-gradient(135deg, rgba(168,85,247,0.12), rgba(59,130,246,0.08))`,
+              border: `1px solid rgba(168,85,247,0.25)`,
+              boxShadow: `0 30px 100px -30px ${PURPLE_GLOW}`,
+            }}
+          >
+            {/* orbs */}
             <div
-              className="absolute -top-24 -left-16 h-64 w-64 rounded-full opacity-60 orb pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(circle, oklch(0.68 0.27 322 / 0.55), transparent 70%)",
-              }}
+              className="absolute -top-24 -left-16 h-72 w-72 rounded-full opacity-50 pointer-events-none animate-pulse"
+              style={{ background: `radial-gradient(circle, ${PURPLE_GLOW}, transparent 70%)` }}
             />
             <div
-              className="absolute -bottom-24 -right-16 h-72 w-72 rounded-full opacity-50 orb pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(circle, oklch(0.6 0.3 285 / 0.5), transparent 70%)",
-                animationDelay: "1.5s",
-              }}
+              className="absolute -bottom-24 -right-16 h-72 w-72 rounded-full opacity-40 pointer-events-none"
+              style={{ background: `radial-gradient(circle, rgba(59,130,246,0.5), transparent 70%)` }}
             />
+
             <div className="relative">
-              <h2 className="font-display font-bold text-3xl sm:text-4xl leading-tight">
-                ¿Listo para llevar tu música al{" "}
-                <span className="text-gradient-brand">siguiente nivel?</span>
+              <Volume2 className="h-10 w-10 mx-auto mb-6" style={{ color: PURPLE }} />
+              <h2 className="font-bold text-3xl sm:text-[2.5rem] leading-tight text-white">
+                ¿Listo para proteger y{" "}
+                <span style={{ color: PURPLE, textShadow: `0 0 25px ${PURPLE_GLOW}` }}>
+                  potenciar tu música?
+                </span>
               </h2>
-              <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-                Únete a miles de artistas que ya protegen, distribuyen y
-                promocionan su música con Musicdibs.
+              <p className="mt-5 text-white/65 max-w-xl mx-auto">
+                Únete a miles de artistas que ya confían en Musicdibs para
+                proteger, distribuir y promocionar sus obras.
               </p>
-              <Button
-                asChild
-                size="lg"
-                className="mt-8 rounded-full px-8 shadow-[var(--shadow-magenta)] hover:scale-105 transition-transform"
+              <Link
+                to="/login"
+                className="mt-10 inline-flex items-center justify-center gap-2 rounded-full px-9 py-4 text-sm font-semibold transition-all hover:scale-[1.04]"
+                style={{
+                  background: PURPLE,
+                  color: "#fff",
+                  boxShadow: `0 0 0 1px ${PURPLE}, 0 15px 50px -10px ${PURPLE_GLOW}, 0 0 80px -15px ${PURPLE_GLOW}`,
+                }}
               >
-                <Link to="/login">
-                  Registrar mi canción hoy
-                  <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
+                Unirme a Musicdibs hoy
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
         </div>
