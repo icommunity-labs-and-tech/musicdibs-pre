@@ -14,7 +14,7 @@ import {
   Sparkles,
   Lock,
   Music2,
-  Award,
+  
   Volume2,
   Heart,
   Users,
