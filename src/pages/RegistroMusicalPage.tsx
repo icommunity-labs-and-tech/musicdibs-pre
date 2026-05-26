@@ -135,108 +135,223 @@ export default function RegistroMusicalPage() {
                     }}
                   />
 
-                  <div className="relative glass glow-magenta rounded-3xl p-7 overflow-hidden">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#ff5f57" }} />
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#febc2e" }} />
-                        <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#28c840" }} />
-                      </div>
-                      <span
-                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
-                        style={{
-                          background: "oklch(0.68 0.27 322 / 0.15)",
-                          color: "oklch(0.92 0.18 340)",
-                          border: "1px solid oklch(0.68 0.27 322 / 0.35)",
-                        }}
-                      >
-                        <span
-                          className="h-1.5 w-1.5 rounded-full animate-pulse"
-                          style={{
-                            background: "oklch(0.85 0.22 340)",
-                            boxShadow: "0 0 8px oklch(0.85 0.22 340)",
-                          }}
-                        />
-                        Registered
-                      </span>
-                    </div>
-
+                  <div className="relative aspect-square w-full max-w-[520px] mx-auto">
+                    {/* Central disc — la canción */}
                     <div
-                      className="rounded-2xl p-6 relative overflow-hidden"
+                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-44 w-44 sm:h-52 sm:w-52 rounded-full flex items-center justify-center z-20"
                       style={{
-                        background: "linear-gradient(135deg, oklch(0.13 0.05 300 / 0.7), oklch(0.18 0.1 320 / 0.5))",
-                        border: "1px solid oklch(0.68 0.27 322 / 0.22)",
+                        background:
+                          "conic-gradient(from 0deg, oklch(0.68 0.27 322), oklch(0.55 0.3 280), oklch(0.7 0.3 0), oklch(0.68 0.27 322))",
+                        boxShadow:
+                          "0 0 60px -10px oklch(0.68 0.27 322 / 0.8), 0 0 120px -20px oklch(0.55 0.3 280 / 0.6)",
                       }}
                     >
-                      <div className="absolute top-5 right-5">
+                      {/* vinyl grooves */}
+                      <div
+                        className="absolute inset-3 rounded-full spin-slow"
+                        style={{
+                          background:
+                            "repeating-radial-gradient(circle at center, oklch(0.13 0.05 300 / 0.85) 0 3px, oklch(0.2 0.08 320 / 0.55) 3px 5px)",
+                          animationDuration: "18s",
+                        }}
+                      />
+                      <div
+                        className="absolute inset-0 rounded-full flex items-center justify-center"
+                      >
                         <div
-                          className="relative h-16 w-16 rounded-full flex items-center justify-center"
+                          className="h-20 w-20 sm:h-24 sm:w-24 rounded-full flex flex-col items-center justify-center text-center"
                           style={{
                             background:
-                              "conic-gradient(from 0deg, oklch(0.68 0.27 322), oklch(0.55 0.3 280), oklch(0.68 0.27 322))",
-                            boxShadow: "0 0 30px -4px oklch(0.68 0.27 322 / 0.7)",
+                              "linear-gradient(135deg, oklch(0.13 0.05 300), oklch(0.18 0.1 320))",
+                            border: "2px solid oklch(0.85 0.22 340 / 0.5)",
+                            boxShadow:
+                              "inset 0 0 20px oklch(0.68 0.27 322 / 0.4)",
                           }}
                         >
-                          <div
-                            className="absolute inset-1 rounded-full flex items-center justify-center"
-                            style={{ background: "oklch(0.13 0.05 300)" }}
-                          >
-                            <Award className="h-7 w-7" style={{ color: "oklch(0.85 0.22 340)" }} />
+                          <Music2
+                            className="h-7 w-7"
+                            style={{ color: "oklch(0.85 0.22 340)" }}
+                          />
+                          <span className="mt-1 text-[9px] uppercase tracking-[0.2em] text-foreground/70">
+                            tu canción
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Orbit ring */}
+                    <div
+                      className="absolute inset-6 rounded-full pointer-events-none"
+                      style={{
+                        border: "1px dashed oklch(0.85 0.22 340 / 0.25)",
+                      }}
+                    />
+                    <div
+                      className="absolute inset-16 rounded-full pointer-events-none"
+                      style={{
+                        border: "1px dashed oklch(0.85 0.22 340 / 0.15)",
+                      }}
+                    />
+
+                    {/* Card 1 — Registro (top) */}
+                    <div
+                      className="absolute left-1/2 -translate-x-1/2 top-0 glass glow-magenta rounded-2xl px-4 py-3 z-30 min-w-[200px]"
+                      style={{ animation: "landing-orb-float 7s ease-in-out infinite" }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.3), oklch(0.55 0.3 280 / 0.2))",
+                            border: "1px solid oklch(0.68 0.27 322 / 0.4)",
+                          }}
+                        >
+                          <ShieldCheck
+                            className="h-5 w-5"
+                            style={{ color: "oklch(0.85 0.22 340)" }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Registro
+                          </p>
+                          <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                            Sellado
+                            <CheckCircle2
+                              className="h-3 w-3"
+                              style={{ color: "oklch(0.85 0.22 340)" }}
+                            />
+                          </p>
+                          <p className="font-mono text-[10px] text-muted-foreground truncate">
+                            0xA1f9…c4d2
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 2 — Distribución (bottom-left) */}
+                    <div
+                      className="absolute left-0 bottom-6 sm:bottom-10 glass glow-magenta rounded-2xl px-4 py-3 z-30 min-w-[180px]"
+                      style={{
+                        animation: "landing-orb-float 8s ease-in-out infinite",
+                        animationDelay: "1.2s",
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.3), oklch(0.55 0.3 280 / 0.2))",
+                            border: "1px solid oklch(0.68 0.27 322 / 0.4)",
+                          }}
+                        >
+                          <Globe2
+                            className="h-5 w-5"
+                            style={{ color: "oklch(0.85 0.22 340)" }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Distribución
+                          </p>
+                          <p className="text-xs font-semibold text-foreground">
+                            +220 plataformas
+                          </p>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            <span
+                              className="h-1.5 w-1.5 rounded-full animate-pulse"
+                              style={{
+                                background: "oklch(0.85 0.22 340)",
+                                boxShadow: "0 0 6px oklch(0.85 0.22 340)",
+                              }}
+                            />
+                            <span
+                              className="text-[10px] font-semibold uppercase tracking-wider"
+                              style={{ color: "oklch(0.85 0.22 340)" }}
+                            >
+                              Live
+                            </span>
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-2">
-                        Music License Certificate
-                      </p>
-                      <h3 className="text-xl font-bold text-foreground pr-20 leading-tight font-display">
-                        Midnight Echoes
-                      </h3>
-                      <p className="text-sm text-muted-foreground mt-1">por A. Morales</p>
-
-                      <div className="mt-6 grid grid-cols-2 gap-4 text-xs">
-                        {[
-                          ["ID Registro", "0xA1f9…c4d2", true],
-                          ["Fecha", "Hoy · 14:32", false],
-                          ["Red", "Polygon · iBS", false],
-                          ["Estado", "Verificado", false],
-                        ].map(([k, v, mono], i) => (
-                          <div key={i}>
-                            <p className="text-muted-foreground uppercase tracking-wider text-[10px] mb-1">
-                              {k}
-                            </p>
-                            <p
-                              className={mono ? "font-mono text-foreground/90" : "text-foreground/90"}
-                              style={k === "Estado" ? { color: "oklch(0.85 0.22 340)", fontWeight: 600 } : {}}
-                            >
-                              {v as string}
-                            </p>
+                    {/* Card 3 — Promoción (bottom-right) */}
+                    <div
+                      className="absolute right-0 bottom-6 sm:bottom-10 glass glow-magenta rounded-2xl px-4 py-3 z-30 min-w-[180px]"
+                      style={{
+                        animation: "landing-orb-float 9s ease-in-out infinite",
+                        animationDelay: "2.4s",
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.3), oklch(0.55 0.3 280 / 0.2))",
+                            border: "1px solid oklch(0.68 0.27 322 / 0.4)",
+                          }}
+                        >
+                          <TrendingUp
+                            className="h-5 w-5"
+                            style={{ color: "oklch(0.85 0.22 340)" }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                            Promoción
+                          </p>
+                          <p className="text-xs font-semibold text-foreground">
+                            +12.4k oyentes
+                          </p>
+                          {/* mini bars */}
+                          <div className="flex items-end gap-0.5 h-3 mt-1">
+                            {[40, 70, 55, 90, 65, 80].map((h, i) => (
+                              <span
+                                key={i}
+                                className="w-1 rounded-sm wave-bar"
+                                style={{
+                                  height: `${h}%`,
+                                  background:
+                                    "linear-gradient(to top, oklch(0.55 0.3 280), oklch(0.85 0.22 340))",
+                                  animationDelay: `${i * 0.15}s`,
+                                }}
+                              />
+                            ))}
                           </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-6 pt-5 border-t border-border flex items-center gap-2">
-                        <Lock className="h-3.5 w-3.5" style={{ color: "oklch(0.85 0.22 340)" }} />
-                        <span className="text-[11px] text-muted-foreground">
-                          Firmado y sellado en blockchain
-                        </span>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="mt-4 flex items-center justify-between rounded-xl px-4 py-3 glass">
-                      <div className="flex items-center gap-2">
-                        <Globe2 className="h-4 w-4" style={{ color: "oklch(0.85 0.22 340)" }} />
-                        <span className="text-xs text-foreground/80">
-                          Distribuyendo a 220 plataformas
-                        </span>
-                      </div>
-                      <span
-                        className="text-[10px] font-semibold uppercase tracking-wider"
-                        style={{ color: "oklch(0.85 0.22 340)" }}
-                      >
-                        Live
-                      </span>
-                    </div>
+                    {/* connecting SVG lines */}
+                    <svg
+                      className="absolute inset-0 w-full h-full pointer-events-none z-10"
+                      viewBox="0 0 100 100"
+                      preserveAspectRatio="none"
+                      aria-hidden
+                    >
+                      <defs>
+                        <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="oklch(0.85 0.22 340)" stopOpacity="0.6" />
+                          <stop offset="100%" stopColor="oklch(0.55 0.3 280)" stopOpacity="0.1" />
+                        </linearGradient>
+                      </defs>
+                      <line x1="50" y1="50" x2="50" y2="10" stroke="url(#line-grad)" strokeWidth="0.3" strokeDasharray="1 1.5" />
+                      <line x1="50" y1="50" x2="12" y2="85" stroke="url(#line-grad)" strokeWidth="0.3" strokeDasharray="1 1.5" />
+                      <line x1="50" y1="50" x2="88" y2="85" stroke="url(#line-grad)" strokeWidth="0.3" strokeDasharray="1 1.5" />
+                    </svg>
+
+                    {/* ambient glow halo */}
+                    <div
+                      className="absolute inset-0 rounded-full blur-3xl opacity-60 pointer-events-none"
+                      style={{
+                        background:
+                          "radial-gradient(circle at center, oklch(0.68 0.27 322 / 0.45), transparent 65%)",
+                      }}
+                    />
                   </div>
                 </div>
               </div>
