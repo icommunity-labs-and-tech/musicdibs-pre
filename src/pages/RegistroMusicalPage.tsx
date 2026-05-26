@@ -73,7 +73,7 @@ export default function RegistroMusicalPage() {
       <div className="landing-ai-studio">
         <main className="relative min-h-screen overflow-hidden">
           <BackgroundScene />
-          <Navbar ctaText="Ir al panel de control" ctaHref="https://www.musicdibs.com/dashboard" />
+          <Navbar ctaText="Empezar AHORA" ctaHref="https://www.musicdibs.com/dashboard" />
 
           {/* ============================= HERO ============================= */}
           <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28">
@@ -107,14 +107,14 @@ export default function RegistroMusicalPage() {
                       to="/login"
                       className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                     >
-                      Empezar ahora gratis
+                      Empezar AHORA
                       <ArrowRight className="h-4 w-4" />
                     </Link>
                     <a
                       href="#servicios"
                       className="btn-ghost inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                     >
-                      Ver demo de registro
+                      Registro Propied
                     </a>
                   </div>
 
