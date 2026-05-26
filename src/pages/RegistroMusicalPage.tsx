@@ -16,6 +16,9 @@ import {
   Music2,
   Award,
   Volume2,
+  Heart,
+  Users,
+  Disc3,
 } from "lucide-react";
 
 const SERVICES = [
