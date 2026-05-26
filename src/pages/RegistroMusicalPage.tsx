@@ -103,13 +103,15 @@ export default function RegistroMusicalPage() {
                   </p>
 
                   <div className="mt-9 flex flex-col sm:flex-row gap-3">
-                    <Link
-                      to="/login"
+                    <a
+                      href="https://www.musicdibs.com/dashboard"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                     >
                       Empezar AHORA
                       <ArrowRight className="h-4 w-4" />
-                    </Link>
+                    </a>
                   </div>
 
                   <div className="mt-8 flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
