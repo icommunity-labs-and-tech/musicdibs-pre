@@ -70,7 +70,7 @@ export default function RegistroMusicalPage() {
       <div className="landing-ai-studio">
         <main className="relative min-h-screen overflow-hidden">
           <BackgroundScene />
-          <Navbar />
+          <Navbar ctaText="Ir al panel de control" ctaHref="https://www.musicdibs.com/dashboard" />
 
           {/* ============================= HERO ============================= */}
           <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28">
