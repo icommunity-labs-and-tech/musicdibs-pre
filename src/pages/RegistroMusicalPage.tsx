@@ -133,32 +133,6 @@ export default function RegistroMusicalPage() {
                     }}
                   />
 
-                  {/* Floating accent card (back) — Certificate */}
-                  <div
-                    className="absolute -top-6 -right-4 z-10 glass rounded-2xl px-4 py-3 w-[210px] hidden sm:block"
-                    style={{
-                      animation: "landing-orb-float 7s ease-in-out infinite",
-                      border: "1px solid oklch(0.85 0.22 340 / 0.35)",
-                      boxShadow: "0 20px 50px -15px #8B5CF6",
-                      transform: "rotate(4deg)",
-                    }}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <Award
-                        className="h-4 w-4"
-                        style={{ color: "oklch(0.85 0.22 340)" }}
-                      />
-                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                        Certificado
-                      </span>
-                    </div>
-                    <p className="text-xs font-semibold text-foreground">
-                      Obra registrada
-                    </p>
-                    <p className="font-mono text-[10px] text-muted-foreground mt-1">
-                      0xA1f9…c4d2
-                    </p>
-                  </div>
 
                   {/* Main panel */}
                   <div
