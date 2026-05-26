@@ -1,6 +1,14 @@
 import logo from "@/assets/landing/logo_dark.png";
 
-export function Navbar() {
+interface NavbarProps {
+  ctaText?: string;
+  ctaHref?: string;
+}
+
+export function Navbar({
+  ctaText = "Probar IA Music Studio GRATIS",
+  ctaHref = "https://www.musicdibs.com/login",
+}: NavbarProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
       <div
@@ -17,12 +25,12 @@ export function Navbar() {
           <img src={logo} alt="Musicdibs" className="h-10 w-auto object-contain" />
         </a>
         <a
-          href="https://www.musicdibs.com/login"
+          href={ctaHref}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-full bg-[var(--primary)] px-5 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] shadow-[var(--shadow-magenta)] transition-transform hover:scale-105"
         >
-          Probar IA Music Studio GRATIS
+          {ctaText}
         </a>
       </div>
     </header>
