@@ -138,140 +138,249 @@ export default function RegistroMusicalPage() {
                     }}
                   />
 
-                  <div className="relative aspect-square w-full max-w-[520px] mx-auto">
-                    {/* Central disc — la canción */}
+                  <div
+                    className="relative aspect-square w-full max-w-[560px] mx-auto"
+                    style={{ perspective: "1400px" }}
+                  >
+                    {/* Backlight halo — Electric Purple focal point */}
                     <div
-                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-44 w-44 sm:h-52 sm:w-52 rounded-full flex items-center justify-center z-20"
+                      className="absolute inset-0 rounded-full blur-3xl pointer-events-none"
                       style={{
                         background:
-                          "conic-gradient(from 0deg, oklch(0.68 0.27 322), oklch(0.55 0.3 280), oklch(0.7 0.3 0), oklch(0.68 0.27 322))",
-                        boxShadow:
-                          "0 0 60px -10px oklch(0.68 0.27 322 / 0.8), 0 0 120px -20px oklch(0.55 0.3 280 / 0.6)",
+                          "radial-gradient(circle at 50% 50%, #8B5CF6 0%, oklch(0.68 0.27 322 / 0.55) 28%, transparent 65%)",
+                        opacity: 0.85,
+                        animation: "landing-orb-float 6s ease-in-out infinite",
+                      }}
+                    />
+                    <div
+                      className="absolute inset-10 rounded-full blur-2xl pointer-events-none"
+                      style={{
+                        background:
+                          "radial-gradient(circle at 50% 50%, oklch(0.85 0.22 340 / 0.5), transparent 70%)",
+                      }}
+                    />
+
+                    {/* Orbit rings — depth */}
+                    <div
+                      className="absolute inset-4 rounded-full pointer-events-none"
+                      style={{
+                        border: "1px dashed oklch(0.85 0.22 340 / 0.22)",
+                        transform: "rotateX(62deg)",
+                      }}
+                    />
+                    <div
+                      className="absolute inset-16 rounded-full pointer-events-none spin-slow"
+                      style={{
+                        border: "1px solid oklch(0.68 0.27 322 / 0.25)",
+                        transform: "rotateX(62deg)",
+                        animationDuration: "26s",
+                      }}
+                    />
+                    <div
+                      className="absolute inset-24 rounded-full pointer-events-none"
+                      style={{
+                        border: "1px dashed oklch(0.55 0.3 280 / 0.2)",
+                        transform: "rotateX(62deg)",
+                      }}
+                    />
+
+                    {/* Central 3D Vinyl */}
+                    <div
+                      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20"
+                      style={{
+                        animation: "landing-orb-float 7s ease-in-out infinite",
+                        transformStyle: "preserve-3d",
                       }}
                     >
-                      {/* vinyl grooves */}
+                      {/* outer vinyl glow */}
                       <div
-                        className="absolute inset-3 rounded-full spin-slow"
+                        className="absolute -inset-6 rounded-full blur-2xl"
                         style={{
                           background:
-                            "repeating-radial-gradient(circle at center, oklch(0.13 0.05 300 / 0.85) 0 3px, oklch(0.2 0.08 320 / 0.55) 3px 5px)",
-                          animationDuration: "18s",
+                            "radial-gradient(circle, #8B5CF6 0%, transparent 70%)",
+                          opacity: 0.7,
                         }}
                       />
                       <div
-                        className="absolute inset-0 rounded-full flex items-center justify-center"
+                        className="relative h-48 w-48 sm:h-56 sm:w-56 rounded-full flex items-center justify-center"
+                        style={{
+                          background:
+                            "radial-gradient(circle at 35% 30%, oklch(0.3 0.12 320) 0%, oklch(0.08 0.04 300) 75%)",
+                          boxShadow:
+                            "0 30px 60px -20px #8B5CF6, 0 0 80px -10px oklch(0.85 0.22 340 / 0.7), inset 0 0 40px oklch(0.08 0.04 300)",
+                          border: "1px solid oklch(0.85 0.22 340 / 0.25)",
+                        }}
                       >
+                        {/* vinyl grooves spinning */}
                         <div
-                          className="h-20 w-20 sm:h-24 sm:w-24 rounded-full flex flex-col items-center justify-center text-center"
+                          className="absolute inset-2 rounded-full spin-slow"
                           style={{
                             background:
-                              "linear-gradient(135deg, oklch(0.13 0.05 300), oklch(0.18 0.1 320))",
-                            border: "2px solid oklch(0.85 0.22 340 / 0.5)",
+                              "repeating-radial-gradient(circle at center, oklch(0.06 0.03 300 / 0.95) 0 2px, oklch(0.22 0.1 320 / 0.45) 2px 4px, oklch(0.12 0.05 300 / 0.6) 4px 6px)",
+                            animationDuration: "14s",
+                            mask: "radial-gradient(circle, transparent 28%, #000 30%)",
+                            WebkitMask:
+                              "radial-gradient(circle, transparent 28%, #000 30%)",
+                          }}
+                        />
+                        {/* highlight sheen */}
+                        <div
+                          className="absolute inset-0 rounded-full pointer-events-none"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, oklch(1 0 0 / 0.18) 0%, transparent 35%, transparent 65%, oklch(1 0 0 / 0.08) 100%)",
+                          }}
+                        />
+                        {/* center label */}
+                        <div
+                          className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full flex flex-col items-center justify-center text-center z-10"
+                          style={{
+                            background:
+                              "conic-gradient(from 90deg, oklch(0.68 0.27 322), oklch(0.55 0.3 280), oklch(0.7 0.3 0), oklch(0.68 0.27 322))",
+                            border: "3px solid oklch(0.08 0.04 300)",
                             boxShadow:
-                              "inset 0 0 20px oklch(0.68 0.27 322 / 0.4)",
+                              "0 0 30px oklch(0.85 0.22 340 / 0.7), inset 0 0 20px oklch(0.08 0.04 300 / 0.6)",
                           }}
                         >
-                          <Music2
-                            className="h-7 w-7"
-                            style={{ color: "oklch(0.85 0.22 340)" }}
+                          <div
+                            className="absolute inset-2 rounded-full flex flex-col items-center justify-center"
+                            style={{
+                              background:
+                                "linear-gradient(135deg, oklch(0.13 0.05 300), oklch(0.18 0.1 320))",
+                            }}
+                          >
+                            <Disc3
+                              className="h-7 w-7"
+                              style={{ color: "oklch(0.85 0.22 340)" }}
+                            />
+                            <span className="mt-1 text-[9px] uppercase tracking-[0.2em] text-foreground/80 font-semibold">
+                              tu música
+                            </span>
+                          </div>
+                          {/* spindle hole */}
+                          <div
+                            className="absolute h-2 w-2 rounded-full z-20"
+                            style={{ background: "oklch(0.06 0.03 300)" }}
                           />
-                          <span className="mt-1 text-[9px] uppercase tracking-[0.2em] text-foreground/70">
-                            tu canción
-                          </span>
                         </div>
                       </div>
                     </div>
 
-                    {/* Orbit ring */}
+                    {/* ===== LAYER 1 — PROTECTION (top) ===== */}
                     <div
-                      className="absolute inset-6 rounded-full pointer-events-none"
+                      className="absolute left-1/2 -translate-x-1/2 top-0 glass rounded-2xl px-4 py-3 z-30 min-w-[220px]"
                       style={{
-                        border: "1px dashed oklch(0.85 0.22 340 / 0.25)",
+                        animation: "landing-orb-float 7s ease-in-out infinite",
+                        boxShadow:
+                          "0 20px 50px -15px #8B5CF6, 0 0 30px -5px oklch(0.85 0.22 340 / 0.6)",
+                        border: "1px solid oklch(0.85 0.22 340 / 0.4)",
+                        backdropFilter: "blur(18px)",
                       }}
-                    />
-                    <div
-                      className="absolute inset-16 rounded-full pointer-events-none"
-                      style={{
-                        border: "1px dashed oklch(0.85 0.22 340 / 0.15)",
-                      }}
-                    />
-
-                    {/* Card 1 — Registro (top) */}
-                    <div
-                      className="absolute left-1/2 -translate-x-1/2 top-0 glass glow-magenta rounded-2xl px-4 py-3 z-30 min-w-[200px]"
-                      style={{ animation: "landing-orb-float 7s ease-in-out infinite" }}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                          className="relative h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
                           style={{
                             background:
-                              "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.3), oklch(0.55 0.3 280 / 0.2))",
-                            border: "1px solid oklch(0.68 0.27 322 / 0.4)",
+                              "linear-gradient(135deg, #8B5CF6, oklch(0.55 0.3 280))",
+                            boxShadow:
+                              "0 0 20px oklch(0.85 0.22 340 / 0.7), inset 0 0 12px oklch(1 0 0 / 0.15)",
                           }}
                         >
-                          <ShieldCheck
-                            className="h-5 w-5"
-                            style={{ color: "oklch(0.85 0.22 340)" }}
+                          <ShieldCheck className="h-5 w-5 text-white" />
+                          <Lock
+                            className="absolute -bottom-1 -right-1 h-3.5 w-3.5 rounded-full p-0.5"
+                            style={{
+                              background: "oklch(0.08 0.04 300)",
+                              color: "oklch(0.85 0.22 340)",
+                              boxShadow: "0 0 8px oklch(0.85 0.22 340)",
+                            }}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                            Registro
+                            Capa de Protección
                           </p>
                           <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                            Sellado
+                            Propiedad Intelectual
                             <CheckCircle2
                               className="h-3 w-3"
                               style={{ color: "oklch(0.85 0.22 340)" }}
                             />
                           </p>
                           <p className="font-mono text-[10px] text-muted-foreground truncate">
-                            0xA1f9…c4d2
+                            ID · 0xA1f9…c4d2
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    {/* Card 2 — Distribución (bottom-left) */}
+                    {/* ===== LAYER 2 — GLOBAL REACH (bottom-left) ===== */}
                     <div
-                      className="absolute left-0 bottom-6 sm:bottom-10 glass glow-magenta rounded-2xl px-4 py-3 z-30 min-w-[180px]"
+                      className="absolute left-0 bottom-4 sm:bottom-8 glass rounded-2xl px-4 py-3 z-30 min-w-[210px]"
                       style={{
-                        animation: "landing-orb-float 8s ease-in-out infinite",
+                        animation: "landing-orb-float 8.5s ease-in-out infinite",
                         animationDelay: "1.2s",
+                        boxShadow:
+                          "0 20px 50px -15px #8B5CF6, 0 0 30px -5px oklch(0.85 0.22 340 / 0.5)",
+                        border: "1px solid oklch(0.85 0.22 340 / 0.4)",
+                        backdropFilter: "blur(18px)",
                       }}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                          className="relative h-11 w-11 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
                           style={{
                             background:
-                              "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.3), oklch(0.55 0.3 280 / 0.2))",
-                            border: "1px solid oklch(0.68 0.27 322 / 0.4)",
+                              "linear-gradient(135deg, oklch(0.55 0.3 280), #8B5CF6)",
+                            boxShadow:
+                              "0 0 20px oklch(0.85 0.22 340 / 0.6), inset 0 0 12px oklch(1 0 0 / 0.15)",
                           }}
                         >
-                          <Globe2
-                            className="h-5 w-5"
-                            style={{ color: "oklch(0.85 0.22 340)" }}
+                          <Globe2 className="h-5 w-5 text-white spin-slow" style={{ animationDuration: "20s" }} />
+                          {/* pulse rings */}
+                          <span
+                            className="absolute inset-0 rounded-xl animate-ping"
+                            style={{
+                              background: "oklch(0.85 0.22 340 / 0.25)",
+                              animationDuration: "2.4s",
+                            }}
                           />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                            Distribución
+                            Alcance Global
                           </p>
                           <p className="text-xs font-semibold text-foreground">
                             +220 plataformas
                           </p>
-                          <div className="flex items-center gap-1 mt-0.5">
+                          {/* Mini platform chips */}
+                          <div className="flex items-center gap-1 mt-1">
+                            {["S", "A", "T"].map((l, i) => (
+                              <span
+                                key={l}
+                                className="h-4 w-4 rounded-full flex items-center justify-center text-[8px] font-bold"
+                                style={{
+                                  background:
+                                    "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.4), oklch(0.55 0.3 280 / 0.3))",
+                                  border: "1px solid oklch(0.85 0.22 340 / 0.5)",
+                                  color: "oklch(0.95 0.05 340)",
+                                  animation: "landing-orb-float 3s ease-in-out infinite",
+                                  animationDelay: `${i * 0.4}s`,
+                                }}
+                              >
+                                {l}
+                              </span>
+                            ))}
                             <span
-                              className="h-1.5 w-1.5 rounded-full animate-pulse"
+                              className="ml-1 h-1.5 w-1.5 rounded-full animate-pulse"
                               style={{
                                 background: "oklch(0.85 0.22 340)",
                                 boxShadow: "0 0 6px oklch(0.85 0.22 340)",
                               }}
                             />
                             <span
-                              className="text-[10px] font-semibold uppercase tracking-wider"
+                              className="text-[9px] font-semibold uppercase tracking-wider"
                               style={{ color: "oklch(0.85 0.22 340)" }}
                             >
                               Live
@@ -281,55 +390,73 @@ export default function RegistroMusicalPage() {
                       </div>
                     </div>
 
-                    {/* Card 3 — Promoción (bottom-right) */}
+                    {/* ===== LAYER 3 — GROWTH (bottom-right) ===== */}
                     <div
-                      className="absolute right-0 bottom-6 sm:bottom-10 glass glow-magenta rounded-2xl px-4 py-3 z-30 min-w-[180px]"
+                      className="absolute right-0 bottom-4 sm:bottom-8 glass rounded-2xl px-4 py-3 z-30 min-w-[210px]"
                       style={{
                         animation: "landing-orb-float 9s ease-in-out infinite",
                         animationDelay: "2.4s",
+                        boxShadow:
+                          "0 20px 50px -15px #8B5CF6, 0 0 40px -5px oklch(0.85 0.22 340 / 0.7)",
+                        border: "1px solid oklch(0.85 0.22 340 / 0.5)",
+                        backdropFilter: "blur(18px)",
                       }}
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                          className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0"
                           style={{
                             background:
-                              "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.3), oklch(0.55 0.3 280 / 0.2))",
-                            border: "1px solid oklch(0.68 0.27 322 / 0.4)",
+                              "linear-gradient(135deg, #8B5CF6, oklch(0.7 0.3 0))",
+                            boxShadow:
+                              "0 0 24px #8B5CF6, inset 0 0 12px oklch(1 0 0 / 0.2)",
                           }}
                         >
-                          <TrendingUp
-                            className="h-5 w-5"
-                            style={{ color: "oklch(0.85 0.22 340)" }}
-                          />
+                          <TrendingUp className="h-5 w-5 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                            Promoción
+                            Audiencia
                           </p>
                           <p className="text-xs font-semibold text-foreground">
                             +12.4k oyentes
                           </p>
-                          {/* mini bars */}
-                          <div className="flex items-end gap-0.5 h-3 mt-1">
-                            {[40, 70, 55, 90, 65, 80].map((h, i) => (
+                          {/* soundwave morphing into engagement icons */}
+                          <div className="flex items-end gap-1 h-4 mt-1">
+                            {[40, 70, 55, 90, 65].map((h, i) => (
                               <span
                                 key={i}
                                 className="w-1 rounded-sm wave-bar"
                                 style={{
                                   height: `${h}%`,
                                   background:
-                                    "linear-gradient(to top, oklch(0.55 0.3 280), oklch(0.85 0.22 340))",
+                                    "linear-gradient(to top, #8B5CF6, oklch(0.85 0.22 340))",
+                                  boxShadow: "0 0 4px oklch(0.85 0.22 340)",
                                   animationDelay: `${i * 0.15}s`,
                                 }}
                               />
                             ))}
+                            <Heart
+                              className="h-3 w-3 ml-0.5"
+                              style={{
+                                color: "oklch(0.85 0.22 340)",
+                                filter: "drop-shadow(0 0 4px #8B5CF6)",
+                              }}
+                              fill="currentColor"
+                            />
+                            <Users
+                              className="h-3 w-3"
+                              style={{
+                                color: "oklch(0.85 0.22 340)",
+                                filter: "drop-shadow(0 0 4px #8B5CF6)",
+                              }}
+                            />
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* connecting SVG lines */}
+                    {/* Connecting glowing lines */}
                     <svg
                       className="absolute inset-0 w-full h-full pointer-events-none z-10"
                       viewBox="0 0 100 100"
@@ -338,28 +465,48 @@ export default function RegistroMusicalPage() {
                     >
                       <defs>
                         <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="oklch(0.85 0.22 340)" stopOpacity="0.6" />
-                          <stop offset="100%" stopColor="oklch(0.55 0.3 280)" stopOpacity="0.1" />
+                          <stop offset="0%" stopColor="oklch(0.85 0.22 340)" stopOpacity="0.8" />
+                          <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.05" />
                         </linearGradient>
+                        <filter id="line-glow">
+                          <feGaussianBlur stdDeviation="0.6" result="blur" />
+                          <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
                       </defs>
-                      <line x1="50" y1="50" x2="50" y2="10" stroke="url(#line-grad)" strokeWidth="0.3" strokeDasharray="1 1.5" />
-                      <line x1="50" y1="50" x2="12" y2="85" stroke="url(#line-grad)" strokeWidth="0.3" strokeDasharray="1 1.5" />
-                      <line x1="50" y1="50" x2="88" y2="85" stroke="url(#line-grad)" strokeWidth="0.3" strokeDasharray="1 1.5" />
+                      <line x1="50" y1="50" x2="50" y2="10" stroke="url(#line-grad)" strokeWidth="0.4" strokeDasharray="1 1.5" filter="url(#line-glow)" />
+                      <line x1="50" y1="50" x2="14" y2="86" stroke="url(#line-grad)" strokeWidth="0.4" strokeDasharray="1 1.5" filter="url(#line-glow)" />
+                      <line x1="50" y1="50" x2="86" y2="86" stroke="url(#line-grad)" strokeWidth="0.4" strokeDasharray="1 1.5" filter="url(#line-glow)" />
                     </svg>
 
-                    {/* ambient glow halo */}
-                    <div
-                      className="absolute inset-0 rounded-full blur-3xl opacity-60 pointer-events-none"
-                      style={{
-                        background:
-                          "radial-gradient(circle at center, oklch(0.68 0.27 322 / 0.45), transparent 65%)",
-                      }}
-                    />
+                    {/* floating particles */}
+                    {[
+                      { top: "18%", left: "85%", delay: "0s" },
+                      { top: "72%", left: "92%", delay: "1.5s" },
+                      { top: "30%", left: "8%", delay: "0.8s" },
+                      { top: "82%", left: "48%", delay: "2.2s" },
+                    ].map((p, i) => (
+                      <span
+                        key={i}
+                        className="absolute h-1.5 w-1.5 rounded-full pointer-events-none"
+                        style={{
+                          top: p.top,
+                          left: p.left,
+                          background: "oklch(0.85 0.22 340)",
+                          boxShadow: "0 0 10px #8B5CF6, 0 0 18px oklch(0.85 0.22 340)",
+                          animation: "landing-orb-float 5s ease-in-out infinite",
+                          animationDelay: p.delay,
+                        }}
+                      />
+                    ))}
                   </div>
                 </div>
               </div>
             </div>
           </section>
+
 
           {/* ============================= SERVICES ============================= */}
           <section id="servicios" className="relative py-24">
