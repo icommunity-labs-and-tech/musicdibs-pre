@@ -16,8 +16,6 @@ import {
   Sparkles,
   Lock,
   Music2,
-  
-  Volume2,
   Heart,
   Users,
   Disc3,
@@ -838,48 +836,6 @@ export default function RegistroMusicalPage() {
                     Promocionar mi música
                     <ArrowRight className="h-4 w-4" />
                   </a>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* ============================= FINAL CTA ============================= */}
-          <section className="relative py-24">
-            <div className="mx-auto max-w-4xl px-6">
-              <div className="relative glass glow-magenta rounded-[2rem] px-6 sm:px-14 py-16 text-center overflow-hidden">
-                <div
-                  className="absolute -top-24 -left-16 h-72 w-72 rounded-full opacity-60 pointer-events-none orb"
-                  style={{
-                    background:
-                      "radial-gradient(circle, oklch(0.68 0.27 322 / 0.55), transparent 70%)",
-                  }}
-                />
-                <div
-                  className="absolute -bottom-24 -right-16 h-72 w-72 rounded-full opacity-50 pointer-events-none orb"
-                  style={{
-                    background:
-                      "radial-gradient(circle, oklch(0.55 0.3 280 / 0.5), transparent 70%)",
-                    animationDelay: "1.5s",
-                  }}
-                />
-
-                <div className="relative">
-                  <Volume2 className="h-10 w-10 mx-auto mb-6" style={{ color: "oklch(0.85 0.22 340)" }} />
-                  <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-tight text-foreground">
-                    ¿Listo para proteger y{" "}
-                    <span className="text-gradient-brand">potenciar tu música?</span>
-                  </h2>
-                  <p className="mt-5 text-muted-foreground max-w-xl mx-auto">
-                    Únete a miles de artistas que ya confían en Musicdibs para
-                    proteger, distribuir y promocionar sus obras.
-                  </p>
-                  <Link
-                    to="/login"
-                    className="btn-magenta mt-10 inline-flex items-center justify-center gap-2 rounded-full px-9 py-4 text-sm font-semibold"
-                  >
-                    Unirme a Musicdibs hoy
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
                 </div>
               </div>
             </div>
