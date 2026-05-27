@@ -110,11 +110,17 @@ Deno.serve(async (req: Request) => {
 
   if (mode === 'check') {
     try {
-      const ML_API_KEY = Deno.env.get('ML_API_KEY');
+      const ML_API_KEY = Deno.env.get('ML_API_KEY') ?? Deno.env.get('MAILERLITE_API_KEY');
+      if (!ML_API_KEY) {
+        return new Response(JSON.stringify({ error: 'ML_API_KEY no configurada' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+        });
+      }
       const res = await fetch(`${ML_BASE}/subscribers/${encodeURIComponent(email)}`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
+          'Accept': 'application/json',
           'Authorization': `Bearer ${ML_API_KEY}`,
         },
       });
