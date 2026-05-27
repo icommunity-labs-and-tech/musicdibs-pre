@@ -815,17 +815,34 @@ export default function RegistroMusicalPage() {
                     audiencias afines para multiplicar tus reproducciones.
                   </p>
                   <ul className="space-y-3 mb-8">
-                    {[
-                      "Publicación en @musicdibs (Instagram) y @musicdibs_ (TikTok)",
-                      "Creatividades adaptadas a Reels y formato vertical",
-                      "Conexión con creadores que usan tu sonido",
-                      "Informe de alcance, reproducciones e interacciones",
-                    ].map((t) => (
-                      <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
-                        <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
-                        {t}
-                      </li>
-                    ))}
+                    <li className="flex items-start gap-3 text-sm text-foreground/85">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
+                      <span>
+                        Publicación en{" "}
+                        <a
+                          href="https://www.instagram.com/musicdibs/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                          style={{ color: "oklch(0.85 0.22 340)" }}
+                        >
+                          @musicdibs
+                        </a>{" "}
+                        (Instagram) y @musicdibs_ (TikTok)
+                      </span>
+                    </li>
+                    <li className="flex items-start gap-3 text-sm text-foreground/85">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
+                      Creatividades adaptadas a Reels y formato vertical
+                    </li>
+                    <li className="flex items-start gap-3 text-sm text-foreground/85">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
+                      Conexión con creadores que usan tu sonido
+                    </li>
+                    <li className="flex items-start gap-3 text-sm text-foreground/85">
+                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
+                      Informe de alcance, reproducciones e interacciones
+                    </li>
                   </ul>
                   <a
                     href="https://www.musicdibs.com/dashboard"
