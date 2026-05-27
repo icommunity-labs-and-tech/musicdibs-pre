@@ -828,7 +828,17 @@ export default function RegistroMusicalPage() {
                         >
                           @musicdibs
                         </a>{" "}
-                        (Instagram) y @musicdibs_ (TikTok)
+                        (Instagram) y{" "}
+                        <a
+                          href="https://www.tiktok.com/@musicdibs_"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="underline"
+                          style={{ color: "oklch(0.85 0.22 340)" }}
+                        >
+                          @musicdibs_
+                        </a>{" "}
+                        (TikTok)
                       </span>
                     </li>
                     <li className="flex items-start gap-3 text-sm text-foreground/85">
