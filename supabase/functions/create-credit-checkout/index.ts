@@ -128,6 +128,7 @@ const EXPLICIT_PRICE_IDS: Record<string, string> = {
   annual_300:  "price_1TMapTFULeu7PzK6D4GnB3Il",
   annual_500:  "price_1TMapTFULeu7PzK6cNJMf2oL",
   annual_1000: "price_1TMapTFULeu7PzK6ziUW5fLn",
+  monthly:     "price_1T8n6lFULeu7PzK60TbO76hE",
 };
 
 async function resolvePlan(stripe: Stripe, planId: string): Promise<ResolvedPlan> {
