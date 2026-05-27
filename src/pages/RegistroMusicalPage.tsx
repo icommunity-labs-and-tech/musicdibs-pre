@@ -54,7 +54,7 @@ export default function RegistroMusicalPage() {
   return (
     <>
       <Helmet>
-        <title>Registro Musical · Protege, distribuye y promociona tu música</title>
+        <title>Registro Musical · Protege y distribuye tu música</title>
         <meta
           name="description"
           content="Registra la propiedad intelectual de tus canciones, distribúyelas en +220 plataformas globales y haz crecer tu audiencia con Musicdibs."
@@ -91,7 +91,7 @@ export default function RegistroMusicalPage() {
                     className="font-display font-bold text-[2.6rem] sm:text-5xl lg:text-[3.6rem] leading-[1.05] tracking-tight text-foreground"
                     style={{ textWrap: "balance" as any }}
                   >
-                    Protege, distribuye y promociona tu música a nivel{" "}
+                    Protege y distribuye tu música a nivel{" "}
                     <span className="text-gradient-brand">global</span>.
                   </h1>
 
