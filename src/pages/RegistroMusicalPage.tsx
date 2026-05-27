@@ -810,7 +810,7 @@ export default function RegistroMusicalPage() {
                     Haz que tu música <span className="text-gradient-brand">se vuelva viral</span>
                   </h2>
                   <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
-                    Crea o mejora tus canciones, genera contenido promocional con
+                    Crea o mejora tus canciones, genera contenido visual con
                     IA y promociona tu música a través de los canales oficiales de
                     Musicdibs en TikTok e Instagram.
                   </p>
