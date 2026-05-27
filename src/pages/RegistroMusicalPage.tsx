@@ -5,6 +5,8 @@ import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { SocialBanner } from "@/components/landing/SocialBanner";
+import urbanArtistInstagram from "@/assets/urban-artist-instagram.jpg";
+import urbanArtistTiktok from "@/assets/urban-artist-tiktok.jpg";
 import {
   ShieldCheck,
   Globe2,
