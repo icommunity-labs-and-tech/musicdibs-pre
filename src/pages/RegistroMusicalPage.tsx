@@ -849,10 +849,6 @@ export default function RegistroMusicalPage() {
                       <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
                       Audiencias afines para multiplicar tus reproducciones
                     </li>
-                    <li className="flex items-start gap-3 text-sm text-foreground/85">
-                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
-                      Informe de alcance, reproducciones e interacciones
-                    </li>
                   </ul>
                   <a
                     href="https://www.musicdibs.com/dashboard"
