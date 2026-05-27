@@ -2694,6 +2694,7 @@ export type Database = {
           current_period_end: string | null
           current_period_start: string | null
           id: string
+          lifetime_coupon: string | null
           plan: string
           plan_type: string | null
           status: string
@@ -2713,6 +2714,7 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          lifetime_coupon?: string | null
           plan: string
           plan_type?: string | null
           status?: string
@@ -2732,6 +2734,7 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
+          lifetime_coupon?: string | null
           plan?: string
           plan_type?: string | null
           status?: string
@@ -3441,6 +3444,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_coupon_redemptions: {
+        Args: { coupon_id: string }
+        Returns: undefined
       }
       increment_free_downloads: {
         Args: { p_user_id: string }

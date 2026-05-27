@@ -38,7 +38,7 @@ const SERVICES = [
     Icon: TrendingUp,
     sub: "Promoción Musicdibs",
     title: "Llega a miles de oyentes",
-    desc: "Activa los canales oficiales de Musicdibs y nuestras herramientas de marketing.",
+    desc: "Crea canciones y actívalas en los canales oficiales de Musicdibs.",
   },
 ];
 
