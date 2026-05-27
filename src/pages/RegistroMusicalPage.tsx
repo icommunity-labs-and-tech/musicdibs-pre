@@ -437,6 +437,387 @@ export default function RegistroMusicalPage() {
             </div>
           </section>
 
+          {/* ============================= REGISTRO / DERECHOS DE AUTOR ============================= */}
+          <section id="registro" className="relative py-24">
+            <div className="mx-auto max-w-6xl px-6">
+              <div className="grid lg:grid-cols-[1fr_1.05fr] gap-12 items-center">
+                {/* Visual */}
+                <div className="relative order-2 lg:order-1">
+                  <div
+                    className="absolute -inset-10 rounded-[2rem] blur-3xl opacity-60 pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 30% 30%, oklch(0.68 0.27 322 / 0.55), transparent 60%), radial-gradient(circle at 80% 80%, #8B5CF6 0%, transparent 55%)",
+                    }}
+                  />
+                  <div
+                    className="relative glass rounded-[1.75rem] p-7 z-10"
+                    style={{
+                      border: "1px solid oklch(0.85 0.22 340 / 0.25)",
+                      boxShadow: "0 40px 80px -30px #8B5CF6",
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5" style={{ color: "oklch(0.85 0.22 340)" }} />
+                        <span className="text-xs uppercase tracking-[0.22em] text-foreground/80 font-semibold">
+                          Certificado Blockchain
+                        </span>
+                      </div>
+                      <span
+                        className="text-[9px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full"
+                        style={{
+                          color: "oklch(0.85 0.22 340)",
+                          background: "oklch(0.85 0.22 340 / 0.12)",
+                          border: "1px solid oklch(0.85 0.22 340 / 0.3)",
+                        }}
+                      >
+                        Verificado
+                      </span>
+                    </div>
+
+                    <div
+                      className="rounded-xl px-4 py-3 mb-4 font-mono text-[11px] break-all"
+                      style={{
+                        background: "oklch(0.13 0.05 300 / 0.55)",
+                        border: "1px solid oklch(0.85 0.22 340 / 0.18)",
+                        color: "oklch(0.85 0.22 340)",
+                      }}
+                    >
+                      0x9f3a · 4c12 · 8b7e · d215 · a6f0 · 7e93 · cb14
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                      {[
+                        { k: "Obra", v: "Midnight Echoes" },
+                        { k: "Autor", v: "Tú · 100%" },
+                        { k: "Fecha", v: "27/05/2026" },
+                        { k: "Red", v: "Polygon" },
+                      ].map(({ k, v }) => (
+                        <div
+                          key={k}
+                          className="rounded-lg px-3 py-2"
+                          style={{
+                            background: "oklch(0.13 0.05 300 / 0.4)",
+                            border: "1px solid oklch(0.85 0.22 340 / 0.12)",
+                          }}
+                        >
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{k}</p>
+                          <p className="text-xs font-semibold text-foreground">{v}</p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <Lock className="h-3.5 w-3.5" style={{ color: "oklch(0.85 0.22 340)" }} />
+                      Convenio de Berna · Validez en 181 países
+                    </div>
+                  </div>
+                </div>
+
+                {/* Copy */}
+                <div className="order-1 lg:order-2">
+                  <p
+                    className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
+                    style={{ color: "oklch(0.85 0.22 340)" }}
+                  >
+                    Registro · Derechos de autor
+                  </p>
+                  <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-5">
+                    Tu obra, <span className="text-gradient-brand">protegida para siempre</span>
+                  </h2>
+                  <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
+                    Generamos un certificado blockchain inmutable con sello de tiempo
+                    que acredita tu autoría con validez legal internacional. Sin papeleos,
+                    sin esperas, sin intermediarios.
+                  </p>
+                  <ul className="space-y-3 mb-8">
+                    {[
+                      "Certificación en minutos con hash único y verificable",
+                      "Validez legal bajo el Convenio de Berna (181 países)",
+                      "Descarga tu certificado PDF en cualquier momento",
+                      "Protege letras, melodías, masters y demos",
+                    ].map((t) => (
+                      <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    href="https://www.musicdibs.com/dashboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
+                  >
+                    Registrar mi obra
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ============================= DISTRIBUCIÓN ============================= */}
+          <section id="distribucion" className="relative py-24">
+            <div className="mx-auto max-w-6xl px-6">
+              <div className="grid lg:grid-cols-[1.05fr_1fr] gap-12 items-center">
+                <div>
+                  <p
+                    className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
+                    style={{ color: "oklch(0.85 0.22 340)" }}
+                  >
+                    Distribución global
+                  </p>
+                  <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-5">
+                    Tu música en <span className="text-gradient-brand">+220 plataformas</span>
+                  </h2>
+                  <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
+                    Lanza tus canciones en Spotify, Apple Music, TikTok, YouTube Music,
+                    Amazon Music y más, desde un único panel. Conserva el 100% de tus
+                    derechos y royalties.
+                  </p>
+                  <ul className="space-y-3 mb-8">
+                    {[
+                      "Subida ilimitada de singles, EPs y álbumes",
+                      "Programación de fecha de lanzamiento global",
+                      "Royalties al 100% para el artista",
+                      "Estadísticas unificadas de todas las plataformas",
+                    ].map((t) => (
+                      <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    href="https://www.musicdibs.com/dashboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
+                  >
+                    Distribuir mi música
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
+
+                <div className="relative">
+                  <div
+                    className="absolute -inset-10 rounded-[2rem] blur-3xl opacity-60 pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 50% 50%, #8B5CF6 0%, transparent 60%)",
+                    }}
+                  />
+                  <div
+                    className="relative glass rounded-[1.75rem] p-6 z-10"
+                    style={{
+                      border: "1px solid oklch(0.85 0.22 340 / 0.25)",
+                      boxShadow: "0 40px 80px -30px #8B5CF6",
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center gap-2">
+                        <Globe2 className="h-5 w-5" style={{ color: "oklch(0.85 0.22 340)" }} />
+                        <span className="text-xs uppercase tracking-[0.22em] text-foreground/80 font-semibold">
+                          Lanzamiento global
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">en curso</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        { name: "Spotify", c: "#1DB954" },
+                        { name: "Apple Music", c: "#FA243C" },
+                        { name: "TikTok", c: "#25F4EE" },
+                        { name: "YouTube Music", c: "#FF0033" },
+                        { name: "Amazon Music", c: "#00A8E1" },
+                        { name: "Deezer", c: "#A238FF" },
+                      ].map(({ name, c }) => (
+                        <div
+                          key={name}
+                          className="rounded-xl px-3 py-3 flex items-center gap-3"
+                          style={{
+                            background: "oklch(0.13 0.05 300 / 0.55)",
+                            border: "1px solid oklch(0.85 0.22 340 / 0.18)",
+                          }}
+                        >
+                          <span
+                            className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+                            style={{
+                              background: `${c}22`,
+                              border: `1px solid ${c}55`,
+                            }}
+                          >
+                            <Disc3 className="h-4 w-4" style={{ color: c }} />
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-foreground truncate">{name}</p>
+                            <p className="text-[10px] text-muted-foreground">Activo</p>
+                          </div>
+                          <CheckCircle2 className="h-4 w-4" style={{ color: "oklch(0.85 0.22 340)" }} />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div
+                      className="mt-4 rounded-xl px-4 py-3 text-center text-[11px] font-semibold"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, oklch(0.68 0.27 322 / 0.2), oklch(0.55 0.3 280 / 0.15))",
+                        border: "1px solid oklch(0.85 0.22 340 / 0.25)",
+                        color: "oklch(0.85 0.22 340)",
+                      }}
+                    >
+                      + 214 plataformas adicionales
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ============================= PROMOCIÓN TIKTOK/INSTAGRAM ============================= */}
+          <section id="promocion" className="relative py-24">
+            <div className="mx-auto max-w-6xl px-6">
+              <div className="grid lg:grid-cols-[1fr_1.05fr] gap-12 items-center">
+                <div className="relative order-2 lg:order-1">
+                  <div
+                    className="absolute -inset-10 rounded-[2rem] blur-3xl opacity-60 pointer-events-none"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 30% 70%, oklch(0.68 0.27 322 / 0.5), transparent 60%), radial-gradient(circle at 80% 20%, #25F4EE55, transparent 55%)",
+                    }}
+                  />
+                  <div className="relative grid grid-cols-2 gap-4 z-10">
+                    <div
+                      className="glass rounded-[1.5rem] p-4 flex flex-col"
+                      style={{
+                        border: "1px solid oklch(0.85 0.22 340 / 0.25)",
+                        boxShadow: "0 30px 60px -25px #E1306C",
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <span
+                          className="h-7 w-7 rounded-lg flex items-center justify-center"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, #F58529, #DD2A7B, #8134AF)",
+                          }}
+                        >
+                          <Heart className="h-3.5 w-3.5 text-white" />
+                        </span>
+                        <span className="text-xs font-semibold text-foreground">@musicdibs</span>
+                      </div>
+                      <div
+                        className="aspect-[3/4] rounded-xl mb-3 overflow-hidden relative"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #F58529, #DD2A7B 50%, #8134AF)",
+                        }}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Music2 className="h-10 w-10 text-white/90" />
+                        </div>
+                        <div className="absolute bottom-2 left-2 right-2 text-[10px] text-white/90 font-semibold">
+                          Tu single en Reels
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <Heart className="h-3 w-3" style={{ color: "#DD2A7B" }} /> 12.4k
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="h-3 w-3" /> 3.2k
+                        </span>
+                      </div>
+                    </div>
+
+                    <div
+                      className="glass rounded-[1.5rem] p-4 flex flex-col mt-8"
+                      style={{
+                        border: "1px solid oklch(0.85 0.22 340 / 0.25)",
+                        boxShadow: "0 30px 60px -25px #25F4EE",
+                      }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <span
+                          className="h-7 w-7 rounded-lg flex items-center justify-center"
+                          style={{ background: "#0a0a0a", border: "1px solid #25F4EE" }}
+                        >
+                          <Music2 className="h-3.5 w-3.5" style={{ color: "#25F4EE" }} />
+                        </span>
+                        <span className="text-xs font-semibold text-foreground">@musicdibs_</span>
+                      </div>
+                      <div
+                        className="aspect-[3/4] rounded-xl mb-3 overflow-hidden relative"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, #25F4EE 0%, #000000 50%, #FE2C55 100%)",
+                        }}
+                      >
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Volume2 className="h-10 w-10 text-white/90" />
+                        </div>
+                        <div className="absolute bottom-2 left-2 right-2 text-[10px] text-white/95 font-semibold">
+                          Trend con tu sonido
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <TrendingUp className="h-3 w-3" style={{ color: "#25F4EE" }} /> 48.2k
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="h-3 w-3" /> 9.1k
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="order-1 lg:order-2">
+                  <p
+                    className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
+                    style={{ color: "oklch(0.85 0.22 340)" }}
+                  >
+                    Promoción · TikTok & Instagram
+                  </p>
+                  <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-5">
+                    Haz que tu música <span className="text-gradient-brand">se vuelva viral</span>
+                  </h2>
+                  <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
+                    Activamos tu canción en los canales oficiales de Musicdibs en
+                    TikTok e Instagram, conectándola con creadores de contenido y
+                    audiencias afines para multiplicar tus reproducciones.
+                  </p>
+                  <ul className="space-y-3 mb-8">
+                    {[
+                      "Publicación en @musicdibs (Instagram) y @musicdibs_ (TikTok)",
+                      "Creatividades adaptadas a Reels y formato vertical",
+                      "Conexión con creadores que usan tu sonido",
+                      "Informe de alcance, reproducciones e interacciones",
+                    ].map((t) => (
+                      <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                  <a
+                    href="https://www.musicdibs.com/dashboard"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
+                  >
+                    Promocionar mi música
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* ============================= FINAL CTA ============================= */}
           <section className="relative py-24">
             <div className="mx-auto max-w-4xl px-6">
