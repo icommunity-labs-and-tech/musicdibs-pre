@@ -635,7 +635,6 @@ export default function RegistroMusicalPage() {
                         { name: "TikTok", c: "#25F4EE" },
                         { name: "YouTube Music", c: "#FF0033" },
                         { name: "Amazon Music", c: "#00A8E1" },
-                        { name: "Deezer", c: "#A238FF" },
                       ].map(({ name, c }) => (
                         <div
                           key={name}
