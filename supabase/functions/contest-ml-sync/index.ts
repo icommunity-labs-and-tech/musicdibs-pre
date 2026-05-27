@@ -54,13 +54,11 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function corsHeaders(origin: string) {
-  const allowed = ['https://concurso.musicdibs.com', 'https://musicdibs.com'];
-  const allowedOrigin = allowed.includes(origin) ? origin : allowed[0];
+function corsHeaders(_origin: string) {
   return {
-    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, x-contest-secret',
+    'Access-Control-Allow-Headers': 'content-type, x-contest-secret',
   };
 }
 
