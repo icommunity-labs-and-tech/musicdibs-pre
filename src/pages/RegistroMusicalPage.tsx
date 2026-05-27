@@ -810,9 +810,9 @@ export default function RegistroMusicalPage() {
                     Haz que tu música <span className="text-gradient-brand">se vuelva viral</span>
                   </h2>
                   <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
-                    Activamos tu canción en los canales oficiales de Musicdibs en
-                    TikTok e Instagram, conectándola con creadores de contenido y
-                    audiencias afines para multiplicar tus reproducciones.
+                    Crea o mejora tus canciones, genera contenido promocional con
+                    IA y promociona tu música a través de los canales oficiales de
+                    Musicdibs en TikTok e Instagram.
                   </p>
                   <ul className="space-y-3 mb-8">
                     <li className="flex items-start gap-3 text-sm text-foreground/85">
