@@ -88,12 +88,14 @@ Deno.serve(async (req: Request) => {
   let email: string;
   let name: string;
   let contest: string;
+  let mode: string;
 
   try {
     const body = await req.json();
     email   = (body.email   ?? '').trim().toLowerCase();
     name    = (body.name    ?? '').trim();
     contest = (body.contest ?? '').trim();
+    mode    = (body.mode    ?? 'sync').trim();
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
       status: 400,
@@ -106,6 +108,46 @@ Deno.serve(async (req: Request) => {
       status: 400,
       headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
     });
+  }
+
+  if (mode === 'check') {
+    try {
+      const ML_API_KEY = Deno.env.get('ML_API_KEY');
+      const res = await fetch(`${ML_BASE}/subscribers/${encodeURIComponent(email)}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ML_API_KEY}`,
+        },
+      });
+
+      if (res.status === 404) {
+        return new Response(JSON.stringify({ alreadyParticipated: false }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+        });
+      }
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`ML GET /subscribers/${email} → ${res.status}: ${text}`);
+      }
+
+      const json = await res.json();
+      const groups = json?.data?.groups ?? [];
+      const inGroup = Array.isArray(groups) && groups.some((g: { id?: string }) => String(g?.id) === ML_GROUP_CONCURSOS);
+
+      return new Response(JSON.stringify({ alreadyParticipated: inGroup }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+      });
+    } catch (err) {
+      console.error(`Error ML check para ${email}:`, err);
+      return new Response(JSON.stringify({ error: (err as Error).message }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+      });
+    }
   }
 
   try {
