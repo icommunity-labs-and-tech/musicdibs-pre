@@ -23,11 +23,15 @@ const ML_BASE = 'https://connect.mailerlite.com/api';
 const ML_GROUP_CONCURSOS = '188529232592241973'; // "Concursos y sorteos"
 
 async function mlRequest(path: string, method: string, body?: unknown) {
-  const ML_API_KEY = Deno.env.get('ML_API_KEY');
+  const ML_API_KEY = Deno.env.get('ML_API_KEY') ?? Deno.env.get('MAILERLITE_API_KEY');
+  if (!ML_API_KEY) {
+    throw new Error('ML_API_KEY no configurada');
+  }
   const res = await fetch(`${ML_BASE}${path}`, {
     method,
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       'Authorization': `Bearer ${ML_API_KEY}`,
     },
     body: body ? JSON.stringify(body) : undefined,
