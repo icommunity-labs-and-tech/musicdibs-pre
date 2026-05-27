@@ -120,9 +120,33 @@ function resolveCredits(price: Stripe.Price, definition: PlanDefinition) {
   return Number.isFinite(inferredCredits) && inferredCredits > 0 ? inferredCredits : definition.credits;
 }
 
+// Mapa explícito de price IDs de MusicDibs — evita colisiones con precios Enterprise
+// Si se añaden nuevos planes, actualizar aquí.
+const EXPLICIT_PRICE_IDS: Record<string, string> = {
+  annual_100:  "price_1T8n6CFULeu7PzK6vs7NZyiJ",
+  annual_200:  "price_1TMapTFULeu7PzK640B5uuEq",
+  annual_300:  "price_1TMapTFULeu7PzK6D4GnB3Il",
+  annual_500:  "price_1TMapTFULeu7PzK6cNJMf2oL",
+  annual_1000: "price_1TMapTFULeu7PzK6ziUW5fLn",
+};
+
 async function resolvePlan(stripe: Stripe, planId: string): Promise<ResolvedPlan> {
   const definition = PLAN_DEFINITIONS.find((plan) => plan.planId === planId);
   if (!definition) throw new Error(`Invalid plan: ${planId}`);
+
+  // Si hay un price ID explícito, úsalo directamente — sin búsqueda dinámica.
+  // Esto evita que precios Enterprise (o cualquier precio nuevo con mismo intervalo)
+  // sean seleccionados antes que los precios correctos de MusicDibs.
+  const explicitPriceId = EXPLICIT_PRICE_IDS[planId];
+  if (explicitPriceId) {
+    const price = await stripe.prices.retrieve(explicitPriceId, { expand: ["product"] });
+    if (!price.active) throw new Error(`Price ${explicitPriceId} for plan ${planId} is not active`);
+    return {
+      ...definition,
+      priceId: price.id,
+      credits: resolveCredits(price, definition),
+    };
+  }
 
   const prices = await stripe.prices.list({ active: true, limit: 100, expand: ["data.product"] });
   const price = prices.data.find((candidate: Stripe.Price) => matchesDefinition(candidate, definition));
