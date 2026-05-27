@@ -5,6 +5,8 @@ import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { SocialBanner } from "@/components/landing/SocialBanner";
+import urbanArtistInstagram from "@/assets/urban-artist-instagram.jpg";
+import urbanArtistTiktok from "@/assets/urban-artist-tiktok.jpg";
 import {
   ShieldCheck,
   Globe2,
@@ -717,10 +719,16 @@ export default function RegistroMusicalPage() {
                             "linear-gradient(135deg, #F58529, #DD2A7B 50%, #8134AF)",
                         }}
                       >
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Music2 className="h-10 w-10 text-white/90" />
-                        </div>
-                        <div className="absolute bottom-2 left-2 right-2 text-[10px] text-white/90 font-semibold">
+                        <img
+                          src={urbanArtistInstagram}
+                          alt="Artista urbano promocionado en Instagram Reels"
+                          loading="lazy"
+                          width={768}
+                          height={1024}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                        <div className="absolute bottom-2 left-2 right-2 text-[10px] text-white/95 font-semibold">
                           Tu single en Reels
                         </div>
                       </div>
@@ -735,7 +743,7 @@ export default function RegistroMusicalPage() {
                     </div>
 
                     <div
-                      className="glass rounded-[1.5rem] p-4 flex flex-col mt-8"
+                      className="glass rounded-[1.5rem] p-4 flex flex-col"
                       style={{
                         border: "1px solid oklch(0.85 0.22 340 / 0.25)",
                         boxShadow: "0 30px 60px -25px #25F4EE",
@@ -757,9 +765,15 @@ export default function RegistroMusicalPage() {
                             "linear-gradient(135deg, #25F4EE 0%, #000000 50%, #FE2C55 100%)",
                         }}
                       >
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Volume2 className="h-10 w-10 text-white/90" />
-                        </div>
+                        <img
+                          src={urbanArtistTiktok}
+                          alt="Artista urbana promocionada en TikTok"
+                          loading="lazy"
+                          width={768}
+                          height={1024}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                         <div className="absolute bottom-2 left-2 right-2 text-[10px] text-white/95 font-semibold">
                           Trend con tu sonido
                         </div>
