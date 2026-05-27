@@ -710,7 +710,14 @@ export default function RegistroMusicalPage() {
                         >
                           <Heart className="h-3.5 w-3.5 text-white" />
                         </span>
-                        <span className="text-xs font-semibold text-foreground">@musicdibs</span>
+                        <a
+                          href="https://www.instagram.com/musicdibs/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-foreground hover:underline"
+                        >
+                          @musicdibs
+                        </a>
                       </div>
                       <div
                         className="aspect-[3/4] rounded-xl mb-3 overflow-hidden relative"
@@ -756,7 +763,14 @@ export default function RegistroMusicalPage() {
                         >
                           <Music2 className="h-3.5 w-3.5" style={{ color: "#25F4EE" }} />
                         </span>
-                        <span className="text-xs font-semibold text-foreground">@musicdibs_</span>
+                        <a
+                          href="https://www.tiktok.com/@musicdibs_"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-semibold text-foreground hover:underline"
+                        >
+                          @musicdibs_
+                        </a>
                       </div>
                       <div
                         className="aspect-[3/4] rounded-xl mb-3 overflow-hidden relative"
