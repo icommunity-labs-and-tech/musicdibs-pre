@@ -847,7 +847,7 @@ export default function RegistroMusicalPage() {
                     </li>
                     <li className="flex items-start gap-3 text-sm text-foreground/85">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
-                      Conexión con creadores que usan tu sonido
+                      Audiencias afines para multiplicar tus reproducciones
                     </li>
                     <li className="flex items-start gap-3 text-sm text-foreground/85">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
