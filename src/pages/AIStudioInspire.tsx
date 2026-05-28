@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 import { ArrowLeft, Sparkles, Dice5, Loader2, Download, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 
 const GENRES = ["pop", "urban pop", "reggaeton", "trap", "indie pop", "electronic", "ballad"];
