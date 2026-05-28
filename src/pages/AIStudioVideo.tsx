@@ -37,6 +37,7 @@ import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { useProductTracking } from "@/hooks/useProductTracking";
+import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 
 const VIDEO_STYLE_KEYS = [
   { id: "cinematic", emoji: "🎬", prompt: "cinematic, dramatic lighting, film grain, anamorphic lens" },
