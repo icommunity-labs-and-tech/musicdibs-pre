@@ -603,6 +603,7 @@ const AIEnhance = () => {
                 {t('aiEnhance.pageSubtitle')}
               </p>
             </div>
+            <CreditsChip />
             <Button
               variant="ghost"
               size="sm"
