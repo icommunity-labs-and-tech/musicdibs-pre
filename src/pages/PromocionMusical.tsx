@@ -15,7 +15,11 @@ import {
   Globe2,
   ShieldCheck,
   Music2,
+  Play,
+  Instagram,
+  Eye,
 } from "lucide-react";
+
 
 const CTA_HREF = "https://www.musicdibs.com/login";
 const AUDIENCE = "500"; // miles (placeholder)
