@@ -13,6 +13,7 @@ import { BookOpen } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
 import { useCredits } from "@/hooks/useCredits";
+import { AccountSummary } from "@/components/dashboard/AccountSummary";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { useTranslation } from "react-i18next";
 import ArtistProfilesPage from "@/pages/ArtistProfilesPage";
@@ -270,7 +271,13 @@ const AIStudio = () => {
               </div>
             </div>
 
+            {/* Account Summary */}
+            <div className="max-w-md mx-auto mb-10">
+              <AccountSummary />
+            </div>
+
             {/* Row 1 */}
+
             <div className="grid md:grid-cols-3 gap-6 mb-6">
               {topRowModules.map((m) => renderModuleCard(m))}
             </div>
