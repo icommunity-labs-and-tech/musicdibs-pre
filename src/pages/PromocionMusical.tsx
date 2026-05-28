@@ -52,104 +52,185 @@ export default function PromocionMusical() {
           <BackgroundScene />
           <Navbar ctaText="Promocionar mi música" ctaHref={CTA_HREF} />
 
-          {/* HERO */}
-          <section className="relative pt-36 pb-24 sm:pt-44 sm:pb-32">
-            <div className="mx-auto max-w-7xl px-6 grid lg:grid-cols-2 gap-14 items-center">
-              <div className="animate-fade-in">
+          {/* HERO — composición visual asimétrica */}
+          <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28">
+            {/* Orbes de fondo */}
+            <div
+              className="pointer-events-none absolute -top-10 -left-32 h-[32rem] w-[32rem] rounded-full blur-[120px] opacity-70"
+              style={{ background: "radial-gradient(circle, oklch(0.68 0.27 322 / 0.55), transparent 70%)" }}
+              aria-hidden
+            />
+            <div
+              className="pointer-events-none absolute top-40 -right-28 h-[28rem] w-[28rem] rounded-full blur-[120px] opacity-60"
+              style={{ background: "radial-gradient(circle, oklch(0.55 0.28 285 / 0.55), transparent 70%)" }}
+              aria-hidden
+            />
+
+            <div className="relative mx-auto max-w-7xl px-6">
+              {/* Badge centrado arriba */}
+              <div className="flex justify-center animate-fade-in">
                 <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium tracking-wide text-foreground/80">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Promoción musical · Musicdibs Network
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: "oklch(0.78 0.25 322)" }} />
+                    <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "oklch(0.78 0.25 322)" }} />
+                  </span>
+                  Musicdibs Network · Promoción musical
                 </span>
-                <h1
-                  className="mt-6 font-display font-bold tracking-tight text-4xl sm:text-5xl lg:text-6xl leading-[1.05]"
-                  style={{ textWrap: "balance" as any }}
-                >
-                  Llega a cientos de miles de{" "}
-                  <span className="text-gradient-brand">fans reales</span>.
-                </h1>
-                <p className="mt-6 text-base sm:text-lg text-foreground/75 max-w-xl leading-relaxed">
-                  Impulsa tu música a través de la red de canales de Musicdibs. Aprovecha nuestra
-                  audiencia de más de <strong className="text-foreground">+{AUDIENCE}k seguidores</strong>{" "}
-                  en Instagram especializados en el sector musical para viralizar tu talento.
-                </p>
-                <div className="mt-8 flex flex-wrap items-center gap-4">
-                  <a
-                    href={CTA_HREF}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-magenta inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
-                  >
-                    Promocionar mi música
-                  </a>
-                  <a
-                    href="#como-funciona"
-                    className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
-                  >
-                    Ver cómo funciona →
-                  </a>
-                </div>
               </div>
 
-              {/* Visual element */}
-              <div className="relative animate-fade-in">
-                <div className="relative mx-auto max-w-md aspect-square">
-                  {/* Glow blob */}
+              {/* Título grande centrado */}
+              <h1
+                className="mt-7 text-center font-display font-bold tracking-tight text-5xl sm:text-6xl lg:text-7xl leading-[1.02] max-w-5xl mx-auto animate-fade-in"
+                style={{ textWrap: "balance" as any }}
+              >
+                Llega a cientos de miles de{" "}
+                <span className="text-gradient-brand">fans reales</span>
+              </h1>
+              <p className="mt-6 text-center text-base sm:text-lg text-foreground/75 max-w-2xl mx-auto leading-relaxed">
+                Impulsa tu música con la red de canales de Musicdibs. Más de{" "}
+                <strong className="text-foreground">+{AUDIENCE}k seguidores</strong> reales,
+                especializados en el sector musical, listos para descubrirte.
+              </p>
+
+              {/* Escena visual: vinilo + tarjetas flotantes */}
+              <div className="relative mt-16 mx-auto max-w-5xl h-[440px] sm:h-[520px]">
+                {/* Anillos concéntricos decorativos */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none" aria-hidden>
+                  <div className="absolute h-[420px] w-[420px] rounded-full border border-white/5" />
+                  <div className="absolute h-[560px] w-[560px] rounded-full border border-white/5" />
+                  <div className="absolute h-[700px] w-[700px] rounded-full border border-white/[0.03]" />
+                </div>
+
+                {/* Vinilo / disco central */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
                   <div
-                    className="absolute inset-0 rounded-full blur-3xl opacity-60"
+                    className="relative h-56 w-56 sm:h-72 sm:w-72 rounded-full flex items-center justify-center"
                     style={{
                       background:
-                        "radial-gradient(circle, oklch(0.68 0.27 322 / 0.7), transparent 65%)",
+                        "conic-gradient(from 0deg, oklch(0.2 0.1 320), oklch(0.15 0.08 285), oklch(0.22 0.12 340), oklch(0.18 0.1 300), oklch(0.2 0.1 320))",
+                      boxShadow:
+                        "0 0 0 1px oklch(0.98 0.01 295 / 0.08), 0 30px 80px -20px oklch(0.68 0.27 322 / 0.55), inset 0 0 40px oklch(0 0 0 / 0.6)",
+                      animation: "spin-slow 18s linear infinite",
                     }}
-                    aria-hidden
-                  />
-                  {/* Music player card */}
-                  <div className="relative glass glow-magenta rounded-3xl p-6 mt-10 mx-6">
-                    <div className="flex items-center gap-4">
-                      <div
-                        className="h-16 w-16 rounded-2xl flex items-center justify-center"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
-                        }}
-                      >
-                        <Music2 className="h-7 w-7 text-white" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-foreground truncate">Tu próximo hit</p>
-                        <p className="text-xs text-foreground/60 truncate">Musicdibs · Promo Boost</p>
-                      </div>
-                    </div>
-                    <div className="mt-5 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                      <div
-                        className="h-full w-2/3 rounded-full"
-                        style={{
-                          background:
-                            "linear-gradient(90deg, oklch(0.78 0.25 322), oklch(0.7 0.28 285))",
-                        }}
-                      />
-                    </div>
-                    <div className="mt-2 flex justify-between text-[10px] text-foreground/50 font-medium">
-                      <span>1:42</span>
-                      <span>2:51</span>
+                  >
+                    <div className="absolute inset-4 rounded-full border border-white/5" />
+                    <div className="absolute inset-8 rounded-full border border-white/5" />
+                    <div className="absolute inset-14 rounded-full border border-white/[0.04]" />
+                    <div
+                      className="relative h-24 w-24 sm:h-28 sm:w-28 rounded-full flex items-center justify-center"
+                      style={{
+                        background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
+                        boxShadow: "0 0 30px -4px oklch(0.68 0.27 322 / 0.8)",
+                      }}
+                    >
+                      <Music2 className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+                      <div className="absolute h-3 w-3 rounded-full bg-black" />
                     </div>
                   </div>
+                  <button
+                    aria-label="Reproducir demo"
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-12 w-12 rounded-full flex items-center justify-center backdrop-blur-md transition-transform hover:scale-110"
+                    style={{ background: "oklch(0 0 0 / 0.45)", border: "1px solid oklch(0.98 0.01 295 / 0.25)" }}
+                  >
+                    <Play className="h-5 w-5 text-white" fill="currentColor" />
+                  </button>
+                </div>
 
-                  {/* Floating engagement icons */}
-                  <FloatingIcon className="top-4 right-6" delay="0s">
-                    <Heart className="h-5 w-5" fill="currentColor" />
-                    <span className="text-xs font-bold">12.4k</span>
-                  </FloatingIcon>
-                  <FloatingIcon className="bottom-10 left-2" delay="0.4s">
-                    <MessageCircle className="h-5 w-5" />
-                    <span className="text-xs font-bold">2.1k</span>
-                  </FloatingIcon>
-                  <FloatingIcon className="bottom-24 right-0" delay="0.8s">
-                    <Share2 className="h-5 w-5" />
-                    <span className="text-xs font-bold">8.7k</span>
-                  </FloatingIcon>
+                {/* Tarjetas flotantes */}
+                <OrbitCard className="left-2 top-4 sm:left-8 sm:top-8" delay="0s">
+                  <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045)" }}>
+                    <Instagram className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-foreground/60 leading-none">Nuevos seguidores</p>
+                    <p className="text-lg font-display font-bold text-foreground leading-tight">+12.847</p>
+                  </div>
+                </OrbitCard>
+
+                <OrbitCard className="right-2 top-10 sm:right-6 sm:top-16" delay="0.15s">
+                  <div className="h-9 w-9 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "oklch(0.3 0.2 0 / 0.4)", color: "oklch(0.85 0.25 0)" }}>
+                    <Heart className="h-4 w-4" fill="currentColor" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-foreground/60 leading-none">Me gusta</p>
+                    <p className="text-lg font-display font-bold text-foreground leading-tight">142,4k</p>
+                  </div>
+                </OrbitCard>
+
+                <OrbitCard className="left-0 bottom-12 sm:left-4 sm:bottom-20" delay="0.3s">
+                  <div className="h-9 w-9 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "oklch(0.3 0.15 280 / 0.5)", color: "oklch(0.85 0.2 285)" }}>
+                    <Eye className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-foreground/60 leading-none">Alcance</p>
+                    <p className="text-lg font-display font-bold text-foreground leading-tight">2,1M</p>
+                  </div>
+                </OrbitCard>
+
+                <OrbitCard className="right-0 bottom-6 sm:right-10 sm:bottom-16" delay="0.45s">
+                  <div className="h-9 w-9 rounded-2xl flex items-center justify-center shrink-0" style={{ background: "oklch(0.3 0.2 322 / 0.45)", color: "oklch(0.85 0.25 322)" }}>
+                    <Share2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-foreground/60 leading-none">Compartidos</p>
+                    <p className="text-lg font-display font-bold text-foreground leading-tight">8,7k</p>
+                  </div>
+                </OrbitCard>
+
+                <OrbitCard className="hidden sm:flex left-1/2 -translate-x-1/2 bottom-0" delay="0.6s">
+                  <div className="flex -space-x-2 shrink-0">
+                    {["#ff6b9d", "#8b5cf6", "#22d3ee"].map((c) => (
+                      <div key={c} className="h-7 w-7 rounded-full border-2" style={{ background: c, borderColor: "oklch(0.13 0.05 300)" }} />
+                    ))}
+                  </div>
+                  <div>
+                    <p className="text-[11px] text-foreground/60 leading-none flex items-center gap-1">
+                      <MessageCircle className="h-3 w-3" /> Comentando ahora
+                    </p>
+                    <p className="text-sm font-semibold text-foreground leading-tight">"Esta canción es 🔥"</p>
+                  </div>
+                </OrbitCard>
+
+                {/* Waveform decorativo */}
+                <div className="absolute left-1/2 -bottom-4 -translate-x-1/2 flex items-end gap-1 h-10 opacity-60 pointer-events-none w-64 justify-center" aria-hidden>
+                  {Array.from({ length: 32 }).map((_, i) => (
+                    <span
+                      key={i}
+                      className="w-1 rounded-full"
+                      style={{
+                        height: `${20 + Math.abs(Math.sin(i * 0.7)) * 80}%`,
+                        background: "linear-gradient(180deg, oklch(0.78 0.25 322), oklch(0.55 0.28 285))",
+                        animation: `wave 1.4s ease-in-out ${i * 0.05}s infinite alternate`,
+                      }}
+                    />
+                  ))}
                 </div>
               </div>
+
+              {/* CTA */}
+              <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-5">
+                <a
+                  href={CTA_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-magenta inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold"
+                >
+                  Promocionar mi música
+                </a>
+                <a
+                  href="#como-funciona"
+                  className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors"
+                >
+                  Ver cómo funciona →
+                </a>
+              </div>
             </div>
+
+            <style>{`
+              @keyframes spin-slow { to { transform: rotate(360deg); } }
+              @keyframes wave { from { transform: scaleY(0.5); } to { transform: scaleY(1.1); } }
+              @keyframes float-soft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+            `}</style>
           </section>
 
           {/* SOCIAL PROOF / STATS */}
