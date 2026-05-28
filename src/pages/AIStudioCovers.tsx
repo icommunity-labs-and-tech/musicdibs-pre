@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { parseAiError } from "@/lib/aiErrorHandler"
 import { toast } from "sonner"
 import { useProductTracking } from "@/hooks/useProductTracking"
+import { CreditsChip } from "@/components/ai-studio/CreditsChip"
 import {
   ArrowLeft, Loader2, Download,
   RefreshCw, ImageIcon, Sparkles,
