@@ -165,10 +165,13 @@ const AIStudioCovers = () => {
       <Navbar />
       <AIStudioThemeBar />
       <main className="container mx-auto px-4 py-6 pt-16">
-        <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
-          <ArrowLeft className="w-4 h-4" />
-          {t('aiCovers.backToStudio')}
-        </Link>
+        <div className="flex items-center justify-between mb-8 gap-3">
+          <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4" />
+            {t('aiCovers.backToStudio')}
+          </Link>
+          <CreditsChip />
+        </div>
 
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
