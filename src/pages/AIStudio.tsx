@@ -13,6 +13,7 @@ import { BookOpen } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
 import { useCredits } from "@/hooks/useCredits";
+import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { useTranslation } from "react-i18next";
 import ArtistProfilesPage from "@/pages/ArtistProfilesPage";
