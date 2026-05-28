@@ -13,7 +13,6 @@ import { BookOpen } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
 import { useCredits } from "@/hooks/useCredits";
-import { AccountSummary } from "@/components/dashboard/AccountSummary";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { useTranslation } from "react-i18next";
 import ArtistProfilesPage from "@/pages/ArtistProfilesPage";
@@ -225,21 +224,33 @@ const AIStudio = () => {
       <Navbar />
       <AIStudioThemeBar />
       <main className="container mx-auto px-4 py-6 pt-16">
-        {/* Back Button */}
-        {activeView === "grid" ? (
-          <Link to="/dashboard" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
-            <ArrowLeft className="w-4 h-4" />
-            {t('aiStudio.backToDashboard')}
-          </Link>
-        ) : (
-          <button
-            onClick={() => setActiveView("grid")}
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
+        {/* Back Button + Credits */}
+        <div className="flex items-center justify-between mb-8 gap-3">
+          {activeView === "grid" ? (
+            <Link to="/dashboard" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-4 h-4" />
+              {t('aiStudio.backToDashboard')}
+            </Link>
+          ) : (
+            <button
+              onClick={() => setActiveView("grid")}
+              className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t('aiStudio.backToDashboard', 'Volver al dashboard')}
+            </button>
+          )}
+
+          <Link
+            to="/dashboard/credits"
+            className="inline-flex items-center gap-2 rounded-full border border-border bg-card hover:bg-accent/40 px-3 py-1.5 text-sm transition-colors shadow-sm"
+            title={t('dashboard.creditBadge.tooltip', 'Créditos disponibles')}
           >
-            <ArrowLeft className="w-4 h-4" />
-            {t('aiStudio.backToDashboard', 'Volver al dashboard')}
-          </button>
-        )}
+            <Coins className="w-4 h-4 text-emerald-500" />
+            <span className="font-semibold tabular-nums">{credits ?? '—'}</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">{t('dashboard.account.credits', 'Créditos')}</span>
+          </Link>
+        </div>
 
         {activeView === "grid" ? (
           <>
@@ -271,10 +282,6 @@ const AIStudio = () => {
               </div>
             </div>
 
-            {/* Account Summary */}
-            <div className="max-w-md mx-auto mb-10">
-              <AccountSummary />
-            </div>
 
             {/* Row 1 */}
 
