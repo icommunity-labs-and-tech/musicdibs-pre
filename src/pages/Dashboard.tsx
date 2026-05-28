@@ -87,9 +87,9 @@ export default function Dashboard() {
                 <Upload className="h-6 w-6 text-primary" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-semibold">Registrar una nueva obra</h3>
+                <h3 className="text-base font-semibold">Registrar una nueva canción</h3>
                 <p className="text-sm text-muted-foreground">
-                  Inicia el proceso de registro y protección de tu obra paso a paso.
+                  Registra los los derechos de autor de tus canciones de forma rápida y segura.
                 </p>
               </div>
               <Button variant="hero" onClick={() => guardRegister()} className="w-full">
