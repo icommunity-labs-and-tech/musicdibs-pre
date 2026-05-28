@@ -10,7 +10,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
       entry: {
         title: 'Elegir tipo de protección',
         subtitle: '¿Qué deseas registrar?',
-        newTitle: 'Registrar una nueva obra',
+        newTitle: 'Registrar una nueva canción',
         newDesc: 'Protege una canción, letra, demo o archivo creativo como una obra nueva.',
         versionTitle: 'Registrar una nueva versión de una obra existente',
         versionDesc: 'Protege una nueva versión de una obra ya registrada, manteniendo su relación con la original.',
