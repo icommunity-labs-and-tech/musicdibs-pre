@@ -56,6 +56,7 @@ const CertificateDownloadPage = lazyWithRetry(() => import("./pages/CertificateD
 const IdentityVerificationPage = lazyWithRetry(() => import("./pages/IdentityVerificationPage"));
 const LaunchPage = lazyWithRetry(() => import("./pages/LaunchPage"));
 const IAMusicStudio = lazyWithRetry(() => import("./pages/IAMusicStudio"));
+const PromocionMusical = lazyWithRetry(() => import("./pages/PromocionMusical"));
 
 const AIStudio = lazyWithRetry(() => import("./pages/AIStudio"));
 const AIStudioCreate = lazyWithRetry(() => import("./pages/AIStudioCreate"));
@@ -186,6 +187,7 @@ const App = () => (
               <Route path="/partners" element={<Partners />} />
               <Route path="/verify" element={<Verify />} />
                             <Route path="/ia-music-studio" element={<IAMusicStudio />} />
+              <Route path="/promocion-musical" element={<PromocionMusical />} />
               <Route path="/distribution" element={<Distribution />} />
               <Route path="/marketing" element={<Marketing />} />
               <Route path="/registro-obras-musicales" element={<SongRegistrationPage />} />
