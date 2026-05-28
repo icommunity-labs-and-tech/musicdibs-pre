@@ -383,6 +383,29 @@ function FloatingIcon({
   );
 }
 
+function OrbitCard({
+  children,
+  className = "",
+  delay = "0s",
+}: {
+  children: React.ReactNode;
+  className?: string;
+  delay?: string;
+}) {
+  return (
+    <div
+      className={`absolute glass rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5 ${className}`}
+      style={{
+        animation: `fade-in 0.7s ease-out ${delay} both, float-soft 5s ease-in-out ${delay} infinite`,
+        boxShadow: "0 10px 30px -10px oklch(0 0 0 / 0.5), 0 0 0 1px oklch(0.98 0.01 295 / 0.08)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+
 function Stat({ value, label, sub }: { value: string; label: string; sub: string }) {
   return (
     <div className="text-center sm:text-left sm:px-4">
