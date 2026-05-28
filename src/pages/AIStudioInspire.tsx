@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 import { ArrowLeft, Sparkles, Dice5, Loader2, Download, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 
 const GENRES = ["pop", "urban pop", "reggaeton", "trap", "indie pop", "electronic", "ballad"];
@@ -318,13 +319,16 @@ const AIStudioInspire = () => {
       <AIStudioThemeBar />
 
       <main className="container mx-auto px-4 py-6 pt-16">
-        <Link
-          to="/ai-studio"
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          {t("aiInspire.backToStudio")}
-        </Link>
+        <div className="flex items-center justify-between mb-8 gap-3">
+          <Link
+            to="/ai-studio"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            {t("aiInspire.backToStudio")}
+          </Link>
+          <CreditsChip />
+        </div>
 
         <div className="max-w-2xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">

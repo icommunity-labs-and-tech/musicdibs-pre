@@ -46,6 +46,7 @@ import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { LyricsSectionsEditor } from "@/components/ai-studio/LyricsSectionsEditor";
 import { useProductTracking } from "@/hooks/useProductTracking";
+import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 
 // ── Music tab constants ──
 const DURATION_OPTIONS: { value: number; label: string }[] = [
@@ -1060,10 +1061,13 @@ const AIStudioCreate = () => {
       <AIStudioThemeBar />
 
       <main className="container mx-auto px-3 sm:px-4 py-6 pt-16 w-full max-w-full overflow-x-hidden">
-        <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
-          <ArrowLeft className="w-4 h-4" />
-          {t('aiCreate.backToStudio')}
-        </Link>
+        <div className="flex items-center justify-between mb-8 gap-3">
+          <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4" />
+            {t('aiCreate.backToStudio')}
+          </Link>
+          <CreditsChip />
+        </div>
 
         <div className="grid lg:grid-cols-2 gap-8 lg:items-stretch min-w-0 w-full overflow-x-hidden">
           {/* ═══ LEFT: Creation Panel ═══ */}

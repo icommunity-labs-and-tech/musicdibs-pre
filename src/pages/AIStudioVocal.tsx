@@ -36,6 +36,7 @@ import { HelpCircle } from 'lucide-react';
 import { useProductTracking } from '@/hooks/useProductTracking';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
 import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
+import { CreditsChip } from '@/components/ai-studio/CreditsChip';
 
 const THEMES = ["Amor", "Desamor", "Superación", "Fiesta", "Calle", "Familia", "Libertad", "Nostalgia", "Éxito", "Identidad"];
 const MUSIC_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Reggaeton', 'Flamenco', 'Electrónica', 'Jazz', 'Clásica', 'R&B', 'Latin'];
@@ -357,9 +358,12 @@ export default function AIStudioVocal() {
         <Navbar />
         <AIStudioThemeBar />
         <main className="container mx-auto px-4 py-6 pt-16">
-          <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
-            <ArrowLeft className="w-4 h-4" /> {tv('backToStudio')}
-          </Link>
+          <div className="flex items-center justify-between mb-8 gap-3">
+            <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="w-4 h-4" /> {tv('backToStudio')}
+            </Link>
+            <CreditsChip />
+          </div>
           <div className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
               <Sparkles className="w-4 h-4" />
@@ -395,9 +399,12 @@ export default function AIStudioVocal() {
       <Navbar />
       <AIStudioThemeBar />
       <main className="container mx-auto px-4 py-6 pt-16">
-        <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
-          <ArrowLeft className="w-4 h-4" /> {tv('backToStudio')}
-        </Link>
+        <div className="flex items-center justify-between mb-8 gap-3">
+          <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4" /> {tv('backToStudio')}
+          </Link>
+          <CreditsChip />
+        </div>
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4">
             <Sparkles className="w-4 h-4" />

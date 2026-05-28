@@ -26,6 +26,7 @@ import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { GenerationPicker } from "@/components/ai-studio/GenerationPicker";
+import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 
 const PROCESSING_STEPS = [
   { icon: Waves, key: "eq" },
@@ -512,10 +513,13 @@ const AIStudioEdit = () => {
       <AIStudioThemeBar />
 
       <main className="container mx-auto px-4 py-6 pt-16 max-w-2xl">
-        <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
-          <ArrowLeft className="w-4 h-4" />
-          {t('aiEdit.backToStudio')}
-        </Link>
+        <div className="flex items-center justify-between mb-8 gap-3">
+          <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4" />
+            {t('aiEdit.backToStudio')}
+          </Link>
+          <CreditsChip />
+        </div>
 
         {/* Header */}
         <div className="mb-8 text-center">

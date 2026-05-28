@@ -37,6 +37,7 @@ import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { useProductTracking } from "@/hooks/useProductTracking";
+import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 
 const VIDEO_STYLE_KEYS = [
   { id: "cinematic", emoji: "🎬", prompt: "cinematic, dramatic lighting, film grain, anamorphic lens" },
@@ -499,10 +500,13 @@ const AIStudioVideo = () => {
       <AIStudioThemeBar />
 
       <main className="container mx-auto px-4 py-6 pt-16">
-        <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8">
-          <ArrowLeft className="w-4 h-4" />
-          {t('aiVideo.backToStudio')}
-        </Link>
+        <div className="flex items-center justify-between mb-8 gap-3">
+          <Link to="/ai-studio" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="w-4 h-4" />
+            {t('aiVideo.backToStudio')}
+          </Link>
+          <CreditsChip />
+        </div>
 
         {/* Header */}
         <div className="mb-8">

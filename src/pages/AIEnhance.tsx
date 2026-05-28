@@ -43,6 +43,7 @@ import {
   FileMusic, FileAudio, Mic,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 
 type EnhanceMode = "instrumental" | "cover" | "extend" | "add_vocals";
 type JobStatus = "idle" | "uploading" | "processing" | "completed" | "failed";
@@ -603,6 +604,7 @@ const AIEnhance = () => {
                 {t('aiEnhance.pageSubtitle')}
               </p>
             </div>
+            <CreditsChip />
             <Button
               variant="ghost"
               size="sm"
