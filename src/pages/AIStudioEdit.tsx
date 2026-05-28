@@ -26,6 +26,7 @@ import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { GenerationPicker } from "@/components/ai-studio/GenerationPicker";
+import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 
 const PROCESSING_STEPS = [
   { icon: Waves, key: "eq" },
