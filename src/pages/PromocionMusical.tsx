@@ -512,6 +512,7 @@ function PillarEditorial({
   accentClass,
   glowColor,
   icon,
+  visual,
 }: {
   number: string;
   badge: string;
@@ -526,14 +527,24 @@ function PillarEditorial({
   accentClass: string;
   glowColor: string;
   icon: React.ReactNode;
+  visual?: React.ReactNode;
 }) {
   return (
-    <div className="group relative bg-background/40 p-8 sm:p-10 lg:p-12 overflow-hidden transition-colors hover:bg-background/60">
+    <div className="group relative bg-background/40 overflow-hidden transition-colors hover:bg-background/60">
       {/* Accent glow */}
       <div
         aria-hidden
         className={`absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl bg-gradient-to-br ${accentClass} opacity-60 group-hover:opacity-100 transition-opacity duration-700`}
       />
+
+      {/* Visual hero zone */}
+      {visual && (
+        <div className="relative h-56 sm:h-64 border-b border-white/10 overflow-hidden">
+          {visual}
+        </div>
+      )}
+
+      <div className="relative p-8 sm:p-10 lg:p-12">
 
       {/* Top row: number + icon */}
       <div className="relative flex items-start justify-between">
