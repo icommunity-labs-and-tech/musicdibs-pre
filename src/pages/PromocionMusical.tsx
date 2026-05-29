@@ -3,6 +3,7 @@ import "@/styles/landing-ai-studio.css";
 import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
+import testimonioPoster from "@/assets/testimonio-poster.jpg";
 import {
   Heart,
   Share2,
