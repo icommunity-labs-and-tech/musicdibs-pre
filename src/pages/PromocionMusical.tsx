@@ -367,7 +367,7 @@ function Pillar({
   badgeIcon: React.ReactNode;
   title: string;
   desc: string;
-  features: string[];
+  features: React.ReactNode[];
   icon: React.ReactNode;
 }) {
   const cyan = accent === "cyan";
