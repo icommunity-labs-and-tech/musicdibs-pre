@@ -1,4 +1,14 @@
 import { Helmet } from "react-helmet-async";
+import { useEffect, useState } from "react";
+import Autoplay from "embla-carousel-autoplay";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 import "@/styles/landing-ai-studio.css";
 import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
@@ -271,224 +281,12 @@ export default function PromocionMusical() {
                 </p>
               </div>
 
-              {/* === Block 1: AI Music Studio — Bento grid === */}
+              {/* === Features carousel — one slide per funcionalidad === */}
               <div className="mt-8">
-                <div
-                  className="relative overflow-hidden rounded-2xl p-4 sm:p-5"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.22 0.08 322 / 0.6), oklch(0.18 0.06 285 / 0.6))",
-                    border: "1px solid oklch(0.68 0.27 322 / 0.25)",
-                    boxShadow: "0 0 40px -10px oklch(0.68 0.27 322 / 0.3)",
-                  }}
-                >
-                  <div
-                    className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-40"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
-                    }}
-                  />
-
-                  <div className="relative grid lg:grid-cols-12 gap-3">
-                    {/* Hero tile */}
-                    <div
-                      className="lg:col-span-5 lg:row-span-2 rounded-xl p-5 flex flex-col justify-between min-h-[180px] relative overflow-hidden"
-                      style={{
-                        background:
-                          "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
-                        boxShadow: "0 16px 40px -12px oklch(0.68 0.27 322 / 0.5)",
-                      }}
-                    >
-                      <div className="relative">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
-                          <Sparkles className="h-3 w-3" /> AI Music Studio
-                        </span>
-                        <h3 className="mt-2 font-display font-bold text-xl sm:text-2xl text-white leading-tight">
-                          Crea, mejora y profesionaliza tu música con IA
-                        </h3>
-                        <p className="mt-1.5 text-white/85 text-sm leading-relaxed">
-                          Un estudio completo para llevar tus ideas hasta el máster final, sin salir de Musicdibs.
-                        </p>
-                      </div>
-                      <div className="relative mt-4 flex items-center justify-between">
-                        <Mic2 className="h-10 w-10 text-white/90 drop-shadow-lg" />
-                        <div className="flex gap-1 items-end h-8">
-                          {[0.4, 0.7, 0.5, 0.9, 0.6, 0.8, 0.5, 0.7].map((h, i) => (
-                            <span
-                              key={i}
-                              className="w-1.5 rounded-full bg-white/70"
-                              style={{ height: `${h * 100}%` }}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Bento feature tiles */}
-                    {[
-                      { icon: <Wand2 className="h-5 w-5" />, title: "Crear y mejorar", desc: "Genera canciones nuevas o mejora las tuyas con IA.", span: "lg:col-span-3" },
-                      { icon: <Upload className="h-5 w-5" />, title: "Sube y profesionaliza", desc: "Lleva tus demos a calidad profesional.", span: "lg:col-span-4" },
-                      { icon: <Headphones className="h-5 w-5" />, title: "Masterización", desc: "Máster pro listo para distribuir.", span: "lg:col-span-3" },
-                      { icon: <ImageIcon className="h-5 w-5" />, title: "Contenido promocional", desc: "Portadas, videos y creatividades.", span: "lg:col-span-4" },
-                      { icon: <Users className="h-5 w-5" />, title: "Artistas virtuales", desc: "Crea perfiles e identidades con IA.", span: "lg:col-span-3" },
-                    ].map((f, i) => (
-                      <div
-                        key={i}
-                        className={`${f.span} group rounded-xl p-4 transition-all hover:-translate-y-0.5`}
-                        style={{
-                          background: "oklch(0.15 0.04 285 / 0.5)",
-                          border: "1px solid oklch(0.68 0.27 322 / 0.18)",
-                        }}
-                      >
-                        <div
-                          className="h-8 w-8 rounded-lg flex items-center justify-center text-white"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
-                          }}
-                        >
-                          {f.icon}
-                        </div>
-                        <h4 className="mt-2 font-display font-semibold text-sm text-foreground">{f.title}</h4>
-                        <p className="mt-0.5 text-xs text-foreground/65 leading-relaxed">{f.desc}</p>
-                      </div>
-                    ))}
-
-                  </div>
-                </div>
+                <FeaturesCarousel />
               </div>
 
-              {/* === Block 2: Registro Musical — Certificate split === */}
-              <div className="mt-4">
-                <div
-                  className="relative overflow-hidden rounded-2xl"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, oklch(0.18 0.05 220 / 0.7), oklch(0.16 0.04 195 / 0.7))",
-                    border: "1px solid oklch(0.7 0.22 195 / 0.25)",
-                    boxShadow: "0 0 40px -10px oklch(0.7 0.22 195 / 0.3)",
-                  }}
-                >
-                  <div className="grid lg:grid-cols-2">
-                    {/* Left: Certificate mockup */}
-                    <div
-                      className="relative p-6 sm:p-8 flex items-center justify-center min-h-[260px]"
-                      style={{
-                        background:
-                          "radial-gradient(circle at 30% 30%, oklch(0.7 0.22 195 / 0.18), transparent 60%)",
-                      }}
-                    >
-                      <div
-                        className="pointer-events-none absolute -top-16 -left-16 h-48 w-48 rounded-full blur-3xl opacity-50"
-                        style={{
-                          background:
-                            "linear-gradient(135deg, oklch(0.7 0.22 195), oklch(0.55 0.2 220))",
-                        }}
-                      />
-                      {/* Mock certificate */}
-                      <div
-                        className="relative w-full max-w-xs rounded-xl p-5 rotate-[-3deg] transition-transform hover:rotate-0 duration-500"
-                        style={{
-                          background: "oklch(0.98 0.01 220)",
-                          boxShadow: "0 20px 40px -15px oklch(0 0 0 / 0.5), 0 0 30px -10px oklch(0.7 0.22 195 / 0.4)",
-                        }}
-                      >
-                        <div className="flex items-center justify-between border-b border-black/10 pb-2.5">
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="h-7 w-7 rounded-md flex items-center justify-center text-white"
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, oklch(0.7 0.22 195), oklch(0.55 0.2 220))",
-                              }}
-                            >
-                              <ShieldCheck className="h-3.5 w-3.5" />
-                            </div>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-black/60">
-                              Certificado Blockchain
-                            </span>
-                          </div>
-                          <span className="text-[9px] font-mono text-black/50">#MDB-2026</span>
-                        </div>
-                        <div className="mt-3 space-y-2">
-                          <div className="h-2 w-3/4 rounded-full bg-black/10" />
-                          <div className="h-2 w-1/2 rounded-full bg-black/10" />
-                          <div className="mt-3 grid grid-cols-2 gap-2">
-                            <div>
-                              <div className="text-[9px] font-semibold uppercase text-black/40">Autor</div>
-                              <div className="mt-1 h-1.5 w-full rounded-full bg-black/15" />
-                            </div>
-                            <div>
-                              <div className="text-[9px] font-semibold uppercase text-black/40">Fecha</div>
-                              <div className="mt-1 h-1.5 w-full rounded-full bg-black/15" />
-                            </div>
-                          </div>
-                          <div className="mt-3 flex items-center justify-between">
-                            <div className="flex gap-0.5">
-                              {Array.from({ length: 10 }).map((_, i) => (
-                                <span key={i} className="w-0.5 h-5 bg-black/70" style={{ opacity: Math.random() * 0.5 + 0.5 }} />
-                              ))}
-                            </div>
-                            <CheckCircle2 className="h-6 w-6" style={{ color: "oklch(0.65 0.2 145)" }} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Right: Content */}
-                    <div className="p-6 sm:p-8 flex flex-col justify-center">
-                      <span
-                        className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
-                        style={{
-                          background: "oklch(0.7 0.25 195 / 0.15)",
-                          color: "oklch(0.85 0.22 195)",
-                          border: "1px solid oklch(0.7 0.25 195 / 0.3)",
-                        }}
-                      >
-                        <ShieldCheck className="h-3 w-3" /> Registro Musical
-                      </span>
-                      <h3 className="mt-2 font-display font-bold text-xl sm:text-2xl leading-tight">
-                        Registra tus canciones y protege tus{" "}
-                        <span
-                          style={{
-                            background: "linear-gradient(135deg, oklch(0.78 0.22 195), oklch(0.7 0.22 220))",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                          }}
-                        >
-                          derechos de autor
-                        </span>
-                      </h3>
-                      <p className="mt-2 text-foreground/75 text-sm leading-relaxed">
-                        Evidencia blockchain con fecha, autoría y certificado verificable con validez legal en +180 países.
-                      </p>
-
-                      <ol className="mt-4 space-y-2.5">
-                        {[
-                          { n: "01", label: "Registro de canciones en blockchain" },
-                          { n: "02", label: "Derechos de autor con validez legal" },
-                          { n: "03", label: "Certificado verificable internacional" },
-                        ].map((s) => (
-                          <li key={s.n} className="flex items-center gap-3">
-                            <span
-                              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold text-white"
-                              style={{
-                                background:
-                                  "linear-gradient(135deg, oklch(0.7 0.22 195), oklch(0.55 0.2 220))",
-                                boxShadow: "0 0 16px -4px oklch(0.7 0.22 195 / 0.5)",
-                              }}
-                            >
-                              {s.n}
-                            </span>
-                            <span className="text-sm text-foreground/90 font-medium">{s.label}</span>
-                          </li>
-                        ))}
-                      </ol>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
 
               {/* CTA inline */}
@@ -796,6 +594,232 @@ function EcoCard({
       </div>
       <h3 className="mt-4 font-display font-semibold text-base text-foreground">{title}</h3>
       <p className="mt-1.5 text-sm text-foreground/65 leading-relaxed">{desc}</p>
+    </div>
+  );
+}
+
+// === Features carousel: registro + AI Music Studio tools ===
+type FeatureSlide = {
+  badge: string;
+  badgeIcon: React.ReactNode;
+  title: string;
+  highlight: string;
+  desc: string;
+  icon: React.ReactNode;
+  bullets: string[];
+  accent: "cyan" | "magenta";
+};
+
+const FEATURE_SLIDES: FeatureSlide[] = [
+  {
+    badge: "Registro Musical",
+    badgeIcon: <ShieldCheck className="h-3 w-3" />,
+    title: "Registra tus canciones y protege tus",
+    highlight: "derechos de autor",
+    desc: "Evidencia blockchain con fecha, autoría y certificado verificable con validez legal en +180 países.",
+    icon: <ShieldCheck className="h-7 w-7" />,
+    bullets: [
+      "Registro en blockchain inmutable",
+      "Derechos de autor con validez legal",
+      "Certificado verificable internacional",
+    ],
+    accent: "cyan",
+  },
+  {
+    badge: "AI Music Studio",
+    badgeIcon: <Wand2 className="h-3 w-3" />,
+    title: "Crea y mejora canciones con",
+    highlight: "inteligencia artificial",
+    desc: "Genera ideas nuevas o lleva tus demos al siguiente nivel con modelos de última generación.",
+    icon: <Wand2 className="h-7 w-7" />,
+    bullets: [
+      "Composición asistida por IA",
+      "Mejora calidad de tus pistas",
+      "Variaciones y remezclas en segundos",
+    ],
+    accent: "magenta",
+  },
+  {
+    badge: "Sube y profesionaliza",
+    badgeIcon: <Upload className="h-3 w-3" />,
+    title: "Convierte tus demos en",
+    highlight: "música profesional",
+    desc: "Sube tu material y obtén versiones limpias, equilibradas y listas para sonar como un disco editado.",
+    icon: <Upload className="h-7 w-7" />,
+    bullets: [
+      "Procesado de audio profesional",
+      "Mezcla y limpieza automática",
+      "Resultados listos para distribuir",
+    ],
+    accent: "magenta",
+  },
+  {
+    badge: "Masterización",
+    badgeIcon: <Headphones className="h-3 w-3" />,
+    title: "Máster final con sonido",
+    highlight: "de estudio",
+    desc: "Masterización inteligente adaptada a streaming, radio y plataformas digitales sin perder dinámica.",
+    icon: <Headphones className="h-7 w-7" />,
+    bullets: [
+      "Optimizado para Spotify y YouTube",
+      "Loudness adaptado a cada plataforma",
+      "Calidad broadcast en un clic",
+    ],
+    accent: "magenta",
+  },
+  {
+    badge: "Contenido promocional",
+    badgeIcon: <ImageIcon className="h-3 w-3" />,
+    title: "Genera portadas, vídeos y",
+    highlight: "creatividades virales",
+    desc: "Todo el material visual que necesitas para lanzar tu canción y destacar en redes sociales.",
+    icon: <ImageIcon className="h-7 w-7" />,
+    bullets: [
+      "Portadas únicas con IA",
+      "Vídeos para Reels y TikTok",
+      "Creatividades para campañas",
+    ],
+    accent: "magenta",
+  },
+  {
+    badge: "Artistas virtuales",
+    badgeIcon: <Users className="h-3 w-3" />,
+    title: "Crea perfiles e identidades",
+    highlight: "con IA",
+    desc: "Diseña artistas virtuales completos, con estética, biografía y catálogo coherente desde cero.",
+    icon: <Users className="h-7 w-7" />,
+    bullets: [
+      "Identidad visual coherente",
+      "Estilo, voz y biografía a medida",
+      "Catálogo musical asociado",
+    ],
+    accent: "magenta",
+  },
+];
+
+function FeaturesCarousel() {
+  const [api, setApi] = useState<CarouselApi>();
+  const [selected, setSelected] = useState(0);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+    setCount(api.scrollSnapList().length);
+    setSelected(api.selectedScrollSnap());
+    const onSelect = () => setSelected(api.selectedScrollSnap());
+    api.on("select", onSelect);
+    api.on("reInit", onSelect);
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
+
+  return (
+    <div className="relative">
+      <Carousel
+        setApi={setApi}
+        opts={{ loop: true, align: "start" }}
+        plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
+        className="w-full"
+      >
+        <CarouselContent>
+          {FEATURE_SLIDES.map((s, i) => (
+            <CarouselItem key={i}>
+              <FeatureSlideCard slide={s} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="hidden sm:flex left-2 sm:-left-12 bg-background/60 backdrop-blur border-white/20" />
+        <CarouselNext className="hidden sm:flex right-2 sm:-right-12 bg-background/60 backdrop-blur border-white/20" />
+      </Carousel>
+
+      {/* Dots */}
+      <div className="mt-5 flex items-center justify-center gap-2">
+        {Array.from({ length: count }).map((_, i) => (
+          <button
+            key={i}
+            onClick={() => api?.scrollTo(i)}
+            aria-label={`Ir a la diapositiva ${i + 1}`}
+            className="h-1.5 rounded-full transition-all"
+            style={{
+              width: i === selected ? 28 : 8,
+              background:
+                i === selected
+                  ? "linear-gradient(90deg, oklch(0.68 0.27 322), oklch(0.7 0.22 195))"
+                  : "oklch(0.7 0.05 285 / 0.35)",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FeatureSlideCard({ slide }: { slide: FeatureSlide }) {
+  const cyan = slide.accent === "cyan";
+  const grad = cyan
+    ? "linear-gradient(135deg, oklch(0.7 0.22 195), oklch(0.55 0.2 220))"
+    : "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))";
+  const bgPanel = cyan
+    ? "linear-gradient(135deg, oklch(0.18 0.05 220 / 0.7), oklch(0.16 0.04 195 / 0.7))"
+    : "linear-gradient(135deg, oklch(0.22 0.08 322 / 0.6), oklch(0.18 0.06 285 / 0.6))";
+  const border = cyan
+    ? "1px solid oklch(0.7 0.22 195 / 0.25)"
+    : "1px solid oklch(0.68 0.27 322 / 0.25)";
+  const glow = cyan
+    ? "0 0 40px -10px oklch(0.7 0.22 195 / 0.35)"
+    : "0 0 40px -10px oklch(0.68 0.27 322 / 0.35)";
+  const badgeBg = cyan
+    ? { background: "oklch(0.7 0.25 195 / 0.15)", color: "oklch(0.85 0.22 195)", border: "1px solid oklch(0.7 0.25 195 / 0.3)" }
+    : { background: "oklch(0.68 0.27 322 / 0.18)", color: "oklch(0.85 0.25 322)", border: "1px solid oklch(0.68 0.27 322 / 0.35)" };
+  const highlightStyle = {
+    background: cyan
+      ? "linear-gradient(135deg, oklch(0.78 0.22 195), oklch(0.7 0.22 220))"
+      : "linear-gradient(135deg, oklch(0.8 0.22 322), oklch(0.72 0.22 285))",
+    WebkitBackgroundClip: "text" as const,
+    WebkitTextFillColor: "transparent" as const,
+  };
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl p-6 sm:p-8 min-h-[260px]"
+      style={{ background: bgPanel, border, boxShadow: glow }}
+    >
+      <div
+        className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-40"
+        style={{ background: grad }}
+      />
+      <div className="relative grid md:grid-cols-[auto,1fr] gap-5 sm:gap-7 items-center">
+        <div
+          className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl flex items-center justify-center text-white shrink-0"
+          style={{ background: grad, boxShadow: glow }}
+        >
+          {slide.icon}
+        </div>
+        <div className="min-w-0">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
+            style={badgeBg}
+          >
+            {slide.badgeIcon} {slide.badge}
+          </span>
+          <h3 className="mt-2 font-display font-bold text-xl sm:text-2xl leading-tight">
+            {slide.title}{" "}
+            <span style={highlightStyle}>{slide.highlight}</span>
+          </h3>
+          <p className="mt-2 text-foreground/75 text-sm sm:text-base leading-relaxed">
+            {slide.desc}
+          </p>
+          <ul className="mt-4 grid sm:grid-cols-2 gap-2">
+            {slide.bullets.map((b, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-foreground/90">
+                <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: cyan ? "oklch(0.78 0.22 195)" : "oklch(0.8 0.22 322)" }} />
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
