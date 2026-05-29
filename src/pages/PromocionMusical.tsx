@@ -21,7 +21,13 @@ import {
   BarChart3,
   CheckCircle2,
   ArrowRight,
+  Mic2,
+  Image as ImageIcon,
+  Users,
+  FileMusic,
+  Scale,
 } from "lucide-react";
+
 
 const CTA_HREF = "https://www.musicdibs.com/dashboard";
 
@@ -265,23 +271,51 @@ export default function PromocionMusical() {
                 </p>
               </div>
 
-              <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                <EcoCard
-                  icon={<Sparkles className="h-5 w-5" />}
-                  title="Creación con IA"
-                  desc="Genera ideas, letras y maquetas desde cero."
+              {/* Featured highlight cards */}
+              <div className="mt-14 grid lg:grid-cols-2 gap-6">
+                <FeatureHighlight
+                  accent="magenta"
+                  badge="AI Music Studio"
+                  badgeIcon={<Sparkles className="h-3 w-3" />}
+                  title="Crea, mejora y profesionaliza tu música con IA"
+                  desc="Un estudio completo para llevar tus ideas hasta el máster final, sin salir de Musicdibs."
+                  features={[
+                    { icon: <Wand2 className="h-4 w-4" />, label: "Crear y mejorar canciones con IA" },
+                    { icon: <Upload className="h-4 w-4" />, label: "Sube tu música y profesionalízala" },
+                    { icon: <Headphones className="h-4 w-4" />, label: "Masterización profesional" },
+                    { icon: <ImageIcon className="h-4 w-4" />, label: "Genera contenido promocional" },
+                    { icon: <Users className="h-4 w-4" />, label: "Creación de artistas virtuales" },
+                  ]}
+                  icon={<Mic2 className="h-7 w-7" />}
                 />
-                <EcoCard
-                  icon={<Wand2 className="h-5 w-5" />}
-                  title="Mejora & Mastering"
-                  desc="Herramientas de retoque de audio profesional."
-                />
-                <EcoCard
-                  icon={<ShieldCheck className="h-5 w-5" />}
-                  title="Protección Legal"
-                  desc="Registro de propiedad intelectual inmediato con validez legal."
+                <FeatureHighlight
+                  accent="cyan"
+                  badge="Registro Musical"
+                  badgeIcon={<ShieldCheck className="h-3 w-3" />}
+                  title="Registra tus canciones y protege tus derechos de autor"
+                  desc="Evidencia blockchain con fecha, autoría y certificado verificable con validez legal en +180 países."
+                  features={[
+                    { icon: <FileMusic className="h-4 w-4" />, label: "Registro de canciones en blockchain" },
+                    { icon: <Scale className="h-4 w-4" />, label: "Derechos de autor con validez legal" },
+                    { icon: <ShieldCheck className="h-4 w-4" />, label: "Certificado verificable internacional" },
+                  ]}
+                  icon={<ShieldCheck className="h-7 w-7" />}
                 />
               </div>
+
+              {/* CTA inline */}
+              <div className="mt-10 text-center">
+                <a
+                  href={CTA_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-foreground/80 hover:text-foreground transition-colors"
+                >
+                  Explora todas las herramientas
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+
             </div>
           </section>
 
@@ -470,6 +504,88 @@ function Step({
     </div>
   );
 }
+
+function FeatureHighlight({
+  accent,
+  badge,
+  badgeIcon,
+  title,
+  desc,
+  features,
+  icon,
+}: {
+  accent: "cyan" | "magenta";
+  badge: string;
+  badgeIcon: React.ReactNode;
+  title: string;
+  desc: string;
+  features: { icon: React.ReactNode; label: string }[];
+  icon: React.ReactNode;
+}) {
+  const cyan = accent === "cyan";
+  const grad = cyan
+    ? "linear-gradient(135deg, oklch(0.7 0.22 195), oklch(0.55 0.2 220))"
+    : "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))";
+  const glow = cyan
+    ? "0 0 40px -8px oklch(0.7 0.22 195 / 0.55)"
+    : "0 0 40px -8px oklch(0.68 0.27 322 / 0.6)";
+  const ringColor = cyan ? "oklch(0.7 0.22 195 / 0.25)" : "oklch(0.68 0.27 322 / 0.3)";
+  const badgeBg = cyan
+    ? { background: "oklch(0.7 0.25 195 / 0.15)", color: "oklch(0.85 0.22 195)", border: "1px solid oklch(0.7 0.25 195 / 0.3)" }
+    : { background: "oklch(0.68 0.27 322 / 0.18)", color: "oklch(0.85 0.25 322)", border: "1px solid oklch(0.68 0.27 322 / 0.35)" };
+
+  return (
+    <div
+      className="glass relative overflow-hidden rounded-3xl p-7 sm:p-8 card-hover"
+      style={{ boxShadow: glow }}
+    >
+      {/* Decorative blob */}
+      <div
+        className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full blur-3xl opacity-50"
+        style={{ background: grad }}
+      />
+
+      <div className="relative flex items-start gap-4">
+        <div
+          className="h-14 w-14 rounded-2xl flex items-center justify-center text-white shrink-0"
+          style={{ background: grad, boxShadow: glow }}
+        >
+          {icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
+            style={badgeBg}
+          >
+            {badgeIcon} {badge}
+          </span>
+          <h3 className="mt-3 font-display font-bold text-xl sm:text-2xl leading-tight">{title}</h3>
+        </div>
+      </div>
+
+      <p className="relative mt-5 text-foreground/75 leading-relaxed text-sm sm:text-base">{desc}</p>
+
+      <ul className="relative mt-6 grid sm:grid-cols-2 gap-2.5">
+        {features.map((f, i) => (
+          <li
+            key={i}
+            className="flex items-center gap-2.5 rounded-xl bg-white/[0.03] px-3 py-2.5 text-sm text-foreground/90 transition-colors hover:bg-white/[0.06]"
+            style={{ border: `1px solid ${ringColor}` }}
+          >
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white"
+              style={{ background: grad }}
+            >
+              {f.icon}
+            </span>
+            <span className="leading-tight">{f.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 
 function EcoCard({
   icon,
