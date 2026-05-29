@@ -432,6 +432,109 @@ function Pillar({
   );
 }
 
+function PillarEditorial({
+  number,
+  badge,
+  badgeIcon,
+  title,
+  desc,
+  stat,
+  statLabel,
+  secondaryStat,
+  secondaryLabel,
+  features,
+  accentClass,
+  glowColor,
+  icon,
+}: {
+  number: string;
+  badge: string;
+  badgeIcon: React.ReactNode;
+  title: string;
+  desc: string;
+  stat: string;
+  statLabel: string;
+  secondaryStat: string;
+  secondaryLabel: string;
+  features: React.ReactNode[];
+  accentClass: string;
+  glowColor: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="group relative bg-background/40 p-8 sm:p-10 lg:p-12 overflow-hidden transition-colors hover:bg-background/60">
+      {/* Accent glow */}
+      <div
+        aria-hidden
+        className={`absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl bg-gradient-to-br ${accentClass} opacity-60 group-hover:opacity-100 transition-opacity duration-700`}
+      />
+
+      {/* Top row: number + icon */}
+      <div className="relative flex items-start justify-between">
+        <span
+          className="font-display font-black text-7xl sm:text-8xl leading-none text-transparent"
+          style={{
+            WebkitTextStroke: "1px oklch(0.98 0.01 295 / 0.25)",
+          }}
+        >
+          {number}
+        </span>
+        <div
+          className="h-12 w-12 rounded-2xl flex items-center justify-center text-white"
+          style={{
+            background: "oklch(0.98 0.01 295 / 0.06)",
+            border: "1px solid oklch(0.98 0.01 295 / 0.12)",
+            boxShadow: `0 0 24px -4px ${glowColor}`,
+          }}
+        >
+          {icon}
+        </div>
+      </div>
+
+      {/* Badge */}
+      <span className="relative mt-6 inline-flex items-center gap-1.5 rounded-full glass px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground/85">
+        {badgeIcon} {badge}
+      </span>
+
+      {/* Title + desc */}
+      <h3 className="relative mt-4 font-display font-bold text-2xl sm:text-3xl leading-tight">
+        {title}
+      </h3>
+      <p className="relative mt-3 text-foreground/70 leading-relaxed text-[15px]">{desc}</p>
+
+      {/* Stats row */}
+      <div className="relative mt-8 grid grid-cols-2 gap-4 py-5 border-y border-white/10">
+        <div>
+          <div className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-foreground">
+            {stat}
+          </div>
+          <div className="mt-1 text-[11px] uppercase tracking-wider text-foreground/55">
+            {statLabel}
+          </div>
+        </div>
+        <div>
+          <div className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-foreground">
+            {secondaryStat}
+          </div>
+          <div className="mt-1 text-[11px] uppercase tracking-wider text-foreground/55">
+            {secondaryLabel}
+          </div>
+        </div>
+      </div>
+
+      {/* Features */}
+      <ul className="relative mt-6 space-y-2.5">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/85">
+            <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-foreground/60" />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function PlatformPill({
   className = "",
   label,
