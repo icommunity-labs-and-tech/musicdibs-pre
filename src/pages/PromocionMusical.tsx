@@ -271,23 +271,51 @@ export default function PromocionMusical() {
                 </p>
               </div>
 
-              <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                <EcoCard
-                  icon={<Sparkles className="h-5 w-5" />}
-                  title="Creación con IA"
-                  desc="Genera ideas, letras y maquetas desde cero."
+              {/* Featured highlight cards */}
+              <div className="mt-14 grid lg:grid-cols-2 gap-6">
+                <FeatureHighlight
+                  accent="magenta"
+                  badge="AI Music Studio"
+                  badgeIcon={<Sparkles className="h-3 w-3" />}
+                  title="Crea, mejora y profesionaliza tu música con IA"
+                  desc="Un estudio completo para llevar tus ideas hasta el máster final, sin salir de Musicdibs."
+                  features={[
+                    { icon: <Wand2 className="h-4 w-4" />, label: "Crear y mejorar canciones con IA" },
+                    { icon: <Upload className="h-4 w-4" />, label: "Sube tu música y profesionalízala" },
+                    { icon: <Headphones className="h-4 w-4" />, label: "Masterización profesional" },
+                    { icon: <ImageIcon className="h-4 w-4" />, label: "Genera contenido promocional" },
+                    { icon: <Users className="h-4 w-4" />, label: "Creación de artistas virtuales" },
+                  ]}
+                  icon={<Mic2 className="h-7 w-7" />}
                 />
-                <EcoCard
-                  icon={<Wand2 className="h-5 w-5" />}
-                  title="Mejora & Mastering"
-                  desc="Herramientas de retoque de audio profesional."
-                />
-                <EcoCard
-                  icon={<ShieldCheck className="h-5 w-5" />}
-                  title="Protección Legal"
-                  desc="Registro de propiedad intelectual inmediato con validez legal."
+                <FeatureHighlight
+                  accent="cyan"
+                  badge="Registro Musical"
+                  badgeIcon={<ShieldCheck className="h-3 w-3" />}
+                  title="Registra tus canciones y protege tus derechos de autor"
+                  desc="Evidencia blockchain con fecha, autoría y certificado verificable con validez legal en +180 países."
+                  features={[
+                    { icon: <FileMusic className="h-4 w-4" />, label: "Registro de canciones en blockchain" },
+                    { icon: <Scale className="h-4 w-4" />, label: "Derechos de autor con validez legal" },
+                    { icon: <ShieldCheck className="h-4 w-4" />, label: "Certificado verificable internacional" },
+                  ]}
+                  icon={<ShieldCheck className="h-7 w-7" />}
                 />
               </div>
+
+              {/* CTA inline */}
+              <div className="mt-10 text-center">
+                <a
+                  href={CTA_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-foreground/80 hover:text-foreground transition-colors"
+                >
+                  Explora todas las herramientas
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+
             </div>
           </section>
 
