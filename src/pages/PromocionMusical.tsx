@@ -85,8 +85,8 @@ export default function PromocionMusical() {
                 <span className="text-gradient-brand">llega a miles de fans</span>
               </h1>
               <p className="mt-6 text-center text-base sm:text-lg text-foreground/75 max-w-3xl mx-auto leading-relaxed">
-                Distribuye tus canciones en más de <strong className="text-foreground">220 plataformas globales</strong> y, al mismo tiempo, impúlsalas en la red de canales de Musicdibs, con una audiencia de{" "}
-                <strong className="text-foreground">cientos de miles de seguidores reales</strong> en Instagram especializados en el sector musical.
+                Distribuye tus canciones en más de <strong className="text-foreground">220 plataformas globales</strong> y, al mismo tiempo, impúlsalas en los canales de Musicdibs, con una audiencia de{" "}
+                <strong className="text-foreground">cientos de miles de seguidores reales</strong> especializados en el sector musical.
               </p>
 
               {/* CTAs */}
