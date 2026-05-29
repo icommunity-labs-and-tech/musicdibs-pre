@@ -256,6 +256,28 @@ export default function PromocionMusical() {
                   accentClass="from-cyan-400/30 via-cyan-500/10 to-transparent"
                   glowColor="oklch(0.7 0.25 195 / 0.55)"
                   icon={<Radio className="h-6 w-6" />}
+                  visual={
+                    <div className="relative h-full w-full flex items-center justify-center" aria-hidden>
+                      <div className="absolute h-48 w-48 rounded-full border border-cyan-300/20" style={{ animation: "spin-slow 28s linear infinite" }} />
+                      <div className="absolute h-64 w-64 rounded-full border border-cyan-300/10" style={{ animation: "spin-slow 40s linear infinite reverse" }} />
+                      <div className="absolute h-80 w-80 rounded-full border border-cyan-300/5" />
+                      <div
+                        className="relative h-24 w-24 rounded-full flex items-center justify-center"
+                        style={{
+                          background: "radial-gradient(circle at 30% 30%, oklch(0.75 0.2 195), oklch(0.3 0.15 240))",
+                          boxShadow: "0 0 50px -4px oklch(0.7 0.25 195 / 0.8), inset -8px -8px 22px oklch(0 0 0 / 0.55)",
+                        }}
+                      >
+                        <Globe2 className="h-10 w-10 text-white/95" />
+                      </div>
+                      <PlatformPill className="left-[6%] top-[12%]" label="Spotify" color="#1DB954" delay="0s" />
+                      <PlatformPill className="right-[6%] top-[20%]" label="Apple Music" color="#fa57c1" delay="0.2s" />
+                      <PlatformPill className="left-[10%] bottom-[14%]" label="YouTube" color="#ff4d4d" delay="0.4s" />
+                      <PlatformPill className="right-[8%] bottom-[18%]" label="Amazon" color="#ffb84d" delay="0.6s" />
+                      <PlatformPill className="left-[42%] top-[2%]" label="Tidal" color="#22d3ee" delay="0.8s" />
+                      <PlatformPill className="right-[40%] bottom-[2%]" label="Deezer" color="#a78bfa" delay="1s" />
+                    </div>
+                  }
                 />
 
                 {/* Pilar 2 — Promoción */}
@@ -277,8 +299,52 @@ export default function PromocionMusical() {
                   accentClass="from-fuchsia-400/30 via-fuchsia-500/10 to-transparent"
                   glowColor="oklch(0.68 0.27 322 / 0.55)"
                   icon={<Headphones className="h-6 w-6" />}
+                  visual={
+                    <div className="relative h-full w-full flex items-center justify-center" aria-hidden>
+                      <div
+                        className="relative h-28 w-28 rounded-full flex items-center justify-center"
+                        style={{
+                          background: "conic-gradient(from 0deg, oklch(0.2 0.1 320), oklch(0.15 0.08 285), oklch(0.22 0.12 340), oklch(0.18 0.1 300), oklch(0.2 0.1 320))",
+                          boxShadow: "0 0 50px -4px oklch(0.68 0.27 322 / 0.8), inset 0 0 26px oklch(0 0 0 / 0.6)",
+                          animation: "spin-slow 14s linear infinite",
+                        }}
+                      >
+                        <div className="absolute inset-3 rounded-full border border-white/5" />
+                        <div className="absolute inset-6 rounded-full border border-white/5" />
+                        <div
+                          className="h-10 w-10 rounded-full flex items-center justify-center"
+                          style={{ background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))" }}
+                        >
+                          <Music2 className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                      <EngagePill className="left-[6%] top-[12%]" icon={<Heart className="h-3.5 w-3.5" fill="currentColor" />} label="142,4k" tone="rose" delay="0s" />
+                      <EngagePill className="right-[6%] top-[18%]" icon={<Share2 className="h-3.5 w-3.5" />} label="8,7k" tone="violet" delay="0.2s" />
+                      <EngagePill className="left-[8%] bottom-[26%]" icon={<Eye className="h-3.5 w-3.5" />} label="2,1M" tone="cyan" delay="0.4s" />
+                      <EngagePill className="right-[8%] bottom-[30%]" icon={<MessageCircle className="h-3.5 w-3.5" />} label="+12k" tone="magenta" delay="0.6s" />
+                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-end justify-center gap-1 h-10 w-[70%] opacity-80">
+                        {Array.from({ length: 32 }).map((_, i) => (
+                          <span
+                            key={i}
+                            className="w-1 rounded-full flex-1"
+                            style={{
+                              height: `${20 + Math.abs(Math.sin(i * 0.6)) * 80}%`,
+                              background: "linear-gradient(180deg, oklch(0.8 0.25 322), oklch(0.55 0.28 285))",
+                              animation: `wave 1.4s ease-in-out ${i * 0.05}s infinite alternate`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  }
                 />
               </div>
+
+              <style>{`
+                @keyframes spin-slow { to { transform: rotate(360deg); } }
+                @keyframes wave { from { transform: scaleY(0.45); } to { transform: scaleY(1.1); } }
+                @keyframes float-soft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+              `}</style>
 
               {/* Bridge note */}
               <p className="mt-8 text-center text-sm text-foreground/60 max-w-xl mx-auto">
