@@ -327,15 +327,15 @@ export default function PromocionMusical() {
 
                     {/* Bento feature tiles */}
                     {[
-                      { icon: <Wand2 className="h-5 w-5" />, title: "Crear y mejorar", desc: "Genera canciones nuevas o mejora las tuyas con IA." },
-                      { icon: <Upload className="h-5 w-5" />, title: "Sube y profesionaliza", desc: "Lleva tus demos a calidad profesional." },
-                      { icon: <Headphones className="h-5 w-5" />, title: "Masterización", desc: "Máster pro listo para distribuir." },
-                      { icon: <ImageIcon className="h-5 w-5" />, title: "Contenido promocional", desc: "Portadas, videos y creatividades." },
-                      { icon: <Users className="h-5 w-5" />, title: "Artistas virtuales", desc: "Crea perfiles e identidades con IA." },
+                      { icon: <Wand2 className="h-5 w-5" />, title: "Crear y mejorar", desc: "Genera canciones nuevas o mejora las tuyas con IA.", span: "lg:col-span-3" },
+                      { icon: <Upload className="h-5 w-5" />, title: "Sube y profesionaliza", desc: "Lleva tus demos a calidad profesional.", span: "lg:col-span-4" },
+                      { icon: <Headphones className="h-5 w-5" />, title: "Masterización", desc: "Máster pro listo para distribuir.", span: "lg:col-span-3" },
+                      { icon: <ImageIcon className="h-5 w-5" />, title: "Contenido promocional", desc: "Portadas, videos y creatividades.", span: "lg:col-span-4" },
+                      { icon: <Users className="h-5 w-5" />, title: "Artistas virtuales", desc: "Crea perfiles e identidades con IA.", span: "lg:col-span-3" },
                     ].map((f, i) => (
                       <div
                         key={i}
-                        className={`lg:col-span-${i === 4 ? "7" : "3"} group rounded-2xl p-5 transition-all hover:-translate-y-0.5`}
+                        className={`${f.span} group rounded-2xl p-5 transition-all hover:-translate-y-0.5`}
                         style={{
                           background: "oklch(0.15 0.04 285 / 0.5)",
                           border: "1px solid oklch(0.68 0.27 322 / 0.18)",
@@ -354,6 +354,7 @@ export default function PromocionMusical() {
                         <p className="mt-1 text-xs text-foreground/65 leading-relaxed">{f.desc}</p>
                       </div>
                     ))}
+
                   </div>
                 </div>
               </div>
