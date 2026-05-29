@@ -230,7 +230,7 @@ export default function PromocionMusical() {
                   title="Promoción en Redes"
                   desc="No solo distribuimos, te hacemos visible. Conectamos tu música directamente con nuestra comunidad de cientos de miles de seguidores melómanos y profesionales del sector de la música."
                   features={[
-                    "Canal de Instagram y TikTok",
+                    <>Canal de <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Instagram</a> y TikTok</>,
                     "Audiencia real, no bots ni inflada",
                     "Promoción curada por expertos del sector",
                     "Crecimiento orgánico medible",
@@ -367,7 +367,7 @@ function Pillar({
   badgeIcon: React.ReactNode;
   title: string;
   desc: string;
-  features: string[];
+  features: React.ReactNode[];
   icon: React.ReactNode;
 }) {
   const cyan = accent === "cyan";
@@ -404,8 +404,8 @@ function Pillar({
       <p className="mt-5 text-foreground/75 leading-relaxed">{desc}</p>
 
       <ul className="mt-6 space-y-2.5">
-        {features.map((f) => (
-          <li key={f} className="flex items-start gap-2.5 text-sm text-foreground/85">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/85">
             <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: cyan ? "oklch(0.78 0.22 195)" : "oklch(0.82 0.25 322)" }} />
             <span>{f}</span>
           </li>
