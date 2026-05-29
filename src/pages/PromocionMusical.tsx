@@ -272,48 +272,48 @@ export default function PromocionMusical() {
               </div>
 
               {/* === Block 1: AI Music Studio — Bento grid === */}
-              <div className="mt-14">
+              <div className="mt-8">
                 <div
-                  className="relative overflow-hidden rounded-3xl p-6 sm:p-8"
+                  className="relative overflow-hidden rounded-2xl p-4 sm:p-5"
                   style={{
                     background:
                       "linear-gradient(135deg, oklch(0.22 0.08 322 / 0.6), oklch(0.18 0.06 285 / 0.6))",
                     border: "1px solid oklch(0.68 0.27 322 / 0.25)",
-                    boxShadow: "0 0 60px -10px oklch(0.68 0.27 322 / 0.45)",
+                    boxShadow: "0 0 40px -10px oklch(0.68 0.27 322 / 0.3)",
                   }}
                 >
                   <div
-                    className="pointer-events-none absolute -top-32 -right-32 h-80 w-80 rounded-full blur-3xl opacity-40"
+                    className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-40"
                     style={{
                       background:
                         "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
                     }}
                   />
 
-                  <div className="relative grid lg:grid-cols-12 gap-5">
+                  <div className="relative grid lg:grid-cols-12 gap-3">
                     {/* Hero tile */}
                     <div
-                      className="lg:col-span-5 lg:row-span-2 rounded-2xl p-7 flex flex-col justify-between min-h-[260px] relative overflow-hidden"
+                      className="lg:col-span-5 lg:row-span-2 rounded-xl p-5 flex flex-col justify-between min-h-[180px] relative overflow-hidden"
                       style={{
                         background:
                           "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
-                        boxShadow: "0 20px 50px -15px oklch(0.68 0.27 322 / 0.6)",
+                        boxShadow: "0 16px 40px -12px oklch(0.68 0.27 322 / 0.5)",
                       }}
                     >
                       <div className="relative">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
                           <Sparkles className="h-3 w-3" /> AI Music Studio
                         </span>
-                        <h3 className="mt-4 font-display font-bold text-2xl sm:text-3xl text-white leading-tight">
+                        <h3 className="mt-2 font-display font-bold text-xl sm:text-2xl text-white leading-tight">
                           Crea, mejora y profesionaliza tu música con IA
                         </h3>
-                        <p className="mt-3 text-white/85 text-sm leading-relaxed">
+                        <p className="mt-1.5 text-white/85 text-sm leading-relaxed">
                           Un estudio completo para llevar tus ideas hasta el máster final, sin salir de Musicdibs.
                         </p>
                       </div>
-                      <div className="relative mt-6 flex items-center justify-between">
-                        <Mic2 className="h-14 w-14 text-white/90 drop-shadow-lg" />
-                        <div className="flex gap-1 items-end h-12">
+                      <div className="relative mt-4 flex items-center justify-between">
+                        <Mic2 className="h-10 w-10 text-white/90 drop-shadow-lg" />
+                        <div className="flex gap-1 items-end h-8">
                           {[0.4, 0.7, 0.5, 0.9, 0.6, 0.8, 0.5, 0.7].map((h, i) => (
                             <span
                               key={i}
@@ -335,14 +335,14 @@ export default function PromocionMusical() {
                     ].map((f, i) => (
                       <div
                         key={i}
-                        className={`${f.span} group rounded-2xl p-5 transition-all hover:-translate-y-0.5`}
+                        className={`${f.span} group rounded-xl p-4 transition-all hover:-translate-y-0.5`}
                         style={{
                           background: "oklch(0.15 0.04 285 / 0.5)",
                           border: "1px solid oklch(0.68 0.27 322 / 0.18)",
                         }}
                       >
                         <div
-                          className="h-9 w-9 rounded-xl flex items-center justify-center text-white"
+                          className="h-8 w-8 rounded-lg flex items-center justify-center text-white"
                           style={{
                             background:
                               "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
@@ -350,8 +350,8 @@ export default function PromocionMusical() {
                         >
                           {f.icon}
                         </div>
-                        <h4 className="mt-3 font-display font-semibold text-sm text-foreground">{f.title}</h4>
-                        <p className="mt-1 text-xs text-foreground/65 leading-relaxed">{f.desc}</p>
+                        <h4 className="mt-2 font-display font-semibold text-sm text-foreground">{f.title}</h4>
+                        <p className="mt-0.5 text-xs text-foreground/65 leading-relaxed">{f.desc}</p>
                       </div>
                     ))}
 
