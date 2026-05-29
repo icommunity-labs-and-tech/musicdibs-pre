@@ -96,10 +96,9 @@ Deno.serve(async (req: Request) => {
   let contest: string;
   let mode: string;
   let instagram: string;
-  let body: { email?: string; name?: string; contest?: string; mode?: string; instagram?: string };
 
   try {
-    body = await req.json();
+    const body = await req.json();
     email     = (body.email     ?? '').trim().toLowerCase();
     name      = (body.name      ?? '').trim();
     contest   = (body.contest   ?? '').trim();
