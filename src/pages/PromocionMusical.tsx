@@ -227,10 +227,10 @@ export default function PromocionMusical() {
                   accent="magenta"
                   badgeIcon={<Megaphone className="h-3.5 w-3.5" />}
                   badge="Pilar 2"
-                  title="Promoción Orgánica en Redes"
-                  desc="No solo distribuimos, te hacemos visible. Conectamos tu música directamente con nuestra comunidad de cientos de miles de seguidores melómanos y profesionales del sector en Instagram."
+                  title="Promoción en Redes"
+                  desc="No solo distribuimos, te hacemos visible. Conectamos tu música directamente con nuestra comunidad de cientos de miles de seguidores melómanos y profesionales del sector de la música."
                   features={[
-                    "Red propia de canales especializados en música",
+                    "Canal de Instagram y TikTok",
                     "Audiencia real, no bots ni inflada",
                     "Promoción curada por expertos del sector",
                     "Crecimiento orgánico medible",
