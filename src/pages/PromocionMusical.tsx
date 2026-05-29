@@ -230,7 +230,7 @@ export default function PromocionMusical() {
                   title="Promoción en Redes"
                   desc="No solo distribuimos, te hacemos visible. Conectamos tu música directamente con nuestra comunidad de cientos de miles de seguidores melómanos y profesionales del sector de la música."
                   features={[
-                    <>Canal de <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Instagram</a> y TikTok</>,
+                    <>Canal de <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Instagram</a> y <a href="https://www.tiktok.com/@musicdibs_" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">TikTok</a></>,
                     "Audiencia real, no bots ni inflada",
                     "Promoción curada por expertos del sector",
                     "Crecimiento orgánico medible",
