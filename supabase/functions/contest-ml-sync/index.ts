@@ -152,6 +152,38 @@ Deno.serve(async (req: Request) => {
       const groups = json?.data?.groups ?? [];
       const inGroup = Array.isArray(groups) && groups.some((g: { id?: string }) => String(g?.id) === ML_GROUP_CONCURSOS);
 
+      // Si email no participó, comprobar por Instagram
+      if (!inGroup && instagram) {
+        const ig = instagram.startsWith('@') ? instagram : `@${instagram}`;
+        let cursor: string | null = null;
+        let foundByIg = false;
+        do {
+          const url = new URL(`${ML_BASE}/subscribers`);
+          url.searchParams.set('filter[group]', ML_GROUP_CONCURSOS);
+          url.searchParams.set('limit', '100');
+          if (cursor) url.searchParams.set('cursor', cursor);
+          const r: Response = await fetch(url.toString(), {
+            headers: { Accept: 'application/json', Authorization: `Bearer ${ML_API_KEY}` },
+          });
+          if (!r.ok) break;
+          const j = await r.json();
+          const subs = j?.data ?? [];
+          if (subs.some((s: { fields?: { company?: string } }) =>
+            String(s?.fields?.company ?? '').trim().toLowerCase() === ig
+          )) {
+            foundByIg = true;
+            break;
+          }
+          cursor = j?.meta?.next_cursor ?? null;
+        } while (cursor);
+        if (foundByIg) {
+          return new Response(JSON.stringify({ alreadyParticipated: true }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
+          });
+        }
+      }
+
       return new Response(JSON.stringify({ alreadyParticipated: inGroup }), {
         status: 200,
         headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
