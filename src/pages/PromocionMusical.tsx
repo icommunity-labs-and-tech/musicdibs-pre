@@ -214,10 +214,10 @@ export default function PromocionMusical() {
                   badgeIcon={<Globe2 className="h-3.5 w-3.5" />}
                   badge="Pilar 1"
                   title="Distribución Global Ilimitada"
-                  desc="Colocamos tu música en más de 220 plataformas digitales (Spotify, Apple Music, Amazon, Deezer, TikTok…). Controla tus regalías, estadísticas y lanzamientos desde un único panel profesional."
+                  desc="Lanza tu música en más de 220 plataformas digitales (Spotify, Apple Music, Amazon, Youtube Music,…). Controla tus regalías, estadísticas y lanzamientos desde un único panel profesional."
                   features={[
                     "+220 plataformas digitales en todo el mundo",
-                    "Regalías 100% para el artista",
+                    "Regalías 95% para el artista",
                     "Panel unificado con estadísticas en tiempo real",
                     "Lanzamientos ilimitados",
                   ]}
