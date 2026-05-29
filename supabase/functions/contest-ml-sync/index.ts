@@ -95,13 +95,16 @@ Deno.serve(async (req: Request) => {
   let name: string;
   let contest: string;
   let mode: string;
+  let instagram: string;
+  let body: { email?: string; name?: string; contest?: string; mode?: string; instagram?: string };
 
   try {
-    const body = await req.json();
-    email   = (body.email   ?? '').trim().toLowerCase();
-    name    = (body.name    ?? '').trim();
-    contest = (body.contest ?? '').trim();
-    mode    = (body.mode    ?? 'sync').trim();
+    body = await req.json();
+    email     = (body.email     ?? '').trim().toLowerCase();
+    name      = (body.name      ?? '').trim();
+    contest   = (body.contest   ?? '').trim();
+    mode      = (body.mode      ?? 'sync').trim();
+    instagram = (body.instagram ?? '').trim().toLowerCase();
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
       status: 400,
