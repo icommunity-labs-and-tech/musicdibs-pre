@@ -44,10 +44,14 @@ async function mlRequest(path: string, method: string, body?: unknown) {
   return res.status === 204 ? null : res.json();
 }
 
-async function addToContestGroup(email: string, name: string, contest: string) {
+async function addToContestGroup(email: string, name: string, contest: string, instagram: string) {
   return mlRequest('/subscribers', 'POST', {
     email,
-    fields: { name, ...(contest ? { last_name: contest } : {}) },
+    fields: {
+      name,
+      ...(contest ? { last_name: contest } : {}),
+      ...(instagram ? { company: instagram } : {}),
+    },
     groups: [ML_GROUP_CONCURSOS],
     resubscribe: true,
     autoresponders: true,
