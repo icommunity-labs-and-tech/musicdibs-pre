@@ -23,7 +23,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-const CTA_HREF = "https://www.musicdibs.com/login";
+const CTA_HREF = "https://www.musicdibs.com/dashboard";
 
 export default function PromocionMusical() {
   return (
