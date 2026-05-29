@@ -23,7 +23,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-const CTA_HREF = "https://www.musicdibs.com/login";
+const CTA_HREF = "https://www.musicdibs.com/dashboard";
 
 export default function PromocionMusical() {
   return (
@@ -89,7 +89,7 @@ export default function PromocionMusical() {
                 <strong className="text-foreground">cientos de miles de seguidores reales</strong> especializados en el sector musical.
               </p>
 
-              {/* CTAs */}
+              {/* CTA */}
               <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
                   href={CTA_HREF}
@@ -98,12 +98,6 @@ export default function PromocionMusical() {
                   className="btn-magenta inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold"
                 >
                   Empezar ahora
-                </a>
-                <a
-                  href="#como-funciona"
-                  className="btn-ghost inline-flex items-center gap-2 rounded-full px-7 py-4 text-sm font-semibold"
-                >
-                  Ver cómo funciona
                 </a>
               </div>
 
