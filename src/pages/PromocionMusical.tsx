@@ -250,7 +250,7 @@ export default function PromocionMusical() {
 
           {/* ECOSYSTEM */}
           <section
-            className="relative py-24 sm:py-32"
+            className="relative py-14 sm:py-18"
             style={{
               backgroundImage:
                 "linear-gradient(oklch(0.98 0.01 295 / 0.04) 1px, transparent 1px), linear-gradient(90deg, oklch(0.98 0.01 295 / 0.04) 1px, transparent 1px)",
