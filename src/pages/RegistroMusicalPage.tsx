@@ -7,6 +7,7 @@ import { Footer } from "@/components/landing/Footer";
 import { SocialBanner } from "@/components/landing/SocialBanner";
 import urbanArtistInstagram from "@/assets/urban-artist-instagram.jpg";
 import urbanArtistTiktok from "@/assets/urban-artist-tiktok.jpg";
+import testimonioPoster from "@/assets/testimonio-poster.jpg";
 import {
   ShieldCheck,
   Globe2,
@@ -455,11 +456,13 @@ export default function RegistroMusicalPage() {
               <div className="relative mx-auto max-w-3xl rounded-2xl overflow-hidden shadow-2xl border border-border/40">
                 <video
                   src="/videos/testimonio-0528.mp4"
+                  poster={testimonioPoster}
                   controls
                   playsInline
-                  preload="metadata"
+                  preload="none"
                   className="w-full h-auto block"
                 />
+
               </div>
             </div>
           </section>
