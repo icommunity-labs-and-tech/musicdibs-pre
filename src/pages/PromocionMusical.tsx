@@ -3,6 +3,7 @@ import "@/styles/landing-ai-studio.css";
 import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
+import testimonioPoster from "@/assets/testimonio-poster.jpg";
 import {
   Heart,
   Share2,
@@ -241,36 +242,31 @@ export default function PromocionMusical() {
             </div>
           </section>
 
-          {/* HOW IT WORKS */}
-          <section id="como-funciona" className="relative py-24 sm:py-32">
-            <div className="mx-auto max-w-6xl px-6">
-              <div className="text-center max-w-2xl mx-auto">
-                <h2 className="font-display font-bold tracking-tight text-3xl sm:text-4xl lg:text-5xl">
-                  Cómo <span className="text-gradient-brand">funciona</span>
+          {/* TESTIMONIOS */}
+          <section id="testimonios" className="relative py-24">
+            <div className="mx-auto max-w-5xl px-6">
+              <div className="text-center mb-12">
+                <p
+                  className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
+                  style={{ color: "oklch(0.85 0.22 340)" }}
+                >
+                  Reseñas · Artistas
+                </p>
+                <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-4">
+                  Qué dicen los <span className="text-gradient-brand">artistas de nosotros</span>
                 </h2>
-                <p className="mt-4 text-foreground/70">
-                  Tres pasos simples para lanzar, proteger y promocionar tu música.
+                <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                  Miles de músicos confían en Musicdibs para proteger su obra. Escucha sus experiencias.
                 </p>
               </div>
-
-              <div className="mt-14 grid md:grid-cols-3 gap-6">
-                <Step
-                  index="01"
-                  title="Sube tu música"
-                  icon={<Upload className="h-6 w-6" />}
-                  desc="Carga tus canciones y añade los metadatos fácilmente desde tu panel."
-                />
-                <Step
-                  index="02"
-                  title="Distribución & protección"
-                  icon={<Globe2 className="h-6 w-6" />}
-                  desc="Enviamos tu música a todo el mundo de forma masiva y segura, con registro legal incluido."
-                />
-                <Step
-                  index="03"
-                  title="Campaña de promoción"
-                  icon={<Megaphone className="h-6 w-6" />}
-                  desc="Activamos la maquinaria en las redes de Musicdibs para multiplicar tu alcance."
+              <div className="relative mx-auto max-w-3xl rounded-2xl overflow-hidden shadow-2xl border border-border/40">
+                <video
+                  src="/videos/testimonio-0528.mp4"
+                  poster={testimonioPoster}
+                  controls
+                  playsInline
+                  preload="none"
+                  className="w-full h-auto block"
                 />
               </div>
             </div>
