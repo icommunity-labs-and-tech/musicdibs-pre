@@ -435,8 +435,38 @@ export default function RegistroMusicalPage() {
             </div>
           </section>
 
+          {/* ============================= TESTIMONIOS / RESEÑAS ============================= */}
+          <section id="testimonios" className="relative py-24">
+            <div className="mx-auto max-w-5xl px-6">
+              <div className="text-center mb-12">
+                <p
+                  className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
+                  style={{ color: "oklch(0.85 0.22 340)" }}
+                >
+                  Reseñas · Artistas
+                </p>
+                <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-4">
+                  Qué dicen los <span className="text-gradient-brand">artistas de nosotros</span>
+                </h2>
+                <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                  Miles de músicos confían en Musicdibs para proteger su obra. Escucha sus experiencias.
+                </p>
+              </div>
+              <div className="relative mx-auto max-w-3xl rounded-2xl overflow-hidden shadow-2xl border border-border/40">
+                <video
+                  src="/videos/testimonio-0528.mp4"
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-auto block"
+                />
+              </div>
+            </div>
+          </section>
+
           {/* ============================= REGISTRO / DERECHOS DE AUTOR ============================= */}
           <section id="registro" className="relative py-24">
+
             <div className="mx-auto max-w-6xl px-6">
               <div className="grid lg:grid-cols-[1fr_1.05fr] gap-12 items-center">
                 {/* Visual */}
