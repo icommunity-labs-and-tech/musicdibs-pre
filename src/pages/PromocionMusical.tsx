@@ -271,37 +271,224 @@ export default function PromocionMusical() {
                 </p>
               </div>
 
-              {/* Featured highlight cards */}
-              <div className="mt-14 grid lg:grid-cols-2 gap-6">
-                <FeatureHighlight
-                  accent="magenta"
-                  badge="AI Music Studio"
-                  badgeIcon={<Sparkles className="h-3 w-3" />}
-                  title="Crea, mejora y profesionaliza tu música con IA"
-                  desc="Un estudio completo para llevar tus ideas hasta el máster final, sin salir de Musicdibs."
-                  features={[
-                    { icon: <Wand2 className="h-4 w-4" />, label: "Crear y mejorar canciones con IA" },
-                    { icon: <Upload className="h-4 w-4" />, label: "Sube tu música y profesionalízala" },
-                    { icon: <Headphones className="h-4 w-4" />, label: "Masterización profesional" },
-                    { icon: <ImageIcon className="h-4 w-4" />, label: "Genera contenido promocional" },
-                    { icon: <Users className="h-4 w-4" />, label: "Creación de artistas virtuales" },
-                  ]}
-                  icon={<Mic2 className="h-7 w-7" />}
-                />
-                <FeatureHighlight
-                  accent="cyan"
-                  badge="Registro Musical"
-                  badgeIcon={<ShieldCheck className="h-3 w-3" />}
-                  title="Registra tus canciones y protege tus derechos de autor"
-                  desc="Evidencia blockchain con fecha, autoría y certificado verificable con validez legal en +180 países."
-                  features={[
-                    { icon: <FileMusic className="h-4 w-4" />, label: "Registro de canciones en blockchain" },
-                    { icon: <Scale className="h-4 w-4" />, label: "Derechos de autor con validez legal" },
-                    { icon: <ShieldCheck className="h-4 w-4" />, label: "Certificado verificable internacional" },
-                  ]}
-                  icon={<ShieldCheck className="h-7 w-7" />}
-                />
+              {/* === Block 1: AI Music Studio — Bento grid === */}
+              <div className="mt-14">
+                <div
+                  className="relative overflow-hidden rounded-3xl p-6 sm:p-8"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, oklch(0.22 0.08 322 / 0.6), oklch(0.18 0.06 285 / 0.6))",
+                    border: "1px solid oklch(0.68 0.27 322 / 0.25)",
+                    boxShadow: "0 0 60px -10px oklch(0.68 0.27 322 / 0.45)",
+                  }}
+                >
+                  <div
+                    className="pointer-events-none absolute -top-32 -right-32 h-80 w-80 rounded-full blur-3xl opacity-40"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
+                    }}
+                  />
+
+                  <div className="relative grid lg:grid-cols-12 gap-5">
+                    {/* Hero tile */}
+                    <div
+                      className="lg:col-span-5 lg:row-span-2 rounded-2xl p-7 flex flex-col justify-between min-h-[260px] relative overflow-hidden"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
+                        boxShadow: "0 20px 50px -15px oklch(0.68 0.27 322 / 0.6)",
+                      }}
+                    >
+                      <div className="relative">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white">
+                          <Sparkles className="h-3 w-3" /> AI Music Studio
+                        </span>
+                        <h3 className="mt-4 font-display font-bold text-2xl sm:text-3xl text-white leading-tight">
+                          Crea, mejora y profesionaliza tu música con IA
+                        </h3>
+                        <p className="mt-3 text-white/85 text-sm leading-relaxed">
+                          Un estudio completo para llevar tus ideas hasta el máster final, sin salir de Musicdibs.
+                        </p>
+                      </div>
+                      <div className="relative mt-6 flex items-center justify-between">
+                        <Mic2 className="h-14 w-14 text-white/90 drop-shadow-lg" />
+                        <div className="flex gap-1 items-end h-12">
+                          {[0.4, 0.7, 0.5, 0.9, 0.6, 0.8, 0.5, 0.7].map((h, i) => (
+                            <span
+                              key={i}
+                              className="w-1.5 rounded-full bg-white/70"
+                              style={{ height: `${h * 100}%` }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bento feature tiles */}
+                    {[
+                      { icon: <Wand2 className="h-5 w-5" />, title: "Crear y mejorar", desc: "Genera canciones nuevas o mejora las tuyas con IA." },
+                      { icon: <Upload className="h-5 w-5" />, title: "Sube y profesionaliza", desc: "Lleva tus demos a calidad profesional." },
+                      { icon: <Headphones className="h-5 w-5" />, title: "Masterización", desc: "Máster pro listo para distribuir." },
+                      { icon: <ImageIcon className="h-5 w-5" />, title: "Contenido promocional", desc: "Portadas, videos y creatividades." },
+                      { icon: <Users className="h-5 w-5" />, title: "Artistas virtuales", desc: "Crea perfiles e identidades con IA." },
+                    ].map((f, i) => (
+                      <div
+                        key={i}
+                        className={`lg:col-span-${i === 4 ? "7" : "3"} group rounded-2xl p-5 transition-all hover:-translate-y-0.5`}
+                        style={{
+                          background: "oklch(0.15 0.04 285 / 0.5)",
+                          border: "1px solid oklch(0.68 0.27 322 / 0.18)",
+                        }}
+                      >
+                        <div
+                          className="h-9 w-9 rounded-xl flex items-center justify-center text-white"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
+                          }}
+                        >
+                          {f.icon}
+                        </div>
+                        <h4 className="mt-3 font-display font-semibold text-sm text-foreground">{f.title}</h4>
+                        <p className="mt-1 text-xs text-foreground/65 leading-relaxed">{f.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
+
+              {/* === Block 2: Registro Musical — Certificate split === */}
+              <div className="mt-6">
+                <div
+                  className="relative overflow-hidden rounded-3xl"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, oklch(0.18 0.05 220 / 0.7), oklch(0.16 0.04 195 / 0.7))",
+                    border: "1px solid oklch(0.7 0.22 195 / 0.25)",
+                    boxShadow: "0 0 60px -10px oklch(0.7 0.22 195 / 0.4)",
+                  }}
+                >
+                  <div className="grid lg:grid-cols-2">
+                    {/* Left: Certificate mockup */}
+                    <div
+                      className="relative p-8 sm:p-10 flex items-center justify-center min-h-[340px]"
+                      style={{
+                        background:
+                          "radial-gradient(circle at 30% 30%, oklch(0.7 0.22 195 / 0.18), transparent 60%)",
+                      }}
+                    >
+                      <div
+                        className="pointer-events-none absolute -top-20 -left-20 h-60 w-60 rounded-full blur-3xl opacity-50"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, oklch(0.7 0.22 195), oklch(0.55 0.2 220))",
+                        }}
+                      />
+                      {/* Mock certificate */}
+                      <div
+                        className="relative w-full max-w-sm rounded-2xl p-6 rotate-[-3deg] transition-transform hover:rotate-0 duration-500"
+                        style={{
+                          background: "oklch(0.98 0.01 220)",
+                          boxShadow: "0 30px 60px -20px oklch(0 0 0 / 0.6), 0 0 40px -10px oklch(0.7 0.22 195 / 0.5)",
+                        }}
+                      >
+                        <div className="flex items-center justify-between border-b border-black/10 pb-3">
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="h-8 w-8 rounded-lg flex items-center justify-center text-white"
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, oklch(0.7 0.22 195), oklch(0.55 0.2 220))",
+                              }}
+                            >
+                              <ShieldCheck className="h-4 w-4" />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-black/60">
+                              Certificado Blockchain
+                            </span>
+                          </div>
+                          <span className="text-[9px] font-mono text-black/50">#MDB-2026</span>
+                        </div>
+                        <div className="mt-4 space-y-2">
+                          <div className="h-2.5 w-3/4 rounded-full bg-black/10" />
+                          <div className="h-2.5 w-1/2 rounded-full bg-black/10" />
+                          <div className="mt-4 grid grid-cols-2 gap-3">
+                            <div>
+                              <div className="text-[9px] font-semibold uppercase text-black/40">Autor</div>
+                              <div className="mt-1 h-2 w-full rounded-full bg-black/15" />
+                            </div>
+                            <div>
+                              <div className="text-[9px] font-semibold uppercase text-black/40">Fecha</div>
+                              <div className="mt-1 h-2 w-full rounded-full bg-black/15" />
+                            </div>
+                          </div>
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="flex gap-0.5">
+                              {Array.from({ length: 12 }).map((_, i) => (
+                                <span key={i} className="w-0.5 h-6 bg-black/70" style={{ opacity: Math.random() * 0.5 + 0.5 }} />
+                              ))}
+                            </div>
+                            <CheckCircle2 className="h-7 w-7" style={{ color: "oklch(0.65 0.2 145)" }} />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Content */}
+                    <div className="p-8 sm:p-10 flex flex-col justify-center">
+                      <span
+                        className="inline-flex w-fit items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
+                        style={{
+                          background: "oklch(0.7 0.25 195 / 0.15)",
+                          color: "oklch(0.85 0.22 195)",
+                          border: "1px solid oklch(0.7 0.25 195 / 0.3)",
+                        }}
+                      >
+                        <ShieldCheck className="h-3 w-3" /> Registro Musical
+                      </span>
+                      <h3 className="mt-3 font-display font-bold text-2xl sm:text-3xl leading-tight">
+                        Registra tus canciones y protege tus{" "}
+                        <span
+                          style={{
+                            background: "linear-gradient(135deg, oklch(0.78 0.22 195), oklch(0.7 0.22 220))",
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                          }}
+                        >
+                          derechos de autor
+                        </span>
+                      </h3>
+                      <p className="mt-3 text-foreground/75 text-sm leading-relaxed">
+                        Evidencia blockchain con fecha, autoría y certificado verificable con validez legal en +180 países.
+                      </p>
+
+                      <ol className="mt-6 space-y-3">
+                        {[
+                          { n: "01", label: "Registro de canciones en blockchain" },
+                          { n: "02", label: "Derechos de autor con validez legal" },
+                          { n: "03", label: "Certificado verificable internacional" },
+                        ].map((s) => (
+                          <li key={s.n} className="flex items-center gap-3">
+                            <span
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold text-white"
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, oklch(0.7 0.22 195), oklch(0.55 0.2 220))",
+                                boxShadow: "0 0 20px -4px oklch(0.7 0.22 195 / 0.6)",
+                              }}
+                            >
+                              {s.n}
+                            </span>
+                            <span className="text-sm sm:text-base text-foreground/90 font-medium">{s.label}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
 
               {/* CTA inline */}
               <div className="mt-10 text-center">
