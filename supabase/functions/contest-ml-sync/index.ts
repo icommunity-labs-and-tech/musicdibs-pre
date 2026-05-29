@@ -198,7 +198,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    await addToContestGroup(email, name, contest);
+    await addToContestGroup(email, name, contest, instagram);
     console.log(`✅  ${email} añadido al grupo "Concursos y sorteos" [${contest}]`);
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
