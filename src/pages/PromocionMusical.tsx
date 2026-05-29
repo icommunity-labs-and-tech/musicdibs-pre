@@ -608,6 +608,7 @@ function PillarEditorial({
           </li>
         ))}
       </ul>
+      </div>
     </div>
   );
 }
