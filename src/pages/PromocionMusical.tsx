@@ -597,3 +597,229 @@ function EcoCard({
     </div>
   );
 }
+
+// === Features carousel: registro + AI Music Studio tools ===
+type FeatureSlide = {
+  badge: string;
+  badgeIcon: React.ReactNode;
+  title: string;
+  highlight: string;
+  desc: string;
+  icon: React.ReactNode;
+  bullets: string[];
+  accent: "cyan" | "magenta";
+};
+
+const FEATURE_SLIDES: FeatureSlide[] = [
+  {
+    badge: "Registro Musical",
+    badgeIcon: <ShieldCheck className="h-3 w-3" />,
+    title: "Registra tus canciones y protege tus",
+    highlight: "derechos de autor",
+    desc: "Evidencia blockchain con fecha, autoría y certificado verificable con validez legal en +180 países.",
+    icon: <ShieldCheck className="h-7 w-7" />,
+    bullets: [
+      "Registro en blockchain inmutable",
+      "Derechos de autor con validez legal",
+      "Certificado verificable internacional",
+    ],
+    accent: "cyan",
+  },
+  {
+    badge: "AI Music Studio",
+    badgeIcon: <Wand2 className="h-3 w-3" />,
+    title: "Crea y mejora canciones con",
+    highlight: "inteligencia artificial",
+    desc: "Genera ideas nuevas o lleva tus demos al siguiente nivel con modelos de última generación.",
+    icon: <Wand2 className="h-7 w-7" />,
+    bullets: [
+      "Composición asistida por IA",
+      "Mejora calidad de tus pistas",
+      "Variaciones y remezclas en segundos",
+    ],
+    accent: "magenta",
+  },
+  {
+    badge: "Sube y profesionaliza",
+    badgeIcon: <Upload className="h-3 w-3" />,
+    title: "Convierte tus demos en",
+    highlight: "música profesional",
+    desc: "Sube tu material y obtén versiones limpias, equilibradas y listas para sonar como un disco editado.",
+    icon: <Upload className="h-7 w-7" />,
+    bullets: [
+      "Procesado de audio profesional",
+      "Mezcla y limpieza automática",
+      "Resultados listos para distribuir",
+    ],
+    accent: "magenta",
+  },
+  {
+    badge: "Masterización",
+    badgeIcon: <Headphones className="h-3 w-3" />,
+    title: "Máster final con sonido",
+    highlight: "de estudio",
+    desc: "Masterización inteligente adaptada a streaming, radio y plataformas digitales sin perder dinámica.",
+    icon: <Headphones className="h-7 w-7" />,
+    bullets: [
+      "Optimizado para Spotify y YouTube",
+      "Loudness adaptado a cada plataforma",
+      "Calidad broadcast en un clic",
+    ],
+    accent: "magenta",
+  },
+  {
+    badge: "Contenido promocional",
+    badgeIcon: <ImageIcon className="h-3 w-3" />,
+    title: "Genera portadas, vídeos y",
+    highlight: "creatividades virales",
+    desc: "Todo el material visual que necesitas para lanzar tu canción y destacar en redes sociales.",
+    icon: <ImageIcon className="h-7 w-7" />,
+    bullets: [
+      "Portadas únicas con IA",
+      "Vídeos para Reels y TikTok",
+      "Creatividades para campañas",
+    ],
+    accent: "magenta",
+  },
+  {
+    badge: "Artistas virtuales",
+    badgeIcon: <Users className="h-3 w-3" />,
+    title: "Crea perfiles e identidades",
+    highlight: "con IA",
+    desc: "Diseña artistas virtuales completos, con estética, biografía y catálogo coherente desde cero.",
+    icon: <Users className="h-7 w-7" />,
+    bullets: [
+      "Identidad visual coherente",
+      "Estilo, voz y biografía a medida",
+      "Catálogo musical asociado",
+    ],
+    accent: "magenta",
+  },
+];
+
+function FeaturesCarousel() {
+  const [api, setApi] = useState<CarouselApi>();
+  const [selected, setSelected] = useState(0);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+    setCount(api.scrollSnapList().length);
+    setSelected(api.selectedScrollSnap());
+    const onSelect = () => setSelected(api.selectedScrollSnap());
+    api.on("select", onSelect);
+    api.on("reInit", onSelect);
+    return () => {
+      api.off("select", onSelect);
+    };
+  }, [api]);
+
+  return (
+    <div className="relative">
+      <Carousel
+        setApi={setApi}
+        opts={{ loop: true, align: "start" }}
+        plugins={[Autoplay({ delay: 5000, stopOnInteraction: true })]}
+        className="w-full"
+      >
+        <CarouselContent>
+          {FEATURE_SLIDES.map((s, i) => (
+            <CarouselItem key={i}>
+              <FeatureSlideCard slide={s} />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="hidden sm:flex left-2 sm:-left-12 bg-background/60 backdrop-blur border-white/20" />
+        <CarouselNext className="hidden sm:flex right-2 sm:-right-12 bg-background/60 backdrop-blur border-white/20" />
+      </Carousel>
+
+      {/* Dots */}
+      <div className="mt-5 flex items-center justify-center gap-2">
+        {Array.from({ length: count }).map((_, i) => (
+          <button
+            key={i}
+            onClick={() => api?.scrollTo(i)}
+            aria-label={`Ir a la diapositiva ${i + 1}`}
+            className="h-1.5 rounded-full transition-all"
+            style={{
+              width: i === selected ? 28 : 8,
+              background:
+                i === selected
+                  ? "linear-gradient(90deg, oklch(0.68 0.27 322), oklch(0.7 0.22 195))"
+                  : "oklch(0.7 0.05 285 / 0.35)",
+            }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FeatureSlideCard({ slide }: { slide: FeatureSlide }) {
+  const cyan = slide.accent === "cyan";
+  const grad = cyan
+    ? "linear-gradient(135deg, oklch(0.7 0.22 195), oklch(0.55 0.2 220))"
+    : "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))";
+  const bgPanel = cyan
+    ? "linear-gradient(135deg, oklch(0.18 0.05 220 / 0.7), oklch(0.16 0.04 195 / 0.7))"
+    : "linear-gradient(135deg, oklch(0.22 0.08 322 / 0.6), oklch(0.18 0.06 285 / 0.6))";
+  const border = cyan
+    ? "1px solid oklch(0.7 0.22 195 / 0.25)"
+    : "1px solid oklch(0.68 0.27 322 / 0.25)";
+  const glow = cyan
+    ? "0 0 40px -10px oklch(0.7 0.22 195 / 0.35)"
+    : "0 0 40px -10px oklch(0.68 0.27 322 / 0.35)";
+  const badgeBg = cyan
+    ? { background: "oklch(0.7 0.25 195 / 0.15)", color: "oklch(0.85 0.22 195)", border: "1px solid oklch(0.7 0.25 195 / 0.3)" }
+    : { background: "oklch(0.68 0.27 322 / 0.18)", color: "oklch(0.85 0.25 322)", border: "1px solid oklch(0.68 0.27 322 / 0.35)" };
+  const highlightStyle = {
+    background: cyan
+      ? "linear-gradient(135deg, oklch(0.78 0.22 195), oklch(0.7 0.22 220))"
+      : "linear-gradient(135deg, oklch(0.8 0.22 322), oklch(0.72 0.22 285))",
+    WebkitBackgroundClip: "text" as const,
+    WebkitTextFillColor: "transparent" as const,
+  };
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-2xl p-6 sm:p-8 min-h-[260px]"
+      style={{ background: bgPanel, border, boxShadow: glow }}
+    >
+      <div
+        className="pointer-events-none absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl opacity-40"
+        style={{ background: grad }}
+      />
+      <div className="relative grid md:grid-cols-[auto,1fr] gap-5 sm:gap-7 items-center">
+        <div
+          className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl flex items-center justify-center text-white shrink-0"
+          style={{ background: grad, boxShadow: glow }}
+        >
+          {slide.icon}
+        </div>
+        <div className="min-w-0">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
+            style={badgeBg}
+          >
+            {slide.badgeIcon} {slide.badge}
+          </span>
+          <h3 className="mt-2 font-display font-bold text-xl sm:text-2xl leading-tight">
+            {slide.title}{" "}
+            <span style={highlightStyle}>{slide.highlight}</span>
+          </h3>
+          <p className="mt-2 text-foreground/75 text-sm sm:text-base leading-relaxed">
+            {slide.desc}
+          </p>
+          <ul className="mt-4 grid sm:grid-cols-2 gap-2">
+            {slide.bullets.map((b, i) => (
+              <li key={i} className="flex items-start gap-2 text-sm text-foreground/90">
+                <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: cyan ? "oklch(0.78 0.22 195)" : "oklch(0.8 0.22 322)" }} />
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
