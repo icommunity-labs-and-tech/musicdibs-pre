@@ -212,10 +212,22 @@ export default function PromocionMusical() {
             `}</style>
           </section>
 
-          {/* THE TWO PILLARS */}
-          <section className="relative py-20 sm:py-28">
-            <div className="mx-auto max-w-7xl px-6">
-              <div className="text-center max-w-2xl mx-auto mb-14">
+          {/* THE TWO PILLARS — Editorial stat-first */}
+          <section className="relative py-20 sm:py-28 overflow-hidden">
+            {/* Subtle backdrop */}
+            <div
+              aria-hidden
+              className="absolute inset-0 opacity-[0.07] pointer-events-none"
+              style={{
+                backgroundImage:
+                  "linear-gradient(oklch(0.98 0.01 295) 1px, transparent 1px), linear-gradient(90deg, oklch(0.98 0.01 295) 1px, transparent 1px)",
+                backgroundSize: "64px 64px",
+                maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
+              }}
+            />
+
+            <div className="relative mx-auto max-w-7xl px-6">
+              <div className="text-center max-w-2xl mx-auto mb-16">
                 <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-foreground/80">
                   Dos servicios. Un solo lugar.
                 </span>
@@ -224,36 +236,55 @@ export default function PromocionMusical() {
                 </h2>
               </div>
 
-              <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
-                <Pillar
-                  accent="cyan"
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-px rounded-3xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm">
+                {/* Pilar 1 — Distribución */}
+                <PillarEditorial
+                  number="01"
+                  badge="Distribución"
                   badgeIcon={<Globe2 className="h-3.5 w-3.5" />}
-                  badge="Pilar 1"
-                  title="Distribución Global Ilimitada"
-                  desc="Lanza tu música en más de 220 plataformas digitales (Spotify, Apple Music, Amazon, Youtube Music,…). Controla tus regalías, estadísticas y lanzamientos desde un único panel profesional."
+                  title="Lleva tu música a todo el mundo"
+                  desc="Lanza en +220 plataformas digitales con regalías del 95% y panel unificado."
+                  stat="+220"
+                  statLabel="Plataformas"
+                  secondaryStat="95%"
+                  secondaryLabel="Regalías para ti"
                   features={[
-                    "+220 plataformas digitales en todo el mundo",
-                    "Regalías 95% para el artista",
-                    "Panel unificado con estadísticas en tiempo real",
+                    "Spotify, Apple Music, Amazon, YouTube Music…",
+                    "Estadísticas en tiempo real",
                     "Lanzamientos ilimitados",
                   ]}
-                  icon={<Radio className="h-7 w-7" />}
+                  accentClass="from-cyan-400/30 via-cyan-500/10 to-transparent"
+                  glowColor="oklch(0.7 0.25 195 / 0.55)"
+                  icon={<Radio className="h-6 w-6" />}
                 />
-                <Pillar
-                  accent="magenta"
+
+                {/* Pilar 2 — Promoción */}
+                <PillarEditorial
+                  number="02"
+                  badge="Promoción"
                   badgeIcon={<Megaphone className="h-3.5 w-3.5" />}
-                  badge="Pilar 2"
-                  title="Promoción en Redes"
-                  desc="No solo distribuimos, te hacemos visible. Conectamos tu música directamente con nuestra comunidad de cientos de miles de seguidores melómanos y profesionales del sector de la música."
+                  title="Conecta con audiencia real"
+                  desc="Te hacemos visible ante nuestra comunidad de melómanos y profesionales del sector."
+                  stat="+500k"
+                  statLabel="Seguidores en RRSS"
+                  secondaryStat="100%"
+                  secondaryLabel="Audiencia real"
                   features={[
-                    <>Canal de <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Instagram</a> y <a href="https://www.tiktok.com/@musicdibs_" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">TikTok</a></>,
-                    "Audiencia real, no bots ni inflada",
-                    "Promoción curada por expertos del sector",
+                    <>Instagram <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">@musicdibs</a> + TikTok <a href="https://www.tiktok.com/@musicdibs_" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">@musicdibs_</a></>,
+                    "Promoción curada por expertos",
                     "Crecimiento orgánico medible",
                   ]}
-                  icon={<Headphones className="h-7 w-7" />}
+                  accentClass="from-fuchsia-400/30 via-fuchsia-500/10 to-transparent"
+                  glowColor="oklch(0.68 0.27 322 / 0.55)"
+                  icon={<Headphones className="h-6 w-6" />}
                 />
               </div>
+
+              {/* Bridge note */}
+              <p className="mt-8 text-center text-sm text-foreground/60 max-w-xl mx-auto">
+                Distribuir <span className="text-foreground/90 font-medium">sin</span> promocionar es publicar al vacío.
+                Promocionar <span className="text-foreground/90 font-medium">sin</span> distribuir es no existir. Hacemos las dos.
+              </p>
             </div>
           </section>
 
@@ -393,6 +424,109 @@ function Pillar({
         {features.map((f, i) => (
           <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/85">
             <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: cyan ? "oklch(0.78 0.22 195)" : "oklch(0.82 0.25 322)" }} />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function PillarEditorial({
+  number,
+  badge,
+  badgeIcon,
+  title,
+  desc,
+  stat,
+  statLabel,
+  secondaryStat,
+  secondaryLabel,
+  features,
+  accentClass,
+  glowColor,
+  icon,
+}: {
+  number: string;
+  badge: string;
+  badgeIcon: React.ReactNode;
+  title: string;
+  desc: string;
+  stat: string;
+  statLabel: string;
+  secondaryStat: string;
+  secondaryLabel: string;
+  features: React.ReactNode[];
+  accentClass: string;
+  glowColor: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="group relative bg-background/40 p-8 sm:p-10 lg:p-12 overflow-hidden transition-colors hover:bg-background/60">
+      {/* Accent glow */}
+      <div
+        aria-hidden
+        className={`absolute -top-24 -right-24 h-64 w-64 rounded-full blur-3xl bg-gradient-to-br ${accentClass} opacity-60 group-hover:opacity-100 transition-opacity duration-700`}
+      />
+
+      {/* Top row: number + icon */}
+      <div className="relative flex items-start justify-between">
+        <span
+          className="font-display font-black text-7xl sm:text-8xl leading-none text-transparent"
+          style={{
+            WebkitTextStroke: "1px oklch(0.98 0.01 295 / 0.25)",
+          }}
+        >
+          {number}
+        </span>
+        <div
+          className="h-12 w-12 rounded-2xl flex items-center justify-center text-white"
+          style={{
+            background: "oklch(0.98 0.01 295 / 0.06)",
+            border: "1px solid oklch(0.98 0.01 295 / 0.12)",
+            boxShadow: `0 0 24px -4px ${glowColor}`,
+          }}
+        >
+          {icon}
+        </div>
+      </div>
+
+      {/* Badge */}
+      <span className="relative mt-6 inline-flex items-center gap-1.5 rounded-full glass px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground/85">
+        {badgeIcon} {badge}
+      </span>
+
+      {/* Title + desc */}
+      <h3 className="relative mt-4 font-display font-bold text-2xl sm:text-3xl leading-tight">
+        {title}
+      </h3>
+      <p className="relative mt-3 text-foreground/70 leading-relaxed text-[15px]">{desc}</p>
+
+      {/* Stats row */}
+      <div className="relative mt-8 grid grid-cols-2 gap-4 py-5 border-y border-white/10">
+        <div>
+          <div className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-foreground">
+            {stat}
+          </div>
+          <div className="mt-1 text-[11px] uppercase tracking-wider text-foreground/55">
+            {statLabel}
+          </div>
+        </div>
+        <div>
+          <div className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-foreground">
+            {secondaryStat}
+          </div>
+          <div className="mt-1 text-[11px] uppercase tracking-wider text-foreground/55">
+            {secondaryLabel}
+          </div>
+        </div>
+      </div>
+
+      {/* Features */}
+      <ul className="relative mt-6 space-y-2.5">
+        {features.map((f, i) => (
+          <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/85">
+            <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-foreground/60" />
             <span>{f}</span>
           </li>
         ))}
