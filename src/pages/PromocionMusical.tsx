@@ -212,10 +212,22 @@ export default function PromocionMusical() {
             `}</style>
           </section>
 
-          {/* THE TWO PILLARS */}
-          <section className="relative py-20 sm:py-28">
-            <div className="mx-auto max-w-7xl px-6">
-              <div className="text-center max-w-2xl mx-auto mb-14">
+          {/* THE TWO PILLARS — Editorial stat-first */}
+          <section className="relative py-20 sm:py-28 overflow-hidden">
+            {/* Subtle backdrop */}
+            <div
+              aria-hidden
+              className="absolute inset-0 opacity-[0.07] pointer-events-none"
+              style={{
+                backgroundImage:
+                  "linear-gradient(oklch(0.98 0.01 295) 1px, transparent 1px), linear-gradient(90deg, oklch(0.98 0.01 295) 1px, transparent 1px)",
+                backgroundSize: "64px 64px",
+                maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
+              }}
+            />
+
+            <div className="relative mx-auto max-w-7xl px-6">
+              <div className="text-center max-w-2xl mx-auto mb-16">
                 <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-foreground/80">
                   Dos servicios. Un solo lugar.
                 </span>
@@ -224,98 +236,55 @@ export default function PromocionMusical() {
                 </h2>
               </div>
 
-              <div className="flex flex-col gap-16 lg:gap-24">
-                {/* Pilar 1 — Distribución: texto izquierda, creatividad derecha */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-                  <Pillar
-                    accent="cyan"
-                    badgeIcon={<Globe2 className="h-3.5 w-3.5" />}
-                    badge="Pilar 1"
-                    title="Distribución Global Ilimitada"
-                    desc="Lanza tu música en más de 220 plataformas digitales (Spotify, Apple Music, Amazon, Youtube Music,…). Controla tus regalías, estadísticas y lanzamientos desde un único panel profesional."
-                    features={[
-                      "+220 plataformas digitales en todo el mundo",
-                      "Regalías 95% para el artista",
-                      "Panel unificado con estadísticas en tiempo real",
-                      "Lanzamientos ilimitados",
-                    ]}
-                    icon={<Radio className="h-7 w-7" />}
-                  />
-                  <div className="relative h-72 sm:h-80 lg:h-96 flex items-center justify-center" aria-hidden>
-                    <div className="absolute h-44 w-44 rounded-full border border-white/10" style={{ animation: "spin-slow 22s linear infinite" }} />
-                    <div className="absolute h-60 w-60 rounded-full border border-white/5" />
-                    <div
-                      className="relative h-32 w-32 rounded-full flex items-center justify-center"
-                      style={{
-                        background: "radial-gradient(circle at 30% 30%, oklch(0.6 0.22 195), oklch(0.25 0.12 240))",
-                        boxShadow: "0 0 60px -6px oklch(0.7 0.25 195 / 0.7), inset -10px -10px 30px oklch(0 0 0 / 0.5)",
-                      }}
-                    >
-                      <Globe2 className="h-12 w-12 text-white/90" />
-                    </div>
-                    <PlatformPill className="left-2 top-2" label="Spotify" color="#1DB954" delay="0s" />
-                    <PlatformPill className="right-2 top-6" label="Apple Music" color="#fa57c1" delay="0.2s" />
-                    <PlatformPill className="left-4 bottom-2" label="TikTok" color="#22d3ee" delay="0.4s" />
-                    <PlatformPill className="right-4 bottom-6" label="Amazon" color="#ffb84d" delay="0.6s" />
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-px rounded-3xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm">
+                {/* Pilar 1 — Distribución */}
+                <PillarEditorial
+                  number="01"
+                  badge="Distribución"
+                  badgeIcon={<Globe2 className="h-3.5 w-3.5" />}
+                  title="Lleva tu música a todo el mundo"
+                  desc="Lanza en +220 plataformas digitales con regalías del 95% y panel unificado."
+                  stat="+220"
+                  statLabel="Plataformas"
+                  secondaryStat="95%"
+                  secondaryLabel="Regalías para ti"
+                  features={[
+                    "Spotify, Apple Music, Amazon, YouTube Music…",
+                    "Estadísticas en tiempo real",
+                    "Lanzamientos ilimitados",
+                  ]}
+                  accentClass="from-cyan-400/30 via-cyan-500/10 to-transparent"
+                  glowColor="oklch(0.7 0.25 195 / 0.55)"
+                  icon={<Radio className="h-6 w-6" />}
+                />
 
-                {/* Pilar 2 — Promoción: creatividad izquierda, texto derecha */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
-                  <div className="relative h-72 sm:h-80 lg:h-96 flex items-center justify-center order-1" aria-hidden>
-                    <div
-                      className="relative h-32 w-32 rounded-full flex items-center justify-center"
-                      style={{
-                        background: "conic-gradient(from 0deg, oklch(0.2 0.1 320), oklch(0.15 0.08 285), oklch(0.22 0.12 340), oklch(0.18 0.1 300), oklch(0.2 0.1 320))",
-                        boxShadow: "0 0 60px -6px oklch(0.68 0.27 322 / 0.7), inset 0 0 30px oklch(0 0 0 / 0.6)",
-                        animation: "spin-slow 16s linear infinite",
-                      }}
-                    >
-                      <div className="absolute inset-3 rounded-full border border-white/5" />
-                      <div
-                        className="h-12 w-12 rounded-full flex items-center justify-center"
-                        style={{ background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))" }}
-                      >
-                        <Music2 className="h-5 w-5 text-white" />
-                      </div>
-                    </div>
-                    <EngagePill className="left-1 top-2" icon={<Heart className="h-3.5 w-3.5" fill="currentColor" />} label="142,4k" tone="rose" delay="0s" />
-                    <EngagePill className="right-1 top-8" icon={<Share2 className="h-3.5 w-3.5" />} label="8,7k" tone="violet" delay="0.2s" />
-                    <EngagePill className="left-2 bottom-4" icon={<Eye className="h-3.5 w-3.5" />} label="2,1M" tone="cyan" delay="0.4s" />
-                    <EngagePill className="right-2 bottom-2" icon={<MessageCircle className="h-3.5 w-3.5" />} label="+12k" tone="magenta" delay="0.6s" />
-                    {/* Waveform */}
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex items-end justify-center gap-1 h-8 opacity-70">
-                      {Array.from({ length: 28 }).map((_, i) => (
-                        <span
-                          key={i}
-                          className="w-1 rounded-full"
-                          style={{
-                            height: `${20 + Math.abs(Math.sin(i * 0.7)) * 80}%`,
-                            background: "linear-gradient(180deg, oklch(0.78 0.25 322), oklch(0.55 0.28 285))",
-                            animation: `wave 1.4s ease-in-out ${i * 0.05}s infinite alternate`,
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="order-2">
-                    <Pillar
-                      accent="magenta"
-                      badgeIcon={<Megaphone className="h-3.5 w-3.5" />}
-                      badge="Pilar 2"
-                      title="Promoción en Redes"
-                      desc="No solo distribuimos, te hacemos visible. Conectamos tu música directamente con nuestra comunidad de cientos de miles de seguidores melómanos y profesionales del sector de la música."
-                      features={[
-                        <>Canal de <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">Instagram</a> y <a href="https://www.tiktok.com/@musicdibs_" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">TikTok</a></>,
-                        "Audiencia real, no bots ni inflada",
-                        "Promoción curada por expertos del sector",
-                        "Crecimiento orgánico medible",
-                      ]}
-                      icon={<Headphones className="h-7 w-7" />}
-                    />
-                  </div>
-                </div>
+                {/* Pilar 2 — Promoción */}
+                <PillarEditorial
+                  number="02"
+                  badge="Promoción"
+                  badgeIcon={<Megaphone className="h-3.5 w-3.5" />}
+                  title="Conecta con audiencia real"
+                  desc="Te hacemos visible ante nuestra comunidad de melómanos y profesionales del sector."
+                  stat="+500k"
+                  statLabel="Seguidores en RRSS"
+                  secondaryStat="100%"
+                  secondaryLabel="Audiencia real"
+                  features={[
+                    <>Instagram <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">@musicdibs</a> + TikTok <a href="https://www.tiktok.com/@musicdibs_" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">@musicdibs_</a></>,
+                    "Promoción curada por expertos",
+                    "Crecimiento orgánico medible",
+                  ]}
+                  accentClass="from-fuchsia-400/30 via-fuchsia-500/10 to-transparent"
+                  glowColor="oklch(0.68 0.27 322 / 0.55)"
+                  icon={<Headphones className="h-6 w-6" />}
+                />
               </div>
+
+              {/* Bridge note */}
+              <p className="mt-8 text-center text-sm text-foreground/60 max-w-xl mx-auto">
+                Distribuir <span className="text-foreground/90 font-medium">sin</span> promocionar es publicar al vacío.
+                Promocionar <span className="text-foreground/90 font-medium">sin</span> distribuir es no existir. Hacemos las dos.
+              </p>
             </div>
           </section>
 
