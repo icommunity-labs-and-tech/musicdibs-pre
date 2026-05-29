@@ -505,6 +505,88 @@ function Step({
   );
 }
 
+function FeatureHighlight({
+  accent,
+  badge,
+  badgeIcon,
+  title,
+  desc,
+  features,
+  icon,
+}: {
+  accent: "cyan" | "magenta";
+  badge: string;
+  badgeIcon: React.ReactNode;
+  title: string;
+  desc: string;
+  features: { icon: React.ReactNode; label: string }[];
+  icon: React.ReactNode;
+}) {
+  const cyan = accent === "cyan";
+  const grad = cyan
+    ? "linear-gradient(135deg, oklch(0.7 0.22 195), oklch(0.55 0.2 220))"
+    : "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))";
+  const glow = cyan
+    ? "0 0 40px -8px oklch(0.7 0.22 195 / 0.55)"
+    : "0 0 40px -8px oklch(0.68 0.27 322 / 0.6)";
+  const ringColor = cyan ? "oklch(0.7 0.22 195 / 0.25)" : "oklch(0.68 0.27 322 / 0.3)";
+  const badgeBg = cyan
+    ? { background: "oklch(0.7 0.25 195 / 0.15)", color: "oklch(0.85 0.22 195)", border: "1px solid oklch(0.7 0.25 195 / 0.3)" }
+    : { background: "oklch(0.68 0.27 322 / 0.18)", color: "oklch(0.85 0.25 322)", border: "1px solid oklch(0.68 0.27 322 / 0.35)" };
+
+  return (
+    <div
+      className="glass relative overflow-hidden rounded-3xl p-7 sm:p-8 card-hover"
+      style={{ boxShadow: glow }}
+    >
+      {/* Decorative blob */}
+      <div
+        className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full blur-3xl opacity-50"
+        style={{ background: grad }}
+      />
+
+      <div className="relative flex items-start gap-4">
+        <div
+          className="h-14 w-14 rounded-2xl flex items-center justify-center text-white shrink-0"
+          style={{ background: grad, boxShadow: glow }}
+        >
+          {icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
+            style={badgeBg}
+          >
+            {badgeIcon} {badge}
+          </span>
+          <h3 className="mt-3 font-display font-bold text-xl sm:text-2xl leading-tight">{title}</h3>
+        </div>
+      </div>
+
+      <p className="relative mt-5 text-foreground/75 leading-relaxed text-sm sm:text-base">{desc}</p>
+
+      <ul className="relative mt-6 grid sm:grid-cols-2 gap-2.5">
+        {features.map((f, i) => (
+          <li
+            key={i}
+            className="flex items-center gap-2.5 rounded-xl bg-white/[0.03] px-3 py-2.5 text-sm text-foreground/90 transition-colors hover:bg-white/[0.06]"
+            style={{ border: `1px solid ${ringColor}` }}
+          >
+            <span
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white"
+              style={{ background: grad }}
+            >
+              {f.icon}
+            </span>
+            <span className="leading-tight">{f.label}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+
 function EcoCard({
   icon,
   title,
