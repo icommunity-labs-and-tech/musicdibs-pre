@@ -21,7 +21,13 @@ import {
   BarChart3,
   CheckCircle2,
   ArrowRight,
+  Mic2,
+  Image as ImageIcon,
+  Users,
+  FileMusic,
+  Scale,
 } from "lucide-react";
+
 
 const CTA_HREF = "https://www.musicdibs.com/dashboard";
 
