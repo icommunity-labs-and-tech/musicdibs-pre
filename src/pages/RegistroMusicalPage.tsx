@@ -456,11 +456,13 @@ export default function RegistroMusicalPage() {
               <div className="relative mx-auto max-w-3xl rounded-2xl overflow-hidden shadow-2xl border border-border/40">
                 <video
                   src="/videos/testimonio-0528.mp4"
+                  poster={testimonioPoster}
                   controls
                   playsInline
-                  preload="metadata"
+                  preload="none"
                   className="w-full h-auto block"
                 />
+
               </div>
             </div>
           </section>
