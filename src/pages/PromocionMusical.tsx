@@ -286,8 +286,7 @@ export default function PromocionMusical() {
                 <FeaturesCarousel />
               </div>
 
-                </div>
-              </div>
+
 
 
               {/* CTA inline */}
