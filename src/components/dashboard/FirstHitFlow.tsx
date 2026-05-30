@@ -127,7 +127,7 @@ function StepHeader({
 // ══════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ══════════════════════════════════════════════════════════════════
-export function FirstHitFlow({ onSkip }: { onSkip?: () => void }) {
+export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onComplete?: () => void }) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
