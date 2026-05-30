@@ -8,25 +8,35 @@
  * The actual deduction is enforced server-side in each Edge Function.
  */
 
-// ── Static defaults (kept in sync with DB seed) ────────────
+// ── Static defaults (kept in sync with DB — operation_pricing table) ────────
 const DEFAULT_COSTS: Record<string, number> = {
-  register_work: 1,
-  promote_work: 30,
-  promote_premium: 30,
-  generate_audio: 3,
-  generate_audio_song: 3,
-  generate_audio_elevenlabs: 5,
-  edit_audio: 2,
-  enhance_audio: 3,
-  generate_cover: 1,
-  inspiration: 2,
-  generate_video: 3,
-  voice_translation_per_min: 2,
-  instagram_creative: 1,
-  youtube_thumbnail: 1,
-  event_poster: 1,
-  social_poster: 1,
-  social_video: 3,
+  register_work:              1,
+  promote_work:              30,
+  promote_premium:           25,
+  generate_audio:             1,
+  generate_audio_song:        1,
+  generate_audio_elevenlabs:  1,
+  edit_audio:                 2,
+  enhance_audio:              6,
+  enhance_add_vocals:         1,
+  enhance_cover:              1,
+  enhance_extend:             1,
+  enhance_instrumental:       1,
+  generate_cover:             2,
+  generate_lyrics:            0,
+  generate_press_release:     0,
+  generate_video:             3,
+  improve_prompt:             0,
+  instagram_creative:         1,
+  youtube_thumbnail:          1,
+  event_poster:               1,
+  social_poster:              1,
+  social_video:               3,
+  midi_generate:              2,
+  one_click_create:           1,
+  distribute_music:           0,
+  inspiration:                0,
+  voice_translation_per_min:  2,
 };
 
 // ── Runtime cache ──────────────────────────────────────────
