@@ -461,8 +461,16 @@ serve(async (req) => {
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId   = session.metadata?.user_id;
-      const credits  = parseInt(session.metadata?.credits || "0", 10);
       const planId   = session.metadata?.plan_id || "unknown";
+
+      // Créditos canónicos por plan — no confiamos en session.metadata.credits
+      // porque puede reflejar metadata desactualizada del precio en Stripe (ej. 3 en lugar de 8)
+      const CHECKOUT_TIER_CREDITS: Record<string, number> = {
+        annual_100: 100, annual_200: 200, annual_300: 300, annual_500: 500, annual_1000: 1000,
+        monthly: 8,
+      };
+      const creditsFromMetadata = parseInt(session.metadata?.credits || "0", 10);
+      const credits = CHECKOUT_TIER_CREDITS[planId] ?? creditsFromMetadata;
 
       if (userId && credits > 0) {
         // ── Idempotency guard: skip if this checkout session was already processed ──
@@ -995,7 +1003,27 @@ serve(async (req) => {
         const profile = await findProfileByCustomerId(supabase, stripe, customerId);
 
         if (profile) {
-          // Idempotency guard: skip if this create invoice was already processed
+          // ── Idempotency guard ────────────────────────────────────────────────────
+          // Check 1: si ya existe una orden del checkout.session.completed para esta
+          // suscripción, saltamos — evita doble crédito cuando el usuario paga mediante
+          // Stripe Checkout (en ese caso checkout.session.completed ya procesó los créditos).
+          if (subscriptionId) {
+            const { data: existingCheckoutOrder } = await supabase
+              .from("orders")
+              .select("id")
+              .eq("stripe_subscription_id", subscriptionId)
+              .not("stripe_checkout_session_id", "is", null)
+              .maybeSingle();
+
+            if (existingCheckoutOrder) {
+              console.log(`[WEBHOOK] subscription_create: already handled by checkout.session.completed for sub ${subscriptionId} — skipping`);
+              return new Response(JSON.stringify({ received: true, duplicate: true }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" }
+              });
+            }
+          }
+
+          // Check 2: si ya procesamos esta factura específica (suscripción creada sin checkout)
           if (invoiceId) {
             const { data: existingCreateOrder } = await supabase
               .from("orders")
