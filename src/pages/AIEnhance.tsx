@@ -589,6 +589,7 @@ const AIEnhance = () => {
     setGeneratedAudioUrl(null);
     setUploadProgress(0);
     setGenError(null);
+    setCopyrightError(null);
     setMidiStatus("idle");
     setMidiDownloadUrl(null);
     if (midiPollRef.current) clearInterval(midiPollRef.current);
