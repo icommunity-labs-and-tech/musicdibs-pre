@@ -183,7 +183,9 @@ export default function UserLogin() {
         title="Acceder"
         description="Inicia sesión o crea tu cuenta en Musicdibs para registrar tu música en blockchain, distribuirla y promocionarla."
         path="/login"
+        noIndex
       />
+
       <Card className="w-full max-w-md border-border/30 bg-card/95 backdrop-blur-sm shadow-2xl">
         <CardHeader className="text-center space-y-3">
           <img src="/lovable-uploads/81d79e1f-fd6f-4e2c-a573-89261bcf3879.png" alt="Musicdibs" className="mx-auto h-14 w-auto invert" />
