@@ -51,7 +51,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { error: insertError } = await supabase
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { error: insertError } = await supabaseAdmin
       .from("product_events")
       .insert({
         user_id: user.id,
