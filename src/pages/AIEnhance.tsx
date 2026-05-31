@@ -605,7 +605,47 @@ const AIEnhance = () => {
     if (midiPollRef.current) clearInterval(midiPollRef.current);
     setWavStatus("idle");
     if (wavPollRef.current) clearInterval(wavPollRef.current);
+    setEnhancedGenerationId(null);
+    setEnhancedMp4Url(null);
+    setEnhancedMp4Status(null);
   };
+
+  // ── Resolver ai_generations.id (para MP4 visualizer) cuando se completa ──
+  useEffect(() => {
+    if (jobStatus !== "completed" || !logId || enhancedGenerationId) return;
+    let cancelled = false;
+    (async () => {
+      // Reintentar varias veces porque el callback inserta en ai_generations
+      // ligeramente después de marcar el log como completed.
+      for (let i = 0; i < 10 && !cancelled; i++) {
+        const { data: log } = await supabase
+          .from("ai_generation_logs")
+          .select("provider_task_id")
+          .eq("id", logId)
+          .maybeSingle();
+        const taskId = log?.provider_task_id as string | undefined;
+        if (taskId) {
+          const { data: gen } = await supabase
+            .from("ai_generations")
+            .select("id, mp4_url, mp4_status")
+            .eq("provider_task_id", taskId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (gen?.id) {
+            if (!cancelled) {
+              setEnhancedGenerationId(gen.id as string);
+              setEnhancedMp4Url((gen as any).mp4_url ?? null);
+              setEnhancedMp4Status((gen as any).mp4_status ?? null);
+            }
+            return;
+          }
+        }
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [jobStatus, logId, enhancedGenerationId]);
 
   return (
     <>
