@@ -238,8 +238,8 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
               </Badge>
             )}
             {!isAnnualActive && (
-              <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 gap-1">
-                <Sparkles className="h-3 w-3" /> {t(`${cs}.bestValue`)}
+              <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 gap-1 whitespace-nowrap px-3">
+                <Sparkles className="h-3 w-3 shrink-0" /> {t(`${cs}.bestValue`)}
               </Badge>
             )}
             <CardHeader className="pb-1 pt-5">
