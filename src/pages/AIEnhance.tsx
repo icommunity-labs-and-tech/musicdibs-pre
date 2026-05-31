@@ -394,7 +394,7 @@ const AIEnhance = () => {
         if (response.status === 409 && data?.error === "copyright_error") {
           setJobStatus("failed");
           setCopyrightError({
-            message: data.message || "El sistema de detección de Suno ha bloqueado el audio.",
+            message: data.message || "El sistema de detección de derechos de autor de la plataforma ha bloqueado el audio.",
             suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
           });
           return;
