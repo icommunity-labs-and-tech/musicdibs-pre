@@ -243,9 +243,26 @@ const AIEnhance = () => {
     };
   };
 
-  // Realtime: listen for callback result on ai_generation_logs
+  const COPYRIGHT_ASYNC_MSG = "El audio fue bloqueado por el filtro de derechos de autor. Prueba con un fragmento más corto (20-30 seg) o un audio sin samples descargados de internet. Tus créditos han sido reembolsados.";
+
   useEffect(() => {
     if (!logId || jobStatus !== "processing") return;
+    const handleStatus = (status: string, output_url?: string | null, error_message?: string | null) => {
+      if (status === "completed" && output_url) {
+        setJobStatus("completed");
+        setGeneratedAudioUrl(output_url);
+        toast.success(t('aiEnhance.toastReady'));
+      } else if (status === "copyright_error") {
+        setJobStatus("failed");
+        setCopyrightError({ message: COPYRIGHT_ASYNC_MSG, suggestions: [] });
+      } else if (status === "failed") {
+        setJobStatus("failed");
+        const { userMessage } = parseAiError(new Error(error_message || ""));
+        setGenError(userMessage);
+        toast.error(userMessage);
+      }
+    };
+
     const channel = supabase
       .channel(`enhance-log-${logId}`)
       .on(
@@ -253,17 +270,7 @@ const AIEnhance = () => {
         { event: "UPDATE", schema: "public", table: "ai_generation_logs", filter: `id=eq.${logId}` },
         (payload) => {
           const updated = payload.new as Record<string, unknown>;
-          if (updated.status === "completed" && updated.output_url) {
-            setJobStatus("completed");
-            setGeneratedAudioUrl(updated.output_url as string);
-            toast.success(t('aiEnhance.toastReady'));
-          } else if (updated.status === "failed") {
-            setJobStatus("failed");
-            const raw = (updated.error_message as string) || "";
-            const { userMessage } = parseAiError(new Error(raw));
-            setGenError(userMessage);
-            toast.error(userMessage);
-          }
+          handleStatus(updated.status as string, updated.output_url as string | null, updated.error_message as string | null);
         }
       )
       .subscribe();
@@ -276,16 +283,7 @@ const AIEnhance = () => {
         .eq("id", logId)
         .maybeSingle();
       if (!data) return;
-      if (data.status === "completed" && data.output_url) {
-        setJobStatus("completed");
-        setGeneratedAudioUrl(data.output_url);
-        toast.success(t('aiEnhance.toastReady'));
-      } else if (data.status === "failed") {
-        setJobStatus("failed");
-        const { userMessage } = parseAiError(new Error(data.error_message || ""));
-        setGenError(userMessage);
-        toast.error(userMessage);
-      }
+      handleStatus(data.status, data.output_url, data.error_message);
     }, 8000);
 
     return () => {
