@@ -21,6 +21,7 @@ import LibraryAccessBanner from "@/components/library/LibraryAccessBanner";
 import { useTranslation } from "react-i18next";
 import { getFeatureCost } from "@/lib/featureCosts";
 import JSZip from "jszip";
+import { useMp4Export } from "@/hooks/useMp4Export";
 
 // ── Types ──
 interface MediaAsset {
@@ -60,6 +61,7 @@ export default function MediaLibraryPage() {
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [midiJobs, setMidiJobs] = useState<Record<string, ExportJobState>>({});
   const [wavJobs, setWavJobs] = useState<Record<string, ExportJobState>>({});
+  const { mp4Jobs, exportMp4 } = useMp4Export();
   const exportPollsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({}); // assetId → poll interval
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -888,6 +890,39 @@ export default function MediaLibraryPage() {
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>Exportar MIDI${getFeatureCost("midi_generate") > 0 ? ` (${getFeatureCost("midi_generate")} créditos)` : ""}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
+                        {/* ── MP4 visualizer export — only for KIE songs */}
+                        {asset.type === "song" && asset.provider_task_id && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  disabled={mp4Jobs[asset.id] === "loading"}
+                                  onClick={() =>
+                                    exportMp4(
+                                      asset.id,
+                                      (customNames[asset.id] || asset.title || `musicdibs-${asset.id.slice(0, 8)}`).replace(/[^\w\-]+/g, "_"),
+                                      undefined,
+                                      undefined,
+                                      ({ title, variant }) => toast({ title, variant })
+                                    )
+                                  }
+                                >
+                                  {mp4Jobs[asset.id] === "loading"
+                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    : mp4Jobs[asset.id] === "done"
+                                      ? <Check className="h-3.5 w-3.5 text-green-500" />
+                                      : <Film className="h-3.5 w-3.5" />}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Descargar MP4 visualizer</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
