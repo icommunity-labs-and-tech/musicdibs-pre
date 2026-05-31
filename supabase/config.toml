@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.kie-mp4-callback]
 verify_jwt = false
+
+[functions.track-event]
+verify_jwt = false
