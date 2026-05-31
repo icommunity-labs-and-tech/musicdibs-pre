@@ -222,6 +222,7 @@ const AIEnhance = () => {
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [genError, setGenError] = useState<string | null>(null);
+  const [copyrightError, setCopyrightError] = useState<{ message: string; suggestions: string[] } | null>(null);
 
   const currentMode = MODES.find((m) => m.id === selectedMode)!;
   const creditsRequired = getFeatureCost(MODE_FEATURE_KEY[selectedMode]);
