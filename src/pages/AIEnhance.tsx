@@ -792,6 +792,29 @@ const AIEnhance = () => {
             </div>
           )}
 
+          {/* ── Cover: hint + duración máxima 60s ──────────────────────────── */}
+          {selectedMode === "cover" && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground/80">
+                💡 Recomendación: usa un fragmento de 20-60 seg de tu obra original para mejores resultados.
+              </p>
+              {audioDuration !== null && audioDuration > 60 && (
+                <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive px-3 py-2.5 text-sm">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>
+                    Para el modo Cover, el audio debe durar máximo 60 segundos (el tuyo tiene {Math.round(audioDuration)}s). Selecciona un fragmento corto (intro, estrofa o estribillo) de tu obra.
+                  </span>
+                </div>
+              )}
+              {genError && selectedMode === "cover" && audioDuration !== null && audioDuration <= 60 && (
+                <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive px-3 py-2.5 text-sm">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>{genError}</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* ── Prompt + Mejorar con IA ──────────────────────────────────────── */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
