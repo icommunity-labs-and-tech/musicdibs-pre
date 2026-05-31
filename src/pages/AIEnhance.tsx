@@ -40,8 +40,9 @@ import {
   ArrowLeft, Wand2, Loader2, Play, Pause,
   Download, RefreshCw, CheckCircle2, X,
   Layers, Repeat2, Expand, AlertTriangle, BookOpen, Sparkles, Mic2, AudioLines, Music2, ArrowRight,
-  FileMusic, FileAudio, Mic,
+  FileMusic, FileAudio, Mic, Film, Check,
 } from "lucide-react";
+import { useMp4Export } from "@/hooks/useMp4Export";
 import { cn } from "@/lib/utils";
 import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 
@@ -212,6 +213,13 @@ const AIEnhance = () => {
   // ── WAV export ─────────────────────────────────────────────────────────────
   const [wavStatus, setWavStatus] = useState<"idle" | "loading" | "error">("idle");
   const wavPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── MP4 export ─────────────────────────────────────────────────────────────
+  const { mp4Jobs, exportMp4, cleanup: cleanupMp4 } = useMp4Export();
+  const [enhancedGenerationId, setEnhancedGenerationId] = useState<string | null>(null);
+  const [enhancedMp4Url, setEnhancedMp4Url] = useState<string | null>(null);
+  const [enhancedMp4Status, setEnhancedMp4Status] = useState<string | null>(null);
+  useEffect(() => () => cleanupMp4(), [cleanupMp4]);
   // ── quality params — instrumental + extend ───────────────────────────────
   const [vocalGender, setVocalGender] = useState<"m" | "f">("m");
   const [fidelityPreset, setFidelityPreset] = useState<FidelityPreset>("balanced");
@@ -597,7 +605,47 @@ const AIEnhance = () => {
     if (midiPollRef.current) clearInterval(midiPollRef.current);
     setWavStatus("idle");
     if (wavPollRef.current) clearInterval(wavPollRef.current);
+    setEnhancedGenerationId(null);
+    setEnhancedMp4Url(null);
+    setEnhancedMp4Status(null);
   };
+
+  // ── Resolver ai_generations.id (para MP4 visualizer) cuando se completa ──
+  useEffect(() => {
+    if (jobStatus !== "completed" || !logId || enhancedGenerationId) return;
+    let cancelled = false;
+    (async () => {
+      // Reintentar varias veces porque el callback inserta en ai_generations
+      // ligeramente después de marcar el log como completed.
+      for (let i = 0; i < 10 && !cancelled; i++) {
+        const { data: log } = await supabase
+          .from("ai_generation_logs")
+          .select("provider_task_id")
+          .eq("id", logId)
+          .maybeSingle();
+        const taskId = log?.provider_task_id as string | undefined;
+        if (taskId) {
+          const { data: gen } = await supabase
+            .from("ai_generations")
+            .select("id, mp4_url, mp4_status")
+            .eq("provider_task_id", taskId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (gen?.id) {
+            if (!cancelled) {
+              setEnhancedGenerationId(gen.id as string);
+              setEnhancedMp4Url((gen as any).mp4_url ?? null);
+              setEnhancedMp4Status((gen as any).mp4_status ?? null);
+            }
+            return;
+          }
+        }
+        await new Promise((r) => setTimeout(r, 2000));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [jobStatus, logId, enhancedGenerationId]);
 
   return (
     <>
@@ -1206,6 +1254,32 @@ const AIEnhance = () => {
                       {midiStatus === "loading" ? t('aiEnhance.generatingMidi') : getFeatureCost("midi_generate") > 0 ? t('aiEnhance.btnMidiWithCost', { cost: getFeatureCost("midi_generate") }) : t('aiEnhance.btnMidi')}
                     </Button>
                   )}
+
+                  {/* ── MP4 visualizer */}
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      enhancedGenerationId &&
+                      exportMp4(
+                        enhancedGenerationId,
+                        `musicdibs-enhance-${enhancedGenerationId.slice(0, 8)}`,
+                        enhancedMp4Url,
+                        enhancedMp4Status,
+                        ({ title, variant }) =>
+                          variant === "destructive" ? toast.error(title) : toast.success(title)
+                      )
+                    }
+                    disabled={!enhancedGenerationId || mp4Jobs[enhancedGenerationId] === "loading"}
+                    className="gap-2"
+                  >
+                    {enhancedGenerationId && mp4Jobs[enhancedGenerationId] === "loading" ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Generando MP4…</>
+                    ) : enhancedGenerationId && mp4Jobs[enhancedGenerationId] === "done" ? (
+                      <><Check className="w-4 h-4 text-green-500" /> MP4 listo</>
+                    ) : (
+                      <><Film className="w-4 h-4" /> {enhancedGenerationId ? "MP4" : "Preparando MP4…"}</>
+                    )}
+                  </Button>
                 </div>
 
                 <Button variant="ghost" size="sm" onClick={handleReset} className="gap-2">

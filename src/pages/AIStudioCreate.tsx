@@ -2205,7 +2205,34 @@ const AIStudioCreate = () => {
                                 </Tooltip>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <AlertDialog>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        exportMp4(
+                                          result.id,
+                                          `musicdibs-${result.id.slice(0, 8)}`,
+                                          result.mp4_url,
+                                          result.mp4_status,
+                                          ({ title, variant }) => toast({ title, variant })
+                                        )
+                                      }
+                                      disabled={mp4Jobs[result.id] === "loading"}
+                                    >
+                                      {mp4Jobs[result.id] === "loading" ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                      ) : mp4Jobs[result.id] === "done" ? (
+                                        <Check className="w-4 h-4 text-green-500" />
+                                      ) : (
+                                        <Film className="w-4 h-4" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent><p>Descargar MP4 visualizer</p></TooltipContent>
+                                </Tooltip>
+                                <Tooltip>
+                                   <TooltipTrigger asChild>
+                                     <AlertDialog>
                                       <AlertDialogTrigger asChild>
                                         <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive">
                                           <Trash2 className="w-4 h-4" />
