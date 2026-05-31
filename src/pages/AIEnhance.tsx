@@ -390,7 +390,7 @@ const AIEnhance = () => {
       );
       const data = await response.json();
       if (!response.ok) {
-        // ── 409: Suno copyright detection ─────────────────────────────────
+        // ── 409: copyright detection ─────────────────────────────────────
         if (response.status === 409 && data?.error === "copyright_error") {
           setJobStatus("failed");
           setCopyrightError({
