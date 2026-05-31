@@ -33,9 +33,11 @@ type Feature =
   | 'premium_promotion' | 'enhance_audio' | 'distribution' | 'inspire'
   | 'instagram_creative' | 'youtube_thumbnail';
 
+type TrackingMetadata = Record<string, unknown>;
+
 interface TrackOptions {
   feature: Feature;
-  metadata?: Record<string, any>;
+  metadata?: TrackingMetadata;
 }
 
 export function useProductTracking() {
@@ -53,25 +55,16 @@ export function useProductTracking() {
   const track = useCallback(async (eventName: EventName, options: TrackOptions) => {
     if (!user) return;
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
-      fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/track-event`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: JSON.stringify({
-            event_name: eventName,
-            feature: options.feature,
-            metadata: options.metadata || {},
-            session_id: sessionId.current,
-          }),
-        }
-      ).catch(() => {});
+      supabase.functions.invoke('track-event', {
+        body: {
+          event_name: eventName,
+          feature: options.feature,
+          metadata: options.metadata || {},
+          session_id: sessionId.current,
+        },
+      }).then(({ error }) => {
+        if (error) console.warn('Product tracking skipped:', error.message);
+      });
     } catch {
       // silent
     }
