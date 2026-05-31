@@ -46,29 +46,12 @@ export function useMp4Export() {
       setMp4Jobs((prev) => ({ ...prev, [generationId]: "loading" }));
 
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-
-        const supabaseUrl =
-          (supabase as any).supabaseUrl ||
-          (window as any).__SUPABASE_URL__ ||
-          import.meta.env.VITE_SUPABASE_URL;
-
-        const res = await fetch(`${supabaseUrl}/functions/v1/kie-mp4-generate`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({ generation_id: generationId }),
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data?.message || data?.error || "Error iniciando generación MP4");
-        }
+        const { data, error: invokeError } = await supabase.functions.invoke(
+          "kie-mp4-generate",
+          { body: { generation_id: generationId } }
+        );
+        if (invokeError) throw new Error(invokeError.message || "Error iniciando generación MP4");
+        if (data?.error) throw new Error(data.message || data.error || "Error iniciando generación MP4");
 
         // ── Caso: ya completado (idempotencia) ──────────────────────────────────
         if (data.status === "completed" && data.mp4_url) {
