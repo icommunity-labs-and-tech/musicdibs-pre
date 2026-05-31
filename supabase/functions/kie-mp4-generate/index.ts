@@ -80,16 +80,48 @@ serve(async (req) => {
     }
 
     // ── Extraer audioId del response_payload ──────────────────────────────────
-    // KIE devuelve 2 variantes en response_payload.data.data[]
-    // variant_index indica cuál corresponde a esta fila
-    const tracks: Array<{ id: string }> =
+    let tracks: Array<{ id: string }> =
       gen.response_payload?.data?.data || [];
 
     const variantIndex = gen.variant_index ?? 0;
-    const audioId: string | undefined = tracks[variantIndex]?.id;
+    let audioId: string | undefined = tracks[variantIndex]?.id;
+
+    // ── Fallback: si no hay payload local, consultar a KIE record-info ─────────
+    if (!audioId) {
+      console.log("[kie-mp4-generate] no audioId locally, fetching KIE record-info", {
+        taskId: gen.provider_task_id,
+      });
+      try {
+        const infoRes = await fetch(
+          `https://api.kie.ai/api/v1/generate/record-info?taskId=${gen.provider_task_id}`,
+          { headers: { Authorization: `Bearer ${KIE_API_KEY}` } }
+        );
+        const infoBody = await infoRes.json().catch(() => ({}));
+        const sunoData: Array<{ id: string }> =
+          infoBody?.data?.response?.sunoData || [];
+        if (sunoData.length > 0) {
+          tracks = sunoData;
+          audioId = sunoData[variantIndex]?.id || sunoData[0]?.id;
+
+          // Persistir payload reconstruido para futuras llamadas
+          await supabaseAdmin
+            .from("ai_generations")
+            .update({
+              response_payload: {
+                code: infoBody?.code,
+                msg: infoBody?.msg,
+                data: { task_id: gen.provider_task_id, data: sunoData },
+              },
+            })
+            .eq("id", generation_id);
+        }
+      } catch (e) {
+        console.error("[kie-mp4-generate] record-info fetch failed", e);
+      }
+    }
 
     if (!audioId) {
-      console.error("[kie-mp4-generate] audioId not found in response_payload", {
+      console.error("[kie-mp4-generate] audioId not found", {
         generation_id,
         variantIndex,
         tracksCount: tracks.length,
