@@ -67,9 +67,10 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
   const periodNet = Number(m.periodRevenue ?? m.totalRevenue ?? 0);
   const feesPending = periodFees === 0 && periodGross > 0;
 
-  const convRate = m.totalUsers > 0
-    ? ((m.customersTotal || 0) / m.totalUsers * 100).toFixed(1)
-    : m.conversionRate || '0';
+  // Conversión del periodo: clientes nuevos / registrados nuevos del periodo
+  const convRate = (m.newUsersThisMonth || 0) > 0
+    ? ((m.customersNew || 0) / m.newUsersThisMonth * 100).toFixed(1)
+    : '0';
 
   return (
     <div className="space-y-4">
