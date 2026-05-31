@@ -53,7 +53,9 @@ export default function DashboardLayout() {
 
   return (
     <NotificationsProvider>
+      <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
       <SidebarProvider>
+
         <div className="min-h-screen flex w-full">
           <DashboardSidebar />
           <div className="flex-1 flex flex-col min-w-0">
