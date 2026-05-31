@@ -196,6 +196,8 @@ export type Database = {
           lyrics_prompt: string | null
           model: string | null
           mood: string | null
+          mp4_status: string
+          mp4_url: string | null
           primary_provider_attempted: string | null
           prompt: string
           provider: string | null
@@ -231,6 +233,8 @@ export type Database = {
           lyrics_prompt?: string | null
           model?: string | null
           mood?: string | null
+          mp4_status?: string
+          mp4_url?: string | null
           primary_provider_attempted?: string | null
           prompt: string
           provider?: string | null
@@ -266,6 +270,8 @@ export type Database = {
           lyrics_prompt?: string | null
           model?: string | null
           mood?: string | null
+          mp4_status?: string
+          mp4_url?: string | null
           primary_provider_attempted?: string | null
           prompt?: string
           provider?: string | null
