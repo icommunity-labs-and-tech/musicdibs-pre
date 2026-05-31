@@ -222,10 +222,13 @@ const AIEnhance = () => {
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [genError, setGenError] = useState<string | null>(null);
+  const [copyrightError, setCopyrightError] = useState<{ message: string; suggestions: string[] } | null>(null);
 
   const currentMode = MODES.find((m) => m.id === selectedMode)!;
   const creditsRequired = getFeatureCost(MODE_FEATURE_KEY[selectedMode]);
-  const canGenerate = !!audioFile && hasEnough(creditsRequired);
+  const coverTooLong = selectedMode === "cover" && audioDuration !== null && audioDuration > 60;
+  const addVocalsTooLong = selectedMode === "add_vocals" && audioDuration !== null && audioDuration > 90;
+  const canGenerate = !!audioFile && hasEnough(creditsRequired) && !coverTooLong && !addVocalsTooLong;
   const isProcessing = jobStatus === "uploading" || jobStatus === "processing";
 
   useEffect(() => {
@@ -242,9 +245,26 @@ const AIEnhance = () => {
     };
   };
 
-  // Realtime: listen for callback result on ai_generation_logs
+  const COPYRIGHT_ASYNC_MSG = "El audio fue bloqueado por el filtro de derechos de autor. Prueba con un fragmento más corto (20-30 seg) o un audio sin samples descargados de internet. Tus créditos han sido reembolsados.";
+
   useEffect(() => {
     if (!logId || jobStatus !== "processing") return;
+    const handleStatus = (status: string, output_url?: string | null, error_message?: string | null) => {
+      if (status === "completed" && output_url) {
+        setJobStatus("completed");
+        setGeneratedAudioUrl(output_url);
+        toast.success(t('aiEnhance.toastReady'));
+      } else if (status === "copyright_error") {
+        setJobStatus("failed");
+        setCopyrightError({ message: COPYRIGHT_ASYNC_MSG, suggestions: [] });
+      } else if (status === "failed") {
+        setJobStatus("failed");
+        const { userMessage } = parseAiError(new Error(error_message || ""));
+        setGenError(userMessage);
+        toast.error(userMessage);
+      }
+    };
+
     const channel = supabase
       .channel(`enhance-log-${logId}`)
       .on(
@@ -252,17 +272,7 @@ const AIEnhance = () => {
         { event: "UPDATE", schema: "public", table: "ai_generation_logs", filter: `id=eq.${logId}` },
         (payload) => {
           const updated = payload.new as Record<string, unknown>;
-          if (updated.status === "completed" && updated.output_url) {
-            setJobStatus("completed");
-            setGeneratedAudioUrl(updated.output_url as string);
-            toast.success(t('aiEnhance.toastReady'));
-          } else if (updated.status === "failed") {
-            setJobStatus("failed");
-            const raw = (updated.error_message as string) || "";
-            const { userMessage } = parseAiError(new Error(raw));
-            setGenError(userMessage);
-            toast.error(userMessage);
-          }
+          handleStatus(updated.status as string, updated.output_url as string | null, updated.error_message as string | null);
         }
       )
       .subscribe();
@@ -275,16 +285,7 @@ const AIEnhance = () => {
         .eq("id", logId)
         .maybeSingle();
       if (!data) return;
-      if (data.status === "completed" && data.output_url) {
-        setJobStatus("completed");
-        setGeneratedAudioUrl(data.output_url);
-        toast.success(t('aiEnhance.toastReady'));
-      } else if (data.status === "failed") {
-        setJobStatus("failed");
-        const { userMessage } = parseAiError(new Error(data.error_message || ""));
-        setGenError(userMessage);
-        toast.error(userMessage);
-      }
+      handleStatus(data.status, data.output_url, data.error_message);
     }, 8000);
 
     return () => {
@@ -317,12 +318,18 @@ const AIEnhance = () => {
   const handleGenerate = async () => {
     if (!audioFile || !user) return;
     setGenError(null);
+    setCopyrightError(null);
 
     // ── Client-side duration validation ──────────────────────────────────────
     if (selectedMode === "add_vocals" && audioDuration !== null && audioDuration > 90) {
       const msg = `Tu audio tiene ${Math.round(audioDuration)}s — supera el límite de 90s para "Añadir voz". Por favor usa un audio más corto.`;
       setGenError(msg);
       toast.error(msg);
+      return;
+    }
+    if (selectedMode === "cover" && audioDuration !== null && audioDuration > 60) {
+      const msg = "Para el modo Cover, el audio debe durar máximo 60 segundos. Selecciona un fragmento corto (intro, estrofa o estribillo) de tu obra.";
+      setGenError(msg);
       return;
     }
 
@@ -358,6 +365,7 @@ const AIEnhance = () => {
             }),
             // ── quality params: cover (voice_type sent separately, no vocal_gender) ─
             ...(selectedMode === "cover" && {
+              trim_seconds: 30,
               audio_weight: FIDELITY_PRESETS[fidelityPreset].audio_weight,
               style_weight: FIDELITY_PRESETS[fidelityPreset].style_weight,
               weirdness_constraint: FIDELITY_PRESETS[fidelityPreset].weirdness_constraint,
@@ -382,11 +390,21 @@ const AIEnhance = () => {
       );
       const data = await response.json();
       if (!response.ok) {
+        // ── 409: Suno copyright detection ─────────────────────────────────
+        if (response.status === 409 && data?.error === "copyright_error") {
+          setJobStatus("failed");
+          setCopyrightError({
+            message: data.message || "El sistema de detección de Suno ha bloqueado el audio.",
+            suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
+          });
+          return;
+        }
+        // ── 400: audio too long (server-side fallback) ────────────────────
         if (data?.error === "audio_too_long") {
-          const msg = data.message || `El audio es demasiado largo para este modo. Máximo: ${data.max_seconds}s.`;
+          const msg = data.hint || data.message || `El audio es demasiado largo para este modo. Máximo: ${data.max_seconds}s.`;
           setJobStatus("failed");
           setGenError(msg);
-          toast.error(msg);
+          if (selectedMode !== "cover") toast.error(msg);
           return;
         }
         throw new Error(data?.error || t('aiEnhance.errStartGen'));
@@ -573,6 +591,7 @@ const AIEnhance = () => {
     setGeneratedAudioUrl(null);
     setUploadProgress(0);
     setGenError(null);
+    setCopyrightError(null);
     setMidiStatus("idle");
     setMidiDownloadUrl(null);
     if (midiPollRef.current) clearInterval(midiPollRef.current);
@@ -772,6 +791,29 @@ const AIEnhance = () => {
                   ? `Tu audio tiene ${Math.round(audioDuration)}s — supera el límite de 90s para "Añadir voz". Por favor usa un audio más corto.`
                   : 'Esta función requiere un audio de máximo 90 segundos. Audios más largos serán rechazados.'}
               </span>
+            </div>
+          )}
+
+          {/* ── Cover: hint + duración máxima 60s ──────────────────────────── */}
+          {selectedMode === "cover" && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground/80">
+                💡 Recomendación: usa un fragmento de 20-60 seg de tu obra original para mejores resultados.
+              </p>
+              {audioDuration !== null && audioDuration > 60 && (
+                <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive px-3 py-2.5 text-sm">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>
+                    Para el modo Cover, el audio debe durar máximo 60 segundos (el tuyo tiene {Math.round(audioDuration)}s). Selecciona un fragmento corto (intro, estrofa o estribillo) de tu obra.
+                  </span>
+                </div>
+              )}
+              {genError && selectedMode === "cover" && audioDuration !== null && audioDuration <= 60 && (
+                <div className="flex items-start gap-2 rounded-lg border border-destructive/50 bg-destructive/10 text-destructive px-3 py-2.5 text-sm">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+                  <span>{genError}</span>
+                </div>
+              )}
             </div>
           )}
 
@@ -1029,6 +1071,45 @@ const AIEnhance = () => {
 
 
 
+
+          {/* ── Copyright blocked error card (sync 409 + async polling) ─────── */}
+          {copyrightError && (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-5 space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-base text-amber-900 dark:text-amber-200">
+                    Audio bloqueado por similitud de copyright
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">{copyrightError.message}</p>
+                </div>
+              </div>
+              {copyrightError.suggestions.length > 0 && (
+                <ol className="list-decimal pl-5 space-y-1.5 text-sm text-foreground/90">
+                  {copyrightError.suggestions.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ol>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setCopyrightError(null);
+                  setGenError(null);
+                  setAudioFile(null);
+                  setAudioDuration(null);
+                  setJobStatus("idle");
+                  setLogId(null);
+                }}
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" /> Intentar de nuevo
+              </Button>
+            </div>
+          )}
 
           {/* ── Botón principal de generación ───────────────────────────────── */}
           <Button
