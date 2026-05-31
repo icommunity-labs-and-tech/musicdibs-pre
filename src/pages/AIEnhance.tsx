@@ -226,7 +226,9 @@ const AIEnhance = () => {
 
   const currentMode = MODES.find((m) => m.id === selectedMode)!;
   const creditsRequired = getFeatureCost(MODE_FEATURE_KEY[selectedMode]);
-  const canGenerate = !!audioFile && hasEnough(creditsRequired);
+  const coverTooLong = selectedMode === "cover" && audioDuration !== null && audioDuration > 60;
+  const addVocalsTooLong = selectedMode === "add_vocals" && audioDuration !== null && audioDuration > 90;
+  const canGenerate = !!audioFile && hasEnough(creditsRequired) && !coverTooLong && !addVocalsTooLong;
   const isProcessing = jobStatus === "uploading" || jobStatus === "processing";
 
   useEffect(() => {
