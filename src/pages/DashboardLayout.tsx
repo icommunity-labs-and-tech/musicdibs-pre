@@ -19,6 +19,8 @@ import { Loader2, Plus } from 'lucide-react';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { useDashboardTheme } from '@/hooks/useDashboardTheme';
 import { useTranslation } from 'react-i18next';
+import { Helmet } from 'react-helmet-async';
+
 
 export default function DashboardLayout() {
   const { user, loading } = useAuth();
