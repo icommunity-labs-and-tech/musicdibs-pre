@@ -91,6 +91,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!isMounted) return;
 
         const authState = supabase.auth.onAuthStateChange((_event, newSession) => {
+          // Set loading=true immediately so DashboardLayout shows the spinner
+          // and does NOT redirect to /login during the async initializeUser tick.
+          // Without this, a race condition causes a redirect loop after login:
+          // navigate('/dashboard') fires before initializeUser completes →
+          // DashboardLayout sees loading=false + user=null → redirects to /login →
+          // UserLogin sees user → redirects back to /dashboard → infinite loop.
+          setLoading(true);
           // Use setTimeout to avoid async work directly in callback
           setTimeout(() => {
             void initializeUser(newSession).catch(recoverFromAuthError);
