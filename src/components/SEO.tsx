@@ -8,7 +8,9 @@ interface SEOProps {
   image?: string;
   locale?: string;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  noIndex?: boolean;
 }
+
 
 const BASE_URL = "https://www.musicdibs.com";
 const DEFAULT_OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/27fdd7c8-3e07-4d0d-886d-53859f68e5de";
@@ -41,8 +43,10 @@ export const SEO = ({
   image,
   locale,
   jsonLd,
+  noIndex = false,
 }: SEOProps) => {
   const url = `${BASE_URL}${path}`;
+  const pathname = path || (typeof window !== "undefined" ? window.location.pathname : "/");
   const normalizedTitle = normalizeBrandName(title);
   const fullTitle = path === "/"
     ? normalizedTitle
@@ -54,6 +58,7 @@ export const SEO = ({
     ? (image.startsWith("http") ? image : `${BASE_URL}${image}`)
     : `${BASE_URL}${DEFAULT_OG_IMAGE}`;
 
+
   const ogLocale = locale ? (LOCALE_MAP[locale] || "es_ES") : "es_ES";
   const alternateLocales = ALL_LOCALES.filter((l) => l !== ogLocale);
 
@@ -64,6 +69,15 @@ export const SEO = ({
       <title>{fullTitle}</title>
       <meta name="description" content={fullDescription} />
       <link rel="canonical" href={url} />
+      {noIndex && <meta name="robots" content="noindex, nofollow" />}
+
+      {/* hreflang alternates */}
+      {Object.entries({ es: "", en: "/en", "pt-BR": "/pt-BR" }).map(([lang, prefix]) => (
+        <link key={lang} rel="alternate" hrefLang={lang} href={`${BASE_URL}${prefix}${pathname}`} />
+      ))}
+      <link rel="alternate" hrefLang="x-default" href={`${BASE_URL}${pathname}`} />
+
+
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />

@@ -19,6 +19,8 @@ import { Loader2, Plus } from 'lucide-react';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { useDashboardTheme } from '@/hooks/useDashboardTheme';
 import { useTranslation } from 'react-i18next';
+import { Helmet } from 'react-helmet-async';
+
 
 export default function DashboardLayout() {
   const { user, loading } = useAuth();
@@ -53,7 +55,9 @@ export default function DashboardLayout() {
 
   return (
     <NotificationsProvider>
+      <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
       <SidebarProvider>
+
         <div className="min-h-screen flex w-full">
           <DashboardSidebar />
           <div className="flex-1 flex flex-col min-w-0">

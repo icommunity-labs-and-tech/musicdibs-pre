@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Helmet } from "react-helmet-async";
+
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -76,7 +78,9 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen page-bg flex items-center justify-center px-6">
+      <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
       <div className="w-full max-w-md">
+
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
           <div className="text-center mb-8">
             <div className="w-14 h-14 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
