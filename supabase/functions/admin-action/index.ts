@@ -3131,8 +3131,8 @@ serve(async (req) => {
         activeUsers30d: mauSet.size,
         verifiedUsers: verifiedRes.count || 0,
         conversionRate:
-          totalUsers > 0
-            ? parseFloat(((paidUsers / totalUsers) * 100).toFixed(1))
+          newThisMonth > 0
+            ? parseFloat(((customersNew / newThisMonth) * 100).toFixed(1))
             : 0,
         totalWorks: totalWorksRes.count || 0,
         worksThisMonth: worksMonthRes.count || 0,
