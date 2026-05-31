@@ -43,8 +43,10 @@ export const SEO = ({
   image,
   locale,
   jsonLd,
+  noIndex = false,
 }: SEOProps) => {
   const url = `${BASE_URL}${path}`;
+  const pathname = path || (typeof window !== "undefined" ? window.location.pathname : "/");
   const normalizedTitle = normalizeBrandName(title);
   const fullTitle = path === "/"
     ? normalizedTitle
@@ -55,6 +57,7 @@ export const SEO = ({
   const imageUrl = image
     ? (image.startsWith("http") ? image : `${BASE_URL}${image}`)
     : `${BASE_URL}${DEFAULT_OG_IMAGE}`;
+
 
   const ogLocale = locale ? (LOCALE_MAP[locale] || "es_ES") : "es_ES";
   const alternateLocales = ALL_LOCALES.filter((l) => l !== ogLocale);
