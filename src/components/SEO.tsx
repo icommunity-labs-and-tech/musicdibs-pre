@@ -8,7 +8,9 @@ interface SEOProps {
   image?: string;
   locale?: string;
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  noIndex?: boolean;
 }
+
 
 const BASE_URL = "https://www.musicdibs.com";
 const DEFAULT_OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/27fdd7c8-3e07-4d0d-886d-53859f68e5de";
