@@ -21,6 +21,7 @@ import LibraryAccessBanner from "@/components/library/LibraryAccessBanner";
 import { useTranslation } from "react-i18next";
 import { getFeatureCost } from "@/lib/featureCosts";
 import JSZip from "jszip";
+import { useMp4Export } from "@/hooks/useMp4Export";
 
 // ── Types ──
 interface MediaAsset {
