@@ -69,6 +69,15 @@ export const SEO = ({
       <title>{fullTitle}</title>
       <meta name="description" content={fullDescription} />
       <link rel="canonical" href={url} />
+      {noIndex && <meta name="robots" content="noindex, nofollow" />}
+
+      {/* hreflang alternates */}
+      {Object.entries({ es: "", en: "/en", "pt-BR": "/pt-BR" }).map(([lang, prefix]) => (
+        <link key={lang} rel="alternate" hrefLang={lang} href={`${BASE_URL}${prefix}${pathname}`} />
+      ))}
+      <link rel="alternate" hrefLang="x-default" href={`${BASE_URL}${pathname}`} />
+
+
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />
