@@ -84,7 +84,7 @@ const Index = () => {
     <div className="min-h-screen page-bg">
       <SEO
         title="Musicdibs - Registro y Distribución Musical"
-        description="Distribuye tu música en Spotify, Apple Music, YouTube Music y más de 150 plataformas digitales. Protege tus derechos con certificación blockchain."
+        description="Distribuye tu música en Spotify, Apple Music, YouTube Music y más de 220 plataformas digitales. Protege tus derechos con certificación blockchain."
         path="/"
         jsonLd={[
           {
@@ -109,7 +109,7 @@ const Index = () => {
             "@context": "https://schema.org",
             "@type": "Product",
             name: "Musicdibs",
-            description: "Registro de obras con certificación blockchain y distribución en más de 150 plataformas digitales.",
+            description: "Registro de obras con certificación blockchain y distribución en más de 220 plataformas digitales.",
             brand: { "@type": "Brand", name: "Musicdibs" },
             offers: [
               {
@@ -154,7 +154,7 @@ const Index = () => {
             url: "https://musicdibs.com",
             applicationCategory: "MultimediaApplication",
             operatingSystem: "Web",
-            description: "Plataforma todo-en-uno para artistas: genera música con IA, regístrala con certificación blockchain, distribúyela en más de 150 plataformas y promociónala en redes.",
+            description: "Plataforma todo-en-uno para artistas: genera música con IA, regístrala con certificación blockchain, distribúyela en más de 220 plataformas y promociónala en redes.",
             featureList: [
               "Generación de música con IA",
               "Generación de letras con IA",
@@ -162,7 +162,7 @@ const Index = () => {
               "Generación de vídeos musicales con IA",
               "Síntesis y clonación de voz con IA",
               "Registro de obras en blockchain (iBS)",
-              "Distribución a Spotify, Apple Music, YouTube Music y +150 plataformas",
+              "Distribución a Spotify, Apple Music, YouTube Music y +220 plataformas",
               "Promoción y marketing en redes sociales",
               "Panel para managers y agencias musicales"
             ],
