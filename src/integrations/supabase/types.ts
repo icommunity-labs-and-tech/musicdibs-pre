@@ -2198,6 +2198,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_notes: string | null
           available_credits: number
           created_at: string
           display_name: string | null
@@ -2232,6 +2233,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
           available_credits?: number
           created_at?: string
           display_name?: string | null
@@ -2266,6 +2268,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
           available_credits?: number
           created_at?: string
           display_name?: string | null
