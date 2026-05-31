@@ -894,6 +894,39 @@ export default function MediaLibraryPage() {
                             </Tooltip>
                           </TooltipProvider>
                         )}
+                        {/* ── MP4 visualizer export — only for KIE songs */}
+                        {asset.type === "song" && asset.provider_task_id && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  disabled={mp4Jobs[asset.id] === "loading"}
+                                  onClick={() =>
+                                    exportMp4(
+                                      asset.id,
+                                      (customNames[asset.id] || asset.title || `musicdibs-${asset.id.slice(0, 8)}`).replace(/[^\w\-]+/g, "_"),
+                                      undefined,
+                                      undefined,
+                                      ({ title, variant }) => toast({ title, variant })
+                                    )
+                                  }
+                                >
+                                  {mp4Jobs[asset.id] === "loading"
+                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    : mp4Jobs[asset.id] === "done"
+                                      ? <Check className="h-3.5 w-3.5 text-green-500" />
+                                      : <Film className="h-3.5 w-3.5" />}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Descargar MP4 visualizer</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
