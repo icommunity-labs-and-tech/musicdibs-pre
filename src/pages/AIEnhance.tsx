@@ -1254,6 +1254,32 @@ const AIEnhance = () => {
                       {midiStatus === "loading" ? t('aiEnhance.generatingMidi') : getFeatureCost("midi_generate") > 0 ? t('aiEnhance.btnMidiWithCost', { cost: getFeatureCost("midi_generate") }) : t('aiEnhance.btnMidi')}
                     </Button>
                   )}
+
+                  {/* ── MP4 visualizer */}
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      enhancedGenerationId &&
+                      exportMp4(
+                        enhancedGenerationId,
+                        `musicdibs-enhance-${enhancedGenerationId.slice(0, 8)}`,
+                        enhancedMp4Url,
+                        enhancedMp4Status,
+                        ({ title, variant }) =>
+                          variant === "destructive" ? toast.error(title) : toast.success(title)
+                      )
+                    }
+                    disabled={!enhancedGenerationId || mp4Jobs[enhancedGenerationId] === "loading"}
+                    className="gap-2"
+                  >
+                    {enhancedGenerationId && mp4Jobs[enhancedGenerationId] === "loading" ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Generando MP4…</>
+                    ) : enhancedGenerationId && mp4Jobs[enhancedGenerationId] === "done" ? (
+                      <><Check className="w-4 h-4 text-green-500" /> MP4 listo</>
+                    ) : (
+                      <><Film className="w-4 h-4" /> {enhancedGenerationId ? "MP4" : "Preparando MP4…"}</>
+                    )}
+                  </Button>
                 </div>
 
                 <Button variant="ghost" size="sm" onClick={handleReset} className="gap-2">
