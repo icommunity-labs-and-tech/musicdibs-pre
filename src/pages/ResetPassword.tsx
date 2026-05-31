@@ -98,7 +98,7 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'linear-gradient(135deg, #1a0a2e 0%, #16082a 50%, #0d0618 100%)' }}>
-      <SEO title="Nueva contraseña" description="Restablece tu contraseña de Musicdibs de forma segura." path="/reset-password" />
+      <SEO title="Nueva contraseña" description="Restablece tu contraseña de Musicdibs de forma segura." path="/reset-password" noIndex />
       <Card className="w-full max-w-md border-border/30 bg-card/95 backdrop-blur-sm shadow-2xl">
         <CardHeader className="text-center space-y-3">
           <img src="/lovable-uploads/81d79e1f-fd6f-4e2c-a573-89261bcf3879.png" alt="Musicdibs" className="mx-auto h-14 w-auto invert" />
