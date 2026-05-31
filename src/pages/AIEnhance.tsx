@@ -316,12 +316,18 @@ const AIEnhance = () => {
   const handleGenerate = async () => {
     if (!audioFile || !user) return;
     setGenError(null);
+    setCopyrightError(null);
 
     // ── Client-side duration validation ──────────────────────────────────────
     if (selectedMode === "add_vocals" && audioDuration !== null && audioDuration > 90) {
       const msg = `Tu audio tiene ${Math.round(audioDuration)}s — supera el límite de 90s para "Añadir voz". Por favor usa un audio más corto.`;
       setGenError(msg);
       toast.error(msg);
+      return;
+    }
+    if (selectedMode === "cover" && audioDuration !== null && audioDuration > 60) {
+      const msg = "Para el modo Cover, el audio debe durar máximo 60 segundos. Selecciona un fragmento corto (intro, estrofa o estribillo) de tu obra.";
+      setGenError(msg);
       return;
     }
 
@@ -357,6 +363,7 @@ const AIEnhance = () => {
             }),
             // ── quality params: cover (voice_type sent separately, no vocal_gender) ─
             ...(selectedMode === "cover" && {
+              trim_seconds: 30,
               audio_weight: FIDELITY_PRESETS[fidelityPreset].audio_weight,
               style_weight: FIDELITY_PRESETS[fidelityPreset].style_weight,
               weirdness_constraint: FIDELITY_PRESETS[fidelityPreset].weirdness_constraint,
@@ -381,11 +388,21 @@ const AIEnhance = () => {
       );
       const data = await response.json();
       if (!response.ok) {
+        // ── 409: Suno copyright detection ─────────────────────────────────
+        if (response.status === 409 && data?.error === "copyright_error") {
+          setJobStatus("failed");
+          setCopyrightError({
+            message: data.message || "El sistema de detección de Suno ha bloqueado el audio.",
+            suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
+          });
+          return;
+        }
+        // ── 400: audio too long (server-side fallback) ────────────────────
         if (data?.error === "audio_too_long") {
-          const msg = data.message || `El audio es demasiado largo para este modo. Máximo: ${data.max_seconds}s.`;
+          const msg = data.hint || data.message || `El audio es demasiado largo para este modo. Máximo: ${data.max_seconds}s.`;
           setJobStatus("failed");
           setGenError(msg);
-          toast.error(msg);
+          if (selectedMode !== "cover") toast.error(msg);
           return;
         }
         throw new Error(data?.error || t('aiEnhance.errStartGen'));
