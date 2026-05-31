@@ -27,8 +27,9 @@ import {
   Heart, Clock, Music, Trash2, Filter, CalendarIcon, X,
   AlertCircle, RefreshCw, ShieldCheck, CheckSquare, Square,
   FileText, Copy, RotateCcw, Music2, CheckCircle2, ChevronDown,
-  Mic, Headphones, RotateCw, Sparkles, HelpCircle, User, Save, Info
+  Mic, Headphones, RotateCw, Sparkles, HelpCircle, User, Save, Info, Film, Check
 } from "lucide-react";
+import { useMp4Export } from "@/hooks/useMp4Export";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -372,6 +373,8 @@ const AIStudioCreate = () => {
         isFavorite: item.is_favorite || false,
         voiceId: (item as any).voice_id || undefined,
         voiceName: (item as any).voice_name || undefined,
+        mp4_url: (item as any).mp4_url || null,
+        mp4_status: (item as any).mp4_status || 'none',
       })));
     } catch (error) {
       console.error('Error loading history:', error);
@@ -727,6 +730,8 @@ const AIStudioCreate = () => {
 
   // ── Descarga WAV (client-side via Web Audio API) ──
   const [wavJobs, setWavJobs] = useState<Record<string, 'idle' | 'loading'>>({});
+  const { mp4Jobs, exportMp4, cleanup: cleanupMp4 } = useMp4Export();
+  useEffect(() => () => cleanupMp4(), [cleanupMp4]);
   const downloadWav = async (result: GenerationResult) => {
     if (wavJobs[result.id] === 'loading') return;
     setWavJobs((p) => ({ ...p, [result.id]: 'loading' }));
@@ -1159,15 +1164,39 @@ const AIStudioCreate = () => {
                       </div>
 
                       {/* Action buttons */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         <Button variant="outline" onClick={handleRegenerate} className="gap-2">
                           <ArrowLeft className="h-4 w-4" />
                           {t('aiCreate.newSong', 'Nueva canción')}
                         </Button>
                         <Button variant="outline" onClick={() => downloadAudio(lastResult)} className="gap-2">
                           <Download className="h-4 w-4" />
-                          {t('aiCreate.download')}
+                          MP3
                         </Button>
+                        <Button
+                          variant="outline"
+                          className="gap-2"
+                          disabled={mp4Jobs[lastResult.id] === "loading"}
+                          onClick={() =>
+                            exportMp4(
+                              lastResult.id,
+                              `musicdibs-${lastResult.id.slice(0, 8)}`,
+                              lastResult.mp4_url,
+                              lastResult.mp4_status,
+                              ({ title, variant }) => toast({ title, variant })
+                            )
+                          }
+                        >
+                          {mp4Jobs[lastResult.id] === "loading" ? (
+                            <><Loader2 className="h-4 w-4 animate-spin" /> Generando MP4…</>
+                          ) : mp4Jobs[lastResult.id] === "done" ? (
+                            <><Check className="h-4 w-4 text-green-500" /> MP4 listo</>
+                          ) : (
+                            <><Film className="h-4 w-4" /> MP4</>
+                          )}
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mt-2">
                         <Button variant="outline" onClick={handleRegenerate} className="gap-2">
                           <RotateCw className="h-4 w-4" />
                           {t('aiCreate.regenerate')}

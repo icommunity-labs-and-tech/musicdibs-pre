@@ -20,6 +20,8 @@ export interface GenerationResult {
   voiceProfileId?: string;
   voiceId?: string;
   voiceName?: string;
+  mp4_url?: string | null;
+  mp4_status?: string | null;
 }
 
 export type VariationType = 'similar' | 'mood_change' | 'extend' | 'inpaint';
