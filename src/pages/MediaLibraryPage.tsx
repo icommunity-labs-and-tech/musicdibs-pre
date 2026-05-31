@@ -61,6 +61,7 @@ export default function MediaLibraryPage() {
   const [assets, setAssets] = useState<MediaAsset[]>([]);
   const [midiJobs, setMidiJobs] = useState<Record<string, ExportJobState>>({});
   const [wavJobs, setWavJobs] = useState<Record<string, ExportJobState>>({});
+  const { mp4Jobs, exportMp4 } = useMp4Export();
   const exportPollsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({}); // assetId → poll interval
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<Set<string>>(new Set());
