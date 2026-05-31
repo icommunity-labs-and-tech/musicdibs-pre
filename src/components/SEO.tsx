@@ -17,9 +17,6 @@ const LOCALE_MAP: Record<string, string> = {
   es: "es_ES",
   en: "en_US",
   "pt-BR": "pt_BR",
-  fr: "fr_FR",
-  it: "it_IT",
-  de: "de_DE",
 };
 
 const ALL_LOCALES = Object.values(LOCALE_MAP);
