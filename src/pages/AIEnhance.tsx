@@ -213,6 +213,13 @@ const AIEnhance = () => {
   // ── WAV export ─────────────────────────────────────────────────────────────
   const [wavStatus, setWavStatus] = useState<"idle" | "loading" | "error">("idle");
   const wavPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── MP4 export ─────────────────────────────────────────────────────────────
+  const { mp4Jobs, exportMp4, cleanup: cleanupMp4 } = useMp4Export();
+  const [enhancedGenerationId, setEnhancedGenerationId] = useState<string | null>(null);
+  const [enhancedMp4Url, setEnhancedMp4Url] = useState<string | null>(null);
+  const [enhancedMp4Status, setEnhancedMp4Status] = useState<string | null>(null);
+  useEffect(() => () => cleanupMp4(), [cleanupMp4]);
   // ── quality params — instrumental + extend ───────────────────────────────
   const [vocalGender, setVocalGender] = useState<"m" | "f">("m");
   const [fidelityPreset, setFidelityPreset] = useState<FidelityPreset>("balanced");
