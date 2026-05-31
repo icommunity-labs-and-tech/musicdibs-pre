@@ -40,8 +40,9 @@ import {
   ArrowLeft, Wand2, Loader2, Play, Pause,
   Download, RefreshCw, CheckCircle2, X,
   Layers, Repeat2, Expand, AlertTriangle, BookOpen, Sparkles, Mic2, AudioLines, Music2, ArrowRight,
-  FileMusic, FileAudio, Mic,
+  FileMusic, FileAudio, Mic, Film, Check,
 } from "lucide-react";
+import { useMp4Export } from "@/hooks/useMp4Export";
 import { cn } from "@/lib/utils";
 import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 
