@@ -97,7 +97,7 @@ export default function RegistroMusicalPage() {
                   </h1>
 
                   <p className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed">
-                    Registra tus derechos de autor, lanza en +220 plataformas y
+                    Registra tus derechos de autor en minutos, lanza en +220 plataformas y
                     haz crecer tu audiencia con Musicdibs.
                   </p>
 
