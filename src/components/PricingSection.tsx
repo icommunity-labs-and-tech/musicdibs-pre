@@ -90,6 +90,10 @@ export const PricingSection = () => {
       body.guest = true;
       body.guestEmail = guestEmail;
     }
+    try {
+      const refCode = localStorage.getItem('referral_code');
+      if (refCode) body.referral_code = refCode;
+    } catch { /* ignore */ }
     const { data, error } = await supabase.functions.invoke('create-credit-checkout', { body });
     if (error) throw error;
     if (data?.already_subscribed) {
