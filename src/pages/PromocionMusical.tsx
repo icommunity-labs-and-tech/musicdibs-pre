@@ -214,96 +214,113 @@ export default function PromocionMusical() {
           </section>
 
           {/* THE TWO PILLARS — Editorial stat-first */}
-          <section className="relative py-20 sm:py-28 overflow-hidden">
-            {/* Subtle backdrop */}
+          {/* THE TWO PILLARS — Editorial split rows */}
+          <section className="relative py-24 sm:py-32 overflow-hidden">
             <div
               aria-hidden
-              className="absolute inset-0 opacity-[0.07] pointer-events-none"
-              style={{
-                backgroundImage:
-                  "linear-gradient(oklch(0.98 0.01 295) 1px, transparent 1px), linear-gradient(90deg, oklch(0.98 0.01 295) 1px, transparent 1px)",
-                backgroundSize: "64px 64px",
-                maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
-              }}
+              className="pointer-events-none absolute -top-20 left-1/4 h-[26rem] w-[26rem] rounded-full blur-[140px] opacity-40"
+              style={{ background: "radial-gradient(circle, oklch(0.7 0.25 195 / 0.4), transparent 70%)" }}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute bottom-0 right-1/4 h-[26rem] w-[26rem] rounded-full blur-[140px] opacity-40"
+              style={{ background: "radial-gradient(circle, oklch(0.68 0.27 322 / 0.45), transparent 70%)" }}
             />
 
-            <div className="relative mx-auto max-w-7xl px-6">
-              <div className="text-center max-w-2xl mx-auto mb-16">
+            <div className="relative mx-auto max-w-6xl px-6">
+              {/* Section header */}
+              <div className="max-w-3xl">
                 <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-foreground/80">
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: "oklch(0.78 0.25 322)" }} />
                   Dos servicios. Un solo lugar.
                 </span>
-                <h2 className="mt-5 font-display font-bold tracking-tight text-3xl sm:text-4xl lg:text-5xl">
-                  Los <span className="text-gradient-brand">dos pilares</span> de tu lanzamiento
+                <h2 className="mt-6 font-display font-bold tracking-tight text-4xl sm:text-5xl lg:text-6xl leading-[1.05]">
+                  Los <span className="text-gradient-brand">dos pilares</span><br className="hidden sm:block" /> de tu lanzamiento
                 </h2>
+                <p className="mt-5 text-base sm:text-lg text-foreground/70 max-w-xl">
+                  Distribuir sin promocionar es publicar al vacío. Promocionar sin distribuir es no existir.
+                  <span className="text-foreground"> Nosotros hacemos las dos.</span>
+                </p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-px rounded-3xl overflow-hidden border border-white/10 bg-white/5 backdrop-blur-sm">
-                {/* Pilar 1 — Distribución */}
-                <PillarEditorial
-                  number="01"
-                  badge="Distribución"
-                  badgeIcon={<Globe2 className="h-3.5 w-3.5" />}
-                  title="Lleva tu música a todo el mundo"
-                  desc="Lanza en +220 plataformas digitales con regalías del 95% y panel unificado."
-                  stat="+220"
-                  statLabel="Plataformas"
-                  secondaryStat="95%"
-                  secondaryLabel="Regalías para ti"
-                  features={[
-                    "Spotify, Apple Music, Amazon, YouTube Music…",
-                    "Estadísticas en tiempo real",
-                    "Lanzamientos ilimitados",
-                  ]}
-                  accentClass="from-cyan-400/30 via-cyan-500/10 to-transparent"
-                  glowColor="oklch(0.7 0.25 195 / 0.55)"
-                  icon={<Radio className="h-6 w-6" />}
-                  visual={
-                    <div className="relative h-full w-full flex items-center justify-center" aria-hidden>
-                      <div className="absolute h-48 w-48 rounded-full border border-cyan-300/20" style={{ animation: "spin-slow 28s linear infinite" }} />
-                      <div className="absolute h-64 w-64 rounded-full border border-cyan-300/10" style={{ animation: "spin-slow 40s linear infinite reverse" }} />
-                      <div className="absolute h-80 w-80 rounded-full border border-cyan-300/5" />
+              {/* Pillar rows */}
+              <div className="mt-16 sm:mt-20 space-y-px rounded-3xl overflow-hidden border border-white/10 bg-white/[0.02] backdrop-blur-sm">
+                {/* ── ROW 01 · Distribución ── */}
+                <article className="relative grid grid-cols-12 gap-0">
+                  <div className="col-span-12 lg:col-span-2 flex lg:flex-col items-center lg:items-start justify-between lg:justify-start gap-4 px-8 py-8 lg:py-12 border-b lg:border-b-0 lg:border-r border-white/5">
+                    <span className="font-display font-black text-6xl lg:text-7xl leading-none tracking-tight"
+                      style={{ background: "linear-gradient(135deg, oklch(0.85 0.22 195), oklch(0.55 0.2 230))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                      01
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
+                      style={{ background: "oklch(0.7 0.25 195 / 0.12)", color: "oklch(0.88 0.18 195)", border: "1px solid oklch(0.7 0.25 195 / 0.3)" }}>
+                      <Globe2 className="h-3 w-3" /> Distribución
+                    </span>
+                  </div>
+
+                  <div className="col-span-12 lg:col-span-6 px-8 py-10 lg:py-12 border-b lg:border-b-0 lg:border-r border-white/5">
+                    <h3 className="font-display font-bold text-2xl sm:text-3xl leading-tight">
+                      Lleva tu música a todo el mundo
+                    </h3>
+                    <p className="mt-3 text-foreground/70 leading-relaxed">
+                      Lanza en <span className="text-foreground font-medium">+220 plataformas digitales</span> y conserva
+                      <span className="text-foreground font-medium"> el 95% de las regalías</span>. Un solo panel para gestionarlo todo.
+                    </p>
+
+                    <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
+                      <div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>+220</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Plataformas</div>
+                      </div>
+                      <div className="h-10 w-px bg-white/10 self-center" aria-hidden />
+                      <div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>95%</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Regalías para ti</div>
+                      </div>
+                      <div className="h-10 w-px bg-white/10 self-center" aria-hidden />
+                      <div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>∞</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Lanzamientos</div>
+                      </div>
+                    </div>
+
+                    <ul className="mt-6 space-y-2 text-sm text-foreground/75">
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 195)" }} /> Spotify, Apple Music, Amazon, YouTube Music…</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 195)" }} /> Estadísticas en tiempo real</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 195)" }} /> Lanzamientos ilimitados</li>
+                    </ul>
+                  </div>
+
+                  <div className="col-span-12 lg:col-span-4 relative min-h-[260px] lg:min-h-[360px] overflow-hidden"
+                    style={{ background: "radial-gradient(ellipse at center, oklch(0.7 0.25 195 / 0.14), transparent 70%)" }}>
+                    <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
+                      <div className="absolute h-44 w-44 rounded-full border border-cyan-300/15" style={{ animation: "spin-slow 28s linear infinite" }} />
+                      <div className="absolute h-60 w-60 rounded-full border border-cyan-300/10" style={{ animation: "spin-slow 40s linear infinite reverse" }} />
+                      <div className="absolute h-72 w-72 rounded-full border border-cyan-300/5" />
                       <div
-                        className="relative h-24 w-24 rounded-full flex items-center justify-center"
+                        className="relative h-20 w-20 rounded-full flex items-center justify-center"
                         style={{
                           background: "radial-gradient(circle at 30% 30%, oklch(0.75 0.2 195), oklch(0.3 0.15 240))",
                           boxShadow: "0 0 50px -4px oklch(0.7 0.25 195 / 0.8), inset -8px -8px 22px oklch(0 0 0 / 0.55)",
                         }}
                       >
-                        <Globe2 className="h-10 w-10 text-white/95" />
+                        <Globe2 className="h-9 w-9 text-white/95" />
                       </div>
-                      <PlatformPill className="left-[6%] top-[12%]" label="Spotify" color="#1DB954" delay="0s" />
-                      <PlatformPill className="right-[6%] top-[20%]" label="Apple Music" color="#fa57c1" delay="0.2s" />
-                      <PlatformPill className="left-[10%] bottom-[14%]" label="YouTube" color="#ff4d4d" delay="0.4s" />
-                      <PlatformPill className="right-[8%] bottom-[18%]" label="Amazon" color="#ffb84d" delay="0.6s" />
-                      <PlatformPill className="left-[42%] top-[2%]" label="Tidal" color="#22d3ee" delay="0.8s" />
-                      <PlatformPill className="right-[40%] bottom-[2%]" label="Deezer" color="#a78bfa" delay="1s" />
+                      <PlatformPill className="left-[8%] top-[14%]" label="Spotify" color="#1DB954" delay="0s" />
+                      <PlatformPill className="right-[8%] top-[22%]" label="Apple Music" color="#fa57c1" delay="0.2s" />
+                      <PlatformPill className="left-[10%] bottom-[18%]" label="YouTube" color="#ff4d4d" delay="0.4s" />
+                      <PlatformPill className="right-[10%] bottom-[14%]" label="Tidal" color="#22d3ee" delay="0.6s" />
                     </div>
-                  }
-                />
+                  </div>
+                </article>
 
-                {/* Pilar 2 — Promoción */}
-                <PillarEditorial
-                  number="02"
-                  badge="Promoción"
-                  badgeIcon={<Megaphone className="h-3.5 w-3.5" />}
-                  title="Conecta con audiencia real"
-                  desc="Te hacemos visible ante nuestra comunidad de melómanos y profesionales del sector."
-                  stat="+500k"
-                  statLabel="Seguidores en RRSS"
-                  secondaryStat="100%"
-                  secondaryLabel="Audiencia real"
-                  features={[
-                    <>Instagram <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">@musicdibs</a> + TikTok <a href="https://www.tiktok.com/@musicdibs_" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">@musicdibs_</a></>,
-                    "Promoción curada por expertos",
-                    "Crecimiento orgánico medible",
-                  ]}
-                  accentClass="from-fuchsia-400/30 via-fuchsia-500/10 to-transparent"
-                  glowColor="oklch(0.68 0.27 322 / 0.55)"
-                  icon={<Headphones className="h-6 w-6" />}
-                  visual={
-                    <div className="relative h-full w-full flex items-center justify-center" aria-hidden>
+                {/* ── ROW 02 · Promoción (flipped) ── */}
+                <article className="relative grid grid-cols-12 gap-0 bg-white/[0.015]">
+                  <div className="col-span-12 lg:col-span-4 lg:order-1 relative min-h-[260px] lg:min-h-[360px] overflow-hidden border-b lg:border-b-0 lg:border-r border-white/5"
+                    style={{ background: "radial-gradient(ellipse at center, oklch(0.68 0.27 322 / 0.16), transparent 70%)" }}>
+                    <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
                       <div
-                        className="relative h-28 w-28 rounded-full flex items-center justify-center"
+                        className="relative h-24 w-24 rounded-full flex items-center justify-center"
                         style={{
                           background: "conic-gradient(from 0deg, oklch(0.2 0.1 320), oklch(0.15 0.08 285), oklch(0.22 0.12 340), oklch(0.18 0.1 300), oklch(0.2 0.1 320))",
                           boxShadow: "0 0 50px -4px oklch(0.68 0.27 322 / 0.8), inset 0 0 26px oklch(0 0 0 / 0.6)",
@@ -311,20 +328,17 @@ export default function PromocionMusical() {
                         }}
                       >
                         <div className="absolute inset-3 rounded-full border border-white/5" />
-                        <div className="absolute inset-6 rounded-full border border-white/5" />
-                        <div
-                          className="h-10 w-10 rounded-full flex items-center justify-center"
-                          style={{ background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))" }}
-                        >
+                        <div className="h-9 w-9 rounded-full flex items-center justify-center"
+                          style={{ background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))" }}>
                           <Music2 className="h-4 w-4 text-white" />
                         </div>
                       </div>
-                      <EngagePill className="left-[6%] top-[12%]" icon={<Heart className="h-3.5 w-3.5" fill="currentColor" />} label="142,4k" tone="rose" delay="0s" />
-                      <EngagePill className="right-[6%] top-[18%]" icon={<Share2 className="h-3.5 w-3.5" />} label="8,7k" tone="violet" delay="0.2s" />
-                      <EngagePill className="left-[8%] bottom-[26%]" icon={<Eye className="h-3.5 w-3.5" />} label="2,1M" tone="cyan" delay="0.4s" />
-                      <EngagePill className="right-[8%] bottom-[30%]" icon={<MessageCircle className="h-3.5 w-3.5" />} label="+12k" tone="magenta" delay="0.6s" />
-                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-end justify-center gap-1 h-10 w-[70%] opacity-80">
-                        {Array.from({ length: 32 }).map((_, i) => (
+                      <EngagePill className="left-[8%] top-[14%]" icon={<Heart className="h-3.5 w-3.5" fill="currentColor" />} label="142,4k" tone="rose" delay="0s" />
+                      <EngagePill className="right-[8%] top-[20%]" icon={<Share2 className="h-3.5 w-3.5" />} label="8,7k" tone="violet" delay="0.2s" />
+                      <EngagePill className="left-[10%] bottom-[28%]" icon={<Eye className="h-3.5 w-3.5" />} label="2,1M" tone="cyan" delay="0.4s" />
+                      <EngagePill className="right-[10%] bottom-[20%]" icon={<MessageCircle className="h-3.5 w-3.5" />} label="+12k" tone="magenta" delay="0.6s" />
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-end justify-center gap-1 h-8 w-[70%] opacity-70">
+                        {Array.from({ length: 28 }).map((_, i) => (
                           <span
                             key={i}
                             className="w-1 rounded-full flex-1"
@@ -337,22 +351,77 @@ export default function PromocionMusical() {
                         ))}
                       </div>
                     </div>
-                  }
-                />
+                  </div>
+
+                  <div className="col-span-12 lg:col-span-6 lg:order-2 px-8 py-10 lg:py-12 border-b lg:border-b-0 lg:border-r border-white/5">
+                    <h3 className="font-display font-bold text-2xl sm:text-3xl leading-tight">
+                      Conecta con audiencia real
+                    </h3>
+                    <p className="mt-3 text-foreground/70 leading-relaxed">
+                      Te hacemos visible ante una comunidad de <span className="text-foreground font-medium">cientos de miles de melómanos</span> y profesionales del sector.
+                    </p>
+
+                    <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
+                      <div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>+500k</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Seguidores RRSS</div>
+                      </div>
+                      <div className="h-10 w-px bg-white/10 self-center" aria-hidden />
+                      <div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>100%</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Audiencia real</div>
+                      </div>
+                      <div className="h-10 w-px bg-white/10 self-center" aria-hidden />
+                      <div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>2</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Canales activos</div>
+                      </div>
+                    </div>
+
+                    <ul className="mt-6 space-y-2 text-sm text-foreground/75">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 322)" }} />
+                        <span>
+                          Instagram <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">@musicdibs</a>
+                          {" "}+ TikTok <a href="https://www.tiktok.com/@musicdibs_" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">@musicdibs_</a>
+                        </span>
+                      </li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 322)" }} /> Promoción curada por expertos</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 322)" }} /> Crecimiento orgánico medible</li>
+                    </ul>
+                  </div>
+
+                  <div className="col-span-12 lg:col-span-2 lg:order-3 flex lg:flex-col items-center lg:items-end justify-between lg:justify-start gap-4 px-8 py-8 lg:py-12 lg:text-right">
+                    <span className="font-display font-black text-6xl lg:text-7xl leading-none tracking-tight"
+                      style={{ background: "linear-gradient(135deg, oklch(0.82 0.25 322), oklch(0.55 0.28 285))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                      02
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
+                      style={{ background: "oklch(0.68 0.27 322 / 0.14)", color: "oklch(0.88 0.22 322)", border: "1px solid oklch(0.68 0.27 322 / 0.32)" }}>
+                      <Megaphone className="h-3 w-3" /> Promoción
+                    </span>
+                  </div>
+                </article>
               </div>
 
-              <style>{`
-                @keyframes spin-slow { to { transform: rotate(360deg); } }
-                @keyframes wave { from { transform: scaleY(0.45); } to { transform: scaleY(1.1); } }
-                @keyframes float-soft { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-              `}</style>
-
-              {/* Bridge note */}
-              <p className="mt-8 text-center text-sm text-foreground/60 max-w-xl mx-auto">
-                Distribuir <span className="text-foreground/90 font-medium">sin</span> promocionar es publicar al vacío.
-                Promocionar <span className="text-foreground/90 font-medium">sin</span> distribuir es no existir. Hacemos las dos.
-              </p>
+              {/* CTA inline */}
+              <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a
+                  href={CTA_HREF}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-magenta inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
+                >
+                  Empezar ahora <ArrowRight className="h-4 w-4" />
+                </a>
+                <span className="text-xs text-foreground/55">Sin permanencia · Cancela cuando quieras</span>
+              </div>
             </div>
+
+            <style>{`
+              @keyframes spin-slow { to { transform: rotate(360deg); } }
+              @keyframes wave { from { transform: scaleY(0.45); } to { transform: scaleY(1.1); } }
+            `}</style>
           </section>
 
           <RoyaltiesCalculator />
