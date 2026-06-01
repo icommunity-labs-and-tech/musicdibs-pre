@@ -144,7 +144,7 @@ const resources = {
       },
       pricing: {
         title: 'Precios',
-        subtitle: 'El plan anual desbloquea todo el potencial de Musicdibs: más créditos, distribución global y mejor precio para lanzar tu música.',
+        subtitle: 'El plan anual desbloquea todo el potencial de Musicdibs: más créditos, distribución global gratuita incluida y mejor precio para lanzar tu música.',
         toggleBasic: 'Basic',
         togglePlus: 'Plan Plus+',
         badgeAnnual: 'Mejor opción para lanzar música',
@@ -192,7 +192,7 @@ const resources = {
             'Soporte prioritario',
           ],
           monthly: [
-            '8 créditos mensuales',
+            '8 créditos mensuales (Registra 8 canciones)',
             'Registro legal de canciones con tecnología blockchain',
             'Acceso limitado a AI Music Studio',
             'Soporte estándar',
