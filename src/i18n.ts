@@ -180,11 +180,11 @@ const resources = {
         conditionsText: '* Impuestos NO incluidos (se aplicará el 21% de IVA para países UE). Las suscripciones mensuales y anuales se renuevan automáticamente al finalizar el periodo de suscripción. Más información en FAQ y en términos de uso y compra.',
         features: {
           annual: [
-            '100 créditos para crear, registrar y promocionar',
+            '100 créditos (registra hasta 100 canciones)',
             'Registro legal de canciones con tecnología blockchain',
             'Distribución global +220 DSPs (Spotify, Apple Music, Amazon Music, Youtube Music…)',
             'AI Music Studio completo',
-            'Canciones, portadas, vídeos y creatividades IA',
+            'Crea canciones, portadas, vídeos y creatividades IA',
             'Masterizado profesional',
             'Promoción en RRSS +200k',
             'Compositor de letras gratis',
@@ -772,11 +772,11 @@ const resources = {
         conditionsText: 'Taxes NOT included (21% VAT applies in EU countries). Monthly and yearly subscriptions renew automatically at the end of the term. More info in FAQ and in Terms of Use & Purchase.',
         features: {
           annual: [
-            '100 credits to create, register and promote',
+            '100 credits (register up to 100 songs)',
             'Legal song registration with blockchain technology',
             'Global distribution +220 DSPs (Spotify, Apple Music, Amazon Music, YouTube Music…)',
             'Full AI Music Studio',
-            'AI songs, covers, videos and creatives',
+            'Create AI songs, covers, videos and creatives',
             'Professional mastering',
             'Social media promotion +200k',
             'Free lyrics composer',
@@ -1318,11 +1318,11 @@ const resources = {
         conditionsText: 'Impostos NÃO incluídos (21% de IVA para países da UE). As assinaturas mensais e anuais renovam automaticamente ao final do período. Mais informações em FAQ e nos Termos de Uso e Compra.',
         features: {
           annual: [
-            '100 créditos para criar, registrar e promover',
+            '100 créditos (registre até 100 canções)',
             'Registro legal de músicas com tecnologia blockchain',
             'Distribuição global +220 DSPs (Spotify, Apple Music, Amazon Music, YouTube Music…)',
             'AI Music Studio completo',
-            'Músicas, capas, vídeos e criativos com IA',
+            'Crie músicas, capas, vídeos e criativos com IA',
             'Masterização profissional',
             'Promoção em redes sociais +200k',
             'Compositor de letras grátis',
