@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import {
   Megaphone, RefreshCw, Plus, TrendingUp, DollarSign,
   Users, ShoppingBag, BarChart3, Eye, Calendar, Loader2, ArrowUpDown,
+  Gift, AlertTriangle, Coins,
 } from 'lucide-react';
 import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/HistoricalDataNotice';
 import {
