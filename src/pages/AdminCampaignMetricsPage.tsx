@@ -632,7 +632,7 @@ export default function AdminCampaignMetricsPage() {
             <Card className="border-border/40">
               <CardHeader>
                 <CardTitle className="text-base">🎥 Influencers (cupones + referral unificado)</CardTitle>
-                <CardDescription>Fusión de datos de cupones de marketing y respuestas del modal de bienvenida</CardDescription>
+                <CardDescription>Fusión de datos de cupones y modal de bienvenida · {getPeriodLabel(periodType, weekStart, selectedMonth, selectedYear)}</CardDescription>
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {loadingCoupons || loadingReferral ? (
