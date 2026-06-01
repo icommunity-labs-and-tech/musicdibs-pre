@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DeleteAccountModal } from '@/components/dashboard/DeleteAccountModal';
+import { ReferralsSection } from '@/components/dashboard/ReferralsSection';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
