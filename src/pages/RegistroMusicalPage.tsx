@@ -73,7 +73,7 @@ export default function RegistroMusicalPage() {
       <div className="landing-ai-studio">
         <main className="relative min-h-screen overflow-hidden">
           <BackgroundScene />
-          <Navbar ctaText="Empezar AHORA" ctaHref="https://www.musicdibs.com/dashboard" />
+          <Navbar ctaText="Registrar y distribuir mi música" ctaHref="#pricing-section" />
 
           {/* ============================= HERO ============================= */}
           <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28">
