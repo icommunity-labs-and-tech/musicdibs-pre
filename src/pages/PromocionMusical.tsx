@@ -10,7 +10,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import "@/styles/landing-ai-studio.css";
-import { BackgroundScene } from "@/components/landing/BackgroundScene";
+import { RoyaltiesCalculator } from "@/components/RoyaltiesCalculator";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import {
