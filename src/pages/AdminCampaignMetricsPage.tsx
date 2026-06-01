@@ -205,6 +205,72 @@ export default function AdminCampaignMetricsPage() {
 
   useEffect(() => { loadReferral(); }, [loadReferral]);
 
+  const loadReferralProgram = useCallback(async () => {
+    setLoadingReferralProgram(true);
+    try {
+      const { fromIso, toIso } = getPeriodRange(periodType, weekStart, selectedMonth, selectedYear);
+
+      const { data: refStats } = await supabase
+        .from('referrals')
+        .select('status, credits_referrer, credits_referred, created_at')
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso);
+      const rows = (refStats || []) as any[];
+      const active = rows.filter(r => r.status === 'active').length;
+      const revoked = rows.filter(r => r.status === 'revoked').length;
+      const totalCreditsIssued = rows
+        .filter(r => r.status === 'active')
+        .reduce((s, r) => s + (Number(r.credits_referrer) || 0) + (Number(r.credits_referred) || 0), 0);
+      const denom = active + revoked;
+      const revocationRate = denom > 0 ? (revoked / denom) * 100 : 0;
+      const conversionRate = denom > 0 ? (active / denom) * 100 : 0;
+      setReferralProgramStats({ active, revoked, totalCreditsIssued, revocationRate, conversionRate });
+
+      const { data: topData } = await supabase
+        .from('referrals')
+        .select(`
+          referrer_id,
+          status,
+          credits_referrer,
+          subscription_tier,
+          referrer:referrer_id ( display_name ),
+          referrer_code:referral_codes!referral_codes_user_id_fkey ( code )
+        `)
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso);
+      const grouped: Record<string, any> = {};
+      ((topData || []) as any[]).forEach(r => {
+        const id = r.referrer_id;
+        if (!grouped[id]) {
+          grouped[id] = {
+            referrer_id: id,
+            display_name: r.referrer?.display_name || '—',
+            code: Array.isArray(r.referrer_code) ? (r.referrer_code[0]?.code || null) : (r.referrer_code?.code || null),
+            subscription_tier: null,
+            invitedActive: 0,
+            creditsEarned: 0,
+            anyRevoked: false,
+          };
+        }
+        if (r.status === 'active') {
+          grouped[id].invitedActive += 1;
+          grouped[id].creditsEarned += Number(r.credits_referrer) || 0;
+          if (!grouped[id].subscription_tier && r.subscription_tier) grouped[id].subscription_tier = r.subscription_tier;
+        }
+        if (r.status === 'revoked') grouped[id].anyRevoked = true;
+      });
+      const list = Object.values(grouped)
+        .filter((g: any) => g.invitedActive > 0)
+        .sort((a: any, b: any) => b.invitedActive - a.invitedActive) as any[];
+      setTopReferrers(list);
+    } catch (e: any) {
+      toast.error('Error cargando programa de referidos');
+    }
+    setLoadingReferralProgram(false);
+  }, [periodType, weekStart, selectedMonth, selectedYear]);
+
+  useEffect(() => { loadReferralProgram(); }, [loadReferralProgram]);
+
   const handleSyncStripeCoupons = useCallback(async (options?: { silent?: boolean }) => {
     setSyncingStripe(true);
     try {
