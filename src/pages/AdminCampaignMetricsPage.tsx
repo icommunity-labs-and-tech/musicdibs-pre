@@ -101,6 +101,7 @@ export default function AdminCampaignMetricsPage() {
   const [referralRows, setReferralRows] = useState<Array<{ referral_source: string | null; referral_influencer: string | null; referral_detail: string | null; user_id: string }>>([]);
   const [totalProfiles, setTotalProfiles] = useState<number>(0);
   const [influencerCouponUserIds, setInfluencerCouponUserIds] = useState<Set<string>>(new Set());
+  const [couponRegByCode, setCouponRegByCode] = useState<Record<string, number>>({});
   const [loadingReferral, setLoadingReferral] = useState(true);
 
   const loadData = useCallback(async () => {
