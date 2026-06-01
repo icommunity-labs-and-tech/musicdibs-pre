@@ -54,6 +54,23 @@ function getPeriodLabel(periodType: PeriodType, weekStart?: string, month?: stri
   return 'Todo el periodo';
 }
 
+function getPeriodRange(periodType: PeriodType, weekStart: string, month: string, year: string): { fromIso: string; toIso: string } {
+  let from: Date;
+  let to: Date;
+  if (periodType === 'week') {
+    from = new Date(weekStart + 'T00:00:00');
+    to = new Date(from);
+    to.setDate(to.getDate() + 7);
+  } else if (periodType === 'month') {
+    from = new Date(parseInt(year), parseInt(month) - 1, 1);
+    to = new Date(parseInt(year), parseInt(month), 1);
+  } else {
+    from = new Date(parseInt(year), 0, 1);
+    to = new Date(parseInt(year) + 1, 0, 1);
+  }
+  return { fromIso: from.toISOString(), toIso: to.toISOString() };
+}
+
 const MONTHS = [
   { value: '01', label: 'Enero' }, { value: '02', label: 'Febrero' },
   { value: '03', label: 'Marzo' }, { value: '04', label: 'Abril' },
