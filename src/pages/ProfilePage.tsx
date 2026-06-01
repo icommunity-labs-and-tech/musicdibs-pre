@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DeleteAccountModal } from '@/components/dashboard/DeleteAccountModal';
+import { ReferralsSection } from '@/components/dashboard/ReferralsSection';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -464,6 +465,9 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+      {/* Referrals */}
+      <ReferralsSection />
+
       {/* Delete Account */}
       <Card className="border-destructive/30 lg:col-span-2">
         <CardHeader className="pb-3">
