@@ -54,6 +54,23 @@ function getPeriodLabel(periodType: PeriodType, weekStart?: string, month?: stri
   return 'Todo el periodo';
 }
 
+function getPeriodRange(periodType: PeriodType, weekStart: string, month: string, year: string): { fromIso: string; toIso: string } {
+  let from: Date;
+  let to: Date;
+  if (periodType === 'week') {
+    from = new Date(weekStart + 'T00:00:00');
+    to = new Date(from);
+    to.setDate(to.getDate() + 7);
+  } else if (periodType === 'month') {
+    from = new Date(parseInt(year), parseInt(month) - 1, 1);
+    to = new Date(parseInt(year), parseInt(month), 1);
+  } else {
+    from = new Date(parseInt(year), 0, 1);
+    to = new Date(parseInt(year) + 1, 0, 1);
+  }
+  return { fromIso: from.toISOString(), toIso: to.toISOString() };
+}
+
 const MONTHS = [
   { value: '01', label: 'Enero' }, { value: '02', label: 'Febrero' },
   { value: '03', label: 'Marzo' }, { value: '04', label: 'Abril' },
@@ -84,6 +101,7 @@ export default function AdminCampaignMetricsPage() {
   const [referralRows, setReferralRows] = useState<Array<{ referral_source: string | null; referral_influencer: string | null; referral_detail: string | null; user_id: string }>>([]);
   const [totalProfiles, setTotalProfiles] = useState<number>(0);
   const [influencerCouponUserIds, setInfluencerCouponUserIds] = useState<Set<string>>(new Set());
+  const [couponRegByCode, setCouponRegByCode] = useState<Record<string, number>>({});
   const [loadingReferral, setLoadingReferral] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -128,16 +146,22 @@ export default function AdminCampaignMetricsPage() {
   const loadReferral = useCallback(async () => {
     setLoadingReferral(true);
     try {
+      const { fromIso, toIso } = getPeriodRange(periodType, weekStart, selectedMonth, selectedYear);
+
       const { data: refData } = await supabase
         .from('profiles')
-        .select('user_id, referral_source, referral_influencer, referral_detail')
-        .not('referral_source', 'is', null);
+        .select('user_id, referral_source, referral_influencer, referral_detail, created_at')
+        .not('referral_source', 'is', null)
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso);
       const rows = (refData || []) as any[];
       setReferralRows(rows);
 
       const { count } = await supabase
         .from('profiles')
-        .select('user_id', { count: 'exact', head: true });
+        .select('user_id', { count: 'exact', head: true })
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso);
       setTotalProfiles(count || 0);
 
       const influencerIds = rows
@@ -153,11 +177,26 @@ export default function AdminCampaignMetricsPage() {
       } else {
         setInfluencerCouponUserIds(new Set());
       }
+
+      // Registros por cupón dentro del periodo (orders.created_at)
+      const { data: periodOrders } = await supabase
+        .from('orders')
+        .select('promotion_code, coupon_code, created_at')
+        .or('promotion_code.not.is.null,coupon_code.not.is.null')
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso);
+      const byCode: Record<string, number> = {};
+      (periodOrders || []).forEach((o: any) => {
+        const code = canonicalCouponCode(o.promotion_code || o.coupon_code);
+        if (!code) return;
+        byCode[code] = (byCode[code] || 0) + 1;
+      });
+      setCouponRegByCode(byCode);
     } catch (e: any) {
       toast.error('Error cargando atribución por canal');
     }
     setLoadingReferral(false);
-  }, []);
+  }, [periodType, weekStart, selectedMonth, selectedYear]);
 
   useEffect(() => { loadReferral(); }, [loadReferral]);
 
@@ -456,7 +495,7 @@ export default function AdminCampaignMetricsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold">🎟️ Cupones e Influencers</h2>
-            <p className="text-sm text-muted-foreground">Histórico acumulado</p>
+            <p className="text-sm text-muted-foreground">Periodo: {getPeriodLabel(periodType, weekStart, selectedMonth, selectedYear)}</p>
           </div>
           <div className="flex flex-wrap gap-2 items-center">
             <Button
@@ -482,7 +521,7 @@ export default function AdminCampaignMetricsPage() {
           const influencers = summaryCoupons.filter(c => c.type === 'influencer');
           const totalSpend = influencers.reduce((s, c) => s + (parseFloat(c.cost) || 0), 0);
           const totalClients = summaryCoupons.reduce((s, c) => s + (c.total_clients || 0), 0);
-          const totalReg = summaryCoupons.reduce((s, c) => s + (c.total_registrations || 0), 0);
+          const totalReg = Object.values(couponRegByCode).reduce((s, n) => s + n, 0);
           const bestRoi = summaryCoupons.filter(c => c.current_roi > 0).sort((a, b) => b.current_roi - a.current_roi)[0];
           return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -555,7 +594,7 @@ export default function AdminCampaignMetricsPage() {
             const key = normalizeInfluencer(c.owner);
             seenKeys.add(key);
             const refCount = referralByInfluencer[key] || 0;
-            const couponReg = c.total_registrations || 0;
+            const couponReg = couponRegByCode[canonicalCouponCode(c.coupon_code)] || 0;
             // Deduplicación aproximada: usar el mayor si hay solapamiento
             const total = refCount + couponReg - Math.min(refCount, couponReg > 0 ? Math.floor(couponReg * 0.5) : 0);
             return {
@@ -593,7 +632,7 @@ export default function AdminCampaignMetricsPage() {
             <Card className="border-border/40">
               <CardHeader>
                 <CardTitle className="text-base">🎥 Influencers (cupones + referral unificado)</CardTitle>
-                <CardDescription>Fusión de datos de cupones de marketing y respuestas del modal de bienvenida</CardDescription>
+                <CardDescription>Fusión de datos de cupones y modal de bienvenida · {getPeriodLabel(periodType, weekStart, selectedMonth, selectedYear)}</CardDescription>
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {loadingCoupons || loadingReferral ? (
@@ -697,7 +736,7 @@ export default function AdminCampaignMetricsPage() {
             <Card className="border-border/40">
               <CardHeader>
                 <CardTitle className="text-base">📱 Canales propios (referral sin influencer)</CardTitle>
-                <CardDescription>Registros del modal de bienvenida agrupados por canal</CardDescription>
+                <CardDescription>Registros del modal de bienvenida agrupados por canal · {getPeriodLabel(periodType, weekStart, selectedMonth, selectedYear)}</CardDescription>
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {loadingReferral ? (
