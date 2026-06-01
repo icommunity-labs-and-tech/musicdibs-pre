@@ -338,6 +338,7 @@ export default function AdminCampaignMetricsPage() {
     const name = canonicalCouponCode(c.coupon_code);
     if (!name) return acc;
     const roi = Number.isFinite(Number(c.current_roi)) ? Math.round(Number(c.current_roi) * 100) : 0;
+    if (hideZeroRoi && roi === 0) return acc;
     if (!acc[name] || roi > acc[name].roi) acc[name] = { name, roi };
     return acc;
   }, {})).sort((a, b) => b.roi - a.roi || a.name.localeCompare(b.name));
