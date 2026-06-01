@@ -521,7 +521,7 @@ export default function AdminCampaignMetricsPage() {
           const influencers = summaryCoupons.filter(c => c.type === 'influencer');
           const totalSpend = influencers.reduce((s, c) => s + (parseFloat(c.cost) || 0), 0);
           const totalClients = summaryCoupons.reduce((s, c) => s + (c.total_clients || 0), 0);
-          const totalReg = summaryCoupons.reduce((s, c) => s + (c.total_registrations || 0), 0);
+          const totalReg = Object.values(couponRegByCode).reduce((s, n) => s + n, 0);
           const bestRoi = summaryCoupons.filter(c => c.current_roi > 0).sort((a, b) => b.current_roi - a.current_roi)[0];
           return (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
