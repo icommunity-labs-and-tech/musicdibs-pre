@@ -442,8 +442,6 @@ export const PricingSection = () => {
           </p>
         </div>
 
-        {/* Comparison Table */}
-        <ComparisonTable />
       </div>
     </section>
     <GuestEmailModal
