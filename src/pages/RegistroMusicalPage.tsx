@@ -5,6 +5,7 @@ import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { SocialBanner } from "@/components/landing/SocialBanner";
+import { PricingSection } from "@/components/PricingSection";
 import urbanArtistInstagram from "@/assets/urban-artist-instagram.jpg";
 import urbanArtistTiktok from "@/assets/urban-artist-tiktok.jpg";
 import testimonioPoster from "@/assets/testimonio-poster.jpg";
