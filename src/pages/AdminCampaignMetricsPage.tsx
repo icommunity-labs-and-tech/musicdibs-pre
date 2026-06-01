@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { adminApi } from '@/services/adminApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -95,6 +96,7 @@ export default function AdminCampaignMetricsPage() {
   const [newCampaign, setNewCampaign] = useState({ name: '', type: '', owner: '', cost: '0', coupon_code: '', utm_source: '', utm_medium: '', utm_campaign: '', notes: '' });
   const [coupons, setCoupons] = useState<any[]>([]);
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
+  const [hideZeroRoi, setHideZeroRoi] = useState(false);
   const [loadingCoupons, setLoadingCoupons] = useState(true);
   const [syncingStripe, setSyncingStripe] = useState(false);
   const initialStripeSyncStarted = useRef(false);
@@ -336,6 +338,7 @@ export default function AdminCampaignMetricsPage() {
     const name = canonicalCouponCode(c.coupon_code);
     if (!name) return acc;
     const roi = Number.isFinite(Number(c.current_roi)) ? Math.round(Number(c.current_roi) * 100) : 0;
+    if (hideZeroRoi && roi === 0) return acc;
     if (!acc[name] || roi > acc[name].roi) acc[name] = { name, roi };
     return acc;
   }, {})).sort((a, b) => b.roi - a.roi || a.name.localeCompare(b.name));
@@ -607,7 +610,21 @@ export default function AdminCampaignMetricsPage() {
         {/* Gráfico ROI por cupón */}
         {!loadingCoupons && roiChartData.length > 0 && (
           <Card className="border-border/40">
-            <CardHeader><CardTitle className="text-base">📈 ROI acumulado por cupón</CardTitle></CardHeader>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <CardTitle className="text-base">📈 ROI acumulado por cupón</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="hide-zero-roi"
+                    checked={hideZeroRoi}
+                    onCheckedChange={setHideZeroRoi}
+                  />
+                  <Label htmlFor="hide-zero-roi" className="text-xs text-muted-foreground cursor-pointer">
+                    Ocultar 0%
+                  </Label>
+                </div>
+              </div>
+            </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={roiChartHeight}>
                 <BarChart
