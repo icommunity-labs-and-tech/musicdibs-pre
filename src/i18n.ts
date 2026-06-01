@@ -772,11 +772,11 @@ const resources = {
         conditionsText: 'Taxes NOT included (21% VAT applies in EU countries). Monthly and yearly subscriptions renew automatically at the end of the term. More info in FAQ and in Terms of Use & Purchase.',
         features: {
           annual: [
-            '100 credits to create, register and promote',
+            '100 credits (register up to 100 songs)',
             'Legal song registration with blockchain technology',
             'Global distribution +220 DSPs (Spotify, Apple Music, Amazon Music, YouTube Music…)',
             'Full AI Music Studio',
-            'AI songs, covers, videos and creatives',
+            'Create AI songs, covers, videos and creatives',
             'Professional mastering',
             'Social media promotion +200k',
             'Free lyrics composer',
