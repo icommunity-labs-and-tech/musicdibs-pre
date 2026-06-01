@@ -36,8 +36,16 @@ export function getAttribution(): AttributionData | null {
   }
 }
 
-/** Capture UTMs from current URL. Only writes if no existing attribution (first-touch). */
+/** Capture UTMs from current URL. Only writes if no existing attribution (first-touch).
+ *  The ?ref= param is ALWAYS persisted separately under `referral_code` (overwrites),
+ *  so referral links work even when the user already had prior attribution. */
 export function captureAttribution(): void {
+  // Always capture referral code (separate from first-touch attribution)
+  try {
+    const refParam = new URLSearchParams(window.location.search).get('ref');
+    if (refParam) localStorage.setItem('referral_code', refParam);
+  } catch { /* ignore */ }
+
   // Don't overwrite existing first-touch data
   if (getAttribution()) return;
 
