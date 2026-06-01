@@ -146,16 +146,22 @@ export default function AdminCampaignMetricsPage() {
   const loadReferral = useCallback(async () => {
     setLoadingReferral(true);
     try {
+      const { fromIso, toIso } = getPeriodRange(periodType, weekStart, selectedMonth, selectedYear);
+
       const { data: refData } = await supabase
         .from('profiles')
-        .select('user_id, referral_source, referral_influencer, referral_detail')
-        .not('referral_source', 'is', null);
+        .select('user_id, referral_source, referral_influencer, referral_detail, created_at')
+        .not('referral_source', 'is', null)
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso);
       const rows = (refData || []) as any[];
       setReferralRows(rows);
 
       const { count } = await supabase
         .from('profiles')
-        .select('user_id', { count: 'exact', head: true });
+        .select('user_id', { count: 'exact', head: true })
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso);
       setTotalProfiles(count || 0);
 
       const influencerIds = rows
@@ -171,11 +177,26 @@ export default function AdminCampaignMetricsPage() {
       } else {
         setInfluencerCouponUserIds(new Set());
       }
+
+      // Registros por cupón dentro del periodo (orders.created_at)
+      const { data: periodOrders } = await supabase
+        .from('orders')
+        .select('promotion_code, coupon_code, created_at')
+        .or('promotion_code.not.is.null,coupon_code.not.is.null')
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso);
+      const byCode: Record<string, number> = {};
+      (periodOrders || []).forEach((o: any) => {
+        const code = canonicalCouponCode(o.promotion_code || o.coupon_code);
+        if (!code) return;
+        byCode[code] = (byCode[code] || 0) + 1;
+      });
+      setCouponRegByCode(byCode);
     } catch (e: any) {
       toast.error('Error cargando atribución por canal');
     }
     setLoadingReferral(false);
-  }, []);
+  }, [periodType, weekStart, selectedMonth, selectedYear]);
 
   useEffect(() => { loadReferral(); }, [loadReferral]);
 
