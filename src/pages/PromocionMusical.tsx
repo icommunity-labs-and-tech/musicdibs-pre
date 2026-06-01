@@ -10,6 +10,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import "@/styles/landing-ai-studio.css";
+import { RoyaltiesCalculator } from "@/components/RoyaltiesCalculator";
 import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
@@ -354,6 +355,7 @@ export default function PromocionMusical() {
             </div>
           </section>
 
+          <RoyaltiesCalculator />
 
           {/* ECOSYSTEM */}
           <section
