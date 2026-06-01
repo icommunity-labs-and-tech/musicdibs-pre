@@ -495,7 +495,7 @@ export default function AdminCampaignMetricsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold">🎟️ Cupones e Influencers</h2>
-            <p className="text-sm text-muted-foreground">Histórico acumulado</p>
+            <p className="text-sm text-muted-foreground">Periodo: {getPeriodLabel(periodType, weekStart, selectedMonth, selectedYear)}</p>
           </div>
           <div className="flex flex-wrap gap-2 items-center">
             <Button
