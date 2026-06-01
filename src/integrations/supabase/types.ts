@@ -2558,6 +2558,137 @@ export type Database = {
           },
         ]
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "referral_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          credits_referred: number
+          credits_referrer: number
+          id: string
+          order_id: string | null
+          price_id: string
+          referred_id: string
+          referrer_id: string
+          revoked_at: string | null
+          revoked_reason: string | null
+          status: string
+          stripe_session_id: string | null
+          subscription_tier: string
+        }
+        Insert: {
+          created_at?: string
+          credits_referred: number
+          credits_referrer: number
+          id?: string
+          order_id?: string | null
+          price_id: string
+          referred_id: string
+          referrer_id: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          subscription_tier: string
+        }
+        Update: {
+          created_at?: string
+          credits_referred?: number
+          credits_referrer?: number
+          id?: string
+          order_id?: string | null
+          price_id?: string
+          referred_id?: string
+          referrer_id?: string
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          subscription_tier?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "referrals_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders_evidences_consistency"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "referrals_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "referrals_referred_id_fkey"
+            columns: ["referred_id"]
+            isOneToOne: true
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       renewal_log: {
         Row: {
           action: string
