@@ -96,6 +96,7 @@ export default function AdminCampaignMetricsPage() {
   const [newCampaign, setNewCampaign] = useState({ name: '', type: '', owner: '', cost: '0', coupon_code: '', utm_source: '', utm_medium: '', utm_campaign: '', notes: '' });
   const [coupons, setCoupons] = useState<any[]>([]);
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
+  const [hideZeroRoi, setHideZeroRoi] = useState(false);
   const [loadingCoupons, setLoadingCoupons] = useState(true);
   const [syncingStripe, setSyncingStripe] = useState(false);
   const initialStripeSyncStarted = useRef(false);
