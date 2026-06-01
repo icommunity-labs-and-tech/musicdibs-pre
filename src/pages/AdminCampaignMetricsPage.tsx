@@ -846,6 +846,88 @@ export default function AdminCampaignMetricsPage() {
             </Card>
           );
         })()}
+
+        {/* ── Programa de Referidos ── */}
+        <Card className="border-border/40">
+          <CardHeader>
+            <CardTitle className="text-base">🎁 Programa de Referidos</CardTitle>
+            <CardDescription>Conversiones del programa de referidos · {getPeriodLabel(periodType, weekStart, selectedMonth, selectedYear)}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {loadingReferralProgram ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <KpiCard label="🎁 Referidos activos" value={referralProgramStats.active} icon={Gift} />
+                  <KpiCard label="💰 Créditos emitidos" value={referralProgramStats.totalCreditsIssued} icon={Coins} />
+                  <Card className="border-border/40">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />⚠️ Tasa de revocación
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold">{referralProgramStats.revocationRate.toFixed(1)}%</span>
+                        {referralProgramStats.revocationRate > 15 && (
+                          <Badge variant="destructive" className="text-[10px]">Alta</Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <KpiCard label="📊 Tasa de conversión" value={`${referralProgramStats.conversionRate.toFixed(1)}%`} icon={TrendingUp} />
+                </div>
+
+                {topReferrers.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                    <Gift className="h-10 w-10 mb-2 opacity-50" />
+                    <p className="text-sm">Aún no hay conversiones del programa de referidos</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Artista</TableHead>
+                          <TableHead>Código</TableHead>
+                          <TableHead>Plan que usó</TableHead>
+                          <TableHead className="text-right">Invitados activos</TableHead>
+                          <TableHead className="text-right">Créditos ganados</TableHead>
+                          <TableHead>Estado</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {topReferrers.map(r => (
+                          <TableRow key={r.referrer_id}>
+                            <TableCell className="font-medium">{r.display_name}</TableCell>
+                            <TableCell>
+                              {r.code ? (
+                                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{r.code}</Badge>
+                              ) : <span className="text-muted-foreground">—</span>}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{r.subscription_tier || '—'}</TableCell>
+                            <TableCell className="text-right">{r.invitedActive}</TableCell>
+                            <TableCell className="text-right">{r.creditsEarned}</TableCell>
+                            <TableCell>
+                              {r.anyRevoked ? (
+                                <Badge variant="destructive" className="text-[10px]">revocado</Badge>
+                              ) : (
+                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">activo</Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
