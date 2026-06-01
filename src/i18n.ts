@@ -1318,11 +1318,11 @@ const resources = {
         conditionsText: 'Impostos NÃO incluídos (21% de IVA para países da UE). As assinaturas mensais e anuais renovam automaticamente ao final do período. Mais informações em FAQ e nos Termos de Uso e Compra.',
         features: {
           annual: [
-            '100 créditos para criar, registrar e promover',
+            '100 créditos (registre até 100 canções)',
             'Registro legal de músicas com tecnologia blockchain',
             'Distribuição global +220 DSPs (Spotify, Apple Music, Amazon Music, YouTube Music…)',
             'AI Music Studio completo',
-            'Músicas, capas, vídeos e criativos com IA',
+            'Crie músicas, capas, vídeos e criativos com IA',
             'Masterização profissional',
             'Promoção em redes sociais +200k',
             'Compositor de letras grátis',
