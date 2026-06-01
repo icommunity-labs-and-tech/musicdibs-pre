@@ -898,6 +898,8 @@ export default function RegistroMusicalPage() {
             </div>
           </section>
 
+          <PricingSection />
+
           <SocialBanner />
           <Footer />
         </main>
