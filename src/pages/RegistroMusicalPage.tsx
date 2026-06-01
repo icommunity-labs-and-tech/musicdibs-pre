@@ -575,9 +575,7 @@ export default function RegistroMusicalPage() {
                     ))}
                   </ul>
                   <a
-                    href="https://www.musicdibs.com/dashboard"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    href="#pricing-section"
                     className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                   >
                     Registrar mi obra
