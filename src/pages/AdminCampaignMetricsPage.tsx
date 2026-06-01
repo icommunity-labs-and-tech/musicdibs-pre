@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import {
   Megaphone, RefreshCw, Plus, TrendingUp, DollarSign,
   Users, ShoppingBag, BarChart3, Eye, Calendar, Loader2, ArrowUpDown,
+  Gift, AlertTriangle, Coins,
 } from 'lucide-react';
 import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/HistoricalDataNotice';
 import {
@@ -103,6 +104,10 @@ export default function AdminCampaignMetricsPage() {
   const [influencerCouponUserIds, setInfluencerCouponUserIds] = useState<Set<string>>(new Set());
   const [couponRegByCode, setCouponRegByCode] = useState<Record<string, number>>({});
   const [loadingReferral, setLoadingReferral] = useState(true);
+
+  const [referralProgramStats, setReferralProgramStats] = useState<{ active: number; revoked: number; totalCreditsIssued: number; revocationRate: number; conversionRate: number }>({ active: 0, revoked: 0, totalCreditsIssued: 0, revocationRate: 0, conversionRate: 0 });
+  const [topReferrers, setTopReferrers] = useState<Array<{ referrer_id: string; display_name: string; code: string | null; subscription_tier: string | null; invitedActive: number; creditsEarned: number; anyRevoked: boolean }>>([]);
+  const [loadingReferralProgram, setLoadingReferralProgram] = useState(true);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -199,6 +204,72 @@ export default function AdminCampaignMetricsPage() {
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
   useEffect(() => { loadReferral(); }, [loadReferral]);
+
+  const loadReferralProgram = useCallback(async () => {
+    setLoadingReferralProgram(true);
+    try {
+      const { fromIso, toIso } = getPeriodRange(periodType, weekStart, selectedMonth, selectedYear);
+
+      const { data: refStats } = await supabase
+        .from('referrals')
+        .select('status, credits_referrer, credits_referred, created_at')
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso);
+      const rows = (refStats || []) as any[];
+      const active = rows.filter(r => r.status === 'active').length;
+      const revoked = rows.filter(r => r.status === 'revoked').length;
+      const totalCreditsIssued = rows
+        .filter(r => r.status === 'active')
+        .reduce((s, r) => s + (Number(r.credits_referrer) || 0) + (Number(r.credits_referred) || 0), 0);
+      const denom = active + revoked;
+      const revocationRate = denom > 0 ? (revoked / denom) * 100 : 0;
+      const conversionRate = denom > 0 ? (active / denom) * 100 : 0;
+      setReferralProgramStats({ active, revoked, totalCreditsIssued, revocationRate, conversionRate });
+
+      const { data: topData } = await supabase
+        .from('referrals')
+        .select(`
+          referrer_id,
+          status,
+          credits_referrer,
+          subscription_tier,
+          referrer:referrer_id ( display_name ),
+          referrer_code:referral_codes!referral_codes_user_id_fkey ( code )
+        `)
+        .gte('created_at', fromIso)
+        .lt('created_at', toIso);
+      const grouped: Record<string, any> = {};
+      ((topData || []) as any[]).forEach(r => {
+        const id = r.referrer_id;
+        if (!grouped[id]) {
+          grouped[id] = {
+            referrer_id: id,
+            display_name: r.referrer?.display_name || '—',
+            code: Array.isArray(r.referrer_code) ? (r.referrer_code[0]?.code || null) : (r.referrer_code?.code || null),
+            subscription_tier: null,
+            invitedActive: 0,
+            creditsEarned: 0,
+            anyRevoked: false,
+          };
+        }
+        if (r.status === 'active') {
+          grouped[id].invitedActive += 1;
+          grouped[id].creditsEarned += Number(r.credits_referrer) || 0;
+          if (!grouped[id].subscription_tier && r.subscription_tier) grouped[id].subscription_tier = r.subscription_tier;
+        }
+        if (r.status === 'revoked') grouped[id].anyRevoked = true;
+      });
+      const list = Object.values(grouped)
+        .filter((g: any) => g.invitedActive > 0)
+        .sort((a: any, b: any) => b.invitedActive - a.invitedActive) as any[];
+      setTopReferrers(list);
+    } catch (e: any) {
+      toast.error('Error cargando programa de referidos');
+    }
+    setLoadingReferralProgram(false);
+  }, [periodType, weekStart, selectedMonth, selectedYear]);
+
+  useEffect(() => { loadReferralProgram(); }, [loadReferralProgram]);
 
   const handleSyncStripeCoupons = useCallback(async (options?: { silent?: boolean }) => {
     setSyncingStripe(true);
@@ -775,6 +846,88 @@ export default function AdminCampaignMetricsPage() {
             </Card>
           );
         })()}
+
+        {/* ── Programa de Referidos ── */}
+        <Card className="border-border/40">
+          <CardHeader>
+            <CardTitle className="text-base">🎁 Programa de Referidos</CardTitle>
+            <CardDescription>Conversiones del programa de referidos · {getPeriodLabel(periodType, weekStart, selectedMonth, selectedYear)}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {loadingReferralProgram ? (
+              <div className="flex items-center justify-center py-8 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <KpiCard label="🎁 Referidos activos" value={referralProgramStats.active} icon={Gift} />
+                  <KpiCard label="💰 Créditos emitidos" value={referralProgramStats.totalCreditsIssued} icon={Coins} />
+                  <Card className="border-border/40">
+                    <CardHeader className="pb-2">
+                      <CardDescription className="text-xs flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />⚠️ Tasa de revocación
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl font-bold">{referralProgramStats.revocationRate.toFixed(1)}%</span>
+                        {referralProgramStats.revocationRate > 15 && (
+                          <Badge variant="destructive" className="text-[10px]">Alta</Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <KpiCard label="📊 Tasa de conversión" value={`${referralProgramStats.conversionRate.toFixed(1)}%`} icon={TrendingUp} />
+                </div>
+
+                {topReferrers.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                    <Gift className="h-10 w-10 mb-2 opacity-50" />
+                    <p className="text-sm">Aún no hay conversiones del programa de referidos</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Artista</TableHead>
+                          <TableHead>Código</TableHead>
+                          <TableHead>Plan que usó</TableHead>
+                          <TableHead className="text-right">Invitados activos</TableHead>
+                          <TableHead className="text-right">Créditos ganados</TableHead>
+                          <TableHead>Estado</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {topReferrers.map(r => (
+                          <TableRow key={r.referrer_id}>
+                            <TableCell className="font-medium">{r.display_name}</TableCell>
+                            <TableCell>
+                              {r.code ? (
+                                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{r.code}</Badge>
+                              ) : <span className="text-muted-foreground">—</span>}
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{r.subscription_tier || '—'}</TableCell>
+                            <TableCell className="text-right">{r.invitedActive}</TableCell>
+                            <TableCell className="text-right">{r.creditsEarned}</TableCell>
+                            <TableCell>
+                              {r.anyRevoked ? (
+                                <Badge variant="destructive" className="text-[10px]">revocado</Badge>
+                              ) : (
+                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">activo</Badge>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
