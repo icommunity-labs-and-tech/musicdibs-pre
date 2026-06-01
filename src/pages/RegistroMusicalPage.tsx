@@ -104,12 +104,10 @@ export default function RegistroMusicalPage() {
 
                   <div className="mt-9 flex flex-col sm:flex-row gap-3">
                     <a
-                      href="https://www.musicdibs.com/dashboard"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href="#pricing-section"
                       className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                     >
-                      Empezar AHORA
+                      Registrar y distribuir mi música
                       <ArrowRight className="h-4 w-4" />
                     </a>
                   </div>
