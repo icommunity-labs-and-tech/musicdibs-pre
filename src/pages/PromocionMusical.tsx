@@ -355,6 +355,7 @@ export default function PromocionMusical() {
             </div>
           </section>
 
+          <RoyaltiesCalculator />
 
           {/* ECOSYSTEM */}
           <section
