@@ -136,7 +136,9 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
           if (parsed.utm_campaign) attribution.attributed_campaign_name = parsed.utm_campaign;
         }
       } catch { /* ignore */ }
-      const { data, error: fnError } = await supabase.functions.invoke('create-credit-checkout', { body: { planId, attribution } });
+      let referralCode: string | null = null;
+      try { referralCode = localStorage.getItem('referral_code'); } catch { /* ignore */ }
+      const { data, error: fnError } = await supabase.functions.invoke('create-credit-checkout', { body: { planId, attribution, ...(referralCode ? { referral_code: referralCode } : {}) } });
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
       if (data?.already_subscribed) { toast.info(data.message); return; }
