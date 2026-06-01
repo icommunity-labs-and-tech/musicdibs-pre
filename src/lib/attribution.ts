@@ -91,6 +91,16 @@ export function clearAttribution(): void {
   localStorage.removeItem(STORAGE_KEY);
 }
 
+/** Read referral code (?ref=...) persisted in localStorage. */
+export function getReferralCode(): string | null {
+  try { return localStorage.getItem('referral_code'); } catch { return null; }
+}
+
+/** Clear the referral code (call after successful checkout). */
+export function clearReferralCode(): void {
+  try { localStorage.removeItem('referral_code'); } catch { /* ignore */ }
+}
+
 /** Build metadata object for Stripe checkout from attribution */
 export function getAttributionForCheckout(): Record<string, string> {
   const attr = getAttribution();
