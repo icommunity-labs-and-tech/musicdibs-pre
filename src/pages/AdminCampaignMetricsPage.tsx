@@ -594,7 +594,7 @@ export default function AdminCampaignMetricsPage() {
             const key = normalizeInfluencer(c.owner);
             seenKeys.add(key);
             const refCount = referralByInfluencer[key] || 0;
-            const couponReg = c.total_registrations || 0;
+            const couponReg = couponRegByCode[canonicalCouponCode(c.coupon_code)] || 0;
             // Deduplicación aproximada: usar el mayor si hay solapamiento
             const total = refCount + couponReg - Math.min(refCount, couponReg > 0 ? Math.floor(couponReg * 0.5) : 0);
             return {
