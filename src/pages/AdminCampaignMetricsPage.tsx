@@ -610,7 +610,21 @@ export default function AdminCampaignMetricsPage() {
         {/* Gráfico ROI por cupón */}
         {!loadingCoupons && roiChartData.length > 0 && (
           <Card className="border-border/40">
-            <CardHeader><CardTitle className="text-base">📈 ROI acumulado por cupón</CardTitle></CardHeader>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <CardTitle className="text-base">📈 ROI acumulado por cupón</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="hide-zero-roi"
+                    checked={hideZeroRoi}
+                    onCheckedChange={setHideZeroRoi}
+                  />
+                  <Label htmlFor="hide-zero-roi" className="text-xs text-muted-foreground cursor-pointer">
+                    Ocultar 0%
+                  </Label>
+                </div>
+              </div>
+            </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={roiChartHeight}>
                 <BarChart
