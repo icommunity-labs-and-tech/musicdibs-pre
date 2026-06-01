@@ -736,7 +736,7 @@ export default function AdminCampaignMetricsPage() {
             <Card className="border-border/40">
               <CardHeader>
                 <CardTitle className="text-base">📱 Canales propios (referral sin influencer)</CardTitle>
-                <CardDescription>Registros del modal de bienvenida agrupados por canal</CardDescription>
+                <CardDescription>Registros del modal de bienvenida agrupados por canal · {getPeriodLabel(periodType, weekStart, selectedMonth, selectedYear)}</CardDescription>
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {loadingReferral ? (
