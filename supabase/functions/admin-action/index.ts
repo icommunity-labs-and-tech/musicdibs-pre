@@ -3462,8 +3462,46 @@ serve(async (req) => {
         await sendPromoEmail(emailContent);
       }
 
-      // Send rejection email
-      if (new_status === "rejected") {
+      // Send rejection email + refund credits (idempotent)
+      if (new_status === "rejected" && promo.status !== "rejected") {
+        const refundAmount = promo.credits_spent ?? 0;
+        if (refundAmount > 0) {
+          const refundMarker = `[promo:${promo_id}]`;
+          const { data: existingRefund } = await admin
+            .from("credit_transactions")
+            .select("id")
+            .eq("user_id", promo.user_id)
+            .eq("type", "refund")
+            .ilike("description", `%${refundMarker}%`)
+            .maybeSingle();
+
+          if (!existingRefund) {
+            const { data: prof } = await admin
+              .from("profiles")
+              .select("available_credits")
+              .eq("user_id", promo.user_id)
+              .single();
+            if (prof) {
+              await admin
+                .from("profiles")
+                .update({
+                  available_credits: (prof.available_credits || 0) + refundAmount,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq("user_id", promo.user_id);
+              await admin.from("credit_transactions").insert({
+                user_id: promo.user_id,
+                amount: refundAmount,
+                type: "refund",
+                description: `Reembolso promo rechazada: ${promo.song_title} ${refundMarker}`,
+              });
+              console.log(
+                `[ADMIN] Refunded ${refundAmount} credits to ${promo.user_id} for rejected promo ${promo_id}`,
+              );
+            }
+          }
+        }
+
         const emailContent = premiumPromoRejectedEmail({
           name: displayName,
           artistName: promo.artist_name,
