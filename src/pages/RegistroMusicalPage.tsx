@@ -704,6 +704,8 @@ export default function RegistroMusicalPage() {
             </div>
           </section>
 
+          <RoyaltiesCalculator />
+
           {/* ============================= PROMOCIÓN TIKTOK/INSTAGRAM ============================= */}
           <section id="promocion" className="relative py-24">
             <div className="mx-auto max-w-6xl px-6">
