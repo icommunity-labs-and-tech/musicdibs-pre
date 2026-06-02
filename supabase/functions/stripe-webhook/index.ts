@@ -1640,7 +1640,12 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       } catch (dispErr) {
         console.error(`[WEBHOOK] Error processing dispute.won ${disputeId}:`, dispErr);
       }
+
+      // Sync dispute fee — Stripe refunds the 15€ fee on won disputes,
+      // so the running total of bt.fee becomes 0 and dispute_fee resets to 0.
+      await syncDisputeFee(stripe, supabase, disputeId, chargeId);
     }
+
 
     return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
