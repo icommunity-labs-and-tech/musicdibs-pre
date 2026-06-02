@@ -586,6 +586,7 @@ serve(async (req) => {
           productLabel: sessionMeta.product_label || planId,
           billingInterval: sessionMeta.billing_interval || null,
           amountGross: amountTotal,
+          amountNet,
           stripeFee: checkoutStripeFee,
           currency: session.currency || "eur",
           isSubscription: !!stripeSubId,
