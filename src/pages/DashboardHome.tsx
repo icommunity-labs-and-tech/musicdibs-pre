@@ -107,8 +107,8 @@ export default function DashboardHome() {
           </CardContent>
         </Card>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Col 1: AI Studio */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Col 1: AI Studio + Registrar + Distribuir */}
         <div className="space-y-4">
           <Card
             data-tour="ai-studio"
@@ -137,61 +137,60 @@ export default function DashboardHome() {
               </Button>
             </CardContent>
           </Card>
-        </div>
 
-        {/* Col 2: Registrar + Distribuir (lado a lado) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 content-start">
-          <div data-tour="register-work">
-            <Card className="border-border/40 shadow-sm h-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div data-tour="register-work">
+              <Card className="border-border/40 shadow-sm h-full">
+                <CardContent className="p-6 flex flex-col items-center text-center gap-4 h-full justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                    <Upload className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-base font-semibold">{t('dashboard.home.registerNew')}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {t('dashboard.home.registerNewDesc')}
+                    </p>
+                  </div>
+                  <Button variant="hero" onClick={() => guardRegister()} className="w-full">
+                    {t('dashboard.home.goToRegister')}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+            <Card data-tour="distribute" className={`border-border/40 shadow-sm transition-all h-full ${summary?.subscriptionPlan === 'Annual' ? 'cursor-pointer hover:shadow-lg hover:border-primary/50' : 'opacity-70'}`} onClick={() => summary?.subscriptionPlan === 'Annual' ? setShowDistributionModal(true) : undefined}>
               <CardContent className="p-6 flex flex-col items-center text-center gap-4 h-full justify-between">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-                  <Upload className="h-6 w-6 text-primary" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
+                  <Share2 className="h-6 w-6 text-blue-500" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-base font-semibold">{t('dashboard.home.registerNew')}</h3>
+                  <h3 className="text-base font-semibold">{t('dashboard.home.distributeWork')}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {t('dashboard.home.registerNewDesc')}
+                    {t('dashboard.home.distributeWorkDesc')}
+                  </p>
+                  <p className="text-sm font-semibold text-green-500 flex items-center justify-center gap-1.5">
+                    <CircleDollarSign className="h-4 w-4" />
+                    {t('dashboard.home.distributeRoyalties', 'Recibe el 95% de tus royalties.')}
                   </p>
                 </div>
-                <Button variant="hero" onClick={() => guardRegister()} className="w-full">
-                  {t('dashboard.home.goToRegister')}
-                </Button>
+                {summary?.subscriptionPlan === 'Annual' ? (
+                  <Button variant="blue" className="w-full">
+                    {t('dashboard.home.goToDistribute')}
+                  </Button>
+                ) : (
+                  <div className="w-full space-y-2">
+                    <Button variant="outline" className="w-full gap-1.5 opacity-60" disabled>
+                      <Lock className="h-3.5 w-3.5" />
+                      {t('dashboard.home.goToDistribute')}
+                    </Button>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.distribute.annualOnly', { defaultValue: 'Disponible solo con suscripción anual' })}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
-          <Card data-tour="distribute" className={`border-border/40 shadow-sm transition-all h-full ${summary?.subscriptionPlan === 'Annual' ? 'cursor-pointer hover:shadow-lg hover:border-primary/50' : 'opacity-70'}`} onClick={() => summary?.subscriptionPlan === 'Annual' ? setShowDistributionModal(true) : undefined}>
-            <CardContent className="p-6 flex flex-col items-center text-center gap-4 h-full justify-between">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
-                <Share2 className="h-6 w-6 text-blue-500" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-semibold">{t('dashboard.home.distributeWork')}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {t('dashboard.home.distributeWorkDesc')}
-                </p>
-                <p className="text-sm font-semibold text-green-500 flex items-center justify-center gap-1.5">
-                  <CircleDollarSign className="h-4 w-4" />
-                  {t('dashboard.home.distributeRoyalties', 'Recibe el 95% de tus royalties.')}
-                </p>
-              </div>
-              {summary?.subscriptionPlan === 'Annual' ? (
-                <Button variant="blue" className="w-full">
-                  {t('dashboard.home.goToDistribute')}
-                </Button>
-              ) : (
-                <div className="w-full space-y-2">
-                  <Button variant="outline" className="w-full gap-1.5 opacity-60" disabled>
-                    <Lock className="h-3.5 w-3.5" />
-                    {t('dashboard.home.goToDistribute')}
-                  </Button>
-                  <p className="text-xs text-muted-foreground">{t('dashboard.distribute.annualOnly', { defaultValue: 'Disponible solo con suscripción anual' })}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Col 3: Account Summary + Credit Store + Media Library */}
+        {/* Col 2: Account Summary + Credit Store + Media Library */}
         <div className="space-y-4">
           <div data-tour="account-summary">
             <AccountSummary onSummaryLoaded={setSummary} subscriptionEnd={subscriptionEnd} cancelAtPeriodEnd={cancelAtPeriodEnd} />
@@ -238,7 +237,7 @@ export default function DashboardHome() {
           </Card>
         </div>
 
-        {/* Recent Registrations spanning cols 1-2 */}
+        {/* Recent Registrations spanning both cols */}
         <div className="md:col-span-2" data-tour="recent-registrations">
           <RecentRegistrations />
         </div>
