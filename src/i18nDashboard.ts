@@ -25,7 +25,7 @@ const es = {
       aiStudioButton: 'Abrir AI Music Studio',
       newUserTitle: '¡Bienvenido a Musicdibs!',
       newUserDesc: 'Aún no tienes obras registradas. Sigue nuestro asistente paso a paso para lanzar tu primera canción al mundo.',
-      newUserBtn: 'Lanza tu primer hit',
+      newUserBtn: 'Mi primer lanzamiento musical',
     },
     billing: {
       title: 'Facturación',
@@ -842,7 +842,7 @@ const en: typeof es = {
       aiStudioButton: 'Open AI Music Studio',
       newUserTitle: 'Welcome to Musicdibs!',
       newUserDesc: "You don't have any registered works yet. Follow our step-by-step assistant to launch your first song to the world.",
-      newUserBtn: 'Launch your first hit',
+      newUserBtn: 'My first music release',
     },
     billing: {
       title: 'Billing',
@@ -1659,7 +1659,7 @@ const pt: typeof es = {
       aiStudioButton: 'Abrir AI Music Studio',
       newUserTitle: 'Bem-vindo ao Musicdibs!',
       newUserDesc: 'Você ainda não tem obras registradas. Siga nosso assistente passo a passo para lançar sua primeira música ao mundo.',
-      newUserBtn: 'Lance seu primeiro hit',
+      newUserBtn: 'Meu primeiro lançamento musical',
     },
     billing: {
       title: 'Faturamento',
