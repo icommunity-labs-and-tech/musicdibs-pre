@@ -1659,7 +1659,7 @@ const pt: typeof es = {
       aiStudioButton: 'Abrir AI Music Studio',
       newUserTitle: 'Bem-vindo ao Musicdibs!',
       newUserDesc: 'Você ainda não tem obras registradas. Siga nosso assistente passo a passo para lançar sua primeira música ao mundo.',
-      newUserBtn: 'Lance seu primeiro hit',
+      newUserBtn: 'Meu primeiro lançamento musical',
     },
     billing: {
       title: 'Faturamento',
