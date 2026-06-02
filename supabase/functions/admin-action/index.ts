@@ -2976,7 +2976,8 @@ serve(async (req) => {
             if (o.order_status === "refunded") return;
             const g = parseFloat(o.amount_gross) || 0;
             const nv = parseFloat(o.amount_net);
-            const nb = !isNaN(nv) && nv > 0 ? nv : g / 1.21;
+            // Use stored amount_net (Stripe-derived). If missing, assume no IVA.
+            const nb = !isNaN(nv) && nv > 0 ? nv : g;
             bGross += g;
             bIva += Math.max(0, g - nb);
             bFee += parseFloat(o.stripe_fee) || 0;
