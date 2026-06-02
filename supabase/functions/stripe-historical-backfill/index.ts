@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
 
     const listParams: Stripe.ChargeListParams = {
       limit: 50,
-      expand: ["data.balance_transaction"],
+      expand: ["data.balance_transaction", "data.invoice"],
     };
 
     if (rangeStart) {
