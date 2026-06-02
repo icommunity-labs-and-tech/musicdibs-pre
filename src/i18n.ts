@@ -1509,7 +1509,7 @@ const resources = {
           myArtists: 'Meus Artistas',
           registerWorkNav: 'Registrar Obra',
           registeredWorks: 'Obras Registradas',
-          launchHit: 'Lance seu primeiro hit 🚀',
+          launchHit: '🚀 Meu primeiro lançamento musical',
           controlPanel: 'Painel de controle',
           createMusic: 'AI Music Studio',
           registerWork: 'Registrar obra',
