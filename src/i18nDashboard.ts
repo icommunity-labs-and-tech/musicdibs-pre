@@ -25,7 +25,7 @@ const es = {
       aiStudioButton: 'Abrir AI Music Studio',
       newUserTitle: '¡Bienvenido a Musicdibs!',
       newUserDesc: 'Aún no tienes obras registradas. Sigue nuestro asistente paso a paso para lanzar tu primera canción al mundo.',
-      newUserBtn: 'Lanza tu primer hit',
+      newUserBtn: 'Mi primer lanzamiento musical',
     },
     billing: {
       title: 'Facturación',
