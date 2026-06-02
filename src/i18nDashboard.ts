@@ -13,7 +13,7 @@ const es = {
       registerNew: 'Registro derechos de autor',
       registerNewDesc: 'Registra legalmente los derechos de autor de tus canciones de forma rápida y segura.',
       goToRegister: 'Ir al registro',
-      distributeWork: 'Distribuir tu música',
+      distributeWork: 'Distribución musical',
       distributeWorkDesc: 'Lleva tu música a todas las plataformas digitales: Spotify, Apple Music, Amazon y más.',
       goToDistribute: 'Ir a distribución',
       aiStudioTitle: 'AI Music Studio',
