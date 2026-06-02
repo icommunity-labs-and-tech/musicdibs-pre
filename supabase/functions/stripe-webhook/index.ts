@@ -1529,7 +1529,11 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           console.error(`[WEBHOOK] Error processing dispute.updated ${disputeId}:`, dispErr);
         }
       }
+
+      // Safety net: keep dispute_fee in sync on every update
+      await syncDisputeFee(stripe, supabase, disputeId, chargeId);
     }
+
 
     // ── charge.dispute.lost ─────────────────────────────────────────────
     if (event.type === "charge.dispute.lost") {
