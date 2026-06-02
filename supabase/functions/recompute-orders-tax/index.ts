@@ -31,6 +31,15 @@ Deno.serve(async (req) => {
     (expectedCronSecret && cronSecret === expectedCronSecret) ||
     authHeader === `Bearer ${serviceKey}`;
 
+  // Also accept any JWT whose payload has role=service_role (handles signing-key rotation).
+  if (!authorized && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.replace("Bearer ", "");
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      if (payload?.role === "service_role") authorized = true;
+    } catch { /* ignore */ }
+  }
+
   if (!authorized && authHeader.startsWith("Bearer ")) {
     const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
