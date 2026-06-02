@@ -2754,10 +2754,12 @@ serve(async (req) => {
           const netBase =
             !isNaN(netVal) && netVal > 0 ? netVal : gross / 1.21;
           const fee = parseFloat(o.stripe_fee) || 0;
+          const disputeFee = parseFloat(o.dispute_fee) || 0;
           periodGross += gross;
           periodIva += Math.max(0, gross - netBase);
-          periodFees += fee;
+          periodFees += fee + disputeFee;
         });
+
         periodGross = Math.round(periodGross * 100) / 100;
         periodIva = Math.round(periodIva * 100) / 100;
         periodFees = Math.round(periodFees * 100) / 100;
