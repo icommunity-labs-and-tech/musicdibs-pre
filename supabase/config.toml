@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.recompute-orders-tax]
 verify_jwt = false
+
+[functions.backfill-stripe-fees]
+verify_jwt = false
