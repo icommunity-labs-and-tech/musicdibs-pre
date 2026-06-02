@@ -2686,8 +2686,9 @@ serve(async (req) => {
           const { data: periodOrders } = await admin
             .from("orders")
             .select(
-              "user_id, paid_at, amount_gross, amount_net, stripe_fee, order_status, product_type, product_code, is_renewal, billing_interval, attributed_campaign_name",
+              "user_id, paid_at, amount_gross, amount_net, stripe_fee, dispute_fee, order_status, product_type, product_code, is_renewal, billing_interval, attributed_campaign_name",
             )
+
             .eq("order_status", "paid")
             .gte("paid_at", filterStart)
             .lte("paid_at", filterEnd)
