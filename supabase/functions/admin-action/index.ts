@@ -2989,7 +2989,7 @@ serve(async (req) => {
             const nb = !isNaN(nv) && nv > 0 ? nv : g;
             bGross += g;
             bIva += Math.max(0, g - nb);
-            bFee += parseFloat(o.stripe_fee) || 0;
+            bFee += (parseFloat(o.stripe_fee) || 0) + (parseFloat(o.dispute_fee) || 0);
           });
           timeSeries.revenue.push({
             label: b.label,
