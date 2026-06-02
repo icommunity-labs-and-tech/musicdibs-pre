@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
     for (let page = 0; page < MAX_PAGES && hasMore; page++) {
       const params: Stripe.ChargeListParams = {
         limit: 100,
-        expand: ["data.balance_transaction"],
+        expand: ["data.balance_transaction", "data.invoice"],
         created: { gte: fromSec, lte: toSec },
       };
       if (startingAfter) params.starting_after = startingAfter;
