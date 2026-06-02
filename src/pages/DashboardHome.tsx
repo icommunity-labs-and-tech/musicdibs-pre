@@ -107,9 +107,9 @@ export default function DashboardHome() {
           </CardContent>
         </Card>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Col 1: AI Studio + Registrar + Distribuir */}
-        <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Col 1: AI Studio + Registrar + Distribuir — más ancho */}
+        <div className="space-y-4 md:col-span-2">
           <Card
             data-tour="ai-studio"
             className="border-border/40 shadow-sm cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all"
@@ -190,8 +190,8 @@ export default function DashboardHome() {
           </div>
         </div>
 
-        {/* Col 2: Account Summary + Credit Store + Media Library */}
-        <div className="space-y-4">
+        {/* Col 2: Account Summary + Credit Store + Media Library — más estrecho */}
+        <div className="space-y-4 md:col-span-1">
           <div data-tour="account-summary">
             <AccountSummary onSummaryLoaded={setSummary} subscriptionEnd={subscriptionEnd} cancelAtPeriodEnd={cancelAtPeriodEnd} />
           </div>
@@ -237,8 +237,8 @@ export default function DashboardHome() {
           </Card>
         </div>
 
-        {/* Recent Registrations spanning both cols */}
-        <div className="md:col-span-2" data-tour="recent-registrations">
+        {/* Recent Registrations spanning all cols */}
+        <div className="md:col-span-3" data-tour="recent-registrations">
           <RecentRegistrations />
         </div>
       </div>
