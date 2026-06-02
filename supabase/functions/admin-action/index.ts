@@ -2083,7 +2083,7 @@ serve(async (req) => {
         // Revenue evolution (12 months) — from orders table, net per month
         const { data: revRows } = await admin
           .from("orders")
-          .select("paid_at, amount_net, amount_gross, stripe_fee, order_status, is_subscription")
+          .select("paid_at, amount_net, amount_gross, stripe_fee, dispute_fee, order_status, is_subscription")
           .eq("order_status", "paid")
           .gte("paid_at", twelveMonthsAgoIso)
           .limit(20000);
@@ -2096,7 +2096,9 @@ serve(async (req) => {
           const gross = parseFloat(o.amount_gross) || 0;
           const base = !isNaN(net) && net > 0 ? net : gross / 1.21;
           const fee = parseFloat(o.stripe_fee) || 0;
-          const value = Math.max(0, base - fee);
+          const disputeFee = parseFloat(o.dispute_fee) || 0;
+          const value = Math.max(0, base - fee - disputeFee);
+
           chargesByMonth[key] = (chargesByMonth[key] || 0) + value;
           totalStripeRevenue += value;
           if (o.is_subscription === false) oneTimeRevenue += value;
@@ -2659,10 +2661,12 @@ serve(async (req) => {
         revenue: number;
       }[] = [];
 
-      // Net revenue helper: amount_net (pre-IVA) − stripe_fee, excluding refunded orders.
-      // amount_net comes from real Stripe tax data (invoice.tax / session.amount_tax);
-      // when missing we assume no IVA (most accurate for non-EU customers) instead of
-      // the old gross/1.21 assumption that inflated IVA.
+      // Net revenue helper: amount_net (pre-IVA) − stripe_fee − dispute_fee,
+      // excluding refunded orders. amount_net comes from real Stripe tax data
+      // (invoice.tax / session.amount_tax); when missing we assume no IVA
+      // (most accurate for non-EU customers) instead of the old gross/1.21
+      // assumption that inflated IVA. dispute_fee captures Stripe chargeback
+      // fees (≈15€) that previously were not deducted from net revenue.
       const netRev = (o: any): number => {
         if (o.order_status === "refunded") return 0;
         const net = parseFloat(o.amount_net);
@@ -2671,8 +2675,10 @@ serve(async (req) => {
             ? net
             : (parseFloat(o.amount_gross) || 0);
         const fee = parseFloat(o.stripe_fee) || 0;
-        return Math.max(0, base - fee);
+        const disputeFee = parseFloat(o.dispute_fee) || 0;
+        return Math.max(0, base - fee - disputeFee);
       };
+
 
       try {
         // Orders in the period
@@ -2680,8 +2686,9 @@ serve(async (req) => {
           const { data: periodOrders } = await admin
             .from("orders")
             .select(
-              "user_id, paid_at, amount_gross, amount_net, stripe_fee, order_status, product_type, product_code, is_renewal, billing_interval, attributed_campaign_name",
+              "user_id, paid_at, amount_gross, amount_net, stripe_fee, dispute_fee, order_status, product_type, product_code, is_renewal, billing_interval, attributed_campaign_name",
             )
+
             .eq("order_status", "paid")
             .gte("paid_at", filterStart)
             .lte("paid_at", filterEnd)
@@ -2747,10 +2754,12 @@ serve(async (req) => {
           const netBase =
             !isNaN(netVal) && netVal > 0 ? netVal : gross / 1.21;
           const fee = parseFloat(o.stripe_fee) || 0;
+          const disputeFee = parseFloat(o.dispute_fee) || 0;
           periodGross += gross;
           periodIva += Math.max(0, gross - netBase);
-          periodFees += fee;
+          periodFees += fee + disputeFee;
         });
+
         periodGross = Math.round(periodGross * 100) / 100;
         periodIva = Math.round(periodIva * 100) / 100;
         periodFees = Math.round(periodFees * 100) / 100;
@@ -2980,7 +2989,7 @@ serve(async (req) => {
             const nb = !isNaN(nv) && nv > 0 ? nv : g;
             bGross += g;
             bIva += Math.max(0, g - nb);
-            bFee += parseFloat(o.stripe_fee) || 0;
+            bFee += (parseFloat(o.stripe_fee) || 0) + (parseFloat(o.dispute_fee) || 0);
           });
           timeSeries.revenue.push({
             label: b.label,
