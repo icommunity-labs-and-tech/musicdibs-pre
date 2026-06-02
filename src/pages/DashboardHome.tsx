@@ -183,6 +183,7 @@ export default function DashboardHome() {
           </div>
           <div data-tour="credit-store">
             <CreditStore compact cancelAtPeriodEnd={cancelAtPeriodEnd} />
+          </div>
         </div>
 
         {/* Recent Registrations spanning all cols */}
