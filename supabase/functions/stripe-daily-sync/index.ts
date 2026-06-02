@@ -6,6 +6,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@17";
+import { netFromCharge } from "../_shared/stripe-net.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,7 +90,7 @@ Deno.serve(async (req) => {
     for (let page = 0; page < MAX_PAGES && hasMore; page++) {
       const params: Stripe.ChargeListParams = {
         limit: 100,
-        expand: ["data.balance_transaction"],
+        expand: ["data.balance_transaction", "data.invoice"],
         created: { gte: fromSec, lte: toSec },
       };
       if (startingAfter) params.starting_after = startingAfter;
@@ -112,7 +113,7 @@ Deno.serve(async (req) => {
         if (existing) { skipped++; continue; }
 
         const amountGross = Math.round((charge.amount / 100) * 100) / 100;
-        const amountNet = Math.round((amountGross / 1.21) * 100) / 100;
+        const amountNet = await netFromCharge(stripe, charge);
 
         let stripeFee = 0;
         const bt = charge.balance_transaction;

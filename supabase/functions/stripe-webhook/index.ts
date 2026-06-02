@@ -545,6 +545,8 @@ serve(async (req) => {
         // ── Create order record ──
         const sessionMeta = session.metadata || {};
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
+        const amountTax = ((session.total_details as any)?.amount_tax ?? 0) / 100;
+        const amountNet = Math.max(0, Math.round((amountTotal - amountTax) * 100) / 100);
         const stripeSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
         const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
 
@@ -584,6 +586,7 @@ serve(async (req) => {
           productLabel: sessionMeta.product_label || planId,
           billingInterval: sessionMeta.billing_interval || null,
           amountGross: amountTotal,
+          amountNet,
           stripeFee: checkoutStripeFee,
           currency: session.currency || "eur",
           isSubscription: !!stripeSubId,
@@ -725,6 +728,7 @@ serve(async (req) => {
       let invoiceId: string | undefined;
       let subscriptionId: string | undefined;
       let invoiceAmount = 0;
+      let invoiceAmountNet = 0;
       let invoiceCurrency = "eur";
       let chargeId: string | null = null;
 
@@ -738,6 +742,7 @@ serve(async (req) => {
           invoiceId = invId;
           subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : (invoice.subscription as any)?.id;
           invoiceAmount = (invoice.amount_paid || 0) / 100;
+          invoiceAmountNet = ((invoice.amount_paid || 0) - ((invoice as any).tax || 0)) / 100;
           invoiceCurrency = invoice.currency || "eur";
           chargeId = typeof (invoice as any).charge === "string" ? (invoice as any).charge : ((invoice as any).charge?.id ?? null);
         } else {
@@ -752,6 +757,7 @@ serve(async (req) => {
         invoiceId = invoice.id;
         subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
         invoiceAmount = (invoice.amount_paid || 0) / 100;
+        invoiceAmountNet = ((invoice.amount_paid || 0) - ((invoice as any).tax || 0)) / 100;
         invoiceCurrency = invoice.currency || "eur";
         chargeId = typeof invoice.charge === "string" ? invoice.charge : (invoice.charge?.id ?? null);
       }
@@ -810,6 +816,7 @@ serve(async (req) => {
             productLabel: planLabel,
             billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
+            amountNet: invoiceAmountNet,
             stripeFee: renewalStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -970,6 +977,7 @@ serve(async (req) => {
             productLabel: `Cambio a ${planId}`,
             billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
+            amountNet: invoiceAmountNet,
             stripeFee: changeStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -1093,6 +1101,7 @@ serve(async (req) => {
             productLabel: `Nueva suscripción ${resolvedPlanId || "unknown"}`,
             billingInterval: createProductType === "annual" ? "yearly" : createProductType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
+            amountNet: invoiceAmountNet,
             stripeFee: createStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,

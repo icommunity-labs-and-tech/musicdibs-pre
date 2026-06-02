@@ -2659,14 +2659,17 @@ serve(async (req) => {
         revenue: number;
       }[] = [];
 
-      // Net revenue helper: amount_net (pre-IVA) − stripe_fee, excluding refunded orders
+      // Net revenue helper: amount_net (pre-IVA) − stripe_fee, excluding refunded orders.
+      // amount_net comes from real Stripe tax data (invoice.tax / session.amount_tax);
+      // when missing we assume no IVA (most accurate for non-EU customers) instead of
+      // the old gross/1.21 assumption that inflated IVA.
       const netRev = (o: any): number => {
         if (o.order_status === "refunded") return 0;
         const net = parseFloat(o.amount_net);
         const base =
           !isNaN(net) && net > 0
             ? net
-            : (parseFloat(o.amount_gross) || 0) / 1.21;
+            : (parseFloat(o.amount_gross) || 0);
         const fee = parseFloat(o.stripe_fee) || 0;
         return Math.max(0, base - fee);
       };
@@ -2973,7 +2976,8 @@ serve(async (req) => {
             if (o.order_status === "refunded") return;
             const g = parseFloat(o.amount_gross) || 0;
             const nv = parseFloat(o.amount_net);
-            const nb = !isNaN(nv) && nv > 0 ? nv : g / 1.21;
+            // Use stored amount_net (Stripe-derived). If missing, assume no IVA.
+            const nb = !isNaN(nv) && nv > 0 ? nv : g;
             bGross += g;
             bIva += Math.max(0, g - nb);
             bFee += parseFloat(o.stripe_fee) || 0;
