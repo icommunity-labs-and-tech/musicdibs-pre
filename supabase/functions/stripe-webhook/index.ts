@@ -41,6 +41,58 @@ function planToMailerLiteType(plan: string | undefined): string {
   return "single";
 }
 
+// ── Sync orders.dispute_fee from the dispute's balance_transactions ─────────
+// On dispute.created Stripe creates a balance_tx with fee = 1500¢ (15€) and a
+// negative net. On dispute.won/lost it adds further balance_txs. The merchant's
+// net dispute cost == sum(bt.fee). When won, the won-adjustment carries a
+// negative `fee` that cancels the original, so the running sum becomes 0.
+async function syncDisputeFee(
+  stripe: Stripe,
+  supabase: any,
+  disputeId: string,
+  chargeId: string,
+) {
+  if (!disputeId || !chargeId) return;
+  try {
+    const full = await stripe.disputes.retrieve(disputeId, {
+      expand: ["balance_transactions"],
+    });
+    const txs = ((full as any).balance_transactions || []) as any[];
+    const feeCents = txs.reduce(
+      (s, t) => s + (typeof t?.fee === "number" ? t.fee : 0),
+      0,
+    );
+    const feeEur = Math.round(feeCents) / 100;
+
+    const { data: ord } = await supabase
+      .from("orders")
+      .select("id, dispute_fee")
+      .eq("stripe_charge_id", chargeId)
+      .maybeSingle();
+
+    if (!ord?.id) {
+      console.warn(`[WEBHOOK] dispute ${disputeId}: no order for charge ${chargeId}`);
+      return;
+    }
+
+    const prev = Number(ord.dispute_fee) || 0;
+    if (Math.abs(prev - feeEur) < 0.01) return;
+
+    const { error: updErr } = await supabase
+      .from("orders").update({ dispute_fee: feeEur }).eq("id", ord.id);
+    if (updErr) {
+      console.warn(`[WEBHOOK] dispute_fee update failed for order ${ord.id}:`, updErr);
+    } else {
+      console.log(
+        `[WEBHOOK] dispute_fee synced: order ${ord.id} ${prev}€ → ${feeEur}€ (dispute ${disputeId})`,
+      );
+    }
+  } catch (e) {
+    console.warn(`[WEBHOOK] syncDisputeFee error (${disputeId}):`, e);
+  }
+}
+
+
 const PRICE_CREDITS: Record<string, number> = {
   "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": 120,
   "price_1THT7cF9ZCIiqrz6sWS67Q4V": 100,
