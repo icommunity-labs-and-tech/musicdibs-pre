@@ -139,11 +139,11 @@ export default function DashboardHome() {
           </Card>
         </div>
 
-        {/* Col 2: Registrar + Distribuir */}
-        <div className="space-y-4">
+        {/* Col 2: Registrar + Distribuir (lado a lado) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 content-start">
           <div data-tour="register-work">
-            <Card className="border-border/40 shadow-sm">
-              <CardContent className="p-6 flex flex-col items-center text-center gap-4">
+            <Card className="border-border/40 shadow-sm h-full">
+              <CardContent className="p-6 flex flex-col items-center text-center gap-4 h-full justify-between">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                   <Upload className="h-6 w-6 text-primary" />
                 </div>
@@ -159,7 +159,7 @@ export default function DashboardHome() {
               </CardContent>
             </Card>
           </div>
-          <Card data-tour="distribute" className={`border-border/40 shadow-sm transition-all ${summary?.subscriptionPlan === 'Annual' ? 'cursor-pointer hover:shadow-lg hover:border-primary/50' : 'opacity-70'}`} onClick={() => summary?.subscriptionPlan === 'Annual' ? setShowDistributionModal(true) : undefined}>
+          <Card data-tour="distribute" className={`border-border/40 shadow-sm transition-all h-full ${summary?.subscriptionPlan === 'Annual' ? 'cursor-pointer hover:shadow-lg hover:border-primary/50' : 'opacity-70'}`} onClick={() => summary?.subscriptionPlan === 'Annual' ? setShowDistributionModal(true) : undefined}>
             <CardContent className="p-6 flex flex-col items-center text-center gap-4 h-full justify-between">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
                 <Share2 className="h-6 w-6 text-blue-500" />
