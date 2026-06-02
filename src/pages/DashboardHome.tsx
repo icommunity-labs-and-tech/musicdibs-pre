@@ -175,7 +175,7 @@ export default function DashboardHome() {
           </div>
         </div>
 
-        {/* Col 2: Account Summary + Credit Store + Media Library — más estrecho */}
+        {/* Col 2: Account Summary + Credit Store */}
         <div className="space-y-4 md:col-span-1">
           <div data-tour="account-summary">
             <AccountSummary onSummaryLoaded={setSummary} subscriptionEnd={subscriptionEnd} cancelAtPeriodEnd={cancelAtPeriodEnd} />
