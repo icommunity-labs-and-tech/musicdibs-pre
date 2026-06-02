@@ -725,6 +725,7 @@ serve(async (req) => {
       let invoiceId: string | undefined;
       let subscriptionId: string | undefined;
       let invoiceAmount = 0;
+      let invoiceAmountNet = 0;
       let invoiceCurrency = "eur";
       let chargeId: string | null = null;
 
@@ -738,6 +739,7 @@ serve(async (req) => {
           invoiceId = invId;
           subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : (invoice.subscription as any)?.id;
           invoiceAmount = (invoice.amount_paid || 0) / 100;
+          invoiceAmountNet = ((invoice.amount_paid || 0) - ((invoice as any).tax || 0)) / 100;
           invoiceCurrency = invoice.currency || "eur";
           chargeId = typeof (invoice as any).charge === "string" ? (invoice as any).charge : ((invoice as any).charge?.id ?? null);
         } else {
@@ -752,6 +754,7 @@ serve(async (req) => {
         invoiceId = invoice.id;
         subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
         invoiceAmount = (invoice.amount_paid || 0) / 100;
+        invoiceAmountNet = ((invoice.amount_paid || 0) - ((invoice as any).tax || 0)) / 100;
         invoiceCurrency = invoice.currency || "eur";
         chargeId = typeof invoice.charge === "string" ? invoice.charge : (invoice.charge?.id ?? null);
       }
