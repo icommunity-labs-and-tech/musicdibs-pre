@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
       }
 
       const amountGross = Math.round((charge.amount / 100) * 100) / 100;
-      const amountNet = Math.round((amountGross / 1.21) * 100) / 100;
+      const amountNet = await netFromCharge(stripe, charge);
 
       let stripeFee = 0;
       const bt = charge.balance_transaction;
