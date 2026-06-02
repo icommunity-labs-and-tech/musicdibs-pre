@@ -1130,7 +1130,7 @@ const resources = {
           myArtists: 'My Artists',
           registerWorkNav: 'Register Work',
           registeredWorks: 'Registered Works',
-          launchHit: 'Launch your first hit 🚀',
+          launchHit: '🚀 My first music release',
           controlPanel: 'Control Panel',
           createMusic: 'AI Music Studio',
           registerWork: 'Register work',
