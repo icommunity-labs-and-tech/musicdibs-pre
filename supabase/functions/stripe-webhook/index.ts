@@ -1004,26 +1004,29 @@ serve(async (req) => {
 
         if (profile) {
           // ── Idempotency guard ────────────────────────────────────────────────────
-          // Check 1: si ya existe una orden del checkout.session.completed para esta
-          // suscripción, saltamos — evita doble crédito cuando el usuario paga mediante
-          // Stripe Checkout (en ese caso checkout.session.completed ya procesó los créditos).
-          if (subscriptionId) {
-            const { data: existingCheckoutOrder } = await supabase
-              .from("orders")
-              .select("id")
-              .eq("stripe_subscription_id", subscriptionId)
-              .not("stripe_checkout_session_id", "is", null)
-              .maybeSingle();
+          // Guard principal: si ya existe una transacción de crédito de tipo 'purchase'
+          // para este usuario en los últimos 3 minutos, checkout.session.completed ya
+          // procesó este pago — skip inmediato.
+          // Este check es robusto aunque subscriptionId llegue null (lo cual ocurre cuando
+          // Stripe envía invoice.payment_succeeded antes de que la subscription esté
+          // completamente inicializada).
+          const guardWindowStart = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+          const { data: recentPurchaseTx } = await supabase
+            .from("credit_transactions")
+            .select("id, description, created_at")
+            .eq("user_id", profile.user_id)
+            .eq("type", "purchase")
+            .gte("created_at", guardWindowStart)
+            .maybeSingle();
 
-            if (existingCheckoutOrder) {
-              console.log(`[WEBHOOK] subscription_create: already handled by checkout.session.completed for sub ${subscriptionId} — skipping`);
-              return new Response(JSON.stringify({ received: true, duplicate: true }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" }
-              });
-            }
+          if (recentPurchaseTx) {
+            console.log(`[WEBHOOK] subscription_create: recent purchase tx found (${recentPurchaseTx.description} at ${recentPurchaseTx.created_at}) — already handled by checkout.session.completed, skipping`);
+            return new Response(JSON.stringify({ received: true, duplicate: true }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
           }
 
-          // Check 2: si ya procesamos esta factura específica (suscripción creada sin checkout)
+          // Guard secundario: si ya procesamos esta factura específica (suscripción directa sin checkout)
           if (invoiceId) {
             const { data: existingCreateOrder } = await supabase
               .from("orders")
