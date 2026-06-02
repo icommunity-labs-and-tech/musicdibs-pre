@@ -842,7 +842,7 @@ const en: typeof es = {
       aiStudioButton: 'Open AI Music Studio',
       newUserTitle: 'Welcome to Musicdibs!',
       newUserDesc: "You don't have any registered works yet. Follow our step-by-step assistant to launch your first song to the world.",
-      newUserBtn: 'Launch your first hit',
+      newUserBtn: 'My first music release',
     },
     billing: {
       title: 'Billing',
