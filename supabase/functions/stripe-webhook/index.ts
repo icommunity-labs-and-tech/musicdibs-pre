@@ -1607,7 +1607,11 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       } catch (dispErr) {
         console.error(`[WEBHOOK] Error processing dispute.lost ${disputeId}:`, dispErr);
       }
+
+      // Sync dispute fee — for lost disputes the fee remains charged
+      await syncDisputeFee(stripe, supabase, disputeId, chargeId);
     }
+
 
     // ── charge.dispute.won ──────────────────────────────────────────────
     if (event.type === "charge.dispute.won") {
