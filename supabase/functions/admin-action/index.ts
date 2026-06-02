@@ -2083,7 +2083,7 @@ serve(async (req) => {
         // Revenue evolution (12 months) — from orders table, net per month
         const { data: revRows } = await admin
           .from("orders")
-          .select("paid_at, amount_net, amount_gross, stripe_fee, order_status, is_subscription")
+          .select("paid_at, amount_net, amount_gross, stripe_fee, dispute_fee, order_status, is_subscription")
           .eq("order_status", "paid")
           .gte("paid_at", twelveMonthsAgoIso)
           .limit(20000);
@@ -2096,7 +2096,9 @@ serve(async (req) => {
           const gross = parseFloat(o.amount_gross) || 0;
           const base = !isNaN(net) && net > 0 ? net : gross / 1.21;
           const fee = parseFloat(o.stripe_fee) || 0;
-          const value = Math.max(0, base - fee);
+          const disputeFee = parseFloat(o.dispute_fee) || 0;
+          const value = Math.max(0, base - fee - disputeFee);
+
           chargesByMonth[key] = (chargesByMonth[key] || 0) + value;
           totalStripeRevenue += value;
           if (o.is_subscription === false) oneTimeRevenue += value;
