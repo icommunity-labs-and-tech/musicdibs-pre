@@ -1864,6 +1864,7 @@ export type Database = {
           coupon_code: string | null
           created_at: string
           currency: string
+          dispute_fee: number
           id: string
           is_first_purchase: boolean
           is_renewal: boolean
@@ -1903,6 +1904,7 @@ export type Database = {
           coupon_code?: string | null
           created_at?: string
           currency?: string
+          dispute_fee?: number
           id?: string
           is_first_purchase?: boolean
           is_renewal?: boolean
@@ -1942,6 +1944,7 @@ export type Database = {
           coupon_code?: string | null
           created_at?: string
           currency?: string
+          dispute_fee?: number
           id?: string
           is_first_purchase?: boolean
           is_renewal?: boolean
@@ -2784,6 +2787,82 @@ export type Database = {
           work_id?: string
         }
         Relationships: []
+      }
+      stripe_adjustments: {
+        Row: {
+          amount: number
+          balance_transaction_id: string
+          created_at: string
+          currency: string | null
+          description: string | null
+          fee: number
+          id: string
+          net: number
+          occurred_at: string | null
+          order_id: string | null
+          raw: Json | null
+          reporting_category: string | null
+          source_id: string | null
+          source_type: string | null
+          type: string
+        }
+        Insert: {
+          amount?: number
+          balance_transaction_id: string
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          fee?: number
+          id?: string
+          net?: number
+          occurred_at?: string | null
+          order_id?: string | null
+          raw?: Json | null
+          reporting_category?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          type: string
+        }
+        Update: {
+          amount?: number
+          balance_transaction_id?: string
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          fee?: number
+          id?: string
+          net?: number
+          occurred_at?: string | null
+          order_id?: string | null
+          raw?: Json | null
+          reporting_category?: string | null
+          source_id?: string | null
+          source_type?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_adjustments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_adjustments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "stripe_adjustments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "v_orders_evidences_consistency"
+            referencedColumns: ["order_id"]
+          },
+        ]
       }
       stripe_backfill_state: {
         Row: {
