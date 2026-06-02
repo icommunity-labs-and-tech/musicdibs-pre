@@ -1483,7 +1483,11 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       } catch (dispErr) {
         console.error(`[WEBHOOK] Error processing dispute.created ${disputeId}:`, dispErr);
       }
+
+      // Track Stripe dispute fee (≈15€) on the related order
+      await syncDisputeFee(stripe, supabase, disputeId, chargeId);
     }
+
 
 
     // -- charge.dispute.updated -- safety net si created se perdio ------
