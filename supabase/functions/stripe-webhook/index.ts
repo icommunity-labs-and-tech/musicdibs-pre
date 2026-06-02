@@ -545,6 +545,8 @@ serve(async (req) => {
         // ── Create order record ──
         const sessionMeta = session.metadata || {};
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
+        const amountTax = ((session.total_details as any)?.amount_tax ?? 0) / 100;
+        const amountNet = Math.max(0, Math.round((amountTotal - amountTax) * 100) / 100);
         const stripeSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
         const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
 
