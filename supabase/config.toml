@@ -26,3 +26,10 @@ verify_jwt = false
 
 [functions.backfill-stripe-fees]
 verify_jwt = false
+
+[functions.backfill-dispute-fees]
+verify_jwt = false
+
+[functions.backfill-stripe-adjustments]
+verify_jwt = false
+
