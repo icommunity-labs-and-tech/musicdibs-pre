@@ -108,7 +108,7 @@ export default function DashboardHome() {
         </Card>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Col 1: AI Studio + Register CTA */}
+        {/* Col 1: AI Studio */}
         <div className="space-y-4">
           <Card
             data-tour="ai-studio"
@@ -137,6 +137,10 @@ export default function DashboardHome() {
               </Button>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Col 2: Registrar + Distribuir */}
+        <div className="space-y-4">
           <div data-tour="register-work">
             <Card className="border-border/40 shadow-sm">
               <CardContent className="p-6 flex flex-col items-center text-center gap-4">
@@ -155,10 +159,6 @@ export default function DashboardHome() {
               </CardContent>
             </Card>
           </div>
-        </div>
-
-        {/* Col 2: Distribute + Media Library */}
-        <div className="space-y-4">
           <Card data-tour="distribute" className={`border-border/40 shadow-sm transition-all ${summary?.subscriptionPlan === 'Annual' ? 'cursor-pointer hover:shadow-lg hover:border-primary/50' : 'opacity-70'}`} onClick={() => summary?.subscriptionPlan === 'Annual' ? setShowDistributionModal(true) : undefined}>
             <CardContent className="p-6 flex flex-col items-center text-center gap-4 h-full justify-between">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
@@ -189,6 +189,16 @@ export default function DashboardHome() {
               )}
             </CardContent>
           </Card>
+        </div>
+
+        {/* Col 3: Account Summary + Credit Store + Media Library */}
+        <div className="space-y-4">
+          <div data-tour="account-summary">
+            <AccountSummary onSummaryLoaded={setSummary} subscriptionEnd={subscriptionEnd} cancelAtPeriodEnd={cancelAtPeriodEnd} />
+          </div>
+          <div data-tour="credit-store">
+            <CreditStore compact cancelAtPeriodEnd={cancelAtPeriodEnd} />
+          </div>
           {/* Media Library quick access */}
           <Card
             className="border-border/40 shadow-sm cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all"
@@ -226,16 +236,6 @@ export default function DashboardHome() {
               </Button>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Col 3: Account Summary + Credit Store */}
-        <div className="space-y-4">
-          <div data-tour="account-summary">
-            <AccountSummary onSummaryLoaded={setSummary} subscriptionEnd={subscriptionEnd} cancelAtPeriodEnd={cancelAtPeriodEnd} />
-          </div>
-          <div data-tour="credit-store">
-            <CreditStore compact cancelAtPeriodEnd={cancelAtPeriodEnd} />
-          </div>
         </div>
 
         {/* Recent Registrations spanning cols 1-2 */}
