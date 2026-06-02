@@ -65,7 +65,7 @@ export function ReferralsSection() {
     return () => { cancelled = true; };
   }, [user]);
 
-  const fullLink = code ? `${BASE_URL}/register?ref=${code}` : '';
+  const fullLink = code ? `${BASE_URL}/login?tab=register&ref=${code}` : '';
   const activeRefs = refs.filter(r => r.status === 'active');
   const revokedRefs = refs.filter(r => r.status === 'revoked');
   const totalEarned = activeRefs.reduce((acc, r) => acc + (r.credits_referrer || 0), 0);

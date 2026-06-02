@@ -150,6 +150,8 @@ export default function UserLogin() {
   const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!allPwValid) return;
+    const refCode = new URLSearchParams(window.location.search).get('ref');
+    if (refCode) localStorage.setItem('referral_code', refCode.toUpperCase());
     setError(''); setSuccess(''); setLoading(true);
     const form = new FormData(e.currentTarget);
     const signUpLang = i18n.resolvedLanguage || 'es';
@@ -197,7 +199,7 @@ export default function UserLogin() {
               ✅ Tu pago fue procesado. Inicia sesión con el email y contraseña que acabas de crear.
             </div>
           )}
-          <Tabs defaultValue="login" className="w-full">
+          <Tabs defaultValue={new URLSearchParams(window.location.search).get('tab') === 'register' ? 'register' : 'login'} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="login">{t('userLogin.tabLogin')}</TabsTrigger>
               <TabsTrigger value="register">{t('userLogin.tabRegister')}</TabsTrigger>
