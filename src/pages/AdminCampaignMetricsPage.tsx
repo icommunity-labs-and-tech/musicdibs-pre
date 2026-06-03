@@ -107,8 +107,8 @@ export default function AdminCampaignMetricsPage() {
   const [couponRegByCode, setCouponRegByCode] = useState<Record<string, number>>({});
   const [loadingReferral, setLoadingReferral] = useState(true);
 
-  const [referralProgramStats, setReferralProgramStats] = useState<{ active: number; revoked: number; totalCreditsIssued: number; revocationRate: number; conversionRate: number }>({ active: 0, revoked: 0, totalCreditsIssued: 0, revocationRate: 0, conversionRate: 0 });
-  const [topReferrers, setTopReferrers] = useState<Array<{ referrer_id: string; display_name: string; code: string | null; subscription_tier: string | null; invitedActive: number; creditsEarned: number; anyRevoked: boolean }>>([]);
+  const [referralProgramStats, setReferralProgramStats] = useState<{ total: number; active: number; revoked: number; creditsGranted: number; creditsRevoked: number; creditsNet: number; revocationRate: number }>({ total: 0, active: 0, revoked: 0, creditsGranted: 0, creditsRevoked: 0, creditsNet: 0, revocationRate: 0 });
+  const [topReferrers, setTopReferrers] = useState<Array<{ referrer_id: string; display_name: string; code: string | null; subscription_tier: string | null; invitedActive: number; invitedRevoked: number; creditsEarned: number; creditsRevoked: number }>>([]);
   const [loadingReferralProgram, setLoadingReferralProgram] = useState(true);
 
   const loadData = useCallback(async () => {
