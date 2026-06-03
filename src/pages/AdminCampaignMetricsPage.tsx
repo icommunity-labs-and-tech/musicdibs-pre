@@ -107,8 +107,8 @@ export default function AdminCampaignMetricsPage() {
   const [couponRegByCode, setCouponRegByCode] = useState<Record<string, number>>({});
   const [loadingReferral, setLoadingReferral] = useState(true);
 
-  const [referralProgramStats, setReferralProgramStats] = useState<{ active: number; revoked: number; totalCreditsIssued: number; revocationRate: number; conversionRate: number }>({ active: 0, revoked: 0, totalCreditsIssued: 0, revocationRate: 0, conversionRate: 0 });
-  const [topReferrers, setTopReferrers] = useState<Array<{ referrer_id: string; display_name: string; code: string | null; subscription_tier: string | null; invitedActive: number; creditsEarned: number; anyRevoked: boolean }>>([]);
+  const [referralProgramStats, setReferralProgramStats] = useState<{ total: number; active: number; revoked: number; creditsGranted: number; creditsRevoked: number; creditsNet: number; revocationRate: number }>({ total: 0, active: 0, revoked: 0, creditsGranted: 0, creditsRevoked: 0, creditsNet: 0, revocationRate: 0 });
+  const [topReferrers, setTopReferrers] = useState<Array<{ referrer_id: string; display_name: string; code: string | null; subscription_tier: string | null; invitedActive: number; invitedRevoked: number; creditsEarned: number; creditsRevoked: number }>>([]);
   const [loadingReferralProgram, setLoadingReferralProgram] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -220,13 +220,15 @@ export default function AdminCampaignMetricsPage() {
       const rows = (refStats || []) as any[];
       const active = rows.filter(r => r.status === 'active').length;
       const revoked = rows.filter(r => r.status === 'revoked').length;
-      const totalCreditsIssued = rows
-        .filter(r => r.status === 'active')
+      const total = active + revoked;
+      const creditsGranted = rows
         .reduce((s, r) => s + (Number(r.credits_referrer) || 0) + (Number(r.credits_referred) || 0), 0);
-      const denom = active + revoked;
-      const revocationRate = denom > 0 ? (revoked / denom) * 100 : 0;
-      const conversionRate = denom > 0 ? (active / denom) * 100 : 0;
-      setReferralProgramStats({ active, revoked, totalCreditsIssued, revocationRate, conversionRate });
+      const creditsRevoked = rows
+        .filter(r => r.status === 'revoked')
+        .reduce((s, r) => s + (Number(r.credits_referrer) || 0) + (Number(r.credits_referred) || 0), 0);
+      const creditsNet = creditsGranted - creditsRevoked;
+      const revocationRate = total > 0 ? (revoked / total) * 100 : 0;
+      setReferralProgramStats({ total, active, revoked, creditsGranted, creditsRevoked, creditsNet, revocationRate });
 
       const { data: topData } = await supabase
         .from('referrals')
@@ -250,20 +252,23 @@ export default function AdminCampaignMetricsPage() {
             code: Array.isArray(r.referrer_code) ? (r.referrer_code[0]?.code || null) : (r.referrer_code?.code || null),
             subscription_tier: null,
             invitedActive: 0,
+            invitedRevoked: 0,
             creditsEarned: 0,
-            anyRevoked: false,
+            creditsRevoked: 0,
           };
         }
+        if (!grouped[id].subscription_tier && r.subscription_tier) grouped[id].subscription_tier = r.subscription_tier;
         if (r.status === 'active') {
           grouped[id].invitedActive += 1;
           grouped[id].creditsEarned += Number(r.credits_referrer) || 0;
-          if (!grouped[id].subscription_tier && r.subscription_tier) grouped[id].subscription_tier = r.subscription_tier;
+        } else if (r.status === 'revoked') {
+          grouped[id].invitedRevoked += 1;
+          grouped[id].creditsRevoked += Number(r.credits_referrer) || 0;
         }
-        if (r.status === 'revoked') grouped[id].anyRevoked = true;
       });
       const list = Object.values(grouped)
-        .filter((g: any) => g.invitedActive > 0)
-        .sort((a: any, b: any) => b.invitedActive - a.invitedActive) as any[];
+        .filter((g: any) => (g.invitedActive + g.invitedRevoked) > 0)
+        .sort((a: any, b: any) => (b.invitedActive + b.invitedRevoked) - (a.invitedActive + a.invitedRevoked)) as any[];
       setTopReferrers(list);
     } catch (e: any) {
       toast.error('Error cargando programa de referidos');
@@ -878,8 +883,8 @@ export default function AdminCampaignMetricsPage() {
             ) : (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <KpiCard label="🎁 Referidos activos" value={referralProgramStats.active} icon={Gift} />
-                  <KpiCard label="💰 Créditos emitidos" value={referralProgramStats.totalCreditsIssued} icon={Coins} />
+                  <KpiCard label={`🎁 Conversiones (${referralProgramStats.active} act · ${referralProgramStats.revoked} rev)`} value={referralProgramStats.total} icon={Gift} />
+                  <KpiCard label={`💰 Créditos netos (bruto ${referralProgramStats.creditsGranted} − rev ${referralProgramStats.creditsRevoked})`} value={referralProgramStats.creditsNet} icon={Coins} />
                   <Card className="border-border/40">
                     <CardHeader className="pb-2">
                       <CardDescription className="text-xs flex items-center gap-1">
@@ -895,7 +900,7 @@ export default function AdminCampaignMetricsPage() {
                       </div>
                     </CardContent>
                   </Card>
-                  <KpiCard label="📊 Tasa de conversión" value={`${referralProgramStats.conversionRate.toFixed(1)}%`} icon={TrendingUp} />
+                  <KpiCard label="🔁 Revocados" value={referralProgramStats.revoked} icon={TrendingUp} />
                 </div>
 
                 {topReferrers.length === 0 ? (
@@ -911,32 +916,41 @@ export default function AdminCampaignMetricsPage() {
                           <TableHead>Artista</TableHead>
                           <TableHead>Código</TableHead>
                           <TableHead>Plan que usó</TableHead>
-                          <TableHead className="text-right">Invitados activos</TableHead>
-                          <TableHead className="text-right">Créditos ganados</TableHead>
+                          <TableHead className="text-right">Activos</TableHead>
+                          <TableHead className="text-right">Revocados</TableHead>
+                          <TableHead className="text-right">Créditos netos</TableHead>
                           <TableHead>Estado</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {topReferrers.map(r => (
-                          <TableRow key={r.referrer_id}>
-                            <TableCell className="font-medium">{r.display_name}</TableCell>
-                            <TableCell>
-                              {r.code ? (
-                                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{r.code}</Badge>
-                              ) : <span className="text-muted-foreground">—</span>}
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">{r.subscription_tier || '—'}</TableCell>
-                            <TableCell className="text-right">{r.invitedActive}</TableCell>
-                            <TableCell className="text-right">{r.creditsEarned}</TableCell>
-                            <TableCell>
-                              {r.anyRevoked ? (
-                                <Badge variant="destructive" className="text-[10px]">revocado</Badge>
-                              ) : (
-                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">activo</Badge>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {topReferrers.map(r => {
+                          const netCredits = r.creditsEarned - r.creditsRevoked;
+                          const isAllRevoked = r.invitedActive === 0 && r.invitedRevoked > 0;
+                          const isMixed = r.invitedActive > 0 && r.invitedRevoked > 0;
+                          return (
+                            <TableRow key={r.referrer_id}>
+                              <TableCell className="font-medium">{r.display_name}</TableCell>
+                              <TableCell>
+                                {r.code ? (
+                                  <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{r.code}</Badge>
+                                ) : <span className="text-muted-foreground">—</span>}
+                              </TableCell>
+                              <TableCell className="text-xs text-muted-foreground">{r.subscription_tier || '—'}</TableCell>
+                              <TableCell className="text-right">{r.invitedActive}</TableCell>
+                              <TableCell className="text-right">{r.invitedRevoked}</TableCell>
+                              <TableCell className="text-right">{netCredits}</TableCell>
+                              <TableCell>
+                                {isAllRevoked ? (
+                                  <Badge variant="destructive" className="text-[10px]">todo revocado</Badge>
+                                ) : isMixed ? (
+                                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">parcial</Badge>
+                                ) : (
+                                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">activo</Badge>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
