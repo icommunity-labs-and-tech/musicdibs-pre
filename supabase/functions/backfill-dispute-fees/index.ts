@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
   }
 
   if (!authorized) {
+    console.log("[backfill-dispute-fees] 401 — authHeaderPresent:", !!authHeader, "startsWithBearer:", authHeader.startsWith("Bearer "), "cronSecretPresent:", !!cronSecret);
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
