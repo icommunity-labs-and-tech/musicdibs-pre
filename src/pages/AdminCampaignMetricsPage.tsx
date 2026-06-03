@@ -220,13 +220,15 @@ export default function AdminCampaignMetricsPage() {
       const rows = (refStats || []) as any[];
       const active = rows.filter(r => r.status === 'active').length;
       const revoked = rows.filter(r => r.status === 'revoked').length;
-      const totalCreditsIssued = rows
-        .filter(r => r.status === 'active')
+      const total = active + revoked;
+      const creditsGranted = rows
         .reduce((s, r) => s + (Number(r.credits_referrer) || 0) + (Number(r.credits_referred) || 0), 0);
-      const denom = active + revoked;
-      const revocationRate = denom > 0 ? (revoked / denom) * 100 : 0;
-      const conversionRate = denom > 0 ? (active / denom) * 100 : 0;
-      setReferralProgramStats({ active, revoked, totalCreditsIssued, revocationRate, conversionRate });
+      const creditsRevoked = rows
+        .filter(r => r.status === 'revoked')
+        .reduce((s, r) => s + (Number(r.credits_referrer) || 0) + (Number(r.credits_referred) || 0), 0);
+      const creditsNet = creditsGranted - creditsRevoked;
+      const revocationRate = total > 0 ? (revoked / total) * 100 : 0;
+      setReferralProgramStats({ total, active, revoked, creditsGranted, creditsRevoked, creditsNet, revocationRate });
 
       const { data: topData } = await supabase
         .from('referrals')
@@ -250,20 +252,23 @@ export default function AdminCampaignMetricsPage() {
             code: Array.isArray(r.referrer_code) ? (r.referrer_code[0]?.code || null) : (r.referrer_code?.code || null),
             subscription_tier: null,
             invitedActive: 0,
+            invitedRevoked: 0,
             creditsEarned: 0,
-            anyRevoked: false,
+            creditsRevoked: 0,
           };
         }
+        if (!grouped[id].subscription_tier && r.subscription_tier) grouped[id].subscription_tier = r.subscription_tier;
         if (r.status === 'active') {
           grouped[id].invitedActive += 1;
           grouped[id].creditsEarned += Number(r.credits_referrer) || 0;
-          if (!grouped[id].subscription_tier && r.subscription_tier) grouped[id].subscription_tier = r.subscription_tier;
+        } else if (r.status === 'revoked') {
+          grouped[id].invitedRevoked += 1;
+          grouped[id].creditsRevoked += Number(r.credits_referrer) || 0;
         }
-        if (r.status === 'revoked') grouped[id].anyRevoked = true;
       });
       const list = Object.values(grouped)
-        .filter((g: any) => g.invitedActive > 0)
-        .sort((a: any, b: any) => b.invitedActive - a.invitedActive) as any[];
+        .filter((g: any) => (g.invitedActive + g.invitedRevoked) > 0)
+        .sort((a: any, b: any) => (b.invitedActive + b.invitedRevoked) - (a.invitedActive + a.invitedRevoked)) as any[];
       setTopReferrers(list);
     } catch (e: any) {
       toast.error('Error cargando programa de referidos');
