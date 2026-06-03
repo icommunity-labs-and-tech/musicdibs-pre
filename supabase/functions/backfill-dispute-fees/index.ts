@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
       const chargeId = typeof dispute.charge === "string"
         ? dispute.charge
         : (dispute.charge as any)?.id ?? "";
-      if (!chargeId) { skipped++; console.log("[skip] no-charge", dispute.id); continue; }
+      if (!chargeId) { skipped++; continue; }
 
       const txs = ((dispute as any).balance_transactions || []) as any[];
       const feeCents = txs.reduce(
@@ -112,10 +112,10 @@ Deno.serve(async (req) => {
         .eq("stripe_charge_id", chargeId)
         .maybeSingle();
 
-      if (!ord?.id) { skipped++; console.log("[skip] no-order", dispute.id, chargeId, "feeEur=", feeEur); continue; }
+      if (!ord?.id) { skipped++; continue; }
 
       const prev = Number(ord.dispute_fee) || 0;
-      if (Math.abs(prev - feeEur) < 0.01) { skipped++; console.log("[skip] match", dispute.id, "prev=", prev, "feeEur=", feeEur); continue; }
+      if (Math.abs(prev - feeEur) < 0.01) { skipped++; continue; }
 
       changes.push({ order_id: ord.id, dispute_id: dispute.id, prev, new: feeEur });
 
