@@ -883,8 +883,8 @@ export default function AdminCampaignMetricsPage() {
             ) : (
               <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <KpiCard label="🎁 Referidos activos" value={referralProgramStats.active} icon={Gift} />
-                  <KpiCard label="💰 Créditos emitidos" value={referralProgramStats.totalCreditsIssued} icon={Coins} />
+                  <KpiCard label={`🎁 Conversiones (${referralProgramStats.active} act · ${referralProgramStats.revoked} rev)`} value={referralProgramStats.total} icon={Gift} />
+                  <KpiCard label={`💰 Créditos netos (bruto ${referralProgramStats.creditsGranted} − rev ${referralProgramStats.creditsRevoked})`} value={referralProgramStats.creditsNet} icon={Coins} />
                   <Card className="border-border/40">
                     <CardHeader className="pb-2">
                       <CardDescription className="text-xs flex items-center gap-1">
@@ -900,7 +900,7 @@ export default function AdminCampaignMetricsPage() {
                       </div>
                     </CardContent>
                   </Card>
-                  <KpiCard label="📊 Tasa de conversión" value={`${referralProgramStats.conversionRate.toFixed(1)}%`} icon={TrendingUp} />
+                  <KpiCard label="🔁 Revocados" value={referralProgramStats.revoked} icon={TrendingUp} />
                 </div>
 
                 {topReferrers.length === 0 ? (
@@ -916,32 +916,41 @@ export default function AdminCampaignMetricsPage() {
                           <TableHead>Artista</TableHead>
                           <TableHead>Código</TableHead>
                           <TableHead>Plan que usó</TableHead>
-                          <TableHead className="text-right">Invitados activos</TableHead>
-                          <TableHead className="text-right">Créditos ganados</TableHead>
+                          <TableHead className="text-right">Activos</TableHead>
+                          <TableHead className="text-right">Revocados</TableHead>
+                          <TableHead className="text-right">Créditos netos</TableHead>
                           <TableHead>Estado</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {topReferrers.map(r => (
-                          <TableRow key={r.referrer_id}>
-                            <TableCell className="font-medium">{r.display_name}</TableCell>
-                            <TableCell>
-                              {r.code ? (
-                                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{r.code}</Badge>
-                              ) : <span className="text-muted-foreground">—</span>}
-                            </TableCell>
-                            <TableCell className="text-xs text-muted-foreground">{r.subscription_tier || '—'}</TableCell>
-                            <TableCell className="text-right">{r.invitedActive}</TableCell>
-                            <TableCell className="text-right">{r.creditsEarned}</TableCell>
-                            <TableCell>
-                              {r.anyRevoked ? (
-                                <Badge variant="destructive" className="text-[10px]">revocado</Badge>
-                              ) : (
-                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">activo</Badge>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {topReferrers.map(r => {
+                          const netCredits = r.creditsEarned - r.creditsRevoked;
+                          const isAllRevoked = r.invitedActive === 0 && r.invitedRevoked > 0;
+                          const isMixed = r.invitedActive > 0 && r.invitedRevoked > 0;
+                          return (
+                            <TableRow key={r.referrer_id}>
+                              <TableCell className="font-medium">{r.display_name}</TableCell>
+                              <TableCell>
+                                {r.code ? (
+                                  <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{r.code}</Badge>
+                                ) : <span className="text-muted-foreground">—</span>}
+                              </TableCell>
+                              <TableCell className="text-xs text-muted-foreground">{r.subscription_tier || '—'}</TableCell>
+                              <TableCell className="text-right">{r.invitedActive}</TableCell>
+                              <TableCell className="text-right">{r.invitedRevoked}</TableCell>
+                              <TableCell className="text-right">{netCredits}</TableCell>
+                              <TableCell>
+                                {isAllRevoked ? (
+                                  <Badge variant="destructive" className="text-[10px]">todo revocado</Badge>
+                                ) : isMixed ? (
+                                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">parcial</Badge>
+                                ) : (
+                                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">activo</Badge>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                       </TableBody>
                     </Table>
                   </div>
