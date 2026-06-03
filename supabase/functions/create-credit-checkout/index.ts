@@ -361,8 +361,10 @@ serve(async (req) => {
         // or past_due (i.e. not actually renewed yet), this is NOT a real renewal —
         // credits should only be reset by stripe-webhook on billing_reason='subscription_cycle'.
         const subStatus = String(updatedSub.status ?? "");
+        // Guard: never grant credits if Stripe sub is past_due or trialing —
+        // real credit assignment happens via stripe-webhook on billing_reason=subscription_cycle.
+        // NOTE: removed 'dbCredits === 0' condition (bug: users with credits > 0 were bypassing this guard)
         const shouldSkipCreditReset =
-          dbCredits === 0 &&
           !!dbTier &&
           (subStatus === "trialing" || subStatus === "past_due");
 
