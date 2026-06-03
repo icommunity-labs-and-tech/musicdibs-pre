@@ -1,0 +1,1 @@
+CREATE POLICY admin_select_referrals ON public.referrals FOR SELECT TO authenticated USING (public.has_role(auth.uid(), 'admin'));
