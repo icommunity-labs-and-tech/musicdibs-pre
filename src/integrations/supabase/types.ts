@@ -3615,6 +3615,13 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_emails_by_user_ids: {
+        Args: { p_ids: string[] }
+        Returns: {
+          email: string
+          id: string
+        }[]
+      }
       get_kyc_pending_users: {
         Args: {
           p_batch_size?: number
@@ -3638,6 +3645,19 @@ export type Database = {
           language: string
           reminder_count: number
           user_id: string
+        }[]
+      }
+      get_profiles_with_email: {
+        Args: { p_limit: number; p_offset: number; p_order_asc: boolean }
+        Returns: {
+          available_credits: number
+          created_at: string
+          email: string
+          kyc_status: string
+          language: string
+          sub_period_end: string
+          subscription_plan: string
+          subscription_tier: string
         }[]
       }
       get_public_app_setting: { Args: { setting_key: string }; Returns: Json }
