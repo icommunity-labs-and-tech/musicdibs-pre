@@ -217,7 +217,7 @@ const resources = {
         ctaTitle: '¿A qué esperas? Protege y monetiza tu música hoy mismo',
         ctaButton: 'Empezar ahora',
       },
-      promoBanner: { text: 'San Valentín: -20% en todas las suscripciones', title: 'Verano Musicdibs', offer: '-30% · Solo 7 días', copyAria: 'Copiar código', cta: 'Aprovechar oferta' },
+      promoBanner: { text: 'San Valentín: -20% en todas las suscripciones', title: 'Verano Musicdibs', offer: '-25% · Solo 7 días', copyAria: 'Copiar código', cta: 'Aprovechar oferta' },
       summerPromo: {
         title: "SAN VALENTÍN",
         discount: "-20%",
