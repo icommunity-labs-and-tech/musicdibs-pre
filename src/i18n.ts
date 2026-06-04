@@ -217,7 +217,7 @@ const resources = {
         ctaTitle: '¿A qué esperas? Protege y monetiza tu música hoy mismo',
         ctaButton: 'Empezar ahora',
       },
-      promoBanner: { text: 'San Valentín: -20% en todas las suscripciones', title: 'Nueva era de Musicdibs', offer: '-30% · Solo mayo', copyAria: 'Copiar código', cta: 'Aprovechar oferta' },
+      promoBanner: { text: 'San Valentín: -20% en todas las suscripciones', title: 'Verano Musicdibs', offer: '-30% · Solo 7 días', copyAria: 'Copiar código', cta: 'Aprovechar oferta' },
       summerPromo: {
         title: "SAN VALENTÍN",
         discount: "-20%",
@@ -800,7 +800,7 @@ const resources = {
       tutorial: {
         heading: 'It\'s that easy to get started', subtitle: 'In just 3 steps your music will be protected and available worldwide.', steps: { step: 'Step', s1: { title: 'Sign up', desc: 'Register and verify your identity to give legal validity to your records.' }, s2: { title: 'Register your song', desc: 'Upload your work; we generate a digital fingerprint and record it on blockchain in seconds. Download your registration certificate with timestamp.', link: 'See sample certificate' }, s3: { title: 'Distribute your music', desc: 'Reach Spotify, Apple Music, YouTube and 200+ platforms with one click. Control and monetize from your dashboard.' } }, ctaTitle: 'What are you waiting for? Protect and monetize your music today', ctaButton: 'Start now'
       },
-      promoBanner: { text: "Valentine's Day: -20% on all subscriptions", title: 'New Musicdibs era', offer: '-30% · May only', copyAria: 'Copy code', cta: 'Get the deal' },
+      promoBanner: { text: "Valentine's Day: -20% on all subscriptions", title: 'Musicdibs Summer', offer: '-30% · 7 days only', copyAria: 'Copy code', cta: 'Get the deal' },
       summerPromo: { title: "VALENTINE'S DAY", discount: '-20%', onAllSubs: 'On all subscriptions', enterCoupon: 'Enter the coupon at checkout.', discountCode: 'Discount code', code: 'LOVE20', footnote: '*Limited time offer' },
       distro: { heading: 'Release your music and take it further', subheading: 'Distribute your songs across the major platforms and promote them on our socials to gain visibility from day one.', world: { title: 'Distribution', desc: 'Release your works worldwide on 220+ DSPs and EARN royalties', cta: 'Learn more' }, social: { title: 'Social Media Promotion', desc: 'Promote yourself on our socials with 300,000+ followers!', cta: 'Learn more' }, market: { title: 'Marketplace', desc: 'Sell your creations in our market and EARN money', cta: 'Go to our Market' }, nfts: { title: 'Boost your songs', desc: 'Create stunning covers and videos for your releases and marketing campaigns', cta: 'Learn more' } },
       calculator: {
@@ -1344,7 +1344,7 @@ const resources = {
         },
       },
       tutorial: { heading: 'É tão fácil começar', subtitle: 'Em apenas 3 passos sua música estará protegida e disponível no mundo todo.', steps: { step: 'Passo', s1: { title: 'Cadastre-se', desc: 'Registre-se e verifique sua identidade para dar validade jurídica aos seus registros.' }, s2: { title: 'Registre sua música', desc: 'Envie sua obra; geramos uma impressão digital e registramos na blockchain em segundos. Baixe seu certificado com carimbo de data e hora.', link: 'Ver exemplo de certificado' }, s3: { title: 'Distribua sua música', desc: 'Chegue ao Spotify, Apple Music, YouTube e mais de 220 plataformas com um clique. Controle e monetize no seu painel.' } }, ctaTitle: 'O que está esperando? Proteja e monetize sua música hoje', ctaButton: 'Começar agora' },
-      promoBanner: { text: 'Dia dos Namorados: -20% em todas as assinaturas', title: 'Nova era da Musicdibs', offer: '-30% · Só em maio', copyAria: 'Copiar código', cta: 'Aproveitar oferta' },
+      promoBanner: { text: 'Dia dos Namorados: -20% em todas as assinaturas', title: 'Verão Musicdibs', offer: '-30% · Só 7 dias', copyAria: 'Copiar código', cta: 'Aproveitar oferta' },
       summerPromo: { title: 'DIA DOS NAMORADOS', discount: '-20%', onAllSubs: 'Em todas as assinaturas', enterCoupon: 'Insira o cupom na finalização da compra.', discountCode: 'Código de desconto', code: 'LOVE20', footnote: '*Oferta por tempo limitado' },
       distro: { heading: 'Lance sua música e faça-a chegar mais longe', subheading: 'Distribua suas canções nas principais plataformas e promova-as em nossas redes para ganhar visibilidade desde o primeiro dia.', world: { title: 'Distribuição', desc: 'Lance suas obras no mundo inteiro em 220+ DSPs e GANHE royalties', cta: 'Saiba mais' }, social: { title: 'Promoção em RRSS', desc: 'Promova-se nas nossas redes com mais de 300.000 seguidores!', cta: 'Saiba mais' }, market: { title: 'Marketplace', desc: 'Venda suas criações no nosso market e GANHE dinheiro', cta: 'Acesse nosso Market' }, nfts: { title: 'Material promocional', desc: 'Crie capas e vídeos incríveis para seus lançamentos e campanhas de marketing', cta: 'Saiba mais' } },
       calculator: {
