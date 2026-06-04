@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
-const PROMO_CODE = "SUMMER25";
-const STORAGE_KEY = "musicdibs_summer25_deadline";
+const PROMO_CODE = "VERANO25";
+const STORAGE_KEY = "musicdibs_verano25_deadline";
 
 const getDeadline = () => {
   if (typeof window === "undefined") return new Date(Date.now() + 7 * 86400000);
