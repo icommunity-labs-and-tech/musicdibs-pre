@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Plus } from 'lucide-react';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { InlineLanguageSwitcher } from '@/components/dashboard/InlineLanguageSwitcher';
 import { useDashboardTheme } from '@/hooks/useDashboardTheme';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
