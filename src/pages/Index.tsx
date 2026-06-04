@@ -177,9 +177,9 @@ const Index = () => {
           }
         ]}
       />
-      <PromoBanner />
       <Navbar />
       <HeroSection />
+      <PromoBanner />
       <DeferredHomeSections />
       <LaunchPromoPopup />
     </div>
