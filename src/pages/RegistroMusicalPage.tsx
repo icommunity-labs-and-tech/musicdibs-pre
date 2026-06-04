@@ -113,10 +113,23 @@ export default function RegistroMusicalPage() {
                       href="#pricing-section"
                       className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                     >
-                      Registrar y distribuir mi música
+                      🚀 Registrar y distribuir mi música
                       <ArrowRight className="h-4 w-4" />
                     </a>
                   </div>
+
+                  <p className="mt-4 text-sm text-[oklch(0.98_0.01_295/0.7)]">
+                    ¿Prefieres explorar primero?{" "}
+                    <a
+                      href="https://www.musicdibs.com/login?tab=register"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold underline-offset-4 hover:underline transition-colors"
+                      style={{ color: "oklch(0.85 0.22 340)" }}
+                    >
+                      Crear una cuenta gratis →
+                    </a>
+                  </p>
 
                   <div className="mt-8 flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
                     {["Validez legal", "Blockchain", "+220 plataformas"].map((t) => (
