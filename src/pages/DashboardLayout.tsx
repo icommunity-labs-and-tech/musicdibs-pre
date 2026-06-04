@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Plus } from 'lucide-react';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
 import { LanguageSelector } from '@/components/LanguageSelector';
+import { InlineLanguageSwitcher } from '@/components/dashboard/InlineLanguageSwitcher';
 import { useDashboardTheme } from '@/hooks/useDashboardTheme';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
@@ -68,11 +69,11 @@ export default function DashboardLayout() {
                 <h1 className="text-sm font-semibold text-muted-foreground">{tr('dashboard.sidebar.controlPanel', 'Panel de control')}</h1>
               </div>
               <div className="flex items-center gap-3">
-              <LanguageSelector />
               <DashboardThemeToggle theme={theme} onToggle={toggleTheme} />
               <CreditBadge />
               <NotificationBell />
               <CouponRedeemButton />
+              <InlineLanguageSwitcher />
               <UserProfileDropdown />
               </div>
             </header>
