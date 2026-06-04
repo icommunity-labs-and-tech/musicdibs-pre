@@ -846,24 +846,17 @@ export default function RegistroMusicalPage() {
                         </a>
                       </div>
                       <div
-                        className="aspect-[3/4] rounded-xl mb-3 overflow-hidden relative"
+                        className="aspect-[3/4] rounded-xl mb-3 overflow-hidden relative flex items-center justify-center"
                         style={{
-                          background:
-                            "linear-gradient(135deg, #25F4EE 0%, #000000 50%, #FE2C55 100%)",
+                          background: "oklch(0.13 0.05 300 / 0.4)",
                         }}
                       >
                         <img
                           src={urbanArtistTiktok}
-                          alt="Artista urbana promocionada en TikTok"
+                          alt="Promoción de tu música en TikTok con +245k seguidores"
                           loading="lazy"
-                          width={768}
-                          height={1024}
-                          className="absolute inset-0 h-full w-full object-cover"
+                          className="h-full w-full object-contain"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                        <div className="absolute bottom-2 left-2 right-2 text-[10px] text-white/95 font-semibold">
-                          Trend con tu sonido
-                        </div>
                       </div>
                       <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
