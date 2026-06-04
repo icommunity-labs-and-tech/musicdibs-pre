@@ -7,8 +7,10 @@ import { Footer } from "@/components/landing/Footer";
 import { SocialBanner } from "@/components/landing/SocialBanner";
 import { PricingSection } from "@/components/PricingSection";
 import { RoyaltiesCalculator } from "@/components/RoyaltiesCalculator";
-import urbanArtistInstagram from "@/assets/urban-artist-instagram.jpg";
-import urbanArtistTiktok from "@/assets/urban-artist-tiktok.jpg";
+import promoInstagramAsset from "@/assets/promo-instagram-100k.png.asset.json";
+import promoTiktokAsset from "@/assets/promo-tiktok-245k.png.asset.json";
+const urbanArtistInstagram = promoInstagramAsset.url;
+const urbanArtistTiktok = promoTiktokAsset.url;
 import testimonioPoster from "@/assets/testimonio-poster.jpg";
 import {
   ShieldCheck,
