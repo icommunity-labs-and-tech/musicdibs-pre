@@ -2,9 +2,20 @@ import { useEffect, useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+const PROMO_CODE = "VERANO25";
+const STORAGE_KEY = "musicdibs_verano25_deadline";
 
-const TARGET_DATE = new Date("2026-05-31T23:59:59");
-const PROMO_CODE = "NEWMUSIC30";
+const getDeadline = () => {
+  if (typeof window === "undefined") return new Date(Date.now() + 7 * 86400000);
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    const d = new Date(stored);
+    if (d.getTime() > Date.now()) return d;
+  }
+  const d = new Date(Date.now() + 7 * 86400000);
+  localStorage.setItem(STORAGE_KEY, d.toISOString());
+  return d;
+};
 
 const useCountdown = (target: Date) => {
   const calc = () => {
@@ -28,7 +39,8 @@ const pad = (n: number) => n.toString().padStart(2, "0");
 
 export const PromoBanner = () => {
   const { t } = useTranslation();
-  const { days, hours, minutes, seconds } = useCountdown(TARGET_DATE);
+  const [target] = useState(getDeadline);
+  const { days, hours, minutes, seconds } = useCountdown(target);
   const [copied, setCopied] = useState(false);
 
   const copyCode = async () => {
@@ -45,42 +57,40 @@ export const PromoBanner = () => {
 
   return (
     <section
-      className="relative w-full border-y border-white/10 animate-fade-in overflow-hidden"
+      className="relative w-full border-y border-white/20 animate-fade-in overflow-hidden"
       style={{
         background:
-          "linear-gradient(90deg, #2a0a4a 0%, #4c1d95 35%, #7c3aed 65%, #c026d3 100%)",
+          "linear-gradient(90deg, #06b6d4 0%, #f59e0b 35%, #f97316 65%, #ec4899 100%)",
       }}
     >
-      {/* Glow sutil */}
-      <div className="pointer-events-none absolute inset-y-0 left-1/4 w-1/2 bg-fuchsia-500/20 blur-3xl" />
+      {/* Sun glow */}
+      <div className="pointer-events-none absolute inset-y-0 left-1/4 w-1/2 bg-yellow-300/30 blur-3xl" />
 
       <div className="container relative mx-auto px-4 py-3 md:py-4">
         <div className="flex flex-col items-center gap-3 text-center lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:text-left">
-          {/* Texto principal */}
           <div className="lg:flex-shrink-0 lg:pl-8 xl:pl-16">
-            <span className="text-base md:text-lg lg:text-xl font-bold text-white leading-tight">
-              🚀 {t("promoBanner.title", { defaultValue: "Nueva era de Musicdibs" })}
+            <span className="text-base md:text-lg lg:text-xl font-bold text-white leading-tight drop-shadow-md">
+              ☀️ {t("promoBanner.title", { defaultValue: "Verano Musicdibs" })} 🌴
             </span>
           </div>
 
-          {/* Oferta + Código + Countdown + CTA */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 md:gap-3">
-            <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1.5 text-xs md:text-sm font-bold tracking-wider text-white border border-white/20 whitespace-nowrap">
-              🎁 {t("promoBanner.offer", { defaultValue: "-30% · Solo mayo" })}
+            <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1.5 text-xs md:text-sm font-bold tracking-wider text-white border border-white/30 whitespace-nowrap">
+              🏖️ {t("promoBanner.offer", { defaultValue: "-25% · Oferta de verano" })}
             </span>
 
             <button
               onClick={copyCode}
-              className="group inline-flex items-center gap-2 rounded-md border border-white/25 bg-white/10 px-3.5 py-2 backdrop-blur-sm transition hover:bg-white/20"
+              className="group inline-flex items-center gap-2 rounded-md border border-white/40 bg-white/15 px-3.5 py-2 backdrop-blur-sm transition hover:bg-white/25"
               aria-label={t("promoBanner.copyAria", { defaultValue: "Copiar código" })}
             >
               <span className="font-mono text-sm md:text-base font-bold text-white tracking-wider">
                 {PROMO_CODE}
               </span>
               {copied ? (
-                <Check className="h-4 w-4 text-emerald-300" />
+                <Check className="h-4 w-4 text-emerald-200" />
               ) : (
-                <Copy className="h-4 w-4 text-white/80 group-hover:text-white" />
+                <Copy className="h-4 w-4 text-white/90 group-hover:text-white" />
               )}
             </button>
 
@@ -92,18 +102,18 @@ export const PromoBanner = () => {
                 { v: seconds, l: "S" },
               ].map((u, i) => (
                 <span key={i} className="inline-flex items-baseline">
-                  <span className="rounded bg-black/30 px-2 py-1">{pad(u.v)}</span>
-                  <span className="ml-0.5 text-[10px] text-white/60 uppercase">{u.l}</span>
-                  {i < 3 && <span className="mx-0.5 text-white/30">:</span>}
+                  <span className="rounded bg-black/25 px-2 py-1">{pad(u.v)}</span>
+                  <span className="ml-0.5 text-[10px] text-white/80 uppercase">{u.l}</span>
+                  {i < 3 && <span className="mx-0.5 text-white/40">:</span>}
                 </span>
               ))}
             </div>
 
             <button
               onClick={scrollToPricing}
-              className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-pink-500 to-fuchsia-600 px-5 py-2.5 text-sm md:text-base font-bold text-white shadow-md transition hover:scale-105 hover:shadow-fuchsia-500/60 hover:shadow-xl whitespace-nowrap"
+              className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-orange-500 to-pink-500 px-5 py-2.5 text-sm md:text-base font-bold text-white shadow-md transition hover:scale-105 hover:shadow-orange-400/60 hover:shadow-xl whitespace-nowrap"
             >
-              🔥 {t("promoBanner.cta", { defaultValue: "Aprovechar oferta" })}
+              🍹 {t("promoBanner.cta", { defaultValue: "Aprovechar oferta" })}
             </button>
           </div>
         </div>
