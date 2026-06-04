@@ -647,6 +647,40 @@ export default function RegistroMusicalPage() {
                 </div>
 
                 <div className="relative">
+                  {/* Royalties badge — eye-catching graphic */}
+                  <div
+                    className="absolute -top-6 -right-4 sm:-top-8 sm:-right-8 z-30 rotate-[8deg] animate-fade-in"
+                    style={{ animation: "landing-orb-float 5s ease-in-out infinite" }}
+                  >
+                    <div
+                      className="relative rounded-2xl px-5 py-3 sm:px-6 sm:py-4 text-center"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #8B5CF6 0%, oklch(0.68 0.27 322) 60%, oklch(0.85 0.22 340) 100%)",
+                        boxShadow:
+                          "0 20px 50px -10px oklch(0.68 0.27 322 / 0.7), 0 0 0 1px oklch(1 0 0 / 0.15) inset",
+                        border: "2px solid oklch(1 0 0 / 0.2)",
+                      }}
+                    >
+                      <div
+                        className="absolute inset-0 rounded-2xl opacity-30 pointer-events-none"
+                        style={{
+                          background:
+                            "repeating-linear-gradient(45deg, transparent 0 6px, oklch(1 0 0 / 0.15) 6px 12px)",
+                        }}
+                      />
+                      <p className="relative text-[10px] uppercase tracking-[0.2em] font-semibold text-white/90">
+                        Gana el
+                      </p>
+                      <p className="relative font-display font-bold text-3xl sm:text-4xl text-white leading-none my-1">
+                        100%
+                      </p>
+                      <p className="relative text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
+                        Royalties
+                      </p>
+                    </div>
+                  </div>
+
                   <div
                     className="absolute -inset-10 rounded-[2rem] blur-3xl opacity-60 pointer-events-none"
                     style={{
