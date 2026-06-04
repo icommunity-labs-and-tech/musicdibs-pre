@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Copy, Check } from "lucide-react";
 
-const PROMO_CODE = "VERANO25";
-const DEADLINE_KEY = "musicdibs_verano25_deadline";
+const PROMO_CODE = "SUMMER25";
+const DEADLINE_KEY = "musicdibs_summer25_deadline";
 const SHOWN_KEY = "musicdibs_verano25_popup_shown";
 
 const getDeadline = () => {
