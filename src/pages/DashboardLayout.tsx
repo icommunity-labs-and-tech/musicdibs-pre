@@ -68,11 +68,11 @@ export default function DashboardLayout() {
                 <h1 className="text-sm font-semibold text-muted-foreground">{tr('dashboard.sidebar.controlPanel', 'Panel de control')}</h1>
               </div>
               <div className="flex items-center gap-3">
-              <LanguageSelector />
               <DashboardThemeToggle theme={theme} onToggle={toggleTheme} />
               <CreditBadge />
               <NotificationBell />
               <CouponRedeemButton />
+              <InlineLanguageSwitcher />
               <UserProfileDropdown />
               </div>
             </header>
