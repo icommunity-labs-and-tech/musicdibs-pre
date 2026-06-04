@@ -90,13 +90,17 @@ serve(async (req) => {
       );
     }
 
-    // Fetch invoices only — all payments use invoice_creation so every
-    // charge has a corresponding invoice. Listing charges separately
-    // caused duplicates because Stripe API v2025 doesn't reliably
-    // populate cross-references (charge/payment_intent) on invoices.
+    // Fetch invoices first
     const invoices = await stripe.invoices.list({ customer: customerId, limit });
 
-    const mapped = invoices.data.map((inv: any) => ({
+    const invoiceChargeIds = new Set<string>();
+    const invoicePIIds = new Set<string>();
+    for (const inv of invoices.data as any[]) {
+      if (inv.charge) invoiceChargeIds.add(typeof inv.charge === "string" ? inv.charge : inv.charge.id);
+      if (inv.payment_intent) invoicePIIds.add(typeof inv.payment_intent === "string" ? inv.payment_intent : inv.payment_intent.id);
+    }
+
+    const mapped: any[] = invoices.data.map((inv: any) => ({
       id: inv.id,
       number: inv.number,
       status: inv.status,
@@ -112,8 +116,41 @@ serve(async (req) => {
       payment_type: inv.subscription ? "subscription" : "one_time",
     }));
 
+    // Fallback: also list succeeded charges with no invoice attached
+    // (legacy PaymentIntents without invoice_creation, or one-off charges).
+    // Surface Stripe's hosted receipt_url so users still see proof of payment.
+    const charges = await stripe.charges.list({ customer: customerId, limit });
+    for (const ch of charges.data as any[]) {
+      if (ch.status !== "succeeded") continue;
+      if (ch.invoice) continue;
+      if (invoiceChargeIds.has(ch.id)) continue;
+      const pi = typeof ch.payment_intent === "string" ? ch.payment_intent : ch.payment_intent?.id;
+      if (pi && invoicePIIds.has(pi)) continue;
+      if ((ch.description ?? "").toLowerCase().includes("certyfile")) continue;
+
+      mapped.push({
+        id: ch.id,
+        number: ch.receipt_number ?? null,
+        status: "paid",
+        amount_due: ch.amount,
+        amount_paid: ch.amount,
+        currency: ch.currency,
+        created: ch.created,
+        period_start: ch.created,
+        period_end: ch.created,
+        hosted_invoice_url: ch.receipt_url ?? null,
+        invoice_pdf: null,
+        description: ch.description ?? null,
+        payment_type: "one_time",
+      });
+    }
+
+    mapped.sort((a, b) => (b.created ?? 0) - (a.created ?? 0));
+
+    console.log("[LIST-INVOICES] customer", customerId, "invoices:", invoices.data.length, "charges_added:", mapped.length - invoices.data.length);
+
     return new Response(
-      JSON.stringify({ invoices: mapped, has_more: invoices.has_more }),
+      JSON.stringify({ invoices: mapped, has_more: invoices.has_more || charges.has_more }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {
