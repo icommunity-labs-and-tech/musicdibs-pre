@@ -10,6 +10,11 @@ const TestimonialsSection = () => {
   
   const testimonials = [
     {
+      name: "CECI DOVER",
+      title: "Vocal Coach",
+      videoId: "6MQv6r7cavM"
+    },
+    {
       name: "Erika Bada",
       title: "Bada Sessions",
       videoId: "CnS6IblpMzY"
