@@ -5,8 +5,8 @@ import { Copy, Check } from "lucide-react";
 const PROMO_CODE = "VERANO25";
 const SHOWN_KEY = "musicdibs_verano25_popup_shown";
 
-// Martes 4 de agosto 2026, 00:00 hora España (CEST, UTC+2)
-const FIXED_DEADLINE = new Date("2026-08-03T22:00:00Z");
+// Miércoles 5 de agosto 2026, 00:00 hora España (CEST, UTC+2)
+const FIXED_DEADLINE = new Date("2026-08-04T22:00:00Z");
 
 const getDeadline = () => FIXED_DEADLINE;
 
