@@ -3,19 +3,10 @@ import { Copy, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const PROMO_CODE = "VERANO25";
-const STORAGE_KEY = "musicdibs_verano25_deadline";
+// Lunes 8 de junio 2026, 00:00 hora España (CEST, UTC+2)
+const FIXED_DEADLINE = new Date("2026-06-07T22:00:00Z");
 
-const getDeadline = () => {
-  if (typeof window === "undefined") return new Date(Date.now() + 7 * 86400000);
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored) {
-    const d = new Date(stored);
-    if (d.getTime() > Date.now()) return d;
-  }
-  const d = new Date(Date.now() + 7 * 86400000);
-  localStorage.setItem(STORAGE_KEY, d.toISOString());
-  return d;
-};
+const getDeadline = () => FIXED_DEADLINE;
 
 const useCountdown = (target: Date) => {
   const calc = () => {
