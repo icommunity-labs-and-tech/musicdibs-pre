@@ -3,8 +3,8 @@ import { Copy, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const PROMO_CODE = "VERANO25";
-// Viernes 10 de julio 2026, 00:00 hora España (CEST, UTC+2)
-const FIXED_DEADLINE = new Date("2026-07-09T22:00:00Z");
+// Sábado 11 de julio 2026, 00:00 hora España (CEST, UTC+2)
+const FIXED_DEADLINE = new Date("2026-07-10T22:00:00Z");
 
 const getDeadline = () => FIXED_DEADLINE;
 
