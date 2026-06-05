@@ -3653,9 +3653,11 @@ export type Database = {
           available_credits: number
           created_at: string
           email: string
+          had_topup: boolean
           kyc_status: string
           language: string
           sub_period_end: string
+          sub_status: string
           subscription_plan: string
           subscription_tier: string
         }[]
