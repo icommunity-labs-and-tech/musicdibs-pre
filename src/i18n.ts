@@ -98,8 +98,8 @@ const resources = {
       hero: {
         title: 'Crea. Protege. Distribuye.',
         highlight: 'Promociona.',
-        subtitle_prefix: 'La plataforma completa para artistas: crea o mejora tu música, regístrala con validez legal y',
-        subtitle_strong: 'lánzala al mundo en minutos.',
+        subtitle_prefix: 'La plataforma completa: produce tu música con innovadora IA de forma sencilla y económica. Regístrala con validez legal y distribuye en +220 plataformas en minutos.',
+        subtitle_strong: '',
         legal_more: '+info',
         cta_start: '🚀 Crear cuenta gratis',
         cta_how: '▶ Mira cómo funciona en 20s',
