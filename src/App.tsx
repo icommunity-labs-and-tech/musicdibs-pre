@@ -50,6 +50,7 @@ const PromotionPage = lazyWithRetry(() => import("./pages/PromotionPage"));
 const CreditsPage = lazyWithRetry(() => import("./pages/CreditsPage"));
 const ProfilePage = lazyWithRetry(() => import("./pages/ProfilePage"));
 const BillingPage = lazyWithRetry(() => import("./pages/BillingPage"));
+const YoutubeServicesPage = lazyWithRetry(() => import("./pages/YoutubeServicesPage"));
 const SupportPage = lazyWithRetry(() => import("./pages/SupportPage"));
 const CertificateDownloadPage = lazyWithRetry(() => import("./pages/CertificateDownloadPage"));
 
@@ -218,6 +219,7 @@ const App = () => (
                 <Route path="credits" element={<CreditsPage />} />
                 <Route path="profile" element={<ProfilePage />} />
                 <Route path="billing" element={<BillingPage />} />
+                <Route path="youtube-services" element={<YoutubeServicesPage />} />
                 <Route path="support" element={<SupportPage />} />
                 <Route path="certificate/:workId" element={<CertificateDownloadPage />} />
                 
