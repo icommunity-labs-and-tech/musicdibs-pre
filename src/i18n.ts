@@ -98,19 +98,19 @@ const resources = {
       hero: {
         title: 'Crea. Protege. Distribuye.',
         highlight: 'Promociona.',
-        subtitle_prefix: 'La plataforma completa para artistas: crea o mejora tu música, regístrala con validez legal y',
-        subtitle_strong: 'lánzala al mundo en minutos.',
+        subtitle_prefix: 'La plataforma completa: produce tu música con innovadora IA de forma sencilla y económica. Regístrala con validez legal y distribuye en +220 plataformas en minutos.',
+        subtitle_strong: '',
         legal_more: '+info',
         cta_start: '🚀 Crear cuenta gratis',
         cta_how: '▶ Mira cómo funciona en 20s',
       },
       why: {
         heading: 'La plataforma todo-en-uno para artistas independientes',
-        subheading: 'Musicdibs te ayuda a lanzar tu música al mundo: regístra, distribuye y promociona.\nCrea con IA o sube tu canción y mejórala con masterización profesional.',
+        subheading: 'Musicdibs te ayuda a lanzar tu música al mundo: produce, regístra, distribuye y promociona.\nProduce tu disco con IA sin conocimientos técnicos, con masterización profesional.',
         features: {
           legal: {
             title: 'AI Music Studio',
-            desc: 'Crea canciones con IA, masterízalas, mejora tus canciones y genera portadas y vídeos promocionales impresionantes.',
+            desc: 'Produce tus canciones con IA, masterízalas y genera portadas y vídeos promocionales impresionantes.',
             popup: `El AI Music Studio es el corazón creativo de Musicdibs: un entorno completo para llevar tu música de la idea al lanzamiento.\n\nCon una sola plataforma puedes:\n\n• Crear canciones originales con IA (instrumentales o con voz)\n• Editar, masterizar y mejorar tus producciones\n• Generar portadas profesionales de álbum y single\n• Diseñar creatividades para Instagram, TikTok y YouTube\n• Producir vídeos promocionales cortos para tus lanzamientos\n• Crear carteles para eventos y cabeceras para redes sociales\n\nLa IA actúa como tu asistente creativo, manteniéndote siempre en el centro del proceso. Cuando tu obra esté lista, podrás registrarla, distribuirla y promocionarla sin salir de Musicdibs.`,
           },
           instant: {
