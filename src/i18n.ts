@@ -106,7 +106,7 @@ const resources = {
       },
       why: {
         heading: 'La plataforma todo-en-uno para artistas independientes',
-        subheading: 'Musicdibs te ayuda a lanzar tu música al mundo: regístra, distribuye y promociona.\nCrea con IA o sube tu canción y mejórala con masterización profesional.',
+        subheading: 'Musicdibs te ayuda a lanzar tu música al mundo: produce, regístra, distribuye y promociona.\nProduce tu disco con IA sin conocimientos técnicos, con masterización profesional.',
         features: {
           legal: {
             title: 'AI Music Studio',
