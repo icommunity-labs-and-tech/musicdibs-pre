@@ -205,6 +205,10 @@ export const faqTranslations: Record<string, Record<string, any>> = {
           q: 'What type of works and files can I register?',
           a: "With Musicdibs you can register the authorship rights of any creative and artistic work:\n\n– Music: songs, lyrics, sheet music, sound recordings.\n– Audiovisual: scripts, treatments, ideas/synopsis, video pieces, storyboards.\n– Literary work: manuscripts and drafts, titles and names, translations, adaptations and derivatives.\n\nAnd you can register all kinds of files, both finished works in any digital audio or video format (mp3, WAV, AIFF, WMA, mp4, etc.) and text files (PDF, DOC) if they are scores, lyrics or scripts. Just remember that the maximum allowed file size is 30Mb.",
         },
+        {
+          q: 'How do I find my Spotify Artist ID?',
+          a: 'The Spotify Artist ID is a unique identifier that Spotify assigns to each artist profile. You will need it to correctly link your releases to your profile when distributing your music.\n\nSteps to find it:\n\n1. Open Spotify (in the app or in your browser at open.spotify.com).\n2. Search for your artist name and open your artist profile (not a song or album).\n3. Click the three dots (•••) next to your name and select "Share" → "Copy link to artist".\n4. Paste the link; it will look like this: https://open.spotify.com/artist/3TVXtAsR1Inumwj472S9r4\n5. Your Spotify Artist ID is the string of characters after /artist/. In the example: 3TVXtAsR1Inumwj472S9r4.\n\nImportant: make sure you copy the artist profile URL, not a song or album URL. Otherwise you will not get the correct ID.\n\nRead the full guide on our blog: /news/how-to-get-spotify-artist-id',
+        },
       ],
     },
   },
