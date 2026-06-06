@@ -3358,6 +3358,66 @@ export type Database = {
           },
         ]
       }
+      youtube_service_requests: {
+        Row: {
+          admin_notes: string | null
+          amount_gross: number | null
+          created_at: string | null
+          currency: string | null
+          form_data: Json
+          id: string
+          paid_at: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          service_type: string
+          status: string
+          stripe_charge_id: string | null
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          submitted_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount_gross?: number | null
+          created_at?: string | null
+          currency?: string | null
+          form_data?: Json
+          id?: string
+          paid_at?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          service_type: string
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount_gross?: number | null
+          created_at?: string | null
+          currency?: string | null
+          form_data?: Json
+          id?: string
+          paid_at?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          service_type?: string
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       api_cost_config: {
