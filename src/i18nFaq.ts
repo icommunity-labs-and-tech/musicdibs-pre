@@ -100,6 +100,10 @@ export const faqTranslations: Record<string, Record<string, any>> = {
           q: '¿Qué tipo de obras y archivos puedo registrar?',
           a: 'Con Musicdibs puedes registrar los derechos de autor de cualquier obra creativa y artística:\n\n– Música: canciones, letras, partituras, grabaciones sonoras.\n– Audiovisual: guiones, tratamientos, ideas/sinopsis, piezas de vídeo, storyboards.\n– Obra literaria: manuscritos y borradores, títulos y nombres, traducciones, adaptaciones y derivados.\n\nY puedes registrar todo tipo de archivos, tanto obras terminadas en cualquier formato digital de audio o vídeo (mp3, WAV, AIFF, WMA, mp4, etc.) como archivos de texto (PDF, DOC) si son partituras, letras o guiones. Solo recuerda que el tamaño máximo permitido de archivo es 30Mb.',
         },
+        {
+          q: '¿Cómo encuentro mi Spotify Artist ID?',
+          a: 'El Spotify Artist ID es un identificador único que Spotify asigna a cada perfil de artista. Lo necesitarás para vincular correctamente tus lanzamientos a tu perfil al distribuir tu música.\n\nPasos para encontrarlo:\n\n1. Abre Spotify (en la app o en el navegador, open.spotify.com).\n2. Busca tu nombre artístico y entra en tu perfil de artista (no en una canción o álbum).\n3. Haz clic en los tres puntos (•••) junto a tu nombre y selecciona "Compartir" → "Copiar enlace al artista".\n4. Pega el enlace; tendrá este formato: https://open.spotify.com/artist/3TVXtAsR1Inumwj472S9r4\n5. Tu Spotify Artist ID es la cadena de caracteres que aparece después de /artist/. En el ejemplo: 3TVXtAsR1Inumwj472S9r4.\n\nImportante: asegúrate de copiar la URL del perfil del artista, no la de una canción o álbum. De lo contrario, no obtendrás el ID correcto.\n\nPuedes leer la guía completa en nuestro blog: /news/how-to-get-spotify-artist-id',
+        },
       ],
     },
   },
