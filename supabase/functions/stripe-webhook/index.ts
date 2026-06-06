@@ -522,6 +522,29 @@ serve(async (req) => {
       const planId   = session.metadata?.plan_id || "unknown";
 
       if (userId && credits > 0) {
+        // ── Always UPSERT subscriptions with new stripe_subscription_id ────────────
+        // Must run BEFORE the duplicate guard: migrated users may have a stale
+        // subscriptions row with an old stripe_subscription_id. checkout.session.completed
+        // only fires on successful payment, so status is always "active".
+        const _checkoutSubId = typeof session.subscription === "string"
+          ? session.subscription
+          : (session.subscription as any)?.id || null;
+        const _checkoutCustomerId = typeof session.customer === "string"
+          ? session.customer
+          : (session.customer as any)?.id || null;
+        if (_checkoutSubId) {
+          const _checkoutPlanName = PLAN_ID_TO_PLAN_NAME[planId] || null;
+          await supabase.from("subscriptions").upsert({
+            user_id: userId,
+            stripe_customer_id: _checkoutCustomerId,
+            stripe_subscription_id: _checkoutSubId,
+            plan: _checkoutPlanName || "Annual",
+            status: "active",
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "user_id" });
+          console.log(`[WEBHOOK] checkout.session.completed: upserted subscriptions stripe_subscription_id=${_checkoutSubId} user=${userId}`);
+        }
+
         // ── Idempotency guard: skip if this checkout session was already processed ──
         const { data: existingCheckoutOrder } = await supabase
           .from("orders")
@@ -530,7 +553,7 @@ serve(async (req) => {
           .maybeSingle();
 
         if (existingCheckoutOrder) {
-          console.log(`[WEBHOOK] Duplicate checkout.session.completed for ${session.id} — skipping`);
+          console.log(`[WEBHOOK] Duplicate checkout.session.completed for ${session.id} — skipping credits/order`);
           return new Response(JSON.stringify({ received: true, duplicate: true }), {
             headers: { "Content-Type": "application/json" }
           });
@@ -1309,6 +1332,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         await supabase.from("subscriptions").upsert({
           user_id: profile.user_id,
           stripe_customer_id: customerId,
+          stripe_subscription_id: subscription.id,
           plan: planName || "Annual",
           status: subStatus,
           current_period_start: periodStart,
@@ -1359,6 +1383,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         await supabase.from("subscriptions").upsert({
           user_id: profile.user_id,
           stripe_customer_id: customerId,
+          stripe_subscription_id: subscription.id,
           plan: "Annual",
           status: "cancelled",
           updated_at: new Date().toISOString(),
