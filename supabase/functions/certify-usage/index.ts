@@ -144,13 +144,23 @@ serve(async (req) => {
 
     if (!ibsRes.ok) {
       const errText = await ibsRes.text();
-      console.error(`[CERTIFY-USAGE] iBS error: ${ibsRes.status} - ${errText}`);
+      console.error(`[CERTIFY-USAGE] iBS error: ${ibsRes.status} - ${errText} | signature: ${signatureId} | user: ${evidence.user_id}`);
+      const failureMeta = {
+        ...(evidence.metadata_json || {}),
+        _certification_error: {
+          status: ibsRes.status,
+          detail: errText.slice(0, 500),
+          signature_id: signatureId,
+          attempted_at: new Date().toISOString(),
+        },
+      };
       await supabase.from("purchase_usage_evidences").update({
         certification_status: "failed",
         evidence_hash: hashHex,
+        metadata_json: failureMeta,
       }).eq("id", usage_evidence_id);
 
-      return new Response(JSON.stringify({ error: "iBS registration failed", detail: errText.slice(0, 300) }), {
+      return new Response(JSON.stringify({ error: "iBS registration failed", status: ibsRes.status, detail: errText.slice(0, 300) }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
