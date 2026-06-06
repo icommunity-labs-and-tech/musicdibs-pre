@@ -4,10 +4,6 @@ import { createClient } from "../_shared/supabase-client.ts";
 import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
 import { creditPurchaseEmail, paymentFailedEmail, distributionWelcomeEmail } from "../_shared/transactional-email.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
 
 // ── MailerLite sync helper ────────────────────────────────────────────────
 async function syncMailerLite(event: string, payload: Record<string, unknown>) {
@@ -40,58 +36,6 @@ function planToMailerLiteType(plan: string | undefined): string {
   if (p.includes("month") || p.includes("mensual")) return "mensuales";
   return "single";
 }
-
-// ── Sync orders.dispute_fee from the dispute's balance_transactions ─────────
-// On dispute.created Stripe creates a balance_tx with fee = 1500¢ (15€) and a
-// negative net. On dispute.won/lost it adds further balance_txs. The merchant's
-// net dispute cost == sum(bt.fee). When won, the won-adjustment carries a
-// negative `fee` that cancels the original, so the running sum becomes 0.
-async function syncDisputeFee(
-  stripe: Stripe,
-  supabase: any,
-  disputeId: string,
-  chargeId: string,
-) {
-  if (!disputeId || !chargeId) return;
-  try {
-    const full = await stripe.disputes.retrieve(disputeId, {
-      expand: ["balance_transactions"],
-    });
-    const txs = ((full as any).balance_transactions || []) as any[];
-    const feeCents = txs.reduce(
-      (s, t) => s + (typeof t?.fee === "number" ? t.fee : 0),
-      0,
-    );
-    const feeEur = Math.round(feeCents) / 100;
-
-    const { data: ord } = await supabase
-      .from("orders")
-      .select("id, dispute_fee")
-      .eq("stripe_charge_id", chargeId)
-      .maybeSingle();
-
-    if (!ord?.id) {
-      console.warn(`[WEBHOOK] dispute ${disputeId}: no order for charge ${chargeId}`);
-      return;
-    }
-
-    const prev = Number(ord.dispute_fee) || 0;
-    if (Math.abs(prev - feeEur) < 0.01) return;
-
-    const { error: updErr } = await supabase
-      .from("orders").update({ dispute_fee: feeEur }).eq("id", ord.id);
-    if (updErr) {
-      console.warn(`[WEBHOOK] dispute_fee update failed for order ${ord.id}:`, updErr);
-    } else {
-      console.log(
-        `[WEBHOOK] dispute_fee synced: order ${ord.id} ${prev}€ → ${feeEur}€ (dispute ${disputeId})`,
-      );
-    }
-  } catch (e) {
-    console.warn(`[WEBHOOK] syncDisputeFee error (${disputeId}):`, e);
-  }
-}
-
 
 const PRICE_CREDITS: Record<string, number> = {
   "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": 120,
@@ -481,7 +425,7 @@ async function createPurchaseEvidence(
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null);
   }
 
   const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
@@ -502,7 +446,7 @@ serve(async (req) => {
       console.error("[WEBHOOK] Missing webhook secret or signature");
       return new Response(
         JSON.stringify({ error: "Webhook secret not configured or signature missing" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        { headers: { "Content-Type": "application/json" }, status: 400 }
       );
     }
 
@@ -512,17 +456,60 @@ serve(async (req) => {
     // ── checkout.session.completed ──────────────────────────────────────
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
-      const userId   = session.metadata?.user_id;
-      const planId   = session.metadata?.plan_id || "unknown";
 
-      // Créditos canónicos por plan — no confiamos en session.metadata.credits
-      // porque puede reflejar metadata desactualizada del precio en Stripe (ej. 3 en lugar de 8)
-      const CHECKOUT_TIER_CREDITS: Record<string, number> = {
-        annual_100: 100, annual_200: 200, annual_300: 300, annual_500: 500, annual_1000: 1000,
-        monthly: 8,
-      };
-      const creditsFromMetadata = parseInt(session.metadata?.credits || "0", 10);
-      const credits = CHECKOUT_TIER_CREDITS[planId] ?? creditsFromMetadata;
+      // ── YouTube Service (OAC / Content ID) ───────────────────────────
+      if (session.metadata?.product_type === "youtube_service") {
+        const requestId  = session.metadata.youtube_request_id;
+        const serviceType = session.metadata.service_type;
+        const ytUserId   = session.metadata.user_id;
+
+        if (requestId) {
+          const piId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
+          await supabase.from("youtube_service_requests").update({
+            status: "submitted",
+            stripe_checkout_session_id: session.id,
+            stripe_payment_intent_id: piId,
+            paid_at: new Date().toISOString(),
+            submitted_at: new Date().toISOString(),
+          }).eq("id", requestId);
+
+          await createOrderRecord(supabase, {
+            userId: ytUserId || "",
+            stripeCheckoutSessionId: session.id,
+            stripeCustomerId: typeof session.customer === "string" ? session.customer : undefined,
+            productType: "youtube_service",
+            productCode: serviceType || "youtube_service",
+            productLabel: serviceType === "oac" ? "Canal Oficial de Artista (OAC)" : "YouTube Content ID",
+            billingInterval: null,
+            amountGross: (session.amount_total || 5000) / 100,
+            currency: session.currency || "eur",
+            isSubscription: false,
+            isRenewal: false,
+            metadata: session.metadata || {},
+          });
+
+          if (ytUserId) {
+            try {
+              const { data: { user: ytUser } } = await supabase.auth.admin.getUserById(ytUserId);
+              if (ytUser?.email) {
+                const serviceName = serviceType === "oac" ? "Canal Oficial de Artista (OAC)" : "YouTube Content ID";
+                const msgId = crypto.randomUUID();
+                await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-${requestId}`, message_id: msgId, to: ytUser.email, from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", subject: `✅ Solicitud de ${serviceName} recibida — MusicDibs`, html: `<p>Hemos recibido tu solicitud de <strong>${serviceName}</strong>. ID: ${requestId}. Plazo estimado: 5 días laborables.</p>`, text: `Solicitud de ${serviceName} recibida. ID: ${requestId}. Plazo: 5 días laborables.`, purpose: "transactional", label: "youtube_service_confirmation", queued_at: new Date().toISOString() } });
+                const adminMsgId = crypto.randomUUID();
+                await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-admin-${requestId}`, message_id: adminMsgId, to: "info@musicdibs.com", from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", subject: `📺 Nueva solicitud ${serviceName} — ${ytUser.email}`, html: `<p>Nueva solicitud: <strong>${serviceName}</strong> de <strong>${ytUser.email}</strong>. Request ID: ${requestId}.</p>`, text: `Nueva solicitud: ${serviceName} de ${ytUser.email}. ID: ${requestId}.`, purpose: "transactional", label: "youtube_service_admin", queued_at: new Date().toISOString() } });
+              }
+            } catch (ytEmailErr) { console.error("[WEBHOOK] youtube_service email error:", ytEmailErr); }
+          }
+
+          console.log(`[WEBHOOK] ✅ YouTube ${serviceType} request ${requestId} → submitted`);
+          return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
+        }
+      }
+      // ── end YouTube Service handler ──────────────────────────────────
+
+      const userId   = session.metadata?.user_id;
+      const credits  = parseInt(session.metadata?.credits || "0", 10);
+      const planId   = session.metadata?.plan_id || "unknown";
 
       if (userId && credits > 0) {
         // ── Idempotency guard: skip if this checkout session was already processed ──
@@ -535,7 +522,7 @@ serve(async (req) => {
         if (existingCheckoutOrder) {
           console.log(`[WEBHOOK] Duplicate checkout.session.completed for ${session.id} — skipping`);
           return new Response(JSON.stringify({ received: true, duplicate: true }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json" }
           });
         }
 
@@ -548,25 +535,12 @@ serve(async (req) => {
         const isPermaPurchase = planId.startsWith("topup_") || planId === "individual";
         const isSubscriptionPurchase = !isPermaPurchase && !!PLAN_ID_TO_PLAN_NAME[planId];
 
-        // ── Plan switch/upgrade: discard leftover non-permanent credits from previous subscription ──
-        // When a user moves between subscription plans (e.g. Monthly → Annual_*), the remaining
-        // monthly credits must NOT carry over. Only permanent credits (topups/individual) survive.
+        // ── Plan switch/upgrade: los créditos restantes del plan anterior se acumulan ──
+        // Los créditos no se resetean en el momento del cambio de plan. El usuario conserva
+        // los créditos restantes y se suman los nuevos del plan al que ha upgradea/cambiado.
+        // Nota: el reset a 0 ocurre únicamente en subscription.deleted (fin del periodo real).
         if (isSubscriptionPurchase && previousPlan !== "Free") {
-          const prevAvail = prevProfile?.available_credits ?? 0;
-          const prevPerm = prevProfile?.permanent_credits ?? 0;
-          const leftover = Math.max(0, prevAvail - prevPerm);
-          if (leftover > 0) {
-            await supabase.from("profiles")
-              .update({ available_credits: prevPerm, updated_at: new Date().toISOString() })
-              .eq("user_id", userId);
-            await supabase.from("credit_transactions").insert({
-              user_id: userId,
-              amount: -leftover,
-              type: "plan_switch_reset",
-              description: `Cambio de plan (${previousPlan} → ${planId}): se descartan ${leftover} créditos no permanentes del plan anterior`,
-            });
-            console.log(`[WEBHOOK] Plan switch ${previousPlan} → ${planId}: discarded ${leftover} leftover credits for user ${userId}`);
-          }
+          console.log(`[WEBHOOK] Plan switch ${previousPlan} → ${planId}: credits preserved (accumulated mode) for user ${userId}`);
         }
 
         await addCredits(supabase, userId, credits, `Compra plan ${planId}: +${credits} créditos`);
@@ -597,8 +571,6 @@ serve(async (req) => {
         // ── Create order record ──
         const sessionMeta = session.metadata || {};
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
-        const amountTax = ((session.total_details as any)?.amount_tax ?? 0) / 100;
-        const amountNet = Math.max(0, Math.round((amountTotal - amountTax) * 100) / 100);
         const stripeSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
         const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
 
@@ -638,7 +610,6 @@ serve(async (req) => {
           productLabel: sessionMeta.product_label || planId,
           billingInterval: sessionMeta.billing_interval || null,
           amountGross: amountTotal,
-          amountNet,
           stripeFee: checkoutStripeFee,
           currency: session.currency || "eur",
           isSubscription: !!stripeSubId,
@@ -780,7 +751,6 @@ serve(async (req) => {
       let invoiceId: string | undefined;
       let subscriptionId: string | undefined;
       let invoiceAmount = 0;
-      let invoiceAmountNet = 0;
       let invoiceCurrency = "eur";
       let chargeId: string | null = null;
 
@@ -794,12 +764,11 @@ serve(async (req) => {
           invoiceId = invId;
           subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : (invoice.subscription as any)?.id;
           invoiceAmount = (invoice.amount_paid || 0) / 100;
-          invoiceAmountNet = ((invoice.amount_paid || 0) - ((invoice as any).tax || 0)) / 100;
           invoiceCurrency = invoice.currency || "eur";
           chargeId = typeof (invoice as any).charge === "string" ? (invoice as any).charge : ((invoice as any).charge?.id ?? null);
         } else {
           console.warn("[WEBHOOK] invoice_payment.paid: no invoice ID found");
-          return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
         }
       } else {
         const invoice = obj;
@@ -809,7 +778,6 @@ serve(async (req) => {
         invoiceId = invoice.id;
         subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
         invoiceAmount = (invoice.amount_paid || 0) / 100;
-        invoiceAmountNet = ((invoice.amount_paid || 0) - ((invoice as any).tax || 0)) / 100;
         invoiceCurrency = invoice.currency || "eur";
         chargeId = typeof invoice.charge === "string" ? invoice.charge : (invoice.charge?.id ?? null);
       }
@@ -830,7 +798,7 @@ serve(async (req) => {
             if (existingRenewalOrder) {
               console.log(`[WEBHOOK] Duplicate renewal for invoice ${invoiceId} — skipping`);
               return new Response(JSON.stringify({ received: true, duplicate: true }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" }
               });
             }
           }
@@ -868,7 +836,6 @@ serve(async (req) => {
             productLabel: planLabel,
             billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
-            amountNet: invoiceAmountNet,
             stripeFee: renewalStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -913,7 +880,7 @@ serve(async (req) => {
             if (existingUpdateOrder) {
               console.log(`[WEBHOOK] Duplicate subscription_update for invoice ${invoiceId} — skipping`);
               return new Response(JSON.stringify({ received: true, duplicate: true }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" }
               });
             }
           }
@@ -1029,7 +996,6 @@ serve(async (req) => {
             productLabel: `Cambio a ${planId}`,
             billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
-            amountNet: invoiceAmountNet,
             stripeFee: changeStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -1063,30 +1029,7 @@ serve(async (req) => {
         const profile = await findProfileByCustomerId(supabase, stripe, customerId);
 
         if (profile) {
-          // ── Idempotency guard ────────────────────────────────────────────────────
-          // Guard principal: si ya existe una transacción de crédito de tipo 'purchase'
-          // para este usuario en los últimos 3 minutos, checkout.session.completed ya
-          // procesó este pago — skip inmediato.
-          // Este check es robusto aunque subscriptionId llegue null (lo cual ocurre cuando
-          // Stripe envía invoice.payment_succeeded antes de que la subscription esté
-          // completamente inicializada).
-          const guardWindowStart = new Date(Date.now() - 3 * 60 * 1000).toISOString();
-          const { data: recentPurchaseTx } = await supabase
-            .from("credit_transactions")
-            .select("id, description, created_at")
-            .eq("user_id", profile.user_id)
-            .eq("type", "purchase")
-            .gte("created_at", guardWindowStart)
-            .maybeSingle();
-
-          if (recentPurchaseTx) {
-            console.log(`[WEBHOOK] subscription_create: recent purchase tx found (${recentPurchaseTx.description} at ${recentPurchaseTx.created_at}) — already handled by checkout.session.completed, skipping`);
-            return new Response(JSON.stringify({ received: true, duplicate: true }), {
-              headers: { ...corsHeaders, "Content-Type": "application/json" }
-            });
-          }
-
-          // Guard secundario: si ya procesamos esta factura específica (suscripción directa sin checkout)
+          // Idempotency guard: skip if this create invoice was already processed
           if (invoiceId) {
             const { data: existingCreateOrder } = await supabase
               .from("orders")
@@ -1097,7 +1040,7 @@ serve(async (req) => {
             if (existingCreateOrder) {
               console.log(`[WEBHOOK] Duplicate subscription_create for invoice ${invoiceId} — skipping`);
               return new Response(JSON.stringify({ received: true, duplicate: true }), {
-                headers: { ...corsHeaders, "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" }
               });
             }
           }
@@ -1153,7 +1096,6 @@ serve(async (req) => {
             productLabel: `Nueva suscripción ${resolvedPlanId || "unknown"}`,
             billingInterval: createProductType === "annual" ? "yearly" : createProductType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
-            amountNet: invoiceAmountNet,
             stripeFee: createStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -1265,7 +1207,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           nextAttempt = invoice.next_payment_attempt ? new Date((invoice.next_payment_attempt as number) * 1000).toISOString() : null;
         } else {
           console.warn("[WEBHOOK] invoice_payment.failed: no invoice ID found");
-          return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
         }
       } else {
         const invoice = obj;
@@ -1336,7 +1278,13 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
             description: `Suscripción en estado "${status}". Se requiere acción de pago.`,
           });
         } else if (status === "canceled" || status === "incomplete_expired") {
-          await supabase.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", profile.user_id);
+          // Solo actualizar plan a Free — los créditos se resetean en subscription.deleted
+          // cuando el periodo de facturación realmente termina (cancel_at_period_end=true)
+          await supabase.from("profiles").update({
+            subscription_plan: "Free", subscription_tier: null,
+            updated_at: new Date().toISOString(),
+          }).eq("user_id", profile.user_id);
+          console.log(`[WEBHOOK] subscription.updated ${status} → Free (credits preserved until subscription.deleted) for user ${profile.user_id}`);
         }
 
         // ── Sincronizar tabla subscriptions local ──
@@ -1363,9 +1311,11 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
             .update({ subscription_plan: planName, subscription_tier: planTier, updated_at: new Date().toISOString() })
             .eq("user_id", profile.user_id);
         } else if (["cancelled", "expired"].includes(subStatus)) {
+          // Solo actualizar plan — reset de créditos ÚNICAMENTE en subscription.deleted
           await supabase.from("profiles")
             .update({ subscription_plan: "Free", subscription_tier: null, updated_at: new Date().toISOString() })
             .eq("user_id", profile.user_id);
+          console.log(`[WEBHOOK] subscription.updated ${subStatus} → Free (credits preserved until subscription.deleted) for user ${profile.user_id}`);
         }
 
         console.log(`[WEBHOOK] subscription.updated → synced subscriptions table for user ${profile.user_id} (status=${subStatus})`);
@@ -1379,10 +1329,21 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
 
       if (profile) {
-        const { data: cancelProfile } = await supabase.from("profiles").select("subscription_plan, language").eq("user_id", profile.user_id).single();
+        const { data: cancelProfile } = await supabase.from("profiles").select("subscription_plan, language, available_credits, permanent_credits").eq("user_id", profile.user_id).single();
         const oldPlan = cancelProfile?.subscription_plan;
-        await supabase.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", profile.user_id);
-        console.log(`[WEBHOOK] Reset to Free for user ${profile.user_id} (cancellation)`);
+        const deletedCreditsToReset = Math.max(0, (cancelProfile?.available_credits ?? 0) - (cancelProfile?.permanent_credits ?? 0));
+        await supabase.from("profiles").update({
+          subscription_plan: "Free", subscription_tier: null,
+          available_credits: cancelProfile?.permanent_credits ?? 0,
+          updated_at: new Date().toISOString(),
+        }).eq("user_id", profile.user_id);
+        if (deletedCreditsToReset > 0) {
+          await supabase.from("credit_transactions").insert({
+            user_id: profile.user_id, amount: -deletedCreditsToReset, type: "admin_reset",
+            description: `Créditos de suscripción eliminados al cancelar definitivamente: -${deletedCreditsToReset}`,
+          });
+        }
+        console.log(`[WEBHOOK] subscription.deleted → Free, -${deletedCreditsToReset} credits for user ${profile.user_id}`);
 
         // ── Sincronizar tabla subscriptions local ──
         await supabase.from("subscriptions").upsert({
@@ -1483,11 +1444,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       } catch (dispErr) {
         console.error(`[WEBHOOK] Error processing dispute.created ${disputeId}:`, dispErr);
       }
-
-      // Track Stripe dispute fee (≈15€) on the related order
-      await syncDisputeFee(stripe, supabase, disputeId, chargeId);
     }
-
 
 
     // -- charge.dispute.updated -- safety net si created se perdio ------
@@ -1529,11 +1486,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           console.error(`[WEBHOOK] Error processing dispute.updated ${disputeId}:`, dispErr);
         }
       }
-
-      // Safety net: keep dispute_fee in sync on every update
-      await syncDisputeFee(stripe, supabase, disputeId, chargeId);
     }
-
 
     // ── charge.dispute.lost ─────────────────────────────────────────────
     if (event.type === "charge.dispute.lost") {
@@ -1607,11 +1560,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       } catch (dispErr) {
         console.error(`[WEBHOOK] Error processing dispute.lost ${disputeId}:`, dispErr);
       }
-
-      // Sync dispute fee — for lost disputes the fee remains charged
-      await syncDisputeFee(stripe, supabase, disputeId, chargeId);
     }
-
 
     // ── charge.dispute.won ──────────────────────────────────────────────
     if (event.type === "charge.dispute.won") {
@@ -1640,19 +1589,14 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       } catch (dispErr) {
         console.error(`[WEBHOOK] Error processing dispute.won ${disputeId}:`, dispErr);
       }
-
-      // Sync dispute fee — Stripe refunds the 15€ fee on won disputes,
-      // so the running total of bt.fee becomes 0 and dispute_fee resets to 0.
-      await syncDisputeFee(stripe, supabase, disputeId, chargeId);
     }
 
-
-    return new Response(JSON.stringify({ received: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
 
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Unknown error";
     console.error("[WEBHOOK] Error:", msg);
-    return new Response(JSON.stringify({ error: msg }), { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 });
+    return new Response(JSON.stringify({ error: msg }), { headers: { "Content-Type": "application/json" }, status: 400 });
   }
 });
 
