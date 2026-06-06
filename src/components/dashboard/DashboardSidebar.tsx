@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Upload, Search, Megaphone, ShoppingBag, User,
   CreditCard, LifeBuoy, Music, LogOut, Mic, Sparkles, Shield,
   HelpCircle, Users, BarChart3, Settings2, Rocket, Briefcase,
-  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell,
+  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell, Youtube,
   type LucideIcon,
 } from 'lucide-react';
 import { DistributionInfoModal } from '@/components/DistributionInfoModal';
@@ -65,12 +65,12 @@ export function DashboardSidebar() {
   ];
 
   const mainItems: SidebarItem[] = [
-    { title: tr('dashboard.sidebar.launchHit', '🚀 Mi primer lanzamiento musical'), url: '/dashboard/launch', icon: Rocket, highlight: true, launchOnly: true },
+    { title: tr('dashboard.sidebar.launchHit', 'ð Mi primer lanzamiento musical'), url: '/dashboard/launch', icon: Rocket, highlight: true, launchOnly: true },
     { title: tr('dashboard.sidebar.controlPanel', 'Panel de control'), url: '/dashboard', icon: LayoutDashboard },
     { title: tr('dashboard.sidebar.createMusic', 'AI Music Studio'), url: '/ai-studio', icon: Sparkles },
     { title: tr('dashboard.sidebar.registerWork', 'Registrar obra'), url: '/dashboard/register', icon: Upload, hideForManager: true, kycGuarded: true },
-    { title: tr('dashboard.sidebar.distributeMusic', 'Distribuir tu música'), url: '#distribute', icon: Palette, hideForManager: true, isDistribute: true },
-    { title: tr('dashboard.sidebar.promotion', 'Promoción RRSS'), url: '/dashboard/promotion', icon: Megaphone, hideForManager: true, tourId: 'promotion' },
+    { title: tr('dashboard.sidebar.distributeMusic', 'Distribuir tu mÃºsica'), url: '#distribute', icon: Palette, hideForManager: true, isDistribute: true },
+    { title: tr('dashboard.sidebar.promotion', 'PromociÃ³n RRSS'), url: '/dashboard/promotion', icon: Megaphone, hideForManager: true, tourId: 'promotion' },
     
     { title: tr('dashboard.sidebar.mediaLibrary', 'Biblioteca multimedia'), url: '/dashboard/media-library', icon: FolderOpen },
   ];
@@ -79,26 +79,27 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.profile', 'Perfil'), url: '/dashboard/profile', icon: User },
     { title: tr('dashboard.sidebar.verifyIdentity', 'Verificar identidad'), url: '/dashboard/verify-identity', icon: User, kycOnly: true },
     { title: tr('dashboard.sidebar.verifyRegistrations', 'Verificar registros'), url: '/dashboard/verify', icon: Search },
-    { title: tr('dashboard.sidebar.plansCredits', 'Planes y créditos'), url: '/dashboard/credits', icon: ShoppingBag },
-    { title: tr('dashboard.sidebar.billing', 'Facturación'), url: '/dashboard/billing', icon: CreditCard },
+    { title: tr('dashboard.sidebar.plansCredits', 'Planes y crÃ©ditos'), url: '/dashboard/credits', icon: ShoppingBag },
+    { title: tr('dashboard.sidebar.billing', 'FacturaciÃ³n'), url: '/dashboard/billing', icon: CreditCard },
+    { title: tr('dashboard.sidebar.youtubeServices', 'Servicios YouTube'), url: '/dashboard/youtube-services', icon: Youtube },
     { title: tr('dashboard.sidebar.support', 'Soporte'), url: '/dashboard/support', icon: LifeBuoy },
   ];
 
   const adminItems: SidebarItem[] = [
     { title: tr('dashboard.sidebar.users', 'Usuarios'), url: '/dashboard/admin/users', icon: Users },
-    { title: tr('dashboard.sidebar.credits', 'Créditos'), url: '/dashboard/admin/credits', icon: CreditCard },
+    { title: tr('dashboard.sidebar.credits', 'CrÃ©ditos'), url: '/dashboard/admin/credits', icon: CreditCard },
     { title: tr('dashboard.sidebar.works', 'Obras'), url: '/dashboard/admin/works', icon: Music },
-    { title: tr('dashboard.sidebar.metrics', 'Métricas'), url: '/dashboard/admin/metrics', icon: BarChart3 },
-    { title: tr('dashboard.sidebar.campaigns', 'Campañas'), url: '/dashboard/admin/campaigns', icon: Megaphone },
-    { title: '🎁 Cupones regalo', url: '/dashboard/admin/credit-coupons', icon: Sparkles },
+    { title: tr('dashboard.sidebar.metrics', 'MÃ©tricas'), url: '/dashboard/admin/metrics', icon: BarChart3 },
+    { title: tr('dashboard.sidebar.campaigns', 'CampaÃ±as'), url: '/dashboard/admin/campaigns', icon: Megaphone },
+    { title: 'ð Cupones regalo', url: '/dashboard/admin/credit-coupons', icon: Sparkles },
     { title: tr('dashboard.sidebar.system', 'Sistema'), url: '/dashboard/admin/system', icon: Settings2 },
     { title: tr('dashboard.sidebar.premiumPromos', 'Promos Premium'), url: '/dashboard/admin/premium-promos', icon: Megaphone },
     { title: tr('dashboard.sidebar.featureCosts', 'Costes de operaciones'), url: '/dashboard/admin/feature-costs', icon: Settings2 },
     { title: tr('dashboard.sidebar.apiProfitability', 'Rentabilidad APIs'), url: '/dashboard/admin/api-costs', icon: BarChart3 },
-    { title: tr('dashboard.sidebar.productMetrics', 'Métricas producto'), url: '/dashboard/admin/product-metrics', icon: BarChart3 },
+    { title: tr('dashboard.sidebar.productMetrics', 'MÃ©tricas producto'), url: '/dashboard/admin/product-metrics', icon: BarChart3 },
     { title: tr('dashboard.sidebar.userChurn', 'Bajas usuarios'), url: '/dashboard/admin/churn', icon: UserX },
     { title: tr('dashboard.sidebar.alerts', 'Alertas sistema'), url: '/dashboard/admin/alerts', icon: Bell },
-    { title: '🤖 Proveedores IA', url: '/dashboard/admin/ai-models', icon: Sparkles },
+    { title: 'ð¤ Proveedores IA', url: '/dashboard/admin/ai-models', icon: Sparkles },
   ];
 
   // Determine which group is active based on current route
@@ -189,7 +190,7 @@ export function DashboardSidebar() {
               onClick={() => isAnnual ? setShowDistributionModal(true) : undefined}
               disabled={!isAnnual}
               className={`flex items-center w-full rounded-md px-2 py-1.5 text-sm ${isAnnual ? 'hover:bg-muted/50' : 'opacity-50 cursor-not-allowed'}`}
-              title={!isAnnual ? t('dashboard.distribute.annualOnly', { defaultValue: 'Disponible solo con suscripción anual' }) : undefined}
+              title={!isAnnual ? t('dashboard.distribute.annualOnly', { defaultValue: 'Disponible solo con suscripciÃ³n anual' }) : undefined}
             >
               <item.icon className="mr-2 h-4 w-4" />
               {!collapsed && <span>{item.title}</span>}
@@ -283,7 +284,7 @@ export function DashboardSidebar() {
 
         {renderCollapsibleGroup('cuenta', tr('dashboard.sidebar.account', 'Cuenta'), accountItems)}
 
-        {isAdmin && renderCollapsibleGroup('admin', tr('dashboard.sidebar.admin', 'Administración'), adminItems, 'bg-pink-500/10 text-pink-400 font-medium')}
+        {isAdmin && renderCollapsibleGroup('admin', tr('dashboard.sidebar.admin', 'AdministraciÃ³n'), adminItems, 'bg-pink-500/10 text-pink-400 font-medium')}
       </SidebarContent>
 
       <SidebarFooter className="p-3">
@@ -306,7 +307,7 @@ export function DashboardSidebar() {
           onClick={async () => { await signOut(); navigate('/login'); }}
         >
           <LogOut className="h-4 w-4 mr-2" />
-          {!collapsed && <span>{tr('dashboard.sidebar.logout', 'Cerrar sesión')}</span>}
+          {!collapsed && <span>{tr('dashboard.sidebar.logout', 'Cerrar sesiÃ³n')}</span>}
         </Button>
       </SidebarFooter>
     </Sidebar>
