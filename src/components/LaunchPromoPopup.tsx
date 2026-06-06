@@ -105,7 +105,7 @@ export const LaunchPromoPopup = () => {
           {/* Offer */}
           <div className="text-center mb-3">
             <div className="text-xl sm:text-2xl font-extrabold tracking-tight">
-              🏖️ -25%
+              🏖️ -25%  
             </div>
           </div>
 
