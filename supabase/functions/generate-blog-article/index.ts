@@ -51,7 +51,7 @@ async function callClaude(systemPrompt: string, userPrompt: string, maxTokens = 
   if (!response.ok) {
     const errText = await response.text();
     console.error("Claude API error:", response.status, errText);
-    throw new Error(`Claude API error: ${response.status}`);
+    throw new Error(`Claude API ${response.status}: ${errText.slice(0, 500)}`);
   }
 
   const data = await response.json();
