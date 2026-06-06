@@ -28,34 +28,36 @@ type LegacyBody = {
 };
 type RequestBody = GenerateIdeasBody | GenerateFullBody | LegacyBody;
 
-async function callClaude(systemPrompt: string, userPrompt: string, maxTokens = 4096): Promise<string> {
-  const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-  if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
+// Gemini text generation (Google Generative Language API, direct).
+// Model: gemini-2.5-flash — fast, high quality, supports long output, ideal for
+// blog ideas and ~800-word articles.
+async function callGemini(systemPrompt: string, userPrompt: string, maxTokens = 4096): Promise<string> {
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+  if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
 
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: maxTokens,
-      temperature: 0.4,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
+      systemInstruction: { role: "system", parts: [{ text: systemPrompt }] },
+      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+      generationConfig: {
+        temperature: 0.5,
+        maxOutputTokens: maxTokens,
+      },
     }),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    console.error("Claude API error:", response.status, errText);
-    throw new Error(`Claude API ${response.status}: ${errText.slice(0, 500)}`);
+    console.error("Gemini API error:", response.status, errText);
+    throw new Error(`Gemini API ${response.status}: ${errText.slice(0, 500)}`);
   }
 
   const data = await response.json();
-  return data.content?.[0]?.text || "";
+  const text = data?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text || "").join("") || "";
+  return text;
 }
 
 function stripCodeBlocks(value: string): string {
@@ -169,7 +171,7 @@ Temas obligatorios a cubrir de forma variada:
 Usa fechas escalonadas en jueves, empezando por estas fechas ISO cuando encaje: ${fallbackDates.join(", ")}.
 Responde SOLO con JSON array válido de ${count} elementos: [{"title":"...","topic":"...","category":"...","suggested_publish_date":"ISO date"}]`;
 
-      const raw = stripCodeBlocks(await callClaude(systemPrompt, userPrompt, 8192));
+      const raw = stripCodeBlocks(await callGemini(systemPrompt, userPrompt, 8192));
       const jsonMatch = raw.match(/\[[\s\S]*\]/);
       const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw) as Array<Record<string, string>>;
       const ideas = expandIdeasByLanguage(parsed.slice(0, count), languages, fallbackDates);
@@ -197,7 +199,7 @@ Extensión: ~800 palabras.
 El contenido debe ser HTML completo sin h1, usando h2, h3, p, ul, li, strong y enlaces cuando proceda.
 Responde SOLO con JSON: {"title":"...","slug":"...","excerpt":"...","content":"HTML","tags":["..."],"category":"..."}`;
 
-      const raw = stripCodeBlocks(await callClaude(systemPrompt, userPrompt, 8192));
+      const raw = stripCodeBlocks(await callGemini(systemPrompt, userPrompt, 8192));
       const jsonMatch = raw.match(/\{[\s\S]*\}/);
       const parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw) as {
         title?: string;
@@ -238,7 +240,7 @@ Responde SOLO con JSON: {"title":"...","slug":"...","excerpt":"...","content":"H
       systemPrompt = `Eres un redactor experto en la industria musical. Genera el contenido completo de un artículo de blog en ${langName} usando formato HTML. Usa etiquetas <h2>, <h3>, <p>, <ul>, <li>, <strong>, <a> según corresponda. NO incluyas el título principal (h1). El artículo debe ser informativo, bien estructurado y de al menos 800 palabras. IMPORTANTE: Devuelve SOLO el HTML puro, sin bloques de código markdown, sin \`\`\`html, sin comillas envolventes.`;
       userPrompt = `Título: ${currentTitle || "Artículo sobre música"}\nExtracto: ${currentExcerpt || ""}\n\nTexto de referencia:\n${referenceText || ""}\n\nGenera el contenido completo del artículo en HTML puro.`;
     } else {
-      systemPrompt = `Eres un redactor experto en la industria musical y distribución digital. Genera un artículo de blog completo en ${langName}. 
+      systemPrompt = `Eres un redactor experto en la industria musical y distribución digital. Genera un artículo de blog completo en ${langName}.
 
 IMPORTANTE: Responde EXACTAMENTE en formato JSON válido con estas claves:
 - "title": título SEO atractivo (string)
@@ -252,7 +254,7 @@ NO envuelvas la respuesta en bloques de código markdown (\`\`\`). Devuelve SOLO
       userPrompt = `Genera un artículo de blog basado en este texto de referencia:\n\n${referenceText}`;
     }
 
-    let content = stripCodeBlocks(await callClaude(systemPrompt, userPrompt));
+    let content = stripCodeBlocks(await callGemini(systemPrompt, userPrompt));
 
     let result: unknown;
     if (section) {
