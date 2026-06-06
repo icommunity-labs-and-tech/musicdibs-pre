@@ -1078,6 +1078,25 @@ serve(async (req) => {
             }
           }
 
+          // Idempotency guard #2: skip if checkout.session.completed already handled this subscription
+          // (checkout orders have stripe_checkout_session_id set but no stripe_invoice_id)
+          if (subscriptionId) {
+            const { data: existingCheckoutOrder } = await supabase
+              .from("orders")
+              .select("id")
+              .eq("stripe_subscription_id", subscriptionId)
+              .eq("is_renewal", false)
+              .not("stripe_checkout_session_id", "is", null)
+              .maybeSingle();
+
+            if (existingCheckoutOrder) {
+              console.log(`[WEBHOOK] subscription_create: checkout already processed sub ${subscriptionId} — skipping duplicate invoice credits`);
+              return new Response(JSON.stringify({ received: true, duplicate: true }), {
+                headers: { "Content-Type": "application/json" }
+              });
+            }
+          }
+
           // Resolve price from subscription (more reliable than invoice line items)
           let actualPriceId = priceId;
           if (subscriptionId) {
