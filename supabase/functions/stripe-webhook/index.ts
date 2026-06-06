@@ -491,12 +491,22 @@ serve(async (req) => {
           if (ytUserId) {
             try {
               const { data: { user: ytUser } } = await supabase.auth.admin.getUserById(ytUserId);
+              const { data: ytReq } = await supabase.from("youtube_service_requests").select("form_data, created_at").eq("id", requestId).single();
+              const formData = (ytReq?.form_data || {}) as Record<string, unknown>;
               if (ytUser?.email) {
                 const serviceName = serviceType === "oac" ? "Canal Oficial de Artista (OAC)" : "YouTube Content ID";
                 const msgId = crypto.randomUUID();
                 await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-${requestId}`, message_id: msgId, to: ytUser.email, from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", subject: `✅ Solicitud de ${serviceName} recibida — MusicDibs`, html: `<p>Hemos recibido tu solicitud de <strong>${serviceName}</strong>. ID: ${requestId}. Plazo estimado: 5 días laborables.</p>`, text: `Solicitud de ${serviceName} recibida. ID: ${requestId}. Plazo: 5 días laborables.`, purpose: "transactional", label: "youtube_service_confirmation", queued_at: new Date().toISOString() } });
+
+                const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                const rowsHtml = Object.entries(formData).map(([k, v]) => {
+                  const val = typeof v === "object" ? JSON.stringify(v) : String(v ?? "");
+                  return `<tr><td style="padding:6px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600;vertical-align:top">${escapeHtml(k)}</td><td style="padding:6px 10px;border:1px solid #e5e7eb;white-space:pre-wrap;word-break:break-word">${escapeHtml(val)}</td></tr>`;
+                }).join("");
+                const rowsText = Object.entries(formData).map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : String(v ?? "")}`).join("\n");
+
                 const adminMsgId = crypto.randomUUID();
-                await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-admin-${requestId}`, message_id: adminMsgId, to: "info@musicdibs.com", from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", subject: `📺 Nueva solicitud ${serviceName} — ${ytUser.email}`, html: `<p>Nueva solicitud: <strong>${serviceName}</strong> de <strong>${ytUser.email}</strong>. Request ID: ${requestId}.</p>`, text: `Nueva solicitud: ${serviceName} de ${ytUser.email}. ID: ${requestId}.`, purpose: "transactional", label: "youtube_service_admin", queued_at: new Date().toISOString() } });
+                await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-admin-${requestId}`, message_id: adminMsgId, to: "marketing@musicdibs.com", cc: "info@musicdibs.com", from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", reply_to: ytUser.email, subject: `📺 Nueva solicitud ${serviceName} — ${ytUser.email}`, html: `<p>Nueva solicitud de <strong>${serviceName}</strong>.</p><p><strong>Usuario:</strong> ${escapeHtml(ytUser.email)}<br/><strong>Request ID:</strong> ${requestId}<br/><strong>Fecha:</strong> ${new Date().toISOString()}</p><h3 style="margin-top:16px">Datos del formulario</h3><table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:13px">${rowsHtml}</table>`, text: `Nueva solicitud: ${serviceName}\nUsuario: ${ytUser.email}\nRequest ID: ${requestId}\n\nDatos:\n${rowsText}`, purpose: "transactional", label: "youtube_service_admin", queued_at: new Date().toISOString() } });
               }
             } catch (ytEmailErr) { console.error("[WEBHOOK] youtube_service email error:", ytEmailErr); }
           }
