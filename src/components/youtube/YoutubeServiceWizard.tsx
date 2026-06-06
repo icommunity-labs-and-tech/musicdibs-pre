@@ -151,7 +151,7 @@ function PaymentStep({ serviceType, onPay, paying }: { serviceType: ServiceType;
         <div className="flex justify-between border-t border-white/10 pt-2 mt-2"><span className="text-sm font-semibold text-white">Total</span><span className="text-lg font-bold text-purple-400">50 EUR</span></div>
       </div>
       <button onClick={onPay} disabled={paying} className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2">
-        {paying ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Procesando...</> : '&#128179; Pagar 50 EUR y enviar solicitud'}
+        {paying ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Procesando...</> : <>💳 Pagar 50 € y enviar solicitud</>}
       </button>
       <p className="text-xs text-white/30 text-center">Pago seguro via Stripe. Recibiras un recibo por email.</p>
     </div>
