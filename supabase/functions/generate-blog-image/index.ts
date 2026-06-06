@@ -6,11 +6,46 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Gemini 2.5 Flash Image (Nano Banana) — high-quality, fast image generation.
+// Returns inline base64 PNG data through the standard generateContent API.
+async function generateWithGemini(prompt: string): Promise<Uint8Array> {
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+  if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GEMINI_API_KEY}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseModalities: ["IMAGE"],
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    console.error("Gemini image API error:", response.status, errText);
+    throw new Error(`Gemini image API ${response.status}: ${errText.slice(0, 500)}`);
+  }
+
+  const data = await response.json();
+  const parts = data?.candidates?.[0]?.content?.parts || [];
+  const imagePart = parts.find((p: { inlineData?: { data?: string } }) => p?.inlineData?.data);
+  const b64 = imagePart?.inlineData?.data;
+  if (!b64) throw new Error("Gemini did not return an image");
+
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    // Auth check — admin only
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -30,7 +65,6 @@ serve(async (req) => {
       });
     }
 
-    // Verify admin role
     const { data: roles } = await supabaseClient
       .from("user_roles")
       .select("role")
@@ -45,52 +79,23 @@ serve(async (req) => {
 
     const { title, excerpt, style } = await req.json();
 
-    const FAL_API_KEY = Deno.env.get("FAL_API_KEY");
-    if (!FAL_API_KEY) throw new Error("FAL_API_KEY is not configured");
+    const styleHint = style || "modern, clean, professional, editorial photography";
+    const prompt = `Professional 16:9 blog header image for a music industry article. Title: "${title}". ${excerpt ? `About: ${excerpt}.` : ""} Style: ${styleHint}. Visually striking, suitable for a music distribution and blockchain platform blog. Absolutely no text, words, letters or logos in the image. High quality, cinematic lighting.`;
 
-    const styleHint = style || "modern, clean, professional";
-    const prompt = `Professional blog header image for a music industry article. Title: "${title}". ${excerpt ? `About: ${excerpt}.` : ""} Style: ${styleHint}. Visually striking, suitable for a music distribution platform blog. No text in the image. High quality, editorial photography or illustration style.`;
+    console.log("Generating image with Gemini Nano Banana, prompt:", prompt.slice(0, 120));
 
-    console.log("Generating image with fal.ai, prompt:", prompt.slice(0, 120));
+    const imgBytes = await generateWithGemini(prompt);
 
-    const falResponse = await fetch("https://fal.run/fal-ai/flux-pro/v1.1", {
-      method: "POST",
-      headers: {
-        Authorization: `Key ${FAL_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        prompt,
-        image_size: "landscape_16_9",
-        num_images: 1,
-        enable_safety_checker: true,
-      }),
-    });
-
-    if (!falResponse.ok) {
-      const errText = await falResponse.text();
-      console.error("fal.ai error:", falResponse.status, errText);
-      throw new Error(`fal.ai error: ${falResponse.status}`);
-    }
-
-    const falData = await falResponse.json();
-    const generatedUrl = falData.images?.[0]?.url;
-
-    if (!generatedUrl) throw new Error("No image generated");
-
-    // Upload to Supabase Storage
+    // Ensure bucket exists
     const { error: bucketError } = await supabaseClient.storage.getBucket("blog-images");
     if (bucketError) {
       await supabaseClient.storage.createBucket("blog-images", { public: true });
     }
 
-    const imgRes = await fetch(generatedUrl);
-    const imgBlob = await imgRes.blob();
     const fileName = `ai-${Date.now()}.png`;
-
     const { error: uploadError } = await supabaseClient.storage
       .from("blog-images")
-      .upload(fileName, imgBlob, { contentType: "image/png", upsert: true });
+      .upload(fileName, imgBytes, { contentType: "image/png", upsert: true });
 
     if (uploadError) throw new Error(`Upload error: ${uploadError.message}`);
 
