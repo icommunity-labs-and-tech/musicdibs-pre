@@ -91,7 +91,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.works', 'Obras'), url: '/dashboard/admin/works', icon: Music },
     { title: tr('dashboard.sidebar.metrics', 'MÃ©tricas'), url: '/dashboard/admin/metrics', icon: BarChart3 },
     { title: tr('dashboard.sidebar.campaigns', 'CampaÃ±as'), url: '/dashboard/admin/campaigns', icon: Megaphone },
-    { title: 'ð Cupones regalo', url: '/dashboard/admin/credit-coupons', icon: Sparkles },
+    { title: 'Cupones regalo', url: '/dashboard/admin/credit-coupons', icon: Sparkles },
     { title: tr('dashboard.sidebar.system', 'Sistema'), url: '/dashboard/admin/system', icon: Settings2 },
     { title: tr('dashboard.sidebar.premiumPromos', 'Promos Premium'), url: '/dashboard/admin/premium-promos', icon: Megaphone },
     { title: tr('dashboard.sidebar.featureCosts', 'Costes de operaciones'), url: '/dashboard/admin/feature-costs', icon: Settings2 },
@@ -99,7 +99,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.productMetrics', 'MÃ©tricas producto'), url: '/dashboard/admin/product-metrics', icon: BarChart3 },
     { title: tr('dashboard.sidebar.userChurn', 'Bajas usuarios'), url: '/dashboard/admin/churn', icon: UserX },
     { title: tr('dashboard.sidebar.alerts', 'Alertas sistema'), url: '/dashboard/admin/alerts', icon: Bell },
-    { title: 'ð¤ Proveedores IA', url: '/dashboard/admin/ai-models', icon: Sparkles },
+    { title: 'Proveedores IA', url: '/dashboard/admin/ai-models', icon: Sparkles },
   ];
 
   // Determine which group is active based on current route
