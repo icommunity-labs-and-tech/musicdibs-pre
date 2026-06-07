@@ -45,6 +45,10 @@ const statusToKey: Record<number, string> = {
  * Order matters: more specific first.
  */
 const KIE_CODE_MAP: Record<number, string> = {
+  400: 'aiShared.kieBadRequest',           // Invalid parameters
+  401: 'aiShared.kieAuthError',            // KIE API key invalid / misconfigured
+  402: 'aiShared.kieProviderUnavailable',  // KIE credits exhausted (provider side) — shown as generic unavailable
+  429: 'aiShared.kieRateLimited',          // KIE rate limit
   413: 'aiShared.kieAudioCopyrightMatch',  // Audio matches existing copyrighted work
   451: 'aiShared.kieDownloadFailed',       // Cannot fetch/download audio URL
   501: 'aiShared.kieTaskFailed',           // Generic generation failure
