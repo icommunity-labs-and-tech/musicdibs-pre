@@ -829,6 +829,10 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       kieUnsupportedFormat: 'Formato de audio no compatible o archivo dañado. Prueba con MP3 o WAV.',
       kieAudioQualityLow: 'La calidad del audio es demasiado baja para procesarlo. Sube una grabación de mayor calidad.',
       kieNoVocalsDetected: 'No se detectó voz en el audio. Este modo requiere audio con voz. Prueba con "Añadir instrumentación" para audio instrumental.',
+      kieBadRequest: 'Los parámetros de la solicitud no son válidos. Revisa la descripción e inténtalo de nuevo.',
+      kieAuthError: 'El servicio no está configurado correctamente. Contacta con soporte.',
+      kieProviderUnavailable: 'El servicio no está disponible en este momento. Reintenta en unos minutos.',
+      kieRateLimited: 'Demasiadas solicitudes en poco tiempo. Espera unos segundos e inténtalo de nuevo.',
       retry: 'Reintentar',
     },
     fileDropzone: {
@@ -1664,6 +1668,10 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       kieUnsupportedFormat: 'Unsupported audio format or corrupted file. Try MP3 or WAV.',
       kieAudioQualityLow: 'Audio quality is too low to process. Upload a higher quality recording.',
       kieNoVocalsDetected: 'No vocals detected in the audio. This mode requires vocal audio. Try "Add Instrumentation" for instrumental tracks.',
+      kieBadRequest: 'The request parameters are invalid. Review your description and try again.',
+      kieAuthError: 'The service is not properly configured. Please contact support.',
+      kieProviderUnavailable: 'The service is not available at the moment. Please retry in a few minutes.',
+      kieRateLimited: 'Too many requests in a short time. Wait a few seconds and try again.',
       retry: 'Retry',
     },
     fileDropzone: {
@@ -2499,6 +2507,10 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       kieUnsupportedFormat: 'Formato de áudio não compatível ou arquivo danificado. Tente com MP3 ou WAV.',
       kieAudioQualityLow: 'A qualidade do áudio é muito baixa para processá-lo. Envie uma gravação de maior qualidade.',
       kieNoVocalsDetected: 'Não foi detectada voz no áudio. Este modo requer áudio com voz. Tente "Adicionar instrumentação" para áudio instrumental.',
+      kieBadRequest: 'Os parâmetros da solicitação não são válidos. Revise a descrição e tente novamente.',
+      kieAuthError: 'O serviço não está configurado corretamente. Entre em contato com o suporte.',
+      kieProviderUnavailable: 'O serviço não está disponível no momento. Tente novamente em alguns minutos.',
+      kieRateLimited: 'Muitas solicitações em pouco tempo. Aguarde alguns segundos e tente novamente.',
     },
     fileDropzone: {
       maxSizeError: 'O arquivo deve ser menor que {{size}}MB',
