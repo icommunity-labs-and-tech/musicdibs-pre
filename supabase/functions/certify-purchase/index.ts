@@ -48,6 +48,7 @@ serve(async (req) => {
 
     // If not a service call, validate the user JWT and remember caller id for ownership check
     let callerUserId: string | null = null;
+    let callerIsAdmin = false;
     if (!isServiceCall) {
       const token = authHeader.replace("Bearer ", "");
       const { data: { user }, error: userErr } = await supabase.auth.getUser(token);
@@ -58,6 +59,8 @@ serve(async (req) => {
         });
       }
       callerUserId = user.id;
+      const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      callerIsAdmin = !!isAdmin;
     }
 
     const { evidence_id } = await req.json();
@@ -82,8 +85,8 @@ serve(async (req) => {
       });
     }
 
-    // Ownership check for user-authenticated callers
-    if (!isServiceCall && callerUserId && evidence.user_id !== callerUserId) {
+    // Ownership check: owner OR admin can retry
+    if (!isServiceCall && !callerIsAdmin && callerUserId && evidence.user_id !== callerUserId) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
