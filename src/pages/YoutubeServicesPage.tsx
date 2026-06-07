@@ -5,18 +5,19 @@ import { YoutubeServiceWizard } from '@/components/youtube/YoutubeServiceWizard'
 import type { ServiceType, YoutubeServiceRequest } from '@/types/youtube-services';
 import { SERVICE_CONFIG } from '@/types/youtube-services';
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  draft:           { label: 'Borrador',       color: 'text-muted-foreground bg-muted' },
-  pending_payment: { label: 'Pago pendiente', color: 'text-yellow-600 dark:text-yellow-400 bg-yellow-400/10' },
-  submitted:       { label: 'Enviada',        color: 'text-blue-600 dark:text-blue-400 bg-blue-400/10' },
-  in_review:       { label: 'En revision',    color: 'text-purple-600 dark:text-purple-400 bg-purple-400/10' },
-  approved:        { label: 'Aprobada',       color: 'text-green-600 dark:text-green-400 bg-green-400/10' },
-  rejected:        { label: 'Rechazada',      color: 'text-red-600 dark:text-red-400 bg-red-400/10' },
+const STATUS_LABELS: Record<string, { label: string; color: string; help: string }> = {
+  draft:           { label: 'Borrador',       color: 'text-muted-foreground bg-muted',                              help: 'Solicitud iniciada pero aún sin enviar.' },
+  pending_payment: { label: 'Pago pendiente', color: 'text-yellow-600 dark:text-yellow-400 bg-yellow-400/10',       help: 'Aún no has completado el pago. Puedes pagar o cancelar para liberar el servicio.' },
+  submitted:       { label: 'En proceso',     color: 'text-blue-600 dark:text-blue-400 bg-blue-400/10',             help: 'Pago recibido. Tu solicitud entrará en revisión por nuestro equipo.' },
+  in_review:       { label: 'En revisión',    color: 'text-purple-600 dark:text-purple-400 bg-purple-400/10',       help: 'Nuestro equipo está validando tu información.' },
+  approved:        { label: 'Aprobada',       color: 'text-green-600 dark:text-green-400 bg-green-400/10',          help: 'Solicitud aprobada y activa.' },
+  rejected:        { label: 'Rechazada',      color: 'text-red-600 dark:text-red-400 bg-red-400/10',                help: 'Solicitud rechazada. Consulta las notas del revisor.' },
+  cancelled:       { label: 'Cancelada',      color: 'text-muted-foreground bg-muted line-through',                 help: 'Cancelaste esta solicitud antes de pagar. Puedes crear una nueva cuando quieras.' },
 };
 
 function StatusBadge({ status }: { status: string }) {
   const s = STATUS_LABELS[status] || STATUS_LABELS.draft;
-  return <span className={"px-2 py-0.5 rounded-full text-xs font-medium " + s.color}>{s.label}</span>;
+  return <span title={s.help} className={"px-2 py-0.5 rounded-full text-xs font-medium cursor-help " + s.color}>{s.label}</span>;
 }
 
 function ServiceCard({ serviceType, onRequest, requests }: { serviceType: ServiceType; onRequest: (t: ServiceType) => void; requests: YoutubeServiceRequest[]; }) {
