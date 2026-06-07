@@ -252,14 +252,25 @@ export function YoutubeServiceWizard({ serviceType, userProfile, onClose }: Wiza
 
   const handlePay = async () => {
     setPaying(true); setError(null);
+    // Abrimos la pestaña inmediatamente (mismo gesto del usuario) para evitar bloqueos de popup
+    // y para que Stripe Checkout funcione tambien dentro del iframe del preview de Lovable.
+    const popup = window.open('about:blank', '_blank');
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('create-youtube-service-checkout', {
         body: { serviceType, formData },
       });
       if (fnErr) throw new Error(fnErr.message);
-      if (data?.url) window.location.href = data.url;
-      else throw new Error('No se recibio URL de pago');
+      if (!data?.url) throw new Error('No se recibio URL de pago');
+      if (popup && !popup.closed) {
+        popup.location.href = data.url;
+      } else {
+        // Fallback: navegacion top-level (escapa del iframe del preview)
+        try { (window.top || window).location.href = data.url; }
+        catch { window.location.href = data.url; }
+      }
+      setPaying(false);
     } catch (err: unknown) {
+      if (popup && !popup.closed) popup.close();
       setError(err instanceof Error ? err.message : 'Error inesperado');
       setPaying(false);
     }
