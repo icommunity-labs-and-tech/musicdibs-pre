@@ -75,8 +75,12 @@ export default function YoutubeServicesPage() {
   useEffect(() => { loadData(); }, []);
 
   const handleCancel = async (id: string) => {
-    if (!confirm('¿Cancelar esta solicitud pendiente de pago? Podrás crear una nueva después.')) return;
-    const { error } = await supabase.from('youtube_service_requests').delete().eq('id', id).eq('status', 'pending_payment');
+    if (!confirm('¿Cancelar esta solicitud pendiente de pago? Quedará registrada como cancelada y podrás crear una nueva.')) return;
+    const { error } = await supabase
+      .from('youtube_service_requests')
+      .update({ status: 'cancelled', cancelled_at: new Date().toISOString() } as never)
+      .eq('id', id)
+      .eq('status', 'pending_payment');
     if (error) { alert('No se pudo cancelar: ' + error.message); return; }
     loadData();
   };
