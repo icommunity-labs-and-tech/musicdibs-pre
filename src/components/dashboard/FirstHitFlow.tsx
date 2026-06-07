@@ -691,7 +691,7 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Publica en <strong>+220 plataformas</strong> — Spotify, Apple Music, Amazon Music y más. Tú te quedas el{" "}
-              <strong>95% de los royalties</strong>.
+              <strong>100% de los royalties</strong>.
             </p>
             <p className="text-[11px] text-muted-foreground/70">
               ⏱ La aprobación puede tardar hasta 7 días. Sin sorpresas.
