@@ -3362,6 +3362,7 @@ export type Database = {
         Row: {
           admin_notes: string | null
           amount_gross: number | null
+          cancelled_at: string | null
           created_at: string | null
           currency: string | null
           form_data: Json
@@ -3381,6 +3382,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           amount_gross?: number | null
+          cancelled_at?: string | null
           created_at?: string | null
           currency?: string | null
           form_data?: Json
@@ -3400,6 +3402,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           amount_gross?: number | null
+          cancelled_at?: string | null
           created_at?: string | null
           currency?: string | null
           form_data?: Json
