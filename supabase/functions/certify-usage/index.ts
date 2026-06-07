@@ -18,15 +18,16 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Auth: only callable internally (service role or cron secret)
+  // Auth: allow service role, cron secret, or an authenticated admin user JWT
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const cronSecret = Deno.env.get("CRON_SECRET") || "";
   const authHeader = req.headers.get("Authorization") || "";
   const cronHeader = req.headers.get("x-cron-secret") || "";
-  const isAuth =
+  const isServiceCall =
     authHeader === `Bearer ${serviceKey}` ||
     (cronSecret && cronHeader === cronSecret);
-  if (!isAuth) {
+
+  if (!isServiceCall && !authHeader.startsWith("Bearer ")) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -40,6 +41,23 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    // If a user JWT was provided, validate it and require admin role
+    if (!isServiceCall) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: userErr } = await supabase.auth.getUser(token);
+      if (userErr || !user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      if (!isAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     const { usage_evidence_id } = await req.json();
     if (!usage_evidence_id) {
@@ -133,7 +151,7 @@ serve(async (req) => {
 
     console.log(`[CERTIFY-USAGE] Registering usage evidence ${evidence.id} in iBS via POST /evidences...`);
 
-    const ibsRes = await fetch(`${IBS_API_URL}/evidences`, {
+    let ibsRes = await fetch(`${IBS_API_URL}/evidences`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -141,6 +159,24 @@ serve(async (req) => {
       },
       body: JSON.stringify(ibsBody),
     });
+
+    // Fallback: if user signature not found in iBS, retry with company signature
+    if (!ibsRes.ok && ibsRes.status === 404) {
+      const companySigId = Deno.env.get("IBS_COMPANY_SIGNATURE_ID") || "";
+      if (companySigId && companySigId !== signatureId) {
+        const errText = await ibsRes.text();
+        console.warn(`[CERTIFY-USAGE] Signature ${signatureId} not found (${errText.slice(0,150)}). Retrying with company signature ${companySigId}...`);
+        ibsBody.signatures = [{ id: companySigId }];
+        ibsRes = await fetch(`${IBS_API_URL}/evidences`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${IBS_API_KEY}`,
+          },
+          body: JSON.stringify(ibsBody),
+        });
+      }
+    }
 
     if (!ibsRes.ok) {
       const errText = await ibsRes.text();
