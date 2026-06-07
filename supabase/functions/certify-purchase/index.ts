@@ -150,9 +150,9 @@ serve(async (req) => {
       signatures: [{ id: signatureId }],
     };
 
-    console.log(`[CERTIFY-PURCHASE] Registering evidence ${evidence.id} in iBS via POST /evidences...`);
+    console.log(`[CERTIFY-PURCHASE] Registering evidence ${evidence.id} in iBS via POST /evidences with signature ${signatureId}...`);
 
-    const ibsRes = await fetch(`${IBS_API_URL}/evidences`, {
+    let ibsRes = await fetch(`${IBS_API_URL}/evidences`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -160,6 +160,25 @@ serve(async (req) => {
       },
       body: JSON.stringify(ibsBody),
     });
+
+    // Fallback: if user signature not found in iBS (e.g. created in another iBS account),
+    // retry with the company signature so certification still succeeds.
+    if (!ibsRes.ok && ibsRes.status === 404) {
+      const companySigId = Deno.env.get("IBS_COMPANY_SIGNATURE_ID") || "";
+      if (companySigId && companySigId !== signatureId) {
+        const errText = await ibsRes.text();
+        console.warn(`[CERTIFY-PURCHASE] Signature ${signatureId} not found in iBS (${errText.slice(0,150)}). Retrying with company signature ${companySigId}...`);
+        ibsBody.signatures = [{ id: companySigId }];
+        ibsRes = await fetch(`${IBS_API_URL}/evidences`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${IBS_API_KEY}`,
+          },
+          body: JSON.stringify(ibsBody),
+        });
+      }
+    }
 
     if (!ibsRes.ok) {
       const errText = await ibsRes.text();
