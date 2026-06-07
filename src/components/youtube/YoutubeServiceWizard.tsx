@@ -61,10 +61,51 @@ function TextareaStep({ step, value, onChange, onNext }: { step: WizardStep; val
   );
 }
 
+function PolicyModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="relative w-full max-w-2xl max-h-[85vh] bg-[#0d0618] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+          <h3 className="text-base font-bold text-white">Politicas de Content ID y Prevencion de Fraudes</h3>
+          <button onClick={onClose} className="text-white/40 hover:text-white text-lg">&#10005;</button>
+        </div>
+        <div className="px-6 py-5 overflow-y-auto text-sm text-white/70 leading-relaxed space-y-3">
+          <p><strong className="text-white">Resumen de las politicas de Content ID de nuestro proveedor de distribucion.</strong></p>
+          <p>Content ID es un sistema automatizado de YouTube que permite a los titulares de derechos identificar y gestionar el uso de su contenido en la plataforma. Para acceder al servicio, el sello y los artistas deben cumplir los siguientes requisitos:</p>
+          <ul className="list-disc pl-5 space-y-1.5">
+            <li>Disponer de los derechos exclusivos de explotacion del 100% de las grabaciones registradas.</li>
+            <li>No registrar musica de dominio publico, samples no autorizados, librerias de produccion, karaokes, covers sin licencia, ni audio generado integramente por IA sin tratamiento artistico.</li>
+            <li>Tener un catalogo activo con al menos 3 releases distribuidos y los artistas con presencia verificable en YouTube y RRSS.</li>
+            <li>El sello debe operar bajo un nombre propio y registrado, no sellos publicos ni por defecto.</li>
+          </ul>
+          <p><strong className="text-white">Prevencion de fraudes.</strong></p>
+          <ul className="list-disc pl-5 space-y-1.5">
+            <li>Esta prohibido reclamar contenido sobre el que no se tienen derechos. Las reclamaciones fraudulentas conllevan suspension inmediata y posibles acciones legales.</li>
+            <li>No se permite la manipulacion artificial de reproducciones (streaming fraudulento, bots, granjas de clicks). Esto incluye la promocion con servicios de PR no transparentes.</li>
+            <li>Cualquier ingreso generado a partir de actividad fraudulenta sera retenido y devuelto a la plataforma.</li>
+            <li>El titular de la cuenta es el unico responsable de la veracidad de la informacion aportada en este formulario.</li>
+            <li>La reincidencia en incumplimientos supone el cierre permanente del acceso a Content ID y la cancelacion del contrato de distribucion.</li>
+          </ul>
+          <p className="text-xs text-white/40 italic">Resumen orientativo. Para el texto completo y vinculante, consulta las politicas oficiales de Content ID de YouTube y los terminos de servicio de tu distribuidor.</p>
+        </div>
+        <div className="px-6 py-3 border-t border-white/10">
+          <button onClick={onClose} className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-xl">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CheckboxStep({ step, value, onChange, onNext }: { step: WizardStep; value: boolean; onChange: (v: boolean) => void; onNext: () => void; }) {
+  const [showPolicy, setShowPolicy] = useState(false);
   return (
     <div className="flex flex-col gap-5">
       {step.subtitle && <p className="text-white/60 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: step.subtitle }} />}
+      {step.showPolicyLink && (
+        <button type="button" onClick={() => setShowPolicy(true)} className="self-start text-sm text-purple-400 hover:text-purple-300 underline underline-offset-2">
+          Ver politicas de Content ID y Prevencion de Fraudes
+        </button>
+      )}
       {step.checklist && <div className="bg-white/5 border border-white/10 rounded-xl p-4"><ul className="space-y-2">{step.checklist.map((item, i) => <ChecklistItem key={i} text={item} />)}</ul></div>}
       <label className="flex items-start gap-3 cursor-pointer">
         <div onClick={() => onChange(!value)} className={"mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors " + (value ? 'bg-purple-600 border-purple-600' : 'border-white/30')}>
@@ -73,6 +114,7 @@ function CheckboxStep({ step, value, onChange, onNext }: { step: WizardStep; val
         <span className="text-sm text-white/80 leading-relaxed">{step.hint}</span>
       </label>
       <button onClick={onNext} disabled={!!(step.required && !value)} className="self-start py-2 px-5 bg-purple-600 hover:bg-purple-500 disabled:opacity-30 text-white font-semibold rounded-xl text-sm">Confirmar y continuar</button>
+      {showPolicy && <PolicyModal onClose={() => setShowPolicy(false)} />}
     </div>
   );
 }
@@ -183,9 +225,10 @@ export function YoutubeServiceWizard({ serviceType, userProfile, onClose }: Wiza
       prefills['lastName'] = parts.slice(1).join(' ') || '';
       prefills['email'] = userProfile.email || '';
     } else {
-      prefills['adminEmail'] = userProfile.email || '';
+      // Email de administrador fijo (dato interno de gestor)
+      prefills['adminEmail'] = 'hello@icommunity.io';
     }
-    setFormData(prev => ({ ...prefills, ...prev }));
+    setFormData(prev => ({ ...prefills, ...prev, adminEmail: serviceType === 'content_id' ? 'hello@icommunity.io' : (prev.adminEmail as string) }));
   }, [userProfile, serviceType]);
 
   useEffect(() => { setTimeout(() => inputRef.current?.focus(), 100); }, [currentStep]);
@@ -209,14 +252,25 @@ export function YoutubeServiceWizard({ serviceType, userProfile, onClose }: Wiza
 
   const handlePay = async () => {
     setPaying(true); setError(null);
+    // Abrimos la pestaña inmediatamente (mismo gesto del usuario) para evitar bloqueos de popup
+    // y para que Stripe Checkout funcione tambien dentro del iframe del preview de Lovable.
+    const popup = window.open('about:blank', '_blank');
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('create-youtube-service-checkout', {
         body: { serviceType, formData },
       });
       if (fnErr) throw new Error(fnErr.message);
-      if (data?.url) window.location.href = data.url;
-      else throw new Error('No se recibio URL de pago');
+      if (!data?.url) throw new Error('No se recibio URL de pago');
+      if (popup && !popup.closed) {
+        popup.location.href = data.url;
+      } else {
+        // Fallback: navegacion top-level (escapa del iframe del preview)
+        try { (window.top || window).location.href = data.url; }
+        catch { window.location.href = data.url; }
+      }
+      setPaying(false);
     } catch (err: unknown) {
+      if (popup && !popup.closed) popup.close();
       setError(err instanceof Error ? err.message : 'Error inesperado');
       setPaying(false);
     }

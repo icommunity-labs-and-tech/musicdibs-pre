@@ -59,6 +59,7 @@ export interface WizardStep {
   prefillFrom?: string;
   checklist?: string[];
   optional?: boolean;
+  showPolicyLink?: boolean;
 }
 
 export const OAC_STEPS: WizardStep[] = [
@@ -109,13 +110,12 @@ export const CONTENT_ID_STEPS: WizardStep[] = [
     subtitle: 'El Content ID detecta y gestiona tu contenido de audio protegido en cualquier video de YouTube.',
     checklist: ['Tu sello no puede ser publico ni por defecto', 'Al menos 3 releases distribuidos', 'Los artistas deben tener presencia en YouTube y RRSS', 'Cuenta sin historial de fraude'],
   },
-  { id: 'cid_email', type: 'email', title: 'Email de administrador en Sonosuite', key: 'adminEmail', placeholder: 'admin@tusello.com', required: true, prefillFrom: 'email' },
-  { id: 'cid_antifraud', type: 'checkbox', title: 'Antes de continuar', subtitle: 'Te recomendamos revisar las politicas de Content ID y Prevencion de Fraudes de Sonosuite.', key: 'antifraudConfirmed', required: true, hint: 'Confirmo que he leido y entendido las politicas de Content ID y Prevencion de Fraudes de Sonosuite.' },
+  { id: 'cid_antifraud', type: 'checkbox', title: 'Antes de continuar', subtitle: 'Te recomendamos revisar las politicas de Content ID y Prevencion de Fraudes de MusicDibs.', key: 'antifraudConfirmed', required: true, hint: 'Confirmo que he leido y entendido las politicas de Content ID y Prevencion de Fraudes de MusicDibs.', showPolicyLink: true },
   { id: 'cid_label_name', type: 'text', title: 'Nombre del sello', subtitle: 'Los sellos publicos o por defecto no son elegibles.', key: 'labelName', placeholder: 'Mi Sello Discografico', required: true },
-  { id: 'cid_label_url', type: 'url', title: 'URL del sello en Sonosuite', key: 'labelUrl', placeholder: 'https://TUCODIGO.sonosuite.com/labels/...', required: true },
+  { id: 'cid_label_url', type: 'url', title: 'URL del sello en MusicDibs', key: 'labelUrl', placeholder: 'https://musicdibs.com/labels/...', required: true },
   { id: 'cid_catalog_desc', type: 'textarea', title: 'Describe el catalogo y roster de artistas', key: 'catalogDescription', placeholder: 'Nuestro sello representa artistas de...', required: true },
   { id: 'cid_youtube_links', type: 'textarea', title: 'Links a contenido oficial en YouTube', subtitle: 'Indica al menos el 50% de los artistas representados.', key: 'youtubeLinks', placeholder: 'https://youtube.com/@artista1\nhttps://youtube.com/@artista2', required: true },
-  { id: 'cid_release_urls', type: 'textarea', title: 'URLs de 3 releases distribuidos', key: 'releaseUrls', placeholder: 'https://TUCODIGO.sonosuite.com/albums/1234', required: true },
+  { id: 'cid_release_urls', type: 'textarea', title: 'URLs de 3 releases distribuidos en MusicDibs', key: 'releaseUrls', placeholder: 'https://musicdibs.com/albums/1234', required: true },
   { id: 'cid_sales_data', type: 'textarea', title: 'Datos de ventas del sello (opcional)', key: 'salesData', optional: true, required: false },
   { id: 'cid_identity', type: 'file', title: 'Verificacion de identidad del representante', key: 'identityDocUrl', accept: '.pdf,.jpg,.jpeg,.png', required: true, hint: 'DNI, Pasaporte u otro documento legal.' },
   { id: 'cid_social_links', type: 'textarea', title: 'Redes sociales del sello y artistas', subtitle: 'Indica al menos el 50% de los artistas.', key: 'socialLinks', placeholder: 'Instagram sello: https://instagram.com/sello', required: true },
