@@ -109,6 +109,7 @@ export default function YoutubeServicesPage() {
                     <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase">Estado</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase">Solicitado</th>
                     <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase">Notas</th>
+                    <th className="text-right py-3 px-4 text-xs font-semibold text-muted-foreground uppercase">Acciones</th>
                   </tr></thead>
                   <tbody>
                     {requests.map(r => (
@@ -117,6 +118,11 @@ export default function YoutubeServicesPage() {
                         <td className="py-3 px-4"><StatusBadge status={r.status} /></td>
                         <td className="py-3 px-4 text-sm text-muted-foreground">{new Date(r.created_at).toLocaleDateString('es-ES')}</td>
                         <td className="py-3 px-4 text-xs text-muted-foreground italic">{r.admin_notes || r.rejection_reason || ''}</td>
+                        <td className="py-3 px-4 text-right">
+                          {r.status === 'pending_payment' && (
+                            <button onClick={() => handleCancel(r.id)} className="text-xs font-medium text-red-600 dark:text-red-400 hover:underline">Cancelar</button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
