@@ -98,7 +98,7 @@ const KNOWN_ERRORS: Array<[RegExp, string]> = [
 ];
 
 /** KIE codes that are NOT retryable (user must change something). */
-const NON_RETRYABLE_KIE_CODES = new Set([413, 505, 531, 532, 535, 537]);
+const NON_RETRYABLE_KIE_CODES = new Set([401, 413, 505, 531, 532, 535, 537]);
 const NON_RETRYABLE_KEYS = new Set([
   'aiShared.aiInsufficientCredits',
   'aiShared.aiSessionExpired',
