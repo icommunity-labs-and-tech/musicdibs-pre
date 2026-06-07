@@ -8,7 +8,8 @@ export type RequestStatus =
   | 'submitted'
   | 'in_review'
   | 'approved'
-  | 'rejected';
+  | 'rejected'
+  | 'cancelled';
 
 export interface YoutubeServiceRequest {
   id: string;
