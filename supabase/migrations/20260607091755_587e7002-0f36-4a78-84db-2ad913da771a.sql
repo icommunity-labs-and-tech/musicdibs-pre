@@ -1,0 +1,1 @@
+CREATE POLICY users_delete_own_pending_youtube_requests ON public.youtube_service_requests FOR DELETE TO authenticated USING (auth.uid() = user_id AND status = 'pending_payment');
