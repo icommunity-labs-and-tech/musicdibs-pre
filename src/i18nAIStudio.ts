@@ -829,6 +829,10 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       kieUnsupportedFormat: 'Formato de audio no compatible o archivo dañado. Prueba con MP3 o WAV.',
       kieAudioQualityLow: 'La calidad del audio es demasiado baja para procesarlo. Sube una grabación de mayor calidad.',
       kieNoVocalsDetected: 'No se detectó voz en el audio. Este modo requiere audio con voz. Prueba con "Añadir instrumentación" para audio instrumental.',
+      kieBadRequest: 'Los parámetros de la solicitud no son válidos. Revisa la descripción e inténtalo de nuevo.',
+      kieAuthError: 'El servicio no está configurado correctamente. Contacta con soporte.',
+      kieProviderUnavailable: 'El servicio no está disponible en este momento. Reintenta en unos minutos.',
+      kieRateLimited: 'Demasiadas solicitudes en poco tiempo. Espera unos segundos e inténtalo de nuevo.',
       retry: 'Reintentar',
     },
     fileDropzone: {
