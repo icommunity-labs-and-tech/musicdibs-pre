@@ -59,6 +59,7 @@ export interface WizardStep {
   prefillFrom?: string;
   checklist?: string[];
   optional?: boolean;
+  showPolicyLink?: boolean;
 }
 
 export const OAC_STEPS: WizardStep[] = [
