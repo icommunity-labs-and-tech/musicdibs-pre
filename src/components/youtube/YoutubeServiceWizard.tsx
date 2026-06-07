@@ -225,9 +225,10 @@ export function YoutubeServiceWizard({ serviceType, userProfile, onClose }: Wiza
       prefills['lastName'] = parts.slice(1).join(' ') || '';
       prefills['email'] = userProfile.email || '';
     } else {
-      prefills['adminEmail'] = userProfile.email || '';
+      // Email de administrador fijo (dato interno de gestor)
+      prefills['adminEmail'] = 'hello@icommunity.io';
     }
-    setFormData(prev => ({ ...prefills, ...prev }));
+    setFormData(prev => ({ ...prefills, ...prev, adminEmail: serviceType === 'content_id' ? 'hello@icommunity.io' : (prev.adminEmail as string) }));
   }, [userProfile, serviceType]);
 
   useEffect(() => { setTimeout(() => inputRef.current?.focus(), 100); }, [currentStep]);
