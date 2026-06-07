@@ -119,7 +119,7 @@ serve(async (req: Request) => {
           },
           body: JSON.stringify({
             from: "MusicDibs <noreply@notify.musicdibs.com>",
-            to: ["admin@musicdibs.com"],
+            to: ["info@musicdibs.com"],
             subject: `New Contact Form: ${payload.subject}`,
             html: `
               <h2>New Contact Form Submission</h2>
