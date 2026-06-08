@@ -42,7 +42,7 @@ export function ReferralSourceModal() {
           .maybeSingle();
         if (error || cancelled) return;
         if (!data?.referral_source) {
-          // Pequeño delay para no chocar con el tour
+          // PequeÃ±o delay para no chocar con el tour
           setTimeout(() => !cancelled && setOpen(true), 1200);
         }
       } catch {
@@ -53,13 +53,13 @@ export function ReferralSourceModal() {
   }, [user]);
 
   const sources: { id: Source; icon: React.ElementType; label: string; emoji: string }[] = [
-    { id: 'influencer', icon: Youtube, emoji: '🎥', label: tr('referral.sources.influencer', 'Vídeo de un creador en YouTube') },
-    { id: 'instagram', icon: Instagram, emoji: '📱', label: tr('referral.sources.instagram', 'Instagram (MusicDibs)') },
-    { id: 'tiktok', icon: Music, emoji: '🎵', label: tr('referral.sources.tiktok', 'TikTok (MusicDibs)') },
-    { id: 'google', icon: Search, emoji: '🔍', label: tr('referral.sources.google', 'Google / Búsqueda web') },
-    { id: 'friend', icon: Users, emoji: '👥', label: tr('referral.sources.friend', 'Un amigo me lo recomendó') },
-    { id: 'podcast', icon: Mic, emoji: '🎙️', label: tr('referral.sources.podcast', 'Podcast o blog') },
-    { id: 'other', icon: Circle, emoji: '🔵', label: tr('referral.sources.other', 'Otro') },
+    { id: 'influencer', icon: Youtube, emoji: 'ð¥', label: tr('referral.sources.influencer', 'VÃ­deo de un creador en YouTube') },
+    { id: 'instagram', icon: Instagram, emoji: 'ð±', label: tr('referral.sources.instagram', 'Instagram (MusicDibs)') },
+    { id: 'tiktok', icon: Music, emoji: 'ðµ', label: tr('referral.sources.tiktok', 'TikTok (MusicDibs)') },
+    { id: 'google', icon: Search, emoji: 'ð', label: tr('referral.sources.google', 'Google / BÃºsqueda web') },
+    { id: 'friend', icon: Users, emoji: 'ð¥', label: tr('referral.sources.friend', 'Un amigo me lo recomendÃ³') },
+    { id: 'podcast', icon: Mic, emoji: 'ðï¸', label: tr('referral.sources.podcast', 'Podcast o blog') },
+    { id: 'other', icon: Circle, emoji: 'ðµ', label: tr('referral.sources.other', 'Otro') },
   ];
 
   const influencers: { id: Influencer; label: string }[] = [
@@ -70,6 +70,7 @@ export function ReferralSourceModal() {
     { id: 'missao', label: 'Missao' },
     { id: 'christian', label: 'Christian' },
     { id: 'erika', label: 'Erika' },
+    { id: 'CeciDover', label: '@CeciDover' },
     { id: 'other', label: tr('referral.influencers.other', 'Otro creador') },
   ];
 
@@ -93,7 +94,7 @@ export function ReferralSourceModal() {
         })
         .eq('user_id', user.id);
       if (error) throw error;
-      toast.success(tr('referral.thanks', '¡Gracias por contarnos!'));
+      toast.success(tr('referral.thanks', 'Â¡Gracias por contarnos!'));
       persistAndClose();
     } catch (e: any) {
       toast.error(e.message || tr('referral.error', 'No se pudo guardar tu respuesta'));
@@ -125,13 +126,13 @@ export function ReferralSourceModal() {
         <DialogHeader>
           <DialogTitle className="text-xl">
             {step === 'source'
-              ? tr('referral.title', '¿Cómo nos conociste?')
-              : tr('referral.influencerTitle', '¿De qué creador?')}
+              ? tr('referral.title', 'Â¿CÃ³mo nos conociste?')
+              : tr('referral.influencerTitle', 'Â¿De quÃ© creador?')}
           </DialogTitle>
           <DialogDescription>
             {step === 'source'
-              ? tr('referral.subtitle', 'Nos ayudas a entender qué funciona para mejorar la plataforma.')
-              : tr('referral.influencerSubtitle', 'Selecciona el creador cuyo vídeo viste.')}
+              ? tr('referral.subtitle', 'Nos ayudas a entender quÃ© funciona para mejorar la plataforma.')
+              : tr('referral.influencerSubtitle', 'Selecciona el creador cuyo vÃ­deo viste.')}
           </DialogDescription>
         </DialogHeader>
 
@@ -200,7 +201,7 @@ export function ReferralSourceModal() {
               disabled={saving}
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
-              {tr('referral.back', 'Atrás')}
+              {tr('referral.back', 'AtrÃ¡s')}
             </Button>
           ) : (
             <Button variant="ghost" size="sm" onClick={handleSkip} disabled={saving}>
