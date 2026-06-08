@@ -180,11 +180,11 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            {t('wizard.file.fileSizeLimit') || `Tamaño máximo: ${MAX_FILE_SIZE_MB}MB. Para WAV de alta calidad, considera exportar en MP3 320kbps.`}
+            {t('wizard.file.fileSizeLimit')}
           </p>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground">o</span>
+            <span className="text-xs text-muted-foreground">{t('wizard.file.orDivider')}</span>
             <div className="flex-1 h-px bg-border" />
           </div>
           <Button
@@ -193,7 +193,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
             onClick={() => setLibraryOpen(true)}
           >
             <FolderOpen className="h-4 w-4" />
-            Seleccionar de tu biblioteca
+            {t('wizard.file.selectFromLibrary')}
           </Button>
         </div>
       )}
