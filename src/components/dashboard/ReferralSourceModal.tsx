@@ -70,7 +70,7 @@ export function ReferralSourceModal() {
     { id: 'missao', label: 'Missao' },
     { id: 'christian', label: 'Christian' },
     { id: 'erika', label: 'Erika' },
-    { id: 'CeciDover', label: '@CeciDover' },
+    { id: 'cecidover', label: '@CeciDover' },
     { id: 'other', label: tr('referral.influencers.other', 'Otro creador') },
   ];
 
