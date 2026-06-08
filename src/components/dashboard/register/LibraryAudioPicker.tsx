@@ -86,7 +86,7 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
       const head = await fetch(asset.url, { method: 'HEAD' });
       const len = Number(head.headers.get('content-length') || 0);
       if (len > 50 * 1024 * 1024) {
-        toast.error(`Este audio supera el tamaño máximo de 50MB (${(len / (1024 * 1024)).toFixed(1)} MB). Genera/usa una versión MP3 más ligera.`);
+        toast.error(t('wizard.library.sizeTooLarge', { size: (len / (1024 * 1024)).toFixed(1) }));
         return;
       }
     } catch { /* if HEAD fails, allow and let StepFile validate later */ }
