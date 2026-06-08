@@ -147,8 +147,8 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resumeId, draftsChecked]);
 
-  const { hasEnough } = useCredits();
-  const noCredits = !hasEnough(FEATURE_COSTS.register_work);
+  const { hasEnough, isLoading: creditsLoading } = useCredits();
+  const noCredits = !creditsLoading && !hasEnough(FEATURE_COSTS.register_work);
   const kycBlocked = summary && summary.kycStatus !== 'verified';
 
   const update = useCallback((patch: Partial<WizardData>) => {
@@ -304,6 +304,16 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
       setSearchParams(searchParams, { replace: true });
     }
   };
+
+  if (creditsLoading) {
+    return (
+      <Card className="border-border/40">
+        <CardContent className="p-10 flex flex-col items-center justify-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (noCredits) {
     return (
