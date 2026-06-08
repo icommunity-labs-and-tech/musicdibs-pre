@@ -11,7 +11,7 @@ import { Youtube, Instagram, Music, Search, Users, Mic, Circle, ArrowLeft, Loade
 import { cn } from '@/lib/utils';
 
 type Source = 'influencer' | 'instagram' | 'tiktok' | 'google' | 'friend' | 'podcast' | 'other';
-type Influencer = 'fael' | 'grego' | 'nico' | 'matzz' | 'missao' | 'christian' | 'erika' | 'other';
+type Influencer = 'fael' | 'grego' | 'nico' | 'matzz' | 'missao' | 'christian' | 'erika' | 'cecidover' | 'other';
 
 const STORAGE_KEY = 'musicdibs_referral_dismissed';
 
