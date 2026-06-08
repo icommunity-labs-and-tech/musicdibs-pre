@@ -850,7 +850,7 @@ const resources = {
         badge: 'Music Distribution',
         title: 'Music Distribution',
         subtitle: 'Distribute your music with the PLUS+ plan at no additional cost!',
-        description: 'Reach over 220 DSPs and keep 100% of your royalties, well above the market average (which typically retains between 20% and 25%).',
+        description: 'Reach over 220 DSPs and keep 95% of your royalties, well above the market average (which typically retains between 20% and 25%).',
         description2: 'In addition to registering and protecting your songs, with PLUS+ you can distribute, promote, and start monetizing them with unique and unprecedented conditions.',
         video_title: 'How to distribute with Musicdibs',
         dsp_list: 'DSP List',
