@@ -921,10 +921,11 @@ serve(async (req) => {
           // Fetch previous plan BEFORE updating (to detect Monthly → Annual upgrade)
           const { data: prevUpgradeProfile } = await supabase
             .from("profiles")
-            .select("subscription_plan")
+            .select("subscription_plan, subscription_tier")
             .eq("user_id", profile.user_id)
             .single();
           const previousPlanBeforeUpgrade = prevUpgradeProfile?.subscription_plan || "Free";
+          const previousTierBeforeUpgrade = prevUpgradeProfile?.subscription_tier || null;
 
           // For subscription_update, invoice line items contain proration entries
           // whose price is the OLD plan. Get the NEW plan's price from the subscription.
@@ -941,7 +942,13 @@ serve(async (req) => {
           console.log(`[WEBHOOK] subscription_update: credits=${credits} source=${creditsSource} tier=${dbTier} price=${actualPriceId}`);
           console.log(`[WEBHOOK] credits resolved via: ${dbTier ? "subscription_tier=" + dbTier : "PRICE_CREDITS=" + actualPriceId} → ${credits} credits`);
 
-          if (credits > 0) {
+          // Guard: only assign credits if the plan tier actually changed.
+          // Setting trial_end generates a subscription_update invoice but is NOT a plan change.
+          const newTierFromPrice = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
+          const tierActuallyChanged = newTierFromPrice !== previousTierBeforeUpgrade;
+          if (!tierActuallyChanged) {
+            console.log(`[WEBHOOK] subscription_update: tier unchanged (${previousTierBeforeUpgrade} → ${newTierFromPrice}) — skipping credit assignment (likely trial_end update)`);
+          } else if (credits > 0) {
             await addCredits(supabase, profile.user_id, credits, `Cambio de plan: +${credits} créditos acumulados`);
             console.log(`[WEBHOOK] Plan change: added ${credits} credits to user ${profile.user_id} (accumulated)`);
           } else {
@@ -1316,6 +1323,18 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       const customerId = typeof subscription.customer === "string" ? subscription.customer : (subscription.customer as any)?.id ?? "";
       const priceId = subscription.items?.data?.[0]?.price?.id;
       const status = subscription.status;
+
+      // Guard: skip if only trial_end (or trial_start) changed — no real plan change.
+      const prevAttrs = (event.data as any).previous_attributes ?? {};
+      const prevAttrKeys = Object.keys(prevAttrs);
+      const onlyTrialEndChanged = prevAttrKeys.length > 0 &&
+        prevAttrKeys.every(k => ["trial_end", "trial_start", "billing_cycle_anchor"].includes(k));
+      if (onlyTrialEndChanged) {
+        console.log(`[WEBHOOK] subscription.updated: only trial_end/trial_start changed — skipping (prev_attrs: ${JSON.stringify(prevAttrs)})`);
+        return new Response(JSON.stringify({ received: true, skipped: "trial_end_only" }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
 
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
       if (profile) {
