@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { RegistrationWizard } from '@/components/dashboard/register/RegistrationWizard';
 import { BlockchainHistory } from '@/components/dashboard/BlockchainHistory';
 import { Separator } from '@/components/ui/separator';
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/button';
 export default function RegisterPage() {
   const { isManager } = useAuth();
   const { isVerified, kycLoading } = useKycGuard();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [pricingOpen, setPricingOpen] = useState(false);
