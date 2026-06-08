@@ -26,6 +26,7 @@ interface LibraryAudioPickerProps {
 
 export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudioPickerProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [assets, setAssets] = useState<AudioAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
