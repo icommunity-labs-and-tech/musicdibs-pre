@@ -695,15 +695,15 @@ export default function AdminCampaignMetricsPage() {
             seenKeys.add(key);
             const refCount = referralByInfluencer[key] || 0;
             const couponReg = couponRegByCode[canonicalCouponCode(c.coupon_code)] || 0;
-            // Deduplicación aproximada: usar el mayor si hay solapamiento
-            const total = refCount + couponReg - Math.min(refCount, couponReg > 0 ? Math.floor(couponReg * 0.5) : 0);
+            // Total combinado = suma directa de referral + cupón
+            const total = refCount + couponReg;
             return {
               key: `coup-${c.id}`,
               label: LABELS[key] || c.owner || c.coupon_code,
               coupon_code: c.coupon_code,
               referral: refCount,
               coupon_reg: couponReg,
-              total: Math.max(refCount, couponReg, total),
+              total,
               clients: c.total_clients || 0,
               roi: parseFloat(c.current_roi) || 0,
               country: c.target_country,
