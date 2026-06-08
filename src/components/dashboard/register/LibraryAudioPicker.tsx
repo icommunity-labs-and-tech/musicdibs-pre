@@ -162,7 +162,7 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
                   </p>
                 </div>
                 <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleSelect(asset); }}>
-                  Usar
+                  {t('wizard.library.use')}
                 </Button>
               </div>
             ))
