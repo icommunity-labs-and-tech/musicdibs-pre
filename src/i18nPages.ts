@@ -36,7 +36,7 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
         bullet1: 'Cartera centralizada de artistas',
         bullet2: 'Registro delegado en blockchain',
         bullet3: 'Informes exportables por artista',
-        cta: 'Conocer más',
+        cta: 'Explorar herramientas de manager',
       },
       userLogin: {
         desc: 'Accede a tu consola de operación y gestión',
@@ -111,7 +111,7 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
         bullet1: 'Centralized artist portfolio',
         bullet2: 'Delegated blockchain registration',
         bullet3: 'Exportable reports per artist',
-        cta: 'Learn more',
+        cta: 'Explore manager tools',
       },
       userLogin: {
         desc: 'Access your operations and management console',
@@ -186,7 +186,7 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
         bullet1: 'Carteira centralizada de artistas',
         bullet2: 'Registro delegado em blockchain',
         bullet3: 'Relatórios exportáveis por artista',
-        cta: 'Saiba mais',
+        cta: 'Explorar ferramentas de manager',
       },
       userLogin: {
         desc: 'Acesse seu console de operação e gestão',
