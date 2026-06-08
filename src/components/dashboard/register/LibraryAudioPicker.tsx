@@ -103,7 +103,7 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5 text-primary" />
-            Seleccionar audio de tu biblioteca
+            {t('wizard.library.title')}
           </DialogTitle>
         </DialogHeader>
 
