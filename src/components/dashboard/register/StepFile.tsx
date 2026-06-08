@@ -44,11 +44,11 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
 
       for (const f of filesArray) {
         if (f.size > MAX_FILE_SIZE_BYTES) {
-          newErrors.push(t('wizard.file.fileTooLarge') || `El archivo supera el límite de ${MAX_FILE_SIZE_MB}MB. Por favor, comprime el archivo o usa MP3 en lugar de WAV.`);
+          newErrors.push(t('wizard.file.fileTooLarge'));
           continue;
         }
         if (f.size === 0) {
-          newErrors.push(`"${f.name}" está vacío`);
+          newErrors.push(t('wizard.file.emptyFile', { name: f.name }));
           continue;
         }
         validFiles.push(f);
@@ -60,13 +60,13 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
       );
 
       if (unique.length > MAX_FILES) {
-        newErrors.push(`Máximo ${MAX_FILES} archivos permitidos`);
+        newErrors.push(t('wizard.file.maxFilesError', { max: MAX_FILES }));
         unique.splice(MAX_FILES);
       }
 
       const newTotalSize = unique.reduce((sum, f) => sum + f.size, 0);
       if (newTotalSize > MAX_TOTAL_SIZE_BYTES) {
-        newErrors.push(`El tamaño total supera el límite de ${MAX_TOTAL_SIZE_MB} MB (${formatSize(newTotalSize)})`);
+        newErrors.push(t('wizard.file.totalSizeError', { max: MAX_TOTAL_SIZE_MB, current: formatSize(newTotalSize) }));
         setErrors(newErrors);
         return;
       }
@@ -81,7 +81,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
       const primary = data.file || unique[0] || null;
       onUpdate({ file: primary, files: unique, aiAudioUrl: null });
     },
-    [onUpdate, data.file, data.files]
+    [onUpdate, data.file, data.files, t]
   );
 
   const removeFile = useCallback(
