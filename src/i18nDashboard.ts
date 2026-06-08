@@ -1356,7 +1356,7 @@ const en: typeof es = {
       congratsDesc: 'Your song is protected and ready to play.',
       congratsEta: 'In <strong>2–3 days</strong> your song will land in front of <strong>100,000+ fans</strong> who are about to discover you. 😎',
       nextLevel: 'Next level: professional distribution',
-      nextLevelDesc: 'Publish on <strong>220+ platforms</strong> — Spotify, Apple Music, Amazon Music and more. You keep <strong>100% of royalties</strong>.',
+      nextLevelDesc: 'Publish on <strong>220+ platforms</strong> — Spotify, Apple Music, Amazon Music and more. You keep <strong>95% of royalties</strong>.',
       approvalNote: '⏱ Approval may take up to 7 days. No surprises.',
       distributeBtn: 'Distribute on 220+ platforms',
       goToDashboard: 'Go to my dashboard →',
