@@ -2173,7 +2173,7 @@ const pt: typeof es = {
       congratsDesc: 'Sua música está protegida e pronta para tocar.',
       congratsEta: 'Em <strong>2–3 dias</strong> sua música chegará a <strong>+100.000 fãs</strong> que estão prestes a descobrir você. 😎',
       nextLevel: 'Próximo nível: distribuição profissional',
-      nextLevelDesc: 'Publique em <strong>+220 plataformas</strong> — Spotify, Apple Music, Amazon Music e mais. Você fica com <strong>100% dos royalties</strong>.',
+      nextLevelDesc: 'Publique em <strong>+220 plataformas</strong> — Spotify, Apple Music, Amazon Music e mais. Você fica com <strong>95% dos royalties</strong>.',
       approvalNote: '⏱ A aprovação pode levar até 7 dias. Sem surpresas.',
       distributeBtn: 'Distribuir em +220 plataformas',
       goToDashboard: 'Ir ao meu painel →',
