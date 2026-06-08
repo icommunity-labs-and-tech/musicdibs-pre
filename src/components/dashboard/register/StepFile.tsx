@@ -44,11 +44,11 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
 
       for (const f of filesArray) {
         if (f.size > MAX_FILE_SIZE_BYTES) {
-          newErrors.push(t('wizard.file.fileTooLarge') || `El archivo supera el límite de ${MAX_FILE_SIZE_MB}MB. Por favor, comprime el archivo o usa MP3 en lugar de WAV.`);
+          newErrors.push(t('wizard.file.fileTooLarge'));
           continue;
         }
         if (f.size === 0) {
-          newErrors.push(`"${f.name}" está vacío`);
+          newErrors.push(t('wizard.file.emptyFile', { name: f.name }));
           continue;
         }
         validFiles.push(f);
@@ -60,13 +60,13 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
       );
 
       if (unique.length > MAX_FILES) {
-        newErrors.push(`Máximo ${MAX_FILES} archivos permitidos`);
+        newErrors.push(t('wizard.file.maxFilesError', { max: MAX_FILES }));
         unique.splice(MAX_FILES);
       }
 
       const newTotalSize = unique.reduce((sum, f) => sum + f.size, 0);
       if (newTotalSize > MAX_TOTAL_SIZE_BYTES) {
-        newErrors.push(`El tamaño total supera el límite de ${MAX_TOTAL_SIZE_MB} MB (${formatSize(newTotalSize)})`);
+        newErrors.push(t('wizard.file.totalSizeError', { max: MAX_TOTAL_SIZE_MB, current: formatSize(newTotalSize) }));
         setErrors(newErrors);
         return;
       }
@@ -81,7 +81,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
       const primary = data.file || unique[0] || null;
       onUpdate({ file: primary, files: unique, aiAudioUrl: null });
     },
-    [onUpdate, data.file, data.files]
+    [onUpdate, data.file, data.files, t]
   );
 
   const removeFile = useCallback(
@@ -112,7 +112,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
         <h2 className="text-lg font-semibold">{t('wizard.file.title')}</h2>
         <p className="text-sm text-muted-foreground mt-1">{t('wizard.file.subtitle')}</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Máx. {MAX_FILE_SIZE_MB} MB por archivo · {MAX_FILES} archivos · {MAX_TOTAL_SIZE_MB} MB en total
+          {t('wizard.file.sizeBudget', { perFile: MAX_FILE_SIZE_MB, maxFiles: MAX_FILES, totalSize: MAX_TOTAL_SIZE_MB })}
         </p>
       </div>
 
@@ -150,7 +150,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
           ))}
           {data.files.length > 1 && (
             <p className="text-xs text-muted-foreground">
-              {data.files.length} archivos · {formatSize(totalSize)} en total
+              {t('wizard.file.filesSummary', { count: data.files.length, size: formatSize(totalSize) })}
             </p>
           )}
           {canAddMore && (
@@ -180,11 +180,11 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
             </div>
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            {t('wizard.file.fileSizeLimit') || `Tamaño máximo: ${MAX_FILE_SIZE_MB}MB. Para WAV de alta calidad, considera exportar en MP3 320kbps.`}
+            {t('wizard.file.fileSizeLimit')}
           </p>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
-            <span className="text-xs text-muted-foreground">o</span>
+            <span className="text-xs text-muted-foreground">{t('wizard.file.orDivider')}</span>
             <div className="flex-1 h-px bg-border" />
           </div>
           <Button
@@ -193,7 +193,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
             onClick={() => setLibraryOpen(true)}
           >
             <FolderOpen className="h-4 w-4" />
-            Seleccionar de tu biblioteca
+            {t('wizard.file.selectFromLibrary')}
           </Button>
         </div>
       )}

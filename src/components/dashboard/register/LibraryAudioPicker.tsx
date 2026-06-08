@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -25,6 +26,7 @@ interface LibraryAudioPickerProps {
 
 export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudioPickerProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [assets, setAssets] = useState<AudioAsset[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -46,7 +48,7 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
               .filter((s) => s.audio_url)
               .map((s) => ({
                 id: s.id,
-                title: s.prompt?.substring(0, 80) || 'Canción sin título',
+                title: s.prompt?.substring(0, 80) || t('wizard.library.untitled'),
                 url: s.audio_url,
                 createdAt: s.created_at,
                 genre: s.genre || undefined,
@@ -84,7 +86,7 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
       const head = await fetch(asset.url, { method: 'HEAD' });
       const len = Number(head.headers.get('content-length') || 0);
       if (len > 50 * 1024 * 1024) {
-        toast.error(`Este audio supera el tamaño máximo de 50MB (${(len / (1024 * 1024)).toFixed(1)} MB). Genera/usa una versión MP3 más ligera.`);
+        toast.error(t('wizard.library.sizeTooLarge', { size: (len / (1024 * 1024)).toFixed(1) }));
         return;
       }
     } catch { /* if HEAD fails, allow and let StepFile validate later */ }
@@ -101,19 +103,19 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5 text-primary" />
-            Seleccionar audio de tu biblioteca
+            {t('wizard.library.title')}
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex items-start gap-2 rounded-md border border-amber-300/40 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
           <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-          <span>Tamaño máximo: 50MB por archivo.</span>
+          <span>{t('wizard.library.sizeWarning')}</span>
         </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por título..."
+            placeholder={t('wizard.library.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -129,7 +131,7 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Music className="h-8 w-8 mb-2 opacity-40" />
               <p className="text-sm">
-                {assets.length === 0 ? 'No tienes audios en tu biblioteca' : 'Sin resultados'}
+                {assets.length === 0 ? t('wizard.library.noLibrary') : t('wizard.library.noResults')}
               </p>
             </div>
           ) : (
@@ -160,7 +162,7 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
                   </p>
                 </div>
                 <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleSelect(asset); }}>
-                  Usar
+                  {t('wizard.library.use')}
                 </Button>
               </div>
             ))

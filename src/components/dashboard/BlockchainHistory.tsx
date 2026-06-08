@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -39,35 +40,10 @@ interface WorkEvidence {
   distribution_clicks: number;
 }
 
-const statusConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
-  processing: {
-    label: 'En proceso',
-    icon: Loader2,
-    className: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
-  },
-  registered: {
-    label: 'Certificado',
-    icon: CheckCircle2,
-    className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
-  },
-  failed: {
-    label: 'Fallido',
-    icon: XCircle,
-    className: 'bg-destructive/10 text-destructive border-destructive/20',
-  },
-};
-
-const typeLabels: Record<string, string> = {
-  audio: '🎵 Audio',
-  video: '🎬 Video',
-  image: '🖼️ Imagen',
-  document: '📄 Documento',
-  other: '📁 Otro',
-};
-
 export function BlockchainHistory() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const [works, setWorks] = useState<WorkEvidence[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -76,6 +52,34 @@ export function BlockchainHistory() {
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const PAGE_SIZE = 5;
+
+  const dateLocale = i18n.language === 'en' ? 'en-US' : i18n.language === 'pt-BR' ? 'pt-BR' : 'es-ES';
+
+  const statusConfig: Record<string, { label: string; icon: React.ElementType; className: string }> = {
+    processing: {
+      label: t('dashboard.blockchainHistory.statusProcessing'),
+      icon: Loader2,
+      className: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+    },
+    registered: {
+      label: t('dashboard.blockchainHistory.statusRegistered'),
+      icon: CheckCircle2,
+      className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+    },
+    failed: {
+      label: t('dashboard.blockchainHistory.statusFailed'),
+      icon: XCircle,
+      className: 'bg-destructive/10 text-destructive border-destructive/20',
+    },
+  };
+
+  const typeLabels: Record<string, string> = {
+    audio: t('dashboard.blockchainHistory.typeAudio'),
+    video: t('dashboard.blockchainHistory.typeVideo'),
+    image: t('dashboard.blockchainHistory.typeImage'),
+    document: t('dashboard.blockchainHistory.typeDocument'),
+    other: t('dashboard.blockchainHistory.typeOther'),
+  };
 
   // Fetch display name
   useEffect(() => {
@@ -143,7 +147,10 @@ export function BlockchainHistory() {
   const copyHash = async (hash: string, workId: string) => {
     await navigator.clipboard.writeText(hash);
     setCopiedId(workId);
-    toast({ title: 'Hash copiado', description: 'El hash blockchain se ha copiado al portapapeles.' });
+    toast({
+      title: t('dashboard.blockchainHistory.hashCopied'),
+      description: t('dashboard.blockchainHistory.hashCopiedDesc'),
+    });
     setTimeout(() => setCopiedId(null), 2000);
   };
 
@@ -152,18 +159,18 @@ export function BlockchainHistory() {
 
   const exportToCsv = () => {
     if (works.length === 0) return;
-    const headers = ['Título','Tipo','Estado','Fecha de registro','Fecha de certificación','Red blockchain','Hash TX','Evidence ID','URL verificación','Distribuido'];
+    const headers = ['Title','Type','Status','Registration date','Certification date','Blockchain network','Hash TX','Evidence ID','Verification URL','Distributed'];
     const rows = works.map(w => [
       `"${(w.title || '').replace(/"/g, '""')}"`,
       w.type || '',
       w.status || '',
-      w.created_at ? new Date(w.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '',
-      w.certified_at ? new Date(w.certified_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '',
+      w.created_at ? new Date(w.created_at).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric' }) : '',
+      w.certified_at ? new Date(w.certified_at).toLocaleDateString(dateLocale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '',
       w.blockchain_network || '',
       w.blockchain_hash || '',
       w.ibs_evidence_id || '',
       w.checker_url || '',
-      w.distributed_at ? new Date(w.distributed_at).toLocaleDateString('es-ES') : '',
+      w.distributed_at ? new Date(w.distributed_at).toLocaleDateString(dateLocale) : '',
     ]);
     const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -188,7 +195,7 @@ export function BlockchainHistory() {
         <div>
           <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
-            Historial de registros
+            {t('dashboard.blockchainHistory.title')}
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -197,14 +204,14 @@ export function BlockchainHistory() {
             size="sm"
             onClick={exportToCsv}
             disabled={loading || works.length === 0}
-            title="Exportar mis obras a CSV"
+            title={t('dashboard.blockchainHistory.exportTooltip')}
           >
             <Download className="h-4 w-4 mr-1.5" />
-            Exportar CSV
+            {t('dashboard.blockchainHistory.exportCsv')}
           </Button>
           <Button variant="outline" size="sm" onClick={() => loadWorks(page)} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
-            Actualizar
+            {t('dashboard.blockchainHistory.refresh')}
           </Button>
         </div>
       </div>
@@ -218,7 +225,7 @@ export function BlockchainHistory() {
             </div>
             <div>
               <p className="text-2xl font-bold">{certified.length}</p>
-              <p className="text-xs text-muted-foreground">Certificadas</p>
+              <p className="text-xs text-muted-foreground">{t('dashboard.blockchainHistory.statCertified')}</p>
             </div>
           </CardContent>
         </Card>
@@ -229,7 +236,7 @@ export function BlockchainHistory() {
             </div>
             <div>
               <p className="text-2xl font-bold">{processing.length}</p>
-              <p className="text-xs text-muted-foreground">En proceso</p>
+              <p className="text-xs text-muted-foreground">{t('dashboard.blockchainHistory.statProcessing')}</p>
             </div>
           </CardContent>
         </Card>
@@ -240,7 +247,7 @@ export function BlockchainHistory() {
             </div>
             <div>
               <p className="text-2xl font-bold">{failed.length}</p>
-              <p className="text-xs text-muted-foreground">Fallidas</p>
+              <p className="text-xs text-muted-foreground">{t('dashboard.blockchainHistory.statFailed')}</p>
             </div>
           </CardContent>
         </Card>
@@ -249,10 +256,10 @@ export function BlockchainHistory() {
       {/* Filters */}
       <div className="flex gap-1.5 flex-wrap">
         {[
-          { key: 'all', label: 'Todas', icon: FileText },
-          { key: 'registered', label: 'Certificadas', icon: CheckCircle2 },
-          { key: 'processing', label: 'En proceso', icon: Clock },
-          { key: 'failed', label: 'Fallidas', icon: XCircle },
+          { key: 'all', label: t('dashboard.blockchainHistory.filterAll'), icon: FileText },
+          { key: 'registered', label: t('dashboard.blockchainHistory.filterCertified'), icon: CheckCircle2 },
+          { key: 'processing', label: t('dashboard.blockchainHistory.filterProcessing'), icon: Clock },
+          { key: 'failed', label: t('dashboard.blockchainHistory.filterFailed'), icon: XCircle },
         ].map(({ key, label, icon: Icon }) => (
           <Button
             key={key}
@@ -270,7 +277,7 @@ export function BlockchainHistory() {
       {/* Evidence List */}
       <Card className="border-border/40 shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold">Mis obras registradas</CardTitle>
+          <CardTitle className="text-base font-semibold">{t('dashboard.blockchainHistory.myWorksTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -282,9 +289,9 @@ export function BlockchainHistory() {
           ) : works.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Shield className="h-12 w-12 mx-auto mb-3 opacity-30" />
-              <p className="text-sm font-medium">No tienes obras registradas</p>
+              <p className="text-sm font-medium">{t('dashboard.blockchainHistory.noWorks')}</p>
               <p className="text-xs mt-1">
-                Registra tu primera obra para verla aquí
+                {t('dashboard.blockchainHistory.noWorksHint')}
               </p>
             </div>
           ) : (
@@ -312,7 +319,7 @@ export function BlockchainHistory() {
                                 {sc.label}
                               </Badge>
                               <span className="text-[10px] text-muted-foreground/60 ml-auto">
-                                {expandedId === work.id ? '▲ ocultar' : '▼ ver progreso'}
+                                {expandedId === work.id ? t('dashboard.blockchainHistory.hideProgress') : t('dashboard.blockchainHistory.showProgress')}
                               </span>
                             </div>
 
@@ -320,7 +327,7 @@ export function BlockchainHistory() {
                               <span>{typeLabels[work.type] || work.type}</span>
                               <span>•</span>
                               <span>
-                                {new Date(work.created_at).toLocaleDateString('es-ES', {
+                                {new Date(work.created_at).toLocaleDateString(dateLocale, {
                                   day: 'numeric',
                                   month: 'short',
                                   year: 'numeric',
@@ -345,7 +352,7 @@ export function BlockchainHistory() {
                                 <button
                                   onClick={(e) => { e.stopPropagation(); copyHash(work.blockchain_hash!, work.id); }}
                                   className="text-muted-foreground hover:text-foreground transition-colors"
-                                  title="Copiar hash"
+                                  title={t('dashboard.blockchainHistory.copyHashTitle')}
                                 >
                                   {copiedId === work.id ? (
                                     <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -359,12 +366,14 @@ export function BlockchainHistory() {
                             {/* Certified date */}
                             {work.certified_at && (
                               <p className="text-[11px] text-muted-foreground">
-                                Certificado: {new Date(work.certified_at).toLocaleString('es-ES', {
-                                  day: 'numeric',
-                                  month: 'short',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit',
+                                {t('dashboard.blockchainHistory.certifiedOn', {
+                                  date: new Date(work.certified_at).toLocaleString(dateLocale, {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  }),
                                 })}
                               </p>
                             )}
@@ -381,7 +390,7 @@ export function BlockchainHistory() {
                             >
                               <Button variant="outline" size="sm" className="text-xs h-7 w-full">
                                 <ExternalLink className="h-3 w-3 mr-1" />
-                                Verificar
+                                {t('dashboard.blockchainHistory.verify')}
                               </Button>
                             </a>
                           )}
@@ -393,7 +402,7 @@ export function BlockchainHistory() {
                             >
                               <Button variant="ghost" size="sm" className="text-xs h-7 w-full text-primary">
                                 <FileText className="h-3 w-3 mr-1" />
-                                Certificado
+                                {t('dashboard.blockchainHistory.certificate')}
                               </Button>
                             </a>
                           )}
@@ -442,7 +451,12 @@ export function BlockchainHistory() {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4 mt-4 border-t border-border/40">
                   <p className="text-xs text-muted-foreground">
-                    {totalCount} obra{totalCount !== 1 ? 's' : ''} · Página {page + 1} de {totalPages}
+                    {t(
+                      totalCount === 1
+                        ? 'dashboard.blockchainHistory.paginationInfoOne'
+                        : 'dashboard.blockchainHistory.paginationInfo',
+                      { count: totalCount, page: page + 1, total: totalPages }
+                    )}
                   </p>
                   <div className="flex gap-1.5">
                     <Button
@@ -452,7 +466,7 @@ export function BlockchainHistory() {
                       disabled={page === 0}
                       onClick={() => setPage(p => p - 1)}
                     >
-                      ← Anterior
+                      {t('dashboard.blockchainHistory.prev')}
                     </Button>
                     <Button
                       variant="outline"
@@ -461,7 +475,7 @@ export function BlockchainHistory() {
                       disabled={page >= totalPages - 1}
                       onClick={() => setPage(p => p + 1)}
                     >
-                      Siguiente →
+                      {t('dashboard.blockchainHistory.next')}
                     </Button>
                   </div>
                 </div>
