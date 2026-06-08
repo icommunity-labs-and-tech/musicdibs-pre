@@ -675,7 +675,7 @@ export default function RegistroMusicalPage() {
                         Gana el
                       </p>
                       <p className="relative font-display font-bold text-3xl sm:text-4xl text-white leading-none my-1">
-                        100%
+                        95%
                       </p>
                       <p className="relative text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
                         Royalties
