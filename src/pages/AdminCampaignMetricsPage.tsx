@@ -659,6 +659,7 @@ export default function AdminCampaignMetricsPage() {
             gr3go: 'grego', grego: 'grego',
             nico: 'nico', nicolas: 'nico', nicomusic: 'nico',
             matzz: 'matzz', missao: 'missao', christian: 'christian', erika: 'erika',
+            ceci: 'cecidover', cecidover: 'cecidover', cecilia: 'cecidover',
           };
           const normalizeInfluencer = (s: string | null | undefined) => {
             if (!s) return '';
@@ -668,6 +669,7 @@ export default function AdminCampaignMetricsPage() {
           const LABELS: Record<string, string> = {
             fael: 'Fael', grego: 'Grego', nico: 'Nicolas (NicoMusic)', matzz: 'Matzz',
             missao: 'Missao', christian: 'Christian', erika: 'Erika',
+            cecidover: 'Ceci Dover',
           };
 
           // Conteo de referral por influencer normalizado
