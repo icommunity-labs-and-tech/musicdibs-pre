@@ -39,10 +39,10 @@ export default function RegisterPage() {
   return (
     <div className="space-y-4 max-w-4xl">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold">Registrar obra</h2>
+        <h2 className="text-xl font-bold">{t('dashboard.registerPage.pageTitle')}</h2>
         <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={() => setPricingOpen(true)}>
           <Coins className="h-4 w-4" />
-          Ver precios
+          {t('dashboard.registerPage.viewPricing')}
         </Button>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6">
