@@ -131,7 +131,7 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Music className="h-8 w-8 mb-2 opacity-40" />
               <p className="text-sm">
-                {assets.length === 0 ? 'No tienes audios en tu biblioteca' : 'Sin resultados'}
+                {assets.length === 0 ? t('wizard.library.noLibrary') : t('wizard.library.noResults')}
               </p>
             </div>
           ) : (
