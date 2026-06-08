@@ -96,7 +96,9 @@ export default function AdminCampaignMetricsPage() {
   const [newCampaign, setNewCampaign] = useState({ name: '', type: '', owner: '', cost: '0', coupon_code: '', utm_source: '', utm_medium: '', utm_campaign: '', notes: '' });
   const [coupons, setCoupons] = useState<any[]>([]);
   const [couponFilter, setCouponFilter] = useState<'all' | 'influencer' | 'rrss'>('all');
-  const [hideZeroRoi, setHideZeroRoi] = useState(false);
+  const [hideZeroRoi, setHideZeroRoi] = useState(() => {
+    try { return localStorage.getItem('admin-campaigns-hideZeroRoi') === 'true'; } catch { return false; }
+  });
   const [loadingCoupons, setLoadingCoupons] = useState(true);
   const [syncingStripe, setSyncingStripe] = useState(false);
   const initialStripeSyncStarted = useRef(false);
@@ -132,6 +134,9 @@ export default function AdminCampaignMetricsPage() {
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
   useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    try { localStorage.setItem('admin-campaigns-hideZeroRoi', String(hideZeroRoi)); } catch { /* noop */ }
+  }, [hideZeroRoi]);
 
   const loadCoupons = useCallback(async () => {
     setLoadingCoupons(true);
