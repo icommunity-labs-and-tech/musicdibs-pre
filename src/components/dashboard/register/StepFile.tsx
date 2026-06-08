@@ -150,7 +150,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
           ))}
           {data.files.length > 1 && (
             <p className="text-xs text-muted-foreground">
-              {data.files.length} archivos · {formatSize(totalSize)} en total
+              {t('wizard.file.filesSummary', { count: data.files.length, size: formatSize(totalSize) })}
             </p>
           )}
           {canAddMore && (
