@@ -623,14 +623,14 @@ export default function RegistroMusicalPage() {
                   </h2>
                   <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
                     Lanza tus canciones en Spotify, Apple Music, TikTok, YouTube Music,
-                    Amazon Music y más, desde un único panel. Conserva el 100% de tus
-                    derechos y royalties.
+                    Amazon Music y más, desde un único panel. Conserva el 95% de tus
+                    royalties.
                   </p>
                   <ul className="space-y-3 mb-8">
                     {[
                       "Subida ilimitada de singles, EPs y álbumes",
                       "Programación de fecha de lanzamiento global",
-                      "Royalties al 100% para el artista",
+                      "Royalties al 95% para el artista",
                       "Estadísticas unificadas de todas las plataformas",
                     ].map((t) => (
                       <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
