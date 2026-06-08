@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      _email_cron_debug: {
+        Row: {
+          id: number
+          info: string | null
+          ts: string | null
+        }
+        Insert: {
+          id?: number
+          info?: string | null
+          ts?: string | null
+        }
+        Update: {
+          id?: number
+          info?: string | null
+          ts?: string | null
+        }
+        Relationships: []
+      }
       _phpass_backup: {
         Row: {
           backed_up_at: string | null
@@ -3678,6 +3696,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_email_queue_service_key: { Args: never; Returns: string }
       get_emails_by_user_ids: {
         Args: { p_ids: string[] }
         Returns: {

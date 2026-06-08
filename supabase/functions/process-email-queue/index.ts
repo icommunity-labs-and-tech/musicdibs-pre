@@ -12,22 +12,30 @@ interface SendPayload {
   subject: string
   html: string
   text?: string
+  cc?: string | string[]
+  bcc?: string | string[]
+  reply_to?: string | string[]
 }
 
 async function sendViaResend(payload: SendPayload, resendApiKey: string): Promise<void> {
+  const body: Record<string, unknown> = {
+    from: payload.from,
+    to: [payload.to],
+    subject: payload.subject,
+    html: payload.html,
+  }
+  if (payload.text) body.text = payload.text
+  if (payload.cc) body.cc = Array.isArray(payload.cc) ? payload.cc : [payload.cc]
+  if (payload.bcc) body.bcc = Array.isArray(payload.bcc) ? payload.bcc : [payload.bcc]
+  if (payload.reply_to) body.reply_to = Array.isArray(payload.reply_to) ? payload.reply_to : [payload.reply_to]
+
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${resendApiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      from: payload.from,
-      to: [payload.to],
-      subject: payload.subject,
-      html: payload.html,
-      ...(payload.text ? { text: payload.text } : {}),
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!res.ok) {
@@ -123,10 +131,18 @@ Deno.serve(async (req) => {
 
   const token = authHeader.slice('Bearer '.length).trim()
   const cronSecret = Deno.env.get('CRON_SECRET') ?? ''
-  if (!cronSecret) {
-    console.warn('[email-queue] CRON_SECRET not configured — only service role key accepted')
+  let isAuthorized =
+    token === supabaseServiceKey ||
+    (cronSecret.length > 0 && token === cronSecret)
+
+  // Fallback: accept any JWT issued for the service_role (e.g. rotated keys stored in Vault)
+  if (!isAuthorized) {
+    const claims = parseJwtClaims(token)
+    if (claims && (claims.role === 'service_role' || claims.role === 'supabase_admin')) {
+      isAuthorized = true
+    }
   }
-  const isAuthorized = token === supabaseServiceKey || (cronSecret.length > 0 && token === cronSecret)
+
   if (!isAuthorized) {
     return new Response(
       JSON.stringify({ error: 'Forbidden' }),
@@ -264,6 +280,9 @@ Deno.serve(async (req) => {
             subject: payload.subject,
             html: payload.html,
             text: payload.text,
+            cc: payload.cc,
+            bcc: payload.bcc,
+            reply_to: payload.reply_to,
           },
           resendApiKey
         )
