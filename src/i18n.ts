@@ -813,7 +813,7 @@ const resources = {
         royalties: 'royalties',
         advantage_prefix: 'With Musicdibs you would earn',
         advantage_suffix: 'more than with the competition',
-        advantage_desc: 'Thanks to our 100% royalties — the highest on the market — you maximise your income from every stream.',
+        advantage_desc: 'Thanks to our 95% royalties — the highest on the market — you maximise your income from every stream.',
         disclaimer: '* Estimate based on an average pay per stream of €0.004. Actual earnings may vary depending on the platform, country and listener subscription type.',
         competitors: { musicdibs: 'Musicdibs', distrokid: 'DistroKid', cdbaby: 'CD Baby', tunecore: 'TuneCore' },
       },
