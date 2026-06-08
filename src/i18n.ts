@@ -245,7 +245,7 @@ const resources = {
         royalties: 'royalties',
         advantage_prefix: 'Con Musicdibs ganarías',
         advantage_suffix: 'más que con la competencia',
-        advantage_desc: 'Gracias a nuestro 100% de royalties, el más alto del mercado, maximizas tus ingresos por cada reproducción.',
+        advantage_desc: 'Gracias a nuestro 95% de royalties, el más alto del mercado, maximizas tus ingresos por cada reproducción.',
         disclaimer: '* Estimación basada en un pago medio por stream de 0,004€. Los ingresos reales pueden variar según la plataforma, país y tipo de suscripción del oyente.',
         competitors: { musicdibs: 'Musicdibs', distrokid: 'DistroKid', cdbaby: 'CD Baby', tunecore: 'TuneCore' },
       },
