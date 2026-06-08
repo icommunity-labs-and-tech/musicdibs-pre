@@ -27,6 +27,23 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         clickSelect: 'o haz clic para seleccionar (puedes elegir varios)',
         fileTooLarge: 'El archivo supera el tamaño máximo de 100MB. Para archivos WAV grandes, exporta en MP3 (320kbps) y el tamaño se reducirá un 90% sin pérdida audible.',
         fileSizeLimit: 'Tamaño máximo: 100MB por archivo. Para WAV de alta calidad, exporta en MP3 320kbps.',
+        sizeBudget: 'Máx. {{perFile}} MB por archivo · {{maxFiles}} archivos · {{totalSize}} MB en total',
+        filesSummary: '{{count}} archivos · {{size}} en total',
+        maxFilesError: 'Máximo {{max}} archivos permitidos',
+        emptyFile: '"{{name}}" está vacío',
+        totalSizeError: 'El tamaño total supera el límite de {{max}} MB ({{current}})',
+        orDivider: 'o',
+        selectFromLibrary: 'Seleccionar de tu biblioteca',
+      },
+      library: {
+        title: 'Seleccionar audio de tu biblioteca',
+        sizeWarning: 'Tamaño máximo: 50MB por archivo.',
+        searchPlaceholder: 'Buscar por título...',
+        noLibrary: 'No tienes audios en tu biblioteca',
+        noResults: 'Sin resultados',
+        untitled: 'Canción sin título',
+        use: 'Usar',
+        sizeTooLarge: 'Este audio supera el tamaño máximo de 50MB ({{size}} MB). Genera/usa una versión MP3 más ligera.',
       },
       // StepTitle
       stepTitle: {
