@@ -141,7 +141,7 @@ export const Navbar = () => {
           <Link to="/" className="flex items-center">
             <img 
               src="/lovable-uploads/81d79e1f-fd6f-4e2c-a573-89261bcf3879.png" 
-              alt="by iCommunity" 
+              alt="Musicdibs by iCommunity logo" 
               className="h-12 w-auto"
               width={69}
               height={48}
