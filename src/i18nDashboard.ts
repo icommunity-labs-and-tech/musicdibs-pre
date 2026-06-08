@@ -539,7 +539,7 @@ const es = {
       congratsDesc: 'Tu canción está protegida y lista para sonar.',
       congratsEta: 'En <strong>2–3 días</strong> tu canción aterrizará frente a <strong>+100.000 fans</strong> que están a punto de descubrirte. 😎',
       nextLevel: 'Siguiente nivel: distribución profesional',
-      nextLevelDesc: 'Publica en <strong>+220 plataformas</strong> — Spotify, Apple Music, Amazon Music y más. Tú te quedas el <strong>100% de los royalties</strong>.',
+      nextLevelDesc: 'Publica en <strong>+220 plataformas</strong> — Spotify, Apple Music, Amazon Music y más. Tú te quedas el <strong>95% de los royalties</strong>.',
       approvalNote: '⏱ La aprobación puede tardar hasta 7 días. Sin sorpresas.',
       distributeBtn: 'Distribuir en +220 plataformas',
       goToDashboard: 'Ir a mi panel →',
