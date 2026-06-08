@@ -48,7 +48,7 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
               .filter((s) => s.audio_url)
               .map((s) => ({
                 id: s.id,
-                title: s.prompt?.substring(0, 80) || 'Canción sin título',
+                title: s.prompt?.substring(0, 80) || t('wizard.library.untitled'),
                 url: s.audio_url,
                 createdAt: s.created_at,
                 genre: s.genre || undefined,
