@@ -112,7 +112,7 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
         <h2 className="text-lg font-semibold">{t('wizard.file.title')}</h2>
         <p className="text-sm text-muted-foreground mt-1">{t('wizard.file.subtitle')}</p>
         <p className="text-xs text-muted-foreground mt-1">
-          Máx. {MAX_FILE_SIZE_MB} MB por archivo · {MAX_FILES} archivos · {MAX_TOTAL_SIZE_MB} MB en total
+          {t('wizard.file.sizeBudget', { perFile: MAX_FILE_SIZE_MB, maxFiles: MAX_FILES, totalSize: MAX_TOTAL_SIZE_MB })}
         </p>
       </div>
 
