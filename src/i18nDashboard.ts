@@ -2172,6 +2172,7 @@ const pt: typeof es = {
       heroTitleHighlight: 'música',
       heroTitle2: ' ao mundo!',
       heroSubtitle: 'Siga os 3 passos. Cada um desbloqueia o seguinte.',
+      welcomeCreditBadge: 'Damos a você 1 crédito grátis para experimentar a plataforma',
       step: 'Passo',
       done: '✓ Feito',
       step1Label: 'Crie sua música',
