@@ -5,25 +5,27 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-async function translateWithClaude(systemPrompt: string, userPrompt: string, apiKey: string): Promise<string> {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+async function translateWithGemini(systemPrompt: string, userPrompt: string, apiKey: string): Promise<string> {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
-      temperature: 0.3,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
+      contents: [{ parts: [{ text: userPrompt }] }],
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      generationConfig: {
+        temperature: 0.3,
+        responseMimeType: "application/json",
+        maxOutputTokens: 16384,
+      },
     }),
   });
 
   const data = await response.json();
-  return data.content?.[0]?.text?.trim() || "";
+  if (!response.ok) {
+    console.error("Gemini API error:", JSON.stringify(data).slice(0, 500));
+    return "";
+  }
+  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
 }
 
 Deno.serve(async (req) => {
