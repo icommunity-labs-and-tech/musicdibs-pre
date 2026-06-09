@@ -76,8 +76,8 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
   const [kycUrl, setKycUrl] = useState<string | null>(null);
   
 
-  const { hasEnough } = useCredits();
-  const noCredits = !hasEnough(FEATURE_COSTS.register_work);
+  const { hasEnough, isLoading: creditsLoading } = useCredits();
+  const noCredits = !creditsLoading && !hasEnough(FEATURE_COSTS.register_work);
   const kycBlocked = summary && summary.kycStatus !== 'verified';
 
   useEffect(() => {
