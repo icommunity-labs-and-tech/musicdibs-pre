@@ -243,6 +243,21 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
     filePaths.push(filePath);
   }
 
+  // Refresh session before DB write — ensures JWT is valid after potentially long file uploads.
+  // (autoRefreshToken can sometimes be mid-swap when the upload finishes, causing auth.uid() to
+  // be NULL in PostgreSQL and triggering an RLS violation on the INSERT.)
+  {
+    const { data: { session: freshSession }, error: refreshErr } = await supabase.auth.refreshSession();
+    if (refreshErr || !freshSession) {
+      console.error('[registerWork] Session refresh failed:', refreshErr);
+      throw new Error(
+        i18n.t('wizard.rw.sessionExpired') ||
+          'Tu sesión ha expirado. Por favor, cierra sesión e inicia sesión de nuevo.'
+      );
+    }
+    console.log('[registerWork] Session refreshed OK, uid:', freshSession.user?.id, 'exp:', freshSession.expires_at);
+  }
+
   // Insert work record as 'draft' — or update existing draft when resuming
   let work: { id: string };
   if (data.resumeWorkId) {
