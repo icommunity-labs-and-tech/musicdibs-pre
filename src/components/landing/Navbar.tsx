@@ -8,7 +8,7 @@ interface NavbarProps {
 }
 
 export function Navbar({
-  ctaText = "🚀 Crear cuenta gratis",
+  ctaText = "🚀 Pruébalo gratis",
   ctaHref = "https://www.musicdibs.com/login?tab=register",
   secondaryText = "Iniciar sesión",
   secondaryHref = "https://www.musicdibs.com/login",
