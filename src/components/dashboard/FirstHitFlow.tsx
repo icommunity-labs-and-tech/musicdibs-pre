@@ -756,6 +756,10 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
           <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
             {t("dashboard.firstHit.heroSubtitle")}
           </p>
+          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-500 ring-1 ring-emerald-500/30">
+            🎁 {t("dashboard.firstHit.welcomeCreditBadge")}
+          </div>
+
         </div>
 
         {/* ══ PASO 1 ══════════════════════════════════════════════ */}
