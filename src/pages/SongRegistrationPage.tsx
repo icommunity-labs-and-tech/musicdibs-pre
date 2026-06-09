@@ -60,7 +60,7 @@ const COPY: Record<Lang, {
     ],
     closingTitle: "Empieza a proteger tu música hoy",
     closingDesc: "Únete a miles de artistas que ya registran sus obras con la prueba de autoría más rápida del mercado.",
-    closingCta: "Crear cuenta gratis",
+    closingCta: "Pruébalo gratis",
   },
   en: {
     seoTitle: "Register Songs on Blockchain — Music Copyright Made Easy",
@@ -103,7 +103,7 @@ const COPY: Record<Lang, {
     ],
     closingTitle: "Start protecting your music today",
     closingDesc: "Join thousands of artists who already register their works with the fastest proof of authorship on the market.",
-    closingCta: "Create free account",
+    closingCta: "Try it free",
   },
   "pt-BR": {
     seoTitle: "Registro de Obras Musicais em Blockchain",
@@ -146,7 +146,7 @@ const COPY: Record<Lang, {
     ],
     closingTitle: "Comece a proteger sua música hoje",
     closingDesc: "Junte-se a milhares de artistas que já registram suas obras com a prova de autoria mais rápida do mercado.",
-    closingCta: "Criar conta grátis",
+    closingCta: "Experimente grátis",
   },
 };
 
