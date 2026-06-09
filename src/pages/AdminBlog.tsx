@@ -459,7 +459,9 @@ const AdminBlog = () => {
     setGenerationErrors([]);
     setContentProgress({ done: 0, total: ideas.length });
     const errors: string[] = [];
+    const insertedEsIds: { id: string; title: string }[] = [];
 
+    // Phase 1: generate ES articles + images
     for (const [index, idea] of ideas.entries()) {
       try {
         const articleResponse = await supabase.functions.invoke("generate-blog-article", {
@@ -501,11 +503,7 @@ const AdminBlog = () => {
         if (insertError) throw insertError;
 
         if (idea.language === "es" && inserted?.id) {
-          try {
-            await supabase.functions.invoke("translate-blog-posts", { body: { postId: inserted.id, sourceLanguage: "es", targetLanguages: ["en", "pt"] } });
-          } catch (translationError) {
-            errors.push(`${idea.title}: traducciones no completadas (${translationError instanceof Error ? translationError.message : "error"})`);
-          }
+          insertedEsIds.push({ id: inserted.id, title: idea.title });
         }
       } catch (error) {
         errors.push(`${idea.title}: ${error instanceof Error ? error.message : "error desconocido"}`);
@@ -514,12 +512,34 @@ const AdminBlog = () => {
       }
     }
 
+    // Phase 2: translate every ES post to EN + PT, with strict error checking
+    if (insertedEsIds.length > 0) {
+      setContentProgress({ done: 0, total: insertedEsIds.length });
+      for (const [i, post] of insertedEsIds.entries()) {
+        try {
+          const tr = await supabase.functions.invoke("translate-blog-posts", {
+            body: { postId: post.id, sourceLanguage: "es", targetLanguages: ["en", "pt"] },
+          });
+          if (tr.error) throw tr.error;
+          if (tr.data?.error) throw new Error(tr.data.error);
+          const failed = (tr.data?.results || []).filter((r: any) => !r.success);
+          if (failed.length) {
+            errors.push(`${post.title}: traducciones fallidas (${failed.map((f: any) => `${f.language}:${f.error}`).join("; ")})`);
+          }
+        } catch (translationError) {
+          errors.push(`${post.title}: traducción no completada (${translationError instanceof Error ? translationError.message : "error"})`);
+        } finally {
+          setContentProgress({ done: i + 1, total: insertedEsIds.length });
+        }
+      }
+    }
+
     setGenerationErrors(errors);
     setGeneratingContent(false);
     queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
     toast({
       title: errors.length ? "Generación completada con avisos" : "Contenido generado",
-      description: errors.length ? `${errors.length} elemento(s) requieren revisión.` : "Todos los artículos se han guardado como borradores planificados.",
+      description: errors.length ? `${errors.length} elemento(s) requieren revisión.` : "Todos los artículos se han guardado como borradores planificados en ES, EN y PT.",
     });
   };
 
