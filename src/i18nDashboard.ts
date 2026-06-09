@@ -1314,6 +1314,7 @@ const en: typeof es = {
       heroTitleHighlight: 'song',
       heroTitle2: ' to the world!',
       heroSubtitle: 'Follow 3 steps. Each one unlocks the next.',
+      welcomeCreditBadge: 'We gift you 1 free credit so you can try the platform',
       step: 'Step',
       done: '✓ Done',
       step1Label: 'Create your song',
