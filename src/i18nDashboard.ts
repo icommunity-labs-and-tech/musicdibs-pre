@@ -456,6 +456,7 @@ const es = {
       heroTitleHighlight: 'canción',
       heroTitle2: ' al mundo!',
       heroSubtitle: 'Sigue los 3 pasos. Cada uno desbloquea el siguiente.',
+      welcomeCreditBadge: 'Te regalamos 1 crédito gratis para que pruebes la plataforma',
       step: 'Paso',
       done: '✓ Hecho',
       step1Label: 'Crea tu canción',
