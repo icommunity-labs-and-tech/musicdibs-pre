@@ -512,7 +512,7 @@ function getCopy(lang: string) {
       final: {
         title: "Tu canción, lista para salir al mundo",
         text: "Crea, registra, distribuye y promociona tu música desde una sola plataforma.",
-        ctaPrimary: "🚀 Crear cuenta gratis",
+        ctaPrimary: "🚀 Pruébalo gratis",
         ctaSecondary: "Ver planes",
       },
     },
@@ -563,7 +563,7 @@ function getCopy(lang: string) {
       final: {
         title: "Your song, ready to take on the world",
         text: "Create, register, distribute and promote your music from a single platform.",
-        ctaPrimary: "🚀 Create free account",
+        ctaPrimary: "🚀 Try it free",
         ctaSecondary: "See plans",
       },
     },
@@ -614,7 +614,7 @@ function getCopy(lang: string) {
       final: {
         title: "Sua canção, pronta para o mundo",
         text: "Crie, registre, distribua e promova sua música em uma única plataforma.",
-        ctaPrimary: "🚀 Criar conta grátis",
+        ctaPrimary: "🚀 Experimente grátis",
         ctaSecondary: "Ver planos",
       },
     },
