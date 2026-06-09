@@ -1069,6 +1069,23 @@ serve(async (req) => {
         const profile = await findProfileByCustomerId(supabase, stripe, customerId);
 
         if (profile) {
+          // Guard #0: If subscriptionId is null in event payload, retrieve from Stripe
+          // (Stripe sometimes sends invoice events before subscription is fully attached)
+          if (!subscriptionId && invoiceId) {
+            try {
+              const fullInv = await stripe.invoices.retrieve(invoiceId);
+              const resolvedSubId = typeof fullInv.subscription === "string"
+                ? fullInv.subscription
+                : (fullInv.subscription as any)?.id ?? undefined;
+              if (resolvedSubId) {
+                subscriptionId = resolvedSubId;
+                console.log(`[WEBHOOK] subscription_create: resolved subscriptionId ${subscriptionId} from Stripe for invoice ${invoiceId}`);
+              }
+            } catch (e) {
+              console.warn("[WEBHOOK] subscription_create: could not retrieve invoice from Stripe:", e);
+            }
+          }
+
           // Idempotency guard: skip if this create invoice was already processed
           if (invoiceId) {
             const { data: existingCreateOrder } = await supabase
