@@ -618,7 +618,7 @@ const AdminBlog = () => {
                 <h2 className="text-xl font-semibold text-foreground">Planificación de contenido IA</h2>
                 <p className="text-sm text-muted-foreground">Configura, revisa y genera borradores planificados.</p>
               </div>
-              <Button variant="ghost" onClick={() => setPlannerOpen(false)}>Cerrar</Button>
+              <Button variant="outline" onClick={() => setPlannerOpen(false)} className="text-black border-white/20">Cerrar</Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 rounded-lg border border-border bg-muted/30 p-4">
