@@ -1121,6 +1121,35 @@ serve(async (req) => {
             }
           }
 
+          // Idempotency guard #2b: fallback for when subscriptionId could NOT be
+          // resolved (Stripe sometimes sends this invoice without `invoice.subscription`
+          // populated, e.g. invoice in_xxx for yervinzeledon@gmail.com on 2026-06-10,
+          // which bypassed guard #2 entirely and granted a duplicate "Alta suscripción
+          // undefined: +N créditos" on top of the checkout.session.completed credits).
+          // Match by customer instead: if a non-renewal subscription order already
+          // exists for this customer from the last hour (i.e. checkout.session.completed
+          // already ran for this signup), treat this invoice as the duplicate side of
+          // the same purchase and skip granting credits again.
+          if (!subscriptionId && customerId) {
+            const recentWindow = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+            const { data: existingRecentSignupOrder } = await supabase
+              .from("orders")
+              .select("id")
+              .eq("stripe_customer_id", customerId)
+              .eq("is_subscription", true)
+              .eq("is_renewal", false)
+              .not("stripe_checkout_session_id", "is", null)
+              .gte("created_at", recentWindow)
+              .maybeSingle();
+
+            if (existingRecentSignupOrder) {
+              console.log(`[WEBHOOK] subscription_create: no subscriptionId resolved, but checkout.session.completed already processed a recent signup for customer ${customerId} — skipping duplicate invoice credits`);
+              return new Response(JSON.stringify({ received: true, duplicate: true }), {
+                headers: { "Content-Type": "application/json" }
+              });
+            }
+          }
+
           // Resolve price from subscription (more reliable than invoice line items)
           let actualPriceId = priceId;
           if (subscriptionId) {
