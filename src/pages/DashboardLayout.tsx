@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useKycGuard } from '@/hooks/useKycGuard';
 import { NotificationsProvider } from '@/hooks/useNotifications';
@@ -33,6 +33,17 @@ export default function DashboardLayout() {
   const tr = (key: string, fallback: string) => t(key, { defaultValue: fallback });
   useUsageTracking(); // auto-tracks login_after_purchase on mount
 
+  // Only show the full-page spinner (and unmount <Outlet/>) on the very
+  // first auth check. Subsequent loading=true flips (e.g. session
+  // re-validation when the tab regains focus) must NOT unmount the page —
+  // doing so was wiping in-progress state like the "Registrar obra" wizard
+  // (it would reset to its first step), which users reported as the page
+  // "reiniciando" when selecting a file on mobile.
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  useEffect(() => {
+    if (!loading) setHasLoadedOnce(true);
+  }, [loading]);
+
   useEffect(() => {
     if (loading) return;
     if (!user) {
@@ -47,13 +58,13 @@ export default function DashboardLayout() {
     }
   }, [loading, user, navigate]);
 
-  if (loading) return (
+  if (loading && !hasLoadedOnce) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>
   );
 
-  if (!user) return null;
+  if (!user && !loading) return null;
 
   return (
     <NotificationsProvider>

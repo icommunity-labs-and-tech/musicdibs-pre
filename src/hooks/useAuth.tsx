@@ -91,6 +91,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!isMounted) return;
 
         const authState = supabase.auth.onAuthStateChange((_event, newSession) => {
+          // Token refreshes / focus-triggered session checks fire constantly
+          // (e.g. when the tab regains focus after a mobile file picker).
+          // For these we must NOT set loading=true: that causes
+          // DashboardLayout to unmount <Outlet/> and remount it a moment
+          // later, wiping in-progress state (e.g. the "Registrar obra"
+          // wizard resets to step -1, looking like the page "reinicia").
+          // Just sync the session/user without touching loading or
+          // re-running the full initializeUser (roles fetch, etc.).
+          if (_event === 'TOKEN_REFRESHED' || _event === 'USER_UPDATED') {
+            setSession(newSession);
+            setUser(newSession?.user ?? null);
+            return;
+          }
+
           // Set loading=true immediately so DashboardLayout shows the spinner
           // and does NOT redirect to /login during the async initializeUser tick.
           // Without this, a race condition causes a redirect loop after login:
