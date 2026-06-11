@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   TrendingUp, TrendingDown, Users, UserPlus, Activity, ShieldCheck,
   Music, ShoppingBag, Zap, DollarSign, BarChart3, Target, ShoppingCart,
-  Repeat, XCircle, ArrowRightLeft, CheckCircle2, AlertTriangle,
+  Repeat, XCircle, ArrowRightLeft, CheckCircle2, AlertTriangle, Gift,
 } from 'lucide-react';
 
 interface KpiGridProps {
