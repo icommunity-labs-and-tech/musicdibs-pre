@@ -468,8 +468,6 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
-      {/* Referrals */}
-      <ReferralsSection />
 
       {/* Delete Account */}
       <Card className="border-destructive/30 lg:col-span-2">
