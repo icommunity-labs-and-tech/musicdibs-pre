@@ -1386,9 +1386,57 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       if (profile) {
         const planName = priceId ? (PRICE_PLAN[priceId] || null) : null;
         const planTier = priceId ? (PRICE_TO_PLAN_ID[priceId] || null) : null;
+        // Capture previous plan BEFORE updating so we can detect Monthly→Annual transitions
+        const { data: prevUpdProfile } = await supabase
+          .from("profiles").select("subscription_plan").eq("user_id", profile.user_id).single();
+        const previousPlanOnUpdate = prevUpdProfile?.subscription_plan || "Free";
         if (status === "active" && planName) {
           await supabase.from("profiles").update({ subscription_plan: planName, subscription_tier: planTier }).eq("user_id", profile.user_id);
           console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} (tier=${planTier}) for user ${profile.user_id}`);
+
+          // ── Distribution onboarding: transition to Annual (idempotent via idempotency_key) ──
+          const ANNUAL_TIERS_SU = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
+          if (planTier && ANNUAL_TIERS_SU.includes(planTier) && previousPlanOnUpdate !== "Annual") {
+            try {
+              const { data: { user: distUser } } = await supabase.auth.admin.getUserById(profile.user_id);
+              const distEmail = distUser?.email || "desconocido";
+              const { data: distProfile } = await supabase.from("profiles").select("display_name, language").eq("user_id", profile.user_id).single();
+              const distName = distProfile?.display_name || distEmail.split("@")[0];
+              const distLang = distProfile?.language || (distUser?.user_metadata as any)?.language || "es";
+
+              const distHtml = `<h2>🎵 Nuevo alta en Distribución</h2><p>Un usuario ha pasado a suscripción anual y necesita ser dado de alta en la plataforma de distribución.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${planTier}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${profile.user_id}</td></tr></table><p>👉 <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
+              const distText = `Nuevo alta en Distribución\nUsuario: ${distName}\nEmail: ${distEmail}\nPlan: ${planTier}\nUser ID: ${profile.user_id}\nDar de alta en: https://musicdibs.sonosuite.com/`;
+
+              const distMsgId = crypto.randomUUID();
+              await supabase.from("email_send_log").insert({ message_id: distMsgId, template_name: "distribution_onboarding", recipient_email: "marketing@musicdibs.com", status: "pending" });
+              await supabase.rpc("enqueue_email", {
+                queue_name: "transactional_emails",
+                payload: {
+                  idempotency_key: `dist-onboard-${profile.user_id}-${planTier}`, message_id: distMsgId,
+                  to: "marketing@musicdibs.com", cc: "info@musicdibs.com",
+                  from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
+                  subject: "Nuevo alta en Distribución", html: distHtml, text: distText,
+                  purpose: "transactional", label: "distribution_onboarding", queued_at: new Date().toISOString(),
+                },
+              });
+
+              const userMsgId = crypto.randomUUID();
+              const distWelcome = distributionWelcomeEmail({ name: distName, email: distEmail, planId: planTier, lang: distLang });
+              await supabase.from("email_send_log").insert({ message_id: userMsgId, template_name: "distribution_welcome", recipient_email: distEmail, status: "pending" });
+              await supabase.rpc("enqueue_email", {
+                queue_name: "transactional_emails",
+                payload: {
+                  to: distEmail, from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
+                  subject: distWelcome.subject, html: distWelcome.html, text: distWelcome.text,
+                  purpose: "transactional", idempotency_key: `dist-welcome-${profile.user_id}-${planTier}`, message_id: userMsgId,
+                  label: "distribution_welcome", queued_at: new Date().toISOString(),
+                },
+              });
+              console.log(`[WEBHOOK] ✅ Distribution emails enqueued (subscription.updated) for ${distEmail} tier=${planTier}`);
+            } catch (distSuErr) {
+              console.error("[WEBHOOK] Error enqueuing distribution emails (subscription.updated):", distSuErr);
+            }
+          }
         } else if (status === "past_due" || status === "unpaid") {
           await supabase.from("credit_transactions").insert({
             user_id: profile.user_id, amount: 0, type: "subscription_issue",
