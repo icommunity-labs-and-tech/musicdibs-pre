@@ -319,6 +319,9 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
+      {/* Referrals */}
+      <ReferralsSection />
+
       {/* Language */}
       <Card className="border-border/40">
         <CardHeader className="pb-3">
