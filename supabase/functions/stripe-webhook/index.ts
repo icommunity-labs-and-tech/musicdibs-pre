@@ -493,17 +493,42 @@ serve(async (req) => {
               const { data: { user: ytUser } } = await supabase.auth.admin.getUserById(ytUserId);
               const { data: ytReq } = await supabase.from("youtube_service_requests").select("form_data, created_at").eq("id", requestId).single();
               const formData = (ytReq?.form_data || {}) as Record<string, unknown>;
+
+              // Resolve private storage paths (documents://...) to short-lived signed URLs
+              // so marketing/info recipients can open the identity documents from the email.
+              const resolveValue = async (v: unknown): Promise<string> => {
+                const raw = typeof v === "object" ? JSON.stringify(v) : String(v ?? "");
+                if (raw.startsWith("documents://")) {
+                  const path = raw.slice("documents://".length);
+                  try {
+                    const { data: signed } = await supabase.storage
+                      .from("documents")
+                      .createSignedUrl(path, 60 * 60 * 24 * 30); // 30 días
+                    if (signed?.signedUrl) return signed.signedUrl;
+                  } catch (e) { console.error("[WEBHOOK] signUrl error:", e); }
+                  return raw;
+                }
+                return raw;
+              };
+
               if (ytUser?.email) {
                 const serviceName = serviceType === "oac" ? "Canal Oficial de Artista (OAC)" : "YouTube Content ID";
                 const msgId = crypto.randomUUID();
                 await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-${requestId}`, message_id: msgId, to: ytUser.email, from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", subject: `✅ Solicitud de ${serviceName} recibida — MusicDibs`, html: `<p>Hemos recibido tu solicitud de <strong>${serviceName}</strong>. ID: ${requestId}. Plazo estimado: 5 días laborables.</p>`, text: `Solicitud de ${serviceName} recibida. ID: ${requestId}. Plazo: 5 días laborables.`, purpose: "transactional", label: "youtube_service_confirmation", queued_at: new Date().toISOString() } });
 
                 const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                const rowsHtml = Object.entries(formData).map(([k, v]) => {
-                  const val = typeof v === "object" ? JSON.stringify(v) : String(v ?? "");
-                  return `<tr><td style="padding:6px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600;vertical-align:top">${escapeHtml(k)}</td><td style="padding:6px 10px;border:1px solid #e5e7eb;white-space:pre-wrap;word-break:break-word">${escapeHtml(val)}</td></tr>`;
+                const isUrl = (s: string) => /^https?:\/\//i.test(s);
+                const entries = await Promise.all(
+                  Object.entries(formData).map(async ([k, v]) => [k, await resolveValue(v)] as [string, string])
+                );
+                const rowsHtml = entries.map(([k, val]) => {
+                  const cell = isUrl(val)
+                    ? `<a href="${escapeHtml(val)}" target="_blank" rel="noopener">${escapeHtml(val)}</a>`
+                    : escapeHtml(val);
+                  return `<tr><td style="padding:6px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600;vertical-align:top">${escapeHtml(k)}</td><td style="padding:6px 10px;border:1px solid #e5e7eb;white-space:pre-wrap;word-break:break-word">${cell}</td></tr>`;
                 }).join("");
-                const rowsText = Object.entries(formData).map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : String(v ?? "")}`).join("\n");
+                const rowsText = entries.map(([k, val]) => `${k}: ${val}`).join("\n");
+
 
                 const adminMsgId = crypto.randomUUID();
                 await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-admin-${requestId}`, message_id: adminMsgId, to: "marketing@musicdibs.com", cc: "info@musicdibs.com", from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", reply_to: ytUser.email, subject: `📺 Nueva solicitud ${serviceName} — ${ytUser.email}`, html: `<p>Nueva solicitud de <strong>${serviceName}</strong>.</p><p><strong>Usuario:</strong> ${escapeHtml(ytUser.email)}<br/><strong>Request ID:</strong> ${requestId}<br/><strong>Fecha:</strong> ${new Date().toISOString()}</p><h3 style="margin-top:16px">Datos del formulario</h3><table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:13px">${rowsHtml}</table>`, text: `Nueva solicitud: ${serviceName}\nUsuario: ${ytUser.email}\nRequest ID: ${requestId}\n\nDatos:\n${rowsText}`, purpose: "transactional", label: "youtube_service_admin", queued_at: new Date().toISOString() } });
