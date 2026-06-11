@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import {
   TrendingUp, TrendingDown, Users, UserPlus, Activity, ShieldCheck,
   Music, ShoppingBag, Zap, DollarSign, BarChart3, Target, ShoppingCart,
-  Repeat, XCircle, ArrowRightLeft, CheckCircle2, AlertTriangle,
+  Repeat, XCircle, ArrowRightLeft, CheckCircle2, AlertTriangle, Gift,
 } from 'lucide-react';
 
 interface KpiGridProps {
@@ -101,7 +101,7 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
           <ShoppingBag className="w-3.5 h-3.5" /> Clientes
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           <KpiCard label="Clientes totales" value={m.customersTotal ?? m.activeSubscriptions ?? 0} icon={ShoppingBag} />
           <KpiCard label="Clientes nuevos" value={m.customersNew ?? 0} icon={UserPlus}
             sub="En el periodo"
@@ -115,6 +115,20 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
           <KpiCard label="Ticket medio" value={`€${m.averageOrderValue ?? m.arpu ?? 0}`} icon={DollarSign}
             sub="AOV del periodo"
           />
+          {(() => {
+            const wcUsers = Number(m.welcomeCreditUsers ?? 0);
+            const wcConv = Number(m.welcomeCreditConverted ?? 0);
+            const wcNet = Number(m.welcomeCreditNetRevenue ?? 0);
+            const wcRate = wcUsers > 0 ? ((wcConv / wcUsers) * 100).toFixed(1) : '0';
+            return (
+              <KpiCard
+                label="Conv. crédito regalo"
+                value={`${wcRate}%`}
+                icon={Gift}
+                sub={`${wcConv}/${wcUsers} usaron · €${wcNet.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} neto`}
+              />
+            );
+          })()}
         </div>
       </div>
 
