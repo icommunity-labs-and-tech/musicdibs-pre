@@ -166,8 +166,8 @@ function FileStep({ step, value, onChange, onNext, uploading }: { step: WizardSt
     const path = 'youtube-requests/' + user.id + '/' + Date.now() + '.' + ext;
     const { error } = await supabase.storage.from('documents').upload(path, file, { upsert: true });
     if (!error) {
-      const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(path);
-      onChange(publicUrl);
+      // Store the storage path (bucket is private — admins generate signed URLs server-side)
+      onChange('documents://' + path);
     }
   };
   return (
