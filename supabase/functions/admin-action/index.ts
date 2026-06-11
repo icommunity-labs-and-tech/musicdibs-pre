@@ -2848,40 +2848,45 @@ serve(async (req) => {
             ),
           ];
           if (candidates.length) {
-            const { data: allUsages } = await admin
-              .from("credit_transactions")
-              .select("user_id, created_at")
-              .eq("type", "usage")
-              .in("user_id", candidates)
-              .order("created_at", { ascending: true })
-              .limit(200000);
-            const firstUsage = new Map<string, string>();
-            (allUsages || []).forEach((u: any) => {
-              if (!firstUsage.has(u.user_id)) {
-                firstUsage.set(u.user_id, u.created_at);
-              }
-            });
-            const welcomeUsers = candidates.filter((uid) => {
-              const f = firstUsage.get(uid);
-              return !!f && f >= filterStart! && f <= filterEnd!;
-            });
+            // "Gastó el crédito de regalo en el periodo" = su PRIMER usage cae en el
+            // periodo. Equivale a: tiene usage en el periodo y NO tiene ningún usage
+            // anterior a filterStart. Paginamos para evitar el techo de PostgREST.
+            const priorUserSet = new Set<string>();
+            const CHUNK = 500;
+            for (let i = 0; i < candidates.length; i += CHUNK) {
+              const slice = candidates.slice(i, i + CHUNK);
+              const { data: prior } = await admin
+                .from("credit_transactions")
+                .select("user_id")
+                .eq("type", "usage")
+                .lt("created_at", filterStart)
+                .in("user_id", slice)
+                .limit(100000);
+              (prior || []).forEach((p: any) => priorUserSet.add(p.user_id));
+            }
+            const welcomeUsers = candidates.filter(
+              (uid) => !priorUserSet.has(uid),
+            );
             welcomeCreditUsers = welcomeUsers.length;
 
             if (welcomeUsers.length) {
-              const { data: theirOrders } = await admin
-                .from("orders")
-                .select(
-                  "user_id, amount_net, amount_gross, stripe_fee, dispute_fee, order_status",
-                )
-                .eq("order_status", "paid")
-                .in("user_id", welcomeUsers)
-                .gte("paid_at", filterStart)
-                .lte("paid_at", filterEnd);
               const buyers = new Set<string>();
-              (theirOrders || []).forEach((o: any) => {
-                buyers.add(o.user_id);
-                welcomeCreditNetRevenue += netRev(o);
-              });
+              for (let i = 0; i < welcomeUsers.length; i += CHUNK) {
+                const slice = welcomeUsers.slice(i, i + CHUNK);
+                const { data: theirOrders } = await admin
+                  .from("orders")
+                  .select(
+                    "user_id, amount_net, amount_gross, stripe_fee, dispute_fee, order_status",
+                  )
+                  .eq("order_status", "paid")
+                  .in("user_id", slice)
+                  .gte("paid_at", filterStart)
+                  .lte("paid_at", filterEnd);
+                (theirOrders || []).forEach((o: any) => {
+                  buyers.add(o.user_id);
+                  welcomeCreditNetRevenue += netRev(o);
+                });
+              }
               welcomeCreditConverted = buyers.size;
               welcomeCreditNetRevenue =
                 Math.round(welcomeCreditNetRevenue * 100) / 100;
