@@ -2840,13 +2840,16 @@ serve(async (req) => {
             .gte("created_at", filterStart)
             .lte("created_at", filterEnd)
             .limit(50000);
-          const candidates = [
-            ...new Set(
-              (usagesInPeriod || [])
-                .map((u: any) => u.user_id)
-                .filter(Boolean),
-            ),
-          ];
+          // Para cada candidato, su PRIMER usage dentro del periodo.
+          const firstUsageInPeriod = new Map<string, string>();
+          (usagesInPeriod || []).forEach((u: any) => {
+            if (!u.user_id || !u.created_at) return;
+            const prev = firstUsageInPeriod.get(u.user_id);
+            if (!prev || u.created_at < prev) {
+              firstUsageInPeriod.set(u.user_id, u.created_at);
+            }
+          });
+          const candidates = [...firstUsageInPeriod.keys()];
           if (candidates.length) {
             // "Gastó el crédito de regalo en el periodo" = su PRIMER usage cae en el
             // periodo. Equivale a: tiene usage en el periodo y NO tiene ningún usage
@@ -2876,13 +2879,19 @@ serve(async (req) => {
                 const { data: theirOrders } = await admin
                   .from("orders")
                   .select(
-                    "user_id, amount_net, amount_gross, stripe_fee, dispute_fee, order_status",
+                    "user_id, amount_net, amount_gross, stripe_fee, dispute_fee, order_status, paid_at",
                   )
                   .eq("order_status", "paid")
                   .in("user_id", slice)
                   .gte("paid_at", filterStart)
                   .lte("paid_at", filterEnd);
                 (theirOrders || []).forEach((o: any) => {
+                  // Sólo cuenta si la compra ocurrió DESPUÉS del primer uso del
+                  // crédito de regalo. Compras previas al uso del crédito no son
+                  // conversión "tras prueba".
+                  const firstUse = firstUsageInPeriod.get(o.user_id);
+                  if (!firstUse || !o.paid_at) return;
+                  if (o.paid_at < firstUse) return;
                   buyers.add(o.user_id);
                   welcomeCreditNetRevenue += netRev(o);
                 });
