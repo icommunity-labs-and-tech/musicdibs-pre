@@ -1962,7 +1962,7 @@ serve(async (req) => {
       const todayStr = new Date().toISOString().slice(0, 10);
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v9:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v10:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -2851,11 +2851,26 @@ serve(async (req) => {
           });
           const candidates = [...firstUsageInPeriod.keys()];
           if (candidates.length) {
+            // Restringir a usuarios que recibieron el bonus de bienvenida
+            // (1 crédito gratis al registrarse). Antes de junio 2026 esto no
+            // existía, así que el cohorte será 0 en periodos previos.
+            const welcomeBonusSet = new Set<string>();
+            const CHUNK = 500;
+            for (let i = 0; i < candidates.length; i += CHUNK) {
+              const slice = candidates.slice(i, i + CHUNK);
+              const { data: bonuses } = await admin
+                .from("credit_transactions")
+                .select("user_id")
+                .eq("type", "bonus")
+                .ilike("description", "Welcome%")
+                .in("user_id", slice)
+                .limit(100000);
+              (bonuses || []).forEach((b: any) => welcomeBonusSet.add(b.user_id));
+            }
             // "Gastó el crédito de regalo en el periodo" = su PRIMER usage cae en el
             // periodo. Equivale a: tiene usage en el periodo y NO tiene ningún usage
             // anterior a filterStart. Paginamos para evitar el techo de PostgREST.
             const priorUserSet = new Set<string>();
-            const CHUNK = 500;
             for (let i = 0; i < candidates.length; i += CHUNK) {
               const slice = candidates.slice(i, i + CHUNK);
               const { data: prior } = await admin
@@ -2868,9 +2883,10 @@ serve(async (req) => {
               (prior || []).forEach((p: any) => priorUserSet.add(p.user_id));
             }
             const welcomeUsers = candidates.filter(
-              (uid) => !priorUserSet.has(uid),
+              (uid) => welcomeBonusSet.has(uid) && !priorUserSet.has(uid),
             );
             welcomeCreditUsers = welcomeUsers.length;
+
 
             if (welcomeUsers.length) {
               const buyers = new Set<string>();
