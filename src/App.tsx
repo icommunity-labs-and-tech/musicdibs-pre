@@ -76,6 +76,7 @@ const AdminWorksPage = lazyWithRetry(() => import("./pages/AdminWorksPage"));
 const AdminMetricsPage = lazyWithRetry(() => import("./pages/AdminMetricsPage"));
 const AdminSystemPage = lazyWithRetry(() => import("./pages/AdminSystemPage"));
 const AdminPremiumPromosPage = lazyWithRetry(() => import("./pages/AdminPremiumPromosPage"));
+const AdminYoutubeServicesPage = lazyWithRetry(() => import("./pages/AdminYoutubeServicesPage"));
 const AdminFeatureCostsPage = lazyWithRetry(() => import("./pages/AdminFeatureCostsPage"));
 const AdminApiCostsPage = lazyWithRetry(() => import("./pages/AdminApiCostsPage"));
 const AdminAlertsPage = lazyWithRetry(() => import("./pages/AdminAlertsPage"));
