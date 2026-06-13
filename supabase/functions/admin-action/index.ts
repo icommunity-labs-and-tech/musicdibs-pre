@@ -5739,6 +5739,87 @@ serve(async (req) => {
       return json({ conversions: results });
     }
 
+    // ── list_youtube_service_requests ─────────────────────────────
+    if (action === "list_youtube_service_requests") {
+      const offset = Number(payload.offset || 0);
+      const limit = Number(payload.limit || 100);
+      let query = admin
+        .from("youtube_service_requests")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
+      if (payload.status_filter) query = query.eq("status", payload.status_filter);
+      if (payload.service_type_filter) query = query.eq("service_type", payload.service_type_filter);
+
+      const { data: requests, error } = await query;
+      if (error) return json({ error: error.message }, 500);
+
+      const userIds = [...new Set((requests || []).map((r: any) => r.user_id))];
+      const emailsMap = await getAllEmailsMap();
+      const { data: profiles } = await admin
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
+      const namesMap: Record<string, string> = {};
+      (profiles || []).forEach((p: any) => { namesMap[p.user_id] = p.display_name; });
+
+      const enriched = (requests || []).map((r: any) => ({
+        ...r,
+        user_email: emailsMap[r.user_id] || "",
+        user_display_name: namesMap[r.user_id] || "",
+      }));
+
+      return json({ requests: enriched });
+    }
+
+    // ── update_youtube_service_request ────────────────────────────
+    if (action === "update_youtube_service_request") {
+      const { request_id, new_status, rejection_reason, admin_notes, service_type } = payload;
+      if (!request_id) return json({ error: "request_id required" }, 400);
+
+      const { data: req, error: fetchErr } = await admin
+        .from("youtube_service_requests")
+        .select("*")
+        .eq("id", request_id)
+        .single();
+      if (fetchErr || !req) return json({ error: "Request not found" }, 404);
+
+      const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
+
+      if (new_status) {
+        const validStatuses = ["draft", "pending_payment", "submitted", "in_review", "approved", "rejected", "cancelled"];
+        if (!validStatuses.includes(new_status)) return json({ error: "Invalid status" }, 400);
+        updateData.status = new_status;
+        if (["in_review", "approved", "rejected"].includes(new_status)) {
+          updateData.reviewed_at = new Date().toISOString();
+        }
+        if (new_status === "rejected" && rejection_reason) {
+          updateData.rejection_reason = rejection_reason;
+        }
+      }
+
+      if (typeof admin_notes === "string") updateData.admin_notes = admin_notes;
+
+      if (service_type) {
+        if (!["content_id", "oac"].includes(service_type)) return json({ error: "Invalid service_type" }, 400);
+        updateData.service_type = service_type;
+      }
+
+      const { error: upErr } = await admin
+        .from("youtube_service_requests")
+        .update(updateData)
+        .eq("id", request_id);
+      if (upErr) return json({ error: upErr.message }, 500);
+
+      await audit({
+        action: "update_youtube_service_request",
+        target_user_id: req.user_id,
+        details: { request_id, old_status: req.status, ...updateData },
+      });
+
+      return json({ ok: true });
+    }
+
     return json({ error: "Unknown action" }, 400);
   } catch (e) {
     console.error("[ADMIN-ACTION] Error:", e);
