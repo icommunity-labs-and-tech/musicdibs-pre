@@ -94,6 +94,7 @@ export function DashboardSidebar() {
     { title: 'Cupones regalo', url: '/dashboard/admin/credit-coupons', icon: Sparkles },
     { title: tr('dashboard.sidebar.system', 'Sistema'), url: '/dashboard/admin/system', icon: Settings2 },
     { title: tr('dashboard.sidebar.premiumPromos', 'Promos Premium'), url: '/dashboard/admin/premium-promos', icon: Megaphone },
+    { title: 'Servicios YouTube', url: '/dashboard/admin/youtube-services', icon: Youtube },
     { title: tr('dashboard.sidebar.featureCosts', 'Costes de operaciones'), url: '/dashboard/admin/feature-costs', icon: Settings2 },
     { title: tr('dashboard.sidebar.apiProfitability', 'Rentabilidad APIs'), url: '/dashboard/admin/api-costs', icon: BarChart3 },
     { title: tr('dashboard.sidebar.productMetrics', 'MÃ©tricas producto'), url: '/dashboard/admin/product-metrics', icon: BarChart3 },

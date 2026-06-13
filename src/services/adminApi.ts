@@ -145,6 +145,8 @@ export const adminApi = {
   callAction: (action: string, payload: AdminActionPayload = {}) => adminAction(action, payload),
   getPremiumPromos: (offset = 0, status_filter = '') => adminAction('get_premium_promos', { offset, status_filter }),
   updatePremiumPromoStatus: (promo_id: string, new_status: string, rejection_reason?: string, ig_url?: string, tiktok_url?: string) => adminAction('update_premium_promo_status', { promo_id, new_status, ...(rejection_reason ? { rejection_reason } : {}), ...(ig_url ? { ig_url } : {}), ...(tiktok_url ? { tiktok_url } : {}) }),
+  listYoutubeServiceRequests: (status_filter = '', service_type_filter = '') => adminAction('list_youtube_service_requests', { ...(status_filter ? { status_filter } : {}), ...(service_type_filter ? { service_type_filter } : {}) }),
+  updateYoutubeServiceRequest: (request_id: string, patch: { new_status?: string; rejection_reason?: string; admin_notes?: string; service_type?: string }) => adminAction('update_youtube_service_request', { request_id, ...patch }),
   deleteWork: (work_id: string) => adminAction('delete_work', { work_id }),
   getWorkFileMetadata: (work_id: string) => adminAction('get_work_file_metadata', { work_id }) as Promise<{ filename?: string | null; filesize?: number | null }>,
   getCampaignsCatalog: () => adminAction('get_campaigns_catalog'),
