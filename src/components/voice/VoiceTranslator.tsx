@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
 import { useCredits } from '@/hooks/useCredits';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
+import { NoCreditsAlert } from '@/components/dashboard/NoCreditsAlert';
 
 interface VoiceTranslatorProps {
   clones: any[];
@@ -216,14 +217,7 @@ export const VoiceTranslator = ({ clones }: VoiceTranslatorProps) => {
 
       {/* Translate Button */}
       {!canAfford ? (
-        <Button
-          onClick={() => navigate('/dashboard/credits')}
-          variant="outline"
-          className="w-full gap-2 border-amber-500/30 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20"
-        >
-          <ShoppingCart className="h-4 w-4" />
-          Comprar créditos
-        </Button>
+        <NoCreditsAlert cost={creditsNeeded} actionLabel={vc('translateButton')} />
       ) : (
         <Button
           onClick={handleTranslate}
