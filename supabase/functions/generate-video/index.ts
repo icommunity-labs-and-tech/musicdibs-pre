@@ -391,6 +391,7 @@ serve(async (req) => {
         const runwayResult = await submitRunway(RUNWAY_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
 
         if (runwayResult) {
+          await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
           console.log(`[VIDEO] Runway task created: ${runwayResult.requestId}, ${CREDITS_COST} credits charged`);
           return jsonResponse({
             requestId: runwayResult.requestId,
@@ -398,6 +399,7 @@ serve(async (req) => {
             provider: 'runway',
           });
         }
+
       }
 
       // All providers failed — refund
