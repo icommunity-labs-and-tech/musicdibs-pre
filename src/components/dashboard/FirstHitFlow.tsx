@@ -46,6 +46,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
+import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
 import { registerWork, listIbsSignatures, createIbsSignature, syncIbsSignatures } from "@/services/dashboardApi";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -982,6 +983,13 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                 </Button>
               </div>
 
+              {!hasEnough(genMode === "song" ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio) && !generating && (
+                <NoCreditsAlert
+                  cost={genMode === "song" ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio}
+                  actionLabel={t("dashboard.firstHit.generateAI")}
+                />
+              )}
+
               {audioUrl && (
                 <Button className="w-full gap-2" onClick={handleStep1Next}>
                   {t("dashboard.firstHit.likeItRegister")}
@@ -1597,6 +1605,13 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                   </Label>
                 </div>
 
+                {!hasEnough(FEATURE_COSTS.promote_premium) && !promoting && (
+                  <NoCreditsAlert
+                    cost={FEATURE_COSTS.promote_premium}
+                    actionLabel={t("dashboard.premium.submit")}
+                  />
+                )}
+
                 <Button
                   type="submit"
                   className="w-full gap-2"
@@ -1607,7 +1622,8 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                     !promoSongTitle.trim() ||
                     !promoLyrics.trim() ||
                     !promoAudioFile ||
-                    !promoMediaFile
+                    !promoMediaFile ||
+                    !hasEnough(FEATURE_COSTS.promote_premium)
                   }
                 >
                   {promoting ? (
