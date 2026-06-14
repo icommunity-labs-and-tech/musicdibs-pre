@@ -315,16 +315,6 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
     );
   }
 
-  if (noCredits) {
-    return (
-      <Card className="border-border/40">
-        <CardContent className="p-6">
-          <NoCreditsAlert message={t('wizard.rw.noCreditsMsg')} />
-        </CardContent>
-      </Card>
-    );
-  }
-
   if (kycBlocked) {
     return (
       <Card className="border-border/40">
@@ -355,7 +345,7 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
 
   const renderStep = () => {
     if (step === -1) {
-      return <StepEntry data={data} onUpdate={update} onNext={() => setStep(0)} />;
+      return <StepEntry data={data} onUpdate={update} onNext={() => setStep(0)} noCredits={noCredits} />;
     }
 
     if (step === steps.length - 1) {
