@@ -1958,8 +1958,45 @@ serve(async (req) => {
       } catch (e) {
         console.warn("[get_saas_metrics] period parse failed:", (e as any)?.message);
       }
+
+      // Cap filterEnd at "now" so an in-progress period (current month/week/year)
+      // is measured MTD/WTD/YTD instead of including future days that haven't
+      // happened yet. This is the foundation for fair "vs anterior" comparisons.
+      if (filterEnd && new Date(filterEnd).getTime() > now.getTime()) {
+        filterEnd = now.toISOString();
+      }
+
+      // Compare windows used by every "vs anterior" KPI (new users, churn, MRR…).
+      // Previous window is calendar-aligned (start of the prior week/month/year)
+      // and trimmed to the same length as the current window — so on Jun 14 we
+      // compare Jun 1–14 against May 1–14, not against the full month of May.
+      const compareThisStart = filterStart || thisMonthStart;
+      const compareThisEnd = filterEnd || now.toISOString();
+      const compareSpanMs = Math.max(
+        0,
+        new Date(compareThisEnd).getTime() - new Date(compareThisStart).getTime(),
+      );
+      let comparePrevStart: string;
+      let comparePrevEnd: string;
+      {
+        const fs = new Date(compareThisStart);
+        let pStart: Date;
+        if (periodType === "week") {
+          pStart = new Date(fs);
+          pStart.setDate(pStart.getDate() - 7);
+        } else if (periodType === "year") {
+          pStart = new Date(fs.getFullYear() - 1, 0, 1);
+        } else {
+          // month is default (and also used when no period filter applies)
+          pStart = new Date(fs.getFullYear(), fs.getMonth() - 1, 1);
+        }
+        comparePrevStart = pStart.toISOString();
+        comparePrevEnd = new Date(pStart.getTime() + compareSpanMs).toISOString();
+      }
+
       const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
       const todayStr = new Date().toISOString().slice(0, 10);
+
 
       // ── Cache layer (5 min TTL per filter combination) ──
       const cacheKey = `saas_metrics_cache_v10:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
