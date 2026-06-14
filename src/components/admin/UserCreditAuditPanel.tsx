@@ -244,6 +244,11 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <EventBadge type={row.event_type} />
+                  {row.event_type === 'usage' && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                      {classifyUsage(row)}
+                    </span>
+                  )}
                   {row.feature_key && (
                     <span className="text-[10px] text-muted-foreground font-mono">{row.feature_key}</span>
                   )}
