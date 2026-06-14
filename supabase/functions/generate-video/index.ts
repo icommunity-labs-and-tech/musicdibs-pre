@@ -492,35 +492,67 @@ serve(async (req) => {
       const resolvedAspectRatio = aspectRatio || '16:9';
       const resolvedDuration = duration || 10;
 
-      // 1. Try fal.ai (primary)
-      const falResult = await submitFal(FAL_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
+      // Read active providers from ai_provider_settings (priority asc).
+      const { data: providerRows } = await supabaseAdmin
+        .from('ai_provider_settings')
+        .select('provider, model, priority, is_active')
+        .eq('feature_key', 'video_generation')
+        .eq('is_active', true)
+        .order('priority', { ascending: true });
 
-      if (falResult) {
-        await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
-        console.log(`[VIDEO] fal.ai queue request: ${falResult.requestId}, ${CREDITS_COST} credits charged`);
-        return jsonResponse({
-          requestId: falResult.requestId,
-          statusUrl: falResult.statusUrl,
-          provider: 'fal',
-        });
+      // Fallback to legacy hardcoded sequence if no DB config exists.
+      const providersToTry: Array<{ provider: string; model: string }> =
+        providerRows && providerRows.length > 0
+          ? providerRows.map((r: any) => ({ provider: String(r.provider), model: String(r.model || '') }))
+          : [
+              { provider: 'fal', model: 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video' },
+              { provider: 'runway', model: 'gen4_turbo' },
+            ];
+
+      // If we have an input image, upload it once so KIE (URL-only) can consume it.
+      let imageUrl: string | undefined;
+      if (imageBase64) {
+        const uploaded = await uploadImageForProvider(supabaseAdmin, userId, imageBase64);
+        if (uploaded) imageUrl = uploaded;
       }
 
+      for (const cfg of providersToTry) {
+        const key = cfg.provider.toLowerCase();
 
-      // 2. Try Runway (fallback)
-      if (RUNWAY_API_KEY) {
-        console.log('[VIDEO] fal.ai failed, trying Runway fallback…');
-        const runwayResult = await submitRunway(RUNWAY_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
-
-        if (runwayResult) {
-          await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
-          console.log(`[VIDEO] Runway task created: ${runwayResult.requestId}, ${CREDITS_COST} credits charged`);
-          return jsonResponse({
-            requestId: runwayResult.requestId,
-            statusUrl: null,
-            provider: 'runway',
-          });
+        if ((key === 'kie' || key === 'kie_suno') && KIE_API_KEY) {
+          console.log(`[VIDEO] Trying KIE provider (model=${cfg.model})`);
+          const r = await submitKie(KIE_API_KEY, cfg.model, promptText, resolvedDuration, resolvedAspectRatio, imageUrl);
+          if (r) {
+            await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
+            console.log(`[VIDEO] KIE task ${r.requestId}, ${CREDITS_COST} credits charged`);
+            return jsonResponse({ requestId: r.requestId, statusUrl: null, provider: 'kie' });
+          }
+          continue;
         }
 
+        if (key === 'fal' && FAL_API_KEY) {
+          console.log('[VIDEO] Trying fal.ai provider');
+          const r = await submitFal(FAL_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
+          if (r) {
+            await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
+            console.log(`[VIDEO] fal.ai queue request: ${r.requestId}, ${CREDITS_COST} credits charged`);
+            return jsonResponse({ requestId: r.requestId, statusUrl: r.statusUrl, provider: 'fal' });
+          }
+          continue;
+        }
+
+        if (key === 'runway' && RUNWAY_API_KEY) {
+          console.log('[VIDEO] Trying Runway provider');
+          const r = await submitRunway(RUNWAY_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
+          if (r) {
+            await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
+            console.log(`[VIDEO] Runway task created: ${r.requestId}, ${CREDITS_COST} credits charged`);
+            return jsonResponse({ requestId: r.requestId, statusUrl: null, provider: 'runway' });
+          }
+          continue;
+        }
+
+        console.warn(`[VIDEO] Skipping provider "${cfg.provider}" (unsupported or missing API key)`);
       }
 
       // All providers failed — refund
