@@ -192,6 +192,20 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
         </div>
       </div>
 
+      {/* Desglose de Usados por categoría */}
+      {usageEntries.length > 0 && (
+        <div className="mb-3 rounded-lg bg-muted/30 px-3 py-2">
+          <p className="text-[10px] text-muted-foreground mb-1.5 uppercase tracking-wider">Desglose de usos</p>
+          <div className="flex flex-wrap gap-1.5">
+            {usageEntries.map(([cat, total]) => (
+              <span key={cat} className="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                {cat}: <span className="font-semibold tabular-nums">-{total}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Toggle validations */}
       <div className="flex items-center gap-2 mb-3">
         <button
