@@ -3128,16 +3128,19 @@ serve(async (req) => {
           return new Date(d.getTime() + madridOffsetMs(d)).toISOString();
         };
 
-        // Aggregate revenue + orders per bucket
-        // NOTE: bucket assignment uses paid_at in Europe/Madrid (real cash-in day).
+        // Aggregate revenue + orders per bucket.
+        // Bucket assignment uses paid_at in UTC to match the period filter
+        // (ordersData is filtered by paid_at >= filterStart < filterEnd in UTC).
+        // Using a Madrid-shifted timestamp here would push orders paid near the
+        // end of the period out of every bucket, making the chart's "Neto del
+        // periodo" lower than the sales card's net.
         // Orders with paid_at IS NULL are excluded from the chart.
         for (const b of buckets) {
           const sIso = b.start.toISOString();
           const eIso = b.end.toISOString();
           const bOrders = ordersData.filter((o: any) => {
             if (!o.paid_at) return false;
-            const localPaid = toMadridIso(o.paid_at);
-            return localPaid >= sIso && localPaid < eIso;
+            return o.paid_at >= sIso && o.paid_at < eIso;
           });
           const bRev = bOrders.reduce((s: number, o: any) => s + netRev(o), 0);
           let bGross = 0, bIva = 0, bFee = 0;
