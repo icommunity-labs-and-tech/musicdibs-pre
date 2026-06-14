@@ -4,14 +4,17 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTranslation } from 'react-i18next';
 import type { WizardData } from './types';
+import { NoCreditsAlert } from '@/components/dashboard/NoCreditsAlert';
+import { FEATURE_COSTS } from '@/lib/featureCosts';
 
 interface StepEntryProps {
   data: WizardData;
-  onUpdate: (d: Partial<WizardData>) => void;
+  onUpdate: (partial: Partial<WizardData>) => void;
   onNext: () => void;
+  noCredits?: boolean;
 }
 
-export function StepEntry({ data, onUpdate, onNext }: StepEntryProps) {
+export function StepEntry({ data, onUpdate, onNext, noCredits }: StepEntryProps) {
   const { t } = useTranslation();
 
   const options = [
@@ -64,14 +67,21 @@ export function StepEntry({ data, onUpdate, onNext }: StepEntryProps) {
         ))}
       </div>
 
-      <Button
-        onClick={onNext}
-        disabled={!data.flow}
-        variant="hero"
-        className="w-full sm:w-auto"
-      >
-        {t('wizard.continue')}
-      </Button>
+      {noCredits ? (
+        <NoCreditsAlert
+          cost={FEATURE_COSTS.register_work}
+          actionLabel={t('wizard.continue')}
+        />
+      ) : (
+        <Button
+          onClick={onNext}
+          disabled={!data.flow}
+          variant="hero"
+          className="w-full sm:w-auto"
+        >
+          {t('wizard.continue')}
+        </Button>
+      )}
     </div>
   );
 }
