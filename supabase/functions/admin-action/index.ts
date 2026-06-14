@@ -3117,6 +3117,7 @@ serve(async (req) => {
               label: s.toLocaleDateString("es-ES", {
                 weekday: "short",
                 day: "2-digit",
+                timeZone: "Europe/Madrid",
               }),
               start: s,
               end: e,
