@@ -255,9 +255,15 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <EventBadge type={row.event_type} />
-                  {row.event_type === 'usage' && (
+                  {consumptionRows.includes(row) && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                      {classifyUsage(row)}
+                      {row.event_type === 'promote_premium' ? 'Promo Premium'
+                        : row.event_type === 'admin_deduct' || row.event_type === 'admin_adjust' ? 'Ajuste admin'
+                        : row.event_type === 'admin_adjustment' || row.event_type === 'adjustment' ? 'Ajuste'
+                        : row.event_type === 'admin_reset' ? 'Reset admin'
+                        : row.event_type === 'referral_revoked' ? 'Referido revocado'
+                        : row.event_type === 'plan_switch_reset' ? 'Cambio de plan'
+                        : classifyUsage(row)}
                     </span>
                   )}
                   {row.feature_key && (
