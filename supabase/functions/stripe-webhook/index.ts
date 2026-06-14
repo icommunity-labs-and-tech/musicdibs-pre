@@ -878,9 +878,9 @@ serve(async (req) => {
           }
 
           // ── Create renewal order ──
-          const resolvedPlanId = priceId ? (PRICE_TO_PLAN_ID[priceId] || "unknown") : "unknown";
+          const resolvedPlanId = priceId ? (PRICE_TO_PLAN_ID[priceId] || dbTier || "unknown") : (dbTier || "unknown");
           const productType = getProductType(resolvedPlanId);
-          const planLabel = `Renovación ${resolvedPlanId}`;
+          const planLabel = `Renovación ${PLAN_ID_TO_PLAN_NAME[resolvedPlanId] ?? resolvedPlanId}`;
 
           const renewalStripeFee = await getStripeFee(stripe, chargeId);
           const renewalOrder = await createOrderRecord(supabase, {
