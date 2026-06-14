@@ -2874,6 +2874,15 @@ serve(async (req) => {
         console.error("[get_saas_metrics] Orders query error:", ordErr.message);
       }
 
+      // Period-over-period revenue change (powers the MRR KPI trend arrow).
+      mrrChange =
+        prevPeriodRevenue > 0
+          ? parseFloat(
+              (((orderRevenue - prevPeriodRevenue) / prevPeriodRevenue) * 100).toFixed(1),
+            )
+          : 0;
+
+
       // ── Welcome-credit conversion (period) ──
       // Usuarios cuyo PRIMER consumo de crédito (es decir, gastaron el crédito
       // de regalo de bienvenida) ocurrió en el periodo, y cuántos de ellos
