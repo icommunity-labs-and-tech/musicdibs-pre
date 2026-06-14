@@ -1958,8 +1958,45 @@ serve(async (req) => {
       } catch (e) {
         console.warn("[get_saas_metrics] period parse failed:", (e as any)?.message);
       }
+
+      // Cap filterEnd at "now" so an in-progress period (current month/week/year)
+      // is measured MTD/WTD/YTD instead of including future days that haven't
+      // happened yet. This is the foundation for fair "vs anterior" comparisons.
+      if (filterEnd && new Date(filterEnd).getTime() > now.getTime()) {
+        filterEnd = now.toISOString();
+      }
+
+      // Compare windows used by every "vs anterior" KPI (new users, churn, MRR…).
+      // Previous window is calendar-aligned (start of the prior week/month/year)
+      // and trimmed to the same length as the current window — so on Jun 14 we
+      // compare Jun 1–14 against May 1–14, not against the full month of May.
+      const compareThisStart = filterStart || thisMonthStart;
+      const compareThisEnd = filterEnd || now.toISOString();
+      const compareSpanMs = Math.max(
+        0,
+        new Date(compareThisEnd).getTime() - new Date(compareThisStart).getTime(),
+      );
+      let comparePrevStart: string;
+      let comparePrevEnd: string;
+      {
+        const fs = new Date(compareThisStart);
+        let pStart: Date;
+        if (periodType === "week") {
+          pStart = new Date(fs);
+          pStart.setDate(pStart.getDate() - 7);
+        } else if (periodType === "year") {
+          pStart = new Date(fs.getFullYear() - 1, 0, 1);
+        } else {
+          // month is default (and also used when no period filter applies)
+          pStart = new Date(fs.getFullYear(), fs.getMonth() - 1, 1);
+        }
+        comparePrevStart = pStart.toISOString();
+        comparePrevEnd = new Date(pStart.getTime() + compareSpanMs).toISOString();
+      }
+
       const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString();
       const todayStr = new Date().toISOString().slice(0, 10);
+
 
       // ── Cache layer (5 min TTL per filter combination) ──
       const cacheKey = `saas_metrics_cache_v10:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
@@ -2070,15 +2107,19 @@ serve(async (req) => {
           })
           .filter(Boolean);
 
-        const thisMonthTs = Math.floor(new Date(thisMonthStart).getTime() / 1000);
-        const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
-        cancelledSubs = allCancelledSubs.filter((s: any) => s.canceled_at >= lastMonthTs);
-        cancelledSubsThisMonth = cancelledSubs.filter(
-          (s: any) => s.canceled_at >= thisMonthTs,
+        // Churn windows aligned with the selected period (MTD vs same-MTD-prev).
+        const thisStartTs = Math.floor(new Date(compareThisStart).getTime() / 1000);
+        const thisEndTs = Math.floor(new Date(compareThisEnd).getTime() / 1000);
+        const prevStartTs = Math.floor(new Date(comparePrevStart).getTime() / 1000);
+        const prevEndTs = Math.floor(new Date(comparePrevEnd).getTime() / 1000);
+        cancelledSubs = allCancelledSubs.filter((s: any) => s.canceled_at >= prevStartTs);
+        cancelledSubsThisMonth = allCancelledSubs.filter(
+          (s: any) => s.canceled_at >= thisStartTs && s.canceled_at < thisEndTs,
         ).length;
-        cancelledSubsLastMonth = cancelledSubs.filter(
-          (s: any) => s.canceled_at >= lastMonthTs && s.canceled_at < thisMonthTs,
+        cancelledSubsLastMonth = allCancelledSubs.filter(
+          (s: any) => s.canceled_at >= prevStartTs && s.canceled_at < prevEndTs,
         ).length;
+
 
         // Revenue evolution (12 months) — from orders table, net per month
         const { data: revRows } = await admin
@@ -2134,17 +2175,13 @@ serve(async (req) => {
       }
 
       // "Nuevos registros" reflects the selected period when one is active, else the current month.
-      const newThisStart = filterStart || thisMonthStart;
-      const newThisEnd = filterEnd || null;
-      const periodMs =
-        filterStart && filterEnd
-          ? new Date(filterEnd).getTime() - new Date(filterStart).getTime()
-          : new Date(thisMonthStart).getTime() -
-            new Date(lastMonthStart).getTime();
-      const prevStart = new Date(
-        new Date(newThisStart).getTime() - periodMs,
-      ).toISOString();
-      const prevEnd = newThisStart;
+      // Aligned with compareThisStart/End so MTD vs same-MTD-prev comparisons hold.
+      const newThisStart = compareThisStart;
+      const newThisEnd = compareThisEnd;
+      const periodMs = compareSpanMs;
+      const prevStart = comparePrevStart;
+      const prevEnd = comparePrevEnd;
+
 
       let newThisQuery = admin
         .from("profiles")
@@ -2605,24 +2642,37 @@ serve(async (req) => {
           ? Math.round((topPlanEntry[1].count / paidUsers) * 100)
           : 0;
 
-      // MRR change (compare this month charges vs last month)
-      const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-      const lastMonthKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
-      const thisMonthRev =
-        mrrEvolution.find(
-          (e) => e.month === mrrEvolution[mrrEvolution.length - 1]?.month,
-        )?.mrr || 0;
-      const lastMonthRev =
-        mrrEvolution.length >= 2
-          ? mrrEvolution[mrrEvolution.length - 2]?.mrr || 0
-          : 0;
-      const mrrChange =
-        lastMonthRev > 0
-          ? parseFloat(
-              (((thisMonthRev - lastMonthRev) / lastMonthRev) * 100).toFixed(1),
-            )
-          : 0;
+      // MRR change: compare net order revenue in the current period (MTD/WTD/YTD)
+      // against the equivalent-length slice of the previous period. This matches
+      // the "Nuevos registros" / "Churn" comparison windows so on Jun 14 we look
+      // at Jun 1–14 vs May 1–14, not the full month of May.
+      let prevPeriodRevenue = 0;
+      try {
+        const { data: prevOrders } = await admin
+          .from("orders")
+          .select("amount_net, amount_gross, stripe_fee, dispute_fee, order_status")
+          .eq("order_status", "paid")
+          .gte("paid_at", comparePrevStart)
+          .lt("paid_at", comparePrevEnd)
+          .limit(20000);
+        prevPeriodRevenue = (prevOrders || []).reduce((s: number, o: any) => {
+          if (o.order_status === "refunded") return s;
+          const net = parseFloat(o.amount_net);
+          const base =
+            !isNaN(net) && net > 0
+              ? net
+              : (parseFloat(o.amount_gross) || 0);
+          const fee = parseFloat(o.stripe_fee) || 0;
+          const disputeFee = parseFloat(o.dispute_fee) || 0;
+          return s + Math.max(0, base - fee - disputeFee);
+        }, 0);
+      } catch (e: any) {
+        console.warn("[get_saas_metrics] prev-period revenue error:", e?.message);
+      }
+      // `orderRevenue` is computed further below from period orders; use a getter
+      // via closure-safe `let` since mrrChange is recomputed after orders block.
+      let mrrChange = 0;
+
 
       const subscriptionRevenue = mrr;
       const annualSubPct =
@@ -2823,6 +2873,15 @@ serve(async (req) => {
       } catch (ordErr: any) {
         console.error("[get_saas_metrics] Orders query error:", ordErr.message);
       }
+
+      // Period-over-period revenue change (powers the MRR KPI trend arrow).
+      mrrChange =
+        prevPeriodRevenue > 0
+          ? parseFloat(
+              (((orderRevenue - prevPeriodRevenue) / prevPeriodRevenue) * 100).toFixed(1),
+            )
+          : 0;
+
 
       // ── Welcome-credit conversion (period) ──
       // Usuarios cuyo PRIMER consumo de crédito (es decir, gastaron el crédito
