@@ -2175,17 +2175,13 @@ serve(async (req) => {
       }
 
       // "Nuevos registros" reflects the selected period when one is active, else the current month.
-      const newThisStart = filterStart || thisMonthStart;
-      const newThisEnd = filterEnd || null;
-      const periodMs =
-        filterStart && filterEnd
-          ? new Date(filterEnd).getTime() - new Date(filterStart).getTime()
-          : new Date(thisMonthStart).getTime() -
-            new Date(lastMonthStart).getTime();
-      const prevStart = new Date(
-        new Date(newThisStart).getTime() - periodMs,
-      ).toISOString();
-      const prevEnd = newThisStart;
+      // Aligned with compareThisStart/End so MTD vs same-MTD-prev comparisons hold.
+      const newThisStart = compareThisStart;
+      const newThisEnd = compareThisEnd;
+      const periodMs = compareSpanMs;
+      const prevStart = comparePrevStart;
+      const prevEnd = comparePrevEnd;
+
 
       let newThisQuery = admin
         .from("profiles")
