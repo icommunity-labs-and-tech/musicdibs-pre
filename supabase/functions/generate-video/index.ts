@@ -242,6 +242,113 @@ async function submitRunway(
   }
 }
 
+/* ── KIE submit (Kling v2.5 turbo) ── */
+async function submitKie(
+  kieKey: string,
+  model: string,
+  promptText: string,
+  duration: number,
+  aspectRatio: string,
+  imageUrl?: string,
+): Promise<{ requestId: string } | null> {
+  const resolvedModel = imageUrl
+    ? (model.includes('image-to-video') ? model : KIE_I2V_MODEL)
+    : (model.includes('text-to-video') ? model : KIE_T2V_MODEL);
+
+  const input: Record<string, unknown> = {
+    prompt: promptText.slice(0, 2500),
+    duration: String(duration >= 10 ? 10 : 5),
+  };
+  if (imageUrl) {
+    input.image_url = imageUrl;
+  } else {
+    input.aspect_ratio = aspectRatio;
+  }
+
+  console.log(`[VIDEO] Submitting to KIE: model=${resolvedModel} "${promptText.slice(0, 60)}..."`);
+
+  try {
+    const response = await fetch(`${KIE_API_BASE}/jobs/createTask`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${kieKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: resolvedModel, input }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data?.code !== 200 || !data?.data?.taskId) {
+      console.error(`[VIDEO] KIE submit error: ${response.status} - ${JSON.stringify(data).slice(0, 400)}`);
+      return null;
+    }
+
+    console.log(`[VIDEO] KIE task created: ${data.data.taskId}`);
+    return { requestId: data.data.taskId };
+  } catch (e) {
+    console.error('[VIDEO] KIE network error:', e);
+    return null;
+  }
+}
+
+/* ── KIE status handler (common recordInfo) ── */
+async function handleKieStatus(kieKey: string, requestId: string) {
+  const res = await fetch(
+    `${KIE_API_BASE}/jobs/recordInfo?taskId=${encodeURIComponent(requestId)}`,
+    { method: 'GET', headers: { 'Authorization': `Bearer ${kieKey}` } },
+  );
+  if (!res.ok) {
+    const t = await res.text();
+    console.error(`[VIDEO] KIE status error: ${res.status} - ${t}`);
+    throw new Error(`KIE status error: ${res.status}`);
+  }
+  const json = await res.json();
+  const d = json?.data;
+  const state = d?.state;
+  console.log(`[VIDEO] KIE task ${requestId}: state=${state} progress=${d?.progress ?? '-'}`);
+
+  if (state === 'success') {
+    let videoUrl: string | null = null;
+    try {
+      const parsed = typeof d.resultJson === 'string' ? JSON.parse(d.resultJson) : d.resultJson;
+      videoUrl = parsed?.resultUrls?.[0]
+        ?? parsed?.videoUrl
+        ?? parsed?.video_url
+        ?? parsed?.videos?.[0]?.url
+        ?? null;
+    } catch { /* ignore */ }
+    if (!videoUrl) return { status: 'FAILED', failure: 'KIE completed without a video URL' };
+    return { status: 'SUCCEEDED', video_url: videoUrl };
+  }
+
+  if (state === 'fail') {
+    return { status: 'FAILED', failure: d?.failMsg || d?.failCode || 'KIE generation failed' };
+  }
+
+  return { status: 'PENDING', queue_position: null };
+}
+
+/* ── Upload base64 image to public bucket for providers that need a URL ── */
+async function uploadImageForProvider(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  userId: string,
+  imageBase64: string,
+): Promise<string | null> {
+  try {
+    const bin = Uint8Array.from(atob(imageBase64), (c) => c.charCodeAt(0));
+    const path = `${userId}/video-input/${Date.now()}.jpg`;
+    const { error } = await supabaseAdmin.storage
+      .from('ai-generations')
+      .upload(path, bin, { contentType: 'image/jpeg', upsert: true });
+    if (error) {
+      console.error('[VIDEO] image upload failed:', error.message);
+      return null;
+    }
+    const { data } = supabaseAdmin.storage.from('ai-generations').getPublicUrl(path);
+    return data?.publicUrl ?? null;
+  } catch (e) {
+    console.error('[VIDEO] image upload exception:', e);
+    return null;
+  }
+}
+
 /* ── Main handler ── */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
