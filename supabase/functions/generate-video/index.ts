@@ -375,6 +375,7 @@ serve(async (req) => {
       const falResult = await submitFal(FAL_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
 
       if (falResult) {
+        await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
         console.log(`[VIDEO] fal.ai queue request: ${falResult.requestId}, ${CREDITS_COST} credits charged`);
         return jsonResponse({
           requestId: falResult.requestId,
@@ -382,6 +383,7 @@ serve(async (req) => {
           provider: 'fal',
         });
       }
+
 
       // 2. Try Runway (fallback)
       if (RUNWAY_API_KEY) {
