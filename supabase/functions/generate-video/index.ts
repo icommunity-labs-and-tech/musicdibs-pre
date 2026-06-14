@@ -318,7 +318,9 @@ serve(async (req) => {
         );
       }
 
-      await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
+      // NOTE: rate-limit row is inserted AFTER a provider successfully accepts
+      // the request (see below). Inserting it here would block the user for 60s
+      // even when the generation failed and credits were refunded.
 
       const CREDITS_COST = await getOperationCost(supabaseAdmin, 'generate_video', 3);
       const { data: profile } = await supabaseAdmin
