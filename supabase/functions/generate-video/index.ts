@@ -318,7 +318,9 @@ serve(async (req) => {
         );
       }
 
-      await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
+      // NOTE: rate-limit row is inserted AFTER a provider successfully accepts
+      // the request (see below). Inserting it here would block the user for 60s
+      // even when the generation failed and credits were refunded.
 
       const CREDITS_COST = await getOperationCost(supabaseAdmin, 'generate_video', 3);
       const { data: profile } = await supabaseAdmin
@@ -373,6 +375,7 @@ serve(async (req) => {
       const falResult = await submitFal(FAL_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
 
       if (falResult) {
+        await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
         console.log(`[VIDEO] fal.ai queue request: ${falResult.requestId}, ${CREDITS_COST} credits charged`);
         return jsonResponse({
           requestId: falResult.requestId,
@@ -381,12 +384,14 @@ serve(async (req) => {
         });
       }
 
+
       // 2. Try Runway (fallback)
       if (RUNWAY_API_KEY) {
         console.log('[VIDEO] fal.ai failed, trying Runway fallback…');
         const runwayResult = await submitRunway(RUNWAY_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
 
         if (runwayResult) {
+          await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
           console.log(`[VIDEO] Runway task created: ${runwayResult.requestId}, ${CREDITS_COST} credits charged`);
           return jsonResponse({
             requestId: runwayResult.requestId,
@@ -394,6 +399,7 @@ serve(async (req) => {
             provider: 'runway',
           });
         }
+
       }
 
       // All providers failed — refund
