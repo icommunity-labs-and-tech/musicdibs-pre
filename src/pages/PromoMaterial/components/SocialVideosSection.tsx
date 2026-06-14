@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Download, Info, AlertCircle, Film, Clock, Instagram, Sparkles } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { NoCreditsAlert } from '@/components/dashboard/NoCreditsAlert';
 
 const VIDEO_COST = FEATURE_COSTS.social_video;
 
@@ -361,7 +362,7 @@ export const SocialVideosSection = () => {
         )}
 
         {!hasEnough(VIDEO_COST) && !generating && (
-          <PricingLink className="block text-center mt-1" />
+          <NoCreditsAlert cost={VIDEO_COST} actionLabel={tr('generateBtn', { cost: VIDEO_COST })} />
         )}
         <GenerationWarning />
 
