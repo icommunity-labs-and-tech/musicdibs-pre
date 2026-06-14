@@ -15,7 +15,12 @@ const FAL_QUEUE_BASE_URL = 'https://queue.fal.run/fal-ai/kling-video';
 /* ── Runway config ── */
 const RUNWAY_API_BASE = 'https://api.dev.runwayml.com/v1';
 
-type Provider = 'fal' | 'runway';
+/* ── KIE config ── */
+const KIE_API_BASE = 'https://api.kie.ai/api/v1';
+const KIE_T2V_MODEL = 'kling/v2-5-turbo-text-to-video-pro';
+const KIE_I2V_MODEL = 'kling/v2-5-turbo-image-to-video-pro';
+
+type Provider = 'fal' | 'runway' | 'kie';
 
 const jsonResponse = (body: unknown, status = 200, extraHeaders: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
