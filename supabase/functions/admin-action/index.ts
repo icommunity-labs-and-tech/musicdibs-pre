@@ -1928,48 +1928,87 @@ serve(async (req) => {
         payload || {};
       const now = new Date();
 
-      // ── Period boundaries ─────────────────────────────────────────
-      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-      const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+      // ── Period boundaries (Europe/Madrid wall-clock) ────────────────
+      // All sales metrics bucket/filter orders by paid_at in Madrid time, so a
+      // sale at 00:30 Madrid on June 1 (= 22:30 UTC on May 31) counts as June,
+      // matching what an operator sees on the dashboard label.
+      const madridOffsetMsAt = (instant: Date) => {
+        const parts = new Intl.DateTimeFormat("en-US", {
+          timeZone: "Europe/Madrid",
+          timeZoneName: "shortOffset",
+        }).formatToParts(instant);
+        const tz = parts.find((p) => p.type === "timeZoneName")?.value || "GMT+1";
+        const m = /GMT([+-]?\d+)(?::(\d+))?/.exec(tz);
+        const h = m ? parseInt(m[1], 10) : 1;
+        const mm = m && m[2] ? parseInt(m[2], 10) : 0;
+        return (h * 60 + Math.sign(h || 1) * mm) * 60000;
+      };
+      // Madrid wall-clock (y, mo, d, h) → matching UTC instant.
+      const madridWallToUtc = (y: number, mo: number, d: number, h = 0, mi = 0): Date => {
+        const naive = new Date(Date.UTC(y, mo, d, h, mi));
+        return new Date(naive.getTime() - madridOffsetMsAt(naive));
+      };
+      // Madrid wall-clock parts of an arbitrary instant.
+      const madridParts = (instant: Date) => {
+        const shifted = new Date(instant.getTime() + madridOffsetMsAt(instant));
+        return {
+          y: shifted.getUTCFullYear(),
+          mo: shifted.getUTCMonth(),
+          d: shifted.getUTCDate(),
+        };
+      };
 
-      // filterStart / filterEnd derived from period selector
+      const thisMonthStart = (() => {
+        const { y, mo } = madridParts(now);
+        return madridWallToUtc(y, mo, 1).toISOString();
+      })();
+      const lastMonthStart = (() => {
+        const { y, mo } = madridParts(now);
+        return madridWallToUtc(y, mo - 1, 1).toISOString();
+      })();
+
+      // filterStart / filterEnd derived from period selector (Madrid-anchored)
       let filterStart: string | null = null;
       let filterEnd: string | null = null;
+      // Track Madrid calendar values to drive the "vs anterior" window cleanly.
+      let periodMadridY: number | null = null;
+      let periodMadridMo: number | null = null;
+      let periodMadridD: number | null = null;
       try {
         if (periodType === "week" && weekStart) {
-          const s = new Date(weekStart);
-          const e = new Date(s);
-          e.setDate(e.getDate() + 7);
-          filterStart = s.toISOString();
-          filterEnd = e.toISOString();
+          // weekStart arrives as "YYYY-MM-DD" — treat as Madrid midnight.
+          const [wy, wm, wd] = String(weekStart).slice(0, 10).split("-").map(Number);
+          if (wy && wm && wd) {
+            filterStart = madridWallToUtc(wy, wm - 1, wd).toISOString();
+            filterEnd = madridWallToUtc(wy, wm - 1, wd + 7).toISOString();
+            periodMadridY = wy; periodMadridMo = wm - 1; periodMadridD = wd;
+          }
         } else if (periodType === "month" && month) {
           const [y, m] = String(month).split("-").map(Number);
           if (y && m) {
-            filterStart = new Date(y, m - 1, 1).toISOString();
-            filterEnd = new Date(y, m, 1).toISOString();
+            filterStart = madridWallToUtc(y, m - 1, 1).toISOString();
+            filterEnd = madridWallToUtc(y, m, 1).toISOString();
+            periodMadridY = y; periodMadridMo = m - 1; periodMadridD = 1;
           }
         } else if (periodType === "year" && year) {
           const y = Number(year);
           if (y) {
-            filterStart = new Date(y, 0, 1).toISOString();
-            filterEnd = new Date(y + 1, 0, 1).toISOString();
+            filterStart = madridWallToUtc(y, 0, 1).toISOString();
+            filterEnd = madridWallToUtc(y + 1, 0, 1).toISOString();
+            periodMadridY = y; periodMadridMo = 0; periodMadridD = 1;
           }
         }
       } catch (e) {
         console.warn("[get_saas_metrics] period parse failed:", (e as any)?.message);
       }
 
-      // Cap filterEnd at "now" so an in-progress period (current month/week/year)
-      // is measured MTD/WTD/YTD instead of including future days that haven't
-      // happened yet. This is the foundation for fair "vs anterior" comparisons.
+      // Cap filterEnd at "now" so an in-progress period is MTD/WTD/YTD.
       if (filterEnd && new Date(filterEnd).getTime() > now.getTime()) {
         filterEnd = now.toISOString();
       }
 
-      // Compare windows used by every "vs anterior" KPI (new users, churn, MRR…).
-      // Previous window is calendar-aligned (start of the prior week/month/year)
-      // and trimmed to the same length as the current window — so on Jun 14 we
-      // compare Jun 1–14 against May 1–14, not against the full month of May.
+      // Compare windows: previous calendar period (Madrid-aligned), trimmed to
+      // the same elapsed length as the current window (Jun 1–14 vs May 1–14).
       const compareThisStart = filterStart || thisMonthStart;
       const compareThisEnd = filterEnd || now.toISOString();
       const compareSpanMs = Math.max(
@@ -1979,16 +2018,18 @@ serve(async (req) => {
       let comparePrevStart: string;
       let comparePrevEnd: string;
       {
-        const fs = new Date(compareThisStart);
         let pStart: Date;
-        if (periodType === "week") {
-          pStart = new Date(fs);
-          pStart.setDate(pStart.getDate() - 7);
-        } else if (periodType === "year") {
-          pStart = new Date(fs.getFullYear() - 1, 0, 1);
+        if (periodMadridY !== null && periodMadridMo !== null && periodMadridD !== null) {
+          if (periodType === "week") {
+            pStart = madridWallToUtc(periodMadridY, periodMadridMo, periodMadridD - 7);
+          } else if (periodType === "year") {
+            pStart = madridWallToUtc(periodMadridY - 1, 0, 1);
+          } else {
+            pStart = madridWallToUtc(periodMadridY, periodMadridMo - 1, 1);
+          }
         } else {
-          // month is default (and also used when no period filter applies)
-          pStart = new Date(fs.getFullYear(), fs.getMonth() - 1, 1);
+          const { y, mo } = madridParts(now);
+          pStart = madridWallToUtc(y, mo - 1, 1);
         }
         comparePrevStart = pStart.toISOString();
         comparePrevEnd = new Date(pStart.getTime() + compareSpanMs).toISOString();
