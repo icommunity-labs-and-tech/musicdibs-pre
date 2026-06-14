@@ -384,33 +384,87 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    const { action, promptText, duration, requestId, statusUrl, aspectRatio, imageBase64, provider } = await req.json();
+    const { action, promptText, duration, requestId, statusUrl, aspectRatio, imageBase64, provider, mode } = await req.json();
 
     /* ── STATUS action ── */
     if (action === 'status') {
       const resolvedProvider: Provider =
         provider === 'runway' ? 'runway' : provider === 'kie' ? 'kie' : 'fal';
 
+      let result: any;
       if (resolvedProvider === 'kie') {
         if (!KIE_API_KEY) throw new Error('KIE_API_KEY not configured');
         if (!requestId) throw new Error('requestId is required');
-        const result = await handleKieStatus(KIE_API_KEY, requestId);
-        return jsonResponse(result);
-      }
-
-      if (resolvedProvider === 'runway') {
+        result = await handleKieStatus(KIE_API_KEY, requestId);
+      } else if (resolvedProvider === 'runway') {
         if (!RUNWAY_API_KEY) throw new Error('RUNWAY_API_KEY not configured');
         if (!requestId) throw new Error('requestId is required');
-        const result = await handleRunwayStatus(RUNWAY_API_KEY, requestId);
-        return jsonResponse(result);
+        result = await handleRunwayStatus(RUNWAY_API_KEY, requestId);
+      } else {
+        if (!FAL_API_KEY) throw new Error('FAL_API_KEY not configured');
+        const falHeaders = { 'Authorization': `Key ${FAL_API_KEY}`, 'Content-Type': 'application/json' };
+        result = await handleFalStatus(falHeaders, statusUrl, requestId);
       }
 
-      // fal.ai status
-      if (!FAL_API_KEY) throw new Error('FAL_API_KEY not configured');
-      const falHeaders = { 'Authorization': `Key ${FAL_API_KEY}`, 'Content-Type': 'application/json' };
-      const result = await handleFalStatus(falHeaders, statusUrl, requestId);
+      // Persist on success: download from provider, upload to our bucket, insert row
+      if (result?.status === 'SUCCEEDED' && result?.video_url && requestId) {
+        try {
+          // Idempotency: skip if already persisted for this task_id
+          const { data: existing } = await supabaseAdmin
+            .from('video_generations')
+            .select('id, video_url')
+            .eq('task_id', requestId)
+            .eq('user_id', userId)
+            .maybeSingle();
+
+          if (existing?.video_url) {
+            result.video_url = existing.video_url;
+          } else {
+            const videoRes = await fetch(result.video_url);
+            if (videoRes.ok) {
+              const bytes = new Uint8Array(await videoRes.arrayBuffer());
+              const path = `videos/${userId}/${Date.now()}-${requestId}.mp4`;
+              const { error: upErr } = await supabaseAdmin.storage
+                .from('ai-generations')
+                .upload(path, bytes, { contentType: 'video/mp4', upsert: true });
+              if (upErr) {
+                console.error('[VIDEO] persist upload failed:', upErr.message);
+              } else {
+                const { data: pub } = supabaseAdmin.storage.from('ai-generations').getPublicUrl(path);
+                const permanentUrl = pub.publicUrl;
+                result.video_url = permanentUrl;
+
+                if (existing?.id) {
+                  await supabaseAdmin.from('video_generations').update({
+                    status: 'SUCCEEDED',
+                    video_url: permanentUrl,
+                  }).eq('id', existing.id);
+                } else {
+                  await supabaseAdmin.from('video_generations').insert({
+                    user_id: userId,
+                    task_id: requestId,
+                    status: 'SUCCEEDED',
+                    video_url: permanentUrl,
+                    prompt: (promptText || '').toString().slice(0, 2000) || 'Video AI',
+                    mode: mode || 'text_to_video',
+                    aspect_ratio: aspectRatio || '16:9',
+                    duration: duration || 10,
+                  });
+                }
+                console.log(`[VIDEO] persisted ${requestId} → ${permanentUrl}`);
+              }
+            } else {
+              console.error('[VIDEO] failed to fetch video for persist:', videoRes.status);
+            }
+          }
+        } catch (e) {
+          console.error('[VIDEO] persist exception:', (e as Error).message);
+        }
+      }
+
       return jsonResponse(result);
     }
+
 
     /* ── GENERATE action ── */
     if (action === 'generate') {
