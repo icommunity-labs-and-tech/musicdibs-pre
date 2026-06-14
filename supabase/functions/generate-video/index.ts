@@ -15,7 +15,12 @@ const FAL_QUEUE_BASE_URL = 'https://queue.fal.run/fal-ai/kling-video';
 /* ── Runway config ── */
 const RUNWAY_API_BASE = 'https://api.dev.runwayml.com/v1';
 
-type Provider = 'fal' | 'runway';
+/* ── KIE config ── */
+const KIE_API_BASE = 'https://api.kie.ai/api/v1';
+const KIE_T2V_MODEL = 'kling/v2-5-turbo-text-to-video-pro';
+const KIE_I2V_MODEL = 'kling/v2-5-turbo-image-to-video-pro';
+
+type Provider = 'fal' | 'runway' | 'kie';
 
 const jsonResponse = (body: unknown, status = 200, extraHeaders: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
@@ -237,6 +242,113 @@ async function submitRunway(
   }
 }
 
+/* ── KIE submit (Kling v2.5 turbo) ── */
+async function submitKie(
+  kieKey: string,
+  model: string,
+  promptText: string,
+  duration: number,
+  aspectRatio: string,
+  imageUrl?: string,
+): Promise<{ requestId: string } | null> {
+  const resolvedModel = imageUrl
+    ? (model.includes('image-to-video') ? model : KIE_I2V_MODEL)
+    : (model.includes('text-to-video') ? model : KIE_T2V_MODEL);
+
+  const input: Record<string, unknown> = {
+    prompt: promptText.slice(0, 2500),
+    duration: String(duration >= 10 ? 10 : 5),
+  };
+  if (imageUrl) {
+    input.image_url = imageUrl;
+  } else {
+    input.aspect_ratio = aspectRatio;
+  }
+
+  console.log(`[VIDEO] Submitting to KIE: model=${resolvedModel} "${promptText.slice(0, 60)}..."`);
+
+  try {
+    const response = await fetch(`${KIE_API_BASE}/jobs/createTask`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${kieKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: resolvedModel, input }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data?.code !== 200 || !data?.data?.taskId) {
+      console.error(`[VIDEO] KIE submit error: ${response.status} - ${JSON.stringify(data).slice(0, 400)}`);
+      return null;
+    }
+
+    console.log(`[VIDEO] KIE task created: ${data.data.taskId}`);
+    return { requestId: data.data.taskId };
+  } catch (e) {
+    console.error('[VIDEO] KIE network error:', e);
+    return null;
+  }
+}
+
+/* ── KIE status handler (common recordInfo) ── */
+async function handleKieStatus(kieKey: string, requestId: string) {
+  const res = await fetch(
+    `${KIE_API_BASE}/jobs/recordInfo?taskId=${encodeURIComponent(requestId)}`,
+    { method: 'GET', headers: { 'Authorization': `Bearer ${kieKey}` } },
+  );
+  if (!res.ok) {
+    const t = await res.text();
+    console.error(`[VIDEO] KIE status error: ${res.status} - ${t}`);
+    throw new Error(`KIE status error: ${res.status}`);
+  }
+  const json = await res.json();
+  const d = json?.data;
+  const state = d?.state;
+  console.log(`[VIDEO] KIE task ${requestId}: state=${state} progress=${d?.progress ?? '-'}`);
+
+  if (state === 'success') {
+    let videoUrl: string | null = null;
+    try {
+      const parsed = typeof d.resultJson === 'string' ? JSON.parse(d.resultJson) : d.resultJson;
+      videoUrl = parsed?.resultUrls?.[0]
+        ?? parsed?.videoUrl
+        ?? parsed?.video_url
+        ?? parsed?.videos?.[0]?.url
+        ?? null;
+    } catch { /* ignore */ }
+    if (!videoUrl) return { status: 'FAILED', failure: 'KIE completed without a video URL' };
+    return { status: 'SUCCEEDED', video_url: videoUrl };
+  }
+
+  if (state === 'fail') {
+    return { status: 'FAILED', failure: d?.failMsg || d?.failCode || 'KIE generation failed' };
+  }
+
+  return { status: 'PENDING', queue_position: null };
+}
+
+/* ── Upload base64 image to public bucket for providers that need a URL ── */
+async function uploadImageForProvider(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  userId: string,
+  imageBase64: string,
+): Promise<string | null> {
+  try {
+    const bin = Uint8Array.from(atob(imageBase64), (c) => c.charCodeAt(0));
+    const path = `${userId}/video-input/${Date.now()}.jpg`;
+    const { error } = await supabaseAdmin.storage
+      .from('ai-generations')
+      .upload(path, bin, { contentType: 'image/jpeg', upsert: true });
+    if (error) {
+      console.error('[VIDEO] image upload failed:', error.message);
+      return null;
+    }
+    const { data } = supabaseAdmin.storage.from('ai-generations').getPublicUrl(path);
+    return data?.publicUrl ?? null;
+  } catch (e) {
+    console.error('[VIDEO] image upload exception:', e);
+    return null;
+  }
+}
+
 /* ── Main handler ── */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -265,7 +377,7 @@ serve(async (req) => {
 
     const FAL_API_KEY = Deno.env.get('FAL_API_KEY');
     const RUNWAY_API_KEY = Deno.env.get('RUNWAY_API_KEY');
-    if (!FAL_API_KEY) throw new Error('FAL_API_KEY is not configured');
+    const KIE_API_KEY = Deno.env.get('KIE_API_KEY');
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -276,7 +388,15 @@ serve(async (req) => {
 
     /* ── STATUS action ── */
     if (action === 'status') {
-      const resolvedProvider: Provider = provider === 'runway' ? 'runway' : 'fal';
+      const resolvedProvider: Provider =
+        provider === 'runway' ? 'runway' : provider === 'kie' ? 'kie' : 'fal';
+
+      if (resolvedProvider === 'kie') {
+        if (!KIE_API_KEY) throw new Error('KIE_API_KEY not configured');
+        if (!requestId) throw new Error('requestId is required');
+        const result = await handleKieStatus(KIE_API_KEY, requestId);
+        return jsonResponse(result);
+      }
 
       if (resolvedProvider === 'runway') {
         if (!RUNWAY_API_KEY) throw new Error('RUNWAY_API_KEY not configured');
@@ -286,6 +406,7 @@ serve(async (req) => {
       }
 
       // fal.ai status
+      if (!FAL_API_KEY) throw new Error('FAL_API_KEY not configured');
       const falHeaders = { 'Authorization': `Key ${FAL_API_KEY}`, 'Content-Type': 'application/json' };
       const result = await handleFalStatus(falHeaders, statusUrl, requestId);
       return jsonResponse(result);
@@ -371,35 +492,67 @@ serve(async (req) => {
       const resolvedAspectRatio = aspectRatio || '16:9';
       const resolvedDuration = duration || 10;
 
-      // 1. Try fal.ai (primary)
-      const falResult = await submitFal(FAL_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
+      // Read active providers from ai_provider_settings (priority asc).
+      const { data: providerRows } = await supabaseAdmin
+        .from('ai_provider_settings')
+        .select('provider, model, priority, is_active')
+        .eq('feature_key', 'video_generation')
+        .eq('is_active', true)
+        .order('priority', { ascending: true });
 
-      if (falResult) {
-        await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
-        console.log(`[VIDEO] fal.ai queue request: ${falResult.requestId}, ${CREDITS_COST} credits charged`);
-        return jsonResponse({
-          requestId: falResult.requestId,
-          statusUrl: falResult.statusUrl,
-          provider: 'fal',
-        });
+      // Fallback to legacy hardcoded sequence if no DB config exists.
+      const providersToTry: Array<{ provider: string; model: string }> =
+        providerRows && providerRows.length > 0
+          ? providerRows.map((r: any) => ({ provider: String(r.provider), model: String(r.model || '') }))
+          : [
+              { provider: 'fal', model: 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video' },
+              { provider: 'runway', model: 'gen4_turbo' },
+            ];
+
+      // If we have an input image, upload it once so KIE (URL-only) can consume it.
+      let imageUrl: string | undefined;
+      if (imageBase64) {
+        const uploaded = await uploadImageForProvider(supabaseAdmin, userId, imageBase64);
+        if (uploaded) imageUrl = uploaded;
       }
 
+      for (const cfg of providersToTry) {
+        const key = cfg.provider.toLowerCase();
 
-      // 2. Try Runway (fallback)
-      if (RUNWAY_API_KEY) {
-        console.log('[VIDEO] fal.ai failed, trying Runway fallback…');
-        const runwayResult = await submitRunway(RUNWAY_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
-
-        if (runwayResult) {
-          await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
-          console.log(`[VIDEO] Runway task created: ${runwayResult.requestId}, ${CREDITS_COST} credits charged`);
-          return jsonResponse({
-            requestId: runwayResult.requestId,
-            statusUrl: null,
-            provider: 'runway',
-          });
+        if ((key === 'kie' || key === 'kie_suno') && KIE_API_KEY) {
+          console.log(`[VIDEO] Trying KIE provider (model=${cfg.model})`);
+          const r = await submitKie(KIE_API_KEY, cfg.model, promptText, resolvedDuration, resolvedAspectRatio, imageUrl);
+          if (r) {
+            await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
+            console.log(`[VIDEO] KIE task ${r.requestId}, ${CREDITS_COST} credits charged`);
+            return jsonResponse({ requestId: r.requestId, statusUrl: null, provider: 'kie' });
+          }
+          continue;
         }
 
+        if (key === 'fal' && FAL_API_KEY) {
+          console.log('[VIDEO] Trying fal.ai provider');
+          const r = await submitFal(FAL_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
+          if (r) {
+            await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
+            console.log(`[VIDEO] fal.ai queue request: ${r.requestId}, ${CREDITS_COST} credits charged`);
+            return jsonResponse({ requestId: r.requestId, statusUrl: r.statusUrl, provider: 'fal' });
+          }
+          continue;
+        }
+
+        if (key === 'runway' && RUNWAY_API_KEY) {
+          console.log('[VIDEO] Trying Runway provider');
+          const r = await submitRunway(RUNWAY_API_KEY, promptText, resolvedDuration, resolvedAspectRatio, imageBase64);
+          if (r) {
+            await supabaseAdmin.from('ai_rate_limits').insert({ user_id: userId, function_name: 'generate-video' });
+            console.log(`[VIDEO] Runway task created: ${r.requestId}, ${CREDITS_COST} credits charged`);
+            return jsonResponse({ requestId: r.requestId, statusUrl: null, provider: 'runway' });
+          }
+          continue;
+        }
+
+        console.warn(`[VIDEO] Skipping provider "${cfg.provider}" (unsupported or missing API key)`);
       }
 
       // All providers failed — refund
