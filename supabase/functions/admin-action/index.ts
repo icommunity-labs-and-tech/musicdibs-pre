@@ -2107,15 +2107,19 @@ serve(async (req) => {
           })
           .filter(Boolean);
 
-        const thisMonthTs = Math.floor(new Date(thisMonthStart).getTime() / 1000);
-        const lastMonthTs = Math.floor(new Date(lastMonthStart).getTime() / 1000);
-        cancelledSubs = allCancelledSubs.filter((s: any) => s.canceled_at >= lastMonthTs);
-        cancelledSubsThisMonth = cancelledSubs.filter(
-          (s: any) => s.canceled_at >= thisMonthTs,
+        // Churn windows aligned with the selected period (MTD vs same-MTD-prev).
+        const thisStartTs = Math.floor(new Date(compareThisStart).getTime() / 1000);
+        const thisEndTs = Math.floor(new Date(compareThisEnd).getTime() / 1000);
+        const prevStartTs = Math.floor(new Date(comparePrevStart).getTime() / 1000);
+        const prevEndTs = Math.floor(new Date(comparePrevEnd).getTime() / 1000);
+        cancelledSubs = allCancelledSubs.filter((s: any) => s.canceled_at >= prevStartTs);
+        cancelledSubsThisMonth = allCancelledSubs.filter(
+          (s: any) => s.canceled_at >= thisStartTs && s.canceled_at < thisEndTs,
         ).length;
-        cancelledSubsLastMonth = cancelledSubs.filter(
-          (s: any) => s.canceled_at >= lastMonthTs && s.canceled_at < thisMonthTs,
+        cancelledSubsLastMonth = allCancelledSubs.filter(
+          (s: any) => s.canceled_at >= prevStartTs && s.canceled_at < prevEndTs,
         ).length;
+
 
         // Revenue evolution (12 months) — from orders table, net per month
         const { data: revRows } = await admin
