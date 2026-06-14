@@ -3139,35 +3139,21 @@ serve(async (req) => {
             weekIdx++;
           }
         } else {
-          // Year → months
+          // Year → months (Madrid wall-clock months)
+          const { y: startY } = madridParts(start);
           for (let m = 0; m < 12; m++) {
-            const s = new Date(start.getFullYear(), m, 1);
-            const e = new Date(start.getFullYear(), m + 1, 1);
+            const s = madridWallToUtc(startY, m, 1);
+            const e = madridWallToUtc(startY, m + 1, 1);
             if (s >= end) break;
             buckets.push({
-              label: s.toLocaleDateString("es-ES", { month: "short" }),
+              label: s.toLocaleDateString("es-ES", { month: "short", timeZone: "Europe/Madrid" }),
               start: s,
-              end: e,
+              end: e > end ? end : e,
             });
           }
         }
 
-        // Madrid timezone offset helper (handles DST). Returns ms offset from UTC.
-        const madridOffsetMs = (d: Date) => {
-          const parts = new Intl.DateTimeFormat("en-US", {
-            timeZone: "Europe/Madrid",
-            timeZoneName: "shortOffset",
-          }).formatToParts(d);
-          const tz = parts.find((p) => p.type === "timeZoneName")?.value || "GMT+1";
-          const m = /GMT([+-]?\d+)(?::(\d+))?/.exec(tz);
-          const h = m ? parseInt(m[1], 10) : 1;
-          const mm = m && m[2] ? parseInt(m[2], 10) : 0;
-          return (h * 60 + Math.sign(h || 1) * mm) * 60000;
-        };
-        const toMadridIso = (iso: string) => {
-          const d = new Date(iso);
-          return new Date(d.getTime() + madridOffsetMs(d)).toISOString();
-        };
+
 
         // Aggregate revenue + orders per bucket.
         // Bucket assignment uses paid_at in UTC to match the period filter
