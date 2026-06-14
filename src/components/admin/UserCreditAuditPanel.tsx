@@ -112,10 +112,20 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
     : rows.filter(r => r.record_type === 'transaction');
 
   const rejectedCount = rows.filter(r => r.event_type === 'validation_rejected_insufficient').length;
-  const totalPurchased = rows.filter(r => r.event_type === 'purchase' || r.event_type === 'renewal')
+  const totalPurchased = rows.filter(r => ['purchase', 'renewal', 'subscription', 'admin_grant', 'bonus', 'coupon', 'referral_bonus', 'onboarding', 'migration'].includes(r.event_type))
     .reduce((sum, r) => sum + (r.credits_delta || 0), 0);
   const totalUsed = rows.filter(r => r.event_type === 'usage')
     .reduce((sum, r) => sum + Math.abs(r.credits_delta || 0), 0);
+
+  // Desglose de "Usados" por categoría inferida
+  const usageBreakdown = rows
+    .filter(r => r.event_type === 'usage')
+    .reduce<Record<string, number>>((acc, r) => {
+      const cat = classifyUsage(r);
+      acc[cat] = (acc[cat] || 0) + Math.abs(r.credits_delta || 0);
+      return acc;
+    }, {});
+  const usageEntries = Object.entries(usageBreakdown).sort((a, b) => b[1] - a[1]);
 
   function exportAudit() {
     const blob = new Blob([JSON.stringify(rows, null, 2)], { type: 'application/json' });
