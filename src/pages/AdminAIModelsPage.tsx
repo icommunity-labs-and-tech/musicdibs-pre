@@ -34,6 +34,7 @@ const FEATURES = [
   { key: "mastering", label: "Mastering" },
   { key: "cover_generation", label: "Portadas" },
   { key: "promo_generation", label: "Promo material" },
+  { key: "video_generation", label: "🎬 Video Generation — Text-to-video e image-to-video para clips musicales" },
 ];
 
 const PROVIDERS = [
