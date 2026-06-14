@@ -114,17 +114,28 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
   const rejectedCount = rows.filter(r => r.event_type === 'validation_rejected_insufficient').length;
   const totalPurchased = rows.filter(r => ['purchase', 'renewal', 'subscription', 'admin_grant', 'bonus', 'coupon', 'referral_bonus', 'onboarding', 'migration'].includes(r.event_type))
     .reduce((sum, r) => sum + (r.credits_delta || 0), 0);
-  const totalUsed = rows.filter(r => r.event_type === 'usage')
-    .reduce((sum, r) => sum + Math.abs(r.credits_delta || 0), 0);
+  // Tipos que consumen créditos (no son sólo 'usage': también promos premium, ajustes admin, etc.)
+  const CONSUMPTION_TYPES = ['usage', 'promote_premium', 'admin_deduct', 'admin_adjustment', 'admin_reset', 'adjustment', 'referral_revoked', 'admin_adjust', 'plan_switch_reset'];
+  const consumptionRows = rows.filter(r =>
+    r.record_type === 'transaction' &&
+    (r.credits_delta || 0) < 0 &&
+    CONSUMPTION_TYPES.includes(r.event_type)
+  );
+  const totalUsed = consumptionRows.reduce((sum, r) => sum + Math.abs(r.credits_delta || 0), 0);
 
-  // Desglose de "Usados" por categoría inferida
-  const usageBreakdown = rows
-    .filter(r => r.event_type === 'usage')
-    .reduce<Record<string, number>>((acc, r) => {
-      const cat = classifyUsage(r);
-      acc[cat] = (acc[cat] || 0) + Math.abs(r.credits_delta || 0);
-      return acc;
-    }, {});
+  // Desglose de "Usados" por categoría inferida (incluye promote_premium, ajustes, etc.)
+  const usageBreakdown = consumptionRows.reduce<Record<string, number>>((acc, r) => {
+    let cat: string;
+    if (r.event_type === 'promote_premium') cat = 'Promo Premium';
+    else if (r.event_type === 'admin_deduct' || r.event_type === 'admin_adjust') cat = 'Ajuste admin';
+    else if (r.event_type === 'admin_adjustment' || r.event_type === 'adjustment') cat = 'Ajuste';
+    else if (r.event_type === 'admin_reset') cat = 'Reset admin';
+    else if (r.event_type === 'referral_revoked') cat = 'Referido revocado';
+    else if (r.event_type === 'plan_switch_reset') cat = 'Cambio de plan';
+    else cat = classifyUsage(r);
+    acc[cat] = (acc[cat] || 0) + Math.abs(r.credits_delta || 0);
+    return acc;
+  }, {});
   const usageEntries = Object.entries(usageBreakdown).sort((a, b) => b[1] - a[1]);
 
   function exportAudit() {
@@ -244,9 +255,15 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <EventBadge type={row.event_type} />
-                  {row.event_type === 'usage' && (
+                  {consumptionRows.includes(row) && (
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
-                      {classifyUsage(row)}
+                      {row.event_type === 'promote_premium' ? 'Promo Premium'
+                        : row.event_type === 'admin_deduct' || row.event_type === 'admin_adjust' ? 'Ajuste admin'
+                        : row.event_type === 'admin_adjustment' || row.event_type === 'adjustment' ? 'Ajuste'
+                        : row.event_type === 'admin_reset' ? 'Reset admin'
+                        : row.event_type === 'referral_revoked' ? 'Referido revocado'
+                        : row.event_type === 'plan_switch_reset' ? 'Cambio de plan'
+                        : classifyUsage(row)}
                     </span>
                   )}
                   {row.feature_key && (
