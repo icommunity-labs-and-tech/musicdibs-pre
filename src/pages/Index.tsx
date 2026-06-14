@@ -179,7 +179,7 @@ const Index = () => {
       />
       <Navbar />
       <HeroSection />
-      <PromoBanner />
+      {/* <PromoBanner /> oferta de verano oculta */}
       <DeferredHomeSections />
       <LaunchPromoPopup />
     </div>
