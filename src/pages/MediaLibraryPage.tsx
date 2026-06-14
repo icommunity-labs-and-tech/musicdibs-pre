@@ -125,7 +125,7 @@ export default function MediaLibraryPage() {
         .from("video_generations" as any)
         .select("id, prompt, status, created_at, style")
         .eq("user_id", userId)
-        .eq("status", "COMPLETED")
+        .eq("status", "SUCCEEDED")
         .order("created_at", { ascending: false })
         .limit(PAGE_LIMIT),
       supabase
