@@ -377,7 +377,7 @@ serve(async (req) => {
 
     const FAL_API_KEY = Deno.env.get('FAL_API_KEY');
     const RUNWAY_API_KEY = Deno.env.get('RUNWAY_API_KEY');
-    if (!FAL_API_KEY) throw new Error('FAL_API_KEY is not configured');
+    const KIE_API_KEY = Deno.env.get('KIE_API_KEY');
 
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -388,7 +388,15 @@ serve(async (req) => {
 
     /* ── STATUS action ── */
     if (action === 'status') {
-      const resolvedProvider: Provider = provider === 'runway' ? 'runway' : 'fal';
+      const resolvedProvider: Provider =
+        provider === 'runway' ? 'runway' : provider === 'kie' ? 'kie' : 'fal';
+
+      if (resolvedProvider === 'kie') {
+        if (!KIE_API_KEY) throw new Error('KIE_API_KEY not configured');
+        if (!requestId) throw new Error('requestId is required');
+        const result = await handleKieStatus(KIE_API_KEY, requestId);
+        return jsonResponse(result);
+      }
 
       if (resolvedProvider === 'runway') {
         if (!RUNWAY_API_KEY) throw new Error('RUNWAY_API_KEY not configured');
@@ -398,6 +406,7 @@ serve(async (req) => {
       }
 
       // fal.ai status
+      if (!FAL_API_KEY) throw new Error('FAL_API_KEY not configured');
       const falHeaders = { 'Authorization': `Key ${FAL_API_KEY}`, 'Content-Type': 'application/json' };
       const result = await handleFalStatus(falHeaders, statusUrl, requestId);
       return jsonResponse(result);
