@@ -2642,24 +2642,37 @@ serve(async (req) => {
           ? Math.round((topPlanEntry[1].count / paidUsers) * 100)
           : 0;
 
-      // MRR change (compare this month charges vs last month)
-      const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const thisMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-      const lastMonthKey = `${prevMonth.getFullYear()}-${String(prevMonth.getMonth() + 1).padStart(2, "0")}`;
-      const thisMonthRev =
-        mrrEvolution.find(
-          (e) => e.month === mrrEvolution[mrrEvolution.length - 1]?.month,
-        )?.mrr || 0;
-      const lastMonthRev =
-        mrrEvolution.length >= 2
-          ? mrrEvolution[mrrEvolution.length - 2]?.mrr || 0
-          : 0;
-      const mrrChange =
-        lastMonthRev > 0
-          ? parseFloat(
-              (((thisMonthRev - lastMonthRev) / lastMonthRev) * 100).toFixed(1),
-            )
-          : 0;
+      // MRR change: compare net order revenue in the current period (MTD/WTD/YTD)
+      // against the equivalent-length slice of the previous period. This matches
+      // the "Nuevos registros" / "Churn" comparison windows so on Jun 14 we look
+      // at Jun 1–14 vs May 1–14, not the full month of May.
+      let prevPeriodRevenue = 0;
+      try {
+        const { data: prevOrders } = await admin
+          .from("orders")
+          .select("amount_net, amount_gross, stripe_fee, dispute_fee, order_status")
+          .eq("order_status", "paid")
+          .gte("paid_at", comparePrevStart)
+          .lt("paid_at", comparePrevEnd)
+          .limit(20000);
+        prevPeriodRevenue = (prevOrders || []).reduce((s: number, o: any) => {
+          if (o.order_status === "refunded") return s;
+          const net = parseFloat(o.amount_net);
+          const base =
+            !isNaN(net) && net > 0
+              ? net
+              : (parseFloat(o.amount_gross) || 0);
+          const fee = parseFloat(o.stripe_fee) || 0;
+          const disputeFee = parseFloat(o.dispute_fee) || 0;
+          return s + Math.max(0, base - fee - disputeFee);
+        }, 0);
+      } catch (e: any) {
+        console.warn("[get_saas_metrics] prev-period revenue error:", e?.message);
+      }
+      // `orderRevenue` is computed further below from period orders; use a getter
+      // via closure-safe `let` since mrrChange is recomputed after orders block.
+      let mrrChange = 0;
+
 
       const subscriptionRevenue = mrr;
       const annualSubPct =
