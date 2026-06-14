@@ -14,14 +14,22 @@ export function useCredits() {
 
     const fetch = async () => {
       setIsLoading(true);
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('available_credits')
         .eq('user_id', user.id)
         .single();
-      if (data) {
-        setCredits(data.available_credits);
-        prevCreditsRef.current = data.available_credits;
+      if (error) {
+        // Si la consulta falla, no bloqueamos al usuario: hasEnough devuelve true
+        // cuando credits===null. El servidor (spend-credits) validará antes de procesar.
+        console.error('[useCredits] Error al cargar créditos:', error.message);
+      } else if (data) {
+        const c = data.available_credits ?? 0;
+        setCredits(c);
+        prevCreditsRef.current = c;
+      } else {
+        setCredits(0);
+        prevCreditsRef.current = 0;
       }
       setIsLoading(false);
     };
@@ -47,7 +55,7 @@ export function useCredits() {
               description: 'Compra más créditos para seguir usando las herramientas.',
               action: {
                 label: 'Comprar',
-                onClick: () => { window.location.href = '/dashboard/credits'; },
+                onClick: () => window.location.href = '/creditos',
               },
               duration: 8000,
             });
@@ -59,7 +67,10 @@ export function useCredits() {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  const hasEnough = (cost: number) => credits !== null && credits >= cost;
+  // credits===null indica que la consulta no ha cargado o falló.
+  // En ese caso no bloqueamos: el servidor validará antes de gastar créditos.
+  // Solo bloqueamos si sabemos con certeza que credits < cost.
+  const hasEnough = (cost: number) => credits === null ? true : credits >= cost;
 
   return { credits, hasEnough, isLoading };
 }
