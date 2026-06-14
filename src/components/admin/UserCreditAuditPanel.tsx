@@ -40,6 +40,43 @@ function EventBadge({ type }: { type: string }) {
   );
 }
 
+// Clasifica un consumo en una categoría legible. feature_key es la fuente preferida;
+// si no existe (legacy), se infiere desde la descripción.
+function classifyUsage(row: CreditAuditRow): string {
+  const fk = row.feature_key?.toLowerCase() || '';
+  if (fk) {
+    if (fk.includes('register_work') || fk.includes('ibs')) return 'Registro obra';
+    if (fk.includes('generate_audio') || fk.includes('suno') || fk.includes('kie')) return 'Generación audio';
+    if (fk.includes('vocal')) return 'Pista vocal';
+    if (fk.includes('cover')) return 'Portada IA';
+    if (fk.includes('video')) return 'Vídeo IA';
+    if (fk.includes('thumbnail')) return 'Thumbnail YT';
+    if (fk.includes('master') || fk.includes('roex') || fk.includes('auphonic') || fk.includes('enhance')) return 'Masterización';
+    if (fk.includes('promo') || fk.includes('social')) return 'Promo RRSS';
+    if (fk.includes('poster')) return 'Poster';
+    if (fk.includes('creative') || fk.includes('instagram')) return 'Creatividad';
+    if (fk.includes('translate') || fk.includes('voice')) return 'Voz IA';
+    if (fk.includes('midi')) return 'MIDI';
+    return fk;
+  }
+  const d = (row.description || '').toLowerCase();
+  if (d.startsWith('registro:') || d.includes('registro de obra')) return 'Registro obra';
+  if (d.includes('generación audio') || d.includes('generacion audio') || d.includes('kie v5') || d.includes('suno')) return 'Generación audio';
+  if (d.includes('enhance audio')) return 'Enhance audio';
+  if (d.includes('pista vocal')) return 'Pista vocal';
+  if (d.includes('portada')) return 'Portada IA';
+  if (d.includes('vídeo') || d.includes('video')) return 'Vídeo IA';
+  if (d.includes('thumbnail') || d.includes('youtube')) return 'Thumbnail YT';
+  if (d.includes('master')) return 'Masterización';
+  if (d.includes('promoción') || d.includes('promocion') || d.includes('rrss')) return 'Promo RRSS';
+  if (d.includes('poster') || d.includes('póster')) return 'Poster';
+  if (d.includes('creatividad') || d.includes('instagram')) return 'Creatividad';
+  if (d.includes('traduc') || d.includes('voz')) return 'Voz IA';
+  if (d.includes('midi')) return 'MIDI';
+  if (d.includes('premium')) return 'Promo Premium';
+  return 'Otro';
+}
+
 function DeltaBadge({ delta }: { delta: number }) {
   if (delta === 0) return <span className="text-xs text-muted-foreground">—</span>;
   const positive = delta > 0;
