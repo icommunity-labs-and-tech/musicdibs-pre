@@ -5,7 +5,7 @@ import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.
 import { creditPurchaseEmail, paymentFailedEmail, distributionWelcomeEmail } from "../_shared/transactional-email.ts";
 
 
-// ── MailerLite sync helper ────────────────────────────────────────────────
+// ââ MailerLite sync helper ââââââââââââââââââââââââââââââââââââââââââââââââ
 async function syncMailerLite(event: string, payload: Record<string, unknown>) {
   try {
     const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/mailerlite-webhook-handler`;
@@ -22,7 +22,7 @@ async function syncMailerLite(event: string, payload: Record<string, unknown>) {
       console.warn(`[ML-SYNC] ${event} failed ${res.status}: ${txt}`);
     } else {
       await res.text();
-      console.log(`[ML-SYNC] ✅ ${event}`);
+      console.log(`[ML-SYNC] â ${event}`);
     }
   } catch (e) {
     console.warn(`[ML-SYNC] ${event} error:`, e);
@@ -53,6 +53,13 @@ const PRICE_CREDITS: Record<string, number> = {
   "price_1THT8AF9ZCIiqrz626wSH9Rz": 200,
   "price_1T8n6CFULeu7PzK6vs7NZyiJ": 100, // annual_100 legacy
   "price_1T8n6lFULeu7PzK60TbO76hE": 8,   // monthly legacy
+  // ── Top-up legacy prices (FULeu7PzK6 account) ──────────────────────────
+  "price_1TMDVkFULeu7PzK6aNdFYW91": 1,   // individual
+  "price_1TMDVkFULeu7PzK6YxaKfBiJ": 10,  // topup_10
+  "price_1TMDVkFULeu7PzK62A2zwaDO": 25,  // topup_25
+  "price_1TMDVkFULeu7PzK6PcMnQkWZ": 50,  // topup_50
+  "price_1TMDVkFULeu7PzK6AJC3o4lZ": 100, // topup_100
+  "price_1TMDVkFULeu7PzK6e9omPpoB": 200, // topup_200
 };
 
 const TIER_CREDITS: Record<string, number> = {
@@ -110,6 +117,13 @@ const PRICE_TO_PLAN_ID: Record<string, string> = {
   "price_1THT8AF9ZCIiqrz626wSH9Rz": "topup_200",
   "price_1T8n6CFULeu7PzK6vs7NZyiJ": "annual_100",
   "price_1T8n6lFULeu7PzK60TbO76hE": "monthly",
+  // ── Top-up legacy prices (FULeu7PzK6 account) ──────────────────────────
+  "price_1TMDVkFULeu7PzK6aNdFYW91": "individual",
+  "price_1TMDVkFULeu7PzK6YxaKfBiJ": "topup_10",
+  "price_1TMDVkFULeu7PzK62A2zwaDO": "topup_25",
+  "price_1TMDVkFULeu7PzK6PcMnQkWZ": "topup_50",
+  "price_1TMDVkFULeu7PzK6AJC3o4lZ": "topup_100",
+  "price_1TMDVkFULeu7PzK6e9omPpoB": "topup_200",
 };
 
 const PLAN_ID_TO_PLAN_NAME: Record<string, string> = {
@@ -141,7 +155,7 @@ async function findProfileByCustomerId(
     .eq("stripe_customer_id", customerId).single();
   if (profile) return profile;
 
-  console.warn(`[WEBHOOK] No profile for customer ${customerId} — trying email fallback`);
+  console.warn(`[WEBHOOK] No profile for customer ${customerId} â trying email fallback`);
   const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
   if (customer.email) {
     const { data: authUser } = await supabase.auth.admin.getUserByEmail(customer.email);
@@ -174,7 +188,7 @@ async function getSubscriptionPriceId(stripe: any, subscriptionId: string): Prom
   }
 }
 
-// ── Get Stripe fee (in EUR) from a charge — never throws ──
+// ââ Get Stripe fee (in EUR) from a charge â never throws ââ
 async function getStripeFee(stripe: any, chargeId?: string | null): Promise<number> {
   if (!chargeId) return 0;
   try {
@@ -190,7 +204,7 @@ async function getStripeFee(stripe: any, chargeId?: string | null): Promise<numb
   }
 }
 
-// ── Create order record in orders table ──
+// ââ Create order record in orders table ââ
 async function createOrderRecord(
   supabase: any,
   params: {
@@ -303,7 +317,7 @@ async function createOrderRecord(
       });
     }
 
-    console.log(`[WEBHOOK] ✅ Order created: ${order?.id} (first_purchase=${isFirstPurchase}, renewal=${params.isRenewal})`);
+    console.log(`[WEBHOOK] â Order created: ${order?.id} (first_purchase=${isFirstPurchase}, renewal=${params.isRenewal})`);
     return order;
   } catch (err: any) {
     console.error("[WEBHOOK] Error creating order:", err.message);
@@ -311,7 +325,7 @@ async function createOrderRecord(
   }
 }
 
-// ── Create purchase evidence record ──
+// ââ Create purchase evidence record ââ
 async function createPurchaseEvidence(
   supabase: any,
   params: {
@@ -397,7 +411,7 @@ async function createPurchaseEvidence(
       return null;
     }
 
-    console.log(`[WEBHOOK] ✅ Purchase evidence created: ${evidence?.id}`);
+    console.log(`[WEBHOOK] â Purchase evidence created: ${evidence?.id}`);
 
     // Trigger async certification via certify-purchase function
     if (evidence?.id) {
@@ -453,11 +467,11 @@ serve(async (req) => {
     const event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
     console.log(`[WEBHOOK] Received event: ${event.type}`);
 
-    // ── checkout.session.completed ──────────────────────────────────────
+    // ââ checkout.session.completed ââââââââââââââââââââââââââââââââââââââ
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
-      // ── YouTube Service (OAC / Content ID) ───────────────────────────
+      // ââ YouTube Service (OAC / Content ID) âââââââââââââââââââââââââââ
       if (session.metadata?.product_type === "youtube_service") {
         const requestId  = session.metadata.youtube_request_id;
         const serviceType = session.metadata.service_type;
@@ -503,7 +517,7 @@ serve(async (req) => {
                   try {
                     const { data: signed } = await supabase.storage
                       .from("documents")
-                      .createSignedUrl(path, 60 * 60 * 24 * 30); // 30 días
+                      .createSignedUrl(path, 60 * 60 * 24 * 30); // 30 dÃ­as
                     if (signed?.signedUrl) return signed.signedUrl;
                   } catch (e) { console.error("[WEBHOOK] signUrl error:", e); }
                   return raw;
@@ -514,7 +528,7 @@ serve(async (req) => {
               if (ytUser?.email) {
                 const serviceName = serviceType === "oac" ? "Canal Oficial de Artista (OAC)" : "YouTube Content ID";
                 const msgId = crypto.randomUUID();
-                await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-${requestId}`, message_id: msgId, to: ytUser.email, from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", subject: `✅ Solicitud de ${serviceName} recibida — MusicDibs`, html: `<p>Hemos recibido tu solicitud de <strong>${serviceName}</strong>. ID: ${requestId}. Plazo estimado: 5 días laborables.</p>`, text: `Solicitud de ${serviceName} recibida. ID: ${requestId}. Plazo: 5 días laborables.`, purpose: "transactional", label: "youtube_service_confirmation", queued_at: new Date().toISOString() } });
+                await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-${requestId}`, message_id: msgId, to: ytUser.email, from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", subject: `â Solicitud de ${serviceName} recibida â MusicDibs`, html: `<p>Hemos recibido tu solicitud de <strong>${serviceName}</strong>. ID: ${requestId}. Plazo estimado: 5 dÃ­as laborables.</p>`, text: `Solicitud de ${serviceName} recibida. ID: ${requestId}. Plazo: 5 dÃ­as laborables.`, purpose: "transactional", label: "youtube_service_confirmation", queued_at: new Date().toISOString() } });
 
                 const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
                 const isUrl = (s: string) => /^https?:\/\//i.test(s);
@@ -531,23 +545,50 @@ serve(async (req) => {
 
 
                 const adminMsgId = crypto.randomUUID();
-                await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-admin-${requestId}`, message_id: adminMsgId, to: "marketing@musicdibs.com", cc: "info@musicdibs.com", from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", reply_to: ytUser.email, subject: `📺 Nueva solicitud ${serviceName} — ${ytUser.email}`, html: `<p>Nueva solicitud de <strong>${serviceName}</strong>.</p><p><strong>Usuario:</strong> ${escapeHtml(ytUser.email)}<br/><strong>Request ID:</strong> ${requestId}<br/><strong>Fecha:</strong> ${new Date().toISOString()}</p><h3 style="margin-top:16px">Datos del formulario</h3><table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:13px">${rowsHtml}</table>`, text: `Nueva solicitud: ${serviceName}\nUsuario: ${ytUser.email}\nRequest ID: ${requestId}\n\nDatos:\n${rowsText}`, purpose: "transactional", label: "youtube_service_admin", queued_at: new Date().toISOString() } });
+                await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `yt-service-admin-${requestId}`, message_id: adminMsgId, to: "marketing@musicdibs.com", cc: "info@musicdibs.com", from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", reply_to: ytUser.email, subject: `ðº Nueva solicitud ${serviceName} â ${ytUser.email}`, html: `<p>Nueva solicitud de <strong>${serviceName}</strong>.</p><p><strong>Usuario:</strong> ${escapeHtml(ytUser.email)}<br/><strong>Request ID:</strong> ${requestId}<br/><strong>Fecha:</strong> ${new Date().toISOString()}</p><h3 style="margin-top:16px">Datos del formulario</h3><table style="border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:13px">${rowsHtml}</table>`, text: `Nueva solicitud: ${serviceName}\nUsuario: ${ytUser.email}\nRequest ID: ${requestId}\n\nDatos:\n${rowsText}`, purpose: "transactional", label: "youtube_service_admin", queued_at: new Date().toISOString() } });
               }
             } catch (ytEmailErr) { console.error("[WEBHOOK] youtube_service email error:", ytEmailErr); }
           }
 
-          console.log(`[WEBHOOK] ✅ YouTube ${serviceType} request ${requestId} → submitted`);
+          console.log(`[WEBHOOK] â YouTube ${serviceType} request ${requestId} â submitted`);
           return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
         }
       }
-      // ── end YouTube Service handler ──────────────────────────────────
+      // ââ end YouTube Service handler ââââââââââââââââââââââââââââââââââ
 
       const userId   = session.metadata?.user_id;
       const credits  = parseInt(session.metadata?.credits || "0", 10);
       const planId   = session.metadata?.plan_id || "unknown";
 
+      // ── Fallback A: recover user_id when missing from metadata (guest checkout) ──
+      if (!userId && session.customer) {
+        const custId = typeof session.customer === "string" ? session.customer : (session.customer as any)?.id;
+        if (custId) {
+          const recoveredProfile = await findProfileByCustomerId(supabase, stripe, custId);
+          if (recoveredProfile) {
+            userId = recoveredProfile.user_id;
+            console.log(`[WEBHOOK] checkout.session.completed: recovered user_id=${userId} from customer ${custId} (metadata missing)`);
+          }
+        }
+      }
+
+      // ── Fallback B: recover credits/planId when missing from metadata ──
+      if (credits === 0 && session.mode === "payment") {
+        try {
+          const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 5, expand: ["data.price"] });
+          const priceId = (lineItems.data[0] as any)?.price?.id;
+          if (priceId && PRICE_CREDITS[priceId] !== undefined) {
+            credits = PRICE_CREDITS[priceId];
+            planId  = PRICE_TO_PLAN_ID[priceId] || "unknown";
+            console.log(`[WEBHOOK] checkout.session.completed: recovered credits=${credits} planId=${planId} from price ${priceId}`);
+          }
+        } catch (lineItemErr) {
+          console.warn("[WEBHOOK] checkout.session.completed: could not fetch line items for fallback:", lineItemErr);
+        }
+      }
+
       if (userId && credits > 0) {
-        // ── Always UPSERT subscriptions with new stripe_subscription_id ────────────
+        // ââ Always UPSERT subscriptions with new stripe_subscription_id ââââââââââââ
         // Must run BEFORE the duplicate guard: migrated users may have a stale
         // subscriptions row with an old stripe_subscription_id. checkout.session.completed
         // only fires on successful payment, so status is always "active".
@@ -570,7 +611,7 @@ serve(async (req) => {
           console.log(`[WEBHOOK] checkout.session.completed: upserted subscriptions stripe_subscription_id=${_checkoutSubId} user=${userId}`);
         }
 
-        // ── Idempotency guard: skip if this checkout session was already processed ──
+        // ââ Idempotency guard: skip if this checkout session was already processed ââ
         const { data: existingCheckoutOrder } = await supabase
           .from("orders")
           .select("id")
@@ -578,7 +619,7 @@ serve(async (req) => {
           .maybeSingle();
 
         if (existingCheckoutOrder) {
-          console.log(`[WEBHOOK] Duplicate checkout.session.completed for ${session.id} — skipping credits/order`);
+          console.log(`[WEBHOOK] Duplicate checkout.session.completed for ${session.id} â skipping credits/order`);
           return new Response(JSON.stringify({ received: true, duplicate: true }), {
             headers: { "Content-Type": "application/json" }
           });
@@ -593,20 +634,20 @@ serve(async (req) => {
         const isPermaPurchase = planId.startsWith("topup_") || planId === "individual";
         const isSubscriptionPurchase = !isPermaPurchase && !!PLAN_ID_TO_PLAN_NAME[planId];
 
-        // ── Plan switch/upgrade: los créditos restantes del plan anterior se acumulan ──
-        // Los créditos no se resetean en el momento del cambio de plan. El usuario conserva
-        // los créditos restantes y se suman los nuevos del plan al que ha upgradea/cambiado.
-        // Nota: el reset a 0 ocurre únicamente en subscription.deleted (fin del periodo real).
+        // ââ Plan switch/upgrade: los crÃ©ditos restantes del plan anterior se acumulan ââ
+        // Los crÃ©ditos no se resetean en el momento del cambio de plan. El usuario conserva
+        // los crÃ©ditos restantes y se suman los nuevos del plan al que ha upgradea/cambiado.
+        // Nota: el reset a 0 ocurre Ãºnicamente en subscription.deleted (fin del periodo real).
         if (isSubscriptionPurchase && previousPlan !== "Free") {
-          console.log(`[WEBHOOK] Plan switch ${previousPlan} → ${planId}: credits preserved (accumulated mode) for user ${userId}`);
+          console.log(`[WEBHOOK] Plan switch ${previousPlan} â ${planId}: credits preserved (accumulated mode) for user ${userId}`);
         }
 
-        await addCredits(supabase, userId, credits, `Compra plan ${planId}: +${credits} créditos`);
+        await addCredits(supabase, userId, credits, `Compra plan ${planId}: +${credits} crÃ©ditos`);
         if (isPermaPurchase) {
           const { data: permProf } = await supabase.from("profiles").select("permanent_credits").eq("user_id", userId).single();
           const newPermanent = (permProf?.permanent_credits ?? 0) + credits;
           await supabase.from("profiles").update({ permanent_credits: newPermanent, updated_at: new Date().toISOString() }).eq("user_id", userId);
-          console.log(`[WEBHOOK] permanent_credits +${credits} → ${newPermanent} for user ${userId} (${planId})`);
+          console.log(`[WEBHOOK] permanent_credits +${credits} â ${newPermanent} for user ${userId} (${planId})`);
         }
 
         const planName = PLAN_ID_TO_PLAN_NAME[planId];
@@ -626,7 +667,7 @@ serve(async (req) => {
           console.log(`[WEBHOOK] Saved stripe_customer_id ${resolvedCustomerId} for user ${userId}`);
         }
 
-        // ── Create order record ──
+        // ââ Create order record ââ
         const sessionMeta = session.metadata || {};
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
         const stripeSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
@@ -677,7 +718,7 @@ serve(async (req) => {
           metadata: sessionMeta,
         });
 
-        // ── Create purchase evidence ──
+        // ââ Create purchase evidence ââ
         {
           const { data: { user: evUser } } = await supabase.auth.admin.getUserById(userId);
           const { data: evProfile } = await supabase.from("profiles").select("display_name").eq("user_id", userId).single();
@@ -732,7 +773,7 @@ serve(async (req) => {
           console.error("[WEBHOOK] Error enqueuing purchase email:", emailErr);
         }
 
-        // ── MailerLite sync: purchase (skip for top-ups and individual credits to preserve subscription group) ──
+        // ââ MailerLite sync: purchase (skip for top-ups and individual credits to preserve subscription group) ââ
         const isTopUpOrIndividual = planId.startsWith("topup_") || planId === "individual";
         if (!isTopUpOrIndividual) {
           try {
@@ -747,10 +788,10 @@ serve(async (req) => {
             }
           } catch (mlErr) { console.warn("[WEBHOOK] MailerLite purchase sync error:", mlErr); }
         } else {
-          console.log(`[WEBHOOK] Skipping MailerLite group sync for ${planId} (top-up/individual — preserving subscription group)`);
+          console.log(`[WEBHOOK] Skipping MailerLite group sync for ${planId} (top-up/individual â preserving subscription group)`);
         }
 
-        // ── Notify team: first annual subscription (distribution onboarding) ──
+        // ââ Notify team: first annual subscription (distribution onboarding) ââ
         const ANNUAL_IDS = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
         if (ANNUAL_IDS.includes(planId) && previousPlan !== "Annual") {
           try {
@@ -759,8 +800,8 @@ serve(async (req) => {
             const { data: distProfile } = await supabase.from("profiles").select("display_name").eq("user_id", userId).single();
             const distName = distProfile?.display_name || distEmail.split("@")[0];
 
-            const distHtml = `<h2>🎵 Nuevo alta en Distribución</h2><p>Un usuario ha contratado su primera suscripción anual y necesita ser dado de alta en la plataforma de distribución.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${planId}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Créditos:</td><td style="padding:6px 12px;">${credits}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${userId}</td></tr></table><p>👉 <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
-            const distText = `Nuevo alta en Distribución\nUsuario: ${distName}\nEmail: ${distEmail}\nPlan: ${planId}\nCréditos: ${credits}\nUser ID: ${userId}\nDar de alta en: https://musicdibs.sonosuite.com/`;
+            const distHtml = `<h2>ðµ Nuevo alta en DistribuciÃ³n</h2><p>Un usuario ha contratado su primera suscripciÃ³n anual y necesita ser dado de alta en la plataforma de distribuciÃ³n.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${planId}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">CrÃ©ditos:</td><td style="padding:6px 12px;">${credits}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${userId}</td></tr></table><p>ð <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
+            const distText = `Nuevo alta en DistribuciÃ³n\nUsuario: ${distName}\nEmail: ${distEmail}\nPlan: ${planId}\nCrÃ©ditos: ${credits}\nUser ID: ${userId}\nDar de alta en: https://musicdibs.sonosuite.com/`;
 
             const distMsgId = crypto.randomUUID();
             await supabase.from("email_send_log").insert({ message_id: distMsgId, template_name: "distribution_onboarding", recipient_email: "marketing@musicdibs.com", status: "pending" });
@@ -770,11 +811,11 @@ serve(async (req) => {
                 idempotency_key: `dist-onboard-${userId}-${planId}`, message_id: distMsgId,
                 to: "marketing@musicdibs.com", cc: "info@musicdibs.com",
                 from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
-                subject: "Nuevo alta en Distribución", html: distHtml, text: distText,
+                subject: "Nuevo alta en DistribuciÃ³n", html: distHtml, text: distText,
                 purpose: "transactional", label: "distribution_onboarding", queued_at: new Date().toISOString(),
               },
             });
-            console.log(`[WEBHOOK] ✅ Distribution onboarding email enqueued for user ${distEmail}`);
+            console.log(`[WEBHOOK] â Distribution onboarding email enqueued for user ${distEmail}`);
 
             // User-facing email: distribution access info
             const userMsgId = crypto.randomUUID();
@@ -791,7 +832,7 @@ serve(async (req) => {
                 label: "distribution_welcome", queued_at: new Date().toISOString(),
               },
             });
-            console.log(`[WEBHOOK] ✅ Distribution welcome email enqueued for ${distEmail}`);
+            console.log(`[WEBHOOK] â Distribution welcome email enqueued for ${distEmail}`);
           } catch (distErr) {
             console.error("[WEBHOOK] Error enqueuing distribution emails:", distErr);
           }
@@ -799,7 +840,7 @@ serve(async (req) => {
       }
     }
 
-    // ── invoice.payment_succeeded / invoice_payment.paid (renovaciones) ─
+    // ââ invoice.payment_succeeded / invoice_payment.paid (renovaciones) â
     if (event.type === "invoice.payment_succeeded" || event.type === "invoice_payment.paid") {
       const obj = event.data.object as any;
 
@@ -844,7 +885,7 @@ serve(async (req) => {
         const profile = await findProfileByCustomerId(supabase, stripe, customerId);
 
         if (profile) {
-          // ── Idempotency guard: skip if this renewal invoice was already processed ──
+          // ââ Idempotency guard: skip if this renewal invoice was already processed ââ
           if (invoiceId) {
             const { data: existingRenewalOrder } = await supabase
               .from("orders")
@@ -854,7 +895,7 @@ serve(async (req) => {
               .maybeSingle();
 
             if (existingRenewalOrder) {
-              console.log(`[WEBHOOK] Duplicate renewal for invoice ${invoiceId} — skipping`);
+              console.log(`[WEBHOOK] Duplicate renewal for invoice ${invoiceId} â skipping`);
               return new Response(JSON.stringify({ received: true, duplicate: true }), {
                 headers: { "Content-Type": "application/json" }
               });
@@ -863,7 +904,7 @@ serve(async (req) => {
 
           const { credits, source: creditsSource, tier: dbTier } = await resolveCreditsForUser(supabase, profile.user_id, priceId);
           console.log(`[WEBHOOK] subscription_cycle: credits=${credits} source=${creditsSource} tier=${dbTier} price=${priceId}`);
-          console.log(`[WEBHOOK] credits resolved via: ${dbTier ? "subscription_tier=" + dbTier : "PRICE_CREDITS=" + priceId} → ${credits} credits`);
+          console.log(`[WEBHOOK] credits resolved via: ${dbTier ? "subscription_tier=" + dbTier : "PRICE_CREDITS=" + priceId} â ${credits} credits`);
 
           if (credits > 0) {
             const { data: rProf } = await supabase.from("profiles").select("permanent_credits").eq("user_id", profile.user_id).single();
@@ -872,15 +913,15 @@ serve(async (req) => {
             await supabase.from("profiles").update({ available_credits: totalCr, updated_at: new Date().toISOString() }).eq("user_id", profile.user_id);
             await supabase.from("credit_transactions").insert({
               user_id: profile.user_id, amount: credits, type: "renewal",
-              description: `Renovación: ${credits} (plan) + ${permanentCr} (permanentes) = ${totalCr} total`,
+              description: `RenovaciÃ³n: ${credits} (plan) + ${permanentCr} (permanentes) = ${totalCr} total`,
             });
             console.log(`[WEBHOOK] Reset credits to ${credits} for user ${profile.user_id} (renewal)`);
           }
 
-          // ── Create renewal order ──
+          // ââ Create renewal order ââ
           const resolvedPlanId = priceId ? (PRICE_TO_PLAN_ID[priceId] || dbTier || "unknown") : (dbTier || "unknown");
           const productType = getProductType(resolvedPlanId);
-          const planLabel = `Renovación ${PLAN_ID_TO_PLAN_NAME[resolvedPlanId] ?? resolvedPlanId}`;
+          const planLabel = `RenovaciÃ³n ${PLAN_ID_TO_PLAN_NAME[resolvedPlanId] ?? resolvedPlanId}`;
 
           const renewalStripeFee = await getStripeFee(stripe, chargeId);
           const renewalOrder = await createOrderRecord(supabase, {
@@ -901,7 +942,7 @@ serve(async (req) => {
             metadata: {},
           });
 
-          // ── Create purchase evidence for renewal ──
+          // ââ Create purchase evidence for renewal ââ
           {
             const { data: { user: rnUser } } = await supabase.auth.admin.getUserById(profile.user_id);
             const { data: rnProfile } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
@@ -922,12 +963,12 @@ serve(async (req) => {
         }
       }
 
-      // ── Plan change (upgrade/downgrade) → accumulate credits ──
+      // ââ Plan change (upgrade/downgrade) â accumulate credits ââ
       if (billingReason === "subscription_update") {
         const profile = await findProfileByCustomerId(supabase, stripe, customerId);
 
         if (profile) {
-          // ── Idempotency guard: skip if this plan-change invoice was already processed ──
+          // ââ Idempotency guard: skip if this plan-change invoice was already processed ââ
           if (invoiceId) {
             const { data: existingUpdateOrder } = await supabase
               .from("orders")
@@ -936,14 +977,14 @@ serve(async (req) => {
               .maybeSingle();
 
             if (existingUpdateOrder) {
-              console.log(`[WEBHOOK] Duplicate subscription_update for invoice ${invoiceId} — skipping`);
+              console.log(`[WEBHOOK] Duplicate subscription_update for invoice ${invoiceId} â skipping`);
               return new Response(JSON.stringify({ received: true, duplicate: true }), {
                 headers: { "Content-Type": "application/json" }
               });
             }
           }
 
-          // Fetch previous plan BEFORE updating (to detect Monthly → Annual upgrade)
+          // Fetch previous plan BEFORE updating (to detect Monthly â Annual upgrade)
           const { data: prevUpgradeProfile } = await supabase
             .from("profiles")
             .select("subscription_plan, subscription_tier")
@@ -965,16 +1006,16 @@ serve(async (req) => {
 
           const { credits, source: creditsSource, tier: dbTier } = await resolveCreditsForUser(supabase, profile.user_id, actualPriceId);
           console.log(`[WEBHOOK] subscription_update: credits=${credits} source=${creditsSource} tier=${dbTier} price=${actualPriceId}`);
-          console.log(`[WEBHOOK] credits resolved via: ${dbTier ? "subscription_tier=" + dbTier : "PRICE_CREDITS=" + actualPriceId} → ${credits} credits`);
+          console.log(`[WEBHOOK] credits resolved via: ${dbTier ? "subscription_tier=" + dbTier : "PRICE_CREDITS=" + actualPriceId} â ${credits} credits`);
 
           // Guard: only assign credits if the plan tier actually changed.
           // Setting trial_end generates a subscription_update invoice but is NOT a plan change.
           const newTierFromPrice = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
           const tierActuallyChanged = newTierFromPrice !== previousTierBeforeUpgrade;
           if (!tierActuallyChanged) {
-            console.log(`[WEBHOOK] subscription_update: tier unchanged (${previousTierBeforeUpgrade} → ${newTierFromPrice}) — skipping credit assignment (likely trial_end update)`);
+            console.log(`[WEBHOOK] subscription_update: tier unchanged (${previousTierBeforeUpgrade} â ${newTierFromPrice}) â skipping credit assignment (likely trial_end update)`);
           } else if (credits > 0) {
-            await addCredits(supabase, profile.user_id, credits, `Cambio de plan: +${credits} créditos acumulados`);
+            await addCredits(supabase, profile.user_id, credits, `Cambio de plan: +${credits} crÃ©ditos acumulados`);
             console.log(`[WEBHOOK] Plan change: added ${credits} credits to user ${profile.user_id} (accumulated)`);
           } else {
             console.warn(`[WEBHOOK] subscription_update: no credits mapping for price ${actualPriceId} (tier=${dbTier})`);
@@ -999,7 +1040,7 @@ serve(async (req) => {
             }
           }
 
-          // ── Distribution onboarding: upgrade Monthly → Annual ──
+          // ââ Distribution onboarding: upgrade Monthly â Annual ââ
           const ANNUAL_IDS_UP = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
           if (resolvedPlanId && ANNUAL_IDS_UP.includes(resolvedPlanId) && previousPlanBeforeUpgrade !== "Annual") {
             try {
@@ -1008,8 +1049,8 @@ serve(async (req) => {
               const { data: distProfile } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
               const distName = distProfile?.display_name || distEmail.split("@")[0];
 
-              const distHtml = `<h2>🎵 Nuevo alta en Distribución (upgrade)</h2><p>Un usuario ha hecho upgrade a suscripción anual y necesita ser dado de alta en la plataforma de distribución.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${resolvedPlanId}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${profile.user_id}</td></tr></table><p>👉 <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
-              const distText = `Nuevo alta en Distribución (upgrade)\nUsuario: ${distName}\nEmail: ${distEmail}\nPlan: ${resolvedPlanId}\nUser ID: ${profile.user_id}\nDar de alta en: https://musicdibs.sonosuite.com/`;
+              const distHtml = `<h2>ðµ Nuevo alta en DistribuciÃ³n (upgrade)</h2><p>Un usuario ha hecho upgrade a suscripciÃ³n anual y necesita ser dado de alta en la plataforma de distribuciÃ³n.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${resolvedPlanId}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${profile.user_id}</td></tr></table><p>ð <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
+              const distText = `Nuevo alta en DistribuciÃ³n (upgrade)\nUsuario: ${distName}\nEmail: ${distEmail}\nPlan: ${resolvedPlanId}\nUser ID: ${profile.user_id}\nDar de alta en: https://musicdibs.sonosuite.com/`;
 
               const distMsgId = crypto.randomUUID();
               await supabase.from("email_send_log").insert({ message_id: distMsgId, template_name: "distribution_onboarding", recipient_email: "marketing@musicdibs.com", status: "pending" });
@@ -1019,11 +1060,11 @@ serve(async (req) => {
                   idempotency_key: `dist-onboard-${profile.user_id}-${resolvedPlanId}`, message_id: distMsgId,
                   to: "marketing@musicdibs.com", cc: "info@musicdibs.com",
                   from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
-                  subject: "Nuevo alta en Distribución (upgrade)", html: distHtml, text: distText,
+                  subject: "Nuevo alta en DistribuciÃ³n (upgrade)", html: distHtml, text: distText,
                   purpose: "transactional", label: "distribution_onboarding", queued_at: new Date().toISOString(),
                 },
               });
-              console.log(`[WEBHOOK] ✅ Distribution onboarding email enqueued (upgrade) for user ${distEmail}`);
+              console.log(`[WEBHOOK] â Distribution onboarding email enqueued (upgrade) for user ${distEmail}`);
 
               // User-facing email: distribution access info
               const userMsgId = crypto.randomUUID();
@@ -1040,13 +1081,13 @@ serve(async (req) => {
                   label: "distribution_welcome", queued_at: new Date().toISOString(),
                 },
               });
-              console.log(`[WEBHOOK] ✅ Distribution welcome email enqueued (upgrade) for ${distEmail}`);
+              console.log(`[WEBHOOK] â Distribution welcome email enqueued (upgrade) for ${distEmail}`);
             } catch (distUpgradeErr) {
               console.error("[WEBHOOK] Error enqueuing distribution upgrade emails:", distUpgradeErr);
             }
           }
 
-          // ── Create order record for plan change ──
+          // ââ Create order record for plan change ââ
           const planId = resolvedPlanId || "unknown";
           const productType = getProductType(planId);
           const changeStripeFee = await getStripeFee(stripe, chargeId);
@@ -1068,7 +1109,7 @@ serve(async (req) => {
             metadata: {},
           });
 
-          // ── Create purchase evidence for plan change ──
+          // ââ Create purchase evidence for plan change ââ
           {
             const { data: { user: chUser } } = await supabase.auth.admin.getUserById(profile.user_id);
             const { data: chProfile } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
@@ -1089,7 +1130,7 @@ serve(async (req) => {
         }
       }
 
-      // ── Nueva suscripción creada directamente (sin Checkout Session) ─────
+      // ââ Nueva suscripciÃ³n creada directamente (sin Checkout Session) âââââ
       if (billingReason === "subscription_create") {
         const profile = await findProfileByCustomerId(supabase, stripe, customerId);
 
@@ -1120,7 +1161,7 @@ serve(async (req) => {
               .maybeSingle();
 
             if (existingCreateOrder) {
-              console.log(`[WEBHOOK] Duplicate subscription_create for invoice ${invoiceId} — skipping`);
+              console.log(`[WEBHOOK] Duplicate subscription_create for invoice ${invoiceId} â skipping`);
               return new Response(JSON.stringify({ received: true, duplicate: true }), {
                 headers: { "Content-Type": "application/json" }
               });
@@ -1139,7 +1180,7 @@ serve(async (req) => {
               .maybeSingle();
 
             if (existingCheckoutOrder) {
-              console.log(`[WEBHOOK] subscription_create: checkout already processed sub ${subscriptionId} — skipping duplicate invoice credits`);
+              console.log(`[WEBHOOK] subscription_create: checkout already processed sub ${subscriptionId} â skipping duplicate invoice credits`);
               return new Response(JSON.stringify({ received: true, duplicate: true }), {
                 headers: { "Content-Type": "application/json" }
               });
@@ -1149,8 +1190,8 @@ serve(async (req) => {
           // Idempotency guard #2b: fallback for when subscriptionId could NOT be
           // resolved (Stripe sometimes sends this invoice without `invoice.subscription`
           // populated, e.g. invoice in_xxx for yervinzeledon@gmail.com on 2026-06-10,
-          // which bypassed guard #2 entirely and granted a duplicate "Alta suscripción
-          // undefined: +N créditos" on top of the checkout.session.completed credits).
+          // which bypassed guard #2 entirely and granted a duplicate "Alta suscripciÃ³n
+          // undefined: +N crÃ©ditos" on top of the checkout.session.completed credits).
           // Match by customer instead: if a non-renewal subscription order already
           // exists for this customer from the last hour (i.e. checkout.session.completed
           // already ran for this signup), treat this invoice as the duplicate side of
@@ -1168,7 +1209,7 @@ serve(async (req) => {
               .maybeSingle();
 
             if (existingRecentSignupOrder) {
-              console.log(`[WEBHOOK] subscription_create: no subscriptionId resolved, but checkout.session.completed already processed a recent signup for customer ${customerId} — skipping duplicate invoice credits`);
+              console.log(`[WEBHOOK] subscription_create: no subscriptionId resolved, but checkout.session.completed already processed a recent signup for customer ${customerId} â skipping duplicate invoice credits`);
               return new Response(JSON.stringify({ received: true, duplicate: true }), {
                 headers: { "Content-Type": "application/json" }
               });
@@ -1201,7 +1242,7 @@ serve(async (req) => {
           console.log(`[WEBHOOK] subscription_create: credits=${createCredits} source=${createSource} tier=${createTier} price=${actualPriceId}`);
 
           if (createCredits > 0) {
-            await addCredits(supabase, profile.user_id, createCredits, `Alta suscripción ${resolvedPlanId || actualPriceId}: +${createCredits} créditos`);
+            await addCredits(supabase, profile.user_id, createCredits, `Alta suscripciÃ³n ${resolvedPlanId || actualPriceId}: +${createCredits} crÃ©ditos`);
             console.log(`[WEBHOOK] subscription_create: added ${createCredits} credits to user ${profile.user_id}`);
           } else {
             console.warn(`[WEBHOOK] subscription_create: no credits mapping for price ${actualPriceId} (tier=${createTier})`);
@@ -1223,7 +1264,7 @@ serve(async (req) => {
             stripeCustomerId: customerId || undefined,
             productType: createProductType,
             productCode: resolvedPlanId || "unknown",
-            productLabel: `Nueva suscripción ${resolvedPlanId || "unknown"}`,
+            productLabel: `Nueva suscripciÃ³n ${resolvedPlanId || "unknown"}`,
             billingInterval: createProductType === "annual" ? "yearly" : createProductType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
             stripeFee: createStripeFee,
@@ -1243,7 +1284,7 @@ serve(async (req) => {
               email: crUser?.email,
               displayName: crProfile?.display_name,
               productType: createProductType,
-              productName: `Nueva suscripción ${resolvedPlanId || "unknown"}`,
+              productName: `Nueva suscripciÃ³n ${resolvedPlanId || "unknown"}`,
               amount: invoiceAmount,
               currency: invoiceCurrency,
               paymentStatus: "succeeded",
@@ -1273,12 +1314,12 @@ serve(async (req) => {
               const { data: distProfile } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
               const distName = distProfile?.display_name || distEmail.split("@")[0];
 
-              const distHtml = `<h2>🎵 Nuevo alta en Distribución</h2><p>Un usuario ha contratado su primera suscripción anual y necesita ser dado de alta en la plataforma de distribución.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${resolvedPlanId}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Créditos:</td><td style="padding:6px 12px;">${createCredits}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${profile.user_id}</td></tr></table><p>👉 <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
-              const distText = `Nuevo alta en Distribución
+              const distHtml = `<h2>ðµ Nuevo alta en DistribuciÃ³n</h2><p>Un usuario ha contratado su primera suscripciÃ³n anual y necesita ser dado de alta en la plataforma de distribuciÃ³n.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${resolvedPlanId}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">CrÃ©ditos:</td><td style="padding:6px 12px;">${createCredits}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${profile.user_id}</td></tr></table><p>ð <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
+              const distText = `Nuevo alta en DistribuciÃ³n
 Usuario: ${distName}
 Email: ${distEmail}
 Plan: ${resolvedPlanId}
-Créditos: ${createCredits}
+CrÃ©ditos: ${createCredits}
 User ID: ${profile.user_id}
 Dar de alta en: https://musicdibs.sonosuite.com/`;
 
@@ -1290,7 +1331,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
                   idempotency_key: `dist-onboard-${profile.user_id}-${resolvedPlanId}`, message_id: distMsgId,
                   to: "marketing@musicdibs.com", cc: "info@musicdibs.com",
                   from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
-                  subject: "Nuevo alta en Distribución", html: distHtml, text: distText,
+                  subject: "Nuevo alta en DistribuciÃ³n", html: distHtml, text: distText,
                   purpose: "transactional", label: "distribution_onboarding", queued_at: new Date().toISOString(),
                 },
               });
@@ -1309,7 +1350,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
                   label: "distribution_welcome", queued_at: new Date().toISOString(),
                 },
               });
-              console.log(`[WEBHOOK] ✅ Distribution emails enqueued for ${distEmail} (subscription_create)`);
+              console.log(`[WEBHOOK] â Distribution emails enqueued for ${distEmail} (subscription_create)`);
             } catch (distCreateErr) {
               console.error("[WEBHOOK] Error enqueuing distribution emails (subscription_create):", distCreateErr);
             }
@@ -1320,7 +1361,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       }
     }
 
-    // ── invoice.payment_failed / invoice_payment.failed ──────────────────
+    // ââ invoice.payment_failed / invoice_payment.failed ââââââââââââââââââ
     if (event.type === "invoice.payment_failed" || event.type === "invoice_payment.failed") {
       const obj = event.data.object as any;
 
@@ -1348,7 +1389,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
 
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
       if (profile) {
-        const description = `Fallo en cobro de suscripción (intento ${attemptCount})${nextAttempt ? `. Próximo reintento: ${nextAttempt}` : ". No hay más reintentos."}`;
+        const description = `Fallo en cobro de suscripciÃ³n (intento ${attemptCount})${nextAttempt ? `. PrÃ³ximo reintento: ${nextAttempt}` : ". No hay mÃ¡s reintentos."}`;
         await supabase.from("credit_transactions").insert({ user_id: profile.user_id, amount: 0, type: "payment_failed", description });
         console.log(`[WEBHOOK] Payment failed for user ${profile.user_id} (attempt ${attemptCount})`);
 
@@ -1377,7 +1418,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
               payload: {
                 idempotency_key: `payment-failed-admin-${adminMsgId}`, message_id: adminMsgId,
                 to: "info@musicdibs.com", from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
-                subject: `⚠️ Fallo de pago — ${userEmail}`, html: email.html, text: email.text,
+                subject: `â ï¸ Fallo de pago â ${userEmail}`, html: email.html, text: email.text,
                 purpose: "transactional", label: "payment_failed_admin", queued_at: new Date().toISOString(),
               },
             });
@@ -1388,20 +1429,20 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       }
     }
 
-    // ── customer.subscription.updated ──────────────────────────────────
+    // ââ customer.subscription.updated ââââââââââââââââââââââââââââââââââ
     if (event.type === "customer.subscription.updated") {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = typeof subscription.customer === "string" ? subscription.customer : (subscription.customer as any)?.id ?? "";
       const priceId = subscription.items?.data?.[0]?.price?.id;
       const status = subscription.status;
 
-      // Guard: skip if only trial_end (or trial_start) changed — no real plan change.
+      // Guard: skip if only trial_end (or trial_start) changed â no real plan change.
       const prevAttrs = (event.data as any).previous_attributes ?? {};
       const prevAttrKeys = Object.keys(prevAttrs);
       const onlyTrialEndChanged = prevAttrKeys.length > 0 &&
         prevAttrKeys.every(k => ["trial_end", "trial_start", "billing_cycle_anchor"].includes(k));
       if (onlyTrialEndChanged) {
-        console.log(`[WEBHOOK] subscription.updated: only trial_end/trial_start changed — skipping (prev_attrs: ${JSON.stringify(prevAttrs)})`);
+        console.log(`[WEBHOOK] subscription.updated: only trial_end/trial_start changed â skipping (prev_attrs: ${JSON.stringify(prevAttrs)})`);
         return new Response(JSON.stringify({ received: true, skipped: "trial_end_only" }), {
           headers: { "Content-Type": "application/json" },
         });
@@ -1411,15 +1452,15 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       if (profile) {
         const planName = priceId ? (PRICE_PLAN[priceId] || null) : null;
         const planTier = priceId ? (PRICE_TO_PLAN_ID[priceId] || null) : null;
-        // Capture previous plan BEFORE updating so we can detect Monthly→Annual transitions
+        // Capture previous plan BEFORE updating so we can detect MonthlyâAnnual transitions
         const { data: prevUpdProfile } = await supabase
           .from("profiles").select("subscription_plan").eq("user_id", profile.user_id).single();
         const previousPlanOnUpdate = prevUpdProfile?.subscription_plan || "Free";
         if (status === "active" && planName) {
           await supabase.from("profiles").update({ subscription_plan: planName, subscription_tier: planTier }).eq("user_id", profile.user_id);
-          console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} (tier=${planTier}) for user ${profile.user_id}`);
+          console.log(`[WEBHOOK] subscription.updated â plan set to ${planName} (tier=${planTier}) for user ${profile.user_id}`);
 
-          // ── Distribution onboarding: transition to Annual (idempotent via idempotency_key) ──
+          // ââ Distribution onboarding: transition to Annual (idempotent via idempotency_key) ââ
           const ANNUAL_TIERS_SU = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
           if (planTier && ANNUAL_TIERS_SU.includes(planTier) && previousPlanOnUpdate !== "Annual") {
             try {
@@ -1429,8 +1470,8 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
               const distName = distProfile?.display_name || distEmail.split("@")[0];
               const distLang = distProfile?.language || (distUser?.user_metadata as any)?.language || "es";
 
-              const distHtml = `<h2>🎵 Nuevo alta en Distribución</h2><p>Un usuario ha pasado a suscripción anual y necesita ser dado de alta en la plataforma de distribución.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${planTier}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${profile.user_id}</td></tr></table><p>👉 <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
-              const distText = `Nuevo alta en Distribución\nUsuario: ${distName}\nEmail: ${distEmail}\nPlan: ${planTier}\nUser ID: ${profile.user_id}\nDar de alta en: https://musicdibs.sonosuite.com/`;
+              const distHtml = `<h2>ðµ Nuevo alta en DistribuciÃ³n</h2><p>Un usuario ha pasado a suscripciÃ³n anual y necesita ser dado de alta en la plataforma de distribuciÃ³n.</p><table style="border-collapse:collapse;margin:16px 0;"><tr><td style="padding:6px 12px;font-weight:bold;">Usuario:</td><td style="padding:6px 12px;">${distName}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Email:</td><td style="padding:6px 12px;">${distEmail}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">Plan:</td><td style="padding:6px 12px;">${planTier}</td></tr><tr><td style="padding:6px 12px;font-weight:bold;">User ID:</td><td style="padding:6px 12px;">${profile.user_id}</td></tr></table><p>ð <a href="https://musicdibs.sonosuite.com/">Dar de alta en Sonosuite</a></p>`;
+              const distText = `Nuevo alta en DistribuciÃ³n\nUsuario: ${distName}\nEmail: ${distEmail}\nPlan: ${planTier}\nUser ID: ${profile.user_id}\nDar de alta en: https://musicdibs.sonosuite.com/`;
 
               const distMsgId = crypto.randomUUID();
               await supabase.from("email_send_log").insert({ message_id: distMsgId, template_name: "distribution_onboarding", recipient_email: "marketing@musicdibs.com", status: "pending" });
@@ -1440,7 +1481,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
                   idempotency_key: `dist-onboard-${profile.user_id}-${planTier}`, message_id: distMsgId,
                   to: "marketing@musicdibs.com", cc: "info@musicdibs.com",
                   from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
-                  subject: "Nuevo alta en Distribución", html: distHtml, text: distText,
+                  subject: "Nuevo alta en DistribuciÃ³n", html: distHtml, text: distText,
                   purpose: "transactional", label: "distribution_onboarding", queued_at: new Date().toISOString(),
                 },
               });
@@ -1457,7 +1498,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
                   label: "distribution_welcome", queued_at: new Date().toISOString(),
                 },
               });
-              console.log(`[WEBHOOK] ✅ Distribution emails enqueued (subscription.updated) for ${distEmail} tier=${planTier}`);
+              console.log(`[WEBHOOK] â Distribution emails enqueued (subscription.updated) for ${distEmail} tier=${planTier}`);
             } catch (distSuErr) {
               console.error("[WEBHOOK] Error enqueuing distribution emails (subscription.updated):", distSuErr);
             }
@@ -1465,19 +1506,19 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         } else if (status === "past_due" || status === "unpaid") {
           await supabase.from("credit_transactions").insert({
             user_id: profile.user_id, amount: 0, type: "subscription_issue",
-            description: `Suscripción en estado "${status}". Se requiere acción de pago.`,
+            description: `SuscripciÃ³n en estado "${status}". Se requiere acciÃ³n de pago.`,
           });
         } else if (status === "canceled" || status === "incomplete_expired") {
-          // Solo actualizar plan a Free — los créditos se resetean en subscription.deleted
-          // cuando el periodo de facturación realmente termina (cancel_at_period_end=true)
+          // Solo actualizar plan a Free â los crÃ©ditos se resetean en subscription.deleted
+          // cuando el periodo de facturaciÃ³n realmente termina (cancel_at_period_end=true)
           await supabase.from("profiles").update({
             subscription_plan: "Free", subscription_tier: null,
             updated_at: new Date().toISOString(),
           }).eq("user_id", profile.user_id);
-          console.log(`[WEBHOOK] subscription.updated ${status} → Free (credits preserved until subscription.deleted) for user ${profile.user_id}`);
+          console.log(`[WEBHOOK] subscription.updated ${status} â Free (credits preserved until subscription.deleted) for user ${profile.user_id}`);
         }
 
-        // ── Sincronizar tabla subscriptions local ──
+        // ââ Sincronizar tabla subscriptions local ââ
         const subStatus = mapStripeStatus(status);
         const itemPeriodStart = (subscription.items.data[0] as any)?.current_period_start;
         const itemPeriodEnd = (subscription.items.data[0] as any)?.current_period_end;
@@ -1502,18 +1543,18 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
             .update({ subscription_plan: planName, subscription_tier: planTier, updated_at: new Date().toISOString() })
             .eq("user_id", profile.user_id);
         } else if (["cancelled", "expired"].includes(subStatus)) {
-          // Solo actualizar plan — reset de créditos ÚNICAMENTE en subscription.deleted
+          // Solo actualizar plan â reset de crÃ©ditos ÃNICAMENTE en subscription.deleted
           await supabase.from("profiles")
             .update({ subscription_plan: "Free", subscription_tier: null, updated_at: new Date().toISOString() })
             .eq("user_id", profile.user_id);
-          console.log(`[WEBHOOK] subscription.updated ${subStatus} → Free (credits preserved until subscription.deleted) for user ${profile.user_id}`);
+          console.log(`[WEBHOOK] subscription.updated ${subStatus} â Free (credits preserved until subscription.deleted) for user ${profile.user_id}`);
         }
 
-        console.log(`[WEBHOOK] subscription.updated → synced subscriptions table for user ${profile.user_id} (status=${subStatus})`);
+        console.log(`[WEBHOOK] subscription.updated â synced subscriptions table for user ${profile.user_id} (status=${subStatus})`);
       }
     }
 
-    // ── customer.subscription.deleted ─────────────────────────────────
+    // ââ customer.subscription.deleted âââââââââââââââââââââââââââââââââ
     if (event.type === "customer.subscription.deleted") {
       const subscription = event.data.object as Stripe.Subscription;
       const customerId = typeof subscription.customer === "string" ? subscription.customer : (subscription.customer as any)?.id ?? "";
@@ -1531,12 +1572,12 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         if (deletedCreditsToReset > 0) {
           await supabase.from("credit_transactions").insert({
             user_id: profile.user_id, amount: -deletedCreditsToReset, type: "admin_reset",
-            description: `Créditos de suscripción eliminados al cancelar definitivamente: -${deletedCreditsToReset}`,
+            description: `CrÃ©ditos de suscripciÃ³n eliminados al cancelar definitivamente: -${deletedCreditsToReset}`,
           });
         }
-        console.log(`[WEBHOOK] subscription.deleted → Free, -${deletedCreditsToReset} credits for user ${profile.user_id}`);
+        console.log(`[WEBHOOK] subscription.deleted â Free, -${deletedCreditsToReset} credits for user ${profile.user_id}`);
 
-        // ── Sincronizar tabla subscriptions local ──
+        // ââ Sincronizar tabla subscriptions local ââ
         await supabase.from("subscriptions").upsert({
           user_id: profile.user_id,
           stripe_customer_id: customerId,
@@ -1545,7 +1586,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           status: "cancelled",
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
-        console.log(`[WEBHOOK] subscription.deleted → marked subscriptions as cancelled for user ${profile.user_id}`);
+        console.log(`[WEBHOOK] subscription.deleted â marked subscriptions as cancelled for user ${profile.user_id}`);
 
         try {
           const { data: { user: cancelUser } } = await supabase.auth.admin.getUserById(profile.user_id);
@@ -1559,14 +1600,14 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       }
     }
 
-    // ── checkout.session.expired ─────────────────────────────────────
+    // ââ checkout.session.expired âââââââââââââââââââââââââââââââââââââ
     if (event.type === "checkout.session.expired") {
       const session = event.data.object as Stripe.Checkout.Session;
       const userEmail = session.customer_email;
       const userId = session.metadata?.user_id;
 
       if (userEmail) {
-        console.log(`[WEBHOOK] checkout.session.expired → ${userEmail}`);
+        console.log(`[WEBHOOK] checkout.session.expired â ${userEmail}`);
         let locale = "en";
         if (userId) {
           const { data: prof } = await supabase.from("profiles").select("language").eq("user_id", userId).single();
@@ -1584,7 +1625,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
     }
 
 
-    // ── charge.dispute.created ──────────────────────────────────────────
+    // ââ charge.dispute.created ââââââââââââââââââââââââââââââââââââââââââ
     if (event.type === "charge.dispute.created") {
       const dispute = event.data.object as Stripe.Dispute;
       const chargeId = typeof dispute.charge === "string" ? dispute.charge : (dispute.charge as any)?.id ?? "";
@@ -1606,7 +1647,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
               is_blocked: true,
             }).eq("user_id", profile.user_id);
 
-            console.log(`[WEBHOOK] ✅ Dispute flagged on user ${profile.user_id} (${disputeId})`);
+            console.log(`[WEBHOOK] â Dispute flagged on user ${profile.user_id} (${disputeId})`);
 
             // Notificar al admin via notify-admin-alert
             try {
@@ -1680,7 +1721,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       }
     }
 
-    // ── charge.dispute.lost ─────────────────────────────────────────────
+    // ââ charge.dispute.lost âââââââââââââââââââââââââââââââââââââââââââââ
     if (event.type === "charge.dispute.lost") {
       const dispute = event.data.object as Stripe.Dispute;
       const chargeId = typeof dispute.charge === "string" ? dispute.charge : (dispute.charge as any)?.id ?? "";
@@ -1694,7 +1735,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         if (customerId) {
           const profile = await findProfileByCustomerId(supabase, stripe, customerId);
           if (profile) {
-            // Cancelar suscripción activa si Stripe no lo hizo automáticamente
+            // Cancelar suscripciÃ³n activa si Stripe no lo hizo automÃ¡ticamente
             const { data: subs } = await supabase
               .from("subscriptions")
               .select("stripe_subscription_id, status")
@@ -1707,14 +1748,14 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
                 await stripe.subscriptions.cancel(subs[0].stripe_subscription_id);
                 console.log(`[WEBHOOK] Subscription ${subs[0].stripe_subscription_id} cancelled due to lost dispute`);
               } catch (cancelErr: any) {
-                // Ignorar si ya está cancelada
+                // Ignorar si ya estÃ¡ cancelada
                 if (!cancelErr.message?.includes("No such subscription")) {
                   console.warn("[WEBHOOK] Error cancelling sub on dispute lost:", cancelErr);
                 }
               }
             }
 
-            // Downgrade a Free y quitar créditos
+            // Downgrade a Free y quitar crÃ©ditos
             await supabase.from("profiles").update({
               subscription_plan: "Free",
               subscription_tier: null,
@@ -1725,7 +1766,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
               is_blocked: true,
             }).eq("user_id", profile.user_id);
 
-            console.log(`[WEBHOOK] ✅ User ${profile.user_id} downgraded to Free after lost dispute ${disputeId}`);
+            console.log(`[WEBHOOK] â User ${profile.user_id} downgraded to Free after lost dispute ${disputeId}`);
 
             // Notificar al admin
             try {
@@ -1754,7 +1795,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       }
     }
 
-    // ── charge.dispute.won ──────────────────────────────────────────────
+    // ââ charge.dispute.won ââââââââââââââââââââââââââââââââââââââââââââââ
     if (event.type === "charge.dispute.won") {
       const dispute = event.data.object as Stripe.Dispute;
       const chargeId = typeof dispute.charge === "string" ? dispute.charge : (dispute.charge as any)?.id ?? "";
@@ -1775,7 +1816,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
               dispute_opened_at: null,
             }).eq("user_id", profile.user_id);
 
-            console.log(`[WEBHOOK] ✅ Dispute won — flags cleared for user ${profile.user_id}`);
+            console.log(`[WEBHOOK] â Dispute won â flags cleared for user ${profile.user_id}`);
           }
         }
       } catch (dispErr) {
