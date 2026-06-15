@@ -2620,8 +2620,32 @@ const pt: typeof es = {
       typeDocument: '📄 Documento',
       typeOther: '📁 Outro',
     },
+    referral: {
+      title: 'Como você nos conheceu?',
+      subtitle: 'Você nos ajuda a entender o que funciona para melhorar a plataforma.',
+      influencerTitle: 'De qual criador?',
+      influencerSubtitle: 'Selecione o criador cujo vídeo você assistiu.',
+      sources: {
+        influencer: 'Vídeo de um criador no YouTube',
+        instagram: 'Instagram (MusicDibs)',
+        tiktok: 'TikTok (MusicDibs)',
+        google: 'Google / Busca na web',
+        friend: 'Um amigo me recomendou',
+        podcast: 'Podcast ou blog',
+        other: 'Outro',
+      },
+      influencers: { other: 'Outro criador' },
+      detailLabel: 'Nome do criador (opcional)',
+      detailPlaceholder: 'Ex. @nomedocriador',
+      back: 'Voltar',
+      skip: 'Pular',
+      confirm: 'Confirmar',
+      thanks: 'Obrigado por nos contar!',
+      error: 'Não foi possível salvar sua resposta',
+    },
   },
 };
+
 
 export const dashboardTranslations: Record<string, { translation: { dashboard: typeof es.dashboard } }> = {
   es: { translation: es },
