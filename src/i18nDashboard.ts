@@ -856,8 +856,32 @@ const es = {
       typeDocument: '📄 Documento',
       typeOther: '📁 Otro',
     },
+    referral: {
+      title: '¿Cómo nos conociste?',
+      subtitle: 'Nos ayudas a entender qué funciona para mejorar la plataforma.',
+      influencerTitle: '¿De qué creador?',
+      influencerSubtitle: 'Selecciona el creador cuyo vídeo viste.',
+      sources: {
+        influencer: 'Vídeo de un creador en YouTube',
+        instagram: 'Instagram (MusicDibs)',
+        tiktok: 'TikTok (MusicDibs)',
+        google: 'Google / Búsqueda web',
+        friend: 'Un amigo me lo recomendó',
+        podcast: 'Podcast o blog',
+        other: 'Otro',
+      },
+      influencers: { other: 'Otro creador' },
+      detailLabel: 'Nombre del creador (opcional)',
+      detailPlaceholder: 'Ej. @nombrecreador',
+      back: 'Atrás',
+      skip: 'Saltar',
+      confirm: 'Confirmar',
+      thanks: '¡Gracias por contarnos!',
+      error: 'No se pudo guardar tu respuesta',
+    },
   },
 };
+
 
 const en: typeof es = {
   dashboard: {
@@ -1714,8 +1738,32 @@ const en: typeof es = {
       typeDocument: '📄 Document',
       typeOther: '📁 Other',
     },
+    referral: {
+      title: 'How did you hear about us?',
+      subtitle: 'Help us understand what works so we can improve the platform.',
+      influencerTitle: 'Which creator?',
+      influencerSubtitle: 'Select the creator whose video you watched.',
+      sources: {
+        influencer: 'Video from a YouTube creator',
+        instagram: 'Instagram (MusicDibs)',
+        tiktok: 'TikTok (MusicDibs)',
+        google: 'Google / Web search',
+        friend: 'A friend recommended it',
+        podcast: 'Podcast or blog',
+        other: 'Other',
+      },
+      influencers: { other: 'Another creator' },
+      detailLabel: 'Creator name (optional)',
+      detailPlaceholder: 'e.g. @creatorname',
+      back: 'Back',
+      skip: 'Skip',
+      confirm: 'Confirm',
+      thanks: 'Thanks for letting us know!',
+      error: 'Could not save your answer',
+    },
   },
 };
+
 
 const pt: typeof es = {
   dashboard: {
@@ -2572,8 +2620,32 @@ const pt: typeof es = {
       typeDocument: '📄 Documento',
       typeOther: '📁 Outro',
     },
+    referral: {
+      title: 'Como você nos conheceu?',
+      subtitle: 'Você nos ajuda a entender o que funciona para melhorar a plataforma.',
+      influencerTitle: 'De qual criador?',
+      influencerSubtitle: 'Selecione o criador cujo vídeo você assistiu.',
+      sources: {
+        influencer: 'Vídeo de um criador no YouTube',
+        instagram: 'Instagram (MusicDibs)',
+        tiktok: 'TikTok (MusicDibs)',
+        google: 'Google / Busca na web',
+        friend: 'Um amigo me recomendou',
+        podcast: 'Podcast ou blog',
+        other: 'Outro',
+      },
+      influencers: { other: 'Outro criador' },
+      detailLabel: 'Nome do criador (opcional)',
+      detailPlaceholder: 'Ex. @nomedocriador',
+      back: 'Voltar',
+      skip: 'Pular',
+      confirm: 'Confirmar',
+      thanks: 'Obrigado por nos contar!',
+      error: 'Não foi possível salvar sua resposta',
+    },
   },
 };
+
 
 export const dashboardTranslations: Record<string, { translation: { dashboard: typeof es.dashboard } }> = {
   es: { translation: es },
