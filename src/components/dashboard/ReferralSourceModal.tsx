@@ -26,7 +26,6 @@ export function ReferralSourceModal() {
   const [detail, setDetail] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Comprobar si ya tiene referral_source
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
@@ -42,7 +41,6 @@ export function ReferralSourceModal() {
           .maybeSingle();
         if (error || cancelled) return;
         if (!data?.referral_source) {
-          // PequeÃ±o delay para no chocar con el tour
           setTimeout(() => !cancelled && setOpen(true), 1200);
         }
       } catch {
@@ -52,14 +50,14 @@ export function ReferralSourceModal() {
     return () => { cancelled = true; };
   }, [user]);
 
-  const sources: { id: Source; icon: React.ElementType; label: string; emoji: string }[] = [
-    { id: 'influencer', icon: Youtube, emoji: 'ð¥', label: tr('referral.sources.influencer', 'VÃ­deo de un creador en YouTube') },
-    { id: 'instagram', icon: Instagram, emoji: 'ð±', label: tr('referral.sources.instagram', 'Instagram (MusicDibs)') },
-    { id: 'tiktok', icon: Music, emoji: 'ðµ', label: tr('referral.sources.tiktok', 'TikTok (MusicDibs)') },
-    { id: 'google', icon: Search, emoji: 'ð', label: tr('referral.sources.google', 'Google / BÃºsqueda web') },
-    { id: 'friend', icon: Users, emoji: 'ð¥', label: tr('referral.sources.friend', 'Un amigo me lo recomendÃ³') },
-    { id: 'podcast', icon: Mic, emoji: 'ðï¸', label: tr('referral.sources.podcast', 'Podcast o blog') },
-    { id: 'other', icon: Circle, emoji: 'ðµ', label: tr('referral.sources.other', 'Otro') },
+  const sources: { id: Source; icon: React.ElementType; label: string }[] = [
+    { id: 'influencer', icon: Youtube, label: tr('referral.sources.influencer', 'Vídeo de un creador en YouTube') },
+    { id: 'instagram', icon: Instagram, label: tr('referral.sources.instagram', 'Instagram (MusicDibs)') },
+    { id: 'tiktok', icon: Music, label: tr('referral.sources.tiktok', 'TikTok (MusicDibs)') },
+    { id: 'google', icon: Search, label: tr('referral.sources.google', 'Google / Búsqueda web') },
+    { id: 'friend', icon: Users, label: tr('referral.sources.friend', 'Un amigo me lo recomendó') },
+    { id: 'podcast', icon: Mic, label: tr('referral.sources.podcast', 'Podcast o blog') },
+    { id: 'other', icon: Circle, label: tr('referral.sources.other', 'Otro') },
   ];
 
   const influencers: { id: Influencer; label: string }[] = [
@@ -94,7 +92,7 @@ export function ReferralSourceModal() {
         })
         .eq('user_id', user.id);
       if (error) throw error;
-      toast.success(tr('referral.thanks', 'Â¡Gracias por contarnos!'));
+      toast.success(tr('referral.thanks', '¡Gracias por contarnos!'));
       persistAndClose();
     } catch (e: any) {
       toast.error(e.message || tr('referral.error', 'No se pudo guardar tu respuesta'));
@@ -126,32 +124,35 @@ export function ReferralSourceModal() {
         <DialogHeader>
           <DialogTitle className="text-xl">
             {step === 'source'
-              ? tr('referral.title', 'Â¿CÃ³mo nos conociste?')
-              : tr('referral.influencerTitle', 'Â¿De quÃ© creador?')}
+              ? tr('referral.title', '¿Cómo nos conociste?')
+              : tr('referral.influencerTitle', '¿De qué creador?')}
           </DialogTitle>
           <DialogDescription>
             {step === 'source'
-              ? tr('referral.subtitle', 'Nos ayudas a entender quÃ© funciona para mejorar la plataforma.')
-              : tr('referral.influencerSubtitle', 'Selecciona el creador cuyo vÃ­deo viste.')}
+              ? tr('referral.subtitle', 'Nos ayudas a entender qué funciona para mejorar la plataforma.')
+              : tr('referral.influencerSubtitle', 'Selecciona el creador cuyo vídeo viste.')}
           </DialogDescription>
         </DialogHeader>
 
         {step === 'source' && (
           <div className="grid gap-2 py-2">
-            {sources.map((s) => (
-              <button
-                key={s.id}
-                disabled={saving}
-                onClick={() => handleSourceClick(s.id)}
-                className={cn(
-                  'flex items-center gap-3 w-full rounded-lg border border-border/60 bg-card p-3 text-left',
-                  'hover:bg-muted/50 hover:border-primary/40 transition-colors disabled:opacity-50'
-                )}
-              >
-                <span className="text-xl shrink-0" aria-hidden>{s.emoji}</span>
-                <span className="text-sm font-medium flex-1">{s.label}</span>
-              </button>
-            ))}
+            {sources.map((s) => {
+              const Icon = s.icon;
+              return (
+                <button
+                  key={s.id}
+                  disabled={saving}
+                  onClick={() => handleSourceClick(s.id)}
+                  className={cn(
+                    'flex items-center gap-3 w-full rounded-lg border border-border/60 bg-card p-3 text-left',
+                    'hover:bg-muted/50 hover:border-primary/40 transition-colors disabled:opacity-50'
+                  )}
+                >
+                  <Icon className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+                  <span className="text-sm font-medium flex-1">{s.label}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -201,7 +202,7 @@ export function ReferralSourceModal() {
               disabled={saving}
             >
               <ArrowLeft className="h-4 w-4 mr-1" />
-              {tr('referral.back', 'AtrÃ¡s')}
+              {tr('referral.back', 'Atrás')}
             </Button>
           ) : (
             <Button variant="ghost" size="sm" onClick={handleSkip} disabled={saving}>
