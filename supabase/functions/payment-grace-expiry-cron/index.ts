@@ -39,29 +39,29 @@ function buildCancellationEmail(
 
   const content: Record<"es" | "en" | "pt", CancellationEmailContent> = {
     es: {
-      subject: "Tu suscripción de MusicDibs ha sido cancelada",
+      subject: "Tu suscripcion de MusicDibs ha sido cancelada",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111;">
           <img src="https://musicdibs.com/logo.png" alt="MusicDibs" style="height: 40px; margin-bottom: 24px;" />
           <h2 style="color: #111; margin-bottom: 8px;">Hola, ${name}</h2>
-          <p>Lamentablemente, tu suscripción de MusicDibs ha sido <strong>cancelada</strong> porque no se pudo procesar el pago en el plazo establecido.</p>
+          <p>Lamentablemente, tu suscripcion de MusicDibs ha sido <strong>cancelada</strong> porque no se pudo procesar el pago en el plazo establecido.</p>
           <p>Tu cuenta ha pasado al plan gratuito. Tus obras registradas en blockchain siguen siendo tuyas y permanecen certificadas.</p>
           <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 24px 0;">
-            <strong>¿Quieres reactivar tu suscripción?</strong><br/>
+            <strong>Quieres reactivar tu suscripcion?</strong><br/>
             Puedes volver a suscribirte en cualquier momento desde tu panel de control.
           </div>
           <a href="https://musicdibs.com/dashboard/billing" style="display: inline-block; background: #7c3aed; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 8px 0;">
-            Reactivar suscripción
+            Reactivar suscripcion
           </a>
           <p style="margin-top: 24px; color: #666; font-size: 14px;">
-            Si tienes alguna pregunta, contáctanos en 
+            Si tienes alguna pregunta, contactanos en
             <a href="mailto:support@musicdibs.com">support@musicdibs.com</a>.
           </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-          <p style="color: #999; font-size: 12px;">MusicDibs — Protege tu música con blockchain</p>
+          <p style="color: #999; font-size: 12px;">MusicDibs - Protege tu musica con blockchain</p>
         </div>
       `,
-      text: `Hola ${name},\n\nTu suscripción de MusicDibs ha sido cancelada porque no se pudo procesar el pago en el plazo establecido.\n\nTu cuenta ha pasado al plan gratuito. Tus obras registradas siguen siendo tuyas.\n\nPuedes reactivar tu suscripción en cualquier momento:\nhttps://musicdibs.com/dashboard/billing\n\nEl equipo de MusicDibs`,
+      text: `Hola ${name},\n\nTu suscripcion de MusicDibs ha sido cancelada porque no se pudo procesar el pago en el plazo establecido.\n\nTu cuenta ha pasado al plan gratuito. Tus obras registradas siguen siendo tuyas.\n\nPuedes reactivar tu suscripcion en cualquier momento:\nhttps://musicdibs.com/dashboard/billing\n\nEl equipo de MusicDibs`,
     },
     en: {
       subject: "Your MusicDibs subscription has been cancelled",
@@ -79,11 +79,11 @@ function buildCancellationEmail(
             Reactivate subscription
           </a>
           <p style="margin-top: 24px; color: #666; font-size: 14px;">
-            If you have any questions, contact us at 
+            If you have any questions, contact us at
             <a href="mailto:support@musicdibs.com">support@musicdibs.com</a>.
           </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-          <p style="color: #999; font-size: 12px;">MusicDibs — Protect your music with blockchain</p>
+          <p style="color: #999; font-size: 12px;">MusicDibs - Protect your music with blockchain</p>
         </div>
       `,
       text: `Hi ${name},\n\nYour MusicDibs subscription has been cancelled because we were unable to process your payment within the grace period.\n\nYour account has been moved to the free plan. Your registered works remain certified and are still yours.\n\nYou can reactivate your subscription at any time:\nhttps://musicdibs.com/dashboard/billing\n\nThe MusicDibs Team`,
@@ -93,25 +93,25 @@ function buildCancellationEmail(
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111;">
           <img src="https://musicdibs.com/logo.png" alt="MusicDibs" style="height: 40px; margin-bottom: 24px;" />
-          <h2 style="color: #111; margin-bottom: 8px;">Olá, ${name}</h2>
-          <p>Infelizmente, sua assinatura do MusicDibs foi <strong>cancelada</strong> porque não foi possível processar o pagamento dentro do prazo estabelecido.</p>
-          <p>Sua conta foi movida para o plano gratuito. Suas obras registradas na blockchain continuam certificadas e são suas.</p>
+          <h2 style="color: #111; margin-bottom: 8px;">Ola, ${name}</h2>
+          <p>Infelizmente, sua assinatura do MusicDibs foi <strong>cancelada</strong> porque nao foi possivel processar o pagamento dentro do prazo estabelecido.</p>
+          <p>Sua conta foi movida para o plano gratuito. Suas obras registradas na blockchain continuam certificadas e sao suas.</p>
           <div style="background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 24px 0;">
             <strong>Quer reativar sua assinatura?</strong><br/>
-            Você pode assinar novamente a qualquer momento pelo seu painel.
+            Voce pode assinar novamente a qualquer momento pelo seu painel.
           </div>
           <a href="https://musicdibs.com/dashboard/billing" style="display: inline-block; background: #7c3aed; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 8px 0;">
             Reativar assinatura
           </a>
           <p style="margin-top: 24px; color: #666; font-size: 14px;">
-            Se tiver alguma dúvida, entre em contato pelo 
+            Se tiver alguma duvida, entre em contato pelo
             <a href="mailto:support@musicdibs.com">support@musicdibs.com</a>.
           </p>
           <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-          <p style="color: #999; font-size: 12px;">MusicDibs — Proteja sua música com blockchain</p>
+          <p style="color: #999; font-size: 12px;">MusicDibs - Proteja sua musica com blockchain</p>
         </div>
       `,
-      text: `Olá ${name},\n\nSua assinatura do MusicDibs foi cancelada porque não foi possível processar o pagamento dentro do prazo.\n\nSua conta foi movida para o plano gratuito. Suas obras registradas continuam certificadas e são suas.\n\nVocê pode reativar sua assinatura a qualquer momento:\nhttps://musicdibs.com/dashboard/billing\n\nEquipe MusicDibs`,
+      text: `Ola ${name},\n\nSua assinatura do MusicDibs foi cancelada porque nao foi possivel processar o pagamento dentro do prazo.\n\nSua conta foi movida para o plano gratuito. Suas obras registradas continuam certificadas e sao suas.\n\nVoce pode reativar sua assinatura a qualquer momento:\nhttps://musicdibs.com/dashboard/billing\n\nEquipe MusicDibs`,
     },
   };
 
@@ -121,7 +121,6 @@ function buildCancellationEmail(
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  // Auth: cron secret o service role key
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const cronSecret = Deno.env.get("CRON_SECRET") || "";
   const authHeader = req.headers.get("Authorization") || "";
@@ -143,7 +142,6 @@ serve(async (req) => {
 
   console.log(`[PAYMENT-GRACE-EXPIRY] Starting run at ${now}`);
 
-  // Obtener usuarios con grace period expirado y aún con plan de pago
   const { data: expiredUsers, error: fetchErr } = await supabase
     .from("profiles")
     .select("user_id, display_name, language, subscription_plan, available_credits, stripe_customer_id, payment_issue_count")
@@ -171,7 +169,6 @@ serve(async (req) => {
     const actions: string[] = [];
 
     try {
-      // Leer email
       const { data: authUser } = await supabase.auth.admin.getUserById(userId);
       const email = authUser?.user?.email;
       if (!email) {
@@ -179,30 +176,74 @@ serve(async (req) => {
         continue;
       }
 
+      console.log(`[PAYMENT-GRACE-EXPIRY] Processing ${email} (${userId})`);
+
+      // 0. PRE-CHECK STRIPE: si tiene suscripcion active o trialing, NO cancelar
+      // "trialing" = suscripcion valida con trial_end en el futuro, no hay fallo de pago
+      if (profile.stripe_customer_id) {
+        try {
+          const [activeSubs, trialingSubs] = await Promise.all([
+            stripe.subscriptions.list({
+              customer: profile.stripe_customer_id,
+              status: "active",
+              limit: 1,
+            }),
+            stripe.subscriptions.list({
+              customer: profile.stripe_customer_id,
+              status: "trialing",
+              limit: 1,
+            }),
+          ]);
+
+          const hasValidSub = activeSubs.data.length > 0 || trialingSubs.data.length > 0;
+
+          if (hasValidSub) {
+            await supabase.from("profiles").update({
+              payment_grace_expires_at: null,
+              updated_at: now,
+            }).eq("user_id", userId);
+
+            const validSubId = activeSubs.data[0]?.id ?? trialingSubs.data[0]?.id;
+            const validSubStatus = activeSubs.data.length > 0 ? "active" : "trialing";
+            console.log(`[PAYMENT-GRACE-EXPIRY] Skipped ${email} — valid Stripe sub ${validSubId} (${validSubStatus}), grace period cleared`);
+            results.push({
+              user_id: userId,
+              email,
+              status: "skipped_valid_sub",
+              actions: [`valid_stripe_sub_detected: ${validSubId} (${validSubStatus})`, "grace_period_cleared"],
+            });
+            continue;
+          }
+        } catch (stripePreCheckErr: any) {
+          console.warn(`[PAYMENT-GRACE-EXPIRY] Stripe pre-check warning for ${email}:`, stripePreCheckErr.message);
+          actions.push(`Stripe pre-check warning: ${stripePreCheckErr.message?.slice(0, 100)}`);
+        }
+      }
+
       console.log(`[PAYMENT-GRACE-EXPIRY] Cancelling ${email} (${userId})`);
 
-      // 1. Plan a Free y créditos a 0
+      // 1. Plan a Free y creditos a 0
       await supabase.from("profiles").update({
         subscription_plan: "Free",
         available_credits: 0,
-        payment_grace_expires_at: null, // limpiar para no reprocesar
+        payment_grace_expires_at: null,
         updated_at: now,
       }).eq("user_id", userId);
-      actions.push("plan→Free, credits→0, grace_cleared");
+      actions.push("plan->Free, credits->0, grace_cleared");
 
-      // 2. Cancelar suscripción en DB
+      // 2. Cancelar suscripcion en DB (incluye trialing por si acaso)
       await supabase.from("subscriptions").update({
         status: "cancelled",
         updated_at: now,
-      }).eq("user_id", userId).in("status", ["active", "past_due"]);
-      actions.push("subscriptions→cancelled");
+      }).eq("user_id", userId).in("status", ["active", "trialing", "past_due"]);
+      actions.push("subscriptions->cancelled");
 
       // 3. Registrar en credit_transactions
       await supabase.from("credit_transactions").insert({
         user_id: userId,
         amount: 0,
         type: "admin_adjustment",
-        description: `Cancelación automática por grace period expirado (${profile.payment_issue_count} notificaciones previas). Plan: ${profile.subscription_plan} → Free. Créditos: ${profile.available_credits} → 0`,
+        description: `Cancelacion automatica por grace period expirado (${profile.payment_issue_count} notificaciones previas). Plan: ${profile.subscription_plan} -> Free. Creditos: ${profile.available_credits} -> 0`,
       });
       actions.push("credit_transaction registrado");
 
@@ -262,7 +303,7 @@ serve(async (req) => {
         actions.push("MailerLite sync warning (non-blocking)");
       }
 
-      // 6. Email de confirmación de cancelación
+      // 6. Email de confirmacion de cancelacion
       const locale = normalizeLocale(profile.language);
       const emailContent = buildCancellationEmail(locale, profile.display_name);
       const messageId = `payment-grace-cancelled-${userId}-${Date.now()}`;
@@ -288,26 +329,28 @@ serve(async (req) => {
         console.warn(`[PAYMENT-GRACE-EXPIRY] Email queue warning for ${email}:`, queueErr);
         actions.push("Email queue warning (non-blocking)");
       } else {
-        actions.push("Email cancelación encolado");
+        actions.push("Email cancelacion encolado");
       }
 
-      console.log(`[PAYMENT-GRACE-EXPIRY] ✅ Done for ${email}:`, actions.join(" | "));
+      console.log(`[PAYMENT-GRACE-EXPIRY] Done for ${email}:`, actions.join(" | "));
       results.push({ user_id: userId, email, status: "cancelled", actions });
 
     } catch (err: any) {
-      console.error(`[PAYMENT-GRACE-EXPIRY] ❌ Fatal error for user ${userId}:`, err.message);
+      console.error(`[PAYMENT-GRACE-EXPIRY] Fatal error for user ${userId}:`, err.message);
       results.push({ user_id: userId, status: "error", error: err.message });
     }
   }
 
   const cancelled = results.filter(r => r.status === "cancelled").length;
+  const skipped = results.filter(r => r.status === "skipped_valid_sub").length;
   const errors = results.filter(r => r.status === "error").length;
 
-  console.log(`[PAYMENT-GRACE-EXPIRY] Finished: ${cancelled} cancelled, ${errors} errors`);
+  console.log(`[PAYMENT-GRACE-EXPIRY] Finished: ${cancelled} cancelled, ${skipped} skipped (valid sub), ${errors} errors`);
 
   return json({
     processed: results.length,
     cancelled,
+    skipped,
     errors,
     results,
   });
