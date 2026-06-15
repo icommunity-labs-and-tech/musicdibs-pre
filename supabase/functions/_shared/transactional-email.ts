@@ -232,10 +232,10 @@ export function kycInProcessEmail(data: { name: string; lang?: string }) {
 
 // ─── 5. KYC Verification Success ────────────────────────────────────────────
 
-const t5: Record<Lang, { greeting: string; title: string; status: string; note: string; registerCta: string; subject: string }> = {
-  es: { greeting: "tu identidad ha sido verificada correctamente.", title: "Identidad verificada", status: "Estado", note: "Ya puedes registrar tus obras sin restricciones. ¡Protege tu propiedad intelectual hoy!", registerCta: "Registrar una obra →", subject: "✅ Identidad verificada — MusicDibs" },
-  en: { greeting: "your identity has been verified successfully.", title: "Identity verified", status: "Status", note: "You can now register your works without restrictions. Protect your intellectual property today!", registerCta: "Register a work →", subject: "✅ Identity verified — MusicDibs" },
-  pt: { greeting: "sua identidade foi verificada com sucesso.", title: "Identidade verificada", status: "Status", note: "Agora você pode registrar suas obras sem restrições. Proteja sua propriedade intelectual hoje!", registerCta: "Registrar uma obra →", subject: "✅ Identidade verificada — MusicDibs" },
+const t5: Record<Lang, { greeting: string; title: string; status: string; note: string; aiNote: string; registerCta: string; aiCta: string; subject: string }> = {
+  es: { greeting: "tu identidad ha sido verificada correctamente.", title: "Identidad verificada", status: "Estado", note: "Ya puedes registrar tus obras sin restricciones. ¡Protege tu propiedad intelectual hoy!", aiNote: "Recuerda que también puedes aprovechar el resto de servicios de la plataforma basados en IA — crea música, letras, portadas, vídeos y voces con AI Music Studio.", registerCta: "Registrar una obra →", aiCta: "Abrir AI Music Studio →", subject: "✅ Identidad verificada — MusicDibs" },
+  en: { greeting: "your identity has been verified successfully.", title: "Identity verified", status: "Status", note: "You can now register your works without restrictions. Protect your intellectual property today!", aiNote: "Remember you can also use the rest of the platform's AI-powered services — create music, lyrics, covers, videos and voices with AI Music Studio.", registerCta: "Register a work →", aiCta: "Open AI Music Studio →", subject: "✅ Identity verified — MusicDibs" },
+  pt: { greeting: "sua identidade foi verificada com sucesso.", title: "Identidade verificada", status: "Status", note: "Agora você pode registrar suas obras sem restrições. Proteja sua propriedade intelectual hoje!", aiNote: "Lembre-se de que você também pode usar o restante dos serviços da plataforma baseados em IA — crie músicas, letras, capas, vídeos e vozes com o AI Music Studio.", registerCta: "Registrar uma obra →", aiCta: "Abrir AI Music Studio →", subject: "✅ Identidade verificada — MusicDibs" },
 };
 
 export function kycVerifiedEmail(data: { name: string; lang?: string }) {
@@ -251,10 +251,13 @@ export function kycVerifiedEmail(data: { name: string; lang?: string }) {
       ${infoRow(i.status, statusLabels[lang])}
     </table>
     <p style="margin:16px 0 0;color:#d1d5db;font-size:14px;text-align:center;">${i.note}</p>
-    ${cta("https://musicdibs.com/dashboard/register", i.registerCta)}`;
+    ${cta("https://musicdibs.com/dashboard/register", i.registerCta)}
+    <p style="margin:28px 0 0;color:#d1d5db;font-size:14px;text-align:center;line-height:1.7;">${i.aiNote}</p>
+    ${cta("https://musicdibs.com/ai-studio", i.aiCta)}`;
 
   return { subject: i.subject, html: wrap("✅", i.title, body, lang), text: `${greeting} ${data.name}, ${i.greeting}` };
 }
+
 
 // ─── 6. KYC Verification Failed ─────────────────────────────────────────────
 
