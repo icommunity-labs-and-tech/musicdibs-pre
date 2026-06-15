@@ -1738,8 +1738,32 @@ const en: typeof es = {
       typeDocument: '📄 Document',
       typeOther: '📁 Other',
     },
+    referral: {
+      title: 'How did you hear about us?',
+      subtitle: 'Help us understand what works so we can improve the platform.',
+      influencerTitle: 'Which creator?',
+      influencerSubtitle: 'Select the creator whose video you watched.',
+      sources: {
+        influencer: 'Video from a YouTube creator',
+        instagram: 'Instagram (MusicDibs)',
+        tiktok: 'TikTok (MusicDibs)',
+        google: 'Google / Web search',
+        friend: 'A friend recommended it',
+        podcast: 'Podcast or blog',
+        other: 'Other',
+      },
+      influencers: { other: 'Another creator' },
+      detailLabel: 'Creator name (optional)',
+      detailPlaceholder: 'e.g. @creatorname',
+      back: 'Back',
+      skip: 'Skip',
+      confirm: 'Confirm',
+      thanks: 'Thanks for letting us know!',
+      error: 'Could not save your answer',
+    },
   },
 };
+
 
 const pt: typeof es = {
   dashboard: {
