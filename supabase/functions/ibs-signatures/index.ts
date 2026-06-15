@@ -327,6 +327,33 @@ serve(async (req) => {
 
     // ── SYNC (update local status from iBS) ──────────────────
     if (action === "sync") {
+      // Self-heal: if any signature is already 'success' but the profile still isn't 'verified',
+      // reconcile the profile immediately (covers webhook misses or missed profile updates).
+      const { data: successSigs } = await supabaseUser
+        .from("ibs_signatures")
+        .select("ibs_signature_id")
+        .eq("user_id", user.id)
+        .eq("status", "success")
+        .limit(1);
+      if (successSigs && successSigs.length > 0) {
+        const { data: prof } = await supabaseAdmin
+          .from("profiles")
+          .select("kyc_status")
+          .eq("user_id", user.id)
+          .single();
+        if (prof && prof.kyc_status !== "verified") {
+          await supabaseAdmin
+            .from("profiles")
+            .update({
+              kyc_status: "verified",
+              ibs_signature_id: successSigs[0].ibs_signature_id,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", user.id);
+          console.log(`[IBS-SIG] Self-healed profile kyc_status=verified for user ${user.id}`);
+        }
+      }
+
       // Throttle: no re-pollear a iBS si la firma se sincronizó hace <5 min
       const throttleCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       const { data: sigs } = await supabaseUser
