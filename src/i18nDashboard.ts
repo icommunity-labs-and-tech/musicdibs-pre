@@ -856,8 +856,32 @@ const es = {
       typeDocument: '📄 Documento',
       typeOther: '📁 Otro',
     },
+    referral: {
+      title: '¿Cómo nos conociste?',
+      subtitle: 'Nos ayudas a entender qué funciona para mejorar la plataforma.',
+      influencerTitle: '¿De qué creador?',
+      influencerSubtitle: 'Selecciona el creador cuyo vídeo viste.',
+      sources: {
+        influencer: 'Vídeo de un creador en YouTube',
+        instagram: 'Instagram (MusicDibs)',
+        tiktok: 'TikTok (MusicDibs)',
+        google: 'Google / Búsqueda web',
+        friend: 'Un amigo me lo recomendó',
+        podcast: 'Podcast o blog',
+        other: 'Otro',
+      },
+      influencers: { other: 'Otro creador' },
+      detailLabel: 'Nombre del creador (opcional)',
+      detailPlaceholder: 'Ej. @nombrecreador',
+      back: 'Atrás',
+      skip: 'Saltar',
+      confirm: 'Confirmar',
+      thanks: '¡Gracias por contarnos!',
+      error: 'No se pudo guardar tu respuesta',
+    },
   },
 };
+
 
 const en: typeof es = {
   dashboard: {
