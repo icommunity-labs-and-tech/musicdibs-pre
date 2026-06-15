@@ -207,15 +207,18 @@ Deno.serve(async (req) => {
       }
 
       try {
-        // a) Already has an active Stripe subscription?
-        const existing = await stripe.subscriptions.list({
-          customer: customerId,
-          status: "active",
-          limit: 1,
-        });
+        // a) Already has an active or trialing Stripe subscription?
+        // Check both statuses in parallel — "trialing" is a valid active subscription
+        // (trial_end in the future) and must NOT trigger a new subscription creation.
+        const [existingActive, existingTrialing] = await Promise.all([
+          stripe.subscriptions.list({ customer: customerId, status: "active", limit: 1 }),
+          stripe.subscriptions.list({ customer: customerId, status: "trialing", limit: 1 }),
+        ]);
 
-        if (existing.data.length > 0) {
-          const ss = existing.data[0];
+        const existingSub = existingActive.data[0] ?? existingTrialing.data[0];
+
+        if (existingSub) {
+          const ss = existingSub;
           await supabase
             .from("subscriptions")
             .update({
@@ -230,7 +233,7 @@ Deno.serve(async (req) => {
             user_id: sub.user_id,
             email,
             action: "skipped",
-            detail: `already has active stripe subscription ${ss.id}`,
+            detail: `already has active/trialing stripe subscription ${ss.id} (status=${ss.status})`,
           });
           skipped++;
           continue;
@@ -311,7 +314,7 @@ Deno.serve(async (req) => {
             user_id: sub.user_id,
             amount: credits,
             type: "renewal",
-            description: `Renovación: créditos reiniciados a ${credits} (${tier})`,
+            description: `Renovacion: creditos reiniciados a ${credits} (${tier})`,
           });
         }
 
