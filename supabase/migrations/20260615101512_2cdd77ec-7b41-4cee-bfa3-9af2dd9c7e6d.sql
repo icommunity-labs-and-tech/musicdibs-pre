@@ -1,0 +1,1 @@
+UPDATE public.profiles SET kyc_status='verified', ibs_signature_id='sig_eMQvagErpNik7LHTqhHHM5', updated_at=now() WHERE user_id='c4f0eb72-e36d-4fd5-9f97-9e03343ba35c';
