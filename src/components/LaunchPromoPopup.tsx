@@ -36,15 +36,26 @@ export const LaunchPromoPopup = () => {
   const [target] = useState(getDeadline);
   const { days, hours, minutes, seconds } = useCountdown(target);
 
+  const expired = target.getTime() <= Date.now();
+
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (expired) return;
     if (sessionStorage.getItem(SHOWN_KEY)) return;
     const t = setTimeout(() => {
       setOpen(true);
       sessionStorage.setItem(SHOWN_KEY, "1");
     }, 7000);
     return () => clearTimeout(t);
-  }, []);
+  }, [expired]);
+
+  useEffect(() => {
+    if (days === 0 && hours === 0 && minutes === 0 && seconds === 0) {
+      setOpen(false);
+    }
+  }, [days, hours, minutes, seconds]);
+
+  if (expired) return null;
 
   const copyCode = async () => {
     try {
