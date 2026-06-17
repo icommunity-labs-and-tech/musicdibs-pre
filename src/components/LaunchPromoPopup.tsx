@@ -1,42 +1,20 @@
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Copy, Check } from "lucide-react";
+import { useCouponCountdown } from "@/hooks/useCouponCountdown";
 
 const PROMO_CODE = "VERANO25";
 const SHOWN_KEY = "musicdibs_verano25_popup_shown";
 
 // Lunes 8 de junio 2026, 23:59 hora España (CEST, UTC+2)
-const FIXED_DEADLINE = new Date("2026-06-08T21:59:00Z");
-
-const getDeadline = () => FIXED_DEADLINE;
-
-const useCountdown = (target: Date) => {
-  const calc = () => {
-    const diff = Math.max(0, target.getTime() - Date.now());
-    return {
-      days: Math.floor(diff / 86400000),
-      hours: Math.floor((diff / 3600000) % 24),
-      minutes: Math.floor((diff / 60000) % 60),
-      seconds: Math.floor((diff / 1000) % 60),
-    };
-  };
-  const [time, setTime] = useState(calc);
-  useEffect(() => {
-    const id = setInterval(() => setTime(calc()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  return time;
-};
+const DEADLINE = new Date("2026-06-08T21:59:00Z");
 
 const pad = (n: number) => n.toString().padStart(2, "0");
 
 export const LaunchPromoPopup = () => {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [target] = useState(getDeadline);
-  const { days, hours, minutes, seconds } = useCountdown(target);
-
-  const expired = target.getTime() <= Date.now();
+  const { days, hours, minutes, seconds, expired } = useCouponCountdown(DEADLINE);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -49,13 +27,14 @@ export const LaunchPromoPopup = () => {
     return () => clearTimeout(t);
   }, [expired]);
 
+  // Regla global: si el contador llega a 00, cerrar y no volver a abrir.
   useEffect(() => {
-    if (days === 0 && hours === 0 && minutes === 0 && seconds === 0) {
-      setOpen(false);
-    }
-  }, [days, hours, minutes, seconds]);
+    if (expired) setOpen(false);
+  }, [expired]);
 
   if (expired) return null;
+
+
 
   const copyCode = async () => {
     try {
