@@ -31,7 +31,7 @@ const SYSTEM_PROMPT = `You are Musicdibs's friendly support assistant. Answer qu
 All-in-one platform for independent artists, producers and managers/agencies. Four pillars:
 1) AI Music Studio — create songs with AI, master them, write lyrics, generate covers, short videos, reels, flyers and social posts.
 2) IP Registration — register works on public blockchains (Ethereum, Polygon, Solana) with timestamp + hash + identity. Legal validity in the 179 countries of the Berne Convention.
-3) Global Distribution — release on 220+ DSPs (Spotify, Apple Music, YouTube Music, Amazon Music, Deezer, TikTok, etc.). Artists keep up to 95% of royalties (highest on the market).
+3) Global Distribution — release on 220+ DSPs (Spotify, Apple Music, YouTube Music, Amazon Music, Deezer, TikTok, etc.). Artists keep up to 100% of royalties (highest on the market).
 4) Social Media Promotion — promotion on Musicdibs' own social channels (200k+ followers).
 
 === PRICING (Plus+ plan, taxes NOT included, 21% VAT applies in EU) ===
@@ -84,7 +84,7 @@ All-in-one platform for independent artists, producers and managers/agencies. Fo
 
 === DISTRIBUTION ===
 - 220+ DSPs (Spotify, Apple Music, YouTube Music, Amazon Music, Deezer, TikTok…).
-- Up to 95% of royalties (vs ~80% on DistroKid/TuneCore, ~85% on CD Baby).
+- Up to 100% of royalties (vs ~80% on DistroKid/TuneCore, ~85% on CD Baby).
 - Distribution requires an active annual subscription.
 
 === ACCOUNT & SUPPORT ===

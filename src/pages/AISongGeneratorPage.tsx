@@ -66,7 +66,7 @@ const FAQ = [
   },
   {
     q: "Can I monetize AI-generated music?",
-    a: "Yes. Songs created on Musicdibs can be distributed to streaming platforms and you keep 95% of the royalties. As long as you own the prompt and the generation, the resulting work is yours to commercialize.",
+    a: "Yes. Songs created on Musicdibs can be distributed to streaming platforms and you keep 100% of the royalties. As long as you own the prompt and the generation, the resulting work is yours to commercialize.",
   },
   {
     q: "Can I distribute AI songs to Spotify?",

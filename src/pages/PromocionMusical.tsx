@@ -264,7 +264,7 @@ export default function PromocionMusical() {
                     </h3>
                     <p className="mt-3 text-foreground/70 leading-relaxed">
                       Lanza en <span className="text-foreground font-medium">+220 plataformas digitales</span> y conserva
-                      <span className="text-foreground font-medium"> el 95% de las regalías</span>. Un solo panel para gestionarlo todo.
+                      <span className="text-foreground font-medium"> el 100% de las regalías</span>. Un solo panel para gestionarlo todo.
                     </p>
 
                     <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
@@ -274,7 +274,7 @@ export default function PromocionMusical() {
                       </div>
                       <div className="h-10 w-px bg-white/10 self-center" aria-hidden />
                       <div>
-                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>95%</div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>100%</div>
                         <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Regalías para ti</div>
                       </div>
                       <div className="h-10 w-px bg-white/10 self-center" aria-hidden />
