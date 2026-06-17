@@ -3277,6 +3277,42 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_event_log: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          event_id: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          processed_at: string
+          result: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_id: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          processed_at?: string
+          result?: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_id?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          processed_at?: string
+          result?: string
+        }
+        Relationships: []
+      }
       works: {
         Row: {
           ai_generation_id: string | null
@@ -3774,6 +3810,10 @@ export type Database = {
       }
       increment_free_downloads: {
         Args: { p_user_id: string }
+        Returns: undefined
+      }
+      increment_user_credits: {
+        Args: { p_delta: number; p_user_id: string }
         Returns: undefined
       }
       is_active_manager: { Args: { _user_id: string }; Returns: boolean }
