@@ -15,6 +15,11 @@ const TestimonialsSection = () => {
       videoId: "6MQv6r7cavM"
     },
     {
+      name: "Fael",
+      title: "Prodfael",
+      videoId: "Bib-Pra2_IY"
+    },
+    {
       name: "Erika Bada",
       title: "Bada Sessions",
       videoId: "CnS6IblpMzY"
