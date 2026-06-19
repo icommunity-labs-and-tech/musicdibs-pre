@@ -32,6 +32,12 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
+import {
+  sanitizeStyleText,
+  stripBlockedPhrase,
+  parseArtistNameFromError,
+  isArtistNameError,
+} from "../_shared/suno-sanitizer.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
