@@ -407,29 +407,68 @@ serve(async (req) => {
 
     console.log(`[kie-enhance-generate] mode=${mode} logId=${logId} credits=${creditsCost} model=${kiePayload.model}`);
 
-    const kieRes = await fetch(KIE_ENDPOINTS[mode], {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${KIE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(kiePayload),
-    });
+    // ── Dispatch con reintento ante falsos positivos de "artist name" ────────
+    // Suno bloquea palabras/frases que coinciden parcialmente con nombres de
+    // artistas registrados (ej: "un corazon", "miguel angel"). Si el error de
+    // KIE lo reporta, eliminamos esa frase de los campos de texto del payload
+    // (prompt/tags/style) y reintentamos hasta 3 veces. Transparente al usuario.
+    const STRIPPABLE_FIELDS = ["prompt", "tags", "style"] as const;
+    const strippedPhrases: string[] = [];
+    let kieRes!: Response;
+    let kieData: any = {};
+    const MAX_ATTEMPTS = 3;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      kieRes = await fetch(KIE_ENDPOINTS[mode], {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${KIE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(kiePayload),
+      });
+      kieData = await kieRes.json().catch(() => ({}));
+      const ok = kieRes.ok && (!kieData?.code || kieData.code === 200);
+      if (ok) break;
 
-    const kieData = await kieRes.json().catch(() => ({}));
+      const errMsg: string = kieData?.msg || kieData?.message || "";
+      const artistName = parseArtistNameFromError(errMsg);
+      if (artistName && attempt < MAX_ATTEMPTS) {
+        console.warn(`[kie-enhance-generate] artist-name false positive '${artistName}', stripping and retrying (attempt ${attempt}/${MAX_ATTEMPTS})`);
+        strippedPhrases.push(artistName);
+        for (const f of STRIPPABLE_FIELDS) {
+          const v = kiePayload[f];
+          if (typeof v === "string" && v.length > 0) {
+            kiePayload[f] = stripBlockedPhrase(v, artistName) || " ";
+          }
+        }
+        continue;
+      }
 
-    if (!kieRes.ok || (kieData?.code && kieData.code !== 200)) {
+      // No es un caso de artist-name (o agotamos intentos): fallo definitivo.
       console.error(`[kie-enhance-generate] KIE error ${kieRes.status}`, kieData);
       await refund(supabaseAdmin, user.id, creditsCost, "KIE dispatch failed");
       await supabaseAdmin
         .from("ai_generation_logs")
         .update({
           status: "failed",
-          error_message: kieData?.msg || `HTTP ${kieRes.status}`,
-          response_payload: kieData,
+          error_message: errMsg || `HTTP ${kieRes.status}`,
+          response_payload: { ...kieData, _stripped_phrases: strippedPhrases },
         })
         .eq("id", logId);
-      return json({ error: "provider_error", message: kieData?.msg || "KIE request failed" }, 502);
+      // Si el bloqueo final es por artist-name, devolvemos 409 explícito para que
+      // el frontend muestre el listado de palabras conflictivas.
+      if (isArtistNameError(errMsg)) {
+        return json({
+          error: "copyright_error",
+          message: "Suno ha detectado palabras que considera nombres de artistas en tu descripción. Edita el campo de estilo eliminando nombres propios o frases que puedan coincidir con artistas.",
+          suggestions: strippedPhrases.concat(parseArtistNameFromError(errMsg) || []).filter(Boolean),
+        }, 409);
+      }
+      return json({ error: "provider_error", message: errMsg || "KIE request failed" }, 502);
+    }
+
+    if (strippedPhrases.length > 0) {
+      console.log(`[kie-enhance-generate] succeeded after stripping: ${strippedPhrases.join(", ")}`);
     }
 
     const taskId: string | undefined = kieData?.data?.taskId;
