@@ -95,14 +95,10 @@ serve(async (req) => {
     const {
       mode,
       source_audio_url,
-      prompt,
       source_filename,
       source_duration_sec,
-      genre,
-      mood,
       intensity,
       voice_type,
-      musical_style,
       source_language,
       // add-instrumental quality params (v19)
       vocal_gender,       // "m" | "f" — vocal register for backing track generation
@@ -112,6 +108,15 @@ serve(async (req) => {
       continue_at,        // number — custom continueAt override (seconds), for extend mode
       custom_lyrics,      // string — cover mode: user-supplied lyrics (enables customMode:true)
     } = body || {};
+
+    // Text fields que pueden disparar falsos positivos de Suno por nombres de
+    // artista. Los pasamos por el sanitizador (lista negra de frases conocidas)
+    // y los dejamos como `let` para poder ampliar la limpieza si KIE responde
+    // con un error específico de "artist name". (v24)
+    let prompt: string = sanitizeStyleText(body?.prompt);
+    let genre: string = sanitizeStyleText(body?.genre);
+    let mood: string = sanitizeStyleText(body?.mood);
+    let musical_style: string = sanitizeStyleText(body?.musical_style);
 
     if (!mode || !FEATURE_KEYS[mode]) {
       return json({ error: "Invalid mode. Use: cover | extend | instrumental | add_vocals" }, 400);
