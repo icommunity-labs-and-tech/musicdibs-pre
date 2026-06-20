@@ -104,6 +104,50 @@ serve(async (req) => {
         });
       }
 
+      // ── GUARD: prevent duplicate signature creation ──────────
+      // Bug observed in iBS console: a second signature gets created seconds after
+      // the first one reaches 'success', orphaning profiles.ibs_signature_id and
+      // leaving a dangling "Esperando Documentos" entry. Root cause: this action had
+      // no server-side check before calling iBS and overwriting the profile pointer.
+      // Fix: if the user is already verified, or already has a non-terminal signature
+      // in flight, return that one instead of creating a new one.
+      const { data: existingProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("kyc_status, ibs_signature_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (existingProfile?.kyc_status === "verified" && existingProfile.ibs_signature_id) {
+        console.log(`[IBS-SIGNATURES] create blocked: user ${user.id} already verified (sig ${existingProfile.ibs_signature_id})`);
+        return new Response(JSON.stringify({
+          signatureId: existingProfile.ibs_signature_id,
+          alreadyVerified: true,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: openSigs } = await supabaseAdmin
+        .from("ibs_signatures")
+        .select("ibs_signature_id, status, kyc_url")
+        .eq("user_id", user.id)
+        .in("status", ["initiated", "created", "pending", "success"])
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (openSigs && openSigs.length > 0) {
+        const open = openSigs[0];
+        console.log(`[IBS-SIGNATURES] create blocked: user ${user.id} already has signature ${open.ibs_signature_id} in status '${open.status}'`);
+        return new Response(JSON.stringify({
+          signatureId: open.ibs_signature_id,
+          kycUrl: open.kyc_url,
+          existing: true,
+          existingStatus: open.status,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
       const ibsRes = await fetch(`${IBS_API_URL}/signatures`, {
         method: "POST",
         headers: ibsHeaders,
