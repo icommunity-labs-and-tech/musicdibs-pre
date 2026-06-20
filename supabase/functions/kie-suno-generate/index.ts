@@ -180,46 +180,80 @@ serve(async (req) => {
     const logId = logInsert.id;
 
     const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-suno-callback?logId=${logId}&token=${callbackToken}`;
-    const kiePayload: Record<string, unknown> = {
-      prompt: sanitizedPrompt,   // sanitized: artist refs stripped + 500 char cap for non-customMode
-      customMode,
-      instrumental,
-      model,
-      callBackUrl,
+
+    const buildPayload = (): Record<string, unknown> => {
+      const p: Record<string, unknown> = {
+        prompt: sanitizedPrompt,
+        customMode,
+        instrumental,
+        model,
+        callBackUrl,
+      };
+      if (title) p.title = title;
+      if (sanitizedStyle) p.style = sanitizedStyle;
+      if (negativeTags) p.negativeTags = negativeTags;
+      if (customMode && vocalGender && (vocalGender === "m" || vocalGender === "f")) {
+        p.vocalGender = vocalGender;
+      }
+      if (typeof styleWeight === "number") p.styleWeight = styleWeight;
+      if (typeof weirdnessConstraint === "number") p.weirdnessConstraint = weirdnessConstraint;
+      if (typeof audioWeight === "number") p.audioWeight = audioWeight;
+      return p;
     };
-    if (title) kiePayload.title = title;
-    if (sanitizedStyle) kiePayload.style = sanitizedStyle;  // sanitized: artist refs stripped
-    if (negativeTags) kiePayload.negativeTags = negativeTags;
-    // Quality params — only vocalGender is gated on customMode per KIE spec
-    if (customMode && vocalGender && (vocalGender === "m" || vocalGender === "f")) {
-      kiePayload.vocalGender = vocalGender;
-    }
-    if (typeof styleWeight === "number") kiePayload.styleWeight = styleWeight;
-    if (typeof weirdnessConstraint === "number") kiePayload.weirdnessConstraint = weirdnessConstraint;
-    if (typeof audioWeight === "number") kiePayload.audioWeight = audioWeight;
 
-    console.log("[kie-suno-generate] dispatching task", { feature: featureKey, model, logId });
+    // Retry loop: if Suno rejects with "artist name 'X'", strip X from prompt/style
+    // and retry transparently. Max 3 attempts.
+    const MAX_ATTEMPTS = 3;
+    const strippedPhrases: string[] = [];
+    let kieRes: Response | null = null;
+    let kieJson: any = {};
+    let lastErrMsg = "";
 
-    const kieRes = await fetch("https://api.kie.ai/api/v1/generate", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${KIE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify(kiePayload),
-    });
-    const kieJson = await kieRes.json().catch(() => ({}));
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      const kiePayload = buildPayload();
+      console.log("[kie-suno-generate] dispatching task", { feature: featureKey, model, logId, attempt });
 
-    if (!kieRes.ok || (kieJson?.code && kieJson.code !== 200)) {
-      console.error("[kie-suno-generate] KIE error", kieRes.status, kieJson);
+      kieRes = await fetch("https://api.kie.ai/api/v1/generate", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${KIE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify(kiePayload),
+      });
+      kieJson = await kieRes.json().catch(() => ({}));
+
+      const ok = kieRes.ok && (!kieJson?.code || kieJson.code === 200);
+      if (ok) break;
+
+      lastErrMsg = kieJson?.msg || `HTTP ${kieRes.status}`;
+      console.error("[kie-suno-generate] KIE error", kieRes.status, kieJson, { attempt });
+
+      if (attempt < MAX_ATTEMPTS && isArtistNameError(lastErrMsg)) {
+        const phrase = parseArtistNameFromError(lastErrMsg);
+        if (phrase) {
+          strippedPhrases.push(phrase);
+          sanitizedPrompt = stripBlockedPhrase(sanitizedPrompt, phrase);
+          if (sanitizedStyle) sanitizedStyle = stripBlockedPhrase(sanitizedStyle, phrase);
+          console.log("[kie-suno-generate] retrying after stripping phrase", { phrase });
+          continue;
+        }
+      }
+      // Non-retryable or out of attempts → fail.
       await refund(supabaseAdmin, user.id, creditsCost, "KIE dispatch failed");
       await supabaseAdmin
         .from("ai_generation_logs")
         .update({
           status: "failed",
-          error_message: kieJson?.msg || `HTTP ${kieRes.status}`,
-          response_payload: kieJson,
+          error_message: lastErrMsg,
+          response_payload: { ...kieJson, stripped_phrases: strippedPhrases },
         })
         .eq("id", logId);
-      return json({ error: "provider_error", message: kieJson?.msg || "KIE request failed" }, 502);
+      const isCopyright = isArtistNameError(lastErrMsg);
+      return json({
+        error: isCopyright ? "copyright_error" : "provider_error",
+        message: lastErrMsg,
+        suggestions: isCopyright ? strippedPhrases : undefined,
+      }, isCopyright ? 409 : 502);
     }
+
 
     const taskId: string | undefined = kieJson?.data?.taskId;
     await supabaseAdmin
