@@ -64,21 +64,21 @@ serve(async (req) => {
     }
 
     // ── Sanitize inputs before sending to KIE/Suno ──────────────────────────
-    // Constraint 1: strip artist name references from style/prompt fields.
-    // KIE rejects tags referencing specific artists (e.g. "estilo de Rosalía").
+    // (1) Strip "estilo de X" / "inspired by X" style artist refs.
+    // (2) Run through shared suno-sanitizer to remove known blocked phrases
+    //     (false positives like "un corazon", "miguel angel", brand names…).
+    // (3) Enforce KIE char limits: prompt 500 (non-customMode), style 1000.
     const stripArtistRefs = (text: string): string => text
       .replace(/\b(estilo\s+de|style\s+of|al\s+estilo\s+de|inspired?\s+by|como|like|similar\s+a|reminiscent\s+of)\s+[^,.\n]{1,60}/gi, "")
       .replace(/\b(inspirado\s+en|en\s+la\s+l[ií]nea\s+de|a\s+lo)\s+[^,.\n]{1,60}/gi, "")
       .replace(/,\s*,/g, ",").replace(/\s+/g, " ").trim();
 
-    // Constraint 2: non-customMode prompt must be ≤ 500 chars (KIE API limit).
-    // customMode=true (user provided lyrics) has no hard char limit from KIE.
-    const sanitizedPrompt = customMode
-      ? prompt.trim()                                    // lyrics — no truncation
-      : stripArtistRefs(prompt.trim()).slice(0, 500);    // description — 500 cap
+    let sanitizedPrompt = customMode
+      ? sanitizeStyleText(prompt.trim())                                  // lyrics — sanitize, no truncation
+      : sanitizeStyleText(stripArtistRefs(prompt.trim())).slice(0, 500);  // description — strip + 500 cap
 
-    const sanitizedStyle = style
-      ? stripArtistRefs(String(style)).slice(0, 1000)
+    let sanitizedStyle: string | undefined = style
+      ? sanitizeStyleText(stripArtistRefs(String(style))).slice(0, 1000)
       : undefined;
 
     console.log(`[kie-suno-generate] prompt: ${sanitizedPrompt.length} chars | style: ${sanitizedStyle?.length ?? 0} chars | customMode=${customMode} | instrumental=${instrumental}`);
