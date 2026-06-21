@@ -437,7 +437,7 @@ const AIStudioCreate = () => {
         if (data?.error === 'copyright_error' || (error as any)?.status === 409) {
           setIsGenerating(false);
           setCopyrightError({
-            message: data?.message || t('aiCreate.copyrightBlockedDesc'),
+            message: t('aiCreate.copyrightBlockedDesc'),
             suggestions: Array.isArray(data?.suggestions) ? data.suggestions : [],
             detected: data?.detected || null,
           });
@@ -457,7 +457,7 @@ const AIStudioCreate = () => {
       if (data?.error === 'copyright_error') {
         setIsGenerating(false);
         setCopyrightError({
-          message: data.message || t('aiCreate.copyrightBlockedDesc'),
+          message: t('aiCreate.copyrightBlockedDesc'),
           suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
           detected: data.detected || null,
         });

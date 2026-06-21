@@ -254,8 +254,6 @@ const AIEnhance = () => {
     };
   };
 
-  const COPYRIGHT_ASYNC_MSG = "El audio fue bloqueado por el filtro de derechos de autor. Prueba con un fragmento más corto (20-30 seg) o un audio sin samples descargados de internet. Tus créditos han sido reembolsados.";
-
   useEffect(() => {
     if (!logId || jobStatus !== "processing") return;
     const handleStatus = (status: string, output_url?: string | null, error_message?: string | null) => {
@@ -265,7 +263,7 @@ const AIEnhance = () => {
         toast.success(t('aiEnhance.toastReady'));
       } else if (status === "copyright_error") {
         setJobStatus("failed");
-        setCopyrightError({ message: COPYRIGHT_ASYNC_MSG, suggestions: [] });
+        setCopyrightError({ message: t('aiCreate.copyrightBlockedAsyncDesc'), suggestions: [] });
       } else if (status === "failed") {
         setJobStatus("failed");
         const { userMessage } = parseAiError(new Error(error_message || ""));
@@ -403,7 +401,7 @@ const AIEnhance = () => {
         if (response.status === 409 && data?.error === "copyright_error") {
           setJobStatus("failed");
           setCopyrightError({
-            message: data.message || "El sistema de detección de derechos de autor de la plataforma ha bloqueado el audio.",
+            message: t('aiCreate.copyrightBlockedDesc'),
             suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
             detected: data.detected || null,
           });
