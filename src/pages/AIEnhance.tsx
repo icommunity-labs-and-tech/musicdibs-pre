@@ -405,6 +405,7 @@ const AIEnhance = () => {
           setCopyrightError({
             message: data.message || "El sistema de detección de derechos de autor de la plataforma ha bloqueado el audio.",
             suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
+            detected: data.detected || null,
           });
           return;
         }
