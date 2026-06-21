@@ -1,4 +1,5 @@
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { CopyrightBlockedAlert } from "@/components/ai-studio/CopyrightBlockedAlert";
 import { SEO } from "@/components/SEO";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
