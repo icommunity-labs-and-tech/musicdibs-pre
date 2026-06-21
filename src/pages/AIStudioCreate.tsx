@@ -1661,10 +1661,7 @@ const AIStudioCreate = () => {
                           message={copyrightError.message}
                           suggestions={copyrightError.suggestions}
                           detected={copyrightError.detected}
-                          onRetry={() => {
-                            setCopyrightError(null);
-                            setPrompt("");
-                          }}
+                          onRetry={() => setCopyrightError(null)}
                         />
                       )}
                       {generationError && (
