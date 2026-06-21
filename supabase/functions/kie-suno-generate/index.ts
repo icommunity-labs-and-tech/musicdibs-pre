@@ -247,7 +247,6 @@ serve(async (req) => {
         })
         .eq("id", logId);
       const isCopyright = isArtistNameError(lastErrMsg);
-      const isCopyright = isArtistNameError(lastErrMsg);
       if (isCopyright) {
         const detected = parseArtistNameFromError(lastErrMsg);
         const suggestions = Array.from(
