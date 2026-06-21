@@ -20,6 +20,7 @@ import { Navbar } from "@/components/Navbar";
 import { AIStudioThemeBar } from "@/components/ai-studio/AIStudioThemeBar";
 import { AIKnowledgeModal, useAIKnowledgeAutoShow } from "@/components/ai-studio/AIKnowledgeModal";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { CopyrightBlockedAlert } from "@/components/ai-studio/CopyrightBlockedAlert";
 import { FileDropzone } from "@/components/FileDropzone";
 import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
