@@ -907,6 +907,7 @@ const AIStudioCreate = () => {
   const handleRegenerate = () => {
     setLastResult(null);
     setGenerationError(null);
+    setCopyrightError(null);
   };
 
   // ── Preview voice sample ──
