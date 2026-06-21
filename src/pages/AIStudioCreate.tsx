@@ -434,6 +434,14 @@ const AIStudioCreate = () => {
       });
 
       if (error) {
+        if (data?.error === 'copyright_error' || (error as any)?.status === 409) {
+          setCopyrightError({
+            message: data?.message || t('aiCreate.copyrightBlockedDesc'),
+            suggestions: Array.isArray(data?.suggestions) ? data.suggestions : [],
+            detected: data?.detected || null,
+          });
+          return;
+        }
         if (data?.error === 'rate_limit_exceeded') {
           toast({ title: 'Demasiadas generaciones', description: data.message, variant: 'destructive' });
           return;
@@ -445,11 +453,13 @@ const AIStudioCreate = () => {
         throw { message: error.message || 'Error al generar audio' };
       }
 
-      if (data?.error) {
-        if (data.error === 'insufficient_credits') {
-          throw { message: data.message || 'Créditos del proveedor insuficientes', details: data.details };
-        }
-        throw { message: data.error, details: data.details };
+      if (data?.error === 'copyright_error') {
+        setCopyrightError({
+          message: data.message || t('aiCreate.copyrightBlockedDesc'),
+          suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
+          detected: data.detected || null,
+        });
+        return;
       }
 
       // Async provider (e.g. KIE Suno): generation runs via callback.
