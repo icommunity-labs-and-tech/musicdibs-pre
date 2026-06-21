@@ -144,6 +144,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       artistRejectedDescGeneric: 'Tu descripción contiene el nombre de un artista. No podemos referenciar artistas específicos. Modifica la descripción e inténtalo de nuevo. Tus créditos han sido devueltos.',
       copyrightBlockedTitle: 'Posible referencia a artista detectada',
       copyrightBlockedDesc: 'El sistema ha detectado palabras que pueden coincidir con nombres de artistas en tu descripción. Revisa las sugerencias, modifica el texto e inténtalo de nuevo. Tus créditos no se han consumido.',
+      copyrightBlockedAsyncDesc: 'El audio fue bloqueado por el filtro de derechos de autor. Prueba con un fragmento más corto (20-30 seg) o un audio sin samples descargados de internet. Tus créditos han sido reembolsados.',
       copyrightSuggestionsLabel: 'Palabras o frases detectadas:',
       copyrightDetectedLabel: 'Detectado',
       copyrightRetry: 'Intentar de nuevo',
