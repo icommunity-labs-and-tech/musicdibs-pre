@@ -403,7 +403,7 @@ const AIEnhance = () => {
         if (response.status === 409 && data?.error === "copyright_error") {
           setJobStatus("failed");
           setCopyrightError({
-            message: data.message || "El sistema de detección de derechos de autor de la plataforma ha bloqueado el audio.",
+            message: t('aiCreate.copyrightBlockedDesc'),
             suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
             detected: data.detected || null,
           });
