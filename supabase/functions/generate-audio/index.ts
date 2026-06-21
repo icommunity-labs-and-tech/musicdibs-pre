@@ -573,7 +573,17 @@ serve(async (req) => {
               status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             });
           }
-          // Always fall back to ElevenLabs on ANY KIE error (artist name, prompt too long, etc.)
+          // Propagate copyright detection so the frontend can show the suggestions array.
+          if (dispatchRes.status === 409 || dispatchJson?.error === 'copyright_error') {
+            return new Response(JSON.stringify({
+              error: 'copyright_error',
+              message: dispatchJson?.message || 'Suno ha detectado palabras que considera nombres de artistas en tu descripción. Edita el texto eliminando nombres propios o frases que puedan coincidir con artistas.',
+              suggestions: Array.isArray(dispatchJson?.suggestions) ? dispatchJson.suggestions : [],
+              detected: dispatchJson?.detected ?? null,
+              provider_message: dispatchJson?.provider_message ?? null,
+            }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+          }
+          // Always fall back to ElevenLabs on remaining KIE errors
           const effectiveFallback = (fallbackProvider === 'elevenlabs' || fallbackProvider === 'lyria')
             ? fallbackProvider : 'elevenlabs';
           console.log(`[GENERATE-AUDIO] KIE error — falling back to ${effectiveFallback}`);

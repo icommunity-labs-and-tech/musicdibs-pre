@@ -20,6 +20,7 @@ import { Navbar } from "@/components/Navbar";
 import { AIStudioThemeBar } from "@/components/ai-studio/AIStudioThemeBar";
 import { AIKnowledgeModal, useAIKnowledgeAutoShow } from "@/components/ai-studio/AIKnowledgeModal";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { CopyrightBlockedAlert } from "@/components/ai-studio/CopyrightBlockedAlert";
 import { FileDropzone } from "@/components/FileDropzone";
 import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
@@ -230,7 +231,7 @@ const AIEnhance = () => {
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [genError, setGenError] = useState<string | null>(null);
-  const [copyrightError, setCopyrightError] = useState<{ message: string; suggestions: string[] } | null>(null);
+  const [copyrightError, setCopyrightError] = useState<{ message: string; suggestions: string[]; detected?: string | null } | null>(null);
 
   const currentMode = MODES.find((m) => m.id === selectedMode)!;
   const creditsRequired = getFeatureCost(MODE_FEATURE_KEY[selectedMode]);
@@ -404,6 +405,7 @@ const AIEnhance = () => {
           setCopyrightError({
             message: data.message || "El sistema de detección de derechos de autor de la plataforma ha bloqueado el audio.",
             suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
+            detected: data.detected || null,
           });
           return;
         }
@@ -1122,41 +1124,19 @@ const AIEnhance = () => {
 
           {/* ── Copyright blocked error card (sync 409 + async polling) ─────── */}
           {copyrightError && (
-            <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-5 space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-full bg-amber-500/15 flex items-center justify-center shrink-0">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-base text-amber-900 dark:text-amber-200">
-                    Audio bloqueado por similitud de copyright
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">{copyrightError.message}</p>
-                </div>
-              </div>
-              {copyrightError.suggestions.length > 0 && (
-                <ol className="list-decimal pl-5 space-y-1.5 text-sm text-foreground/90">
-                  {copyrightError.suggestions.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ol>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setCopyrightError(null);
-                  setGenError(null);
-                  setAudioFile(null);
-                  setAudioDuration(null);
-                  setJobStatus("idle");
-                  setLogId(null);
-                }}
-                className="gap-2"
-              >
-                <RefreshCw className="w-4 h-4" /> Intentar de nuevo
-              </Button>
-            </div>
+            <CopyrightBlockedAlert
+              message={copyrightError.message}
+              suggestions={copyrightError.suggestions}
+              detected={copyrightError.detected}
+              onRetry={() => {
+                setCopyrightError(null);
+                setGenError(null);
+                setAudioFile(null);
+                setAudioDuration(null);
+                setJobStatus("idle");
+                setLogId(null);
+              }}
+            />
           )}
 
           {/* ── Botón principal de generación ───────────────────────────────── */}

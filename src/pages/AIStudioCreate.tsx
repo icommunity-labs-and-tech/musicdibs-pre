@@ -1,4 +1,5 @@
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { CopyrightBlockedAlert } from "@/components/ai-studio/CopyrightBlockedAlert";
 import { SEO } from "@/components/SEO";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -125,6 +126,7 @@ const AIStudioCreate = () => {
   const [lyricsExpanded, setLyricsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<{ message: string; details?: string } | null>(null);
+  const [copyrightError, setCopyrightError] = useState<{ message: string; suggestions: string[]; detected?: string | null } | null>(null);
   const [lastResult, setLastResult] = useState<GenerationResult | null>(null);
 
   // ── History & playback state ──
@@ -396,6 +398,7 @@ const AIStudioCreate = () => {
 
     setIsGenerating(true);
     setGenerationError(null);
+    setCopyrightError(null);
     setLastResult(null);
     track('generation_started', { feature: 'create_music', metadata: { mode } });
 
@@ -431,6 +434,15 @@ const AIStudioCreate = () => {
       });
 
       if (error) {
+        if (data?.error === 'copyright_error' || (error as any)?.status === 409) {
+          setIsGenerating(false);
+          setCopyrightError({
+            message: data?.message || t('aiCreate.copyrightBlockedDesc'),
+            suggestions: Array.isArray(data?.suggestions) ? data.suggestions : [],
+            detected: data?.detected || null,
+          });
+          return;
+        }
         if (data?.error === 'rate_limit_exceeded') {
           toast({ title: 'Demasiadas generaciones', description: data.message, variant: 'destructive' });
           return;
@@ -442,11 +454,14 @@ const AIStudioCreate = () => {
         throw { message: error.message || 'Error al generar audio' };
       }
 
-      if (data?.error) {
-        if (data.error === 'insufficient_credits') {
-          throw { message: data.message || 'Créditos del proveedor insuficientes', details: data.details };
-        }
-        throw { message: data.error, details: data.details };
+      if (data?.error === 'copyright_error') {
+        setIsGenerating(false);
+        setCopyrightError({
+          message: data.message || t('aiCreate.copyrightBlockedDesc'),
+          suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
+          detected: data.detected || null,
+        });
+        return;
       }
 
       // Async provider (e.g. KIE Suno): generation runs via callback.
@@ -894,6 +909,7 @@ const AIStudioCreate = () => {
   const handleRegenerate = () => {
     setLastResult(null);
     setGenerationError(null);
+    setCopyrightError(null);
   };
 
   // ── Preview voice sample ──
@@ -1640,6 +1656,14 @@ const AIStudioCreate = () => {
                       </div>
 
                       {/* Error */}
+                      {copyrightError && (
+                        <CopyrightBlockedAlert
+                          message={copyrightError.message}
+                          suggestions={copyrightError.suggestions}
+                          detected={copyrightError.detected}
+                          onRetry={() => setCopyrightError(null)}
+                        />
+                      )}
                       {generationError && (
                         <Alert variant="destructive">
                           <AlertCircle className="h-4 w-4" />
