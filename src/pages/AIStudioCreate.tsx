@@ -1654,6 +1654,17 @@ const AIStudioCreate = () => {
                       </div>
 
                       {/* Error */}
+                      {copyrightError && (
+                        <CopyrightBlockedAlert
+                          message={copyrightError.message}
+                          suggestions={copyrightError.suggestions}
+                          detected={copyrightError.detected}
+                          onRetry={() => {
+                            setCopyrightError(null);
+                            setPrompt("");
+                          }}
+                        />
+                      )}
                       {generationError && (
                         <Alert variant="destructive">
                           <AlertCircle className="h-4 w-4" />
