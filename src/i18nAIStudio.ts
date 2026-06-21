@@ -993,6 +993,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       artistRejectedDescGeneric: 'Your description references a specific artist. We can\'t reference specific artists. Please update your description and try again. Your credits have been refunded.',
       copyrightBlockedTitle: 'Possible artist reference detected',
       copyrightBlockedDesc: 'The system detected words that may match artist names in your description. Review the suggestions, edit the text and try again. Your credits have not been consumed.',
+      copyrightBlockedAsyncDesc: 'The audio was blocked by the copyright filter. Try a shorter clip (20-30s) or audio without samples downloaded from the internet. Your credits have been refunded.',
       copyrightSuggestionsLabel: 'Detected words or phrases:',
       copyrightDetectedLabel: 'Detected',
       copyrightRetry: 'Try again',
