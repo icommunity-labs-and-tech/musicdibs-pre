@@ -126,6 +126,7 @@ const AIStudioCreate = () => {
   const [lyricsExpanded, setLyricsExpanded] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<{ message: string; details?: string } | null>(null);
+  const [copyrightError, setCopyrightError] = useState<{ message: string; suggestions: string[]; detected?: string | null } | null>(null);
   const [lastResult, setLastResult] = useState<GenerationResult | null>(null);
 
   // ── History & playback state ──
