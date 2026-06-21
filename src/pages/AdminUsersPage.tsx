@@ -288,6 +288,30 @@ export default function AdminUsersPage() {
     toast.success(`${selected.length} usuarios exportados`);
   };
 
+  const handleBulkKycReminder = async () => {
+    const selected = users.filter(u => selectedIds.has(u.user_id) && u.kyc_status !== 'verified');
+    if (selected.length === 0) {
+      toast.info('Ningún usuario seleccionado tiene KYC pendiente');
+      return;
+    }
+    if (!confirm(`¿Enviar recordatorio de KYC a ${selected.length} usuario${selected.length === 1 ? '' : 's'} con KYC no verificado?`)) return;
+    const toastId = toast.loading(`Enviando recordatorios… (0/${selected.length})`);
+    let sent = 0, skipped = 0, failed = 0;
+    for (let i = 0; i < selected.length; i++) {
+      const u = selected[i];
+      try {
+        const { data, error } = await supabase.functions.invoke('kyc-reminder', { body: { user_id: u.user_id } });
+        if (error) failed++;
+        else if (data?.ok) sent++;
+        else skipped++;
+      } catch { failed++; }
+      toast.loading(`Enviando recordatorios… (${i + 1}/${selected.length})`, { id: toastId });
+    }
+    toast.success(`Recordatorios KYC: ${sent} enviados, ${skipped} omitidos, ${failed} fallidos`, { id: toastId });
+    load();
+  };
+
+
   const clearFilters = () => {
     setKycFilter('all'); setPlanFilter('all'); setStripeFilter('all'); setStatusFilter('all'); setRoleFilter('all'); setCreditsFilter('all');
     setSearch(''); setPage(0);
