@@ -456,7 +456,9 @@ export default function AdminUsersPage() {
             </Button>
             <Button size="sm" variant="outline" onClick={() => setBulkConfirm({ open: true, op: 'kyc_verified', label: 'marcar KYC como Verificado' })}>KYC → Verificado</Button>
             <Button size="sm" variant="outline" onClick={() => setBulkConfirm({ open: true, op: 'kyc_pending', label: 'marcar KYC como Pendiente' })}>KYC → Pendiente</Button>
+            <Button size="sm" variant="outline" onClick={handleBulkKycReminder}>📧 Recordatorio KYC</Button>
             <Button size="sm" variant="outline" onClick={() => setBulkConfirm({ open: true, op: 'block', label: 'bloquear' })}>Bloquear</Button>
+
             <Button size="sm" variant="outline" onClick={() => setBulkConfirm({ open: true, op: 'unblock', label: 'desbloquear' })}>Desbloquear</Button>
             <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>Limpiar</Button>
           </div>
