@@ -247,11 +247,21 @@ serve(async (req) => {
         })
         .eq("id", logId);
       const isCopyright = isArtistNameError(lastErrMsg);
-      return json({
-        error: isCopyright ? "copyright_error" : "provider_error",
-        message: lastErrMsg,
-        suggestions: isCopyright ? strippedPhrases : undefined,
-      }, isCopyright ? 409 : 502);
+      const isCopyright = isArtistNameError(lastErrMsg);
+      if (isCopyright) {
+        const detected = parseArtistNameFromError(lastErrMsg);
+        const suggestions = Array.from(
+          new Set([...strippedPhrases, ...(detected ? [detected] : [])].filter(Boolean)),
+        );
+        return json({
+          error: "copyright_error",
+          message: "Suno ha detectado palabras que considera nombres de artistas en tu descripción. Edita el campo de estilo eliminando nombres propios o frases que puedan coincidir con artistas.",
+          suggestions,
+          detected: detected ?? null,
+          provider_message: lastErrMsg,
+        }, 409);
+      }
+      return json({ error: "provider_error", message: lastErrMsg }, 502);
     }
 
 
