@@ -458,10 +458,16 @@ serve(async (req) => {
       // Si el bloqueo final es por artist-name, devolvemos 409 explícito para que
       // el frontend muestre el listado de palabras conflictivas.
       if (isArtistNameError(errMsg)) {
+        const detected = parseArtistNameFromError(errMsg);
+        const suggestions = Array.from(
+          new Set([...strippedPhrases, ...(detected ? [detected] : [])].filter(Boolean)),
+        );
         return json({
           error: "copyright_error",
           message: "Suno ha detectado palabras que considera nombres de artistas en tu descripción. Edita el campo de estilo eliminando nombres propios o frases que puedan coincidir con artistas.",
-          suggestions: strippedPhrases.concat(parseArtistNameFromError(errMsg) || []).filter(Boolean),
+          suggestions,
+          detected: detected ?? null,
+          provider_message: errMsg,
         }, 409);
       }
       return json({ error: "provider_error", message: errMsg || "KIE request failed" }, 502);
