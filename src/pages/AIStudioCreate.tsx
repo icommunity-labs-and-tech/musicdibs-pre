@@ -435,6 +435,7 @@ const AIStudioCreate = () => {
 
       if (error) {
         if (data?.error === 'copyright_error' || (error as any)?.status === 409) {
+          setIsGenerating(false);
           setCopyrightError({
             message: data?.message || t('aiCreate.copyrightBlockedDesc'),
             suggestions: Array.isArray(data?.suggestions) ? data.suggestions : [],
