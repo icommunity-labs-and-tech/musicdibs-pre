@@ -398,6 +398,7 @@ const AIStudioCreate = () => {
 
     setIsGenerating(true);
     setGenerationError(null);
+    setCopyrightError(null);
     setLastResult(null);
     track('generation_started', { feature: 'create_music', metadata: { mode } });
 
