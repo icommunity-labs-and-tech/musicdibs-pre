@@ -1578,11 +1578,13 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         console.log(`[WEBHOOK] subscription.deleted â Free, -${deletedCreditsToReset} credits for user ${profile.user_id}`);
 
         // ââ Sincronizar tabla subscriptions local ââ
+        const deletedPriceId = subscription.items?.data?.[0]?.price?.id ?? "";
+        const deletedPlanName = PLAN_ID_TO_PLAN_NAME[deletedPriceId] ?? oldPlan ?? "Annual";
         await supabase.from("subscriptions").upsert({
           user_id: profile.user_id,
           stripe_customer_id: customerId,
           stripe_subscription_id: subscription.id,
-          plan: "Annual",
+          plan: deletedPlanName,
           status: "cancelled",
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
