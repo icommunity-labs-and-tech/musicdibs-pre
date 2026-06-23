@@ -1720,6 +1720,8 @@ serve(async (req) => {
             .from("profiles")
             .select("*")
             .order("created_at", { ascending: false });
+          q = applyDateRange(q);
+
 
           if (kycFilter && kycFilter !== "initiated" && kycFilter !== "created") {
             q = q.eq("kyc_status", kycFilter);
