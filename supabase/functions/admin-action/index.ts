@@ -1618,6 +1618,13 @@ serve(async (req) => {
 
     if (action === "export_csv") {
       const { dataset } = payload;
+      const dateFrom = typeof payload.date_from === "string" ? payload.date_from : null;
+      const dateTo = typeof payload.date_to === "string" ? payload.date_to : null;
+      const applyDateRange = (q: any, col = "created_at") => {
+        if (dateFrom) q = q.gte(col, dateFrom);
+        if (dateTo) q = q.lt(col, dateTo);
+        return q;
+      };
 
       // Paginated fetch helper — Supabase caps each request at 1000 rows.
       // We loop with .range() until we get a short page.
@@ -1639,6 +1646,7 @@ serve(async (req) => {
         }
         return all;
       };
+
 
       if (dataset === "users") {
         const search = (payload.search || "").trim().toLowerCase();
