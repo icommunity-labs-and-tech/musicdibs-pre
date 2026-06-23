@@ -1619,6 +1619,27 @@ serve(async (req) => {
     if (action === "export_csv") {
       const { dataset } = payload;
 
+      // Paginated fetch helper — Supabase caps each request at 1000 rows.
+      // We loop with .range() until we get a short page.
+      const fetchAllPaginated = async (
+        buildQuery: () => any,
+        pageSize = 1000,
+        maxRows = 200000,
+      ) => {
+        const all: any[] = [];
+        let from = 0;
+        while (all.length < maxRows) {
+          const to = from + pageSize - 1;
+          const { data, error } = await buildQuery().range(from, to);
+          if (error) throw error;
+          const rows = data || [];
+          all.push(...rows);
+          if (rows.length < pageSize) break;
+          from += pageSize;
+        }
+        return all;
+      };
+
       if (dataset === "users") {
         const search = (payload.search || "").trim().toLowerCase();
         const kycFilter = (payload.kyc_filter || "").trim();
@@ -1640,11 +1661,11 @@ serve(async (req) => {
             const exclude = new Set(
               (nonUsers || []).map((r: any) => r.user_id),
             );
-            const { data: allP } = await admin
-              .from("profiles")
-              .select("user_id");
+            const allP = await fetchAllPaginated(() =>
+              admin.from("profiles").select("user_id"),
+            );
             roleUserIds = new Set(
-              (allP || [])
+              allP
                 .map((p: any) => p.user_id)
                 .filter((id: string) => !exclude.has(id)),
             );
@@ -1686,11 +1707,40 @@ serve(async (req) => {
           }
         }
 
-        let query = admin
-          .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false });
+        const baseQuery = () => {
+          let q = admin
+            .from("profiles")
+            .select("*")
+            .order("created_at", { ascending: false });
 
+          if (kycFilter && kycFilter !== "initiated" && kycFilter !== "created") {
+            q = q.eq("kyc_status", kycFilter);
+          }
+          if (planFilter) {
+            if (planFilter === "Free")
+              q = q.eq("subscription_plan", "Free");
+            else if (planFilter === "Annual")
+              q = q
+                .eq("subscription_plan", "Annual")
+                .is("subscription_tier", null);
+            else if (planFilter === "Monthly")
+              q = q.eq("subscription_tier", "monthly");
+            else if (planFilter.startsWith("annual_"))
+              q = q.eq("subscription_tier", planFilter);
+            else q = q.eq("subscription_plan", planFilter);
+          }
+          if (stripeFilter === "linked")
+            q = q.not("stripe_customer_id", "is", null);
+          if (stripeFilter === "unlinked")
+            q = q.is("stripe_customer_id", null);
+          if (statusFilter === "blocked") q = q.eq("is_blocked", true);
+          if (statusFilter === "active")
+            q = q.or("is_blocked.is.null,is_blocked.eq.false");
+          if (statusFilter === "disputed") q = q.eq("has_open_dispute", true);
+          return q;
+        };
+
+        let filtered: any[];
         if (kycFilter === "initiated" || kycFilter === "created") {
           const { data: sigUsers } = await admin
             .from("ibs_signatures")
@@ -1703,34 +1753,19 @@ serve(async (req) => {
             return json({
               csv: "email,display_name,plan,credits,kyc_status,is_blocked,created_at",
             });
-          query = query.in("user_id", ids).neq("kyc_status", "verified");
-        } else if (kycFilter) {
-          query = query.eq("kyc_status", kycFilter);
+          // Chunk .in() to avoid URL length limits
+          filtered = [];
+          for (let i = 0; i < ids.length; i += 500) {
+            const chunk = ids.slice(i, i + 500);
+            const rows = await fetchAllPaginated(() =>
+              baseQuery().in("user_id", chunk).neq("kyc_status", "verified"),
+            );
+            filtered.push(...rows);
+          }
+        } else {
+          filtered = await fetchAllPaginated(baseQuery);
         }
-        if (planFilter) {
-          if (planFilter === "Free")
-            query = query.eq("subscription_plan", "Free");
-          else if (planFilter === "Annual")
-            query = query
-              .eq("subscription_plan", "Annual")
-              .is("subscription_tier", null);
-          else if (planFilter === "Monthly")
-            query = query.eq("subscription_tier", "monthly");
-          else if (planFilter.startsWith("annual_"))
-            query = query.eq("subscription_tier", planFilter);
-          else query = query.eq("subscription_plan", planFilter);
-        }
-        if (stripeFilter === "linked")
-          query = query.not("stripe_customer_id", "is", null);
-        if (stripeFilter === "unlinked")
-          query = query.is("stripe_customer_id", null);
-        if (statusFilter === "blocked") query = query.eq("is_blocked", true);
-        if (statusFilter === "active")
-          query = query.or("is_blocked.is.null,is_blocked.eq.false");
-        if (statusFilter === "disputed") query = query.eq("has_open_dispute", true);
 
-        const { data: profiles } = await query;
-        let filtered = profiles || [];
         if (roleUserIds)
           filtered = filtered.filter((p: any) => roleUserIds!.has(p.user_id));
         if (searchUserIds) {
@@ -1760,14 +1795,15 @@ serve(async (req) => {
       }
 
       if (dataset === "transactions") {
-        const { data: txs } = await admin
-          .from("credit_transactions")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1000);
+        const txs = await fetchAllPaginated(() =>
+          admin
+            .from("credit_transactions")
+            .select("*")
+            .order("created_at", { ascending: false }),
+        );
         const emailsMap = await getAllEmailsMap();
         const header = "email,amount,type,description,created_at";
-        const rows = (txs || []).map(
+        const rows = txs.map(
           (t: any) =>
             `${emailsMap[t.user_id] || ""},${t.amount},${t.type},"${(t.description || "").replace(/"/g, '""')}",${t.created_at}`,
         );
@@ -1775,19 +1811,21 @@ serve(async (req) => {
       }
 
       if (dataset === "works") {
-        const { data: works } = await admin
-          .from("works")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1000);
+        const works = await fetchAllPaginated(() =>
+          admin
+            .from("works")
+            .select("*")
+            .order("created_at", { ascending: false }),
+        );
         const emailsMap = await getAllEmailsMap();
         const header = "email,title,type,status,blockchain_hash,created_at";
-        const rows = (works || []).map(
+        const rows = works.map(
           (w: any) =>
             `${emailsMap[w.user_id] || ""},"${(w.title || "").replace(/"/g, '""')}",${w.type},${w.status},${w.blockchain_hash || ""},${w.created_at}`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
+
 
       if (dataset === "audit") {
         const { data: logs } = await admin
