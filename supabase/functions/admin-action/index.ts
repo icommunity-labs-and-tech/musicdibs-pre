@@ -1866,11 +1866,19 @@ serve(async (req) => {
           apiVersion: "2025-08-27.basil",
         });
 
+        const created: any = {};
+        if (dateFrom) created.gte = Math.floor(new Date(dateFrom).getTime() / 1000);
+        if (dateTo) created.lt = Math.floor(new Date(dateTo).getTime() / 1000);
+        const listParams: any = { limit: 100 };
+        if (dateFrom || dateTo) listParams.created = created;
+
         const charges: any[] = [];
-        for await (const charge of stripe.charges.list({ limit: 100 })) {
+        const maxCharges = (dateFrom || dateTo) ? 100000 : 1000;
+        for await (const charge of stripe.charges.list(listParams)) {
           charges.push(charge);
-          if (charges.length >= 1000) break;
+          if (charges.length >= maxCharges) break;
         }
+
 
         const header = "date,amount,currency,status,customer,description";
         const rows = charges.map(
