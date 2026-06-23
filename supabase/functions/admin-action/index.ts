@@ -2906,8 +2906,10 @@ serve(async (req) => {
           if (o.order_status === "refunded") return;
           const gross = parseFloat(o.amount_gross) || 0;
           const netVal = parseFloat(o.amount_net);
+          // Use stored amount_net (Stripe-derived). If missing, assume no IVA
+          // (same fallback as per-bucket timeSeries below, so daily sums == period totals).
           const netBase =
-            !isNaN(netVal) && netVal > 0 ? netVal : gross / 1.21;
+            !isNaN(netVal) && netVal > 0 ? netVal : gross;
           const fee = parseFloat(o.stripe_fee) || 0;
           const disputeFee = parseFloat(o.dispute_fee) || 0;
           periodGross += gross;
