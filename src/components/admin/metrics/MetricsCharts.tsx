@@ -17,7 +17,18 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
   const m = metrics;
 
   // Use timeSeries if available (period-aware), fall back to legacy arrays
-  const revenueTimeSeries = m.timeSeries?.revenue ?? m.mrrEvolution ?? [];
+  const rawRevenueTimeSeries = m.timeSeries?.revenue ?? m.mrrEvolution ?? [];
+  const revenueTimeSeries = rawRevenueTimeSeries.map((point: any) => {
+    const gross = Number(point.gross ?? 0) || 0;
+    const iva = Number(point.iva ?? 0) || 0;
+    const fee = Number(point.fee ?? 0) || 0;
+    const hasBreakdown = point.gross != null || point.iva != null || point.fee != null;
+    const value = hasBreakdown
+      ? Math.max(0, Math.round((gross - iva - fee) * 100) / 100)
+      : (Number(point.value ?? point.mrr ?? 0) || 0);
+
+    return { ...point, value };
+  });
   const userAcquisitionSeries = (m.timeSeries?.userAcquisition && m.timeSeries.userAcquisition.length > 0)
     ? m.timeSeries.userAcquisition
     : (m.userAcquisition ?? []).map((u: any) => ({ label: u.month, newUsers: u.newUsers, activeUsers: u.activeUsers }));
@@ -29,7 +40,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
     (sum: number, p: any) => sum + (Number(p.value ?? p.mrr ?? 0) || 0),
     0,
   );
-  const periodRevenue = m.periodRevenue ?? periodRevenueSum;
+  const periodRevenue = revenueTimeSeries.length > 0 ? periodRevenueSum : (m.periodRevenue ?? 0);
   const periodUnits = (m.unitsSoldAnnual ?? 0) + (m.unitsSoldMonthly ?? 0) + (m.unitsSoldSingle ?? 0) + (m.unitsSoldTopup ?? 0);
 
   return (
