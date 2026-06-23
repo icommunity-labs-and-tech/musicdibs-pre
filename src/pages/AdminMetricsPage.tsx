@@ -161,9 +161,27 @@ export default function AdminMetricsPage() {
   // Auto-reload on any filter change (period type, week, month, year)
   useEffect(() => { loadMetrics(false); }, [loadMetrics]);
 
+  // Compute [from, toExclusive) date range covering the selected period
+  const periodRange = useMemo(() => {
+    let from: Date, toExcl: Date;
+    if (periodType === 'week') {
+      from = parseLocalDate(weekStart);
+      toExcl = new Date(from); toExcl.setDate(toExcl.getDate() + 7);
+    } else if (periodType === 'month') {
+      const y = Number(selectedYear); const m = Number(selectedMonth);
+      from = new Date(y, m - 1, 1);
+      toExcl = new Date(y, m, 1);
+    } else {
+      const y = Number(selectedYear);
+      from = new Date(y, 0, 1);
+      toExcl = new Date(y + 1, 0, 1);
+    }
+    return { date_from: from.toISOString(), date_to: toExcl.toISOString() };
+  }, [periodType, weekStart, selectedMonth, selectedYear]);
+
   const handleExport = async (dataset: string) => {
     try {
-      const res = await adminApi.exportCsv(dataset);
+      const res = await adminApi.exportCsv(dataset, periodRange);
       const blob = new Blob([res.csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -174,6 +192,7 @@ export default function AdminMetricsPage() {
       toast.success('CSV descargado');
     } catch (e: any) { toast.error(e.message); }
   };
+
 
   // Period label for display
   const periodLabel = useMemo(() => {
