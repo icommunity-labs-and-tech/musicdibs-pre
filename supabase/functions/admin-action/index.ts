@@ -1618,6 +1618,13 @@ serve(async (req) => {
 
     if (action === "export_csv") {
       const { dataset } = payload;
+      const dateFrom = typeof payload.date_from === "string" ? payload.date_from : null;
+      const dateTo = typeof payload.date_to === "string" ? payload.date_to : null;
+      const applyDateRange = (q: any, col = "created_at") => {
+        if (dateFrom) q = q.gte(col, dateFrom);
+        if (dateTo) q = q.lt(col, dateTo);
+        return q;
+      };
 
       // Paginated fetch helper — Supabase caps each request at 1000 rows.
       // We loop with .range() until we get a short page.
@@ -1639,6 +1646,7 @@ serve(async (req) => {
         }
         return all;
       };
+
 
       if (dataset === "users") {
         const search = (payload.search || "").trim().toLowerCase();
@@ -1712,6 +1720,8 @@ serve(async (req) => {
             .from("profiles")
             .select("*")
             .order("created_at", { ascending: false });
+          q = applyDateRange(q);
+
 
           if (kycFilter && kycFilter !== "initiated" && kycFilter !== "created") {
             q = q.eq("kyc_status", kycFilter);
@@ -1796,10 +1806,12 @@ serve(async (req) => {
 
       if (dataset === "transactions") {
         const txs = await fetchAllPaginated(() =>
-          admin
-            .from("credit_transactions")
-            .select("*")
-            .order("created_at", { ascending: false }),
+          applyDateRange(
+            admin
+              .from("credit_transactions")
+              .select("*")
+              .order("created_at", { ascending: false }),
+          ),
         );
         const emailsMap = await getAllEmailsMap();
         const header = "email,amount,type,description,created_at";
@@ -1812,10 +1824,12 @@ serve(async (req) => {
 
       if (dataset === "works") {
         const works = await fetchAllPaginated(() =>
-          admin
-            .from("works")
-            .select("*")
-            .order("created_at", { ascending: false }),
+          applyDateRange(
+            admin
+              .from("works")
+              .select("*")
+              .order("created_at", { ascending: false }),
+          ),
         );
         const emailsMap = await getAllEmailsMap();
         const header = "email,title,type,status,blockchain_hash,created_at";
@@ -1828,18 +1842,22 @@ serve(async (req) => {
 
 
       if (dataset === "audit") {
-        const { data: logs } = await admin
-          .from("audit_log")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1000);
+        const logs = await fetchAllPaginated(() =>
+          applyDateRange(
+            admin
+              .from("audit_log")
+              .select("*")
+              .order("created_at", { ascending: false }),
+          ),
+        );
         const header = "admin_email,action,target_email,details,created_at";
-        const rows = (logs || []).map(
+        const rows = logs.map(
           (l: any) =>
             `${l.admin_email},${l.action},${l.target_email || ""},"${JSON.stringify(l.details || {}).replace(/"/g, '""')}",${l.created_at}`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
+
       if (dataset === "revenue") {
         const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
         if (!stripeKey)
@@ -1848,11 +1866,19 @@ serve(async (req) => {
           apiVersion: "2025-08-27.basil",
         });
 
+        const created: any = {};
+        if (dateFrom) created.gte = Math.floor(new Date(dateFrom).getTime() / 1000);
+        if (dateTo) created.lt = Math.floor(new Date(dateTo).getTime() / 1000);
+        const listParams: any = { limit: 100 };
+        if (dateFrom || dateTo) listParams.created = created;
+
         const charges: any[] = [];
-        for await (const charge of stripe.charges.list({ limit: 100 })) {
+        const maxCharges = (dateFrom || dateTo) ? 100000 : 1000;
+        for await (const charge of stripe.charges.list(listParams)) {
           charges.push(charge);
-          if (charges.length >= 1000) break;
+          if (charges.length >= maxCharges) break;
         }
+
 
         const header = "date,amount,currency,status,customer,description";
         const rows = charges.map(
