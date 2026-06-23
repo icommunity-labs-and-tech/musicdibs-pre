@@ -82,11 +82,19 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
     ? m.timeSeries.productBreakdown
     : [];
 
-  const periodRevenueSum = revenueTimeSeries.reduce(
+  // Use KPI authoritative totals (Bruto − IVA − Stripe fees) so el chart cuadra con las tarjetas
+  const periodGrossTotal = Number((m as any).periodGross ?? 0);
+  const periodIvaTotal = Number((m as any).periodIva ?? 0);
+  const periodFeesTotal = Number((m as any).periodFees ?? 0);
+  const periodNetFromKpi = Math.round((periodGrossTotal - periodIvaTotal - periodFeesTotal) * 100) / 100;
+  const periodRevenueSumSeries = revenueTimeSeries.reduce(
     (sum: number, p: RevenuePoint) => sum + (Number(p.value ?? p.mrr ?? 0) || 0),
     0,
   );
-  const periodRevenue = revenueTimeSeries.length > 0 ? periodRevenueSum : (m.periodRevenue ?? 0);
+  const periodRevenueSum = periodGrossTotal > 0 ? periodNetFromKpi : periodRevenueSumSeries;
+  const periodRevenue = periodGrossTotal > 0
+    ? periodNetFromKpi
+    : (revenueTimeSeries.length > 0 ? periodRevenueSumSeries : (m.periodRevenue ?? 0));
   const periodUnits = (m.unitsSoldAnnual ?? 0) + (m.unitsSoldMonthly ?? 0) + (m.unitsSoldSingle ?? 0) + (m.unitsSoldTopup ?? 0);
 
   return (
