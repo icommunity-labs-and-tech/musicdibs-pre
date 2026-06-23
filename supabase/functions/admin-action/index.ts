@@ -1806,10 +1806,12 @@ serve(async (req) => {
 
       if (dataset === "transactions") {
         const txs = await fetchAllPaginated(() =>
-          admin
-            .from("credit_transactions")
-            .select("*")
-            .order("created_at", { ascending: false }),
+          applyDateRange(
+            admin
+              .from("credit_transactions")
+              .select("*")
+              .order("created_at", { ascending: false }),
+          ),
         );
         const emailsMap = await getAllEmailsMap();
         const header = "email,amount,type,description,created_at";
@@ -1822,10 +1824,12 @@ serve(async (req) => {
 
       if (dataset === "works") {
         const works = await fetchAllPaginated(() =>
-          admin
-            .from("works")
-            .select("*")
-            .order("created_at", { ascending: false }),
+          applyDateRange(
+            admin
+              .from("works")
+              .select("*")
+              .order("created_at", { ascending: false }),
+          ),
         );
         const emailsMap = await getAllEmailsMap();
         const header = "email,title,type,status,blockchain_hash,created_at";
@@ -1838,18 +1842,22 @@ serve(async (req) => {
 
 
       if (dataset === "audit") {
-        const { data: logs } = await admin
-          .from("audit_log")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1000);
+        const logs = await fetchAllPaginated(() =>
+          applyDateRange(
+            admin
+              .from("audit_log")
+              .select("*")
+              .order("created_at", { ascending: false }),
+          ),
+        );
         const header = "admin_email,action,target_email,details,created_at";
-        const rows = (logs || []).map(
+        const rows = logs.map(
           (l: any) =>
             `${l.admin_email},${l.action},${l.target_email || ""},"${JSON.stringify(l.details || {}).replace(/"/g, '""')}",${l.created_at}`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
+
       if (dataset === "revenue") {
         const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
         if (!stripeKey)
