@@ -117,6 +117,13 @@ const PRICE_TO_PLAN_ID: Record<string, string> = {
   "price_1THT8AF9ZCIiqrz626wSH9Rz": "topup_200",
   "price_1T8n6CFULeu7PzK6vs7NZyiJ": "annual_100",
   "price_1T8n6lFULeu7PzK60TbO76hE": "monthly",
+  // ── Live production prices (FULeu7PzK6 annual plans) ─────────────────
+  "price_1TMDVwFULeu7PzK6laW4n6wu": "annual_100",
+  "price_1TMDVwFULeu7PzK6ZnMqrW1c": "annual_200",
+  "price_1TMDVwFULeu7PzK6S22WkY3w": "annual_300",
+  "price_1TMDVwFULeu7PzK6mSwmx29Z": "annual_500",
+  "price_1TMDVwFULeu7PzK68TlUbof2": "annual_1000",
+  "price_1TMDW3FULeu7PzK6468wsXJt": "monthly",
   // ── Top-up legacy prices (FULeu7PzK6 account) ──────────────────────────
   "price_1TMDVkFULeu7PzK6aNdFYW91": "individual",
   "price_1TMDVkFULeu7PzK6YxaKfBiJ": "topup_10",
@@ -1579,7 +1586,8 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
 
         // ââ Sincronizar tabla subscriptions local ââ
         const deletedPriceId = subscription.items?.data?.[0]?.price?.id ?? "";
-        const deletedPlanName = PLAN_ID_TO_PLAN_NAME[deletedPriceId] ?? oldPlan ?? "Annual";
+        const deletedPlanId = PRICE_TO_PLAN_ID[deletedPriceId] ?? "";
+        const deletedPlanName = PLAN_ID_TO_PLAN_NAME[deletedPlanId] ?? oldPlan ?? "Annual";
         await supabase.from("subscriptions").upsert({
           user_id: profile.user_id,
           stripe_customer_id: customerId,
