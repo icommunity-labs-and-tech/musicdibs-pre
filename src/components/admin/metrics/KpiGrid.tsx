@@ -192,7 +192,7 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
                 €{periodNet.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               <div className="text-xs mt-1 text-green-700/70 dark:text-green-400/70">
-                Pre-IVA − Stripe fees
+                Bruto − IVA − Stripe fees
               </div>
             </CardContent>
           </Card>
