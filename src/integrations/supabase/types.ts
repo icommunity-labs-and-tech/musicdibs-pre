@@ -3038,6 +3038,36 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_credit_grants: {
+        Row: {
+          created_at: string
+          credits: number
+          id: string
+          plan_id: string | null
+          source_event: string | null
+          stripe_event_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          id?: string
+          plan_id?: string | null
+          source_event?: string | null
+          stripe_event_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          id?: string
+          plan_id?: string | null
+          source_event?: string | null
+          stripe_event_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           amount: number | null
@@ -3943,6 +3973,17 @@ export type Database = {
           encrypted_password: string
           user_id: string
         }[]
+      }
+      grant_credits_atomic: {
+        Args: {
+          p_credits: number
+          p_description: string
+          p_plan_id: string
+          p_source_event: string
+          p_stripe_event_key: string
+          p_user_id: string
+        }
+        Returns: number
       }
       has_role: {
         Args: {
