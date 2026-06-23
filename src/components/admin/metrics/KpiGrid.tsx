@@ -64,7 +64,8 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
   const periodGross = Number(m.periodGross ?? 0);
   const periodIva = Number(m.periodIva ?? Math.max(0, periodGross - (m.periodRevenue ?? 0) - (m.periodFees ?? 0)));
   const periodFees = Number(m.periodFees ?? 0);
-  const periodNet = Number(m.periodRevenue ?? m.totalRevenue ?? 0);
+  // Neto real = Bruto − IVA − comisiones Stripe (debe cuadrar con las tarjetas mostradas)
+  const periodNet = Math.round((periodGross - periodIva - periodFees) * 100) / 100;
   const feesPending = periodFees === 0 && periodGross > 0;
 
   // Conversión del periodo: clientes nuevos / registrados nuevos del periodo
@@ -191,7 +192,7 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
                 €{periodNet.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               <div className="text-xs mt-1 text-green-700/70 dark:text-green-400/70">
-                Pre-IVA − Stripe fees
+                Bruto − IVA − Stripe fees
               </div>
             </CardContent>
           </Card>
