@@ -61,6 +61,7 @@ interface MetricsData {
 
 export default function MetricsCharts({ metrics, periodType = 'month' }: MetricsChartsProps) {
   const m = metrics;
+  const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 
   // Use timeSeries if available (period-aware), fall back to legacy arrays
   const rawRevenueTimeSeries = m.timeSeries?.revenue ?? m.mrrEvolution ?? [];
@@ -70,7 +71,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
     const fee = Number(point.fee ?? 0) || 0;
     const hasBreakdown = point.gross != null || point.iva != null || point.fee != null;
     const value = hasBreakdown
-      ? Math.max(0, Math.round((gross - iva - fee) * 100) / 100)
+      ? Math.max(0, roundCurrency(gross - iva - fee))
       : (Number(point.value ?? point.mrr ?? 0) || 0);
 
     return { ...point, value };
@@ -82,17 +83,29 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
     ? m.timeSeries.productBreakdown
     : [];
 
-  // Use KPI authoritative totals (Bruto − IVA − Stripe fees) so el chart cuadra con las tarjetas
-  const periodGrossTotal = Number((m as any).periodGross ?? 0);
-  const periodIvaTotal = Number((m as any).periodIva ?? 0);
-  const periodFeesTotal = Number((m as any).periodFees ?? 0);
-  const periodNetFromKpi = Math.round((periodGrossTotal - periodIvaTotal - periodFeesTotal) * 100) / 100;
+  // Prefer the visible period buckets as source of truth: their sum must match
+  // the aggregate shown for the selected period.
+  const hasRevenueBreakdown = revenueTimeSeries.some(
+    (point: RevenuePoint) => point.gross != null || point.iva != null || point.fee != null,
+  );
+  const revenueBreakdownTotals = revenueTimeSeries.reduce(
+    (acc: { gross: number; iva: number; fees: number }, point: RevenuePoint) => ({
+      gross: acc.gross + (Number(point.gross) || 0),
+      iva: acc.iva + (Number(point.iva) || 0),
+      fees: acc.fees + (Number(point.fee) || 0),
+    }),
+    { gross: 0, iva: 0, fees: 0 },
+  );
+  const periodGrossTotal = hasRevenueBreakdown ? revenueBreakdownTotals.gross : Number((m as any).periodGross ?? 0);
+  const periodIvaTotal = hasRevenueBreakdown ? revenueBreakdownTotals.iva : Number((m as any).periodIva ?? 0);
+  const periodFeesTotal = hasRevenueBreakdown ? revenueBreakdownTotals.fees : Number((m as any).periodFees ?? 0);
+  const periodNetFromKpi = roundCurrency(periodGrossTotal - periodIvaTotal - periodFeesTotal);
   const periodRevenueSumSeries = revenueTimeSeries.reduce(
     (sum: number, p: RevenuePoint) => sum + (Number(p.value ?? p.mrr ?? 0) || 0),
     0,
   );
-  const periodRevenueSum = periodGrossTotal > 0 ? periodNetFromKpi : periodRevenueSumSeries;
-  const periodRevenue = periodGrossTotal > 0
+  const periodRevenueSum = (hasRevenueBreakdown || periodGrossTotal > 0) ? periodNetFromKpi : periodRevenueSumSeries;
+  const periodRevenue = (hasRevenueBreakdown || periodGrossTotal > 0)
     ? periodNetFromKpi
     : (revenueTimeSeries.length > 0 ? periodRevenueSumSeries : (m.periodRevenue ?? 0));
   const periodUnits = (m.unitsSoldAnnual ?? 0) + (m.unitsSoldMonthly ?? 0) + (m.unitsSoldSingle ?? 0) + (m.unitsSoldTopup ?? 0);

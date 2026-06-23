@@ -2104,7 +2104,7 @@ serve(async (req) => {
 
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v10:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v11:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -2240,7 +2240,7 @@ serve(async (req) => {
           const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
           const net = parseFloat(o.amount_net);
           const gross = parseFloat(o.amount_gross) || 0;
-          const base = !isNaN(net) && net > 0 ? net : gross / 1.21;
+          const base = !isNaN(net) && net > 0 ? net : gross;
           const fee = parseFloat(o.stripe_fee) || 0;
           const disputeFee = parseFloat(o.dispute_fee) || 0;
           const value = Math.max(0, base - fee - disputeFee);
@@ -3296,8 +3296,13 @@ serve(async (req) => {
         }
       }
 
-      // Period revenue = sum of all order revenue inside the selected period
-      const periodRevenue = Math.round(orderRevenue * 100) / 100;
+      // Period revenue is the same authoritative formula shown in the KPI cards:
+      // gross − real IVA − Stripe/dispute fees. This keeps daily bucket sums and
+      // period aggregate totals aligned.
+      const periodRevenue = Math.max(
+        0,
+        Math.round((periodGross - periodIva - periodFees) * 100) / 100,
+      );
 
       const creditsPercentage =
         periodRevenue > 0
@@ -4746,13 +4751,14 @@ serve(async (req) => {
         return { ok: false, reason: "non_musicdibs" };
       }
 
-      // Compute amount_net: prefer stripe net (pre-tax), fallback to gross/1.21
+      // Compute amount_net: prefer Stripe's explicit pre-tax net. If Stripe did
+      // not provide tax/net data, keep gross as net instead of inventing 21% IVA.
       function computeAmountNet(
         stripeNet: number | null,
         gross: number,
       ): number {
         if (stripeNet != null && stripeNet > 0) return stripeNet;
-        return Math.round((gross / 1.21) * 100) / 100;
+        return Math.round(gross * 100) / 100;
       }
 
       // Decide action for a candidate stripe record:
