@@ -9,8 +9,54 @@ import {
 } from 'recharts';
 
 interface MetricsChartsProps {
-  metrics: any;
+  metrics: MetricsData;
   periodType?: 'week' | 'month' | 'year';
+}
+
+interface RevenuePoint {
+  label?: string;
+  value?: number | string | null;
+  mrr?: number | string | null;
+  gross?: number | string | null;
+  iva?: number | string | null;
+  fee?: number | string | null;
+  [key: string]: unknown;
+}
+
+interface UserAcquisitionPoint {
+  month?: string;
+  label?: string;
+  newUsers?: number;
+  activeUsers?: number;
+  [key: string]: unknown;
+}
+
+interface MetricsData {
+  _dataSource?: string;
+  timeSeries?: {
+    revenue?: RevenuePoint[];
+    userAcquisition?: UserAcquisitionPoint[];
+    productBreakdown?: Record<string, unknown>[];
+  };
+  mrrEvolution?: RevenuePoint[];
+  userAcquisition?: UserAcquisitionPoint[];
+  churnEvolution?: Record<string, unknown>[];
+  productBreakdown?: Record<string, unknown>[];
+  featureUsage?: Record<string, unknown>[];
+  periodRevenue?: number;
+  unitsSoldAnnual?: number;
+  unitsSoldMonthly?: number;
+  unitsSoldSingle?: number;
+  unitsSoldTopup?: number;
+  revenueAnnual?: number;
+  revenueMonthly?: number;
+  revenueSingle?: number;
+  revenueTopup?: number;
+  topPlanName?: string;
+  topPlanPercentage?: number;
+  activeSubscriptions?: number;
+  cancelledThisMonth?: number;
+  top10RevenuePercentage?: number;
 }
 
 export default function MetricsCharts({ metrics, periodType = 'month' }: MetricsChartsProps) {
@@ -18,7 +64,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
 
   // Use timeSeries if available (period-aware), fall back to legacy arrays
   const rawRevenueTimeSeries = m.timeSeries?.revenue ?? m.mrrEvolution ?? [];
-  const revenueTimeSeries = rawRevenueTimeSeries.map((point: any) => {
+  const revenueTimeSeries = rawRevenueTimeSeries.map((point: RevenuePoint) => {
     const gross = Number(point.gross ?? 0) || 0;
     const iva = Number(point.iva ?? 0) || 0;
     const fee = Number(point.fee ?? 0) || 0;
@@ -31,13 +77,13 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
   });
   const userAcquisitionSeries = (m.timeSeries?.userAcquisition && m.timeSeries.userAcquisition.length > 0)
     ? m.timeSeries.userAcquisition
-    : (m.userAcquisition ?? []).map((u: any) => ({ label: u.month, newUsers: u.newUsers, activeUsers: u.activeUsers }));
+    : (m.userAcquisition ?? []).map((u: UserAcquisitionPoint) => ({ label: u.month, newUsers: u.newUsers, activeUsers: u.activeUsers }));
   const productSeries = (m.timeSeries?.productBreakdown && m.timeSeries.productBreakdown.length > 0)
     ? m.timeSeries.productBreakdown
     : [];
 
   const periodRevenueSum = revenueTimeSeries.reduce(
-    (sum: number, p: any) => sum + (Number(p.value ?? p.mrr ?? 0) || 0),
+    (sum: number, p: RevenuePoint) => sum + (Number(p.value ?? p.mrr ?? 0) || 0),
     0,
   );
   const periodRevenue = revenueTimeSeries.length > 0 ? periodRevenueSum : (m.periodRevenue ?? 0);
@@ -56,8 +102,8 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
                   <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-500">Stripe Live</Badge>
                 )}
                 {(() => {
-                  const totalFee = revenueTimeSeries.reduce((s: number, p: any) => s + (Number(p.fee) || 0), 0);
-                  const totalGross = revenueTimeSeries.reduce((s: number, p: any) => s + (Number(p.gross) || 0), 0);
+                  const totalFee = revenueTimeSeries.reduce((s: number, p: RevenuePoint) => s + (Number(p.fee) || 0), 0);
+                  const totalGross = revenueTimeSeries.reduce((s: number, p: RevenuePoint) => s + (Number(p.gross) || 0), 0);
                   if (totalFee === 0 && totalGross > 0) {
                     return (
                       <TooltipProvider>
@@ -90,7 +136,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip
                   contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }}
-                  formatter={(val: any, name: string) => [`€${Number(val).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, name]}
+                  formatter={(val: unknown, name: string) => [`€${Number(val).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, name]}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Line type="monotone" dataKey="gross" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} strokeDasharray="4 2" dot={false} name="Bruto" />
