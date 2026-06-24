@@ -53,7 +53,7 @@ const PRICE_CREDITS: Record<string, number> = {
   "price_1THT8AF9ZCIiqrz626wSH9Rz": 200,
   "price_1T8n6CFULeu7PzK6vs7NZyiJ": 100, // annual_100 legacy
   "price_1T8n6lFULeu7PzK60TbO76hE": 8,   // monthly legacy
-  // ── Top-up legacy prices (FULeu7PzK6 account) ──────────────────────────
+  //  Top-up legacy prices (FULeu7PzK6 account) 
   "price_1TMDVkFULeu7PzK6aNdFYW91": 1,   // individual
   "price_1TMDVkFULeu7PzK6YxaKfBiJ": 10,  // topup_10
   "price_1TMDVkFULeu7PzK62A2zwaDO": 25,  // topup_25
@@ -117,14 +117,14 @@ const PRICE_TO_PLAN_ID: Record<string, string> = {
   "price_1THT8AF9ZCIiqrz626wSH9Rz": "topup_200",
   "price_1T8n6CFULeu7PzK6vs7NZyiJ": "annual_100",
   "price_1T8n6lFULeu7PzK60TbO76hE": "monthly",
-  // ── Live production prices (FULeu7PzK6 annual plans) ─────────────────
+  //  Live production prices (FULeu7PzK6 annual plans) 
   "price_1TMDVwFULeu7PzK6laW4n6wu": "annual_100",
   "price_1TMDVwFULeu7PzK6ZnMqrW1c": "annual_200",
   "price_1TMDVwFULeu7PzK6S22WkY3w": "annual_300",
   "price_1TMDVwFULeu7PzK6mSwmx29Z": "annual_500",
   "price_1TMDVwFULeu7PzK68TlUbof2": "annual_1000",
   "price_1TMDW3FULeu7PzK6468wsXJt": "monthly",
-  // ── Top-up legacy prices (FULeu7PzK6 account) ──────────────────────────
+  //  Top-up legacy prices (FULeu7PzK6 account) 
   "price_1TMDVkFULeu7PzK6aNdFYW91": "individual",
   "price_1TMDVkFULeu7PzK6YxaKfBiJ": "topup_10",
   "price_1TMDVkFULeu7PzK62A2zwaDO": "topup_25",
@@ -545,7 +545,7 @@ serve(async (req) => {
                 const rowsHtml = entries.map(([k, val]) => {
                   const cell = isUrl(val)
                     ? `<a href="${escapeHtml(val)}" target="_blank" rel="noopener">${escapeHtml(val)}</a>`
-                    : escapeHtml(val);
+                   : escapeHtml(val);
                   return `<tr><td style="padding:6px 10px;border:1px solid #e5e7eb;background:#f9fafb;font-weight:600;vertical-align:top">${escapeHtml(k)}</td><td style="padding:6px 10px;border:1px solid #e5e7eb;white-space:pre-wrap;word-break:break-word">${cell}</td></tr>`;
                 }).join("");
                 const rowsText = entries.map(([k, val]) => `${k}: ${val}`).join("\n");
@@ -567,7 +567,7 @@ serve(async (req) => {
       const credits  = parseInt(session.metadata?.credits || "0", 10);
       const planId   = session.metadata?.plan_id || "unknown";
 
-      // ── Fallback A: recover user_id when missing from metadata (guest checkout) ──
+      //  Fallback A: recover user_id when missing from metadata (guest checkout) 
       if (!userId && session.customer) {
         const custId = typeof session.customer === "string" ? session.customer : (session.customer as any)?.id;
         if (custId) {
@@ -579,7 +579,7 @@ serve(async (req) => {
         }
       }
 
-      // ── Fallback B: recover credits/planId when missing from metadata ──
+      //  Fallback B: recover credits/planId when missing from metadata 
       if (credits === 0 && session.mode === "payment") {
         try {
           const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 5, expand: ["data.price"] });
@@ -1196,7 +1196,7 @@ serve(async (req) => {
 
           // Idempotency guard #2b: fallback for when subscriptionId could NOT be
           // resolved (Stripe sometimes sends this invoice without `invoice.subscription`
-          // populated, e.g. invoice in_xxx for yervinzeledon@gmail.com on 2026-06-10,
+         // populated, e.g. invoice in_xxx for yervinzeledon@gmail.com on 2026-06-10,
           // which bypassed guard #2 entirely and granted a duplicate "Alta suscripción
           // undefined: +N créditos" on top of the checkout.session.completed credits).
           // Match by customer instead: if a non-renewal subscription order already
@@ -1396,7 +1396,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
 
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
       if (profile) {
-        const description = `Fallo en cobro de suscripción (intento ${attemptCount})${nextAttempt ? `. Próximo reintento: ${nextAttempt}` : ". No hay más reintentos."}`;
+        const description = `Fallo en cobro de suscripción (intento ${attemptCount})${nextAttempt ? `. Próximo reintento: ${nextAttempt}`: ". No hay más reintentos."}`;
         await supabase.from("credit_transactions").insert({ user_id: profile.user_id, amount: 0, type: "payment_failed", description });
         console.log(`[WEBHOOK] Payment failed for user ${profile.user_id} (attempt ${attemptCount})`);
 
