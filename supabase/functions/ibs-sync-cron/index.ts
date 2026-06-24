@@ -232,19 +232,22 @@ serve(async (req) => {
         } else {
           // iBS error — retry or exhaust
           const errText = await ibsRes.text().catch(() => "unknown");
-          // Raise admin alert on 5xx errors from iBS
-          if (ibsRes.status >= 500) {
+          // Calcular si se agotarán los reintentos tras este intento
+          const newRetryCount = (item.retry_count || 0) + 1;
+          const willExhaust = newRetryCount >= (item.max_retries || 3);
+          // Solo alertar si se agotan los reintentos (no en cada 500 transitorio)
+          if (ibsRes.status >= 500 && willExhaust) {
             await supabaseAdmin.from("admin_alerts").insert({
               source: "ibs_certification",
               severity: "error",
-              message: `iBS devolvió HTTP ${ibsRes.status} al verificar evidence ${item.ibs_evidence_id}`,
+              message: `iBS devolvió HTTP ${ibsRes.status} al verificar evidence ${item.ibs_evidence_id} (reintentos agotados)`,
               context: {
                 http_status: ibsRes.status,
                 ibs_evidence_id: item.ibs_evidence_id,
                 work_id: item.work_id,
                 queue_id: item.id,
                 user_id: item.user_id,
-                retry_count: item.retry_count,
+                retry_count: newRetryCount,
                 max_retries: item.max_retries,
                 response: errText.slice(0, 500),
               },
