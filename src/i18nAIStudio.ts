@@ -1673,7 +1673,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       kieDownloadFailed: 'Could not access the audio file. Make sure it is publicly available and try again.',
       kieTaskFailed: 'The AI could not complete the generation. Try changing your description or use a different audio.',
       kieCopyrightContent: 'The generated content was blocked due to copyright or content policy. Modify your description.',
-      kieLyricsRequired: 'This mode requires recognisable vocals in the audio. Add lyrics to the description or use audio with a clearer voice.',
+      kieLyricsRequired: 'The lyrics are empty, too short, or malformed. Please review the lyrics field (a few lines with sections like [Verse]/[Chorus] are required) and try again. Your credits have been refunded.',
       kieOutputCopyright: 'The output was blocked due to copyright detection in the source audio.',
       kieAudioTooLong: 'The audio exceeds the maximum allowed duration. Trim the file to under 4 minutes.',
       kieAudioTooShort: 'The audio is too short. Upload a clip of at least 5 seconds.',
