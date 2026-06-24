@@ -198,7 +198,7 @@ serve(async (req) => {
     ctx.creditCost = creditCost;
 
     const { data: profile } = await supabaseAdmin
-      .from("profiles").select("available_credits")
+      .from("profiles").select("available_credits, subscription_plan")
       .eq("user_id", user.id).single();
 
     if (!profile || profile.available_credits < creditCost) {
@@ -207,6 +207,26 @@ serve(async (req) => {
         JSON.stringify({ error: "Créditos insuficientes", available: profile?.available_credits || 0, required: creditCost }),
         { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+
+    // ── Free tier: máximo 1 registro de obra por cuenta gratuita ──
+    if (profile && profile.subscription_plan === "Free") {
+      const { count } = await supabaseAdmin
+        .from("works")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .in("status", ["registered", "processing", "certified"]);
+      if ((count ?? 0) >= 1) {
+        await markDraftAsFailed(supabaseAdmin, workId, "free_register_limit");
+        return new Response(
+          JSON.stringify({
+            error: "Los usuarios gratuitos solo pueden registrar 1 obra. Actualiza tu plan para registrar mas.",
+            code: "FREE_REGISTER_LIMIT",
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     await supabaseAdmin.from("profiles")
