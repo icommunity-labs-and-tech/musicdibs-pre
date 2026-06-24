@@ -2518,7 +2518,7 @@ export const aiStudioTranslations: Record<string, Record<string, any>> = {
       kieDownloadFailed: 'Não foi possível acessar o áudio. Certifique-se de que o arquivo está disponível publicamente e tente novamente.',
       kieTaskFailed: 'A IA não conseguiu concluir a geração. Ajuste a descrição ou tente com outro áudio.',
       kieCopyrightContent: 'O conteúdo gerado foi bloqueado por direitos autorais ou políticas de conteúdo. Modifique a descrição.',
-      kieLyricsRequired: 'O modo escolhido requer voz reconhecível no áudio. Adicione letra na descrição ou use um áudio com voz mais clara.',
+      kieLyricsRequired: 'A letra está vazia, é muito curta ou tem formato inválido. Revise o campo de letra (algumas linhas com seções tipo [Verso]/[Refrão]) e tente novamente. Seus créditos foram reembolsados.',
       kieOutputCopyright: 'O resultado foi bloqueado por detecção de direitos autorais no áudio de origem.',
       kieAudioTooLong: 'O áudio excede a duração máxima permitida. Recorte o arquivo para menos de 4 minutos.',
       kieAudioTooShort: 'O áudio é muito curto. Envie um trecho de pelo menos 5 segundos.',
