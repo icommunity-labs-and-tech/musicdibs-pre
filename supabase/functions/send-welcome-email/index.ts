@@ -77,7 +77,7 @@ serve(async (req) => {
         footer: "Este correo fue enviado automáticamente porque te registraste en MusicDibs.",
         panel: "Mi panel",
         support: "Soporte",
-        subject: "🎵 Bienvenido a MusicDibs — protege tu música",
+        subject: "Bienvenido a MusicDibs — protege tu música",
         textBody: `¡Bienvenido a MusicDibs, ${name}! Tu cuenta está lista. Elige un plan y registra tu primera obra. Accede a tu panel: ${dashboardUrl}`,
       },
       en: {
@@ -97,7 +97,7 @@ serve(async (req) => {
         footer: "This email was sent automatically because you signed up for MusicDibs.",
         panel: "My dashboard",
         support: "Support",
-        subject: "🎵 Welcome to MusicDibs — protect your music",
+        subject: "Welcome to MusicDibs — protect your music",
         textBody: `Welcome to MusicDibs, ${name}! Your account is ready. Choose a plan and register your first work. Dashboard: ${dashboardUrl}`,
       },
       pt: {
@@ -117,7 +117,7 @@ serve(async (req) => {
         footer: "Este email foi enviado automaticamente porque você se registrou no MusicDibs.",
         panel: "Meu painel",
         support: "Suporte",
-        subject: "🎵 Bem-vindo ao MusicDibs — proteja sua música",
+        subject: "Bem-vindo ao MusicDibs — proteja sua música",
         textBody: `Bem-vindo ao MusicDibs, ${name}! Sua conta está pronta. Escolha um plano e registre sua primeira obra. Painel: ${dashboardUrl}`,
       },
     };
@@ -137,7 +137,7 @@ serve(async (req) => {
         </td></tr>
         <tr><td align="center" style="padding:0 0 24px;">
           <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#a855f7,#6d28d9);display:flex;align-items:center;justify-content:center;">
-            <span style="font-size:32px;line-height:64px;">🎵</span>
+            <span style="font-size:32px;line-height:64px;"></span>
           </div>
         </td></tr>
         <tr><td style="background-color:#1a0a2e;border-radius:16px;padding:40px 36px;">

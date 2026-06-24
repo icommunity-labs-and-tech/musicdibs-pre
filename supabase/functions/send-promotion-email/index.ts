@@ -62,7 +62,7 @@ serve(async (req: Request) => {
 <body>
   <div class="container">
     <div class="header">
-      <h1>🎤 Nueva solicitud de promoción</h1>
+      <h1> Nueva solicitud de promoción</h1>
       <p>MusicDibs — Panel de artistas</p>
     </div>
     <div class="body">

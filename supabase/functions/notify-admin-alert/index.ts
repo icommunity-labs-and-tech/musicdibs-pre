@@ -51,7 +51,7 @@ serve(async (req) => {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px;">
         <h2 style="color:${sev === "CRITICAL" ? "#b91c1c" : sev === "ERROR" ? "#dc2626" : "#d97706"};">
-          ⚠️ Alerta ${sev} — ${escapeHtml(source)}
+           Alerta ${sev} — ${escapeHtml(source)}
         </h2>
         <p><strong>Mensaje:</strong> ${escapeHtml(message)}</p>
         ${id ? `<p><strong>ID:</strong> <code>${escapeHtml(id)}</code></p>` : ""}

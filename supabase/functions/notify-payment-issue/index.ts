@@ -44,7 +44,7 @@ function buildEmail(
 
   const content: Record<"es" | "en" | "pt", EmailContent> = {
     es: {
-      subject: "⚠️ Acción requerida: actualiza tu método de pago en MusicDibs",
+      subject: "Acción requerida: actualiza tu método de pago en MusicDibs",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111;">
           <img src="https://musicdibs.com/logo.png" alt="MusicDibs" style="height: 40px; margin-bottom: 24px;" />
@@ -69,7 +69,7 @@ function buildEmail(
       text: `Hola ${name},\n\nHemos detectado un problema al procesar el pago de tu suscripción en MusicDibs.\n\nPor favor, actualiza tu método de pago antes del ${deadline} para evitar la cancelación de tu cuenta:\n${billingUrl}\n\nSi ya actualizaste tu pago, ignora este mensaje.\n\nEl equipo de MusicDibs`,
     },
     en: {
-      subject: "⚠️ Action required: update your payment method on MusicDibs",
+      subject: "Action required: update your payment method on MusicDibs",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111;">
           <img src="https://musicdibs.com/logo.png" alt="MusicDibs" style="height: 40px; margin-bottom: 24px;" />
@@ -94,7 +94,7 @@ function buildEmail(
       text: `Hi ${name},\n\nWe encountered an issue processing your MusicDibs subscription payment.\n\nPlease update your payment method before ${deadline} to avoid account cancellation:\n${billingUrl}\n\nIf you've already updated your payment, please ignore this message.\n\nThe MusicDibs Team`,
     },
     pt: {
-      subject: "⚠️ Ação necessária: atualize seu método de pagamento no MusicDibs",
+      subject: "Ação necessária: atualize seu método de pagamento no MusicDibs",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; color: #111;">
           <img src="https://musicdibs.com/logo.png" alt="MusicDibs" style="height: 40px; margin-bottom: 24px;" />
@@ -224,7 +224,7 @@ serve(async (req) => {
     return json({ error: "Failed to queue email" }, 500);
   }
 
-  console.log(`[NOTIFY-PAYMENT-ISSUE] ✅ Notification queued for ${email} (attempt #${newCount}, grace until ${graceExpiresAt.toISOString()})`);
+  console.log(`[NOTIFY-PAYMENT-ISSUE]  Notification queued for ${email} (attempt #${newCount}, grace until ${graceExpiresAt.toISOString()})`);
 
   return json({
     success: true,
