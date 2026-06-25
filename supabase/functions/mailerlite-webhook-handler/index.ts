@@ -19,6 +19,8 @@ const MAILERLITE_GROUPS: Record<string, Record<string, string>> = {
     single: "179655957217805955",
     baja: "180549266623694014",
     cart_abandoned: "184043608840602848",
+    sin_creditos: "184095888770073830",
+    todos_musicdibs: "184716034425488438",
   },
   en: {
     registrados: "180552563766068699",
@@ -27,6 +29,8 @@ const MAILERLITE_GROUPS: Record<string, Record<string, string>> = {
     single: "179655967666865903",
     baja: "180549280191218751",
     cart_abandoned: "184043614299489447",
+    sin_creditos: "184095891299239754",
+    todos_musicdibs: "184893161875703104",
   },
   "pt-br": {
     registrados: "180552569505974164",
@@ -35,6 +39,8 @@ const MAILERLITE_GROUPS: Record<string, Record<string, string>> = {
     single: "179655975825835602",
     baja: "180549290870965583",
     cart_abandoned: "184043618346992923",
+    sin_creditos: "184095895331013822",
+    todos_musicdibs: "184893167954298415",
   },
 };
 
@@ -85,8 +91,14 @@ async function callMailerLite(
 
 async function handleUserSignup(p: any) {
   const locale = normalizeLocale(p.locale);
-  const groupId = MAILERLITE_GROUPS[locale].registrados;
-  console.log(`[ML:signup] ${p.email} → locale=${locale} group=${groupId}`);
+  const groups = MAILERLITE_GROUPS[locale];
+  // Añadir a: Todos Musicdibs + registrados (sin compra) + Sin créditos
+  const groupIds = [
+    groups.todos_musicdibs,
+    groups.registrados,
+    groups.sin_creditos,
+  ].filter(Boolean);
+  console.log(`[ML:signup] ${p.email} → locale=${locale} groups=${groupIds.join(",")}`);
 
   const sub = await callMailerLite("POST", "/subscribers", {
     email: p.email,
@@ -101,7 +113,7 @@ async function handleUserSignup(p: any) {
       credits_balance: 0,
       last_activity_date: new Date().toISOString().slice(0, 10),
     },
-    groups: [groupId],
+    groups: groupIds,
     status: "active",
   });
   console.log(`[ML:signup] ✅ id=${sub.data?.id}`);
@@ -115,16 +127,21 @@ async function handlePurchase(p: any) {
   const email = encodeURIComponent(p.email);
   console.log(`[ML:purchase] ${p.email} → plan=${p.plan_type}`);
 
-  // Remove from registrados and baja groups (best-effort)
-  for (const gKey of ["registrados", "baja"]) {
+  // Remove from registrados, baja y sin_creditos (best-effort)
+  for (const gKey of ["registrados", "baja", "sin_creditos"]) {
     try {
       await callMailerLite("DELETE", `/subscribers/${email}/groups/${MAILERLITE_GROUPS[locale][gKey]}`);
     } catch (_) { /* may not be in group */ }
   }
 
-  // Add to plan group
+  // Add to plan group + todos_musicdibs
   if (newGroup) {
     await callMailerLite("POST", `/subscribers/${email}/groups/${newGroup}`, {});
+  }
+  // Asegurar que está en Todos Musicdibs
+  const todosGroup = MAILERLITE_GROUPS[locale].todos_musicdibs;
+  if (todosGroup) {
+    try { await callMailerLite("POST", `/subscribers/${email}/groups/${todosGroup}`, {}); } catch (_) {}
   }
 
   // Update fields

@@ -225,6 +225,33 @@ serve(async (req) => {
 
     console.log(`[WELCOME-EMAIL] Enqueued for ${email}, msgId: ${msgId}, messageId: ${messageId}`);
 
+    // Sync con MailerLite — añadir a Todos Musicdibs + Sin creditos + registrados
+    try {
+      const mlRes = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/mailerlite-webhook-handler`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            event: "user.signup",
+            payload: {
+              id: userId,
+              email,
+              full_name: displayName || "",
+              locale: language || "es",
+            },
+          }),
+        }
+      );
+      console.log(`[WELCOME-EMAIL] ML sync ${mlRes.ok ? "OK" : "WARN"} for ${email}`);
+    } catch (mlErr) {
+      console.warn("[WELCOME-EMAIL] ML sync error (non-fatal):", mlErr);
+    }
+
+
     return new Response(
       JSON.stringify({ success: true, msgId }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
