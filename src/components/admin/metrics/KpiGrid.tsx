@@ -162,10 +162,10 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
             sub="Total facturado"
           />
           <KpiCard
-            label="IVA (21%)"
+            label="IVA (Stripe)"
             value={`€${periodIva.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={BarChart3}
-            sub="Impuesto incluido"
+            sub="Impuesto leído de Stripe"
           />
           <Card className="border-border/40">
             <CardHeader className="pb-2">

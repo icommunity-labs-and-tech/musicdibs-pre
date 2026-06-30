@@ -3,6 +3,7 @@ import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "../_shared/supabase-client.ts";
 import { encode as hexEncode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
 import { creditPurchaseEmail, paymentFailedEmail, distributionWelcomeEmail } from "../_shared/transactional-email.ts";
+import { netFromInvoice, netFromSession } from "../_shared/stripe-net.ts";
 
 
 // ââ MailerLite sync helper ââââââââââââââââââââââââââââââââââââââââââââââââ
@@ -503,6 +504,7 @@ serve(async (req) => {
             productLabel: serviceType === "oac" ? "Canal Oficial de Artista (OAC)" : "YouTube Content ID",
             billingInterval: null,
             amountGross: (session.amount_total || 5000) / 100,
+            amountNet: netFromSession(session),
             currency: session.currency || "eur",
             isSubscription: false,
             isRenewal: false,
@@ -677,6 +679,7 @@ serve(async (req) => {
         // ââ Create order record ââ
         const sessionMeta = session.metadata || {};
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
+        const amountNet = netFromSession(session);
         const stripeSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
         const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
 
@@ -716,6 +719,7 @@ serve(async (req) => {
           productLabel: sessionMeta.product_label || planId,
           billingInterval: sessionMeta.billing_interval || null,
           amountGross: amountTotal,
+          amountNet,
           stripeFee: checkoutStripeFee,
           currency: session.currency || "eur",
           isSubscription: !!stripeSubId,
@@ -859,6 +863,7 @@ serve(async (req) => {
       let invoiceAmount = 0;
       let invoiceCurrency = "eur";
       let chargeId: string | null = null;
+      let invoiceNet: number | null = null;
 
       if (event.type === "invoice_payment.paid") {
         const invId = typeof obj.invoice === "string" ? obj.invoice : obj.invoice?.id;
@@ -870,6 +875,7 @@ serve(async (req) => {
           invoiceId = invId;
           subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : (invoice.subscription as any)?.id;
           invoiceAmount = (invoice.amount_paid || 0) / 100;
+          invoiceNet = netFromInvoice(invoice);
           invoiceCurrency = invoice.currency || "eur";
           chargeId = typeof (invoice as any).charge === "string" ? (invoice as any).charge : ((invoice as any).charge?.id ?? null);
         } else {
@@ -884,6 +890,7 @@ serve(async (req) => {
         invoiceId = invoice.id;
         subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
         invoiceAmount = (invoice.amount_paid || 0) / 100;
+        invoiceNet = netFromInvoice(invoice);
         invoiceCurrency = invoice.currency || "eur";
         chargeId = typeof invoice.charge === "string" ? invoice.charge : (invoice.charge?.id ?? null);
       }
@@ -942,6 +949,7 @@ serve(async (req) => {
             productLabel: planLabel,
             billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
+            amountNet: invoiceNet ?? undefined,
             stripeFee: renewalStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -1109,6 +1117,7 @@ serve(async (req) => {
             productLabel: `Cambio a ${planId}`,
             billingInterval: productType === "annual" ? "yearly" : productType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
+            amountNet: invoiceNet ?? undefined,
             stripeFee: changeStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,
@@ -1274,6 +1283,7 @@ serve(async (req) => {
             productLabel: `Nueva suscripción ${resolvedPlanId || "unknown"}`,
             billingInterval: createProductType === "annual" ? "yearly" : createProductType === "monthly" ? "monthly" : null,
             amountGross: invoiceAmount,
+            amountNet: invoiceNet ?? undefined,
             stripeFee: createStripeFee,
             currency: invoiceCurrency,
             isSubscription: true,
