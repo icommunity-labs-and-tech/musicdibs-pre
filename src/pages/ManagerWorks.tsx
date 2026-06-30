@@ -43,9 +43,33 @@ export default function ManagerWorks() {
         return s === statusFilter;
       });
 
-  const exportCsv = () => {
+  const exportCsv = async () => {
+    if (!user) return;
+    // Fetch ALL managed works (paginated)
+    const PAGE = 1000;
+    const all: any[] = [];
+    let off = 0;
+    while (all.length < 200000) {
+      const { data, error } = await supabase.from('managed_works')
+        .select('*, managed_artists(artist_name, artist_email), works(id, title, status, created_at, blockchain_hash)')
+        .eq('manager_user_id', user.id)
+        .order('created_at', { ascending: false })
+        .range(off, off + PAGE - 1);
+      if (error) break;
+      const rows = data || [];
+      all.push(...rows);
+      if (rows.length < PAGE) break;
+      off += PAGE;
+    }
+    const source = statusFilter === 'all'
+      ? all
+      : all.filter((w: any) => {
+          const s = w.works?.status;
+          if (statusFilter === 'registered') return s === 'registered' || s === 'certified';
+          return s === statusFilter;
+        });
     const rows = [['Artista', 'Título', 'Fecha', 'Estado', 'Hash Blockchain']];
-    filteredWorks.forEach((w: any) => {
+    source.forEach((w: any) => {
       rows.push([
         w.managed_artists?.artist_name || '',
         w.works?.title || '',
