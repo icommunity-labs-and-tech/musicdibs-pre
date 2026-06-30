@@ -169,8 +169,6 @@ export default function AdminUsersPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    // Invalidar estado local antes del refetch — evita mostrar datos cacheados obsoletos
-    // tras acciones del admin (ajuste de créditos, notificación de pago, etc.)
     setUsers([]);
     setTotal(0);
     try {
@@ -181,6 +179,7 @@ export default function AdminUsersPage() {
         status_filter: statusFilter === 'all' ? '' : statusFilter,
         role_filter: roleFilter === 'all' ? '' : roleFilter,
         credits_filter: creditsFilter === 'all' ? '' : creditsFilter,
+        reminder_filter: reminderFilter === 'all' ? '' : reminderFilter,
         sort_by: sortBy,
         sort_dir: sortDir,
       });
@@ -190,12 +189,24 @@ export default function AdminUsersPage() {
       toast.error(e.message);
     }
     setLoading(false);
-  }, [page, pageSize, search, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, sortBy, sortDir]);
+  }, [page, pageSize, search, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, reminderFilter, sortBy, sortDir]);
 
   useEffect(() => { load(); }, [load]);
 
+  // Persist filters + pagination
+  useEffect(() => {
+    try {
+      const state: PersistedState = {
+        search, page, pageSize,
+        kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, reminderFilter,
+        sortBy, sortDir,
+      };
+      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(state));
+    } catch { /* ignore */ }
+  }, [search, page, pageSize, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, reminderFilter, sortBy, sortDir]);
+
   // Clear selection when page/filters change
-  useEffect(() => { setSelectedIds(new Set()); }, [page, pageSize, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, sortBy, sortDir]);
+  useEffect(() => { setSelectedIds(new Set()); }, [page, pageSize, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, reminderFilter, sortBy, sortDir]);
 
   const handleSearch = () => { setPage(0); load(); };
 
