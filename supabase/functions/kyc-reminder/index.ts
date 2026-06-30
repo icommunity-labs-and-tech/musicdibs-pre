@@ -122,7 +122,7 @@ serve(async (req) => {
     if (reminderNumber > MAX_REMINDERS) return json({ ok: false, reason: `Max ${MAX_REMINDERS} reminders sent` });
     const locale = normalizeLocale(profile.language);
     const sent = await enqueueReminder(supabase, email, name, locale, reminderNumber);
-    if (sent) await supabase.from("kyc_reminder_log").insert({ user_id: manualUserId, reminder_number: reminderNumber, type: "manual", channel: "resend" });
+    if (sent) await supabase.from("kyc_reminder_log").insert({ user_id: manualUserId, reminder_number: reminderNumber, type: "manual" });
     return json({ ok: sent, email, reminder_number: reminderNumber, lang: locale });
   }
 
@@ -148,7 +148,7 @@ serve(async (req) => {
     const name = u.full_name || (u.email ? u.email.split("@")[0] : "");
     const success = await enqueueReminder(supabase, u.email, name, locale, reminderNumber);
     if (success) {
-      logs.push({ user_id: u.user_id, reminder_number: reminderNumber, type: "auto", channel: "resend" });
+      logs.push({ user_id: u.user_id, reminder_number: reminderNumber, type: "auto" });
       totalAdded++;
     } else { totalFailed++; }
   }
