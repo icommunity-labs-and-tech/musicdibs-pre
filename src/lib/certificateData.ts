@@ -1,4 +1,4 @@
-import type { CertificateData } from '@/lib/generateCertificate';
+import type { CertificateCoauthor, CertificateData } from '@/lib/generateCertificate';
 import { pollEvidenceStatus } from '@/services/dashboardApi';
 import { supabase } from '@/integrations/supabase/client';
 
