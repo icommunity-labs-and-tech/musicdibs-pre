@@ -384,13 +384,22 @@ serve(async (req) => {
 
       // Recordatorio KYC elegible: KYC no verificado Y (sin recordatorio O último envío hace ≥5 días)
       if (reminderFilter === "eligible") {
-        query = query.not("kyc_status", "in", "(verified)");
+        query = query.neq("kyc_status", "verified");
         const cutoff = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
-        const { data: recent } = await admin
-          .from("kyc_reminder_log")
-          .select("user_id")
-          .gte("sent_at", cutoff);
-        const excludeIds = Array.from(new Set((recent || []).map((r: any) => r.user_id)));
+        // Paginate to get ALL recent reminders (default 1000-row limit would miss exclusions)
+        const recentIds = new Set<string>();
+        const PAGE = 1000;
+        for (let from = 0; ; from += PAGE) {
+          const { data: chunk, error: chunkErr } = await admin
+            .from("kyc_reminder_log")
+            .select("user_id")
+            .gte("sent_at", cutoff)
+            .range(from, from + PAGE - 1);
+          if (chunkErr) break;
+          (chunk || []).forEach((r: any) => r.user_id && recentIds.add(r.user_id));
+          if (!chunk || chunk.length < PAGE) break;
+        }
+        const excludeIds = Array.from(recentIds);
         if (excludeIds.length > 0) {
           // Chunk to avoid URL length blowups
           const CHUNK = 200;
