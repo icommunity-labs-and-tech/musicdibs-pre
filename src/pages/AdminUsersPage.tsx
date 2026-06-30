@@ -335,24 +335,31 @@ export default function AdminUsersPage() {
     const toastId = toast.loading(`Enviando recordatorios… (0/${selected.length})`);
     let sent = 0, skipped = 0, failed = 0;
     const reasons: string[] = [];
-    for (let i = 0; i < selected.length; i++) {
-      const u = selected[i];
-      try {
-        const { data, error } = await supabase.functions.invoke('kyc-reminder', { body: { user_id: u.user_id } });
-        if (error) {
-          failed++;
-          reasons.push(error.message);
-        }
-        else if (data?.ok) sent++;
-        else {
-          skipped++;
-          if (data?.reason) reasons.push(data.reason);
-        }
-      } catch (e: any) {
-        failed++;
-        reasons.push(e?.message || 'Error desconocido');
+    try {
+      const { data, error } = await supabase.functions.invoke('kyc-reminder', {
+        body: {
+          users: selected.map(u => ({
+            user_id: u.user_id,
+            email: u.email,
+            name: u.display_name,
+            language: u.language,
+            kyc_status: u.kyc_status,
+            reminder_count: u.kyc_reminders_count,
+            last_reminder_at: u.kyc_last_reminder_at,
+          })),
+        },
+      });
+      if (error) throw error;
+      sent = data?.sent ?? 0;
+      skipped = data?.skipped ?? 0;
+      failed = data?.failed ?? 0;
+      if (data?.reasons) {
+        Object.entries(data.reasons).forEach(([reason, count]) => reasons.push(`${reason} (${count})`));
       }
-      toast.loading(`Enviando recordatorios… (${i + 1}/${selected.length})`, { id: toastId });
+      toast.loading(`Enviando recordatorios… (${selected.length}/${selected.length})`, { id: toastId });
+    } catch (e: any) {
+      failed = selected.length;
+      reasons.push(e?.message || 'Error desconocido');
     }
     const detail = Array.from(new Set(reasons)).slice(0, 3).join(' · ');
     if (sent === 0 && (failed > 0 || skipped > 0)) {
@@ -707,7 +714,15 @@ export default function AdminUsersPage() {
                         <DropdownMenuItem onClick={async () => {
                           try {
                             const { data, error } = await supabase.functions.invoke('kyc-reminder', {
-                              body: { user_id: u.user_id },
+                              body: {
+                                user_id: u.user_id,
+                                email: u.email,
+                                name: u.display_name,
+                                language: u.language,
+                                kyc_status: u.kyc_status,
+                                reminder_count: u.kyc_reminders_count,
+                                last_reminder_at: u.kyc_last_reminder_at,
+                              },
                             });
                             if (error || !data?.ok) {
                               toast.error('No enviado', { description: data?.reason || error?.message });
