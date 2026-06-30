@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
   }
 
   const stripeKey =
-    Deno.env.get("STRIPE_SECRET_KEY") ?? Deno.env.get("STRIPE_LIVE_SECRET_KEY");
+    Deno.env.get("STRIPE_LIVE_SECRET_KEY") ?? Deno.env.get("STRIPE_SECRET_KEY");
   if (!stripeKey) {
     return new Response(JSON.stringify({ error: "STRIPE_SECRET_KEY not configured" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
