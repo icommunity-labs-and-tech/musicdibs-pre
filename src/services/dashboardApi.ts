@@ -260,6 +260,15 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
 
   // Insert work record as 'draft' — or update existing draft when resuming
   let work: { id: string };
+  const creatorsPayload = (data.creators && data.creators.length > 0)
+    ? data.creators.map((c) => ({
+        name: c.name?.trim() || '',
+        email: c.email?.trim() || null,
+        roles: Array.isArray(c.roles) ? c.roles : [],
+        percentage: typeof c.percentage === 'number' ? c.percentage : null,
+      })).filter((c) => c.name)
+    : null;
+
   if (data.resumeWorkId) {
     const { data: updated, error: updErr } = await supabase.from('works').update({
       title: data.title,
@@ -269,6 +278,7 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
       file_path: filePaths[0],
       file_hash: fileHash,
       file_hash_sha512_b64: fileHashSha512B64,
+      creators: creatorsPayload as any,
       status: 'draft',
     }).eq('id', data.resumeWorkId).eq('user_id', user.id).select('id').single();
     if (updErr || !updated) throw updErr || new Error('No se pudo actualizar el borrador');
@@ -283,6 +293,7 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
       file_path: filePaths[0],
       file_hash: fileHash,
       file_hash_sha512_b64: fileHashSha512B64,
+      creators: creatorsPayload as any,
       status: 'draft',
     }).select('id').single();
     if (error) throw error;

@@ -1,0 +1,1 @@
+ALTER TABLE public.works ADD COLUMN IF NOT EXISTS creators jsonb;

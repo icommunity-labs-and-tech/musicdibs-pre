@@ -3500,6 +3500,7 @@ export type Database = {
           certified_at: string | null
           checker_url: string | null
           created_at: string
+          creators: Json | null
           description: string | null
           distributed_at: string | null
           distribution_clicks: number | null
@@ -3527,6 +3528,7 @@ export type Database = {
           certified_at?: string | null
           checker_url?: string | null
           created_at?: string
+          creators?: Json | null
           description?: string | null
           distributed_at?: string | null
           distribution_clicks?: number | null
@@ -3554,6 +3556,7 @@ export type Database = {
           certified_at?: string | null
           checker_url?: string | null
           created_at?: string
+          creators?: Json | null
           description?: string | null
           distributed_at?: string | null
           distribution_clicks?: number | null
