@@ -2104,7 +2104,7 @@ serve(async (req) => {
 
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v13:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v14:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -3266,22 +3266,35 @@ serve(async (req) => {
       let welcomeCreditNetRevenue = 0;
       try {
         if (filterStart && filterEnd) {
-          const { data: usagesInPeriod } = await admin
-            .from("credit_transactions")
-            .select("user_id, created_at")
-            .eq("type", "usage")
-            .gte("created_at", filterStart)
-            .lte("created_at", filterEnd)
-            .limit(50000);
-          // Para cada candidato, su PRIMER usage dentro del periodo.
+          // Paginate to bypass PostgREST's default 1000-row cap. For year-long
+          // periods the usage table can exceed tens of thousands of rows; a
+          // truncated read would under-count candidates (e.g. annual view
+          // showing 0% gift-credit conversion).
           const firstUsageInPeriod = new Map<string, string>();
-          (usagesInPeriod || []).forEach((u: any) => {
-            if (!u.user_id || !u.created_at) return;
-            const prev = firstUsageInPeriod.get(u.user_id);
-            if (!prev || u.created_at < prev) {
-              firstUsageInPeriod.set(u.user_id, u.created_at);
+          const PAGE = 1000;
+          let from = 0;
+          // Safety cap to avoid runaway loops if the table grows enormously.
+          for (let page = 0; page < 200; page++) {
+            const { data: pageRows, error: pageErr } = await admin
+              .from("credit_transactions")
+              .select("user_id, created_at")
+              .eq("type", "usage")
+              .gte("created_at", filterStart)
+              .lte("created_at", filterEnd)
+              .order("created_at", { ascending: true })
+              .range(from, from + PAGE - 1);
+            if (pageErr) break;
+            const rows = pageRows || [];
+            for (const u of rows) {
+              if (!u.user_id || !u.created_at) continue;
+              const prev = firstUsageInPeriod.get(u.user_id);
+              if (!prev || u.created_at < prev) {
+                firstUsageInPeriod.set(u.user_id, u.created_at);
+              }
             }
-          });
+            if (rows.length < PAGE) break;
+            from += PAGE;
+          }
           const candidates = [...firstUsageInPeriod.keys()];
           if (candidates.length) {
             // Restringir a usuarios que recibieron el bonus de bienvenida
@@ -3735,6 +3748,10 @@ serve(async (req) => {
           { feature: "Letras", uses: lyricsGen.count || 0 },
         ].sort((a, b) => b.uses - a.uses),
         _dataSource: subsDataAvailable ? "db_local" : "estimated",
+        compareThisStart,
+        compareThisEnd,
+        comparePrevStart,
+        comparePrevEnd,
       };
 
       // Persist to cache (best-effort, non-blocking semantics not needed: we already have the result)

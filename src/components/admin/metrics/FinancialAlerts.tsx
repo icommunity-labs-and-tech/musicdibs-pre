@@ -141,20 +141,36 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
 
   // 9. Ingresos del periodo en caída vs periodo anterior (period-aware)
   // `mrrChange` representa la variación del revenue NETO del periodo
-  // seleccionado contra el equivalente del periodo anterior.
-  const periodSuffix = periodLabel ? ` (${periodLabel} vs periodo anterior)` : ' vs periodo anterior';
+  // seleccionado contra el equivalente PROPORCIONAL del periodo anterior
+  // (p.ej. en 2026 hasta hoy se compara contra el mismo nº de días de 2025).
+  const fmtRange = (fromIso?: string, toIso?: string) => {
+    if (!fromIso || !toIso) return '';
+    const f = new Date(fromIso);
+    const t = new Date(toIso);
+    // El backend devuelve `comparePrev*` como [from, to) → restamos 1 día para mostrar el rango inclusivo.
+    const tInc = new Date(t.getTime() - 86400000);
+    const opts: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'short', year: 'numeric' };
+    return `${f.toLocaleDateString('es-ES', opts)} – ${tInc.toLocaleDateString('es-ES', opts)}`;
+  };
+  const prevRangeLabel = fmtRange(m.comparePrevStart, m.comparePrevEnd);
+  const thisRangeLabel = fmtRange(m.compareThisStart, m.compareThisEnd);
+  const periodSuffix = prevRangeLabel
+    ? ` (${thisRangeLabel} vs ${prevRangeLabel})`
+    : periodLabel
+      ? ` (${periodLabel} vs periodo anterior proporcional)`
+      : ' vs periodo anterior proporcional';
   if (m.mrrChange < -10) {
     alerts.push({
       severity: 'critical',
       title: `Ingresos del periodo en caída: ${m.mrrChange}%${periodSuffix}`,
-      description: 'Los ingresos netos del periodo seleccionado caen más de un 10% respecto al periodo anterior. Analizar cancelaciones y pipeline de nuevos clientes.',
+      description: 'Los ingresos netos del periodo seleccionado caen más de un 10% respecto al periodo anterior equivalente (misma longitud de días). Analizar cancelaciones y pipeline de nuevos clientes.',
       icon: TrendingDown,
     });
   } else if (m.mrrChange < 0) {
     alerts.push({
       severity: 'warning',
       title: `Ingresos del periodo descendentes: ${m.mrrChange}%${periodSuffix}`,
-      description: 'Los ingresos netos del periodo seleccionado han bajado respecto al periodo anterior. Monitorizar tendencia y activar retención.',
+      description: 'Los ingresos netos del periodo seleccionado han bajado respecto al periodo anterior equivalente. Monitorizar tendencia y activar retención.',
       icon: TrendingDown,
     });
   }
