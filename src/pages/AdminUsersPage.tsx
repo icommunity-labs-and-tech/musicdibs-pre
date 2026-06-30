@@ -335,31 +335,37 @@ export default function AdminUsersPage() {
     const toastId = toast.loading(`Enviando recordatorios… (0/${selected.length})`);
     let sent = 0, skipped = 0, failed = 0;
     const reasons: string[] = [];
-    try {
-      const { data, error } = await supabase.functions.invoke('kyc-reminder', {
-        body: {
-          users: selected.map(u => ({
-            user_id: u.user_id,
-            email: u.email,
-            name: u.display_name,
-            language: u.language,
-            kyc_status: u.kyc_status,
-            reminder_count: u.kyc_reminders_count,
-            last_reminder_at: u.kyc_last_reminder_at,
-          })),
-        },
-      });
-      if (error) throw error;
-      sent = data?.sent ?? 0;
-      skipped = data?.skipped ?? 0;
-      failed = data?.failed ?? 0;
-      if (data?.reasons) {
-        Object.entries(data.reasons).forEach(([reason, count]) => reasons.push(`${reason} (${count})`));
+    const BATCH_SIZE = 10;
+    let processed = 0;
+    for (let i = 0; i < selected.length; i += BATCH_SIZE) {
+      const batch = selected.slice(i, i + BATCH_SIZE);
+      try {
+        const { data, error } = await supabase.functions.invoke('kyc-reminder', {
+          body: {
+            users: batch.map(u => ({
+              user_id: u.user_id,
+              email: u.email,
+              name: u.display_name,
+              language: u.language,
+              kyc_status: u.kyc_status,
+              reminder_count: u.kyc_reminders_count,
+              last_reminder_at: u.kyc_last_reminder_at,
+            })),
+          },
+        });
+        if (error) throw error;
+        sent += data?.sent ?? 0;
+        skipped += data?.skipped ?? 0;
+        failed += data?.failed ?? 0;
+        if (data?.reasons) {
+          Object.entries(data.reasons).forEach(([reason, count]) => reasons.push(`${reason} (${count})`));
+        }
+      } catch (e: any) {
+        failed += batch.length;
+        reasons.push(e?.message || 'Error desconocido');
       }
-      toast.loading(`Enviando recordatorios… (${selected.length}/${selected.length})`, { id: toastId });
-    } catch (e: any) {
-      failed = selected.length;
-      reasons.push(e?.message || 'Error desconocido');
+      processed += batch.length;
+      toast.loading(`Enviando recordatorios… (${processed}/${selected.length}) · ✅ ${sent} · ❌ ${failed}`, { id: toastId });
     }
     const detail = Array.from(new Set(reasons)).slice(0, 3).join(' · ');
     if (sent === 0 && (failed > 0 || skipped > 0)) {
