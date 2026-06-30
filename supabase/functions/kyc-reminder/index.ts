@@ -9,6 +9,7 @@ const corsHeaders = {
 
 const MAX_REMINDERS = 3;
 const DAYS_BETWEEN = 5;
+const FROM_EMAIL = "MusicDibs <noreply@notify.musicdibs.com>";
 
 function normalizeLocale(lang: string | null): "es" | "en" | "pt" {
   if (!lang) return "es";
@@ -29,10 +30,17 @@ async function enqueueReminder(
   lang: string,
   reminderNumber: number,
 ): Promise<boolean> {
+  const resendApiKey = Deno.env.get("RESEND_API_KEY");
+  if (!resendApiKey) {
+    console.error("[KYC-REMINDER] RESEND_API_KEY is not configured");
+    return false;
+  }
+
+  let messageId = crypto.randomUUID();
+  let label = `kyc_reminder_${reminderNumber}`;
+
   try {
     const emailData = kycReminderEmail({ name, lang, reminderNumber });
-    const messageId = crypto.randomUUID();
-    const label = `kyc_reminder_${reminderNumber}`;
     const { error: logError } = await supabaseAdmin.from("email_send_log").insert({
       message_id: messageId,
       template_name: label,
@@ -44,37 +52,57 @@ async function enqueueReminder(
       return false;
     }
 
-    const { error } = await supabaseAdmin.rpc("enqueue_email", {
-      queue_name: "transactional_emails",
-      payload: {
-        idempotency_key: `${label}-${messageId}`,
-        message_id: messageId,
-        to: email,
-        from: "MusicDibs <noreply@notify.musicdibs.com>",
-        sender_domain: "notify.musicdibs.com",
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: FROM_EMAIL,
+        to: [email],
         subject: emailData.subject,
         html: emailData.html,
         text: emailData.text,
-        purpose: "transactional",
-        label,
-        queued_at: new Date().toISOString(),
-      },
+        tags: [
+          { name: "template", value: label },
+          { name: "source", value: "kyc-reminder" },
+        ],
+      }),
     });
-    if (error) {
-      console.error(`[KYC-REMINDER] enqueue_email failed for ${email}: ${error.message}`);
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`[KYC-REMINDER] Resend send failed for ${email}: ${res.status} ${errText}`);
       await supabaseAdmin.from("email_send_log").insert({
         message_id: messageId,
         template_name: label,
         recipient_email: email,
         status: "failed",
-        error_message: `enqueue_email failed: ${error.message}`.slice(0, 1000),
+        error_message: `Resend ${res.status}: ${errText}`.slice(0, 1000),
       });
       return false;
     }
-    console.log(`[KYC-REMINDER] Enqueued ${label} to ${email} (msg ${messageId})`);
+
+    const resendResponse = await res.json().catch(() => ({}));
+    await supabaseAdmin.from("email_send_log").insert({
+      message_id: messageId,
+      template_name: label,
+      recipient_email: email,
+      status: "sent",
+      metadata: { resend_id: resendResponse?.id ?? null },
+    });
+    console.log(`[KYC-REMINDER] Sent ${label} to ${email} via Resend (msg ${messageId})`);
     return true;
   } catch (e) {
     console.error(`[KYC-REMINDER] enqueue exception for ${email}:`, e);
+    await supabaseAdmin.from("email_send_log").insert({
+      message_id: messageId,
+      template_name: label,
+      recipient_email: email,
+      status: "failed",
+      error_message: e instanceof Error ? e.message.slice(0, 1000) : String(e).slice(0, 1000),
+    });
     return false;
   }
 }
