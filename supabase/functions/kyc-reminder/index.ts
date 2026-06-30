@@ -23,6 +23,147 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
+type ReminderTarget = {
+  user_id: string;
+  email?: string | null;
+  name?: string | null;
+  language?: string | null;
+  kyc_status?: string | null;
+  reminder_count?: number | null;
+  last_reminder_at?: string | null;
+};
+
+function asString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function asNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function getBodyTargets(body: Record<string, unknown>): ReminderTarget[] | null {
+  if (!Array.isArray(body.users)) return null;
+  return body.users
+    .map((raw) => {
+      if (!raw || typeof raw !== "object") return null;
+      const item = raw as Record<string, unknown>;
+      const userId = asString(item.user_id);
+      if (!userId) return null;
+      return {
+        user_id: userId,
+        email: asString(item.email),
+        name: asString(item.name) || asString(item.display_name),
+        language: asString(item.language),
+        kyc_status: asString(item.kyc_status),
+        reminder_count: asNumber(item.reminder_count) ?? asNumber(item.kyc_reminders_count),
+        last_reminder_at: asString(item.last_reminder_at) || asString(item.kyc_last_reminder_at),
+      };
+    })
+    .filter((target): target is ReminderTarget => target !== null);
+}
+
+async function getReminderTarget(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  target: ReminderTarget,
+): Promise<ReminderTarget & { skipReason?: string }> {
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("user_id, language, kyc_status, full_name, display_name")
+    .eq("user_id", target.user_id)
+    .maybeSingle();
+
+  if (!profile && !target.email) {
+    return { ...target, skipReason: "User not found" };
+  }
+
+  let authEmail: string | null = null;
+  let authName: string | null = null;
+  try {
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.getUserById(target.user_id);
+    if (authError) console.warn(`[KYC-REMINDER] auth user lookup skipped for ${target.user_id}: ${authError.message}`);
+    authEmail = authUser?.user?.email ?? null;
+    authName = asString(authUser?.user?.user_metadata?.full_name) || asString(authUser?.user?.user_metadata?.display_name);
+  } catch (e) {
+    console.warn(`[KYC-REMINDER] auth user lookup exception for ${target.user_id}:`, e);
+  }
+
+  return {
+    user_id: target.user_id,
+    email: authEmail || target.email,
+    name: asString((profile as Record<string, unknown> | null)?.full_name) ||
+      asString((profile as Record<string, unknown> | null)?.display_name) ||
+      target.name ||
+      authName,
+    language: asString((profile as Record<string, unknown> | null)?.language) || target.language,
+    kyc_status: asString((profile as Record<string, unknown> | null)?.kyc_status) || target.kyc_status,
+    reminder_count: target.reminder_count,
+    last_reminder_at: target.last_reminder_at,
+  };
+}
+
+async function getReminderStats(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  target: ReminderTarget,
+) {
+  const [lastLogResult, countResult] = await Promise.all([
+    supabaseAdmin
+      .from("kyc_reminder_log")
+      .select("sent_at")
+      .eq("user_id", target.user_id)
+      .order("sent_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("kyc_reminder_log")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", target.user_id),
+  ]);
+
+  return {
+    lastSentAt: lastLogResult.data?.sent_at || target.last_reminder_at || null,
+    count: countResult.count ?? target.reminder_count ?? 0,
+  };
+}
+
+async function sendManualReminder(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  target: ReminderTarget,
+  type: "manual" | "auto" = "manual",
+) {
+  const resolved = await getReminderTarget(supabaseAdmin, target);
+  if (resolved.skipReason) return { ok: false, reason: resolved.skipReason, user_id: target.user_id };
+  if (resolved.kyc_status === "verified") return { ok: false, reason: "User already verified", user_id: target.user_id };
+  if (!resolved.email) return { ok: false, reason: "No email on auth user", user_id: target.user_id };
+
+  const { lastSentAt, count } = await getReminderStats(supabaseAdmin, resolved);
+  if (lastSentAt) {
+    const daysSince = (Date.now() - new Date(lastSentAt).getTime()) / 86400000;
+    if (daysSince < DAYS_BETWEEN) {
+      return { ok: false, reason: `Last reminder ${Math.floor(daysSince)}d ago`, user_id: target.user_id };
+    }
+  }
+
+  const reminderNumber = count + 1;
+  if (reminderNumber > MAX_REMINDERS) {
+    return { ok: false, reason: `Max ${MAX_REMINDERS} reminders sent`, user_id: target.user_id };
+  }
+
+  const locale = normalizeLocale(resolved.language || null);
+  const name = resolved.name || resolved.email.split("@")[0];
+  const sent = await enqueueReminder(supabaseAdmin, resolved.email, name, locale, reminderNumber);
+  if (!sent) return { ok: false, reason: "Email send failed", user_id: target.user_id };
+
+  const { error: reminderLogError } = await supabaseAdmin
+    .from("kyc_reminder_log")
+    .insert({ user_id: target.user_id, reminder_number: reminderNumber, type });
+  if (reminderLogError) {
+    console.error(`[KYC-REMINDER] reminder log insert failed for ${target.user_id}: ${reminderLogError.message}`);
+    return { ok: false, reason: "Reminder log failed", user_id: target.user_id };
+  }
+
+  return { ok: true, email: resolved.email, reminder_number: reminderNumber, lang: locale, user_id: target.user_id };
+}
+
 async function enqueueReminder(
   supabaseAdmin: ReturnType<typeof createClient>,
   email: string,
@@ -110,7 +251,7 @@ async function enqueueReminder(
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  let body: any = {};
+  let body: Record<string, unknown> = {};
   try { body = await req.json(); } catch { /* no body */ }
 
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -139,42 +280,41 @@ serve(async (req) => {
 
   if (!isAuth) return json({ error: "Unauthorized" }, 401);
 
-  const manualUserId: string | null = body.user_id || null;
-  const batchSize: number = Math.min(body.batch_size || 200, 2000);
+  const manualUserId = asString(body.user_id);
+  const batchSize = Math.min(asNumber(body.batch_size) || 200, 2000);
   const cutoffDate = new Date(Date.now() - DAYS_BETWEEN * 24 * 60 * 60 * 1000).toISOString();
+
+  // MODO MANUAL MASIVO: admin envía recordatorio a usuarios seleccionados con datos ya cargados en la tabla.
+  const manualTargets = getBodyTargets(body);
+  if (manualTargets) {
+    let sent = 0, skipped = 0, failed = 0;
+    const reasons: Record<string, number> = {};
+    const results = [];
+
+    for (const target of manualTargets) {
+      const result = await sendManualReminder(supabase, target, "manual");
+      results.push(result);
+      if (result.ok) sent++;
+      else if (result.reason === "Email send failed" || result.reason === "Reminder log failed") failed++;
+      else skipped++;
+      if (!result.ok && result.reason) reasons[result.reason] = (reasons[result.reason] || 0) + 1;
+    }
+
+    return json({ ok: sent > 0, processed: manualTargets.length, sent, skipped, failed, reasons, results });
+  }
 
   // MODO MANUAL: admin envía recordatorio a usuario concreto
   if (manualUserId) {
-    const { data: profile } = await supabase.from("profiles").select("user_id, language, kyc_status, full_name").eq("user_id", manualUserId).maybeSingle();
-    if (!profile) return json({ ok: false, reason: "User not found" });
-    if (profile.kyc_status === "verified") return json({ ok: false, reason: "User already verified" });
-    const { data: authUser } = await supabase.auth.admin.getUserById(manualUserId);
-    const email = authUser?.user?.email;
-    if (!email) return json({ ok: false, reason: "No email on auth user" });
-    const name = (profile as any).full_name || authUser?.user?.user_metadata?.full_name || email.split("@")[0];
-    const { data: lastLog } = await supabase.from("kyc_reminder_log").select("sent_at").eq("user_id", manualUserId).order("sent_at", { ascending: false }).limit(1).maybeSingle();
-    if (lastLog) {
-      const daysSince = (Date.now() - new Date(lastLog.sent_at).getTime()) / 86400000;
-      if (daysSince < DAYS_BETWEEN) return json({ ok: false, reason: `Last reminder ${Math.floor(daysSince)}d ago` });
-    }
-    const { count } = await supabase.from("kyc_reminder_log").select("id", { count: "exact", head: true }).eq("user_id", manualUserId);
-    const reminderNumber = (count || 0) + 1;
-    if (reminderNumber > MAX_REMINDERS) return json({ ok: false, reason: `Max ${MAX_REMINDERS} reminders sent` });
-    const locale = normalizeLocale(profile.language);
-    const sent = await enqueueReminder(supabase, email, name, locale, reminderNumber);
-    if (!sent) {
-      return json({ ok: false, reason: "Email queue failed" }, 500);
-    }
-
-    const { error: reminderLogError } = await supabase
-      .from("kyc_reminder_log")
-      .insert({ user_id: manualUserId, reminder_number: reminderNumber, type: "manual" });
-    if (reminderLogError) {
-      console.error(`[KYC-REMINDER] reminder log insert failed for ${manualUserId}: ${reminderLogError.message}`);
-      return json({ ok: false, reason: "Reminder log failed" }, 500);
-    }
-
-    return json({ ok: true, email, reminder_number: reminderNumber, lang: locale });
+    const result = await sendManualReminder(supabase, {
+      user_id: manualUserId,
+      email: asString(body.email),
+      name: asString(body.name),
+      language: asString(body.language),
+      kyc_status: asString(body.kyc_status),
+      reminder_count: asNumber(body.reminder_count),
+      last_reminder_at: asString(body.last_reminder_at),
+    }, "manual");
+    return json(result, result.reason === "Email send failed" || result.reason === "Reminder log failed" ? 500 : 200);
   }
 
   // MODO CRON/MASIVO
