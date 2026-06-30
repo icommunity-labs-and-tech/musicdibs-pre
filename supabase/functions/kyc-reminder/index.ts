@@ -105,8 +105,8 @@ serve(async (req) => {
 
   // MODO MANUAL: admin envía recordatorio a usuario concreto
   if (manualUserId) {
-    const { data: profile } = await supabase.from("profiles").select("user_id, language, kyc_status, full_name").eq("user_id", manualUserId).single();
-    if (!profile) return json({ error: "User not found" }, 404);
+    const { data: profile } = await supabase.from("profiles").select("user_id, language, kyc_status, full_name").eq("user_id", manualUserId).maybeSingle();
+    if (!profile) return json({ ok: false, reason: "User not found" });
     if (profile.kyc_status === "verified") return json({ ok: false, reason: "User already verified" });
     const { data: authUser } = await supabase.auth.admin.getUserById(manualUserId);
     const email = authUser?.user?.email;
