@@ -1410,6 +1410,22 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         await supabase.from("credit_transactions").insert({ user_id: profile.user_id, amount: 0, type: "payment_failed", description });
         console.log(`[WEBHOOK] Payment failed for user ${profile.user_id} (attempt ${attemptCount})`);
 
+
+        // ── Intento 4+: marcar cancel_at_period_end como ultimo aviso ──
+        if (attemptCount >= 4) {
+          try {
+            const pastDueSubs = await stripe.subscriptions.list({
+              customer: customerId, status: "past_due", limit: 5,
+            });
+            for (const sub of pastDueSubs.data) {
+              if (!sub.cancel_at_period_end) {
+                await stripe.subscriptions.modify(sub.id, { cancel_at_period_end: true });
+                console.log(`[WEBHOOK] Sub ${sub.id} marcada cancel_at_period_end=true (intento ${attemptCount})`);
+              }
+            }
+          } catch (e) { console.warn("[WEBHOOK] Error marcando cancel_at_period_end:", e); }
+        }
+
         try {
           const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
           const userEmail = customer.email || "";
