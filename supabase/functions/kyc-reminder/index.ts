@@ -33,12 +33,17 @@ async function enqueueReminder(
     const emailData = kycReminderEmail({ name, lang, reminderNumber });
     const messageId = crypto.randomUUID();
     const label = `kyc_reminder_${reminderNumber}`;
-    await supabaseAdmin.from("email_send_log").insert({
+    const { error: logError } = await supabaseAdmin.from("email_send_log").insert({
       message_id: messageId,
       template_name: label,
       recipient_email: email,
       status: "pending",
     });
+    if (logError) {
+      console.error(`[KYC-REMINDER] email_send_log insert failed for ${email}: ${logError.message}`);
+      return false;
+    }
+
     const { error } = await supabaseAdmin.rpc("enqueue_email", {
       queue_name: "transactional_emails",
       payload: {
@@ -56,13 +61,20 @@ async function enqueueReminder(
       },
     });
     if (error) {
-      console.warn(`[KYC-REMINDER] enqueue_email failed for ${email}: ${error.message}`);
+      console.error(`[KYC-REMINDER] enqueue_email failed for ${email}: ${error.message}`);
+      await supabaseAdmin.from("email_send_log").insert({
+        message_id: messageId,
+        template_name: label,
+        recipient_email: email,
+        status: "failed",
+        error_message: `enqueue_email failed: ${error.message}`.slice(0, 1000),
+      });
       return false;
     }
     console.log(`[KYC-REMINDER] Enqueued ${label} to ${email} (msg ${messageId})`);
     return true;
   } catch (e) {
-    console.warn(`[KYC-REMINDER] enqueue exception for ${email}:`, e);
+    console.error(`[KYC-REMINDER] enqueue exception for ${email}:`, e);
     return false;
   }
 }
@@ -122,8 +134,19 @@ serve(async (req) => {
     if (reminderNumber > MAX_REMINDERS) return json({ ok: false, reason: `Max ${MAX_REMINDERS} reminders sent` });
     const locale = normalizeLocale(profile.language);
     const sent = await enqueueReminder(supabase, email, name, locale, reminderNumber);
-    if (sent) await supabase.from("kyc_reminder_log").insert({ user_id: manualUserId, reminder_number: reminderNumber, type: "manual" });
-    return json({ ok: sent, email, reminder_number: reminderNumber, lang: locale });
+    if (!sent) {
+      return json({ ok: false, reason: "Email queue failed" }, 500);
+    }
+
+    const { error: reminderLogError } = await supabase
+      .from("kyc_reminder_log")
+      .insert({ user_id: manualUserId, reminder_number: reminderNumber, type: "manual" });
+    if (reminderLogError) {
+      console.error(`[KYC-REMINDER] reminder log insert failed for ${manualUserId}: ${reminderLogError.message}`);
+      return json({ ok: false, reason: "Reminder log failed" }, 500);
+    }
+
+    return json({ ok: true, email, reminder_number: reminderNumber, lang: locale });
   }
 
   // MODO CRON/MASIVO
@@ -153,7 +176,13 @@ serve(async (req) => {
     } else { totalFailed++; }
   }
 
-  if (logs.length > 0) await supabase.from("kyc_reminder_log").insert(logs);
+  if (logs.length > 0) {
+    const { error: reminderLogError } = await supabase.from("kyc_reminder_log").insert(logs);
+    if (reminderLogError) {
+      console.error(`[KYC-REMINDER] bulk reminder log insert failed: ${reminderLogError.message}`);
+      return json({ ok: false, error: reminderLogError.message, enqueued: totalAdded, failed: totalFailed }, 500);
+    }
+  }
 
   console.log(`[KYC-REMINDER] Done: ${totalAdded} enqueued, ${totalFailed} failed`);
   return json({ ok: true, processed: eligible.length, enqueued: totalAdded, failed: totalFailed });
