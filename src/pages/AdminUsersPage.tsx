@@ -350,11 +350,11 @@ export default function AdminUsersPage() {
 
 
   const clearFilters = () => {
-    setKycFilter('all'); setPlanFilter('all'); setStripeFilter('all'); setStatusFilter('all'); setRoleFilter('all'); setCreditsFilter('all');
+    setKycFilter('all'); setPlanFilter('all'); setStripeFilter('all'); setStatusFilter('all'); setRoleFilter('all'); setCreditsFilter('all'); setReminderFilter('all');
     setSearch(''); setPage(0);
   };
 
-  const activeFiltersCount = [kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter].filter(f => f !== 'all').length + (search ? 1 : 0);
+  const activeFiltersCount = [kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, reminderFilter].filter(f => f !== 'all').length + (search ? 1 : 0);
 
   const getPageNumbers = () => {
     const pages: (number | 'ellipsis')[] = [];
