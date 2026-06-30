@@ -5132,9 +5132,7 @@ serve(async (req) => {
                 0,
               )
             : (Number((inv as any).tax ?? 0) || 0);
-          const stripeNet = typeof (inv as any).total_excluding_tax === "number"
-            ? (inv as any).total_excluding_tax / 100
-            : ((inv.amount_paid || 0) - invTax) / 100;
+          const stripeNet = ((inv.amount_paid || 0) - invTax) / 100;
 
           const { productType, productCode, billingInterval, isSub } =
             inferProductType(priceId, interval, amount);
