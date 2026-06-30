@@ -18,15 +18,21 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
   const m = metrics;
   const alerts: AlertItem[] = [];
 
-  // 1. Runway < 12 months — critical
-  if (m.runway > 0 && m.runway < 12) {
+  // Alerts based on global "this month" snapshots (Stripe MRR, churn, LTV/CAC,
+  // runway, conversion, quick ratio…) only make sense when the user is looking
+  // at the current period. For past periods we hide them to avoid showing
+  // numbers that don't match the rest of the section.
+  const showLiveSnapshotAlerts = isCurrentPeriod;
+
+  // 1. Runway < 12 months — critical (global, current snapshot)
+  if (showLiveSnapshotAlerts && m.runway > 0 && m.runway < 12) {
     alerts.push({
       severity: 'critical',
       title: `Runway crítico: ${m.runway} meses`,
       description: 'El runway está por debajo de 12 meses. Considerar reducir burn rate, acelerar revenue o iniciar ronda de financiación.',
       icon: Flame,
     });
-  } else if (m.runway >= 12 && m.runway < 18) {
+  } else if (showLiveSnapshotAlerts && m.runway >= 12 && m.runway < 18) {
     alerts.push({
       severity: 'warning',
       title: `Runway bajo: ${m.runway} meses`,
@@ -35,7 +41,7 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 2. CAC > LTV — unit economics negativas
+  // 2. CAC > LTV — unit economics negativas (period-aware: ARPU is period)
   if (m.cac > 0 && m.ltv > 0 && m.cac > m.ltv) {
     alerts.push({
       severity: 'critical',
@@ -52,15 +58,15 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 3. Churn rate alto
-  if (m.churnRate > 10) {
+  // 3. Churn rate alto (global current month)
+  if (showLiveSnapshotAlerts && m.churnRate > 10) {
     alerts.push({
       severity: 'critical',
       title: `Churn rate elevado: ${m.churnRate}%`,
       description: 'Un churn >10% mensual es insostenible. Analizar cohortes, activar encuestas de salida y mejorar onboarding.',
       icon: TrendingDown,
     });
-  } else if (m.churnRate > 5) {
+  } else if (showLiveSnapshotAlerts && m.churnRate > 5) {
     alerts.push({
       severity: 'warning',
       title: `Churn rate alto: ${m.churnRate}%`,
@@ -69,8 +75,8 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 4. NRR < 100% — revenue contraction
-  if (m.nrr < 100 && m.nrr > 0) {
+  // 4. NRR < 100% (derived from churn — global)
+  if (showLiveSnapshotAlerts && m.nrr < 100 && m.nrr > 0) {
     alerts.push({
       severity: 'warning',
       title: `NRR por debajo del 100% (${m.nrr}%)`,
@@ -79,7 +85,7 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 5. Gross Margin bajo
+  // 5. Gross Margin bajo (period-aware)
   if (m.grossMargin < 60 && m.grossMargin > 0) {
     alerts.push({
       severity: 'critical',
@@ -96,7 +102,7 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 6. Payback period > 18 meses
+  // 6. Payback period > 18 meses (period-aware)
   if (m.paybackPeriod > 18) {
     alerts.push({
       severity: 'warning',
@@ -106,15 +112,15 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 7. Quick Ratio bajo (growth efficiency)
-  if (m.quickRatio > 0 && m.quickRatio < 1) {
+  // 7. Quick Ratio bajo (global current month)
+  if (showLiveSnapshotAlerts && m.quickRatio > 0 && m.quickRatio < 1) {
     alerts.push({
       severity: 'critical',
       title: `Quick Ratio < 1 (${m.quickRatio}x)`,
       description: 'Se pierde más MRR del que se gana. El negocio está en contracción neta. Acción inmediata en retención.',
       icon: Flame,
     });
-  } else if (m.quickRatio >= 1 && m.quickRatio < 2) {
+  } else if (showLiveSnapshotAlerts && m.quickRatio >= 1 && m.quickRatio < 2) {
     alerts.push({
       severity: 'warning',
       title: `Quick Ratio bajo (${m.quickRatio}x)`,
@@ -123,8 +129,8 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 8. Conversión Free→Paid baja
-  if (m.conversionRate < 2 && m.totalUsers > 50) {
+  // 8. Conversión Free→Paid baja (global current month)
+  if (showLiveSnapshotAlerts && m.conversionRate < 2 && m.totalUsers > 50) {
     alerts.push({
       severity: 'warning',
       title: `Conversión Free→Paid baja: ${m.conversionRate}%`,
@@ -133,24 +139,27 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 9. MRR declining
+  // 9. Ingresos del periodo en caída vs periodo anterior (period-aware)
+  // `mrrChange` representa la variación del revenue NETO del periodo
+  // seleccionado contra el equivalente del periodo anterior.
+  const periodSuffix = periodLabel ? ` (${periodLabel} vs periodo anterior)` : ' vs periodo anterior';
   if (m.mrrChange < -10) {
     alerts.push({
       severity: 'critical',
-      title: `MRR en caída: ${m.mrrChange}% MoM`,
-      description: 'El MRR cae más de un 10% respecto al mes anterior. Analizar cancelaciones y pipeline de nuevos clientes.',
+      title: `Ingresos del periodo en caída: ${m.mrrChange}%${periodSuffix}`,
+      description: 'Los ingresos netos del periodo seleccionado caen más de un 10% respecto al periodo anterior. Analizar cancelaciones y pipeline de nuevos clientes.',
       icon: TrendingDown,
     });
   } else if (m.mrrChange < 0) {
     alerts.push({
       severity: 'warning',
-      title: `MRR descendente: ${m.mrrChange}% MoM`,
-      description: 'El MRR ha bajado respecto al mes anterior. Monitorizar tendencia y activar retención.',
+      title: `Ingresos del periodo descendentes: ${m.mrrChange}%${periodSuffix}`,
+      description: 'Los ingresos netos del periodo seleccionado han bajado respecto al periodo anterior. Monitorizar tendencia y activar retención.',
       icon: TrendingDown,
     });
   }
 
-  // 10. Revenue concentration risk
+  // 10. Revenue concentration risk (period-aware: usa top plan del periodo)
   if (m.top10RevenuePercentage > 80) {
     alerts.push({
       severity: 'warning',
