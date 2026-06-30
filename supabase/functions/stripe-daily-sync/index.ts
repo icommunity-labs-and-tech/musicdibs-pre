@@ -110,8 +110,6 @@ Deno.serve(async (req) => {
           .select("id")
           .eq("stripe_charge_id", charge.id)
           .maybeSingle();
-        if (existing) { skipped++; continue; }
-
         const amountGross = Math.round((charge.amount / 100) * 100) / 100;
         const amountNet = await netFromCharge(stripe, charge);
 
@@ -119,6 +117,18 @@ Deno.serve(async (req) => {
         const bt = charge.balance_transaction;
         if (bt && typeof bt === "object" && "fee" in bt) {
           stripeFee = Math.round((bt.fee / 100) * 100) / 100;
+        }
+
+        if (existing) {
+          const { error: updErr } = await supabase
+            .from("orders")
+            .update({ amount_net: amountNet, stripe_fee: stripeFee })
+            .eq("id", existing.id);
+          if (updErr) {
+            console.error("[stripe-daily-sync] update error", charge.id, updErr.message);
+          }
+          skipped++;
+          continue;
         }
 
         const productType = inferProductType(amountGross);
