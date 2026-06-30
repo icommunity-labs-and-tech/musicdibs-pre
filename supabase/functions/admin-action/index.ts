@@ -3748,6 +3748,10 @@ serve(async (req) => {
           { feature: "Letras", uses: lyricsGen.count || 0 },
         ].sort((a, b) => b.uses - a.uses),
         _dataSource: subsDataAvailable ? "db_local" : "estimated",
+        compareThisStart,
+        compareThisEnd,
+        comparePrevStart,
+        comparePrevEnd,
       };
 
       // Persist to cache (best-effort, non-blocking semantics not needed: we already have the result)
