@@ -2162,10 +2162,9 @@ serve(async (req) => {
         return taxFromBreakdown || Number(invoice?.tax ?? 0) || 0;
       };
       const netFromStripeInvoice = (invoice: any): number => {
-        const totalExcludingTax = Number(invoice?.total_excluding_tax);
-        if (Number.isFinite(totalExcludingTax) && totalExcludingTax >= 0) {
-          return roundMoney(totalExcludingTax / 100);
-        }
+        // For sales metrics, match Stripe's collected revenue: amount_paid can be
+        // lower than invoice.total when customer balance/credits are applied.
+        // Therefore net = amount_paid - real Stripe tax (not total_excluding_tax).
         const paid = Number(invoice?.amount_paid ?? 0) || 0;
         return roundMoney((paid - invoiceTaxCents(invoice)) / 100);
       };
