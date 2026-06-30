@@ -398,6 +398,7 @@ export default function AdminUsersPage() {
               status_filter: statusFilter === 'all' ? '' : statusFilter,
               role_filter: roleFilter === 'all' ? '' : roleFilter,
               credits_filter: creditsFilter === 'all' ? '' : creditsFilter,
+              reminder_filter: reminderFilter === 'all' ? '' : reminderFilter,
             });
             const blob = new Blob([res.csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
