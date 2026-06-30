@@ -52,6 +52,11 @@ interface CertLabels {
   sectionAuthor: string
   authorNameLabel: string
   authorDocLabel: string
+  coauthorsLabel: string
+  rolesLabel: string
+  percentageLabel: string
+  mainAuthorTag: string
+  roleMap: Record<string, string>
   sectionTransaction: string
   txIdLabel: string
   fingerprintLabel: string
@@ -67,6 +72,19 @@ interface CertLabels {
   verifyLabel: string
   footerPowered: string
   filePrefix: string
+}
+
+const ROLE_LABELS_ES: Record<string, string> = {
+  autor: 'Autor', compositor: 'Compositor', cantante: 'Cantante',
+  productor: 'Productor', arreglista: 'Arreglista', adaptador: 'Adaptador',
+}
+const ROLE_LABELS_EN: Record<string, string> = {
+  autor: 'Author', compositor: 'Composer', cantante: 'Singer',
+  productor: 'Producer', arreglista: 'Arranger', adaptador: 'Adapter',
+}
+const ROLE_LABELS_PT: Record<string, string> = {
+  autor: 'Autor', compositor: 'Compositor', cantante: 'Cantor',
+  productor: 'Produtor', arreglista: 'Arranjador', adaptador: 'Adaptador',
 }
 
 const labelsMap: Record<string, CertLabels> = {
