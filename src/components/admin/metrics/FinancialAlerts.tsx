@@ -186,9 +186,11 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex items-center gap-2 mb-1 flex-wrap">
         <AlertTriangle className="h-5 w-5 text-orange-500" />
-        <h3 className="text-base font-semibold">Alertas Financieras</h3>
+        <h3 className="text-base font-semibold">
+          Alertas Financieras{periodLabel ? ` — ${periodLabel}` : ''}
+        </h3>
         {criticals.length > 0 && (
           <span className="text-xs bg-destructive/20 text-destructive px-2 py-0.5 rounded-full font-medium">
             {criticals.length} crítica{criticals.length > 1 ? 's' : ''}
@@ -200,6 +202,18 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
           </span>
         )}
       </div>
+
+      {!isCurrentPeriod && (
+        <Alert className="border-blue-500/30 bg-blue-500/5">
+          <Info className="h-4 w-4 text-blue-500" />
+          <AlertDescription className="text-blue-600/90 text-xs">
+            Estás viendo un periodo pasado. Solo se muestran alertas calculadas
+            sobre el periodo seleccionado (ingresos, margen, payback, LTV/CAC,
+            concentración). Las alertas de snapshot global (MRR Stripe, churn,
+            NRR, quick ratio, runway, conversión) solo aplican al periodo actual.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {criticals.map((alert, i) => (
         <Alert key={`c-${i}`} className="border-destructive/50 bg-destructive/5">
