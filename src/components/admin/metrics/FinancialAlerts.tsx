@@ -173,9 +173,13 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     return (
       <Alert className="border-green-500/30 bg-green-500/5">
         <CheckCircle2 className="h-4 w-4 text-green-500" />
-        <AlertTitle className="text-green-600">Salud financiera OK</AlertTitle>
+        <AlertTitle className="text-green-600">
+          Salud financiera OK{periodLabel ? ` — ${periodLabel}` : ''}
+        </AlertTitle>
         <AlertDescription className="text-green-600/80">
-          No se detectan alertas críticas. Todos los indicadores están en rango saludable.
+          {isCurrentPeriod
+            ? 'No se detectan alertas críticas. Todos los indicadores están en rango saludable.'
+            : 'No se detectan alertas sobre los indicadores period-aware (ingresos, margen, payback, LTV/CAC, concentración) para el periodo seleccionado.'}
         </AlertDescription>
       </Alert>
     );
