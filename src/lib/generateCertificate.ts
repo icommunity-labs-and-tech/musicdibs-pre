@@ -375,6 +375,53 @@ export async function generateCertificate(data: CertificateData, locale?: string
     y = field(y, L.authorDocLabel, data.authorDocId)
   }
 
+  // Coautores y % de propiedad (si hay más de un creador o roles/% definidos)
+  const coauthors = (data.coauthors || []).filter((c) => c && c.name && c.name.trim())
+  const hasRichCreatorData = coauthors.length > 1
+    || coauthors.some((c) => (c.roles && c.roles.length > 0) || (typeof c.percentage === 'number' && c.percentage > 0))
+
+  if (hasRichCreatorData) {
+    font('normal', 9.5)
+    hex(GRAY_D)
+    doc.text(L.coauthorsLabel, ML, y)
+    y += 6
+
+    const totalPct = coauthors.reduce((s, c) => s + (typeof c.percentage === 'number' ? c.percentage : 0), 0)
+    const distributeEqually = totalPct === 0 && coauthors.length > 0
+
+    coauthors.forEach((c, idx) => {
+      const isMain = idx === 0
+      const roleNames = (c.roles || []).map((r) => L.roleMap[r] || r).filter(Boolean).join(', ')
+      const pct = typeof c.percentage === 'number' && c.percentage > 0
+        ? c.percentage
+        : (distributeEqually ? Math.round((100 / coauthors.length) * 100) / 100 : null)
+
+      // Name + main tag
+      font('bold', 9.5)
+      hex(BLACK)
+      const nameLine = isMain ? `${c.name}  ·  ${L.mainAuthorTag}` : c.name
+      doc.text(nameLine, ML + 2, y)
+
+      // Percentage (right aligned)
+      if (pct !== null) {
+        font('bold', 9.5)
+        hex(RED_CORP)
+        doc.text(`${pct}%`, W - MR, y, { align: 'right' })
+      }
+      y += 4.5
+
+      if (roleNames) {
+        font('normal', 8.5)
+        hex(GRAY_D)
+        const roleLines = doc.splitTextToSize(roleNames, contentW - 4)
+        doc.text(roleLines.slice(0, 2), ML + 2, y)
+        y += roleLines.slice(0, 2).length * 4
+      }
+      y += 2.5
+    })
+    y += 2
+  }
+
   // ══════════════════════════════════════════════════════════
   // SECTION 3: DATOS DE LA TRANSACCIÓN
   // ══════════════════════════════════════════════════════════
