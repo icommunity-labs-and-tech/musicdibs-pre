@@ -244,6 +244,7 @@ serve(async (req) => {
       const statusFilter = (payload.status_filter || "").trim(); // 'active' | 'blocked'
       const roleFilter = (payload.role_filter || "").trim(); // 'admin' | 'manager' | 'user'
       const creditsFilter = (payload.credits_filter || "").trim(); // 'has_permanent' | 'no_permanent'
+      const reminderFilter = (payload.reminder_filter || "").trim(); // 'eligible'
       const REMINDER_SORT_KEYS = [
         "kyc_reminders_count",
         "kyc_last_reminder_at",
