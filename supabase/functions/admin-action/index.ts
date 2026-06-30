@@ -5733,15 +5733,27 @@ serve(async (req) => {
       const { dataset } = payload;
 
       if (dataset === "orders") {
-        const { data: orders } = await admin
-          .from("orders")
-          .select("*")
-          .order("paid_at", { ascending: false })
-          .limit(1000);
+        // Paginate to bypass PostgREST's 1000-row default cap
+        const PAGE = 1000;
+        const MAX = 200000;
+        const orders: any[] = [];
+        let off = 0;
+        while (orders.length < MAX) {
+          const { data, error } = await admin
+            .from("orders")
+            .select("*")
+            .order("paid_at", { ascending: false })
+            .range(off, off + PAGE - 1);
+          if (error) break;
+          const rows = data || [];
+          orders.push(...rows);
+          if (rows.length < PAGE) break;
+          off += PAGE;
+        }
         const emailsMap = await getAllEmailsMap();
         const header =
           "email,product_label,product_type,amount_gross,currency,order_status,is_renewal,paid_at";
-        const rows = (orders || []).map(
+        const rows = orders.map(
           (o: any) =>
             `${emailsMap[o.user_id] || ""},"${(o.product_label || "").replace(/"/g, '""')}",${o.product_type},${o.amount_gross},${o.currency},${o.order_status},${o.is_renewal},${o.paid_at}`,
         );
