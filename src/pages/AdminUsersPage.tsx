@@ -19,28 +19,54 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 type SortKey = 'created_at' | 'updated_at' | 'display_name' | 'available_credits' | 'permanent_credits' | 'subscription_plan' | 'kyc_status' | 'kyc_reminders_count' | 'kyc_last_reminder_at';
 
+const FILTERS_STORAGE_KEY = 'admin_users_filters_v1';
+
+type PersistedState = {
+  search: string;
+  page: number;
+  pageSize: number;
+  kycFilter: string;
+  planFilter: string;
+  stripeFilter: string;
+  statusFilter: string;
+  roleFilter: string;
+  creditsFilter: string;
+  reminderFilter: string;
+  sortBy: SortKey;
+  sortDir: 'asc' | 'desc';
+};
+
+function loadPersisted(): Partial<PersistedState> {
+  try {
+    const raw = localStorage.getItem(FILTERS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
 export default function AdminUsersPage() {
   const { user } = useAuth();
+  const persisted = loadPersisted();
   const [users, setUsers] = useState<any[]>([]);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
+  const [search, setSearch] = useState(persisted.search ?? '');
+  const [page, setPage] = useState(persisted.page ?? 0);
+  const [pageSize, setPageSize] = useState(persisted.pageSize ?? 50);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Filters
-  const [kycFilter, setKycFilter] = useState<string>('all');
-  const [planFilter, setPlanFilter] = useState<string>('all');
-  const [stripeFilter, setStripeFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [creditsFilter, setCreditsFilter] = useState<string>('all'); // 'has_permanent' | 'no_permanent'
+  const [kycFilter, setKycFilter] = useState<string>(persisted.kycFilter ?? 'all');
+  const [planFilter, setPlanFilter] = useState<string>(persisted.planFilter ?? 'all');
+  const [stripeFilter, setStripeFilter] = useState<string>(persisted.stripeFilter ?? 'all');
+  const [statusFilter, setStatusFilter] = useState<string>(persisted.statusFilter ?? 'all');
+  const [roleFilter, setRoleFilter] = useState<string>(persisted.roleFilter ?? 'all');
+  const [creditsFilter, setCreditsFilter] = useState<string>(persisted.creditsFilter ?? 'all');
+  const [reminderFilter, setReminderFilter] = useState<string>(persisted.reminderFilter ?? 'all');
 
   // Sorting
-  const [sortBy, setSortBy] = useState<SortKey>('created_at');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<SortKey>(persisted.sortBy ?? 'created_at');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(persisted.sortDir ?? 'desc');
 
   // Modals
   const [creditModal, setCreditModal] = useState<{ open: boolean; userId: string; email: string; currentCredits: number }>({ open: false, userId: '', email: '', currentCredits: 0 });
@@ -143,8 +169,6 @@ export default function AdminUsersPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    // Invalidar estado local antes del refetch — evita mostrar datos cacheados obsoletos
-    // tras acciones del admin (ajuste de créditos, notificación de pago, etc.)
     setUsers([]);
     setTotal(0);
     try {
@@ -155,6 +179,7 @@ export default function AdminUsersPage() {
         status_filter: statusFilter === 'all' ? '' : statusFilter,
         role_filter: roleFilter === 'all' ? '' : roleFilter,
         credits_filter: creditsFilter === 'all' ? '' : creditsFilter,
+        reminder_filter: reminderFilter === 'all' ? '' : reminderFilter,
         sort_by: sortBy,
         sort_dir: sortDir,
       });
@@ -164,12 +189,24 @@ export default function AdminUsersPage() {
       toast.error(e.message);
     }
     setLoading(false);
-  }, [page, pageSize, search, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, sortBy, sortDir]);
+  }, [page, pageSize, search, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, reminderFilter, sortBy, sortDir]);
 
   useEffect(() => { load(); }, [load]);
 
+  // Persist filters + pagination
+  useEffect(() => {
+    try {
+      const state: PersistedState = {
+        search, page, pageSize,
+        kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, reminderFilter,
+        sortBy, sortDir,
+      };
+      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(state));
+    } catch { /* ignore */ }
+  }, [search, page, pageSize, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, reminderFilter, sortBy, sortDir]);
+
   // Clear selection when page/filters change
-  useEffect(() => { setSelectedIds(new Set()); }, [page, pageSize, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, sortBy, sortDir]);
+  useEffect(() => { setSelectedIds(new Set()); }, [page, pageSize, kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, reminderFilter, sortBy, sortDir]);
 
   const handleSearch = () => { setPage(0); load(); };
 
@@ -313,11 +350,11 @@ export default function AdminUsersPage() {
 
 
   const clearFilters = () => {
-    setKycFilter('all'); setPlanFilter('all'); setStripeFilter('all'); setStatusFilter('all'); setRoleFilter('all'); setCreditsFilter('all');
+    setKycFilter('all'); setPlanFilter('all'); setStripeFilter('all'); setStatusFilter('all'); setRoleFilter('all'); setCreditsFilter('all'); setReminderFilter('all');
     setSearch(''); setPage(0);
   };
 
-  const activeFiltersCount = [kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter].filter(f => f !== 'all').length + (search ? 1 : 0);
+  const activeFiltersCount = [kycFilter, planFilter, stripeFilter, statusFilter, roleFilter, creditsFilter, reminderFilter].filter(f => f !== 'all').length + (search ? 1 : 0);
 
   const getPageNumbers = () => {
     const pages: (number | 'ellipsis')[] = [];
@@ -361,6 +398,7 @@ export default function AdminUsersPage() {
               status_filter: statusFilter === 'all' ? '' : statusFilter,
               role_filter: roleFilter === 'all' ? '' : roleFilter,
               credits_filter: creditsFilter === 'all' ? '' : creditsFilter,
+              reminder_filter: reminderFilter === 'all' ? '' : reminderFilter,
             });
             const blob = new Blob([res.csv], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
@@ -437,6 +475,13 @@ export default function AdminUsersPage() {
             <SelectItem value="all">Créditos (todos)</SelectItem>
             <SelectItem value="has_permanent">Con permanentes</SelectItem>
             <SelectItem value="no_permanent">Sin permanentes</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={reminderFilter} onValueChange={v => { setReminderFilter(v); setPage(0); }}>
+          <SelectTrigger className="w-[220px] h-8"><SelectValue placeholder="Recordatorio KYC" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Recordatorio KYC (todos)</SelectItem>
+            <SelectItem value="eligible">📧 Elegibles (no verif. + ≥5 días sin aviso)</SelectItem>
           </SelectContent>
         </Select>
         {activeFiltersCount > 0 && (

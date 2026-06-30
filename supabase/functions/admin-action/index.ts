@@ -244,6 +244,7 @@ serve(async (req) => {
       const statusFilter = (payload.status_filter || "").trim(); // 'active' | 'blocked'
       const roleFilter = (payload.role_filter || "").trim(); // 'admin' | 'manager' | 'user'
       const creditsFilter = (payload.credits_filter || "").trim(); // 'has_permanent' | 'no_permanent'
+      const reminderFilter = (payload.reminder_filter || "").trim(); // 'eligible'
       const REMINDER_SORT_KEYS = [
         "kyc_reminders_count",
         "kyc_last_reminder_at",
@@ -380,6 +381,25 @@ serve(async (req) => {
         query = query.gt("permanent_credits", 0);
       if (creditsFilter === "no_permanent")
         query = query.or("permanent_credits.is.null,permanent_credits.eq.0");
+
+      // Recordatorio KYC elegible: KYC no verificado Y (sin recordatorio O último envío hace ≥5 días)
+      if (reminderFilter === "eligible") {
+        query = query.not("kyc_status", "in", "(verified)");
+        const cutoff = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: recent } = await admin
+          .from("kyc_reminder_log")
+          .select("user_id")
+          .gte("sent_at", cutoff);
+        const excludeIds = Array.from(new Set((recent || []).map((r: any) => r.user_id)));
+        if (excludeIds.length > 0) {
+          // Chunk to avoid URL length blowups
+          const CHUNK = 200;
+          for (let i = 0; i < excludeIds.length; i += CHUNK) {
+            const slice = excludeIds.slice(i, i + CHUNK);
+            query = query.not("user_id", "in", `(${slice.join(",")})`);
+          }
+        }
+      }
 
       let profiles: any[] = [];
       let profilesCount = 0;
