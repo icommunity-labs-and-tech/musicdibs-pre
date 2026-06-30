@@ -91,7 +91,7 @@ serve(async (req) => {
     if (profile.kyc_status === "verified") return json({ ok: false, reason: "User already verified" });
     const { data: authUser } = await supabase.auth.admin.getUserById(manualUserId);
     const email = authUser?.user?.email;
-    if (!email) return json({ error: "No email" }, 400);
+    if (!email) return json({ ok: false, reason: "No email on auth user" });
     const { data: lastLog } = await supabase.from("kyc_reminder_log").select("sent_at").eq("user_id", manualUserId).order("sent_at", { ascending: false }).limit(1).maybeSingle();
     if (lastLog) {
       const daysSince = (Date.now() - new Date(lastLog.sent_at).getTime()) / 86400000;
