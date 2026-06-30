@@ -204,6 +204,22 @@ export default function AdminMetricsPage() {
     return selectedYear;
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
+  // Whether the selected period matches "today's" period — alerts based on
+  // global "this month" data only make sense for the current period.
+  const isCurrentPeriod = useMemo(() => {
+    const today = new Date();
+    if (periodType === 'week') {
+      return weekStart === getCurrentMonday();
+    }
+    if (periodType === 'month') {
+      return (
+        Number(selectedYear) === today.getFullYear() &&
+        Number(selectedMonth) === today.getMonth() + 1
+      );
+    }
+    return Number(selectedYear) === today.getFullYear();
+  }, [periodType, weekStart, selectedMonth, selectedYear]);
+
   if (loading && !metrics) return <div className="flex items-center justify-center py-20 text-muted-foreground">Cargando métricas...</div>;
   if (!metrics) return (
     <Card className="border-border/40">
@@ -326,7 +342,7 @@ export default function AdminMetricsPage() {
       <KpiGrid metrics={lifetimeTotalUsers != null ? { ...metrics, totalUsers: lifetimeTotalUsers } : metrics} />
 
       {/* Financial Alerts */}
-      <FinancialAlerts metrics={metrics} />
+      <FinancialAlerts metrics={metrics} isCurrentPeriod={isCurrentPeriod} periodLabel={periodLabel} />
 
       {/* Mini Marketing Summary */}
       <MarketingSummary metrics={metrics} />
