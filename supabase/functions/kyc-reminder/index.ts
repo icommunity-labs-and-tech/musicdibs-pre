@@ -68,7 +68,7 @@ async function getReminderTarget(
 ): Promise<ReminderTarget & { skipReason?: string }> {
   const { data: profile } = await supabaseAdmin
     .from("profiles")
-    .select("user_id, language, kyc_status, full_name, display_name")
+    .select("user_id, language, kyc_status, display_name")
     .eq("user_id", target.user_id)
     .maybeSingle();
 
@@ -90,8 +90,7 @@ async function getReminderTarget(
   return {
     user_id: target.user_id,
     email: authEmail || target.email,
-    name: asString((profile as Record<string, unknown> | null)?.full_name) ||
-      asString((profile as Record<string, unknown> | null)?.display_name) ||
+    name: asString((profile as Record<string, unknown> | null)?.display_name) ||
       target.name ||
       authName,
     language: asString((profile as Record<string, unknown> | null)?.language) || target.language,
