@@ -342,7 +342,7 @@ export default function AdminMetricsPage() {
       <KpiGrid metrics={lifetimeTotalUsers != null ? { ...metrics, totalUsers: lifetimeTotalUsers } : metrics} />
 
       {/* Financial Alerts */}
-      <FinancialAlerts metrics={metrics} />
+      <FinancialAlerts metrics={metrics} isCurrentPeriod={isCurrentPeriod} periodLabel={periodLabel} />
 
       {/* Mini Marketing Summary */}
       <MarketingSummary metrics={metrics} />
