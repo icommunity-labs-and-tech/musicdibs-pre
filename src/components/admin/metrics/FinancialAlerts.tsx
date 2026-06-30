@@ -1,8 +1,10 @@
-import { AlertTriangle, TrendingDown, DollarSign, Flame, ShieldAlert, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, TrendingDown, DollarSign, Flame, ShieldAlert, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface FinancialAlertsProps {
   metrics: any;
+  isCurrentPeriod?: boolean;
+  periodLabel?: string;
 }
 
 interface AlertItem {
@@ -12,7 +14,7 @@ interface AlertItem {
   icon: any;
 }
 
-export default function FinancialAlerts({ metrics }: FinancialAlertsProps) {
+export default function FinancialAlerts({ metrics, isCurrentPeriod = true, periodLabel }: FinancialAlertsProps) {
   const m = metrics;
   const alerts: AlertItem[] = [];
 
