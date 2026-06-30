@@ -613,3 +613,56 @@ export function distributionWelcomeEmail(data: { name: string; email: string; pl
   };
 }
 
+//  KYC Reminder (sent when user has not completed KYC) 
+
+const tKycRem: Record<Lang, { subject: (n: number) => string; title: string; greeting: string; body: string; note: string; cta: string; closing: string }> = {
+  es: {
+    subject: (n) => n === 1 ? "Recordatorio: completa tu verificación de identidad — MusicDibs" : n === 2 ? "Segundo recordatorio: verifica tu identidad para registrar obras" : "Último recordatorio: verifica tu identidad en MusicDibs",
+    title: "Completa tu verificación de identidad",
+    greeting: "queremos recordarte que aún tienes pendiente la verificación de identidad (KYC) en MusicDibs.",
+    body: "Hasta que no la completes, no podrás registrar obras en blockchain ni emitir certificados de propiedad intelectual. El proceso es rápido (menos de 2 minutos) y se realiza online con tu documento de identidad.",
+    note: "Recuerda que también puedes seguir usando el resto de servicios de la plataforma, incluido nuestro IA Music Studio para generar música, letras, portadas y vídeos.",
+    cta: "Verificar mi identidad →",
+    closing: "Si ya la has completado, ignora este correo.",
+  },
+  en: {
+    subject: (n) => n === 1 ? "Reminder: complete your identity verification — MusicDibs" : n === 2 ? "Second reminder: verify your identity to register works" : "Final reminder: verify your identity on MusicDibs",
+    title: "Complete your identity verification",
+    greeting: "we want to remind you that your identity verification (KYC) on MusicDibs is still pending.",
+    body: "Until you complete it, you won't be able to register works on blockchain or issue intellectual property certificates. The process is quick (less than 2 minutes) and is done online with your ID document.",
+    note: "Remember you can still use the rest of the platform's services, including our AI Music Studio to generate music, lyrics, covers and videos.",
+    cta: "Verify my identity →",
+    closing: "If you've already completed it, please ignore this email.",
+  },
+  pt: {
+    subject: (n) => n === 1 ? "Lembrete: complete sua verificação de identidade — MusicDibs" : n === 2 ? "Segundo lembrete: verifique sua identidade para registrar obras" : "Último lembrete: verifique sua identidade no MusicDibs",
+    title: "Complete sua verificação de identidade",
+    greeting: "queremos lembrar que sua verificação de identidade (KYC) no MusicDibs ainda está pendente.",
+    body: "Até concluí-la, você não poderá registrar obras em blockchain nem emitir certificados de propriedade intelectual. O processo é rápido (menos de 2 minutos) e feito online com seu documento de identidade.",
+    note: "Lembre-se de que você pode continuar usando os demais serviços da plataforma, incluindo nosso AI Music Studio para gerar música, letras, capas e vídeos.",
+    cta: "Verificar minha identidade →",
+    closing: "Se você já concluiu, por favor ignore este email.",
+  },
+};
+
+export function kycReminderEmail(data: { name: string; reminderNumber?: number; lang?: string }) {
+  const lang = normLang(data.lang);
+  const i = tKycRem[lang];
+  const n = data.reminderNumber || 1;
+  const safeName = escapeHtml(data.name || "");
+  const greeting = lang === "en" ? "Hi" : lang === "pt" ? "Olá" : "Hola";
+
+  const body = `
+    <p style="margin:0 0 20px;color:#d1d5db;font-size:15px;line-height:1.7;text-align:center;">${greeting} <strong style="color:#f3f4f6;">${safeName}</strong>, ${i.greeting}</p>
+    <p style="margin:0 0 16px;color:#d1d5db;font-size:14px;line-height:1.7;">${i.body}</p>
+    ${cta("https://musicdibs.com/dashboard/identity", i.cta)}
+    <p style="margin:28px 0 12px;color:#d1d5db;font-size:14px;line-height:1.7;text-align:center;">${i.note}</p>
+    <p style="margin:20px 0 0;color:#9ca3af;font-size:12px;text-align:center;">${i.closing}</p>`;
+
+  return {
+    subject: i.subject(n),
+    html: wrap("", i.title, body, lang),
+    text: `${greeting} ${data.name}, ${i.greeting} ${i.body}\n\nhttps://musicdibs.com/dashboard/identity`,
+  };
+}
+
