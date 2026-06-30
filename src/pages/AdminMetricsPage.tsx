@@ -205,7 +205,10 @@ export default function AdminMetricsPage() {
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
   // Whether the selected period matches "today's" period — alerts based on
-  // global "this month" data only make sense for the current period.
+  // global "this month" data only make sense for the current short period.
+  // The year view spans 12 months so global "this month" snapshots (churn,
+  // NRR, quick ratio…) don't represent the year — we treat year as NOT
+  // current to avoid misleading snapshot alerts.
   const isCurrentPeriod = useMemo(() => {
     const today = new Date();
     if (periodType === 'week') {
@@ -217,7 +220,8 @@ export default function AdminMetricsPage() {
         Number(selectedMonth) === today.getMonth() + 1
       );
     }
-    return Number(selectedYear) === today.getFullYear();
+    // Year view: snapshot alerts don't apply to a 12-month window.
+    return false;
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
   if (loading && !metrics) return <div className="flex items-center justify-center py-20 text-muted-foreground">Cargando métricas...</div>;
