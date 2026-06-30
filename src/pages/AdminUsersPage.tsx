@@ -334,17 +334,38 @@ export default function AdminUsersPage() {
     if (!confirm(`¿Enviar recordatorio de KYC a ${selected.length} usuario${selected.length === 1 ? '' : 's'} con KYC no verificado?`)) return;
     const toastId = toast.loading(`Enviando recordatorios… (0/${selected.length})`);
     let sent = 0, skipped = 0, failed = 0;
+    const reasons: string[] = [];
     for (let i = 0; i < selected.length; i++) {
       const u = selected[i];
       try {
         const { data, error } = await supabase.functions.invoke('kyc-reminder', { body: { user_id: u.user_id } });
-        if (error) failed++;
+        if (error) {
+          failed++;
+          reasons.push(error.message);
+        }
         else if (data?.ok) sent++;
-        else skipped++;
-      } catch { failed++; }
+        else {
+          skipped++;
+          if (data?.reason) reasons.push(data.reason);
+        }
+      } catch (e: any) {
+        failed++;
+        reasons.push(e?.message || 'Error desconocido');
+      }
       toast.loading(`Enviando recordatorios… (${i + 1}/${selected.length})`, { id: toastId });
     }
-    toast.success(`Recordatorios KYC: ${sent} enviados, ${skipped} omitidos, ${failed} fallidos`, { id: toastId });
+    const detail = Array.from(new Set(reasons)).slice(0, 3).join(' · ');
+    if (sent === 0 && (failed > 0 || skipped > 0)) {
+      toast.error('No se ha enviado ningún recordatorio KYC', {
+        id: toastId,
+        description: detail || `${skipped} omitidos, ${failed} fallidos`,
+      });
+    } else {
+      toast.success(`Recordatorios KYC: ${sent} enviados, ${skipped} omitidos, ${failed} fallidos`, {
+        id: toastId,
+        description: detail || undefined,
+      });
+    }
     load();
   };
 
