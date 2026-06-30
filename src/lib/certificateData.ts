@@ -22,6 +22,7 @@ export interface CertificateBuildInput {
   fallbackAlgorithm?: string;
   sourceFile?: File | null;
   workId?: string;
+  coauthors?: CertificateCoauthor[];
 }
 
 interface EvidenceCertificateDetail {
