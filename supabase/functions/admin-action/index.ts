@@ -2104,7 +2104,7 @@ serve(async (req) => {
 
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v12:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v13:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -3166,6 +3166,87 @@ serve(async (req) => {
       } catch (ordErr: any) {
         console.error("[get_saas_metrics] Orders query error:", ordErr.message);
       }
+
+      // ── Stripe-authoritative subscription unit counts (period) ──
+      // Source of truth = Stripe paid invoices in the selected window, classified
+      // by `lines.data[].price.recurring.interval` (year vs month). This matches
+      // what is visible in the Stripe dashboard ("Invoices · Paid") for the same
+      // period, regardless of whether webhook persistence into `orders` lagged
+      // or mis-classified a row. We override unitsSold{Annual,Monthly} and
+      // revenue{Annual,Monthly} when Stripe data is reachable.
+      try {
+        const stripeKey = Deno.env.get("STRIPE_LIVE_SECRET_KEY") ?? Deno.env.get("STRIPE_SECRET_KEY");
+        if (stripeKey && filterStart && filterEnd) {
+          const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+          const gte = Math.floor(new Date(filterStart).getTime() / 1000);
+          const lt = Math.floor(new Date(filterEnd).getTime() / 1000);
+
+          let sAnnualUnits = 0;
+          let sMonthlyUnits = 0;
+          let sAnnualRev = 0;
+          let sMonthlyRev = 0;
+          let sAnnualRenewals = 0;
+          let sMonthlyRenewals = 0;
+          let scanned = 0;
+          const MAX_SCAN = 5000;
+
+          // Iterate paid invoices in window. status:paid + created range.
+          const listParams: any = {
+            limit: 100,
+            status: "paid",
+            created: { gte, lt },
+            expand: ["data.lines.data.price"],
+          };
+          for await (const inv of stripe.invoices.list(listParams)) {
+            scanned++;
+            if (scanned > MAX_SCAN) break;
+            // Only count subscription invoices (skip one-off invoices if any).
+            const sub = (inv as any).subscription;
+            const reason = String((inv as any).billing_reason || "");
+            if (!sub && !reason.startsWith("subscription")) continue;
+
+            // Determine interval from first recurring line item.
+            let interval: string | null = null;
+            const lines = (inv as any).lines?.data || [];
+            for (const li of lines) {
+              const rec = li?.price?.recurring?.interval ?? li?.plan?.interval;
+              if (rec) { interval = String(rec); break; }
+            }
+            if (!interval) continue;
+
+            const paid = Number((inv as any).amount_paid ?? 0) || 0;
+            const tax = invoiceTaxCents(inv);
+            const netEuro = Math.max(0, (paid - tax) / 100);
+            const isRenewal = reason === "subscription_cycle" || reason === "subscription_update";
+
+            if (interval === "year") {
+              sAnnualUnits++;
+              sAnnualRev += netEuro;
+              if (isRenewal) sAnnualRenewals++;
+            } else if (interval === "month") {
+              sMonthlyUnits++;
+              sMonthlyRev += netEuro;
+              if (isRenewal) sMonthlyRenewals++;
+            }
+          }
+
+          // Override only if Stripe returned data (avoid wiping on transient errors).
+          if (sAnnualUnits + sMonthlyUnits > 0) {
+            unitsSoldAnnual = sAnnualUnits;
+            unitsSoldMonthly = sMonthlyUnits;
+            revenueAnnual = Math.round(sAnnualRev * 100) / 100;
+            revenueMonthly = Math.round(sMonthlyRev * 100) / 100;
+            renewalsAnnualCount = sAnnualRenewals;
+            renewalsMonthlyCount = sMonthlyRenewals;
+            console.log(
+              `[get_saas_metrics] Stripe sub-units override: annual=${sAnnualUnits} monthly=${sMonthlyUnits} (scanned=${scanned})`,
+            );
+          }
+        }
+      } catch (stripeErr: any) {
+        console.warn("[get_saas_metrics] Stripe subscription reconciliation failed:", stripeErr?.message);
+      }
+
 
       // Period-over-period revenue change (powers the MRR KPI trend arrow).
       mrrChange =

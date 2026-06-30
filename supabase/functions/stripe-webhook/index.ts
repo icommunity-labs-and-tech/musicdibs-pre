@@ -61,13 +61,6 @@ const PRICE_CREDITS: Record<string, number> = {
   "price_1TMDVkFULeu7PzK6PcMnQkWZ": 50,  // topup_50
   "price_1TMDVkFULeu7PzK6AJC3o4lZ": 100, // topup_100
   "price_1TMDVkFULeu7PzK6e9omPpoB": 200, // topup_200
-  // Live production prices (FULeu7PzK6 annual + monthly plans)
-  "price_1TMDVwFULeu7PzK6laW4n6wu": 100, // annual_100 live
-  "price_1TMDVwFULeu7PzK6ZnMqrW1c": 200, // annual_200 live
-  "price_1TMDVwFULeu7PzK6S22WkY3w": 300, // annual_300 live
-  "price_1TMDVwFULeu7PzK6mSwmx29Z": 500, // annual_500 live
-  "price_1TMDVwFULeu7PzK68TlUbof2": 1000, // annual_1000 live
-  "price_1TMDW3FULeu7PzK6468wsXJt": 8,   // monthly live
 };
 
 const TIER_CREDITS: Record<string, number> = {
