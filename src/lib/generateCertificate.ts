@@ -9,6 +9,12 @@ const GRAY_M  = '#999999'
 const RED_CORP = '#E8364E'
 const WHITE   = '#FFFFFF'
 
+export interface CertificateCoauthor {
+  name: string
+  roles?: string[]
+  percentage?: number | null
+}
+
 export interface CertificateData {
   title: string
   filename: string
@@ -17,6 +23,7 @@ export interface CertificateData {
   description?: string
   authorName: string
   authorDocId?: string
+  coauthors?: CertificateCoauthor[]
   certifiedAt: string
   network: string
   txHash: string
