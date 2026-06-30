@@ -2104,7 +2104,7 @@ serve(async (req) => {
 
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v11:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v12:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -2145,6 +2145,192 @@ serve(async (req) => {
           /* cache miss is non-fatal */
         }
       }
+
+      // Stripe-derived financial helpers. `orders.amount_net` is our stored
+      // pre-tax amount, but older webhook rows did not persist it, and relying
+      // on a fallback makes IVA lower than Stripe Tax. For metrics we repair the
+      // selected period from Stripe (invoice total_tax_amounts / session tax)
+      // and persist the corrected amount_net/fee for future cached reads.
+      const roundMoney = (value: number) => Math.round(value * 100) / 100;
+      const invoiceTaxCents = (invoice: any): number => {
+        const taxFromBreakdown = Array.isArray(invoice?.total_tax_amounts)
+          ? invoice.total_tax_amounts.reduce(
+              (sum: number, item: any) => sum + (Number(item?.amount) || 0),
+              0,
+            )
+          : 0;
+        return taxFromBreakdown || Number(invoice?.tax ?? 0) || 0;
+      };
+      const netFromStripeInvoice = (invoice: any): number => {
+        // For sales metrics, match Stripe's collected revenue: amount_paid can be
+        // lower than invoice.total when customer balance/credits are applied.
+        // Therefore net = amount_paid - real Stripe tax (not total_excluding_tax).
+        const paid = Number(invoice?.amount_paid ?? 0) || 0;
+        return roundMoney((paid - invoiceTaxCents(invoice)) / 100);
+      };
+      const netFromStripeSession = (session: any): number => {
+        const total = Number(session?.amount_total ?? 0) || 0;
+        const tax = Number(session?.total_details?.amount_tax ?? 0) || 0;
+        return roundMoney((total - tax) / 100);
+      };
+      const feeFromBalanceTransaction = (bt: any): number | null => {
+        if (bt && typeof bt === "object" && typeof bt.fee === "number") {
+          return roundMoney(bt.fee / 100);
+        }
+        return null;
+      };
+      const enrichOrdersWithStripeFinancials = async (orders: any[]) => {
+        const stripeKey = Deno.env.get("STRIPE_LIVE_SECRET_KEY") ?? Deno.env.get("STRIPE_SECRET_KEY");
+        if (!stripeKey || !orders.length) return orders;
+
+        const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+        const invoiceCache = new Map<string, any>();
+        const sessionCache = new Map<string, any>();
+        const chargeCache = new Map<string, any>();
+        const piCache = new Map<string, any>();
+
+        const retrieveInvoice = async (id: string) => {
+          if (!invoiceCache.has(id)) {
+            invoiceCache.set(id, await stripe.invoices.retrieve(id, {
+              expand: ["charge.balance_transaction"],
+            } as any));
+          }
+          return invoiceCache.get(id);
+        };
+        const retrieveSession = async (id: string) => {
+          if (!sessionCache.has(id)) {
+            sessionCache.set(id, await stripe.checkout.sessions.retrieve(id, {
+              expand: ["payment_intent.latest_charge.balance_transaction"],
+            } as any));
+          }
+          return sessionCache.get(id);
+        };
+        const retrieveCharge = async (id: string) => {
+          // Newer Stripe invoice APIs can expose invoice payments as `py_...`;
+          // those are not Charges and cannot be retrieved through charges.retrieve.
+          if (!id || !id.startsWith("ch_")) return null;
+          if (!chargeCache.has(id)) {
+            chargeCache.set(id, await stripe.charges.retrieve(id, {
+              expand: ["balance_transaction", "invoice"],
+            } as any));
+          }
+          return chargeCache.get(id);
+        };
+        const retrievePaymentIntent = async (id: string) => {
+          if (!id) return null;
+          if (!piCache.has(id)) {
+            piCache.set(id, await stripe.paymentIntents.retrieve(id, {
+              expand: ["latest_charge.balance_transaction"],
+            } as any));
+          }
+          return piCache.get(id);
+        };
+
+        const enrichOne = async (o: any) => {
+          const gross = Number(o.amount_gross) || 0;
+          const currentNet = Number(o.amount_net);
+          const currentFee = Number(o.stripe_fee);
+          const hasStripeRef = !!(
+            o.stripe_invoice_id ||
+            o.stripe_checkout_session_id ||
+            o.stripe_charge_id ||
+            o.stripe_payment_intent_id
+          );
+          const looksLikeOldVatFallback =
+            Number.isFinite(currentNet) &&
+            gross > 0 &&
+            Math.abs(currentNet - roundMoney(gross / 1.21)) < 0.02;
+          const needsStripeRefresh =
+            !Number.isFinite(currentNet) ||
+            currentNet <= 0 ||
+            looksLikeOldVatFallback ||
+            !Number.isFinite(currentFee) ||
+            currentFee <= 0;
+          if (gross <= 0 || !hasStripeRef || !needsStripeRefresh) return o;
+
+          let amountNet: number | null = null;
+          let stripeFee: number | null = null;
+          let chargeId: string | null = o.stripe_charge_id || null;
+
+          try {
+            if (o.stripe_invoice_id) {
+              const inv = await retrieveInvoice(o.stripe_invoice_id);
+              amountNet = netFromStripeInvoice(inv);
+              const invCharge: any = (inv as any)?.charge;
+              if (!chargeId) chargeId = typeof invCharge === "string" ? invCharge : invCharge?.id || null;
+              stripeFee = feeFromBalanceTransaction(invCharge?.balance_transaction) ?? stripeFee;
+            }
+
+            if ((amountNet == null || stripeFee == null) && o.stripe_checkout_session_id) {
+              const session = await retrieveSession(o.stripe_checkout_session_id);
+              if (amountNet == null) amountNet = netFromStripeSession(session);
+              const pi: any = session?.payment_intent;
+              const latestCharge = typeof pi === "object" ? pi?.latest_charge : null;
+              if (!chargeId) chargeId = typeof latestCharge === "string" ? latestCharge : latestCharge?.id || null;
+              stripeFee = feeFromBalanceTransaction(latestCharge?.balance_transaction) ?? stripeFee;
+
+              if (stripeFee == null && typeof pi === "string") {
+                const fullPi: any = await retrievePaymentIntent(pi);
+                const lc = fullPi?.latest_charge;
+                if (!chargeId) chargeId = typeof lc === "string" ? lc : lc?.id || null;
+                stripeFee = feeFromBalanceTransaction(lc?.balance_transaction) ?? stripeFee;
+              }
+            }
+
+            if (stripeFee == null && o.stripe_payment_intent_id) {
+              const fullPi: any = await retrievePaymentIntent(o.stripe_payment_intent_id);
+              const lc = fullPi?.latest_charge;
+              if (!chargeId) chargeId = typeof lc === "string" ? lc : lc?.id || null;
+              stripeFee = feeFromBalanceTransaction(lc?.balance_transaction) ?? stripeFee;
+            }
+
+            if ((amountNet == null || stripeFee == null) && chargeId?.startsWith("ch_")) {
+              const ch: any = await retrieveCharge(chargeId);
+              stripeFee = feeFromBalanceTransaction(ch?.balance_transaction) ?? stripeFee;
+              if (amountNet == null) {
+                const inv = ch?.invoice;
+                amountNet = inv && typeof inv === "object" ? netFromStripeInvoice(inv) : gross;
+              }
+            }
+          } catch (e: any) {
+            console.warn("[get_saas_metrics] Stripe financial enrichment failed:", o.id, e?.message);
+          }
+
+          const updates: any = {};
+          if (
+            amountNet != null &&
+            Number.isFinite(amountNet) &&
+            (!Number.isFinite(currentNet) || Math.abs(currentNet - amountNet) >= 0.01)
+          ) {
+            updates.amount_net = roundMoney(amountNet);
+          }
+          if (
+            stripeFee != null &&
+            Number.isFinite(stripeFee) &&
+            (!Number.isFinite(currentFee) || Math.abs(currentFee - stripeFee) >= 0.01)
+          ) {
+            updates.stripe_fee = roundMoney(stripeFee);
+          }
+          if (!o.stripe_charge_id && chargeId?.startsWith("ch_")) updates.stripe_charge_id = chargeId;
+
+          if (Object.keys(updates).length > 0 && o.id) {
+            const { error } = await admin.from("orders").update(updates).eq("id", o.id);
+            if (error) {
+              console.warn("[get_saas_metrics] order financial update failed:", o.id, error.message);
+            }
+            return { ...o, ...updates };
+          }
+          return o;
+        };
+
+        const enriched: any[] = [];
+        const CONCURRENCY = 8;
+        for (let i = 0; i < orders.length; i += CONCURRENCY) {
+          const chunk = orders.slice(i, i + CONCURRENCY);
+          enriched.push(...await Promise.all(chunk.map(enrichOne)));
+        }
+        return enriched;
+      };
 
       // ── Subscriptions & revenue metrics from local DB (no Stripe API calls) ──
       // Source of truth: public.subscriptions (synced by stripe-webhook) for MRR/churn,
@@ -2841,15 +3027,15 @@ serve(async (req) => {
           const { data: periodOrders } = await admin
             .from("orders")
             .select(
-              "user_id, paid_at, amount_gross, amount_net, stripe_fee, dispute_fee, order_status, product_type, product_code, is_renewal, billing_interval, attributed_campaign_name",
+              "id, user_id, paid_at, amount_gross, amount_net, stripe_fee, dispute_fee, order_status, product_type, product_code, is_renewal, billing_interval, attributed_campaign_name, stripe_invoice_id, stripe_checkout_session_id, stripe_charge_id, stripe_payment_intent_id",
             )
 
             .eq("order_status", "paid")
             .gte("paid_at", filterStart)
-            .lte("paid_at", filterEnd)
+            .lt("paid_at", filterEnd)
             .order("paid_at", { ascending: false })
             .limit(5000);
-          ordersData = periodOrders || [];
+          ordersData = await enrichOrdersWithStripeFinancials(periodOrders || []);
         }
         // Clientes totales del periodo = únicos con compra en el periodo
         customersTotal = new Set(
@@ -4940,8 +5126,13 @@ serve(async (req) => {
           const priceId = lineItem?.price?.id || null;
           const interval = lineItem?.price?.recurring?.interval || null;
           const amount = (inv.amount_paid || 0) / 100;
-          const stripeNet =
-            typeof inv.subtotal === "number" ? inv.subtotal / 100 : null;
+          const invTax = Array.isArray((inv as any).total_tax_amounts)
+            ? (inv as any).total_tax_amounts.reduce(
+                (sum: number, item: any) => sum + (Number(item?.amount) || 0),
+                0,
+              )
+            : (Number((inv as any).tax ?? 0) || 0);
+          const stripeNet = ((inv.amount_paid || 0) - invTax) / 100;
 
           const { productType, productCode, billingInterval, isSub } =
             inferProductType(priceId, interval, amount);
