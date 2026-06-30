@@ -2104,7 +2104,7 @@ serve(async (req) => {
 
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v13:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v14:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
