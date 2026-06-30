@@ -477,6 +477,13 @@ export default function AdminUsersPage() {
             <SelectItem value="no_permanent">Sin permanentes</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={reminderFilter} onValueChange={v => { setReminderFilter(v); setPage(0); }}>
+          <SelectTrigger className="w-[220px] h-8"><SelectValue placeholder="Recordatorio KYC" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Recordatorio KYC (todos)</SelectItem>
+            <SelectItem value="eligible">📧 Elegibles (no verif. + ≥5 días sin aviso)</SelectItem>
+          </SelectContent>
+        </Select>
         {activeFiltersCount > 0 && (
           <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
             <X className="h-3 w-3 mr-1" /> Limpiar ({activeFiltersCount})
