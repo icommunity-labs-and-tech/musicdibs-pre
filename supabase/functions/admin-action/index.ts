@@ -383,10 +383,12 @@ serve(async (req) => {
         query = query.or("permanent_credits.is.null,permanent_credits.eq.0");
 
       // Recordatorio KYC elegible: KYC no verificado Y (sin recordatorio O último envío hace ≥5 días)
+      // El exclude set puede tener miles de UUIDs → no se puede meter en la URL como not.in.
+      // Resolvemos el filtrado en memoria.
+      let eligibleExcludeSet: Set<string> | null = null;
       if (reminderFilter === "eligible") {
         query = query.neq("kyc_status", "verified");
         const cutoff = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
-        // Paginate to get ALL recent reminders (default 1000-row limit would miss exclusions)
         const recentIds = new Set<string>();
         const PAGE = 1000;
         for (let from = 0; ; from += PAGE) {
@@ -399,85 +401,82 @@ serve(async (req) => {
           (chunk || []).forEach((r: any) => r.user_id && recentIds.add(r.user_id));
           if (!chunk || chunk.length < PAGE) break;
         }
-        const excludeIds = Array.from(recentIds);
-        if (excludeIds.length > 0) {
-          // Chunk to avoid URL length blowups
-          const CHUNK = 200;
-          for (let i = 0; i < excludeIds.length; i += CHUNK) {
-            const slice = excludeIds.slice(i, i + CHUNK);
-            query = query.not("user_id", "in", `(${slice.join(",")})`);
-          }
-        }
+        eligibleExcludeSet = recentIds;
       }
 
       let profiles: any[] = [];
       let profilesCount = 0;
       let error: any = null;
 
-      if (isReminderSort) {
-        // Fetch all matching profile rows (capped), join with reminder aggregates, sort, paginate, then refetch full rows.
-        const {
-          data: idRows,
-          error: idErr,
-          count: idCount,
-        } = await query.select("user_id", { count: "exact" }).range(0, 4999);
-        if (idErr) {
-          if (
-            (idErr.message || "")
-              .toLowerCase()
-              .includes("range not satisfiable")
-          )
-            return json({ users: [], total: 0 });
-          return json({ error: idErr.message }, 500);
+      if (isReminderSort || eligibleExcludeSet) {
+        // Fetch all matching profile ids (capped), filter excludes in memory, sort, paginate, refetch.
+        const allIds: string[] = [];
+        const PAGE = 1000;
+        for (let from = 0; from < 50000; from += PAGE) {
+          const { data: idChunk, error: idErr } = await query
+            .select("user_id")
+            .range(from, from + PAGE - 1);
+          if (idErr) {
+            if ((idErr.message || "").toLowerCase().includes("range not satisfiable")) break;
+            return json({ error: idErr.message }, 500);
+          }
+          const rows = (idChunk || []) as any[];
+          for (const r of rows) {
+            if (eligibleExcludeSet && eligibleExcludeSet.has(r.user_id)) continue;
+            allIds.push(r.user_id);
+          }
+          if (rows.length < PAGE) break;
         }
-        const allIds = (idRows || []).map((r: any) => r.user_id);
         if (allIds.length === 0) return json({ users: [], total: 0 });
 
-        const { data: allReminders } = await admin
-          .from("kyc_reminder_log")
-          .select("user_id, sent_at")
-          .in("user_id", allIds);
-        const remStats: Record<string, { count: number; last: number | null }> =
-          {};
-        (allReminders || []).forEach((r: any) => {
-          const s = (remStats[r.user_id] ||= { count: 0, last: null });
-          s.count++;
-          const t = r.sent_at ? new Date(r.sent_at).getTime() : null;
-          if (t !== null && (s.last === null || t > s.last)) s.last = t;
-        });
-
-        const sortable = allIds.map((id) => ({
-          id,
-          count: remStats[id]?.count || 0,
-          last: remStats[id]?.last ?? null,
-        }));
-        const dir = sortDir ? 1 : -1;
-        sortable.sort((a, b) => {
-          if (sortBy === "kyc_reminders_count")
-            return (a.count - b.count) * dir;
-          // kyc_last_reminder_at: nulls always at the end
-          if (a.last === null && b.last === null) return 0;
-          if (a.last === null) return 1;
-          if (b.last === null) return -1;
-          return (a.last - b.last) * dir;
-        });
-
-        profilesCount = idCount ?? sortable.length;
-        const pageIds = sortable.slice(offset, offset + limit).map((s) => s.id);
-        if (pageIds.length === 0)
-          return json({ users: [], total: profilesCount });
-
-        const { data: pageProfiles, error: pErr } = await admin
-          .from("profiles")
-          .select("*")
-          .in("user_id", pageIds);
-        if (pErr) return json({ error: pErr.message }, 500);
-        // Preserve sort order
-        const pMap: Record<string, any> = {};
-        (pageProfiles || []).forEach((p: any) => {
-          pMap[p.user_id] = p;
-        });
-        profiles = pageIds.map((id) => pMap[id]).filter(Boolean);
+        if (isReminderSort) {
+          const { data: allReminders } = await admin
+            .from("kyc_reminder_log")
+            .select("user_id, sent_at")
+            .in("user_id", allIds);
+          const remStats: Record<string, { count: number; last: number | null }> = {};
+          (allReminders || []).forEach((r: any) => {
+            const s = (remStats[r.user_id] ||= { count: 0, last: null });
+            s.count++;
+            const t = r.sent_at ? new Date(r.sent_at).getTime() : null;
+            if (t !== null && (s.last === null || t > s.last)) s.last = t;
+          });
+          const sortable = allIds.map((id) => ({
+            id,
+            count: remStats[id]?.count || 0,
+            last: remStats[id]?.last ?? null,
+          }));
+          const dir = sortDir ? 1 : -1;
+          sortable.sort((a, b) => {
+            if (sortBy === "kyc_reminders_count") return (a.count - b.count) * dir;
+            if (a.last === null && b.last === null) return 0;
+            if (a.last === null) return 1;
+            if (b.last === null) return -1;
+            return (a.last - b.last) * dir;
+          });
+          profilesCount = sortable.length;
+          const pageIds = sortable.slice(offset, offset + limit).map((s) => s.id);
+          if (pageIds.length === 0) return json({ users: [], total: profilesCount });
+          const { data: pageProfiles, error: pErr } = await admin
+            .from("profiles")
+            .select("*")
+            .in("user_id", pageIds);
+          if (pErr) return json({ error: pErr.message }, 500);
+          const pMap: Record<string, any> = {};
+          (pageProfiles || []).forEach((p: any) => { pMap[p.user_id] = p; });
+          profiles = pageIds.map((id) => pMap[id]).filter(Boolean);
+        } else {
+          profilesCount = allIds.length;
+          const pageIds = allIds.slice(offset, offset + limit);
+          if (pageIds.length === 0) return json({ users: [], total: profilesCount });
+          const { data: pageProfiles, error: pErr } = await admin
+            .from("profiles")
+            .select("*")
+            .in("user_id", pageIds)
+            .order(sortBy, { ascending: sortDir });
+          if (pErr) return json({ error: pErr.message }, 500);
+          profiles = pageProfiles || [];
+        }
       } else {
         query = query
           .order(sortBy, { ascending: sortDir })
