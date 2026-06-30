@@ -382,6 +382,25 @@ serve(async (req) => {
       if (creditsFilter === "no_permanent")
         query = query.or("permanent_credits.is.null,permanent_credits.eq.0");
 
+      // Recordatorio KYC elegible: KYC no verificado Y (sin recordatorio O último envío hace ≥5 días)
+      if (reminderFilter === "eligible") {
+        query = query.not("kyc_status", "in", "(verified)");
+        const cutoff = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: recent } = await admin
+          .from("kyc_reminder_log")
+          .select("user_id")
+          .gte("sent_at", cutoff);
+        const excludeIds = Array.from(new Set((recent || []).map((r: any) => r.user_id)));
+        if (excludeIds.length > 0) {
+          // Chunk to avoid URL length blowups
+          const CHUNK = 200;
+          for (let i = 0; i < excludeIds.length; i += CHUNK) {
+            const slice = excludeIds.slice(i, i + CHUNK);
+            query = query.not("user_id", "in", `(${slice.join(",")})`);
+          }
+        }
+      }
+
       let profiles: any[] = [];
       let profilesCount = 0;
       let error: any = null;
