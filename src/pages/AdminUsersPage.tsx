@@ -19,28 +19,54 @@ const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 type SortKey = 'created_at' | 'updated_at' | 'display_name' | 'available_credits' | 'permanent_credits' | 'subscription_plan' | 'kyc_status' | 'kyc_reminders_count' | 'kyc_last_reminder_at';
 
+const FILTERS_STORAGE_KEY = 'admin_users_filters_v1';
+
+type PersistedState = {
+  search: string;
+  page: number;
+  pageSize: number;
+  kycFilter: string;
+  planFilter: string;
+  stripeFilter: string;
+  statusFilter: string;
+  roleFilter: string;
+  creditsFilter: string;
+  reminderFilter: string;
+  sortBy: SortKey;
+  sortDir: 'asc' | 'desc';
+};
+
+function loadPersisted(): Partial<PersistedState> {
+  try {
+    const raw = localStorage.getItem(FILTERS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
 export default function AdminUsersPage() {
   const { user } = useAuth();
+  const persisted = loadPersisted();
   const [users, setUsers] = useState<any[]>([]);
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
+  const [search, setSearch] = useState(persisted.search ?? '');
+  const [page, setPage] = useState(persisted.page ?? 0);
+  const [pageSize, setPageSize] = useState(persisted.pageSize ?? 50);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Filters
-  const [kycFilter, setKycFilter] = useState<string>('all');
-  const [planFilter, setPlanFilter] = useState<string>('all');
-  const [stripeFilter, setStripeFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [creditsFilter, setCreditsFilter] = useState<string>('all'); // 'has_permanent' | 'no_permanent'
+  const [kycFilter, setKycFilter] = useState<string>(persisted.kycFilter ?? 'all');
+  const [planFilter, setPlanFilter] = useState<string>(persisted.planFilter ?? 'all');
+  const [stripeFilter, setStripeFilter] = useState<string>(persisted.stripeFilter ?? 'all');
+  const [statusFilter, setStatusFilter] = useState<string>(persisted.statusFilter ?? 'all');
+  const [roleFilter, setRoleFilter] = useState<string>(persisted.roleFilter ?? 'all');
+  const [creditsFilter, setCreditsFilter] = useState<string>(persisted.creditsFilter ?? 'all');
+  const [reminderFilter, setReminderFilter] = useState<string>(persisted.reminderFilter ?? 'all');
 
   // Sorting
-  const [sortBy, setSortBy] = useState<SortKey>('created_at');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<SortKey>(persisted.sortBy ?? 'created_at');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>(persisted.sortDir ?? 'desc');
 
   // Modals
   const [creditModal, setCreditModal] = useState<{ open: boolean; userId: string; email: string; currentCredits: number }>({ open: false, userId: '', email: '', currentCredits: 0 });
