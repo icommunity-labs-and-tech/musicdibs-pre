@@ -211,7 +211,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
         description={seoDesc}
         path={path}
         type="article"
-        locale={lang}
+        lang={lang}
         jsonLd={[articleSchema, faqSchema, breadcrumbSchema]}
       />
       <Navbar />
