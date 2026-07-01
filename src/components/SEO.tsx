@@ -59,8 +59,10 @@ export const SEO = ({
   const imageUrl = image ? resolveImageUrl(image) : resolveImageUrl(DEFAULT_OG_IMAGE);
 
 
-  const ogLocale = locale ? (LOCALE_MAP[locale] || "es_ES") : "es_ES";
-  const alternateLocales = ALL_LOCALES.filter((l) => l !== ogLocale);
+  // Site is currently served only in Spanish at the URL level (i18n is
+  // client-side only, no /en/* or /pt-BR/* real routes). Emit a single
+  // honest locale + self-referencing canonical, no fake hreflang alternates.
+  const ogLocale = "es_ES";
 
   const schemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
@@ -70,14 +72,6 @@ export const SEO = ({
       <meta name="description" content={fullDescription} />
       <link rel="canonical" href={url} />
       {noIndex && <meta name="robots" content="noindex, nofollow" />}
-
-      {/* hreflang alternates */}
-      {Object.entries({ es: "", en: "/en", "pt-BR": "/pt-BR" }).map(([lang, prefix]) => (
-        <link key={lang} rel="alternate" hrefLang={lang} href={`${BASE_URL}${prefix}${pathname}`} />
-      ))}
-      <link rel="alternate" hrefLang="x-default" href={`${BASE_URL}${pathname}`} />
-
-
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />
