@@ -39,7 +39,7 @@ const FAQ = [
   },
   {
     q: "Is switching from DistroKid difficult?",
-    a: "If you want to move distribution to Musicdibs too, we support ISRC-matched migration so your existing streams and playlist placements aren't affected.",
+    a: "No. If you want to move distribution to Musicdibs too, we support ISRC-matched migration so your existing streams and playlist placements aren't affected. See the full step-by-step guide at /switch-to-musicdibs.",
   },
   {
     q: "What does Musicdibs protect that DistroKid doesn't?",

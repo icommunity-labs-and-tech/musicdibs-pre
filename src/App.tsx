@@ -97,6 +97,7 @@ const MusicdibsVsLoudlyPage = lazyWithRetry(() => import("./pages/MusicdibsVsLou
 const MusicdibsVsLandrPage = lazyWithRetry(() => import("./pages/MusicdibsVsLandrPage"));
 const MusicdibsVsDiyStackPage = lazyWithRetry(() => import("./pages/MusicdibsVsDiyStackPage"));
 const AllInOneMusicPlatformPage = lazyWithRetry(() => import("./pages/AllInOneMusicPlatformPage"));
+const SwitchToMusicdibsPage = lazyWithRetry(() => import("./pages/SwitchToMusicdibsPage"));
 
 const AdminCampaignMetricsPage = lazyWithRetry(() => import("./pages/AdminCampaignMetricsPage"));
 const AdminChurnPage = lazyWithRetry(() => import("./pages/AdminChurnPage"));
@@ -211,6 +212,7 @@ const App = () => (
               <Route path="/musicdibs-vs-landr" element={<MusicdibsVsLandrPage />} />
               <Route path="/musicdibs-vs-diy-stack" element={<MusicdibsVsDiyStackPage />} />
               <Route path="/all-in-one-music-platform" element={<AllInOneMusicPlatformPage />} />
+              <Route path="/switch-to-musicdibs" element={<SwitchToMusicdibsPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
               <Route path="/admin" element={<AdminLogin />} />
