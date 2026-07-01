@@ -15,13 +15,6 @@ interface SEOProps {
 const BASE_URL = "https://www.musicdibs.com";
 const DEFAULT_OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/27fdd7c8-3e07-4d0d-886d-53859f68e5de";
 
-const LOCALE_MAP: Record<string, string> = {
-  es: "es_ES",
-  en: "en_US",
-  "pt-BR": "pt_BR",
-};
-
-const ALL_LOCALES = Object.values(LOCALE_MAP);
 
 const BRAND_NAME = "Musicdibs";
 const BRAND_NAME_PATTERN = /MusicDibs|Musicdibs/gi;
@@ -46,7 +39,6 @@ export const SEO = ({
   noIndex = false,
 }: SEOProps) => {
   const url = `${BASE_URL}${path}`;
-  const pathname = path || (typeof window !== "undefined" ? window.location.pathname : "/");
   const normalizedTitle = normalizeBrandName(title);
   const fullTitle = path === "/"
     ? normalizedTitle
@@ -59,8 +51,10 @@ export const SEO = ({
   const imageUrl = image ? resolveImageUrl(image) : resolveImageUrl(DEFAULT_OG_IMAGE);
 
 
-  const ogLocale = locale ? (LOCALE_MAP[locale] || "es_ES") : "es_ES";
-  const alternateLocales = ALL_LOCALES.filter((l) => l !== ogLocale);
+  // Site is currently served only in Spanish at the URL level (i18n is
+  // client-side only, no /en/* or /pt-BR/* real routes). Emit a single
+  // honest locale + self-referencing canonical, no fake hreflang alternates.
+  const ogLocale = "es_ES";
 
   const schemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
@@ -70,14 +64,6 @@ export const SEO = ({
       <meta name="description" content={fullDescription} />
       <link rel="canonical" href={url} />
       {noIndex && <meta name="robots" content="noindex, nofollow" />}
-
-      {/* hreflang alternates */}
-      {Object.entries({ es: "", en: "/en", "pt-BR": "/pt-BR" }).map(([lang, prefix]) => (
-        <link key={lang} rel="alternate" hrefLang={lang} href={`${BASE_URL}${prefix}${pathname}`} />
-      ))}
-      <link rel="alternate" hrefLang="x-default" href={`${BASE_URL}${pathname}`} />
-
-
 
       {/* Open Graph */}
       <meta property="og:type" content={type} />
@@ -89,9 +75,6 @@ export const SEO = ({
       <meta property="og:image:height" content="630" />
       <meta property="og:site_name" content={BRAND_NAME} />
       <meta property="og:locale" content={ogLocale} />
-      {alternateLocales.map((alt) => (
-        <meta key={alt} property="og:locale:alternate" content={alt} />
-      ))}
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
