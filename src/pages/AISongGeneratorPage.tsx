@@ -130,7 +130,7 @@ const AISongGeneratorPage = () => {
         description="Create, protect and distribute AI-generated music from one platform. AI vocals, lyrics, mastering, blockchain copyright and global distribution."
         path={PATH}
         type="website"
-        locale="en"
+        lang="en"
         jsonLd={[webPageSchema, softwareSchema, faqSchema, breadcrumbSchema]}
       />
       <Navbar />

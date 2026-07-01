@@ -218,7 +218,7 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
         description={seoDesc}
         path={path}
         type="article"
-        locale={lang}
+        lang={lang}
         jsonLd={[articleSchema, faqSchema, breadcrumbSchema]}
       />
       <Navbar />

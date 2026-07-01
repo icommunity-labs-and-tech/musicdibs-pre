@@ -105,7 +105,7 @@ const NewsArticle = () => {
         path={`/news/${slug}`}
         type="article"
         image={post?.image_url || undefined}
-        locale={i18n.language}
+        lang={(i18n.language === "en" || i18n.language === "pt-BR") ? i18n.language : "es"}
         jsonLd={articleJsonLd}
       />
       <Navbar />

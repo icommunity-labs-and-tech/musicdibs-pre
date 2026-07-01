@@ -129,7 +129,7 @@ const GeneradorCancionesIAPage = () => {
         description="Crea, protege y distribuye música generada con IA desde una sola plataforma. Voces IA, letras, masterización, copyright blockchain y distribución global."
         path={PATH}
         type="website"
-        locale="es"
+        lang="es"
         jsonLd={[webPageSchema, softwareSchema, faqSchema, breadcrumbSchema]}
       />
       <Navbar />

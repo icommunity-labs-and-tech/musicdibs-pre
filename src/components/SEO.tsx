@@ -6,10 +6,22 @@ interface SEOProps {
   path?: string;
   type?: string;
   image?: string;
-  locale?: string;
+  /**
+   * Language of the actual page content. Drives <html lang>, og:locale
+   * and twitter locale. Defaults to Spanish because the vast majority of
+   * routes are ES-only. English/Portuguese landings MUST pass this
+   * explicitly so crawlers see the page's real language.
+   */
+  lang?: "es" | "en" | "pt-BR";
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   noIndex?: boolean;
 }
+
+const LOCALE_MAP: Record<"es" | "en" | "pt-BR", { html: string; og: string }> = {
+  es: { html: "es", og: "es_ES" },
+  en: { html: "en", og: "en_US" },
+  "pt-BR": { html: "pt-BR", og: "pt_BR" },
+};
 
 
 const BASE_URL = "https://www.musicdibs.com";
@@ -34,7 +46,7 @@ export const SEO = ({
   path = "/",
   type = "website",
   image,
-  locale,
+  lang = "es",
   jsonLd,
   noIndex = false,
 }: SEOProps) => {
@@ -51,15 +63,16 @@ export const SEO = ({
   const imageUrl = image ? resolveImageUrl(image) : resolveImageUrl(DEFAULT_OG_IMAGE);
 
 
-  // Site is currently served only in Spanish at the URL level (i18n is
-  // client-side only, no /en/* or /pt-BR/* real routes). Emit a single
-  // honest locale + self-referencing canonical, no fake hreflang alternates.
-  const ogLocale = "es_ES";
+  // No fake hreflang alternates (URLs are single-locale). Each page declares
+  // its OWN language honestly via the `lang` prop — so English landings like
+  // /register-a-song or /copyright-a-song report en/en_US instead of es_ES.
+  const { html: htmlLang, og: ogLocale } = LOCALE_MAP[lang];
 
   const schemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
   return (
     <Helmet>
+      <html lang={htmlLang} />
       <title>{fullTitle}</title>
       <meta name="description" content={fullDescription} />
       <link rel="canonical" href={url} />

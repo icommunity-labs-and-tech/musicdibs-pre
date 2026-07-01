@@ -107,7 +107,7 @@ const News = () => {
         title={t("blog.title", "Noticias")}
         description={t("blog.seo_description", "Últimas noticias y artículos de Musicdibs sobre distribución musical, blockchain y derechos de autor.")}
         path="/news"
-        locale={i18n.language}
+        lang={(i18n.language === "en" || i18n.language === "pt-BR") ? i18n.language : "es"}
         jsonLd={[
           {
             "@context": "https://schema.org",
