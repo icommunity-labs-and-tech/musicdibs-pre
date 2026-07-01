@@ -15,13 +15,6 @@ interface SEOProps {
 const BASE_URL = "https://www.musicdibs.com";
 const DEFAULT_OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/27fdd7c8-3e07-4d0d-886d-53859f68e5de";
 
-const LOCALE_MAP: Record<string, string> = {
-  es: "es_ES",
-  en: "en_US",
-  "pt-BR": "pt_BR",
-};
-
-const ALL_LOCALES = Object.values(LOCALE_MAP);
 
 const BRAND_NAME = "Musicdibs";
 const BRAND_NAME_PATTERN = /MusicDibs|Musicdibs/gi;
@@ -46,7 +39,6 @@ export const SEO = ({
   noIndex = false,
 }: SEOProps) => {
   const url = `${BASE_URL}${path}`;
-  const pathname = path || (typeof window !== "undefined" ? window.location.pathname : "/");
   const normalizedTitle = normalizeBrandName(title);
   const fullTitle = path === "/"
     ? normalizedTitle
