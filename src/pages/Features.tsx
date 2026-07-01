@@ -44,7 +44,7 @@ const featuresJsonLd = {
     "Generación de música completa con IA",
     "Registro blockchain de propiedad intelectual",
     "Distribución a 220+ plataformas de streaming",
-    "95% de royalties para el artista",
+    "100% de royalties para el artista",
     "Generación de portadas con IA",
     "Generación de vídeos promocionales con IA",
     "AI Mastering automático",
@@ -121,13 +121,13 @@ const PILLARS = [
     badge: "DISTRIBUTE",
     badgeColor: "bg-pink-500/20 text-pink-300 border-pink-500/30",
     title: "Distribución Musical Global",
-    subtitle: "220+ plataformas. 95% de royalties. Sin permanencia.",
+    subtitle: "220+ plataformas. 100% de royalties. Sin permanencia.",
     description:
-      "Distribuye tu música a Spotify, Apple Music, TikTok, YouTube Music, Amazon y 220+ plataformas globales. Sin comisiones abusivas: conservas el 95% de lo que generas. Alta en 24–48 horas.",
+      "Distribuye tu música a Spotify, Apple Music, TikTok, YouTube Music, Amazon y 220+ plataformas globales. Sin comisiones abusivas: conservas el 100% de lo que generas. Alta en 24–48 horas.",
     href: "/distribution",
     features: [
       { icon: Radio,      label: "220+ plataformas",         desc: "Spotify, Apple, TikTok y más" },
-      { icon: TrendingUp, label: "95% de royalties",          desc: "Sin comisiones sorpresa" },
+      { icon: TrendingUp, label: "100% de royalties",          desc: "Sin comisiones sorpresa" },
       { icon: Zap,        label: "Alta en 24–48h",            desc: "Sin esperas interminables" },
       { icon: Play,       label: "YouTube Content ID",        desc: "Monetiza cada uso en YouTube" },
     ],
@@ -167,7 +167,7 @@ const PILLARS = [
 
 const COMPARE_ROWS = [
   { feature: "Distribución a 220+ plataformas", md: true,  landr: true,  distrokid: true,  toolost: true  },
-  { feature: "95% royalties al artista",        md: true,  landr: false, distrokid: false, toolost: true  },
+  { feature: "100% royalties al artista",        md: true,  landr: false, distrokid: false, toolost: true  },
   { feature: "Registro blockchain IP",          md: true,  landr: false, distrokid: false, toolost: false },
   { feature: "Validez legal global (175+ países)", md: true, landr: false, distrokid: false, toolost: false },
   { feature: "Certificación en <15 segundos",  md: true,  landr: false, distrokid: false, toolost: false },
