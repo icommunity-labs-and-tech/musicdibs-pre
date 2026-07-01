@@ -23,9 +23,10 @@ type Mode = "dry_run" | "notify" | "purge";
 
 // Retention per bucket (in days). null = untouched. inactiveDays applies to users without active subscription.
 const RULES: Record<string, { activeDays: number | null; inactiveDays: number | null; forceDays?: number }> = {
+  "works-files":           { activeDays: 180, inactiveDays: 30 },
   "ai-generations":        { activeDays: 365, inactiveDays: 56 },
   "voice-samples":         { activeDays: 365, inactiveDays: 56 },
-  "voice-clones":          { activeDays: 365, inactiveDays: 56 } as any, // may not exist as bucket; safe skip
+  "voice-clones":          { activeDays: 365, inactiveDays: 56 } as any,
   "social-promo-images":   { activeDays: 180, inactiveDays: 28 },
   "social-promo-videos":   { activeDays: 180, inactiveDays: 28 },
   "premium-promo-media":   { activeDays: 180, inactiveDays: 28 },
@@ -35,7 +36,7 @@ const RULES: Record<string, { activeDays: number | null; inactiveDays: number | 
   "auphonic-temp":         { activeDays: 7,   inactiveDays: 7, forceDays: 7 },
 };
 
-const PROTECTED = new Set(["works-files", "purchase-certificates", "documents", "blog-images", "cleanup-trash"]);
+const PROTECTED = new Set(["purchase-certificates", "documents", "blog-images", "cleanup-trash"]);
 const TRASH_BUCKET = "cleanup-trash";
 const TRASH_PURGE_DAYS = 14;
 const NOTIFY_GAP_DAYS = 7; // between warn -> final -> move
@@ -224,11 +225,13 @@ serve(async (req) => {
     if (nextPhase === "warn" || nextPhase === "final") {
       // send email
       if (resendKey && info.email) {
+        const hasWorksFiles = files.some((f) => f.bucket === "works-files");
         const tpl = storageCleanupEmail({
           name: info.name, phase: nextPhase === "warn" ? "warn" : "final",
           fileCount: files.length, sizeBytes: totalSize,
           daysUntilDeletion: nextPhase === "warn" ? 14 : 7,
           lang: info.lang,
+          variant: hasWorksFiles ? "works-files" : "generic",
         });
         try {
           const r = await fetch("https://api.resend.com/emails", {
@@ -264,7 +267,7 @@ serve(async (req) => {
       }
       // Also send a "deleted" email so the user knows
       if (resendKey && info.email) {
-        const tpl = storageCleanupEmail({ name: info.name, phase: "deleted", fileCount: files.length, sizeBytes: totalSize, lang: info.lang });
+        const tpl = storageCleanupEmail({ name: info.name, phase: "deleted", fileCount: files.length, sizeBytes: totalSize, lang: info.lang, variant: files.some((f) => f.bucket === "works-files") ? "works-files" : "generic" });
         try {
           await fetch("https://api.resend.com/emails", {
             method: "POST",
