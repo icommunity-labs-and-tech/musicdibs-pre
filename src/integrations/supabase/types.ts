@@ -500,6 +500,69 @@ export type Database = {
         }
         Relationships: []
       }
+      asset_cleanup_exceptions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      asset_cleanup_log: {
+        Row: {
+          action: string
+          bucket: string
+          executed_at: string
+          id: string
+          mode: string
+          path: string
+          reason: string | null
+          run_id: string
+          size_bytes: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          bucket: string
+          executed_at?: string
+          id?: string
+          mode: string
+          path: string
+          reason?: string | null
+          run_id: string
+          size_bytes?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          bucket?: string
+          executed_at?: string
+          id?: string
+          mode?: string
+          path?: string
+          reason?: string | null
+          run_id?: string
+          size_bytes?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audiomack_connections: {
         Row: {
           audiomack_id: string | null
