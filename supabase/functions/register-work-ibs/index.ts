@@ -152,7 +152,7 @@ serve(async (req) => {
 
     const { data: work, error: workError } = await supabaseAdmin
       .from("works")
-      .select("id, user_id, title, description, status, file_path, file_hash, file_hash_sha512_b64")
+      .select("id, user_id, title, description, status, file_path, file_hash, file_hash_sha512_b64, creators, type, author")
       .eq("id", workId).single();
 
     if (workError || !work) {
@@ -266,6 +266,33 @@ serve(async (req) => {
 
     const ibsHeaders = { "Authorization": `Bearer ${IBS_API_KEY}`, "Content-Type": "application/json" };
 
+    // ── Descripción enriquecida con metadatos de la obra (autor, tipo, coautores) ──
+    const roleLabelMap: Record<string, string> = {
+      autor: "Autor", compositor: "Compositor", cantante: "Cantante",
+      productor: "Productor", arreglista: "Arreglista", adaptador: "Adaptador",
+    };
+    const rawCreators = Array.isArray((work as any).creators) ? (work as any).creators : [];
+    const creatorsList = rawCreators
+      .filter((c: any) => c && typeof c.name === "string" && c.name.trim())
+      .map((c: any) => {
+        const roles = Array.isArray(c.roles) && c.roles.length > 0
+          ? c.roles.map((r: string) => roleLabelMap[r] || r).join(", ")
+          : "Autor";
+        const pct = typeof c.percentage === "number" ? ` — ${c.percentage}%` : "";
+        return `- ${c.name.trim()} (${roles})${pct}`;
+      });
+
+    const metaLines: string[] = [];
+    if (work.description && work.description.trim()) metaLines.push(work.description.trim());
+    const detailLines: string[] = [];
+    if ((work as any).author) detailLines.push(`Autor principal: ${(work as any).author}`);
+    if ((work as any).type) detailLines.push(`Tipo de obra: ${(work as any).type}`);
+    if (detailLines.length > 0) metaLines.push(detailLines.join("\n"));
+    if (creatorsList.length > 0) {
+      metaLines.push("Coautores y participación:\n" + creatorsList.join("\n"));
+    }
+    const enrichedDescription = metaLines.join("\n\n");
+
     // ── Decidir ruta A o B según tamaño total ─────────────────────────
     const totalSize = filesMeta.reduce((s, f) => s + f.size, 0);
     const useDirectUpload = totalSize < DIRECT_UPLOAD_THRESHOLD_BYTES;
@@ -299,7 +326,7 @@ serve(async (req) => {
       }
 
       const ibsPayload: Record<string, unknown> = { title: work.title, files: inlineFiles };
-      if (work.description) ibsPayload.description = work.description;
+      if (enrichedDescription) ibsPayload.description = enrichedDescription;
 
       const ibsRes = await fetch(`${IBS_API_URL}/evidences`, {
         method: "POST", headers: ibsHeaders,
@@ -328,7 +355,7 @@ serve(async (req) => {
       // PASO 1: Crear sesión
       const sessionBody = {
         title: work.title,
-        ...(work.description ? { description: work.description } : {}),
+        ...(enrichedDescription ? { description: enrichedDescription } : {}),
         signatures: [{ id: signatureId }],
         files: filesMeta.map(f => ({ name: f.name, content_type: f.contentType, size: f.size })),
       };
