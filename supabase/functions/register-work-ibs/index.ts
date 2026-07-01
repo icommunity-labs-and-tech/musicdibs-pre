@@ -355,7 +355,7 @@ serve(async (req) => {
       // PASO 1: Crear sesión
       const sessionBody = {
         title: work.title,
-        ...(work.description ? { description: work.description } : {}),
+        ...(enrichedDescription ? { description: enrichedDescription } : {}),
         signatures: [{ id: signatureId }],
         files: filesMeta.map(f => ({ name: f.name, content_type: f.contentType, size: f.size })),
       };
