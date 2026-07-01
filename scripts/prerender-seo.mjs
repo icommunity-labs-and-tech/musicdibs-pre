@@ -33,6 +33,41 @@ const LOCALE_MAP = {
  */
 const ROUTES = [
 
+  // ── FEATURES HUB ────────────────────────────────────────────────────────────
+  {
+    path: "/features",
+    locale: "es",
+    title: "Funcionalidades: Crea, Protege, Distribuye y Promociona tu Música | Musicdibs",
+    description: "Todo lo que necesita un artista independiente: AI Music Studio, registro blockchain de IP, distribución a 220+ plataformas y promoción con IA. Sin permanencia. Desde €6,90/mes.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "Musicdibs",
+      applicationCategory: "MusicApplication",
+      operatingSystem: "Web",
+      url: "https://www.musicdibs.com",
+      description: "Plataforma todo-en-uno para artistas independientes: crea música con IA, registra propiedad intelectual en blockchain, distribuye a 220+ plataformas y promociona con contenido generado por IA.",
+      offers: {
+        "@type": "AggregateOffer",
+        lowPrice: "6.90",
+        highPrice: "399.90",
+        priceCurrency: "EUR",
+        offerCount: "5",
+      },
+      featureList: [
+        "Generación de música completa con IA",
+        "Registro blockchain de propiedad intelectual",
+        "Distribución a 220+ plataformas de streaming",
+        "95% de royalties para el artista",
+        "AI Mastering automático",
+        "Generación de portadas con IA",
+        "Generación de vídeos promocionales con IA",
+        "YouTube Content ID",
+        "Validez legal en 175+ países",
+      ],
+    },
+  },
+
   // ── REGISTRO / IP PROTECTION ────────────────────────────────────────────────
   {
     path: "/registro-obras-musicales",

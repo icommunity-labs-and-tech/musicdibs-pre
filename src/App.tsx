@@ -91,6 +91,7 @@ const ManagerLanding = lazyWithRetry(() => import("./pages/ManagerLanding"));
 const ArtistProfilesPage = lazyWithRetry(() => import("./pages/ArtistProfilesPage"));
 const MediaLibraryPage = lazyWithRetry(() => import("./pages/MediaLibraryPage"));
 const PressPage = lazyWithRetry(() => import("./pages/PressPage"));
+const Features = lazyWithRetry(() => import("./pages/Features"));
 
 const AdminCampaignMetricsPage = lazyWithRetry(() => import("./pages/AdminCampaignMetricsPage"));
 const AdminChurnPage = lazyWithRetry(() => import("./pages/AdminChurnPage"));
@@ -191,6 +192,7 @@ const App = () => (
                             <Route path="/ia-music-studio" element={<IAMusicStudio />} />
               <Route path="/promocion-musical" element={<PromocionMusical />} />
               <Route path="/distribution" element={<Distribution />} />
+              <Route path="/features" element={<Features />} />
               <Route path="/marketing" element={<Marketing />} />
               <Route path="/registro-obras-musicales" element={<SongRegistrationPage />} />
               <Route path="/derechos-autor-musica" element={<MusicCopyrightPage />} />

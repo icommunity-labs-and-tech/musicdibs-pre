@@ -31,6 +31,13 @@
     <priority>0.9</priority>
   </url>
 
+  <!-- Features hub -->
+  <url>
+    <loc>https://www.musicdibs.com/features</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
   <!-- Registro IP (ES) -->
   <url>
     <loc>https://www.musicdibs.com/registro-obras-musicales</loc>
