@@ -74,6 +74,9 @@ const Footer = () => {
               <Link to="/ai-song-generator" className="block text-white/70 hover:text-white text-sm transition-colors">
                 AI song generator
               </Link>
+              <Link to="/all-in-one-music-platform" className="block text-white/70 hover:text-white text-sm transition-colors">
+                All-in-one music platform
+              </Link>
             </div>
           </div>
 

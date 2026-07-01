@@ -93,6 +93,10 @@ const MediaLibraryPage = lazyWithRetry(() => import("./pages/MediaLibraryPage"))
 const PressPage = lazyWithRetry(() => import("./pages/PressPage"));
 const Features = lazyWithRetry(() => import("./pages/Features"));
 const MusicdibsVsDistroKidPage = lazyWithRetry(() => import("./pages/MusicdibsVsDistroKidPage"));
+const MusicdibsVsLoudlyPage = lazyWithRetry(() => import("./pages/MusicdibsVsLoudlyPage"));
+const MusicdibsVsLandrPage = lazyWithRetry(() => import("./pages/MusicdibsVsLandrPage"));
+const MusicdibsVsDiyStackPage = lazyWithRetry(() => import("./pages/MusicdibsVsDiyStackPage"));
+const AllInOneMusicPlatformPage = lazyWithRetry(() => import("./pages/AllInOneMusicPlatformPage"));
 
 const AdminCampaignMetricsPage = lazyWithRetry(() => import("./pages/AdminCampaignMetricsPage"));
 const AdminChurnPage = lazyWithRetry(() => import("./pages/AdminChurnPage"));
@@ -203,6 +207,10 @@ const App = () => (
               <Route path="/generador-canciones-ia" element={<GeneradorCancionesIAPage />} />
               <Route path="/registro-musical" element={<RegistroMusicalPage />} />
               <Route path="/musicdibs-vs-distrokid" element={<MusicdibsVsDistroKidPage />} />
+              <Route path="/musicdibs-vs-loudly" element={<MusicdibsVsLoudlyPage />} />
+              <Route path="/musicdibs-vs-landr" element={<MusicdibsVsLandrPage />} />
+              <Route path="/musicdibs-vs-diy-stack" element={<MusicdibsVsDiyStackPage />} />
+              <Route path="/all-in-one-music-platform" element={<AllInOneMusicPlatformPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
               <Route path="/admin" element={<AdminLogin />} />
