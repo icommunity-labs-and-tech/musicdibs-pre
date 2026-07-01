@@ -157,10 +157,30 @@ export function BlockchainHistory() {
   const truncateHash = (hash: string) =>
     hash.length > 16 ? `${hash.slice(0, 8)}...${hash.slice(-8)}` : hash;
 
-  const exportToCsv = () => {
-    if (works.length === 0) return;
+  const exportToCsv = async () => {
+    if (!user) return;
+    // Fetch ALL works (paginated) — not just current page
+    const PAGE = 1000;
+    const all: WorkEvidence[] = [];
+    let off = 0;
+    while (all.length < 200000) {
+      let q = supabase
+        .from('works')
+        .select('id, title, type, status, blockchain_hash, blockchain_network, checker_url, certificate_url, certified_at, created_at, ibs_evidence_id, distributed_at, distribution_clicks')
+        .eq('user_id', user.id);
+      if (statusFilter !== 'all') q = q.eq('status', statusFilter);
+      const { data, error } = await q
+        .order('created_at', { ascending: false })
+        .range(off, off + PAGE - 1);
+      if (error) break;
+      const rows = (data as WorkEvidence[]) || [];
+      all.push(...rows);
+      if (rows.length < PAGE) break;
+      off += PAGE;
+    }
+    if (all.length === 0) return;
     const headers = ['Title','Type','Status','Registration date','Certification date','Blockchain network','Hash TX','Evidence ID','Verification URL','Distributed'];
-    const rows = works.map(w => [
+    const rows = all.map(w => [
       `"${(w.title || '').replace(/"/g, '""')}"`,
       w.type || '',
       w.status || '',

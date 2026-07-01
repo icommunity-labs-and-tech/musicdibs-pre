@@ -6,17 +6,28 @@
 // without Stripe Tax).
 //
 // Source of truth:
-//   • Invoice path (subscriptions, renewals, plan changes): use `invoice.tax`.
-//     net = (amount_paid - tax) / 100
+//   • Invoice path (subscriptions, renewals, plan changes): for metrics, Stripe's
+//     collected cash is `amount_paid`, not the invoice `total` (which can differ
+//     when customer balance/credits are applied). Compute tax from explicit tax
+//     totals (`total_tax_amounts`, falling back to `invoice.tax`) and use
+//     net = amount_paid - tax. Do NOT use `total_excluding_tax` here because it
+//     represents the invoice subtotal, not necessarily the paid/collected net.
 //   • Checkout Session (one-time payments): use `session.total_details.amount_tax`.
 //     net = (amount_total - amount_tax) / 100
 //   • Raw Charge with no invoice/session info: assume tax = 0 → net = gross.
 
-import Stripe from "npm:stripe@17";
+import type Stripe from "npm:stripe@17";
 
 export function netFromInvoice(invoice: Stripe.Invoice): number {
   const paid = invoice.amount_paid ?? 0;
-  const tax = (invoice as any).tax ?? 0; // cents, may be null
+  const taxFromBreakdown = Array.isArray((invoice as any).total_tax_amounts)
+    ? (invoice as any).total_tax_amounts.reduce(
+        (sum: number, item: any) => sum + (Number(item?.amount) || 0),
+        0,
+      )
+    : 0;
+  const tax = taxFromBreakdown || Number((invoice as any).tax ?? 0) || 0;
+
   return Math.round((paid - tax)) / 100;
 }
 

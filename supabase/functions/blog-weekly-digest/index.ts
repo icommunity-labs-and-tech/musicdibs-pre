@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ sent: false, published_due: true, planned_count: 0 });
     }
 
-    const subject = `📅 Publicaciones planificadas semana del ${formatDate(monday)} al ${formatDate(sunday)}`;
+    const subject = ` Publicaciones planificadas semana del ${formatDate(monday)} al ${formatDate(sunday)}`;
     await sendEmail("marketing@musicdibs.com", subject, buildEmail(posts as BlogPost[], monday, sunday));
 
     return jsonResponse({ sent: true, planned_count: posts.length });

@@ -9,27 +9,105 @@ import {
 } from 'recharts';
 
 interface MetricsChartsProps {
-  metrics: any;
+  metrics: MetricsData;
   periodType?: 'week' | 'month' | 'year';
+}
+
+interface RevenuePoint {
+  label?: string;
+  value?: number | string | null;
+  mrr?: number | string | null;
+  gross?: number | string | null;
+  iva?: number | string | null;
+  fee?: number | string | null;
+  [key: string]: unknown;
+}
+
+interface UserAcquisitionPoint {
+  month?: string;
+  label?: string;
+  newUsers?: number;
+  activeUsers?: number;
+  [key: string]: unknown;
+}
+
+interface MetricsData {
+  _dataSource?: string;
+  timeSeries?: {
+    revenue?: RevenuePoint[];
+    userAcquisition?: UserAcquisitionPoint[];
+    productBreakdown?: Record<string, unknown>[];
+  };
+  mrrEvolution?: RevenuePoint[];
+  userAcquisition?: UserAcquisitionPoint[];
+  churnEvolution?: Record<string, unknown>[];
+  productBreakdown?: Record<string, unknown>[];
+  featureUsage?: Record<string, unknown>[];
+  periodRevenue?: number;
+  unitsSoldAnnual?: number;
+  unitsSoldMonthly?: number;
+  unitsSoldSingle?: number;
+  unitsSoldTopup?: number;
+  revenueAnnual?: number;
+  revenueMonthly?: number;
+  revenueSingle?: number;
+  revenueTopup?: number;
+  topPlanName?: string;
+  topPlanPercentage?: number;
+  activeSubscriptions?: number;
+  cancelledThisMonth?: number;
+  top10RevenuePercentage?: number;
 }
 
 export default function MetricsCharts({ metrics, periodType = 'month' }: MetricsChartsProps) {
   const m = metrics;
+  const roundCurrency = (value: number) => Math.round(value * 100) / 100;
 
   // Use timeSeries if available (period-aware), fall back to legacy arrays
-  const revenueTimeSeries = m.timeSeries?.revenue ?? m.mrrEvolution ?? [];
+  const rawRevenueTimeSeries = m.timeSeries?.revenue ?? m.mrrEvolution ?? [];
+  const revenueTimeSeries = rawRevenueTimeSeries.map((point: RevenuePoint) => {
+    const gross = Number(point.gross ?? 0) || 0;
+    const iva = Number(point.iva ?? 0) || 0;
+    const fee = Number(point.fee ?? 0) || 0;
+    const hasBreakdown = point.gross != null || point.iva != null || point.fee != null;
+    const value = hasBreakdown
+      ? Math.max(0, roundCurrency(gross - iva - fee))
+      : (Number(point.value ?? point.mrr ?? 0) || 0);
+
+    return { ...point, value };
+  });
   const userAcquisitionSeries = (m.timeSeries?.userAcquisition && m.timeSeries.userAcquisition.length > 0)
     ? m.timeSeries.userAcquisition
-    : (m.userAcquisition ?? []).map((u: any) => ({ label: u.month, newUsers: u.newUsers, activeUsers: u.activeUsers }));
+    : (m.userAcquisition ?? []).map((u: UserAcquisitionPoint) => ({ label: u.month, newUsers: u.newUsers, activeUsers: u.activeUsers }));
   const productSeries = (m.timeSeries?.productBreakdown && m.timeSeries.productBreakdown.length > 0)
     ? m.timeSeries.productBreakdown
     : [];
 
-  const periodRevenueSum = revenueTimeSeries.reduce(
-    (sum: number, p: any) => sum + (Number(p.value ?? p.mrr ?? 0) || 0),
+  // Prefer the visible period buckets as source of truth: their sum must match
+  // the aggregate shown for the selected period.
+  const hasRevenueBreakdown = revenueTimeSeries.some(
+    (point: RevenuePoint) => point.gross != null || point.iva != null || point.fee != null,
+  );
+  const revenueBreakdownTotals = revenueTimeSeries.reduce(
+    (acc: { gross: number; iva: number; fees: number }, point: RevenuePoint) => ({
+      gross: acc.gross + (Number(point.gross) || 0),
+      iva: acc.iva + (Number(point.iva) || 0),
+      fees: acc.fees + (Number(point.fee) || 0),
+    }),
+    { gross: 0, iva: 0, fees: 0 },
+  );
+  const periodGrossTotal = hasRevenueBreakdown ? revenueBreakdownTotals.gross : Number((m as any).periodGross ?? 0);
+  const periodIvaTotal = hasRevenueBreakdown ? revenueBreakdownTotals.iva : Number((m as any).periodIva ?? 0);
+  const periodFeesTotal = hasRevenueBreakdown ? revenueBreakdownTotals.fees : Number((m as any).periodFees ?? 0);
+  const periodNetFromKpi = roundCurrency(periodGrossTotal - periodIvaTotal - periodFeesTotal);
+  const periodRevenueSumSeries = revenueTimeSeries.reduce(
+    (sum: number, p: RevenuePoint) => sum + (Number(p.value ?? p.mrr ?? 0) || 0),
     0,
   );
-  const periodRevenue = m.periodRevenue ?? periodRevenueSum;
+  const periodRevenueSum = (hasRevenueBreakdown || periodGrossTotal > 0) ? periodNetFromKpi : periodRevenueSumSeries;
+  const periodRevenue = (hasRevenueBreakdown || periodGrossTotal > 0)
+    ? periodNetFromKpi
+    : (revenueTimeSeries.length > 0 ? periodRevenueSumSeries : (m.periodRevenue ?? 0));
   const periodUnits = (m.unitsSoldAnnual ?? 0) + (m.unitsSoldMonthly ?? 0) + (m.unitsSoldSingle ?? 0) + (m.unitsSoldTopup ?? 0);
 
   return (
@@ -45,8 +123,8 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
                   <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-500">Stripe Live</Badge>
                 )}
                 {(() => {
-                  const totalFee = revenueTimeSeries.reduce((s: number, p: any) => s + (Number(p.fee) || 0), 0);
-                  const totalGross = revenueTimeSeries.reduce((s: number, p: any) => s + (Number(p.gross) || 0), 0);
+                  const totalFee = revenueTimeSeries.reduce((s: number, p: RevenuePoint) => s + (Number(p.fee) || 0), 0);
+                  const totalGross = revenueTimeSeries.reduce((s: number, p: RevenuePoint) => s + (Number(p.gross) || 0), 0);
                   if (totalFee === 0 && totalGross > 0) {
                     return (
                       <TooltipProvider>
@@ -79,7 +157,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
                 <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
                 <Tooltip
                   contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 12 }}
-                  formatter={(val: any, name: string) => [`€${Number(val).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, name]}
+                  formatter={(val: unknown, name: string) => [`€${Number(val).toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, name]}
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Line type="monotone" dataKey="gross" stroke="hsl(var(--muted-foreground))" strokeWidth={1.5} strokeDasharray="4 2" dot={false} name="Bruto" />

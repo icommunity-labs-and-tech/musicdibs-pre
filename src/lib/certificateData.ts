@@ -1,4 +1,4 @@
-import type { CertificateData } from '@/lib/generateCertificate';
+import type { CertificateCoauthor, CertificateData } from '@/lib/generateCertificate';
 import { pollEvidenceStatus } from '@/services/dashboardApi';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,6 +22,7 @@ export interface CertificateBuildInput {
   fallbackAlgorithm?: string;
   sourceFile?: File | null;
   workId?: string;
+  coauthors?: CertificateCoauthor[];
 }
 
 interface EvidenceCertificateDetail {
@@ -211,6 +212,30 @@ async function resolveFromStorage(workId?: string): Promise<{ filename?: string;
   }
 }
 
+async function resolveCreators(workId?: string): Promise<CertificateCoauthor[] | undefined> {
+  if (!workId) return undefined;
+  try {
+    const { data } = await supabase
+      .from('works')
+      .select('creators')
+      .eq('id', workId)
+      .maybeSingle();
+    const raw = (data as any)?.creators;
+    if (!Array.isArray(raw)) return undefined;
+    const parsed: CertificateCoauthor[] = raw
+      .filter((c: any) => c && typeof c === 'object' && typeof c.name === 'string' && c.name.trim())
+      .map((c: any) => ({
+        name: String(c.name).trim(),
+        roles: Array.isArray(c.roles) ? c.roles.map((r: any) => String(r)) : [],
+        percentage: typeof c.percentage === 'number' ? c.percentage : null,
+      }));
+    return parsed.length > 0 ? parsed : undefined;
+  } catch (e) {
+    console.warn('[certificateData] Unable to resolve creators', e);
+    return undefined;
+  }
+}
+
 export async function buildCertificateData(input: CertificateBuildInput): Promise<CertificateData> {
   let evidenceDetail: EvidenceCertificateDetail | null = null;
 
@@ -221,7 +246,10 @@ export async function buildCertificateData(input: CertificateBuildInput): Promis
   }
 
   const needsStorageLookup = !input.filesize || !input.filename;
-  const storageInfo = needsStorageLookup ? await resolveFromStorage(input.workId) : {};
+  const [storageInfo, dbCreators] = await Promise.all([
+    needsStorageLookup ? resolveFromStorage(input.workId) : Promise.resolve({} as { filename?: string; filesize?: number }),
+    input.coauthors ? Promise.resolve(undefined) : resolveCreators(input.workId),
+  ]);
 
   const fallbackFingerprint = input.fallbackFingerprint || await computeSha512Base64(input.sourceFile);
   const txHash = evidenceDetail?.txHash || input.txHash || '';
@@ -241,6 +269,7 @@ export async function buildCertificateData(input: CertificateBuildInput): Promis
     description: evidenceDetail?.description || input.description,
     authorName: input.authorName,
     authorDocId: input.authorDocId,
+    coauthors: input.coauthors || dbCreators,
     certifiedAt: formatCertificateDate(evidenceDetail?.certifiedAt || input.certifiedAt, input.locale),
     network,
     txHash,

@@ -9,6 +9,12 @@ const GRAY_M  = '#999999'
 const RED_CORP = '#E8364E'
 const WHITE   = '#FFFFFF'
 
+export interface CertificateCoauthor {
+  name: string
+  roles?: string[]
+  percentage?: number | null
+}
+
 export interface CertificateData {
   title: string
   filename: string
@@ -17,6 +23,7 @@ export interface CertificateData {
   description?: string
   authorName: string
   authorDocId?: string
+  coauthors?: CertificateCoauthor[]
   certifiedAt: string
   network: string
   txHash: string
@@ -45,6 +52,11 @@ interface CertLabels {
   sectionAuthor: string
   authorNameLabel: string
   authorDocLabel: string
+  coauthorsLabel: string
+  rolesLabel: string
+  percentageLabel: string
+  mainAuthorTag: string
+  roleMap: Record<string, string>
   sectionTransaction: string
   txIdLabel: string
   fingerprintLabel: string
@@ -62,6 +74,19 @@ interface CertLabels {
   filePrefix: string
 }
 
+const ROLE_LABELS_ES: Record<string, string> = {
+  autor: 'Autor', compositor: 'Compositor', cantante: 'Cantante',
+  productor: 'Productor', arreglista: 'Arreglista', adaptador: 'Adaptador',
+}
+const ROLE_LABELS_EN: Record<string, string> = {
+  autor: 'Author', compositor: 'Composer', cantante: 'Singer',
+  productor: 'Producer', arreglista: 'Arranger', adaptador: 'Adapter',
+}
+const ROLE_LABELS_PT: Record<string, string> = {
+  autor: 'Autor', compositor: 'Compositor', cantante: 'Cantor',
+  productor: 'Produtor', arreglista: 'Arranjador', adaptador: 'Adaptador',
+}
+
 const labelsMap: Record<string, CertLabels> = {
   es: {
     headerTitle: 'Comprobante de certificación',
@@ -74,6 +99,11 @@ const labelsMap: Record<string, CertLabels> = {
     sectionAuthor: 'Datos del autor',
     authorNameLabel: 'Nombre:',
     authorDocLabel: 'Documento:',
+    coauthorsLabel: 'Coautores y participación:',
+    rolesLabel: 'Roles:',
+    percentageLabel: '% de propiedad:',
+    mainAuthorTag: 'Autor principal',
+    roleMap: ROLE_LABELS_ES,
     sectionTransaction: 'Datos de la transacción',
     txIdLabel: 'Identificador de la transacción:',
     fingerprintLabel: 'Huella digital del archivo:',
@@ -101,6 +131,11 @@ const labelsMap: Record<string, CertLabels> = {
     sectionAuthor: 'Author data',
     authorNameLabel: 'Name:',
     authorDocLabel: 'Document:',
+    coauthorsLabel: 'Co-authors and ownership:',
+    rolesLabel: 'Roles:',
+    percentageLabel: 'Ownership %:',
+    mainAuthorTag: 'Main author',
+    roleMap: ROLE_LABELS_EN,
     sectionTransaction: 'Transaction data',
     txIdLabel: 'Transaction identifier:',
     fingerprintLabel: 'File digital fingerprint:',
@@ -128,6 +163,11 @@ const labelsMap: Record<string, CertLabels> = {
     sectionAuthor: 'Dados do autor',
     authorNameLabel: 'Nome:',
     authorDocLabel: 'Documento:',
+    coauthorsLabel: 'Coautores e participação:',
+    rolesLabel: 'Funções:',
+    percentageLabel: '% de propriedade:',
+    mainAuthorTag: 'Autor principal',
+    roleMap: ROLE_LABELS_PT,
     sectionTransaction: 'Dados da transação',
     txIdLabel: 'Identificador da transação:',
     fingerprintLabel: 'Impressão digital do arquivo:',
@@ -333,6 +373,53 @@ export async function generateCertificate(data: CertificateData, locale?: string
   y = field(y, L.authorNameLabel, data.authorName)
   if (data.authorDocId) {
     y = field(y, L.authorDocLabel, data.authorDocId)
+  }
+
+  // Coautores y % de propiedad (si hay más de un creador o roles/% definidos)
+  const coauthors = (data.coauthors || []).filter((c) => c && c.name && c.name.trim())
+  const hasRichCreatorData = coauthors.length > 1
+    || coauthors.some((c) => (c.roles && c.roles.length > 0) || (typeof c.percentage === 'number' && c.percentage > 0))
+
+  if (hasRichCreatorData) {
+    font('normal', 9.5)
+    hex(GRAY_D)
+    doc.text(L.coauthorsLabel, ML, y)
+    y += 6
+
+    const totalPct = coauthors.reduce((s, c) => s + (typeof c.percentage === 'number' ? c.percentage : 0), 0)
+    const distributeEqually = totalPct === 0 && coauthors.length > 0
+
+    coauthors.forEach((c, idx) => {
+      const isMain = idx === 0
+      const roleNames = (c.roles || []).map((r) => L.roleMap[r] || r).filter(Boolean).join(', ')
+      const pct = typeof c.percentage === 'number' && c.percentage > 0
+        ? c.percentage
+        : (distributeEqually ? Math.round((100 / coauthors.length) * 100) / 100 : null)
+
+      // Name + main tag
+      font('bold', 9.5)
+      hex(BLACK)
+      const nameLine = isMain ? `${c.name}  ·  ${L.mainAuthorTag}` : c.name
+      doc.text(nameLine, ML + 2, y)
+
+      // Percentage (right aligned)
+      if (pct !== null) {
+        font('bold', 9.5)
+        hex(RED_CORP)
+        doc.text(`${pct}%`, W - MR, y, { align: 'right' })
+      }
+      y += 4.5
+
+      if (roleNames) {
+        font('normal', 8.5)
+        hex(GRAY_D)
+        const roleLines = doc.splitTextToSize(roleNames, contentW - 4)
+        doc.text(roleLines.slice(0, 2), ML + 2, y)
+        y += roleLines.slice(0, 2).length * 4
+      }
+      y += 2.5
+    })
+    y += 2
   }
 
   // ══════════════════════════════════════════════════════════

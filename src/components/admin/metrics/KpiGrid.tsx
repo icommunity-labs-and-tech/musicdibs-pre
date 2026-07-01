@@ -61,10 +61,26 @@ function TrendKpi({ label, value, icon: Icon, change, suffix, invertColor }: {
 
 export default function KpiGrid({ metrics }: KpiGridProps) {
   const m = metrics;
-  const periodGross = Number(m.periodGross ?? 0);
-  const periodIva = Number(m.periodIva ?? Math.max(0, periodGross - (m.periodRevenue ?? 0) - (m.periodFees ?? 0)));
-  const periodFees = Number(m.periodFees ?? 0);
-  const periodNet = Number(m.periodRevenue ?? m.totalRevenue ?? 0);
+  const roundCurrency = (value: number) => Math.round(value * 100) / 100;
+  const revenueSeries = Array.isArray(m.timeSeries?.revenue) ? m.timeSeries.revenue : [];
+  const hasSeriesBreakdown = revenueSeries.some(
+    (point: { gross?: unknown; iva?: unknown; fee?: unknown }) => point.gross != null || point.iva != null || point.fee != null,
+  );
+  const seriesTotals = revenueSeries.reduce(
+    (acc: { gross: number; iva: number; fees: number }, point: { gross?: unknown; iva?: unknown; fee?: unknown }) => ({
+      gross: acc.gross + (Number(point.gross) || 0),
+      iva: acc.iva + (Number(point.iva) || 0),
+      fees: acc.fees + (Number(point.fee) || 0),
+    }),
+    { gross: 0, iva: 0, fees: 0 },
+  );
+  const periodGross = roundCurrency(hasSeriesBreakdown ? seriesTotals.gross : Number(m.periodGross ?? 0));
+  const periodIva = roundCurrency(hasSeriesBreakdown
+    ? seriesTotals.iva
+    : Number(m.periodIva ?? Math.max(0, periodGross - (m.periodRevenue ?? 0) - (m.periodFees ?? 0))));
+  const periodFees = roundCurrency(hasSeriesBreakdown ? seriesTotals.fees : Number(m.periodFees ?? 0));
+  // Neto real = Bruto − IVA − comisiones Stripe (debe cuadrar con las tarjetas mostradas)
+  const periodNet = roundCurrency(periodGross - periodIva - periodFees);
   const feesPending = periodFees === 0 && periodGross > 0;
 
   // Conversión del periodo: clientes nuevos / registrados nuevos del periodo
@@ -146,10 +162,10 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
             sub="Total facturado"
           />
           <KpiCard
-            label="IVA (21%)"
+            label="IVA (Stripe)"
             value={`€${periodIva.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={BarChart3}
-            sub="Impuesto incluido"
+            sub="Impuesto leído de Stripe"
           />
           <Card className="border-border/40">
             <CardHeader className="pb-2">
@@ -191,7 +207,7 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
                 €{periodNet.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               <div className="text-xs mt-1 text-green-700/70 dark:text-green-400/70">
-                Pre-IVA − Stripe fees
+                Bruto − IVA − Stripe fees
               </div>
             </CardContent>
           </Card>

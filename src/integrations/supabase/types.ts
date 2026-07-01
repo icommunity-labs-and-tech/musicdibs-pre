@@ -500,6 +500,69 @@ export type Database = {
         }
         Relationships: []
       }
+      asset_cleanup_exceptions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      asset_cleanup_log: {
+        Row: {
+          action: string
+          bucket: string
+          executed_at: string
+          id: string
+          mode: string
+          path: string
+          reason: string | null
+          run_id: string
+          size_bytes: number | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          bucket: string
+          executed_at?: string
+          id?: string
+          mode: string
+          path: string
+          reason?: string | null
+          run_id: string
+          size_bytes?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          bucket?: string
+          executed_at?: string
+          id?: string
+          mode?: string
+          path?: string
+          reason?: string | null
+          run_id?: string
+          size_bytes?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audiomack_connections: {
         Row: {
           audiomack_id: string | null
@@ -980,6 +1043,72 @@ export type Database = {
         }
         Relationships: []
       }
+      distributions: {
+        Row: {
+          amount_charged: number | null
+          artist_name: string | null
+          catalog_number: string | null
+          created_at: string | null
+          credits_charged: number | null
+          error_message: string | null
+          id: string
+          is_legacy_sonosuite: boolean | null
+          labelgrid_payload: Json | null
+          labelgrid_release_id: string | null
+          labelgrid_track_id: string | null
+          musicdibs_release_id: string | null
+          musicdibs_user_id: string
+          release_title: string | null
+          release_type: string
+          status: string
+          stripe_payment_id: string | null
+          updated_at: string | null
+          upsell_triggered: boolean | null
+        }
+        Insert: {
+          amount_charged?: number | null
+          artist_name?: string | null
+          catalog_number?: string | null
+          created_at?: string | null
+          credits_charged?: number | null
+          error_message?: string | null
+          id?: string
+          is_legacy_sonosuite?: boolean | null
+          labelgrid_payload?: Json | null
+          labelgrid_release_id?: string | null
+          labelgrid_track_id?: string | null
+          musicdibs_release_id?: string | null
+          musicdibs_user_id: string
+          release_title?: string | null
+          release_type: string
+          status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string | null
+          upsell_triggered?: boolean | null
+        }
+        Update: {
+          amount_charged?: number | null
+          artist_name?: string | null
+          catalog_number?: string | null
+          created_at?: string | null
+          credits_charged?: number | null
+          error_message?: string | null
+          id?: string
+          is_legacy_sonosuite?: boolean | null
+          labelgrid_payload?: Json | null
+          labelgrid_release_id?: string | null
+          labelgrid_track_id?: string | null
+          musicdibs_release_id?: string | null
+          musicdibs_user_id?: string
+          release_title?: string | null
+          release_type?: string
+          status?: string
+          stripe_payment_id?: string | null
+          updated_at?: string | null
+          upsell_triggered?: boolean | null
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1265,6 +1394,30 @@ export type Database = {
           sent_at?: string | null
           type?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      labelgrid_entities: {
+        Row: {
+          created_at: string | null
+          id: string
+          labelgrid_artist_id: string | null
+          musicdibs_user_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          labelgrid_artist_id?: string | null
+          musicdibs_user_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          labelgrid_artist_id?: string | null
+          musicdibs_user_id?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1995,6 +2148,24 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_config: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value?: string
+        }
+        Relationships: []
+      }
       premium_social_promotions: {
         Row: {
           artist_name: string
@@ -2227,6 +2398,7 @@ export type Database = {
         Row: {
           admin_notes: string | null
           available_credits: number
+          catalog_migrated: boolean | null
           created_at: string
           display_name: string | null
           dispute_lost_at: string | null
@@ -2244,6 +2416,7 @@ export type Database = {
           library_status: string | null
           library_status_since: string | null
           managed_by_manager_id: string | null
+          paid_distro_count: number | null
           payment_grace_expires_at: string | null
           payment_issue_count: number | null
           payment_issue_notified_at: string | null
@@ -2253,6 +2426,7 @@ export type Database = {
           referral_influencer: string | null
           referral_set_at: string | null
           referral_source: string | null
+          sonosuite_legacy: boolean | null
           stripe_customer_id: string | null
           subscription_plan: string
           subscription_tier: string | null
@@ -2262,6 +2436,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           available_credits?: number
+          catalog_migrated?: boolean | null
           created_at?: string
           display_name?: string | null
           dispute_lost_at?: string | null
@@ -2279,6 +2454,7 @@ export type Database = {
           library_status?: string | null
           library_status_since?: string | null
           managed_by_manager_id?: string | null
+          paid_distro_count?: number | null
           payment_grace_expires_at?: string | null
           payment_issue_count?: number | null
           payment_issue_notified_at?: string | null
@@ -2288,6 +2464,7 @@ export type Database = {
           referral_influencer?: string | null
           referral_set_at?: string | null
           referral_source?: string | null
+          sonosuite_legacy?: boolean | null
           stripe_customer_id?: string | null
           subscription_plan?: string
           subscription_tier?: string | null
@@ -2297,6 +2474,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           available_credits?: number
+          catalog_migrated?: boolean | null
           created_at?: string
           display_name?: string | null
           dispute_lost_at?: string | null
@@ -2314,6 +2492,7 @@ export type Database = {
           library_status?: string | null
           library_status_since?: string | null
           managed_by_manager_id?: string | null
+          paid_distro_count?: number | null
           payment_grace_expires_at?: string | null
           payment_issue_count?: number | null
           payment_issue_notified_at?: string | null
@@ -2323,6 +2502,7 @@ export type Database = {
           referral_influencer?: string | null
           referral_set_at?: string | null
           referral_source?: string | null
+          sonosuite_legacy?: boolean | null
           stripe_customer_id?: string | null
           subscription_plan?: string
           subscription_tier?: string | null
@@ -2921,6 +3101,36 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_credit_grants: {
+        Row: {
+          created_at: string
+          credits: number
+          id: string
+          plan_id: string | null
+          source_event: string | null
+          stripe_event_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits: number
+          id?: string
+          plan_id?: string | null
+          source_event?: string | null
+          stripe_event_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits?: number
+          id?: string
+          plan_id?: string | null
+          source_event?: string | null
+          stripe_event_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           amount: number | null
@@ -3005,6 +3215,36 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      upsell_events: {
+        Row: {
+          converted_at: string | null
+          dismissed_at: string | null
+          id: string
+          musicdibs_user_id: string
+          shown_at: string | null
+          total_spent_at_trigger: number | null
+          trigger_type: string | null
+        }
+        Insert: {
+          converted_at?: string | null
+          dismissed_at?: string | null
+          id?: string
+          musicdibs_user_id: string
+          shown_at?: string | null
+          total_spent_at_trigger?: number | null
+          trigger_type?: string | null
+        }
+        Update: {
+          converted_at?: string | null
+          dismissed_at?: string | null
+          id?: string
+          musicdibs_user_id?: string
+          shown_at?: string | null
+          total_spent_at_trigger?: number | null
+          trigger_type?: string | null
         }
         Relationships: []
       }
@@ -3323,6 +3563,7 @@ export type Database = {
           certified_at: string | null
           checker_url: string | null
           created_at: string
+          creators: Json | null
           description: string | null
           distributed_at: string | null
           distribution_clicks: number | null
@@ -3350,6 +3591,7 @@ export type Database = {
           certified_at?: string | null
           checker_url?: string | null
           created_at?: string
+          creators?: Json | null
           description?: string | null
           distributed_at?: string | null
           distribution_clicks?: number | null
@@ -3377,6 +3619,7 @@ export type Database = {
           certified_at?: string | null
           checker_url?: string | null
           created_at?: string
+          creators?: Json | null
           description?: string | null
           distributed_at?: string | null
           distribution_clicks?: number | null
@@ -3796,6 +4039,17 @@ export type Database = {
           encrypted_password: string
           user_id: string
         }[]
+      }
+      grant_credits_atomic: {
+        Args: {
+          p_credits: number
+          p_description: string
+          p_plan_id: string
+          p_source_event: string
+          p_stripe_event_key: string
+          p_user_id: string
+        }
+        Returns: number
       }
       has_role: {
         Args: {

@@ -244,6 +244,7 @@ serve(async (req) => {
       const statusFilter = (payload.status_filter || "").trim(); // 'active' | 'blocked'
       const roleFilter = (payload.role_filter || "").trim(); // 'admin' | 'manager' | 'user'
       const creditsFilter = (payload.credits_filter || "").trim(); // 'has_permanent' | 'no_permanent'
+      const reminderFilter = (payload.reminder_filter || "").trim(); // 'eligible'
       const REMINDER_SORT_KEYS = [
         "kyc_reminders_count",
         "kyc_last_reminder_at",
@@ -381,74 +382,101 @@ serve(async (req) => {
       if (creditsFilter === "no_permanent")
         query = query.or("permanent_credits.is.null,permanent_credits.eq.0");
 
+      // Recordatorio KYC elegible: KYC no verificado Y (sin recordatorio O último envío hace ≥5 días)
+      // El exclude set puede tener miles de UUIDs → no se puede meter en la URL como not.in.
+      // Resolvemos el filtrado en memoria.
+      let eligibleExcludeSet: Set<string> | null = null;
+      if (reminderFilter === "eligible") {
+        query = query.neq("kyc_status", "verified");
+        const cutoff = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
+        const recentIds = new Set<string>();
+        const PAGE = 1000;
+        for (let from = 0; ; from += PAGE) {
+          const { data: chunk, error: chunkErr } = await admin
+            .from("kyc_reminder_log")
+            .select("user_id")
+            .gte("sent_at", cutoff)
+            .range(from, from + PAGE - 1);
+          if (chunkErr) break;
+          (chunk || []).forEach((r: any) => r.user_id && recentIds.add(r.user_id));
+          if (!chunk || chunk.length < PAGE) break;
+        }
+        eligibleExcludeSet = recentIds;
+      }
+
       let profiles: any[] = [];
       let profilesCount = 0;
       let error: any = null;
 
-      if (isReminderSort) {
-        // Fetch all matching profile rows (capped), join with reminder aggregates, sort, paginate, then refetch full rows.
-        const {
-          data: idRows,
-          error: idErr,
-          count: idCount,
-        } = await query.select("user_id", { count: "exact" }).range(0, 4999);
-        if (idErr) {
-          if (
-            (idErr.message || "")
-              .toLowerCase()
-              .includes("range not satisfiable")
-          )
-            return json({ users: [], total: 0 });
-          return json({ error: idErr.message }, 500);
+      if (isReminderSort || eligibleExcludeSet) {
+        // Fetch all matching profile ids (capped), filter excludes in memory, sort, paginate, refetch.
+        const allIds: string[] = [];
+        const PAGE = 1000;
+        for (let from = 0; from < 50000; from += PAGE) {
+          const { data: idChunk, error: idErr } = await query
+            .select("user_id")
+            .range(from, from + PAGE - 1);
+          if (idErr) {
+            if ((idErr.message || "").toLowerCase().includes("range not satisfiable")) break;
+            return json({ error: idErr.message }, 500);
+          }
+          const rows = (idChunk || []) as any[];
+          for (const r of rows) {
+            if (eligibleExcludeSet && eligibleExcludeSet.has(r.user_id)) continue;
+            allIds.push(r.user_id);
+          }
+          if (rows.length < PAGE) break;
         }
-        const allIds = (idRows || []).map((r: any) => r.user_id);
         if (allIds.length === 0) return json({ users: [], total: 0 });
 
-        const { data: allReminders } = await admin
-          .from("kyc_reminder_log")
-          .select("user_id, sent_at")
-          .in("user_id", allIds);
-        const remStats: Record<string, { count: number; last: number | null }> =
-          {};
-        (allReminders || []).forEach((r: any) => {
-          const s = (remStats[r.user_id] ||= { count: 0, last: null });
-          s.count++;
-          const t = r.sent_at ? new Date(r.sent_at).getTime() : null;
-          if (t !== null && (s.last === null || t > s.last)) s.last = t;
-        });
-
-        const sortable = allIds.map((id) => ({
-          id,
-          count: remStats[id]?.count || 0,
-          last: remStats[id]?.last ?? null,
-        }));
-        const dir = sortDir ? 1 : -1;
-        sortable.sort((a, b) => {
-          if (sortBy === "kyc_reminders_count")
-            return (a.count - b.count) * dir;
-          // kyc_last_reminder_at: nulls always at the end
-          if (a.last === null && b.last === null) return 0;
-          if (a.last === null) return 1;
-          if (b.last === null) return -1;
-          return (a.last - b.last) * dir;
-        });
-
-        profilesCount = idCount ?? sortable.length;
-        const pageIds = sortable.slice(offset, offset + limit).map((s) => s.id);
-        if (pageIds.length === 0)
-          return json({ users: [], total: profilesCount });
-
-        const { data: pageProfiles, error: pErr } = await admin
-          .from("profiles")
-          .select("*")
-          .in("user_id", pageIds);
-        if (pErr) return json({ error: pErr.message }, 500);
-        // Preserve sort order
-        const pMap: Record<string, any> = {};
-        (pageProfiles || []).forEach((p: any) => {
-          pMap[p.user_id] = p;
-        });
-        profiles = pageIds.map((id) => pMap[id]).filter(Boolean);
+        if (isReminderSort) {
+          const { data: allReminders } = await admin
+            .from("kyc_reminder_log")
+            .select("user_id, sent_at")
+            .in("user_id", allIds);
+          const remStats: Record<string, { count: number; last: number | null }> = {};
+          (allReminders || []).forEach((r: any) => {
+            const s = (remStats[r.user_id] ||= { count: 0, last: null });
+            s.count++;
+            const t = r.sent_at ? new Date(r.sent_at).getTime() : null;
+            if (t !== null && (s.last === null || t > s.last)) s.last = t;
+          });
+          const sortable = allIds.map((id) => ({
+            id,
+            count: remStats[id]?.count || 0,
+            last: remStats[id]?.last ?? null,
+          }));
+          const dir = sortDir ? 1 : -1;
+          sortable.sort((a, b) => {
+            if (sortBy === "kyc_reminders_count") return (a.count - b.count) * dir;
+            if (a.last === null && b.last === null) return 0;
+            if (a.last === null) return 1;
+            if (b.last === null) return -1;
+            return (a.last - b.last) * dir;
+          });
+          profilesCount = sortable.length;
+          const pageIds = sortable.slice(offset, offset + limit).map((s) => s.id);
+          if (pageIds.length === 0) return json({ users: [], total: profilesCount });
+          const { data: pageProfiles, error: pErr } = await admin
+            .from("profiles")
+            .select("*")
+            .in("user_id", pageIds);
+          if (pErr) return json({ error: pErr.message }, 500);
+          const pMap: Record<string, any> = {};
+          (pageProfiles || []).forEach((p: any) => { pMap[p.user_id] = p; });
+          profiles = pageIds.map((id) => pMap[id]).filter(Boolean);
+        } else {
+          profilesCount = allIds.length;
+          const pageIds = allIds.slice(offset, offset + limit);
+          if (pageIds.length === 0) return json({ users: [], total: profilesCount });
+          const { data: pageProfiles, error: pErr } = await admin
+            .from("profiles")
+            .select("*")
+            .in("user_id", pageIds)
+            .order(sortBy, { ascending: sortDir });
+          if (pErr) return json({ error: pErr.message }, 500);
+          profiles = pageProfiles || [];
+        }
       } else {
         query = query
           .order(sortBy, { ascending: sortDir })
@@ -1618,6 +1646,35 @@ serve(async (req) => {
 
     if (action === "export_csv") {
       const { dataset } = payload;
+      const dateFrom = typeof payload.date_from === "string" ? payload.date_from : null;
+      const dateTo = typeof payload.date_to === "string" ? payload.date_to : null;
+      const applyDateRange = (q: any, col = "created_at") => {
+        if (dateFrom) q = q.gte(col, dateFrom);
+        if (dateTo) q = q.lt(col, dateTo);
+        return q;
+      };
+
+      // Paginated fetch helper — Supabase caps each request at 1000 rows.
+      // We loop with .range() until we get a short page.
+      const fetchAllPaginated = async (
+        buildQuery: () => any,
+        pageSize = 1000,
+        maxRows = 200000,
+      ) => {
+        const all: any[] = [];
+        let from = 0;
+        while (all.length < maxRows) {
+          const to = from + pageSize - 1;
+          const { data, error } = await buildQuery().range(from, to);
+          if (error) throw error;
+          const rows = data || [];
+          all.push(...rows);
+          if (rows.length < pageSize) break;
+          from += pageSize;
+        }
+        return all;
+      };
+
 
       if (dataset === "users") {
         const search = (payload.search || "").trim().toLowerCase();
@@ -1640,11 +1697,11 @@ serve(async (req) => {
             const exclude = new Set(
               (nonUsers || []).map((r: any) => r.user_id),
             );
-            const { data: allP } = await admin
-              .from("profiles")
-              .select("user_id");
+            const allP = await fetchAllPaginated(() =>
+              admin.from("profiles").select("user_id"),
+            );
             roleUserIds = new Set(
-              (allP || [])
+              allP
                 .map((p: any) => p.user_id)
                 .filter((id: string) => !exclude.has(id)),
             );
@@ -1686,11 +1743,42 @@ serve(async (req) => {
           }
         }
 
-        let query = admin
-          .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false });
+        const baseQuery = () => {
+          let q = admin
+            .from("profiles")
+            .select("*")
+            .order("created_at", { ascending: false });
+          q = applyDateRange(q);
 
+
+          if (kycFilter && kycFilter !== "initiated" && kycFilter !== "created") {
+            q = q.eq("kyc_status", kycFilter);
+          }
+          if (planFilter) {
+            if (planFilter === "Free")
+              q = q.eq("subscription_plan", "Free");
+            else if (planFilter === "Annual")
+              q = q
+                .eq("subscription_plan", "Annual")
+                .is("subscription_tier", null);
+            else if (planFilter === "Monthly")
+              q = q.eq("subscription_tier", "monthly");
+            else if (planFilter.startsWith("annual_"))
+              q = q.eq("subscription_tier", planFilter);
+            else q = q.eq("subscription_plan", planFilter);
+          }
+          if (stripeFilter === "linked")
+            q = q.not("stripe_customer_id", "is", null);
+          if (stripeFilter === "unlinked")
+            q = q.is("stripe_customer_id", null);
+          if (statusFilter === "blocked") q = q.eq("is_blocked", true);
+          if (statusFilter === "active")
+            q = q.or("is_blocked.is.null,is_blocked.eq.false");
+          if (statusFilter === "disputed") q = q.eq("has_open_dispute", true);
+          return q;
+        };
+
+        let filtered: any[];
         if (kycFilter === "initiated" || kycFilter === "created") {
           const { data: sigUsers } = await admin
             .from("ibs_signatures")
@@ -1703,34 +1791,19 @@ serve(async (req) => {
             return json({
               csv: "email,display_name,plan,credits,kyc_status,is_blocked,created_at",
             });
-          query = query.in("user_id", ids).neq("kyc_status", "verified");
-        } else if (kycFilter) {
-          query = query.eq("kyc_status", kycFilter);
+          // Chunk .in() to avoid URL length limits
+          filtered = [];
+          for (let i = 0; i < ids.length; i += 500) {
+            const chunk = ids.slice(i, i + 500);
+            const rows = await fetchAllPaginated(() =>
+              baseQuery().in("user_id", chunk).neq("kyc_status", "verified"),
+            );
+            filtered.push(...rows);
+          }
+        } else {
+          filtered = await fetchAllPaginated(baseQuery);
         }
-        if (planFilter) {
-          if (planFilter === "Free")
-            query = query.eq("subscription_plan", "Free");
-          else if (planFilter === "Annual")
-            query = query
-              .eq("subscription_plan", "Annual")
-              .is("subscription_tier", null);
-          else if (planFilter === "Monthly")
-            query = query.eq("subscription_tier", "monthly");
-          else if (planFilter.startsWith("annual_"))
-            query = query.eq("subscription_tier", planFilter);
-          else query = query.eq("subscription_plan", planFilter);
-        }
-        if (stripeFilter === "linked")
-          query = query.not("stripe_customer_id", "is", null);
-        if (stripeFilter === "unlinked")
-          query = query.is("stripe_customer_id", null);
-        if (statusFilter === "blocked") query = query.eq("is_blocked", true);
-        if (statusFilter === "active")
-          query = query.or("is_blocked.is.null,is_blocked.eq.false");
-        if (statusFilter === "disputed") query = query.eq("has_open_dispute", true);
 
-        const { data: profiles } = await query;
-        let filtered = profiles || [];
         if (roleUserIds)
           filtered = filtered.filter((p: any) => roleUserIds!.has(p.user_id));
         if (searchUserIds) {
@@ -1760,14 +1833,17 @@ serve(async (req) => {
       }
 
       if (dataset === "transactions") {
-        const { data: txs } = await admin
-          .from("credit_transactions")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1000);
+        const txs = await fetchAllPaginated(() =>
+          applyDateRange(
+            admin
+              .from("credit_transactions")
+              .select("*")
+              .order("created_at", { ascending: false }),
+          ),
+        );
         const emailsMap = await getAllEmailsMap();
         const header = "email,amount,type,description,created_at";
-        const rows = (txs || []).map(
+        const rows = txs.map(
           (t: any) =>
             `${emailsMap[t.user_id] || ""},${t.amount},${t.type},"${(t.description || "").replace(/"/g, '""')}",${t.created_at}`,
         );
@@ -1775,33 +1851,41 @@ serve(async (req) => {
       }
 
       if (dataset === "works") {
-        const { data: works } = await admin
-          .from("works")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1000);
+        const works = await fetchAllPaginated(() =>
+          applyDateRange(
+            admin
+              .from("works")
+              .select("*")
+              .order("created_at", { ascending: false }),
+          ),
+        );
         const emailsMap = await getAllEmailsMap();
         const header = "email,title,type,status,blockchain_hash,created_at";
-        const rows = (works || []).map(
+        const rows = works.map(
           (w: any) =>
             `${emailsMap[w.user_id] || ""},"${(w.title || "").replace(/"/g, '""')}",${w.type},${w.status},${w.blockchain_hash || ""},${w.created_at}`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
 
+
       if (dataset === "audit") {
-        const { data: logs } = await admin
-          .from("audit_log")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1000);
+        const logs = await fetchAllPaginated(() =>
+          applyDateRange(
+            admin
+              .from("audit_log")
+              .select("*")
+              .order("created_at", { ascending: false }),
+          ),
+        );
         const header = "admin_email,action,target_email,details,created_at";
-        const rows = (logs || []).map(
+        const rows = logs.map(
           (l: any) =>
             `${l.admin_email},${l.action},${l.target_email || ""},"${JSON.stringify(l.details || {}).replace(/"/g, '""')}",${l.created_at}`,
         );
         return json({ csv: [header, ...rows].join("\n") });
       }
+
       if (dataset === "revenue") {
         const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
         if (!stripeKey)
@@ -1810,11 +1894,19 @@ serve(async (req) => {
           apiVersion: "2025-08-27.basil",
         });
 
+        const created: any = {};
+        if (dateFrom) created.gte = Math.floor(new Date(dateFrom).getTime() / 1000);
+        if (dateTo) created.lt = Math.floor(new Date(dateTo).getTime() / 1000);
+        const listParams: any = { limit: 100 };
+        if (dateFrom || dateTo) listParams.created = created;
+
         const charges: any[] = [];
-        for await (const charge of stripe.charges.list({ limit: 100 })) {
+        const maxCharges = (dateFrom || dateTo) ? 100000 : 1000;
+        for await (const charge of stripe.charges.list(listParams)) {
           charges.push(charge);
-          if (charges.length >= 1000) break;
+          if (charges.length >= maxCharges) break;
         }
+
 
         const header = "date,amount,currency,status,customer,description";
         const rows = charges.map(
@@ -2040,7 +2132,7 @@ serve(async (req) => {
 
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v10:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v14:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -2081,6 +2173,192 @@ serve(async (req) => {
           /* cache miss is non-fatal */
         }
       }
+
+      // Stripe-derived financial helpers. `orders.amount_net` is our stored
+      // pre-tax amount, but older webhook rows did not persist it, and relying
+      // on a fallback makes IVA lower than Stripe Tax. For metrics we repair the
+      // selected period from Stripe (invoice total_tax_amounts / session tax)
+      // and persist the corrected amount_net/fee for future cached reads.
+      const roundMoney = (value: number) => Math.round(value * 100) / 100;
+      const invoiceTaxCents = (invoice: any): number => {
+        const taxFromBreakdown = Array.isArray(invoice?.total_tax_amounts)
+          ? invoice.total_tax_amounts.reduce(
+              (sum: number, item: any) => sum + (Number(item?.amount) || 0),
+              0,
+            )
+          : 0;
+        return taxFromBreakdown || Number(invoice?.tax ?? 0) || 0;
+      };
+      const netFromStripeInvoice = (invoice: any): number => {
+        // For sales metrics, match Stripe's collected revenue: amount_paid can be
+        // lower than invoice.total when customer balance/credits are applied.
+        // Therefore net = amount_paid - real Stripe tax (not total_excluding_tax).
+        const paid = Number(invoice?.amount_paid ?? 0) || 0;
+        return roundMoney((paid - invoiceTaxCents(invoice)) / 100);
+      };
+      const netFromStripeSession = (session: any): number => {
+        const total = Number(session?.amount_total ?? 0) || 0;
+        const tax = Number(session?.total_details?.amount_tax ?? 0) || 0;
+        return roundMoney((total - tax) / 100);
+      };
+      const feeFromBalanceTransaction = (bt: any): number | null => {
+        if (bt && typeof bt === "object" && typeof bt.fee === "number") {
+          return roundMoney(bt.fee / 100);
+        }
+        return null;
+      };
+      const enrichOrdersWithStripeFinancials = async (orders: any[]) => {
+        const stripeKey = Deno.env.get("STRIPE_LIVE_SECRET_KEY") ?? Deno.env.get("STRIPE_SECRET_KEY");
+        if (!stripeKey || !orders.length) return orders;
+
+        const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+        const invoiceCache = new Map<string, any>();
+        const sessionCache = new Map<string, any>();
+        const chargeCache = new Map<string, any>();
+        const piCache = new Map<string, any>();
+
+        const retrieveInvoice = async (id: string) => {
+          if (!invoiceCache.has(id)) {
+            invoiceCache.set(id, await stripe.invoices.retrieve(id, {
+              expand: ["charge.balance_transaction"],
+            } as any));
+          }
+          return invoiceCache.get(id);
+        };
+        const retrieveSession = async (id: string) => {
+          if (!sessionCache.has(id)) {
+            sessionCache.set(id, await stripe.checkout.sessions.retrieve(id, {
+              expand: ["payment_intent.latest_charge.balance_transaction"],
+            } as any));
+          }
+          return sessionCache.get(id);
+        };
+        const retrieveCharge = async (id: string) => {
+          // Newer Stripe invoice APIs can expose invoice payments as `py_...`;
+          // those are not Charges and cannot be retrieved through charges.retrieve.
+          if (!id || !id.startsWith("ch_")) return null;
+          if (!chargeCache.has(id)) {
+            chargeCache.set(id, await stripe.charges.retrieve(id, {
+              expand: ["balance_transaction", "invoice"],
+            } as any));
+          }
+          return chargeCache.get(id);
+        };
+        const retrievePaymentIntent = async (id: string) => {
+          if (!id) return null;
+          if (!piCache.has(id)) {
+            piCache.set(id, await stripe.paymentIntents.retrieve(id, {
+              expand: ["latest_charge.balance_transaction"],
+            } as any));
+          }
+          return piCache.get(id);
+        };
+
+        const enrichOne = async (o: any) => {
+          const gross = Number(o.amount_gross) || 0;
+          const currentNet = Number(o.amount_net);
+          const currentFee = Number(o.stripe_fee);
+          const hasStripeRef = !!(
+            o.stripe_invoice_id ||
+            o.stripe_checkout_session_id ||
+            o.stripe_charge_id ||
+            o.stripe_payment_intent_id
+          );
+          const looksLikeOldVatFallback =
+            Number.isFinite(currentNet) &&
+            gross > 0 &&
+            Math.abs(currentNet - roundMoney(gross / 1.21)) < 0.02;
+          const needsStripeRefresh =
+            !Number.isFinite(currentNet) ||
+            currentNet <= 0 ||
+            looksLikeOldVatFallback ||
+            !Number.isFinite(currentFee) ||
+            currentFee <= 0;
+          if (gross <= 0 || !hasStripeRef || !needsStripeRefresh) return o;
+
+          let amountNet: number | null = null;
+          let stripeFee: number | null = null;
+          let chargeId: string | null = o.stripe_charge_id || null;
+
+          try {
+            if (o.stripe_invoice_id) {
+              const inv = await retrieveInvoice(o.stripe_invoice_id);
+              amountNet = netFromStripeInvoice(inv);
+              const invCharge: any = (inv as any)?.charge;
+              if (!chargeId) chargeId = typeof invCharge === "string" ? invCharge : invCharge?.id || null;
+              stripeFee = feeFromBalanceTransaction(invCharge?.balance_transaction) ?? stripeFee;
+            }
+
+            if ((amountNet == null || stripeFee == null) && o.stripe_checkout_session_id) {
+              const session = await retrieveSession(o.stripe_checkout_session_id);
+              if (amountNet == null) amountNet = netFromStripeSession(session);
+              const pi: any = session?.payment_intent;
+              const latestCharge = typeof pi === "object" ? pi?.latest_charge : null;
+              if (!chargeId) chargeId = typeof latestCharge === "string" ? latestCharge : latestCharge?.id || null;
+              stripeFee = feeFromBalanceTransaction(latestCharge?.balance_transaction) ?? stripeFee;
+
+              if (stripeFee == null && typeof pi === "string") {
+                const fullPi: any = await retrievePaymentIntent(pi);
+                const lc = fullPi?.latest_charge;
+                if (!chargeId) chargeId = typeof lc === "string" ? lc : lc?.id || null;
+                stripeFee = feeFromBalanceTransaction(lc?.balance_transaction) ?? stripeFee;
+              }
+            }
+
+            if (stripeFee == null && o.stripe_payment_intent_id) {
+              const fullPi: any = await retrievePaymentIntent(o.stripe_payment_intent_id);
+              const lc = fullPi?.latest_charge;
+              if (!chargeId) chargeId = typeof lc === "string" ? lc : lc?.id || null;
+              stripeFee = feeFromBalanceTransaction(lc?.balance_transaction) ?? stripeFee;
+            }
+
+            if ((amountNet == null || stripeFee == null) && chargeId?.startsWith("ch_")) {
+              const ch: any = await retrieveCharge(chargeId);
+              stripeFee = feeFromBalanceTransaction(ch?.balance_transaction) ?? stripeFee;
+              if (amountNet == null) {
+                const inv = ch?.invoice;
+                amountNet = inv && typeof inv === "object" ? netFromStripeInvoice(inv) : gross;
+              }
+            }
+          } catch (e: any) {
+            console.warn("[get_saas_metrics] Stripe financial enrichment failed:", o.id, e?.message);
+          }
+
+          const updates: any = {};
+          if (
+            amountNet != null &&
+            Number.isFinite(amountNet) &&
+            (!Number.isFinite(currentNet) || Math.abs(currentNet - amountNet) >= 0.01)
+          ) {
+            updates.amount_net = roundMoney(amountNet);
+          }
+          if (
+            stripeFee != null &&
+            Number.isFinite(stripeFee) &&
+            (!Number.isFinite(currentFee) || Math.abs(currentFee - stripeFee) >= 0.01)
+          ) {
+            updates.stripe_fee = roundMoney(stripeFee);
+          }
+          if (!o.stripe_charge_id && chargeId?.startsWith("ch_")) updates.stripe_charge_id = chargeId;
+
+          if (Object.keys(updates).length > 0 && o.id) {
+            const { error } = await admin.from("orders").update(updates).eq("id", o.id);
+            if (error) {
+              console.warn("[get_saas_metrics] order financial update failed:", o.id, error.message);
+            }
+            return { ...o, ...updates };
+          }
+          return o;
+        };
+
+        const enriched: any[] = [];
+        const CONCURRENCY = 8;
+        for (let i = 0; i < orders.length; i += CONCURRENCY) {
+          const chunk = orders.slice(i, i + CONCURRENCY);
+          enriched.push(...await Promise.all(chunk.map(enrichOne)));
+        }
+        return enriched;
+      };
 
       // ── Subscriptions & revenue metrics from local DB (no Stripe API calls) ──
       // Source of truth: public.subscriptions (synced by stripe-webhook) for MRR/churn,
@@ -2176,7 +2454,7 @@ serve(async (req) => {
           const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
           const net = parseFloat(o.amount_net);
           const gross = parseFloat(o.amount_gross) || 0;
-          const base = !isNaN(net) && net > 0 ? net : gross / 1.21;
+          const base = !isNaN(net) && net > 0 ? net : gross;
           const fee = parseFloat(o.stripe_fee) || 0;
           const disputeFee = parseFloat(o.dispute_fee) || 0;
           const value = Math.max(0, base - fee - disputeFee);
@@ -2777,15 +3055,15 @@ serve(async (req) => {
           const { data: periodOrders } = await admin
             .from("orders")
             .select(
-              "user_id, paid_at, amount_gross, amount_net, stripe_fee, dispute_fee, order_status, product_type, product_code, is_renewal, billing_interval, attributed_campaign_name",
+              "id, user_id, paid_at, amount_gross, amount_net, stripe_fee, dispute_fee, order_status, product_type, product_code, is_renewal, billing_interval, attributed_campaign_name, stripe_invoice_id, stripe_checkout_session_id, stripe_charge_id, stripe_payment_intent_id",
             )
 
             .eq("order_status", "paid")
             .gte("paid_at", filterStart)
-            .lte("paid_at", filterEnd)
+            .lt("paid_at", filterEnd)
             .order("paid_at", { ascending: false })
             .limit(5000);
-          ordersData = periodOrders || [];
+          ordersData = await enrichOrdersWithStripeFinancials(periodOrders || []);
         }
         // Clientes totales del periodo = únicos con compra en el periodo
         customersTotal = new Set(
@@ -2842,8 +3120,10 @@ serve(async (req) => {
           if (o.order_status === "refunded") return;
           const gross = parseFloat(o.amount_gross) || 0;
           const netVal = parseFloat(o.amount_net);
+          // Use stored amount_net (Stripe-derived). If missing, assume no IVA
+          // (same fallback as per-bucket timeSeries below, so daily sums == period totals).
           const netBase =
-            !isNaN(netVal) && netVal > 0 ? netVal : gross / 1.21;
+            !isNaN(netVal) && netVal > 0 ? netVal : gross;
           const fee = parseFloat(o.stripe_fee) || 0;
           const disputeFee = parseFloat(o.dispute_fee) || 0;
           periodGross += gross;
@@ -2915,6 +3195,87 @@ serve(async (req) => {
         console.error("[get_saas_metrics] Orders query error:", ordErr.message);
       }
 
+      // ── Stripe-authoritative subscription unit counts (period) ──
+      // Source of truth = Stripe paid invoices in the selected window, classified
+      // by `lines.data[].price.recurring.interval` (year vs month). This matches
+      // what is visible in the Stripe dashboard ("Invoices · Paid") for the same
+      // period, regardless of whether webhook persistence into `orders` lagged
+      // or mis-classified a row. We override unitsSold{Annual,Monthly} and
+      // revenue{Annual,Monthly} when Stripe data is reachable.
+      try {
+        const stripeKey = Deno.env.get("STRIPE_LIVE_SECRET_KEY") ?? Deno.env.get("STRIPE_SECRET_KEY");
+        if (stripeKey && filterStart && filterEnd) {
+          const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+          const gte = Math.floor(new Date(filterStart).getTime() / 1000);
+          const lt = Math.floor(new Date(filterEnd).getTime() / 1000);
+
+          let sAnnualUnits = 0;
+          let sMonthlyUnits = 0;
+          let sAnnualRev = 0;
+          let sMonthlyRev = 0;
+          let sAnnualRenewals = 0;
+          let sMonthlyRenewals = 0;
+          let scanned = 0;
+          const MAX_SCAN = 5000;
+
+          // Iterate paid invoices in window. status:paid + created range.
+          const listParams: any = {
+            limit: 100,
+            status: "paid",
+            created: { gte, lt },
+            expand: ["data.lines.data.price"],
+          };
+          for await (const inv of stripe.invoices.list(listParams)) {
+            scanned++;
+            if (scanned > MAX_SCAN) break;
+            // Only count subscription invoices (skip one-off invoices if any).
+            const sub = (inv as any).subscription;
+            const reason = String((inv as any).billing_reason || "");
+            if (!sub && !reason.startsWith("subscription")) continue;
+
+            // Determine interval from first recurring line item.
+            let interval: string | null = null;
+            const lines = (inv as any).lines?.data || [];
+            for (const li of lines) {
+              const rec = li?.price?.recurring?.interval ?? li?.plan?.interval;
+              if (rec) { interval = String(rec); break; }
+            }
+            if (!interval) continue;
+
+            const paid = Number((inv as any).amount_paid ?? 0) || 0;
+            const tax = invoiceTaxCents(inv);
+            const netEuro = Math.max(0, (paid - tax) / 100);
+            const isRenewal = reason === "subscription_cycle" || reason === "subscription_update";
+
+            if (interval === "year") {
+              sAnnualUnits++;
+              sAnnualRev += netEuro;
+              if (isRenewal) sAnnualRenewals++;
+            } else if (interval === "month") {
+              sMonthlyUnits++;
+              sMonthlyRev += netEuro;
+              if (isRenewal) sMonthlyRenewals++;
+            }
+          }
+
+          // Override only if Stripe returned data (avoid wiping on transient errors).
+          if (sAnnualUnits + sMonthlyUnits > 0) {
+            unitsSoldAnnual = sAnnualUnits;
+            unitsSoldMonthly = sMonthlyUnits;
+            revenueAnnual = Math.round(sAnnualRev * 100) / 100;
+            revenueMonthly = Math.round(sMonthlyRev * 100) / 100;
+            renewalsAnnualCount = sAnnualRenewals;
+            renewalsMonthlyCount = sMonthlyRenewals;
+            console.log(
+              `[get_saas_metrics] Stripe sub-units override: annual=${sAnnualUnits} monthly=${sMonthlyUnits} (scanned=${scanned})`,
+            );
+          }
+        }
+      } catch (stripeErr: any) {
+        console.warn("[get_saas_metrics] Stripe subscription reconciliation failed:", stripeErr?.message);
+      }
+
+
       // Period-over-period revenue change (powers the MRR KPI trend arrow).
       mrrChange =
         prevPeriodRevenue > 0
@@ -2933,22 +3294,35 @@ serve(async (req) => {
       let welcomeCreditNetRevenue = 0;
       try {
         if (filterStart && filterEnd) {
-          const { data: usagesInPeriod } = await admin
-            .from("credit_transactions")
-            .select("user_id, created_at")
-            .eq("type", "usage")
-            .gte("created_at", filterStart)
-            .lte("created_at", filterEnd)
-            .limit(50000);
-          // Para cada candidato, su PRIMER usage dentro del periodo.
+          // Paginate to bypass PostgREST's default 1000-row cap. For year-long
+          // periods the usage table can exceed tens of thousands of rows; a
+          // truncated read would under-count candidates (e.g. annual view
+          // showing 0% gift-credit conversion).
           const firstUsageInPeriod = new Map<string, string>();
-          (usagesInPeriod || []).forEach((u: any) => {
-            if (!u.user_id || !u.created_at) return;
-            const prev = firstUsageInPeriod.get(u.user_id);
-            if (!prev || u.created_at < prev) {
-              firstUsageInPeriod.set(u.user_id, u.created_at);
+          const PAGE = 1000;
+          let from = 0;
+          // Safety cap to avoid runaway loops if the table grows enormously.
+          for (let page = 0; page < 200; page++) {
+            const { data: pageRows, error: pageErr } = await admin
+              .from("credit_transactions")
+              .select("user_id, created_at")
+              .eq("type", "usage")
+              .gte("created_at", filterStart)
+              .lte("created_at", filterEnd)
+              .order("created_at", { ascending: true })
+              .range(from, from + PAGE - 1);
+            if (pageErr) break;
+            const rows = pageRows || [];
+            for (const u of rows) {
+              if (!u.user_id || !u.created_at) continue;
+              const prev = firstUsageInPeriod.get(u.user_id);
+              if (!prev || u.created_at < prev) {
+                firstUsageInPeriod.set(u.user_id, u.created_at);
+              }
             }
-          });
+            if (rows.length < PAGE) break;
+            from += PAGE;
+          }
           const candidates = [...firstUsageInPeriod.keys()];
           if (candidates.length) {
             // Restringir a usuarios que recibieron el bonus de bienvenida
@@ -3230,8 +3604,13 @@ serve(async (req) => {
         }
       }
 
-      // Period revenue = sum of all order revenue inside the selected period
-      const periodRevenue = Math.round(orderRevenue * 100) / 100;
+      // Period revenue is the same authoritative formula shown in the KPI cards:
+      // gross − real IVA − Stripe/dispute fees. This keeps daily bucket sums and
+      // period aggregate totals aligned.
+      const periodRevenue = Math.max(
+        0,
+        Math.round((periodGross - periodIva - periodFees) * 100) / 100,
+      );
 
       const creditsPercentage =
         periodRevenue > 0
@@ -3397,6 +3776,10 @@ serve(async (req) => {
           { feature: "Letras", uses: lyricsGen.count || 0 },
         ].sort((a, b) => b.uses - a.uses),
         _dataSource: subsDataAvailable ? "db_local" : "estimated",
+        compareThisStart,
+        compareThisEnd,
+        comparePrevStart,
+        comparePrevEnd,
       };
 
       // Persist to cache (best-effort, non-blocking semantics not needed: we already have the result)
@@ -4680,13 +5063,14 @@ serve(async (req) => {
         return { ok: false, reason: "non_musicdibs" };
       }
 
-      // Compute amount_net: prefer stripe net (pre-tax), fallback to gross/1.21
+      // Compute amount_net: prefer Stripe's explicit pre-tax net. If Stripe did
+      // not provide tax/net data, keep gross as net instead of inventing 21% IVA.
       function computeAmountNet(
         stripeNet: number | null,
         gross: number,
       ): number {
         if (stripeNet != null && stripeNet > 0) return stripeNet;
-        return Math.round((gross / 1.21) * 100) / 100;
+        return Math.round(gross * 100) / 100;
       }
 
       // Decide action for a candidate stripe record:
@@ -4868,8 +5252,13 @@ serve(async (req) => {
           const priceId = lineItem?.price?.id || null;
           const interval = lineItem?.price?.recurring?.interval || null;
           const amount = (inv.amount_paid || 0) / 100;
-          const stripeNet =
-            typeof inv.subtotal === "number" ? inv.subtotal / 100 : null;
+          const invTax = Array.isArray((inv as any).total_tax_amounts)
+            ? (inv as any).total_tax_amounts.reduce(
+                (sum: number, item: any) => sum + (Number(item?.amount) || 0),
+                0,
+              )
+            : (Number((inv as any).tax ?? 0) || 0);
+          const stripeNet = ((inv.amount_paid || 0) - invTax) / 100;
 
           const { productType, productCode, billingInterval, isSub } =
             inferProductType(priceId, interval, amount);
@@ -5372,15 +5761,27 @@ serve(async (req) => {
       const { dataset } = payload;
 
       if (dataset === "orders") {
-        const { data: orders } = await admin
-          .from("orders")
-          .select("*")
-          .order("paid_at", { ascending: false })
-          .limit(1000);
+        // Paginate to bypass PostgREST's 1000-row default cap
+        const PAGE = 1000;
+        const MAX = 200000;
+        const orders: any[] = [];
+        let off = 0;
+        while (orders.length < MAX) {
+          const { data, error } = await admin
+            .from("orders")
+            .select("*")
+            .order("paid_at", { ascending: false })
+            .range(off, off + PAGE - 1);
+          if (error) break;
+          const rows = data || [];
+          orders.push(...rows);
+          if (rows.length < PAGE) break;
+          off += PAGE;
+        }
         const emailsMap = await getAllEmailsMap();
         const header =
           "email,product_label,product_type,amount_gross,currency,order_status,is_renewal,paid_at";
-        const rows = (orders || []).map(
+        const rows = orders.map(
           (o: any) =>
             `${emailsMap[o.user_id] || ""},"${(o.product_label || "").replace(/"/g, '""')}",${o.product_type},${o.amount_gross},${o.currency},${o.order_status},${o.is_renewal},${o.paid_at}`,
         );
