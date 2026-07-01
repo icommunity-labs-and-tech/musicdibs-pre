@@ -152,7 +152,7 @@ serve(async (req) => {
 
     const { data: work, error: workError } = await supabaseAdmin
       .from("works")
-      .select("id, user_id, title, description, status, file_path, file_hash, file_hash_sha512_b64")
+      .select("id, user_id, title, description, status, file_path, file_hash, file_hash_sha512_b64, creators, type, author")
       .eq("id", workId).single();
 
     if (workError || !work) {
