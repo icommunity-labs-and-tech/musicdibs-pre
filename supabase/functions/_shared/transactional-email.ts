@@ -666,3 +666,105 @@ export function kycReminderEmail(data: { name: string; reminderNumber?: number; 
   };
 }
 
+
+//  Storage Cleanup — Warning / Final / Deleted 
+const tCleanup: Record<Lang, {
+  warnSubject: string; finalSubject: string; deletedSubject: string;
+  title: string; titleFinal: string; titleDeleted: string;
+  greeting: string;
+  warnBody: (days: number, count: number, sizeMb: string) => string;
+  finalBody: (count: number, sizeMb: string) => string;
+  deletedBody: (count: number, sizeMb: string) => string;
+  reactivate: string; download: string; whyText: string;
+}> = {
+  es: {
+    warnSubject: "Tus archivos generados serán eliminados en 14 días",
+    finalSubject: "Último aviso: tus archivos se eliminan en 7 días",
+    deletedSubject: "Tus archivos han sido eliminados",
+    title: "Aviso de limpieza de almacenamiento",
+    titleFinal: "Último aviso antes de eliminación",
+    titleDeleted: "Archivos eliminados",
+    greeting: "Hola",
+    warnBody: (d, c, s) => `Como parte de nuestra política de retención de datos, vamos a eliminar en <strong>${d} días</strong> aproximadamente <strong>${c} archivo(s)</strong> (${s} MB) generados desde tu cuenta (música IA, imágenes promocionales, muestras de voz, etc.).<br/><br/>Tus obras registradas en blockchain, certificados de compra y documentos KYC <strong>nunca se eliminan</strong>. Solo se limpia material generado que ya ha sido entregado.`,
+    finalBody: (c, s) => `Este es el aviso final. En <strong>7 días</strong> eliminaremos definitivamente <strong>${c} archivo(s)</strong> (${s} MB) de tu cuenta. Si quieres conservarlos, descárgalos desde tu panel o reactiva una suscripción para mantenerlos disponibles.`,
+    deletedBody: (c, s) => `Hemos eliminado <strong>${c} archivo(s)</strong> (${s} MB) según nuestra política de retención. Tus obras registradas en blockchain y certificados de compra <strong>permanecen intactos</strong>.`,
+    reactivate: "Reactivar suscripción",
+    download: "Ir a mi biblioteca",
+    whyText: "Aplicamos esta política para mantener el servicio sostenible y proteger tu privacidad. Los usuarios con suscripción activa disfrutan de plazos de retención mucho más largos.",
+  },
+  en: {
+    warnSubject: "Your generated files will be deleted in 14 days",
+    finalSubject: "Final notice: your files will be deleted in 7 days",
+    deletedSubject: "Your files have been deleted",
+    title: "Storage cleanup notice",
+    titleFinal: "Final notice before deletion",
+    titleDeleted: "Files deleted",
+    greeting: "Hi",
+    warnBody: (d, c, s) => `As part of our data retention policy, we will delete in <strong>${d} days</strong> approximately <strong>${c} file(s)</strong> (${s} MB) generated from your account (AI music, promo images, voice samples, etc.).<br/><br/>Your blockchain-registered works, purchase certificates and KYC documents are <strong>never deleted</strong>. Only delivered generated material is cleaned up.`,
+    finalBody: (c, s) => `This is the final notice. In <strong>7 days</strong> we will permanently delete <strong>${c} file(s)</strong> (${s} MB) from your account. Download them from your library or reactivate a subscription to keep them available.`,
+    deletedBody: (c, s) => `We have deleted <strong>${c} file(s)</strong> (${s} MB) as per our retention policy. Your blockchain-registered works and purchase certificates <strong>remain intact</strong>.`,
+    reactivate: "Reactivate subscription",
+    download: "Go to my library",
+    whyText: "This policy keeps the service sustainable and protects your privacy. Users with an active subscription enjoy much longer retention windows.",
+  },
+  pt: {
+    warnSubject: "Seus arquivos gerados serão excluídos em 14 dias",
+    finalSubject: "Aviso final: seus arquivos serão excluídos em 7 dias",
+    deletedSubject: "Seus arquivos foram excluídos",
+    title: "Aviso de limpeza de armazenamento",
+    titleFinal: "Aviso final antes da exclusão",
+    titleDeleted: "Arquivos excluídos",
+    greeting: "Olá",
+    warnBody: (d, c, s) => `Como parte da nossa política de retenção de dados, excluiremos em <strong>${d} dias</strong> aproximadamente <strong>${c} arquivo(s)</strong> (${s} MB) gerados na sua conta (música IA, imagens promocionais, amostras de voz, etc.).<br/><br/>Suas obras registradas em blockchain, certificados de compra e documentos KYC <strong>nunca são excluídos</strong>. Apenas material gerado já entregue é limpo.`,
+    finalBody: (c, s) => `Este é o aviso final. Em <strong>7 dias</strong> excluiremos permanentemente <strong>${c} arquivo(s)</strong> (${s} MB) da sua conta. Baixe-os da sua biblioteca ou reative uma assinatura para mantê-los disponíveis.`,
+    deletedBody: (c, s) => `Excluímos <strong>${c} arquivo(s)</strong> (${s} MB) conforme nossa política de retenção. Suas obras registradas em blockchain e certificados de compra <strong>permanecem intactos</strong>.`,
+    reactivate: "Reativar assinatura",
+    download: "Ir para minha biblioteca",
+    whyText: "Aplicamos esta política para manter o serviço sustentável e proteger sua privacidade. Usuários com assinatura ativa têm prazos de retenção muito mais longos.",
+  },
+};
+
+export function storageCleanupEmail(data: {
+  name: string;
+  phase: "warn" | "final" | "deleted";
+  fileCount: number;
+  sizeBytes: number;
+  daysUntilDeletion?: number;
+  lang?: string;
+}) {
+  const lang = normLang(data.lang);
+  const i = tCleanup[lang];
+  const safeName = escapeHtml(data.name || "");
+  const sizeMb = (data.sizeBytes / (1024 * 1024)).toFixed(1);
+  const greet = `<p style="margin:0 0 20px;color:#d1d5db;font-size:15px;line-height:1.7;text-align:center;">${i.greeting} <strong style="color:#f3f4f6;">${safeName}</strong>,</p>`;
+
+  let subject: string; let title: string; let bodyText: string; let icon: string;
+  if (data.phase === "warn") {
+    subject = i.warnSubject; title = i.title; icon = "";
+    bodyText = i.warnBody(data.daysUntilDeletion ?? 14, data.fileCount, sizeMb);
+  } else if (data.phase === "final") {
+    subject = i.finalSubject; title = i.titleFinal; icon = "";
+    bodyText = i.finalBody(data.fileCount, sizeMb);
+  } else {
+    subject = i.deletedSubject; title = i.titleDeleted; icon = "";
+    bodyText = i.deletedBody(data.fileCount, sizeMb);
+  }
+
+  const ctas = data.phase === "deleted"
+    ? cta("https://musicdibs.com/dashboard/billing", i.reactivate)
+    : `${cta("https://musicdibs.com/dashboard/media-library", i.download)}
+       <div style="height:12px;"></div>
+       ${cta("https://musicdibs.com/dashboard/billing", i.reactivate)}`;
+
+  const body = `
+    ${greet}
+    <p style="margin:0 0 16px;color:#d1d5db;font-size:14px;line-height:1.7;">${bodyText}</p>
+    ${ctas}
+    <p style="margin:28px 0 0;color:#9ca3af;font-size:12px;line-height:1.6;text-align:center;">${i.whyText}</p>`;
+
+  return {
+    subject,
+    html: wrap(icon, title, body, lang),
+    text: `${i.greeting} ${data.name},\n\n${bodyText.replace(/<[^>]+>/g, "")}\n\nhttps://musicdibs.com/dashboard/media-library`,
+  };
+}
