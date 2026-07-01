@@ -326,7 +326,7 @@ serve(async (req) => {
       }
 
       const ibsPayload: Record<string, unknown> = { title: work.title, files: inlineFiles };
-      if (work.description) ibsPayload.description = work.description;
+      if (enrichedDescription) ibsPayload.description = enrichedDescription;
 
       const ibsRes = await fetch(`${IBS_API_URL}/evidences`, {
         method: "POST", headers: ibsHeaders,
