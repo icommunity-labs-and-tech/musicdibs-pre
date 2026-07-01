@@ -731,6 +731,7 @@ export function storageCleanupEmail(data: {
   sizeBytes: number;
   daysUntilDeletion?: number;
   lang?: string;
+  variant?: "generic" | "works-files";
 }) {
   const lang = normLang(data.lang);
   const i = tCleanup[lang];
@@ -750,6 +751,14 @@ export function storageCleanupEmail(data: {
     bodyText = i.deletedBody(data.fileCount, sizeMb);
   }
 
+  const blockchainNote = data.variant === "works-files"
+    ? (lang === "en"
+        ? `<p style="margin:0 0 16px;color:#fbbf24;font-size:13px;line-height:1.7;background:#1f2937;padding:12px 14px;border-radius:8px;border-left:3px solid #fbbf24;"><strong>Your blockchain registration and PDF certificate remain valid forever.</strong> Only the audio file copy is deleted. Your ownership stays legally proven and verifiable — if you ever need to prove authorship, just re-upload the original file at <a href="https://musicdibs.com/verify" style="color:#fbbf24;text-decoration:underline;">musicdibs.com/verify</a>.</p>`
+      : lang === "pt"
+        ? `<p style="margin:0 0 16px;color:#fbbf24;font-size:13px;line-height:1.7;background:#1f2937;padding:12px 14px;border-radius:8px;border-left:3px solid #fbbf24;"><strong>Seu registro em blockchain e o certificado PDF permanecem válidos para sempre.</strong> Apenas a cópia do arquivo de áudio é excluída. Sua titularidade continua legalmente comprovada — se precisar provar autoria, basta reenviar o arquivo original em <a href="https://musicdibs.com/verify" style="color:#fbbf24;text-decoration:underline;">musicdibs.com/verify</a>.</p>`
+        : `<p style="margin:0 0 16px;color:#fbbf24;font-size:13px;line-height:1.7;background:#1f2937;padding:12px 14px;border-radius:8px;border-left:3px solid #fbbf24;"><strong>Tu registro en blockchain y el certificado PDF siguen siendo válidos para siempre.</strong> Solo se elimina la copia del archivo de audio. Tu titularidad continúa legalmente probada — si necesitas demostrar la autoría, basta con volver a subir el archivo original en <a href="https://musicdibs.com/verify" style="color:#fbbf24;text-decoration:underline;">musicdibs.com/verify</a>.</p>`)
+    : "";
+
   const ctas = data.phase === "deleted"
     ? cta("https://musicdibs.com/dashboard/billing", i.reactivate)
     : `${cta("https://musicdibs.com/dashboard/media-library", i.download)}
@@ -759,6 +768,7 @@ export function storageCleanupEmail(data: {
   const body = `
     ${greet}
     <p style="margin:0 0 16px;color:#d1d5db;font-size:14px;line-height:1.7;">${bodyText}</p>
+    ${blockchainNote}
     ${ctas}
     <p style="margin:28px 0 0;color:#9ca3af;font-size:12px;line-height:1.6;text-align:center;">${i.whyText}</p>`;
 
