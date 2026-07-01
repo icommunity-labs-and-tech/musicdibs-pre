@@ -267,7 +267,7 @@ serve(async (req) => {
       }
       // Also send a "deleted" email so the user knows
       if (resendKey && info.email) {
-        const tpl = storageCleanupEmail({ name: info.name, phase: "deleted", fileCount: files.length, sizeBytes: totalSize, lang: info.lang });
+        const tpl = storageCleanupEmail({ name: info.name, phase: "deleted", fileCount: files.length, sizeBytes: totalSize, lang: info.lang, variant: files.some((f) => f.bucket === "works-files") ? "works-files" : "generic" });
         try {
           await fetch("https://api.resend.com/emails", {
             method: "POST",
