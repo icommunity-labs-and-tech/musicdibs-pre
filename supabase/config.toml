@@ -33,3 +33,6 @@ verify_jwt = false
 [functions.backfill-stripe-adjustments]
 verify_jwt = false
 
+[functions.cleanup-storage-assets]
+verify_jwt = false
+
