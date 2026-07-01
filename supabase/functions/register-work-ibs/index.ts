@@ -266,6 +266,33 @@ serve(async (req) => {
 
     const ibsHeaders = { "Authorization": `Bearer ${IBS_API_KEY}`, "Content-Type": "application/json" };
 
+    // ── Descripción enriquecida con metadatos de la obra (autor, tipo, coautores) ──
+    const roleLabelMap: Record<string, string> = {
+      autor: "Autor", compositor: "Compositor", cantante: "Cantante",
+      productor: "Productor", arreglista: "Arreglista", adaptador: "Adaptador",
+    };
+    const rawCreators = Array.isArray((work as any).creators) ? (work as any).creators : [];
+    const creatorsList = rawCreators
+      .filter((c: any) => c && typeof c.name === "string" && c.name.trim())
+      .map((c: any) => {
+        const roles = Array.isArray(c.roles) && c.roles.length > 0
+          ? c.roles.map((r: string) => roleLabelMap[r] || r).join(", ")
+          : "Autor";
+        const pct = typeof c.percentage === "number" ? ` — ${c.percentage}%` : "";
+        return `- ${c.name.trim()} (${roles})${pct}`;
+      });
+
+    const metaLines: string[] = [];
+    if (work.description && work.description.trim()) metaLines.push(work.description.trim());
+    const detailLines: string[] = [];
+    if ((work as any).author) detailLines.push(`Autor principal: ${(work as any).author}`);
+    if ((work as any).type) detailLines.push(`Tipo de obra: ${(work as any).type}`);
+    if (detailLines.length > 0) metaLines.push(detailLines.join("\n"));
+    if (creatorsList.length > 0) {
+      metaLines.push("Coautores y participación:\n" + creatorsList.join("\n"));
+    }
+    const enrichedDescription = metaLines.join("\n\n");
+
     // ── Decidir ruta A o B según tamaño total ─────────────────────────
     const totalSize = filesMeta.reduce((s, f) => s + f.size, 0);
     const useDirectUpload = totalSize < DIRECT_UPLOAD_THRESHOLD_BYTES;
