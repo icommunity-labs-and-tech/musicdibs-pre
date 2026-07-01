@@ -6,7 +6,10 @@ import { useInView } from "@/hooks/useInView";
 import { useAnimatedValue } from "@/hooks/useAnimatedValue";
 
 const COMPETITORS = [
-  { key: "musicdibs", rate: 0.95, highlight: true },
+  // Musicdibs no se queda comisión — el usuario recibe el 100% de lo que
+  // pagan las plataformas. El ~5% de merma es de la propia plataforma de
+  // streaming, no de Musicdibs (aclarado en el disclaimer).
+  { key: "musicdibs", rate: 1.0, highlight: true },
   { key: "distrokid", rate: 0.80, highlight: false },
   { key: "cdbaby", rate: 0.85, highlight: false },
   { key: "tunecore", rate: 0.80, highlight: false },
