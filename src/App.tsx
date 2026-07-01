@@ -92,6 +92,7 @@ const ArtistProfilesPage = lazyWithRetry(() => import("./pages/ArtistProfilesPag
 const MediaLibraryPage = lazyWithRetry(() => import("./pages/MediaLibraryPage"));
 const PressPage = lazyWithRetry(() => import("./pages/PressPage"));
 const Features = lazyWithRetry(() => import("./pages/Features"));
+const MusicdibsVsDistroKidPage = lazyWithRetry(() => import("./pages/MusicdibsVsDistroKidPage"));
 
 const AdminCampaignMetricsPage = lazyWithRetry(() => import("./pages/AdminCampaignMetricsPage"));
 const AdminChurnPage = lazyWithRetry(() => import("./pages/AdminChurnPage"));
@@ -201,6 +202,7 @@ const App = () => (
               <Route path="/ai-song-generator" element={<AISongGeneratorPage />} />
               <Route path="/generador-canciones-ia" element={<GeneradorCancionesIAPage />} />
               <Route path="/registro-musical" element={<RegistroMusicalPage />} />
+              <Route path="/musicdibs-vs-distrokid" element={<MusicdibsVsDistroKidPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
               <Route path="/admin" element={<AdminLogin />} />
