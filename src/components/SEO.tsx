@@ -83,9 +83,6 @@ export const SEO = ({
       <meta property="og:image:height" content="630" />
       <meta property="og:site_name" content={BRAND_NAME} />
       <meta property="og:locale" content={ogLocale} />
-      {alternateLocales.map((alt) => (
-        <meta key={alt} property="og:locale:alternate" content={alt} />
-      ))}
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
