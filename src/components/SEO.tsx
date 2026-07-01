@@ -54,9 +54,9 @@ export const SEO = ({
       ? normalizedTitle
       : `${normalizedTitle} | ${BRAND_NAME}`;
   const fullDescription = withBrandInDescription(description);
-  const imageUrl = image
-    ? (image.startsWith("http") ? image : `${BASE_URL}${image}`)
-    : `${BASE_URL}${DEFAULT_OG_IMAGE}`;
+  const resolveImageUrl = (img: string) =>
+    img.startsWith("http") ? img : `${BASE_URL}${img}`;
+  const imageUrl = image ? resolveImageUrl(image) : resolveImageUrl(DEFAULT_OG_IMAGE);
 
 
   const ogLocale = locale ? (LOCALE_MAP[locale] || "es_ES") : "es_ES";
