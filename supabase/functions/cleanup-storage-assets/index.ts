@@ -225,11 +225,13 @@ serve(async (req) => {
     if (nextPhase === "warn" || nextPhase === "final") {
       // send email
       if (resendKey && info.email) {
+        const hasWorksFiles = files.some((f) => f.bucket === "works-files");
         const tpl = storageCleanupEmail({
           name: info.name, phase: nextPhase === "warn" ? "warn" : "final",
           fileCount: files.length, sizeBytes: totalSize,
           daysUntilDeletion: nextPhase === "warn" ? 14 : 7,
           lang: info.lang,
+          variant: hasWorksFiles ? "works-files" : "generic",
         });
         try {
           const r = await fetch("https://api.resend.com/emails", {
