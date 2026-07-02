@@ -691,8 +691,8 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
               <p>{t("dashboard.firstHit.nextLevel")}</p>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Publica en <strong>+220 plataformas</strong> — Spotify, Apple Music, Amazon Music y más. Tú te quedas el{" "}
-              <strong>100% de los royalties</strong>.
+              Publica en <strong>+220 plataformas</strong> — Spotify, Apple Music, Amazon Music y más.{" "}
+              <strong>Musicdibs no cobra ninguna comisión sobre tus royalties de streaming.</strong>
             </p>
             <p className="text-[11px] text-muted-foreground/70">
               ⏱ La aprobación puede tardar hasta 7 días. Sin sorpresas.

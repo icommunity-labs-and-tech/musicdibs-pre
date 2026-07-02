@@ -58,7 +58,7 @@ const ROUTES = [
         "Generación de música completa con IA",
         "Registro blockchain de propiedad intelectual",
         "Distribución a 220+ plataformas de streaming",
-        "100% de royalties para el artista",
+        "Sin comisión de Musicdibs sobre los royalties de streaming del artista",
         "AI Mastering automático",
         "Generación de portadas con IA",
         "Generación de vídeos promocionales con IA",
@@ -132,14 +132,14 @@ const ROUTES = [
   {
     path: "/distribution",
     locale: "en",
-    title: "Music Distribution to 220+ Platforms — Keep 100% Royalties | Musicdibs",
-    description: "Distribute your music to Spotify, Apple Music, TikTok and 220+ platforms. Keep 100% of royalties. Live in 24–48h. No lock-in. YouTube Content ID available. Real-time analytics.",
+    title: "Music Distribution to 220+ Platforms — No Commission on Royalties | Musicdibs",
+    description: "Distribute your music to Spotify, Apple Music, TikTok and 220+ platforms. Musicdibs does not charge any commission on your streaming royalties. Live in 24–48h. No lock-in. YouTube Content ID available. Real-time analytics.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "Service",
       name: "Music Distribution",
       provider: { "@type": "Organization", name: "Musicdibs", url: BASE_URL },
-      description: "Global music distribution to 220+ streaming platforms with 100% royalty retention.",
+      description: "Global music distribution to 220+ streaming platforms with no Musicdibs commission on streaming royalties.",
       serviceType: "Music Distribution",
       offers: {
         "@type": "Offer",
@@ -308,7 +308,7 @@ const ROUTES = [
         {
           "@type": "Question",
           name: "¿Puedo distribuir mi música en Spotify con Musicdibs?",
-          acceptedAnswer: { "@type": "Answer", text: "Sí. Musicdibs distribuye a 220+ plataformas incluyendo Spotify, Apple Music, TikTok y YouTube Music, conservando el 100% de tus royalties." },
+          acceptedAnswer: { "@type": "Answer", text: "Sí. Musicdibs distribuye a 220+ plataformas incluyendo Spotify, Apple Music, TikTok y YouTube Music. Musicdibs no cobra ninguna comisión sobre tus royalties de streaming." },
         },
       ],
     },

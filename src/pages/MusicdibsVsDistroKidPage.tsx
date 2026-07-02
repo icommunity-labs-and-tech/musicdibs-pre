@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 /**
  * Comparison landing: Musicdibs vs DistroKid.
  * English-only page (SEO target market). Content signed off by product:
- * royalties Musicdibs = 100%. Competitor data based on publicly available
- * DistroKid pricing (2026); table row phrasing kept honest ("100% unlimited plan").
+ * Musicdibs does not charge commission on streaming royalties. Competitor
+ * data based on publicly available DistroKid pricing (2026).
  */
 
 const PATH = "/musicdibs-vs-distrokid";
@@ -21,7 +21,7 @@ const TABLE_ROWS: { feature: string; distrokid: string | boolean; musicdibs: str
   { feature: "Legal proof of authorship / copyright registration", distrokid: false, musicdibs: "Blockchain-certified" },
   { feature: "Protection before you publish, not after", distrokid: false, musicdibs: true },
   { feature: "Promotion to an existing audience", distrokid: false, musicdibs: "300k+ followers across social" },
-  { feature: "Royalty retention", distrokid: "100% (unlimited plan)", musicdibs: "100%" },
+  { feature: "Commission on your streaming royalties", distrokid: "None (unlimited plan)", musicdibs: "None" },
   { feature: "Pricing model", distrokid: "Annual subscription, per-artist add-ons", musicdibs: "Credit-based, single plan" },
 ];
 

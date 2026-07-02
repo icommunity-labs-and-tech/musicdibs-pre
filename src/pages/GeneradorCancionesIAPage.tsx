@@ -65,7 +65,7 @@ const FAQ = [
   },
   {
     q: "¿Puedo monetizar la música generada con IA?",
-    a: "Sí. Las canciones creadas en Musicdibs se pueden distribuir a plataformas de streaming y te quedas con el 100% de los royalties. Mientras seas dueño del prompt y de la generación, la obra resultante es tuya para comercializarla.",
+    a: "Sí. Las canciones creadas en Musicdibs se pueden distribuir a plataformas de streaming y Musicdibs no cobra ninguna comisión sobre tus royalties de streaming. Mientras seas dueño del prompt y de la generación, la obra resultante es tuya para comercializarla.",
   },
   {
     q: "¿Puedo distribuir canciones IA en Spotify?",
