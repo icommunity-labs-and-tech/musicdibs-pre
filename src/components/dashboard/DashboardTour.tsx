@@ -42,7 +42,7 @@ function useSteps(): Step[] {
     {
       target: '[data-tour="distribute"]',
       title: t('dashboard.tour.distributeTitle', 'Distribuir tu música'),
-      content: t('dashboard.tour.distributeContent', 'Lleva tu música a todas las plataformas digitales: Spotify, Apple Music, Amazon y más.\n\n💰 Recibe el 100% de tus royalties.'),
+      content: t('dashboard.tour.distributeContent', 'Lleva tu música a todas las plataformas digitales: Spotify, Apple Music, Amazon y más.\n\n💰 Musicdibs no cobra ninguna comisión sobre tus royalties de streaming.'),
       disableBeacon: true,
     },
     {

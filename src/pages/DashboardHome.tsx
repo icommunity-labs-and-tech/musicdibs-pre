@@ -154,7 +154,7 @@ export default function DashboardHome() {
                   </p>
                   <p className="text-sm font-semibold text-green-500 flex items-center justify-center gap-1.5">
                     <CircleDollarSign className="h-4 w-4" />
-                    {t('dashboard.home.distributeRoyalties', 'Recibe el 100% de tus royalties.')}
+                    {t('dashboard.home.distributeRoyalties', 'Musicdibs no cobra ninguna comisión sobre tus royalties de streaming.')}
                   </p>
                 </div>
                 {summary?.subscriptionPlan === 'Annual' ? (

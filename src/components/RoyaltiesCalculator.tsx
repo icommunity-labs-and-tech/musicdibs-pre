@@ -397,9 +397,11 @@ export const RoyaltiesCalculator = () => {
                                 {t("calculator.recommended")}
                               </span>
                             )}
-                            <span className="text-xs" style={{ color: "#C4B5FD" }}>
-                              ({r.percentage}% {t("calculator.royalties")})
-                            </span>
+                            {!r.highlight && (
+                              <span className="text-xs" style={{ color: "#C4B5FD" }}>
+                                ({r.percentage}% {t("calculator.royalties")})
+                              </span>
+                            )}
                           </div>
                           <span
                             className="font-bold text-lg"

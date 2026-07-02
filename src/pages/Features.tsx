@@ -44,7 +44,7 @@ const featuresJsonLd = {
     "Generación de música completa con IA",
     "Registro blockchain de propiedad intelectual",
     "Distribución a 220+ plataformas de streaming",
-    "100% de royalties para el artista",
+    "Sin comisiones de Musicdibs sobre los royalties de streaming del artista",
     "Generación de portadas con IA",
     "Generación de vídeos promocionales con IA",
     "AI Mastering automático",
@@ -121,13 +121,13 @@ const PILLARS = [
     badge: "DISTRIBUTE",
     badgeColor: "bg-pink-500/20 text-pink-300 border-pink-500/30",
     title: "Distribución Musical Global",
-    subtitle: "220+ plataformas. 100% de royalties. Sin permanencia.",
+    subtitle: "220+ plataformas. Sin comisión de Musicdibs sobre tus royalties. Sin permanencia.",
     description:
-      "Distribuye tu música a Spotify, Apple Music, TikTok, YouTube Music, Amazon y 220+ plataformas globales. Sin comisiones abusivas: conservas el 100% de lo que generas. Alta en 24–48 horas.",
+      "Distribuye tu música a Spotify, Apple Music, TikTok, YouTube Music, Amazon y 220+ plataformas globales. Musicdibs no cobra ninguna comisión sobre tus royalties de streaming. Alta en 24–48 horas.",
     href: "/distribution",
     features: [
       { icon: Radio,      label: "220+ plataformas",         desc: "Spotify, Apple, TikTok y más" },
-      { icon: TrendingUp, label: "100% de royalties",          desc: "Sin comisiones sorpresa" },
+      { icon: TrendingUp, label: "Sin comisión sobre royalties", desc: "Musicdibs no retiene comisión de streaming" },
       { icon: Zap,        label: "Alta en 24–48h",            desc: "Sin esperas interminables" },
       { icon: Play,       label: "YouTube Content ID",        desc: "Monetiza cada uso en YouTube" },
     ],
@@ -167,7 +167,7 @@ const PILLARS = [
 
 const COMPARE_ROWS = [
   { feature: "Distribución a 220+ plataformas", md: true,  landr: true,  distrokid: true,  toolost: true  },
-  { feature: "100% royalties al artista",        md: true,  landr: false, distrokid: false, toolost: true  },
+  { feature: "Sin comisión de Musicdibs sobre royalties de streaming", md: true, landr: false, distrokid: false, toolost: true },
   { feature: "Registro blockchain IP",          md: true,  landr: false, distrokid: false, toolost: false },
   { feature: "Validez legal global (175+ países)", md: true, landr: false, distrokid: false, toolost: false },
   { feature: "Certificación en <15 segundos",  md: true,  landr: false, distrokid: false, toolost: false },
