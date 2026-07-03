@@ -259,11 +259,15 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {annualOptions.map(o => (
-                      <SelectItem key={o.planId} value={o.planId}>
-                        {t(`${cs}.nCredits`, { n: o.credits })} — {o.formattedPrice}{t(`${cs}.perYear`)} ({o.formattedPricePerCredit ?? '—'}/cr.)
-                      </SelectItem>
-                    ))}
+                    {annualOptions.map(o => {
+                      const isStarter = o.planId === 'annual_20';
+                      return (
+                        <SelectItem key={o.planId} value={o.planId}>
+                          {isStarter ? `${t(`${cs}.starterTag`, { defaultValue: 'Básico' })} · ` : ''}
+                          {t(`${cs}.nCredits`, { n: o.credits })} — {o.formattedPrice}{t(`${cs}.perYear`)} ({o.formattedPricePerCredit ?? '—'}/cr.)
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
