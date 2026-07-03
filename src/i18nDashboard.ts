@@ -2193,7 +2193,7 @@ const pt: typeof es = {
       genTypeInstrumentalLog: 'Instrumental',
     },
     distribute: {
-      annualOnly: 'Disponível apenas com assinatura anual',
+      annualOnly: 'Disponível apenas com Plano PLUS+',
     },
     paymentAlert: {
       managePayment: 'Gerenciar pagamento',
