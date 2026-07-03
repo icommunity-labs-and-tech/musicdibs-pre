@@ -1410,8 +1410,22 @@ const resources = {
             'Promoção em redes sociais +200k',
             '100 créditos anuais',
             'Melhor opção para lançamentos',
+          starter: [
+            '20 créditos para registrar, gerar e criar com IA',
+            'Registro legal com blockchain',
+            'Acesso ao AI Music Studio',
           ],
         },
+        starter: {
+          name: 'Anual Básico',
+          badge: 'Recomendado para começar',
+          brief: 'A forma mais econômica de proteger e criar música durante um ano inteiro.',
+          credits: '20 créditos, pagamento único anual',
+          cta: 'Começar com Anual Básico',
+          upsell: 'Distribuição para 220+ plataformas disponível no Plano Plus+',
+        },
+      },
+
       },
       tutorial: { heading: 'É tão fácil começar', subtitle: 'Em apenas 3 passos sua música estará protegida e disponível no mundo todo.', steps: { step: 'Passo', s1: { title: 'Cadastre-se', desc: 'Registre-se e verifique sua identidade para dar validade jurídica aos seus registros.' }, s2: { title: 'Registre sua música', desc: 'Envie sua obra; geramos uma impressão digital e registramos na blockchain em segundos. Baixe seu certificado com carimbo de data e hora.', link: 'Ver exemplo de certificado' }, s3: { title: 'Distribua sua música', desc: 'Chegue ao Spotify, Apple Music, YouTube e mais de 220 plataformas com um clique. Controle e monetize no seu painel.' } }, ctaTitle: 'O que está esperando? Proteja e monetize sua música hoje', ctaButton: 'Começar agora' },
       promoBanner: { text: 'Dia dos Namorados: -20% em todas as assinaturas', title: 'Verão Musicdibs', offer: '-25% · Só 7 dias', copyAria: 'Copiar código', cta: 'Aproveitar oferta' },
