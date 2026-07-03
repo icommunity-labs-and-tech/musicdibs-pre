@@ -2398,6 +2398,8 @@ export type Database = {
         Row: {
           admin_notes: string | null
           available_credits: number
+          billing_country: string | null
+          billing_country_updated_at: string | null
           catalog_migrated: boolean | null
           created_at: string
           display_name: string | null
@@ -2436,6 +2438,8 @@ export type Database = {
         Insert: {
           admin_notes?: string | null
           available_credits?: number
+          billing_country?: string | null
+          billing_country_updated_at?: string | null
           catalog_migrated?: boolean | null
           created_at?: string
           display_name?: string | null
@@ -2474,6 +2478,8 @@ export type Database = {
         Update: {
           admin_notes?: string | null
           available_credits?: number
+          billing_country?: string | null
+          billing_country_updated_at?: string | null
           catalog_migrated?: boolean | null
           created_at?: string
           display_name?: string | null

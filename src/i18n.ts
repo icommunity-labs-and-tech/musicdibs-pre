@@ -203,7 +203,21 @@ const resources = {
             '100 créditos anuales',
             'Mejor opción para lanzamientos',
           ],
+          starter: [
+            '20 créditos para registrar, generar y crear con IA',
+            'Registro legal con blockchain',
+            'Acceso al AI Music Studio',
+          ],
         },
+        starter: {
+          name: 'Anual Básico',
+          badge: 'Recomendado para empezar',
+          brief: 'La forma más económica de proteger y crear música durante todo un año.',
+          credits: '20 créditos, pago único anual',
+          cta: 'Empezar con Anual Básico',
+          upsell: 'Distribución a 220+ plataformas disponible en Plan Plus+',
+        },
+
       },
       tutorial: {
         heading: 'Así de fácil es empezar',
@@ -816,7 +830,21 @@ const resources = {
             '100 annual credits',
             'Best option for releases',
           ],
+          starter: [
+            '20 credits to register, generate and create with AI',
+            'Legal registration with blockchain',
+            'Access to AI Music Studio',
+          ],
         },
+        starter: {
+          name: 'Annual Starter',
+          badge: 'Recommended to get started',
+          brief: 'The most affordable way to protect and create music for a whole year.',
+          credits: '20 credits, one-off annual payment',
+          cta: 'Start with Annual Starter',
+          upsell: 'Distribution to 220+ platforms available in Plus+ Plan',
+        },
+
       },
       tutorial: {
         heading: 'It\'s that easy to get started', subtitle: 'In just 3 steps your music will be protected and available worldwide.', steps: { step: 'Step', s1: { title: 'Sign up', desc: 'Register and verify your identity to give legal validity to your records.' }, s2: { title: 'Register your song', desc: 'Upload your work; we generate a digital fingerprint and record it on blockchain in seconds. Download your registration certificate with timestamp.', link: 'See sample certificate' }, s3: { title: 'Distribute your music', desc: 'Reach Spotify, Apple Music, YouTube and 200+ platforms with one click. Control and monetize from your dashboard.' } }, ctaTitle: 'What are you waiting for? Protect and monetize your music today', ctaButton: 'Start now'
@@ -1383,8 +1411,22 @@ const resources = {
             '100 créditos anuais',
             'Melhor opção para lançamentos',
           ],
+          starter: [
+            '20 créditos para registrar, gerar e criar com IA',
+            'Registro legal com blockchain',
+            'Acesso ao AI Music Studio',
+          ],
+        },
+        starter: {
+          name: 'Anual Básico',
+          badge: 'Recomendado para começar',
+          brief: 'A forma mais econômica de proteger e criar música durante um ano inteiro.',
+          credits: '20 créditos, pagamento único anual',
+          cta: 'Começar com Anual Básico',
+          upsell: 'Distribuição para 220+ plataformas disponível no Plano Plus+',
         },
       },
+
       tutorial: { heading: 'É tão fácil começar', subtitle: 'Em apenas 3 passos sua música estará protegida e disponível no mundo todo.', steps: { step: 'Passo', s1: { title: 'Cadastre-se', desc: 'Registre-se e verifique sua identidade para dar validade jurídica aos seus registros.' }, s2: { title: 'Registre sua música', desc: 'Envie sua obra; geramos uma impressão digital e registramos na blockchain em segundos. Baixe seu certificado com carimbo de data e hora.', link: 'Ver exemplo de certificado' }, s3: { title: 'Distribua sua música', desc: 'Chegue ao Spotify, Apple Music, YouTube e mais de 220 plataformas com um clique. Controle e monetize no seu painel.' } }, ctaTitle: 'O que está esperando? Proteja e monetize sua música hoje', ctaButton: 'Começar agora' },
       promoBanner: { text: 'Dia dos Namorados: -20% em todas as assinaturas', title: 'Verão Musicdibs', offer: '-25% · Só 7 dias', copyAria: 'Copiar código', cta: 'Aproveitar oferta' },
       summerPromo: { title: 'DIA DOS NAMORADOS', discount: '-20%', onAllSubs: 'Em todas as assinaturas', enterCoupon: 'Insira o cupom na finalização da compra.', discountCode: 'Código de desconto', code: 'LOVE20', footnote: '*Oferta por tempo limitado' },
