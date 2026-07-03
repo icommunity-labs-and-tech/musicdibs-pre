@@ -135,6 +135,71 @@ serve(async (req) => {
       }
     }
 
+    // ── 2b. Cambios de plan (upgrade/downgrade) desincronizados con Stripe ──────
+    // Detecta el patrón de bug del 2026-07-03: create-credit-checkout sobrescribía
+    // el resultado correcto de un cambio de plan con el tier ANTERIOR, dejando al
+    // usuario con los créditos/tier de un plan que ya no tiene en Stripe.
+    // Estrategia: para cada credit_transaction reciente de tipo 'subscription' con
+    // descripción "Cambio de plan: ...", comparamos el tier/créditos actuales del
+    // perfil contra la suscripción REAL y VIVA en Stripe (fuente de verdad).
+    const { data: planChanges } = await supabase
+      .from("credit_transactions")
+      .select("user_id, amount, description, created_at")
+      .eq("type", "subscription")
+      .ilike("description", "Cambio de plan:%")
+      .gte("created_at", since.toISOString());
+
+    // Deduplicar por usuario: solo revisamos el estado actual una vez por usuario,
+    // no una vez por cada transacción (puede haber varias del mismo cambio fallido).
+    const planChangeUserIds = [...new Set((planChanges || []).map((t: any) => t.user_id))];
+
+    for (const userId of planChangeUserIds) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("stripe_customer_id, subscription_tier, subscription_plan, available_credits, permanent_credits")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!profile?.stripe_customer_id) continue;
+
+      try {
+        const subs = await stripe.subscriptions.list({ customer: profile.stripe_customer_id, status: "active", limit: 3 });
+        const activeSub = subs.data.find((s) => !s.cancel_at_period_end) || subs.data[0];
+        if (!activeSub) continue; // sin suscripción activa en Stripe, otro check ya cubre esto
+
+        const livePriceId = activeSub.items?.data?.[0]?.price?.id;
+        if (!livePriceId) continue;
+
+        // Fuente de verdad SIN mapa hardcodeado: leer directamente metadata.musicdibs_plan_id
+        // del precio en Stripe. Así este check nunca queda desactualizado cuando se
+        // añaden nuevos planes (a diferencia de mapas como TIER_CREDITS que hay que
+        // recordar actualizar en cada sitio -- ya nos ha pasado 5 veces).
+        const livePrice = await stripe.prices.retrieve(livePriceId);
+        const liveTier = livePrice.metadata?.musicdibs_plan_id;
+        const liveCredits = livePrice.metadata?.credits ? parseInt(livePrice.metadata.credits, 10) : null;
+        if (!liveTier || liveCredits === null) continue; // precio sin metadata, no podemos verificar
+
+        const dbTier = profile.subscription_tier;
+        const dbCreditsFromPlan = Math.max(0, (profile.available_credits ?? 0) - (profile.permanent_credits ?? 0));
+
+        if (dbTier !== liveTier) {
+          const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+          issues.push({
+            type: "cambio_plan_desincronizado", severity: "critical", email: user?.email || "unknown",
+            detail: `Tras un "Cambio de plan", el tier en DB (${dbTier ?? "null"}) no coincide con el plan REAL activo en Stripe (${liveTier}, ${liveCredits} créditos). Créditos actuales en DB: ${profile.available_credits}.`,
+          });
+        } else if (dbCreditsFromPlan !== liveCredits) {
+          const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+          issues.push({
+            type: "creditos_plan_incorrectos_tras_cambio", severity: "warning", email: user?.email || "unknown",
+            detail: `Tier correcto (${liveTier}) pero créditos de plan no coinciden: DB tiene ${dbCreditsFromPlan} (sin contar permanentes), Stripe/plan espera ${liveCredits}.`,
+          });
+        }
+      } catch (e: any) {
+        console.warn(`[PURCHASE-AUDIT] Error verificando cambio de plan para user ${userId}:`, e?.message);
+      }
+    }
+
+
     // ── 3. Cancelaciones/impagos: créditos de plan deben estar en 0 ────────────
     const { data: cancelledSubs } = await supabase
       .from("subscriptions")
@@ -207,8 +272,9 @@ Chequeos realizados:
 1. Cargos de Stripe succeeded vs orders en Supabase (detecta webhook fallando silenciosamente)
 2. Créditos asignados coherentes con el producto comprado
 3. subscription_tier coherente con la última compra
-4. Créditos de plan reseteados en cancelaciones definitivas
-5. Evidencias IBS creadas para cada order
+4. Cambios de plan (upgrade/downgrade) coherentes con la suscripción real y viva en Stripe
+5. Créditos de plan reseteados en cancelaciones definitivas
+6. Evidencias IBS creadas para cada order
 
 MusicDibs Monitoring · Auditoría diaria 09:00
 `;

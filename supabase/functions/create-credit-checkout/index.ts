@@ -340,6 +340,7 @@ serve(async (req) => {
         // (which may be stale/wrong for migrated users whose Stripe price_ids don't
         // match the canonical live IDs).
         const TIER_CREDITS: Record<string, number> = {
+          annual_20: 20,
           annual_100: 100,
           annual_200: 200,
           annual_300: 300,
@@ -348,6 +349,7 @@ serve(async (req) => {
           monthly: 8,
         };
         const TIER_LABELS: Record<string, string> = {
+          annual_20: "Anual Básico 20 créditos",
           annual_100: "Anual 100 créditos",
           annual_200: "Anual 200 créditos",
           annual_300: "Anual 300 créditos",
@@ -370,7 +372,19 @@ serve(async (req) => {
         let resolvedPlanName = actualPlanName;
         let creditsSource: "subscription_tier" | "stripe_price" = "stripe_price";
 
-        if (dbTier && TIER_CREDITS[dbTier] !== undefined) {
+        // FIX CRÍTICO (caso addiusfalcon55/ladydaymgs 2026-07-03): este fallback a
+        // dbTier estaba pisando SIEMPRE el resultado ya resuelto correctamente desde
+        // Stripe (actualPriceId), incluso cuando ese resultado era 100% correcto y
+        // confiable (actualPriceId === plan.priceId, el plan que el usuario acaba de
+        // solicitar). Efecto real: CUALQUIER cambio de plan revertia los creditos al
+        // tier ANTERIOR en vez de aplicar el nuevo, porque el tier antiguo casi
+        // siempre existe en TIER_CREDITS. El fallback a dbTier solo debe usarse
+        // cuando la resolucion vía Stripe genuinamente fallo (matchedDef no
+        // encontrado Y el precio no es el que se pidio explicitamente) — nunca
+        // para sobrescribir una resolucion ya confirmada.
+        const priceResolutionFailed = actualPriceId !== plan.priceId && actualCredits === plan.credits;
+        if (priceResolutionFailed && dbTier && TIER_CREDITS[dbTier] !== undefined) {
+          console.warn(`[CHECKOUT] actualPriceId resolution uncertain (${actualPriceId}), falling back to dbTier=${dbTier}`);
           resolvedCredits = TIER_CREDITS[dbTier];
           resolvedLabel = TIER_LABELS[dbTier] ?? resolvedLabel;
           resolvedPlanName = dbTier.startsWith("annual") ? "Annual" : "Monthly";
@@ -436,6 +450,79 @@ serve(async (req) => {
             description: `Cambio de plan: ${resolvedLabel}`,
           });
         }
+
+        // FIX: registrar el cambio de plan en el timeline probatorio (orders +
+        // purchase_evidences). Este flujo NUNCA creaba estos registros — solo
+        // tocaba credit_transactions/subscriptions — por eso los upgrades/downgrades
+        // hechos desde aquí no aparecian en "Compras" ni se certificaban en IBS
+        // (caso addiusfalcon55, upgrade a annual_20, 2026-07-03).
+        try {
+          let switchAmount = 0;
+          let switchInvoiceId: string | undefined;
+          const latestInvoiceId = (updatedSub as any).latest_invoice as string | undefined;
+          if (latestInvoiceId) {
+            switchInvoiceId = latestInvoiceId;
+            try {
+              const inv = await stripe.invoices.retrieve(latestInvoiceId);
+              switchAmount = (inv.amount_paid ?? 0) / 100;
+            } catch { /* seguir sin importe si falla */ }
+          }
+          const { data: switchOrder, error: switchOrderErr } = await supabaseAdmin
+            .from("orders")
+            .insert({
+              user_id: user.id,
+              stripe_customer_id: customerId,
+              stripe_subscription_id: updatedSub.id,
+              stripe_invoice_id: switchInvoiceId,
+              stripe_price_id: actualPriceId,
+              product_type: resolvedPlanName === "Annual" ? "annual" : "monthly",
+              product_code: plan.planId,
+              product_label: `Cambio de plan: ${resolvedLabel}`,
+              billing_interval: resolvedPlanName === "Annual" ? "yearly" : "monthly",
+              amount_gross: switchAmount,
+              currency: "eur",
+              is_subscription: true,
+              is_renewal: false,
+              paid_at: new Date().toISOString(),
+            })
+            .select("id")
+            .single();
+          if (switchOrderErr) {
+            console.warn("[CHECKOUT] switch: failed to create order:", switchOrderErr.message);
+          } else if (switchOrder) {
+            const { data: switchProfile } = await supabaseAdmin
+              .from("profiles").select("display_name").eq("user_id", user.id).single();
+            const { data: evidence } = await supabaseAdmin
+              .from("purchase_evidences")
+              .insert({
+                user_id: user.id,
+                order_id: switchOrder.id,
+                email: user.email,
+                display_name: switchProfile?.display_name,
+                product_type: resolvedPlanName === "Annual" ? "annual" : "monthly",
+                product_name: `Cambio de plan: ${resolvedLabel}`,
+                amount: switchAmount,
+                currency: "eur",
+                payment_provider: "stripe",
+                payment_status: switchAmount > 0 ? "succeeded" : "pending",
+                accepted_terms: false,
+                certification_status: "pending",
+              })
+              .select("id")
+              .single();
+            // Disparar certificación IBS igual que hace el webhook para el resto de compras
+            if (evidence?.id) {
+              fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/certify-purchase`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+                body: JSON.stringify({ evidence_id: evidence.id }),
+              }).catch(() => {});
+            }
+          }
+        } catch (evErr) {
+          console.warn("[CHECKOUT] switch: failed to create order/evidence:", evErr);
+        }
+
         return json({
           switched: true,
           message: shouldSkipCreditReset
