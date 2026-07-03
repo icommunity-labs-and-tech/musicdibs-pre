@@ -22,6 +22,7 @@ type ResolvedPlan = PlanDefinition & {
 };
 
 const PLAN_DEFINITIONS: PlanDefinition[] = [
+  { planId: "annual_20", credits: 20, mode: "subscription", productType: "annual", billingInterval: "yearly", label: "Anual Básico 20 créditos" },
   { planId: "annual_100", credits: 100, mode: "subscription", productType: "annual", billingInterval: "yearly", label: "Anual 100 créditos" },
   { planId: "annual_200", credits: 200, mode: "subscription", productType: "annual", billingInterval: "yearly", label: "Anual 200 créditos" },
   { planId: "annual_300", credits: 300, mode: "subscription", productType: "annual", billingInterval: "yearly", label: "Anual 300 créditos" },
@@ -128,6 +129,7 @@ function resolveCredits(price: Stripe.Price, definition: PlanDefinition) {
 // (Enterprise, YouTube, etc.) que coincidan por tipo/créditos.
 const EXPLICIT_PRICE_IDS: Record<string, string> = {
   // Suscripciones anuales
+  annual_20:   "price_1Tp90nFULeu7PzK67hoGodWv",
   annual_100:  "price_1T8n6CFULeu7PzK6vs7NZyiJ",
   annual_200:  "price_1TMapTFULeu7PzK640B5uuEq",
   annual_300:  "price_1TMapTFULeu7PzK6D4GnB3Il",

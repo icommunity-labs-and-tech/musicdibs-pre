@@ -12,7 +12,7 @@ function json(body: unknown, status = 200) {
 
 // Mapa de créditos esperados por producto (debe reflejar EXPLICIT_PRICE_IDS del webhook)
 const EXPECTED_CREDITS: Record<string, number> = {
-  annual_100: 100, annual_200: 200, annual_300: 300, annual_500: 500, annual_1000: 1000,
+  annual_20: 20, annual_100: 100, annual_200: 200, annual_300: 300, annual_500: 500, annual_1000: 1000,
   monthly: 8, individual: 1, single: 1,
   topup_10: 10, topup_25: 25, topup_50: 50, topup_100: 100, topup_200: 200,
 };

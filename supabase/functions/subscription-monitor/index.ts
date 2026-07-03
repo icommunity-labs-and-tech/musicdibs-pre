@@ -16,7 +16,7 @@ const JUSTIFIED_TX_TYPES = ["migration", "admin_adjustment", "admin_reset", "adj
 const INTERNAL_ACCOUNTS = ["mg@icommunity.io", "info@musicdibs.com", "marta.escabias@icommunity.io"];
 // Créditos máximos por tier (para cálculo de exceso)
 const TIER_MAX: Record<string, number> = {
-  free: 0, monthly: 8, annual_100: 100, annual_200: 200,
+  free: 0, monthly: 8, annual_20: 20, annual_100: 100, annual_200: 200,
   annual_300: 300, annual_500: 500, annual_1000: 1000,
 };
 

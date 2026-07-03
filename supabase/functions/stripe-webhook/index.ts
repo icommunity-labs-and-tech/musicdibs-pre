@@ -64,6 +64,7 @@ const PRICE_CREDITS: Record<string, number> = {
 };
 
 const TIER_CREDITS: Record<string, number> = {
+  annual_20: 20,
   annual_100: 100,
   annual_200: 200,
   annual_300: 300,
@@ -132,10 +133,12 @@ const PRICE_TO_PLAN_ID: Record<string, string> = {
   "price_1TMDVkFULeu7PzK6PcMnQkWZ": "topup_50",
   "price_1TMDVkFULeu7PzK6AJC3o4lZ": "topup_100",
   "price_1TMDVkFULeu7PzK6e9omPpoB": "topup_200",
+  // Anual Básico — tier intermedio LATAM (2026-07)
+  "price_1Tp90nFULeu7PzK67hoGodWv": "annual_20",
 };
 
 const PLAN_ID_TO_PLAN_NAME: Record<string, string> = {
-  annual_100: "Annual", annual_200: "Annual", annual_300: "Annual",
+  annual_20: "Annual", annual_100: "Annual", annual_200: "Annual", annual_300: "Annual",
   annual_500: "Annual", annual_1000: "Annual", monthly: "Monthly",
   annual_legacy: "Annual",
 };
