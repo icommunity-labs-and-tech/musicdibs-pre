@@ -429,7 +429,7 @@ const es = {
       genTypeInstrumentalLog: 'Instrumental',
     },
     distribute: {
-      annualOnly: 'Disponible solo con suscripción anual',
+      annualOnly: 'Disponible solo con Plan PLUS+',
     },
     paymentAlert: {
       managePayment: 'Gestionar pago',
