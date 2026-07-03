@@ -830,7 +830,21 @@ const resources = {
             '100 annual credits',
             'Best option for releases',
           ],
+          starter: [
+            '20 credits to register, generate and create with AI',
+            'Legal registration with blockchain',
+            'Access to AI Music Studio',
+          ],
         },
+        starter: {
+          name: 'Annual Starter',
+          badge: 'Recommended to get started',
+          brief: 'The most affordable way to protect and create music for a whole year.',
+          credits: '20 credits, one-off annual payment',
+          cta: 'Start with Annual Starter',
+          upsell: 'Distribution to 220+ platforms available in Plus+ Plan',
+        },
+
       },
       tutorial: {
         heading: 'It\'s that easy to get started', subtitle: 'In just 3 steps your music will be protected and available worldwide.', steps: { step: 'Step', s1: { title: 'Sign up', desc: 'Register and verify your identity to give legal validity to your records.' }, s2: { title: 'Register your song', desc: 'Upload your work; we generate a digital fingerprint and record it on blockchain in seconds. Download your registration certificate with timestamp.', link: 'See sample certificate' }, s3: { title: 'Distribute your music', desc: 'Reach Spotify, Apple Music, YouTube and 200+ platforms with one click. Control and monetize from your dashboard.' } }, ctaTitle: 'What are you waiting for? Protect and monetize your music today', ctaButton: 'Start now'
