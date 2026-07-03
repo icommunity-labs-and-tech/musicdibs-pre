@@ -2,11 +2,12 @@ import type { TFunction } from 'i18next';
 
 // Annual tier → credits per year (mirrors BillingPage)
 export const ANNUAL_TIER_CREDITS: Record<string, number> = {
+  annual_20: 20,
   annual_100: 100,
   annual_200: 200,
   annual_300: 300,
-  annual_400: 500,
-  annual_500: 1000,
+  annual_500: 500,
+  annual_1000: 1000,
 };
 
 /**
