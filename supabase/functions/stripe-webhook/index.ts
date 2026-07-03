@@ -565,9 +565,9 @@ serve(async (req) => {
       }
       // ââ end YouTube Service handler ââââââââââââââââââââââââââââââââââ
 
-      const userId   = session.metadata?.user_id;
-      const credits  = parseInt(session.metadata?.credits || "0", 10);
-      const planId   = session.metadata?.plan_id || "unknown";
+      let userId   = session.metadata?.user_id;
+      let credits  = parseInt(session.metadata?.credits || "0", 10);
+      let planId   = session.metadata?.plan_id || "unknown";
 
       //  Fallback A: recover user_id when missing from metadata (guest checkout) 
       if (!userId && session.customer) {
@@ -651,7 +651,25 @@ serve(async (req) => {
           console.log(`[WEBHOOK] Plan switch ${previousPlan} → ${planId}: credits preserved (accumulated mode) for user ${userId}`);
         }
 
-        await addCredits(supabase, userId, credits, `Compra plan ${planId}: +${credits} créditos`);
+        // ATOMIC DEDUP: checkout session ID es unico -- bloquea duplicados a nivel DB
+        // (previene el race condition entre checkout.session.completed e invoice.payment_succeeded)
+        const checkoutAtomicKey = `checkout_${session.id}`;
+        const checkoutAtomic = await supabase.rpc("grant_credits_atomic", {
+          p_stripe_event_key: checkoutAtomicKey,
+          p_user_id: userId,
+          p_credits: credits,
+          p_plan_id: planId || "unknown",
+          p_source_event: "checkout_completed",
+          p_description: `Compra plan ${planId}: +${credits} creditos`,
+        });
+        if ((checkoutAtomic.data ?? -1) === 0) {
+          console.log(`[WEBHOOK] checkout.completed: ATOMIC DEDUP blocked dup key=${checkoutAtomicKey}`);
+          return new Response(JSON.stringify({ received: true, duplicate: true }), { headers: { "Content-Type": "application/json" } });
+        }
+        if (checkoutAtomic.error) {
+          console.warn("[WEBHOOK] checkout.completed: grant_credits_atomic error, fallback:", checkoutAtomic.error.message);
+          await addCredits(supabase, userId, credits, `Compra plan ${planId}: +${credits} créditos`);
+        }
         if (isPermaPurchase) {
           const { data: permProf } = await supabase.from("profiles").select("permanent_credits").eq("user_id", userId).single();
           const newPermanent = (permProf?.permanent_credits ?? 0) + credits;
@@ -1019,21 +1037,26 @@ serve(async (req) => {
             }
           }
 
-          const { credits, source: creditsSource, tier: dbTier } = await resolveCreditsForUser(supabase, profile.user_id, actualPriceId);
-          console.log(`[WEBHOOK] subscription_update: credits=${credits} source=${creditsSource} tier=${dbTier} price=${actualPriceId}`);
-          console.log(`[WEBHOOK] credits resolved via: ${dbTier ? "subscription_tier=" + dbTier : "PRICE_CREDITS=" + actualPriceId} → ${credits} credits`);
+          // FIX: Usar TIER_CREDITS directo con el nuevo precio (no resolveCreditsForUser
+          // que lee subscription_tier del perfil que aun tiene el tier anterior)
+          const newTierFromPrice = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
+          const newCreditsFromTier = newTierFromPrice ? (TIER_CREDITS[newTierFromPrice] ?? 0) : 0;
+          console.log(`[WEBHOOK] subscription_update: prev tier=${previousTierBeforeUpgrade} new tier=${newTierFromPrice} credits=${newCreditsFromTier} price=${actualPriceId}`);
 
           // Guard: only assign credits if the plan tier actually changed.
-          // Setting trial_end generates a subscription_update invoice but is NOT a plan change.
-          const newTierFromPrice = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
           const tierActuallyChanged = newTierFromPrice !== previousTierBeforeUpgrade;
           if (!tierActuallyChanged) {
-            console.log(`[WEBHOOK] subscription_update: tier unchanged (${previousTierBeforeUpgrade} → ${newTierFromPrice}) — skipping credit assignment (likely trial_end update)`);
-          } else if (credits > 0) {
-            await addCredits(supabase, profile.user_id, credits, `Cambio de plan: +${credits} créditos acumulados`);
-            console.log(`[WEBHOOK] Plan change: added ${credits} credits to user ${profile.user_id} (accumulated)`);
+            console.log(`[WEBHOOK] subscription_update: tier unchanged, skipping credit assignment`);
+          } else if (newCreditsFromTier > 0) {
+            // FIX: Resetear creditos al nuevo tier (no acumular) — cubre tanto upgrade como downgrade
+            const { data: permProfile } = await supabase.from("profiles").select("permanent_credits").eq("user_id", profile.user_id).single();
+            const permanentCr = permProfile?.permanent_credits ?? 0;
+            const totalCr = newCreditsFromTier + permanentCr;
+            await supabase.from("profiles").update({ available_credits: totalCr, updated_at: new Date().toISOString() }).eq("user_id", profile.user_id);
+            await supabase.from("credit_transactions").insert({ user_id: profile.user_id, amount: newCreditsFromTier, type: "purchase", description: `Cambio de plan: ${newTierFromPrice} ${newCreditsFromTier} creditos` });
+            console.log(`[WEBHOOK] Plan change: reset credits to ${totalCr} for ${profile.user_id}`);
           } else {
-            console.warn(`[WEBHOOK] subscription_update: no credits mapping for price ${actualPriceId} (tier=${dbTier})`);
+            console.warn(`[WEBHOOK] subscription_update: no credits mapping for tier ${newTierFromPrice}`);
           }
 
           // Update plan name
@@ -1201,6 +1224,20 @@ serve(async (req) => {
                 headers: { "Content-Type": "application/json" }
               });
             }
+            // FIX race condition: checkout.session.completed puede llegar hasta 2s despues
+            // del invoice.payment_succeeded. Esperar 1.5s y reintentar el check antes de
+            // asumir que no hay checkout order (evita doble-credito, caso ibidemoficial 2026-06-29).
+            await new Promise(r => setTimeout(r, 1500));
+            const { data: existingCheckoutOrder2 } = await supabase
+              .from("orders").select("id")
+              .eq("stripe_subscription_id", subscriptionId)
+              .eq("is_renewal", false)
+              .not("stripe_checkout_session_id", "is", null)
+              .maybeSingle();
+            if (existingCheckoutOrder2) {
+              console.log(`[WEBHOOK] subscription_create: checkout order found after delay (sub ${subscriptionId}) — skipping`);
+              return new Response(JSON.stringify({ received: true, duplicate: true }), { headers: { "Content-Type": "application/json" } });
+            }
           }
 
           // Idempotency guard #2b: fallback for when subscriptionId could NOT be
@@ -1258,8 +1295,26 @@ serve(async (req) => {
           console.log(`[WEBHOOK] subscription_create: credits=${createCredits} source=${createSource} tier=${createTier} price=${actualPriceId}`);
 
           if (createCredits > 0) {
-            await addCredits(supabase, profile.user_id, createCredits, `Alta suscripción ${resolvedPlanId || actualPriceId}: +${createCredits} créditos`);
-            console.log(`[WEBHOOK] subscription_create: added ${createCredits} credits to user ${profile.user_id}`);
+            // ATOMIC DEDUP via grant_credits_atomic (ON CONFLICT stripe_event_key)
+            const atomicKey = invoiceId ? `inv_create_${invoiceId}` : `cust_${customerId}_${Date.now()}`;
+            const atomicResult = await supabase.rpc("grant_credits_atomic", {
+              p_stripe_event_key: atomicKey,
+              p_user_id: profile.user_id,
+              p_credits: createCredits,
+              p_plan_id: resolvedPlanId || actualPriceId || "unknown",
+              p_source_event: "subscription_create",
+              p_description: `Alta suscripcion ${resolvedPlanId || actualPriceId}: +${createCredits} creditos`,
+            });
+            if ((atomicResult.data ?? -1) === 0) {
+              console.log(`[WEBHOOK] subscription_create: ATOMIC DEDUP blocked dup key=${atomicKey}`);
+              return new Response(JSON.stringify({ received: true, duplicate: true }), { headers: { "Content-Type": "application/json" } });
+            }
+            if (atomicResult.error) {
+              console.warn("[WEBHOOK] subscription_create: grant_credits_atomic error, fallback:", atomicResult.error.message);
+              await addCredits(supabase, profile.user_id, createCredits, `Alta suscripcion ${resolvedPlanId || actualPriceId}: +${createCredits} creditos`);
+            } else {
+              console.log(`[WEBHOOK] subscription_create: granted ${createCredits} credits atomically for user ${profile.user_id}`);
+            }
           } else {
             console.warn(`[WEBHOOK] subscription_create: no credits mapping for price ${actualPriceId} (tier=${createTier})`);
           }
@@ -1410,6 +1465,50 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         await supabase.from("credit_transactions").insert({ user_id: profile.user_id, amount: 0, type: "payment_failed", description });
         console.log(`[WEBHOOK] Payment failed for user ${profile.user_id} (attempt ${attemptCount})`);
 
+        // FIX: Si no hay mas reintentos (impago definitivo), resetear creditos de plan
+        // y crear evidencia IBS de "cancelacion por impago" inmediatamente (no esperar
+        // al subscription.deleted, que puede tardar dias en llegar).
+        if (!nextAttempt) {
+          try {
+            const { data: failedProfile } = await supabase.from("profiles")
+              .select("subscription_tier, subscription_plan, available_credits, permanent_credits")
+              .eq("user_id", profile.user_id).single();
+            const planCredits = Math.max(0, (failedProfile?.available_credits ?? 0) - (failedProfile?.permanent_credits ?? 0));
+            if (planCredits > 0) {
+              await supabase.from("profiles").update({
+                available_credits: failedProfile?.permanent_credits ?? 0,
+                updated_at: new Date().toISOString(),
+              }).eq("user_id", profile.user_id);
+              await supabase.from("credit_transactions").insert({
+                user_id: profile.user_id, amount: -planCredits, type: "admin_reset",
+                description: `Creditos de suscripcion eliminados por impago definitivo: -${planCredits}`,
+              });
+            }
+            const failedPlanId = failedProfile?.subscription_tier || "unknown";
+            const failedPlanName = PLAN_ID_TO_PLAN_NAME[failedPlanId] || failedProfile?.subscription_plan || "Unknown";
+            const failedOrder = await createOrderRecord(supabase, {
+              userId: profile.user_id, stripeCustomerId: customerId || undefined,
+              productType: getProductType(failedPlanId), productCode: failedPlanId,
+              productLabel: `Cancelacion por impago: ${failedPlanName}`,
+              billingInterval: null, amountGross: 0, stripeFee: 0, currency: "eur",
+              isSubscription: true, isRenewal: false,
+              metadata: { cancellation_reason: "payment_failed_definitive", attempt_count: attemptCount },
+            });
+            const { data: { user: failedUser } } = await supabase.auth.admin.getUserById(profile.user_id);
+            const { data: failedDisp } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
+            await createPurchaseEvidence(supabase, {
+              userId: profile.user_id, orderId: failedOrder?.id,
+              email: failedUser?.email, displayName: failedDisp?.display_name,
+              productType: "cancellation",
+              productName: `Cancelacion por impago definitivo: ${failedPlanName}`,
+              amount: 0, currency: "eur", paymentStatus: "failed",
+            });
+            console.log(`[WEBHOOK] payment_failed definitive: credits reset + IBS evidence created for ${profile.user_id}`);
+          } catch (failedEvErr) {
+            console.warn("[WEBHOOK] payment_failed definitive: failed to create evidence:", failedEvErr);
+          }
+        }
+
 
         // ── Intento 4+: marcar cancel_at_period_end como ultimo aviso ──
         if (attemptCount >= 4) {
@@ -1451,7 +1550,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
               payload: {
                 idempotency_key: `payment-failed-admin-${adminMsgId}`, message_id: adminMsgId,
                 to: "info@musicdibs.com", from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com",
-                subject: `â ï¸ Fallo de pago — ${userEmail}`, html: email.html, text: email.text,
+                subject: `[MusicDibs] Fallo de pago - ${userEmail}`, html: email.html, text: email.text,
                 purpose: "transactional", label: "payment_failed_admin", queued_at: new Date().toISOString(),
               },
             });
@@ -1623,6 +1722,39 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
         console.log(`[WEBHOOK] subscription.deleted → marked subscriptions as cancelled for user ${profile.user_id}`);
+
+        // FIX: Crear order + evidencia IBS para la cancelacion, distinguiendo el motivo real
+        try {
+          const cancelReason = (subscription as any).cancellation_details?.reason || "unknown";
+          const cancelProductName = cancelReason === "payment_failed"
+            ? `Cancelacion por impago definitivo: ${deletedPlanName}`
+            : cancelReason === "cancellation_requested"
+              ? `Cancelacion por no renovacion: ${deletedPlanName}`
+              : `Cancelacion de suscripcion: ${deletedPlanName}`;
+          const cancelPaymentStatus = cancelReason === "payment_failed" ? "failed" : "cancelled";
+          const cancelOrder = await createOrderRecord(supabase, {
+            userId: profile.user_id, stripeSubscriptionId: subscription.id,
+            stripeCustomerId: customerId || undefined,
+            productType: deletedPlanId ? getProductType(deletedPlanId) : "monthly",
+            productCode: deletedPlanId || "cancelled",
+            productLabel: `${cancelReason === "payment_failed" ? "Cancelacion por impago" : cancelReason === "cancellation_requested" ? "Cancelacion por no renovacion" : "Cancelacion"}: ${deletedPlanName}`,
+            billingInterval: null, amountGross: 0, stripeFee: 0, currency: "eur",
+            isSubscription: true, isRenewal: false,
+            metadata: { cancellation_reason: cancelReason },
+          });
+          const { data: { user: cancelEvUser } } = await supabase.auth.admin.getUserById(profile.user_id);
+          const { data: cancelEvProf } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
+          await createPurchaseEvidence(supabase, {
+            userId: profile.user_id, orderId: cancelOrder?.id,
+            email: cancelEvUser?.email, displayName: cancelEvProf?.display_name,
+            productType: "cancellation",
+            productName: cancelProductName,
+            amount: 0, currency: "eur", paymentStatus: cancelPaymentStatus,
+          });
+          console.log(`[WEBHOOK] subscription.deleted: IBS evidence created (reason=${cancelReason}) for ${profile.user_id}`);
+        } catch (cancelEvErr) {
+          console.warn("[WEBHOOK] subscription.deleted: failed to create cancellation evidence:", cancelEvErr);
+        }
 
         try {
           const { data: { user: cancelUser } } = await supabase.auth.admin.getUserById(profile.user_id);
