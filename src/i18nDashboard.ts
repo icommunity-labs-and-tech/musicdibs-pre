@@ -1311,7 +1311,7 @@ const en: typeof es = {
       genTypeInstrumentalLog: 'Instrumental',
     },
     distribute: {
-      annualOnly: 'Available only with annual subscription',
+      annualOnly: 'Available only with Plan PLUS+',
     },
     paymentAlert: {
       managePayment: 'Manage payment',
