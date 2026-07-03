@@ -39,7 +39,7 @@ export function useKycGuard() {
 
     // 2. Realtime – wrapped in try/catch so failures don't break the dashboard
     try {
-      channel = supabase.channel(`realtime:kyc-guard-${user.id}`);
+      channel = supabase.channel(`realtime:kyc-guard-${user.id}-${Math.random().toString(36).slice(2)}`);
 
       // Register ALL listeners BEFORE calling subscribe
       channel.on('postgres_changes', {
