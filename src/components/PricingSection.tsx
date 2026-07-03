@@ -2,35 +2,23 @@ import { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTranslation, Trans } from "react-i18next";
-import { getFooterLinks } from "@/i18nLinks";
-import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 
 import { useABTest, trackABClick } from "@/hooks/useABTest";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Loader2, Briefcase, ArrowRight, Check, X, Sparkles } from "lucide-react";
+import { Loader2, Briefcase, ArrowRight, Check, Sparkles, Star } from "lucide-react";
 import { GuestEmailModal } from "@/components/GuestEmailModal";
 
 // Annual capacity packs — connected to real Stripe prices via the
-// `create-credit-checkout` edge function. The frontend sends `planId` AND
-// `expectedPriceId`; the edge function resolves `planId → priceId` and validates
-// that the expected price matches, preventing silent UI/Stripe mismatches.
-//
-// All five prices belong to the same Stripe product `prod_U7jGiCV4Uj76rt`
-// (annual subscription), which lets users switch capacity as a plan change.
-//
-// To rotate a price ID:
-//   1) Update the priceId here.
-//   2) Update the same priceId in `supabase/functions/create-credit-checkout/index.ts`
-//      (PLANS map). Both must stay in sync.
+// `create-credit-checkout` edge function.
 type AnnualOption = {
   planId: 'annual_100' | 'annual_200' | 'annual_300' | 'annual_500' | 'annual_1000';
   credits: number;
   priceEur: number;
   pricePerCreditEur: number;
-  /** Stripe Price ID — kept in sync with create-credit-checkout edge function */
   priceId: string;
 };
 
@@ -42,16 +30,19 @@ const ANNUAL_OPTIONS: AnnualOption[] = [
   { planId: 'annual_1000', credits: 1000, priceEur: 399.90, pricePerCreditEur: 0.40, priceId: 'price_1THT7rF9ZCIiqrz6UmJDkBNZ' },
 ];
 
-
-// Base prices in EUR
-const BASE_PRICES = {
-  annual: 59.90,
-  monthly: 6.90,
-  individual: 7.00,
-  signupFee: 6.90,
+// New starter annual plan — planId already resolved in the backend edge function.
+const STARTER_ANNUAL = {
+  planId: 'annual_20' as const,
+  credits: 20,
+  priceEur: 19.90,
+  priceId: 'price_1Tp90nFULeu7PzK67hoGodWv',
 };
 
-// Approximate exchange rates from EUR
+const BASE_PRICES = {
+  monthly: 6.90,
+  individual: 7.00,
+};
+
 const CURRENCY_CONFIG: Record<string, { symbol: string; rate: number; position: 'before' | 'after'; decimal: string }> = {
   es: { symbol: '€', rate: 1, position: 'after', decimal: ',' },
   en: { symbol: '$', rate: 1.08, position: 'before', decimal: '.' },
@@ -72,19 +63,19 @@ function formatPrice(amount: number, lang: string): string {
 }
 
 export const PricingSection = () => {
-  const [isAnnual, setIsAnnual] = useState(true);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [selectedAnnualPlanId, setSelectedAnnualPlanId] = useState<AnnualOption['planId']>('annual_100');
   const [guestModalOpen, setGuestModalOpen] = useState(false);
   const [pendingGuestPlanId, setPendingGuestPlanId] = useState<string | null>(null);
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const lang = i18n.resolvedLanguage || i18n.language;
-  const links = getFooterLinks(lang);
 
   const launchCheckout = useCallback(async (planId: string, guestEmail?: string) => {
-    const expectedPriceId = ANNUAL_OPTIONS.find(o => o.planId === planId)?.priceId;
+    const expectedPriceId =
+      planId === STARTER_ANNUAL.planId
+        ? STARTER_ANNUAL.priceId
+        : ANNUAL_OPTIONS.find(o => o.planId === planId)?.priceId;
     const body: Record<string, unknown> = expectedPriceId ? { planId, expectedPriceId } : { planId };
     if (guestEmail) {
       body.guest = true;
@@ -101,7 +92,6 @@ export const PricingSection = () => {
       return;
     }
     if (data?.url) {
-      // Guests deben ir en la misma pestaña para preservar sessionStorage tras volver de Stripe
       if (guestEmail) {
         window.location.href = data.url;
       } else {
@@ -112,7 +102,6 @@ export const PricingSection = () => {
 
   const handleCheckout = useCallback(async (planId: string) => {
     if (!user) {
-      // Guest → pedir email primero
       setPendingGuestPlanId(planId);
       setGuestModalOpen(true);
       return;
@@ -132,19 +121,16 @@ export const PricingSection = () => {
     const planId = pendingGuestPlanId;
     setLoadingPlan(planId);
     try {
-      // Pre-registrar lead (crea usuario + welcome email + MailerLite)
       const { data, error } = await supabase.functions.invoke('register-guest-lead', {
         body: { email, password, name, language: (lang || 'es').slice(0, 2) },
       });
       if (error || !data?.ok) {
         throw new Error(data?.error || 'Error al registrar el email');
       }
-      // Guardar credenciales para auto-login tras el pago (mismo tab)
       try {
         sessionStorage.setItem('guest_checkout_email', email);
         sessionStorage.setItem('guest_checkout_password', password);
-      } catch { /* sessionStorage puede fallar en modo privado */ }
-      // Continuar al checkout independientemente de si userId es null (p.ej. usuario OAuth existente)
+      } catch { /* ignore */ }
       await launchCheckout(planId, email);
       setGuestModalOpen(false);
       setPendingGuestPlanId(null);
@@ -171,14 +157,13 @@ export const PricingSection = () => {
   );
 
   const prices = useMemo(() => ({
-    annual: formatPrice(selectedAnnual.priceEur, lang),
-    annualPerCredit: formatPrice(selectedAnnual.pricePerCreditEur, lang),
     monthly: formatPrice(BASE_PRICES.monthly, lang),
     individual: formatPrice(BASE_PRICES.individual, lang),
-    signupFee: formatPrice(BASE_PRICES.signupFee, lang),
+    starter: formatPrice(STARTER_ANNUAL.priceEur, lang),
+    annual: formatPrice(selectedAnnual.priceEur, lang),
+    annualPerCredit: formatPrice(selectedAnnual.pricePerCreditEur, lang),
   }), [lang, selectedAnnual]);
 
-  // Format the option label per language using the converted currency
   const annualOptionLabel = useCallback((opt: AnnualOption) => {
     const price = formatPrice(opt.priceEur, lang);
     const perCredit = formatPrice(opt.pricePerCreditEur, lang);
@@ -188,68 +173,148 @@ export const PricingSection = () => {
     return `${opt.credits} ${creditsWord} — ${price} ${yearSuffix} (${perCredit} ${perCreditWord})`;
   }, [lang, t]);
 
+  const monthlyFeatures = t('pricing.features.monthly', { returnObjects: true }) as string[];
+  const starterFeatures = t('pricing.features.starter', { returnObjects: true }) as string[];
+  const annualFeatures = t('pricing.features.annual', { returnObjects: true }) as string[];
+
+  const renderFeature = (text: string, tone: 'plain' | 'accent' = 'plain') => (
+    <div className="flex items-start space-x-3">
+      <div
+        className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0 ${
+          tone === 'accent'
+            ? 'bg-green-400 ring-2 ring-green-300/40 shadow-[0_0_10px_rgba(74,222,128,0.45)]'
+            : 'bg-white/90'
+        }`}
+      >
+        <Check className={`w-3 h-3 ${tone === 'accent' ? 'text-green-900' : 'text-slate-700'}`} strokeWidth={3} />
+      </div>
+      <span className="text-sm leading-relaxed text-white/90">{text}</span>
+    </div>
+  );
+
   return (
     <>
     <section id="pricing-section" className="py-20 px-4 bg-gradient-to-b from-primary/60 via-primary to-purple-600">
-      <div className="max-w-6xl mx-auto text-center">
+      <div className="max-w-7xl mx-auto text-center">
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
           {t("pricing.title")}
         </h2>
-        <p className="text-xl text-white/90 mb-12 max-w-4xl mx-auto">
+        <p className="text-xl text-white/90 mb-14 max-w-4xl mx-auto">
           {t("pricing.subtitle")}
         </p>
 
-        {/* Toggle Switch */}
-        <div className="flex items-center justify-center mb-12">
-          <span className={`mr-4 text-lg font-medium ${!isAnnual ? 'text-white' : 'text-white/70'}`}>
-            {t("pricing.toggleBasic")}
-          </span>
-          <button
-            onClick={() => setIsAnnual(!isAnnual)}
-            className="relative inline-flex h-8 w-16 items-center rounded-full bg-white/20 transition-colors"
-            aria-label={`${t("pricing.toggleBasic")} / ${t("pricing.togglePlus")}`}
-          >
-            <span
-              className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                isAnnual ? 'translate-x-8' : 'translate-x-1'
-              }`}
-            />
-          </button>
-          <span className={`ml-4 text-lg font-medium ${isAnnual ? 'text-white' : 'text-white/70'}`}>
-            {t("pricing.togglePlus")}
-          </span>
-        </div>
+        {/* 3 columnas de precios */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-5 items-stretch mb-16 max-w-6xl mx-auto">
 
-        {/* Pricing Card */}
-        <div className="flex justify-center mb-16">
-          <Card
-            className={`w-full border-0 text-white transition-all duration-500 ${
-              isAnnual
-                ? "max-w-lg bg-gradient-to-br from-pink-500 via-pink-600 to-purple-700 shadow-[0_25px_80px_-15px_rgba(236,72,153,0.6)] ring-2 ring-yellow-400/60 scale-100"
-                : "max-w-md bg-gradient-to-b from-slate-700/90 to-slate-800/90 shadow-lg ring-1 ring-white/10 opacity-95"
-            }`}
-          >
-            <CardContent className={isAnnual ? "p-10" : "p-7"}>
-              <div className="text-center mb-6">
-                {isAnnual && (
-                  <div className="inline-flex items-center gap-1.5 bg-yellow-400 text-pink-700 font-bold text-xs md:text-sm px-4 py-2 rounded-full mb-4 shadow-md">
-                    <Sparkles className="w-4 h-4" />
-                    {t("pricing.badgeAnnual")}
+          {/* ─────────── COLUMNA IZQUIERDA — Mensual ─────────── */}
+          <div className="order-1 md:order-1 flex">
+            <Card className="w-full border border-white/15 bg-gradient-to-b from-slate-700/90 to-slate-800/90 text-white shadow-lg flex flex-col">
+              <CardContent className="p-6 flex flex-col flex-1">
+                <div className="text-center mb-5">
+                  <h3 className="text-lg font-bold text-white/90 mb-1">
+                    {t("pricing.nameMonthly")}
+                  </h3>
+                  <p className="text-xs text-white/65 mb-4">{t("pricing.briefMonthly")}</p>
+                  <div className="text-3xl font-bold mb-2">
+                    {prices.monthly}
+                    <span className="text-base font-normal">{t("pricing.priceMonthlySuffix")}</span>
                   </div>
-                )}
+                  <div className="inline-block rounded-full bg-white/10 text-white/85 px-3 py-1 text-xs font-semibold">
+                    {t("pricing.creditsMonthly")}
+                  </div>
+                </div>
+                <div className="space-y-2.5 mb-6 text-left flex-1">
+                  {monthlyFeatures.map((f, i) => <div key={i}>{renderFeature(f)}</div>)}
+                </div>
+                <Button
+                  className="w-full font-semibold rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/30 py-3 text-sm"
+                  disabled={loadingPlan !== null}
+                  onClick={() => handleCheckout('monthly')}
+                >
+                  {loadingPlan === 'monthly' ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+                  {t("pricing.ctaMonthly")}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
 
-                <h3 className={`font-bold mb-1 ${isAnnual ? 'text-2xl md:text-3xl' : 'text-lg text-white/90'}`}>
-                  {isAnnual ? t("pricing.nameAnnual") : t("pricing.nameMonthly")}
-                </h3>
+          {/* ─────────── COLUMNA CENTRAL — Anual Básico (destacada) ─────────── */}
+          <div className="order-2 md:order-2 flex">
+            <Card
+              className="w-full border-[3px] border-yellow-400 text-white flex flex-col relative md:-mt-4 md:mb-0"
+              style={{
+                background: 'linear-gradient(160deg, #f59e0b 0%, #ec4899 55%, #a855f7 100%)',
+                boxShadow: '0 30px 80px -20px rgba(236,72,153,0.7), 0 0 0 4px rgba(250,204,21,0.15)',
+              }}
+            >
+              {/* Badge superior grande */}
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                <div className="inline-flex items-center gap-1.5 bg-yellow-400 text-pink-800 font-extrabold text-xs md:text-sm px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
+                  <Star className="w-4 h-4 fill-pink-800" />
+                  {t('pricing.starter.badge')}
+                </div>
+              </div>
 
-                <p className={`mb-4 ${isAnnual ? 'text-white/85 text-sm md:text-base' : 'text-white/65 text-xs'}`}>
-                  {isAnnual ? t("pricing.briefAnnual") : t("pricing.briefMonthly")}
+              <CardContent className="p-7 pt-9 flex flex-col flex-1">
+                <div className="text-center mb-5">
+                  <h3 className="text-2xl md:text-3xl font-bold mb-1">
+                    {t('pricing.starter.name')}
+                  </h3>
+                  <p className="text-white/90 text-sm mb-4">
+                    {t('pricing.starter.brief')}
+                  </p>
+                  <div className="text-5xl md:text-6xl font-bold mb-2">
+                    {prices.starter}
+                    <span className="text-xl font-normal">{t("pricing.priceAnnualSuffix")}</span>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-sm border border-white/40 text-white font-semibold px-4 py-1.5 text-sm">
+                    <Sparkles className="w-4 h-4" />
+                    {t('pricing.starter.credits')}
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 mb-4 text-left flex-1">
+                  {starterFeatures.map((f, i) => <div key={i}>{renderFeature(f, 'accent')}</div>)}
+                </div>
+
+                {/* Upsell tenue hacia Plus+ */}
+                <p className="text-[11px] md:text-xs text-white/75 text-center mb-5 leading-relaxed">
+                  {t('pricing.starter.upsell')} <ArrowRight className="inline w-3 h-3 -mt-0.5" />
                 </p>
 
-                {/* Annual capacity selector — only on the annual plan */}
-                {isAnnual && (
-                  <div className="mb-5 text-left">
-                    <p className="text-xs md:text-sm text-white/85 mb-2 text-center">
+                <Button
+                  className="w-full font-bold rounded-full bg-white hover:bg-yellow-50 text-pink-600 py-4 text-base md:text-lg shadow-xl"
+                  disabled={loadingPlan !== null}
+                  onClick={() => {
+                    trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
+                    handleCheckout(STARTER_ANNUAL.planId);
+                  }}
+                >
+                  {loadingPlan === STARTER_ANNUAL.planId ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+                  {t('pricing.starter.cta')}
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* ─────────── COLUMNA DERECHA — Plan Plus+ ─────────── */}
+          <div className="order-3 md:order-3 flex">
+            <Card className="w-full border border-white/20 bg-gradient-to-br from-purple-700/80 via-pink-600/70 to-purple-800/80 text-white shadow-xl flex flex-col">
+              <CardContent className="p-6 flex flex-col flex-1">
+                <div className="text-center mb-4">
+                  <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 text-white font-semibold text-[11px] md:text-xs px-3 py-1 rounded-full mb-3">
+                    {t("pricing.badgeAnnual")}
+                  </div>
+                  <h3 className="text-xl md:text-2xl font-bold mb-1">
+                    {t("pricing.nameAnnual")}
+                  </h3>
+                  <p className="text-white/85 text-xs md:text-sm mb-4">
+                    {t("pricing.briefAnnual")}
+                  </p>
+
+                  <div className="mb-4 text-left">
+                    <p className="text-[11px] md:text-xs text-white/80 mb-1.5 text-center">
                       {t('pricing.annualSelectorHelp')}
                     </p>
                     <Select
@@ -258,7 +323,7 @@ export const PricingSection = () => {
                     >
                       <SelectTrigger
                         aria-label={t('pricing.annualSelectorAria', { defaultValue: 'Selecciona pack anual' })}
-                        className="w-full bg-white/15 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-semibold h-12 text-sm md:text-base"
+                        className="w-full bg-white/15 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-semibold h-11 text-sm"
                       >
                         <SelectValue>{annualOptionLabel(selectedAnnual)}</SelectValue>
                       </SelectTrigger>
@@ -270,112 +335,42 @@ export const PricingSection = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="mt-2 text-[11px] md:text-xs text-white/70 text-center">
-                      {t('pricing.annualSelectorNote')}
-                    </p>
                   </div>
-                )}
 
-                <div className={`font-bold mb-2 ${isAnnual ? 'text-5xl md:text-6xl' : 'text-3xl'}`}>
-                  {isAnnual ? prices.annual : prices.monthly}
-                  <span className={`font-normal ${isAnnual ? 'text-xl' : 'text-base'}`}>
-                    {isAnnual ? t("pricing.priceAnnualSuffix") : t("pricing.priceMonthlySuffix")}
-                  </span>
-                </div>
-
-                <div
-                  className={`inline-block rounded-full font-semibold ${
-                    isAnnual
-                      ? 'bg-white/20 text-white px-4 py-1.5 text-sm md:text-base backdrop-blur-sm border border-white/30'
-                      : 'bg-white/10 text-white/85 px-3 py-1 text-xs'
-                  }`}
-                >
-                  {isAnnual
-                    ? t('pricing.creditsAnnualDynamic', {
-                        count: selectedAnnual.credits,
-                        defaultValue: `${selectedAnnual.credits} créditos incluidos`,
-                      })
-                    : t('pricing.creditsMonthly')}
-                </div>
-
-                {isAnnual && (
-                  <p className="mt-2 text-xs md:text-sm text-white/80">
-                    {t('pricing.annualPerCredit', {
-                      price: prices.annualPerCredit,
-                      defaultValue: `${prices.annualPerCredit} / crédito`,
-                    })}
+                  <div className="text-4xl md:text-5xl font-bold mb-2">
+                    {prices.annual}
+                    <span className="text-lg font-normal">{t("pricing.priceAnnualSuffix")}</span>
+                  </div>
+                  <div className="inline-block rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold px-3 py-1 text-xs">
+                    {t('pricing.creditsAnnualDynamic', { count: selectedAnnual.credits })}
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-white/75">
+                    {t('pricing.annualPerCredit', { price: prices.annualPerCredit })}
                   </p>
-                )}
-              </div>
+                </div>
 
-              <div className={`space-y-2.5 mb-6 text-left ${isAnnual ? '' : 'mt-6'}`}>
-                {(() => {
-                  const featureList = t(`pricing.features.${isAnnual ? 'annual' : 'monthly'}`, { returnObjects: true }) as string[];
-                  return featureList.map((feature, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0 ${
-                          isAnnual
-                            ? 'bg-green-400 ring-2 ring-green-300/40 shadow-[0_0_10px_rgba(74,222,128,0.45)]'
-                            : 'bg-white'
-                        }`}
-                      >
-                        <Check className={`w-3 h-3 ${isAnnual ? 'text-green-900' : 'text-slate-700'}`} strokeWidth={3} />
-                      </div>
-                      <span className={`leading-relaxed ${isAnnual ? 'text-sm md:text-[15px]' : 'text-sm text-white/90'}`}>{feature}</span>
-                    </div>
-                  ));
-                })()}
-              </div>
+                <div className="space-y-2 mb-6 text-left flex-1">
+                  {annualFeatures.map((f, i) => <div key={i}>{renderFeature(f, 'accent')}</div>)}
+                </div>
 
-              {!isAnnual && (() => {
-                const excluded = t('pricing.features.monthlyExcluded', { returnObjects: true }) as string[];
-                if (!Array.isArray(excluded) || excluded.length === 0) return null;
-                return (
-                  <div className="mb-6 pt-4 border-t border-white/15">
-                    <p className="text-xs uppercase tracking-wider text-white/55 font-semibold mb-2">
-                      {t('pricing.excludedTitle')}
-                    </p>
-                    <div className="space-y-2">
-                      {excluded.map((feature, index) => (
-                        <div key={index} className="flex items-start space-x-3">
-                          <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center mt-0.5 flex-shrink-0">
-                            <X className="w-3 h-3 text-white/60" strokeWidth={3} />
-                          </div>
-                          <span className="text-sm leading-relaxed text-white/55 line-through">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {(() => {
-                const targetPlanId = isAnnual ? selectedAnnualPlanId : 'monthly';
-                return (
-                  <Button
-                    className={`w-full font-semibold rounded-full ${
-                      isAnnual
-                        ? 'bg-white hover:bg-white/95 text-pink-600 py-4 text-base md:text-lg shadow-xl'
-                        : 'bg-white/10 hover:bg-white/20 text-white border border-white/30 py-3 text-sm'
-                    } ${ctaBuy.className}`}
-                    disabled={loadingPlan !== null}
-                    onClick={() => {
-                      trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
-                      handleCheckout(targetPlanId);
-                    }}
-                  >
-                    {loadingPlan === targetPlanId ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                    {isAnnual ? t("pricing.ctaAnnual") : t("pricing.ctaMonthly")}
-                    {isAnnual && <ArrowRight className="ml-2 w-5 h-5" />}
-                  </Button>
-                );
-              })()}
-            </CardContent>
-          </Card>
+                <Button
+                  className={`w-full font-semibold rounded-full bg-white/95 hover:bg-white text-purple-700 py-3.5 text-sm md:text-base shadow-lg ${ctaBuy.className}`}
+                  disabled={loadingPlan !== null}
+                  onClick={() => {
+                    trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
+                    handleCheckout(selectedAnnualPlanId);
+                  }}
+                >
+                  {loadingPlan === selectedAnnualPlanId ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+                  {t("pricing.ctaAnnual")}
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Individual Registration Option — secondary, must not compete with annual plan */}
+        {/* Individual Registration Option */}
         <div className="text-center max-w-xl mx-auto rounded-2xl px-6 py-6 bg-white/5 backdrop-blur-sm border border-white/10">
           <h3 className="text-base md:text-lg font-semibold text-white/90 mb-1">
             {t("pricing.indivTitle")}
@@ -440,7 +435,6 @@ export const PricingSection = () => {
             </Link>
           </div>
 
-          {/* Fiscal / legal note */}
           <p className="mt-6 text-center text-white/55 text-xs leading-relaxed max-w-3xl mx-auto">
             {t("pricing.conditionsText")}
           </p>
