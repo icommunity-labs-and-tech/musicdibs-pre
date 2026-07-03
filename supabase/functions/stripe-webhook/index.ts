@@ -1040,14 +1040,38 @@ serve(async (req) => {
             }
           }
 
+          // FIX RACE CONDITION (caso ladydaymgs 2026-07-03): cuando un usuario hace
+          // upgrade y downgrade en cuestion de segundos, Stripe puede emitir 2 invoices
+          // "subscription_update" casi simultaneas. Si las procesamos con el precio
+          // resuelto en el instante inicial de cada webhook, uno de los dos eventos
+          // puede aplicar creditos de un tier que Stripe ya abandono. Estabilizamos
+          // esperando 2s y volviendo a leer el precio EN VIVO justo antes de decidir,
+          // quedandonos siempre con el estado mas reciente posible de Stripe.
+          await new Promise(r => setTimeout(r, 2000));
+          if (subscriptionId) {
+            const stablePriceId = await getSubscriptionPriceId(stripe, subscriptionId);
+            if (stablePriceId && stablePriceId !== actualPriceId) {
+              console.log(`[WEBHOOK] subscription_update: price changed during stabilization (${actualPriceId} -> ${stablePriceId}), usando el mas reciente`);
+              actualPriceId = stablePriceId;
+            }
+          }
+
           // FIX: Usar TIER_CREDITS directo con el nuevo precio (no resolveCreditsForUser
           // que lee subscription_tier del perfil que aun tiene el tier anterior)
           const newTierFromPrice = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
           const newCreditsFromTier = newTierFromPrice ? (TIER_CREDITS[newTierFromPrice] ?? 0) : 0;
           console.log(`[WEBHOOK] subscription_update: prev tier=${previousTierBeforeUpgrade} new tier=${newTierFromPrice} credits=${newCreditsFromTier} price=${actualPriceId}`);
 
-          // Guard: only assign credits if the plan tier actually changed.
-          const tierActuallyChanged = newTierFromPrice !== previousTierBeforeUpgrade;
+          // FIX: releer el tier actual justo antes de decidir (no confiar en la lectura
+          // de arriba, que puede estar obsoleta si otro evento concurrente ya escribio
+          // mientras esperabamos el delay de estabilizacion).
+          const { data: freshProfileCheck } = await supabase
+            .from("profiles").select("subscription_tier").eq("user_id", profile.user_id).single();
+          const currentTierRightNow = freshProfileCheck?.subscription_tier ?? previousTierBeforeUpgrade;
+
+          // Guard: only assign credits if the plan tier actually changed respecto al
+          // estado MAS RECIENTE en DB (no el que leimos al principio de la funcion).
+          const tierActuallyChanged = newTierFromPrice !== currentTierRightNow;
           if (!tierActuallyChanged) {
             console.log(`[WEBHOOK] subscription_update: tier unchanged, skipping credit assignment`);
           } else if (newCreditsFromTier > 0) {
