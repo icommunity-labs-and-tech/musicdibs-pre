@@ -429,7 +429,7 @@ const es = {
       genTypeInstrumentalLog: 'Instrumental',
     },
     distribute: {
-      annualOnly: 'Disponible solo con suscripción anual',
+      annualOnly: 'Disponible solo con Plan PLUS+',
     },
     paymentAlert: {
       managePayment: 'Gestionar pago',
@@ -1311,7 +1311,7 @@ const en: typeof es = {
       genTypeInstrumentalLog: 'Instrumental',
     },
     distribute: {
-      annualOnly: 'Available only with annual subscription',
+      annualOnly: 'Available only with Plan PLUS+',
     },
     paymentAlert: {
       managePayment: 'Manage payment',
@@ -2193,7 +2193,7 @@ const pt: typeof es = {
       genTypeInstrumentalLog: 'Instrumental',
     },
     distribute: {
-      annualOnly: 'Disponível apenas com assinatura anual',
+      annualOnly: 'Disponível apenas com Plano PLUS+',
     },
     paymentAlert: {
       managePayment: 'Gerenciar pagamento',
