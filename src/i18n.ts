@@ -1355,7 +1355,7 @@ const resources = {
         subtitle: 'O plano anual desbloqueia todo o potencial do Musicdibs: mais créditos, distribuição global e melhor preço para lançar sua música.',
         toggleBasic: 'Basic',
         togglePlus: 'Plano Plus+',
-        badgeAnnual: 'Melhor opção para lançar música',
+        badgeAnnual: 'Melhor opção para distribuir música',
         priceAnnualSuffix: ' / ano',
         priceMonthlySuffix: ' / mês',
         signupFeeNote: '',
