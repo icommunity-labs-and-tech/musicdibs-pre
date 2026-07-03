@@ -17,6 +17,7 @@ type PlanDefinition = {
 };
 
 const PLAN_DEFINITIONS: PlanDefinition[] = [
+  { planId: "annual_20", credits: 20, mode: "subscription", productType: "annual", billingInterval: "yearly", label: "Anual Básico 20 créditos", sortOrder: 20 },
   { planId: "annual_100", credits: 100, mode: "subscription", productType: "annual", billingInterval: "yearly", label: "Anual 100 créditos", sortOrder: 100 },
   { planId: "annual_200", credits: 200, mode: "subscription", productType: "annual", billingInterval: "yearly", label: "Anual 200 créditos", sortOrder: 200 },
   { planId: "annual_300", credits: 300, mode: "subscription", productType: "annual", billingInterval: "yearly", label: "Anual 300 créditos", sortOrder: 300 },
