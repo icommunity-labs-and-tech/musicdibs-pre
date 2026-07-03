@@ -49,11 +49,13 @@ serve(async (req) => {
       const customerId = typeof charge.customer === "string" ? charge.customer : charge.customer?.id;
       if (!customerId) continue;
 
-      // Buscar el order correspondiente por charge_id (o invoice si viene de suscripción)
+      // Buscar el order correspondiente por charge_id O payment_intent_id
+      // (correcciones manuales a veces solo tienen uno de los dos)
+      const piId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
       const { data: order } = await supabase
         .from("orders")
         .select("id, product_code, product_type, amount_gross, user_id")
-        .or(`stripe_charge_id.eq.${charge.id}`)
+        .or(`stripe_charge_id.eq.${charge.id}${piId ? `,stripe_payment_intent_id.eq.${piId}` : ""}`)
         .maybeSingle();
 
       const { data: profile } = await supabase
