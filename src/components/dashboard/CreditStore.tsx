@@ -83,10 +83,10 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('subscription_plan').eq('user_id', user.id).single()
+    supabase.from('profiles').select('subscription_plan, subscription_tier').eq('user_id', user.id).single()
       .then(({ data }) => {
         const plan = data?.subscription_plan ?? 'Free';
-        if (plan === 'Annual') setCurrentPlanId('annual_100');
+        if (plan === 'Annual') setCurrentPlanId((data as any)?.subscription_tier || 'annual_100');
         else if (plan === 'Monthly') setCurrentPlanId('monthly');
         else setCurrentPlanId('');
       });
@@ -95,7 +95,7 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
     });
   }, [user]);
 
-  const pollSubscriptionChange = async (expectedPlan: 'Annual' | 'Monthly'): Promise<boolean> => {
+  const pollSubscriptionChange = async (expectedPlan: 'Annual' | 'Monthly', purchasedPlanId?: string): Promise<boolean> => {
     const start = Date.now();
     const TIMEOUT_MS = 10_000;
     const INTERVAL_MS = 2_000;
@@ -104,8 +104,9 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
       try {
         const { data } = await supabase.functions.invoke('check-subscription');
         const plan = ((data as any)?.plan ?? (data as any)?.subscription_plan) as string | undefined;
+        const tier = ((data as any)?.subscription_tier ?? (data as any)?.tier) as string | undefined;
         if (plan === expectedPlan) {
-          if (expectedPlan === 'Annual') setCurrentPlanId('annual_100');
+          if (expectedPlan === 'Annual') setCurrentPlanId(tier || purchasedPlanId || 'annual_100');
           else setCurrentPlanId('monthly');
           return true;
         }
@@ -147,12 +148,12 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
         if (data.reactivated) setCancelAtPeriodEnd(false);
         // Optimistic UI update with the truth returned by the function
         const returnedPlan = (data as any)?.plan as 'Annual' | 'Monthly' | undefined;
-        if (returnedPlan === 'Annual') setCurrentPlanId('annual_100');
+        if (returnedPlan === 'Annual') setCurrentPlanId(planId);
         else if (returnedPlan === 'Monthly') setCurrentPlanId('monthly');
         // Poll Stripe-backed check-subscription to confirm propagation
         const expected: 'Annual' | 'Monthly' = returnedPlan
           ?? (planId.startsWith('annual') ? 'Annual' : 'Monthly');
-        const confirmed = await pollSubscriptionChange(expected);
+        const confirmed = await pollSubscriptionChange(expected, planId);
         if (!confirmed) {
           toast.message(t(`${cs}.switchProcessing`, { defaultValue: 'Cambio procesándose, puede tardar unos segundos.' }));
         }
@@ -258,11 +259,15 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {annualOptions.map(o => (
-                      <SelectItem key={o.planId} value={o.planId}>
-                        {t(`${cs}.nCredits`, { n: o.credits })} — {o.formattedPrice}{t(`${cs}.perYear`)} ({o.formattedPricePerCredit ?? '—'}/cr.)
-                      </SelectItem>
-                    ))}
+                    {annualOptions.map(o => {
+                      const isStarter = o.planId === 'annual_20';
+                      return (
+                        <SelectItem key={o.planId} value={o.planId}>
+                          {isStarter ? `${t(`${cs}.starterTag`, { defaultValue: 'Básico' })} · ` : ''}
+                          {t(`${cs}.nCredits`, { n: o.credits })} — {o.formattedPrice}{t(`${cs}.perYear`)} ({o.formattedPricePerCredit ?? '—'}/cr.)
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
