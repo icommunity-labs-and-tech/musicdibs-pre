@@ -122,14 +122,27 @@ function resolveCredits(price: Stripe.Price, definition: PlanDefinition) {
 
 // Mapa explícito de price IDs de MusicDibs — evita colisiones con precios Enterprise
 // Si se añaden nuevos planes, actualizar aquí.
+// Mapa COMPLETO de price IDs de MusicDibs.
+// IMPORTANTE: añadir aquí SIEMPRE que se cree un nuevo precio en Stripe.
+// Sin esto, la búsqueda dinámica puede seleccionar precios de otros productos
+// (Enterprise, YouTube, etc.) que coincidan por tipo/créditos.
 const EXPLICIT_PRICE_IDS: Record<string, string> = {
+  // Suscripciones anuales
   annual_100:  "price_1T8n6CFULeu7PzK6vs7NZyiJ",
   annual_200:  "price_1TMapTFULeu7PzK640B5uuEq",
   annual_300:  "price_1TMapTFULeu7PzK6D4GnB3Il",
   annual_500:  "price_1TMapTFULeu7PzK6cNJMf2oL",
   annual_1000: "price_1TMapTFULeu7PzK6ziUW5fLn",
+  // Suscripción mensual
   monthly:     "price_1T8n6lFULeu7PzK60TbO76hE",
+  // Crédito individual
   individual:  "price_1TMDVkFULeu7PzK6aNdFYW91",
+  // Top-ups (pago único) — sin esto, Stripe puede devolver precios de YouTube u otros
+  topup_10:    "price_1TMDVkFULeu7PzK6YxaKfBiJ",
+  topup_25:    "price_1TMDVkFULeu7PzK62A2zwaDO",
+  topup_50:    "price_1TMDVkFULeu7PzK6PcMnQkWZ",
+  topup_100:   "price_1TMDVkFULeu7PzK6AJC3o4lZ",
+  topup_200:   "price_1TMDVkFULeu7PzK6e9omPpoB",
 };
 
 async function resolvePlan(stripe: Stripe, planId: string): Promise<ResolvedPlan> {
@@ -150,11 +163,16 @@ async function resolvePlan(stripe: Stripe, planId: string): Promise<ResolvedPlan
     };
   }
 
+  // Fallback: búsqueda dinámica — SOLO entre precios con metadata.musicdibs_plan_id
+  // para evitar colisiones con precios de otros productos (YouTube, Enterprise, etc.)
   const prices = await stripe.prices.list({ active: true, limit: 100, expand: ["data.product"] });
-  const price = prices.data.find((candidate: Stripe.Price) => matchesDefinition(candidate, definition));
+  const musicdibsPrices = prices.data.filter((p: Stripe.Price) =>
+    p.metadata?.musicdibs_plan_id || p.lookup_key?.startsWith("annual") || p.lookup_key?.startsWith("topup") || p.lookup_key === "individual" || p.lookup_key === "monthly"
+  );
+  const price = musicdibsPrices.find((candidate: Stripe.Price) => matchesDefinition(candidate, definition));
 
   if (!price) {
-    throw new Error(`No active Stripe price found for plan ${planId}. Set Stripe price lookup_key or metadata plan_id to ${planId}.`);
+    throw new Error(`No active Stripe price found for plan ${planId}. Add price ID to EXPLICIT_PRICE_IDS map or set Stripe price metadata.musicdibs_plan_id=${planId}.`);
   }
 
   return {

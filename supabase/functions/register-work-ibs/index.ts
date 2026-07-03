@@ -20,6 +20,21 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 const IBS_API_URL = "https://api.icommunitylabs.com/v2";
 
+// Timeout para llamadas a IBS — Supabase corta la edge function a los ~60s (free) / 150s (pro)
+// sin dejar ejecutar el catch global. Con timeout explícito capturamos el error correctamente.
+const IBS_TIMEOUT_MS = 45_000; // 45s por llamada individual a IBS
+const GCS_TIMEOUT_MS = 55_000; // 55s para upload a GCS (archivos grandes)
+
+async function fetchWithTimeout(url: string, opts: RequestInit & { duplex?: string } = {}, timeoutMs = IBS_TIMEOUT_MS): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...opts, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // SIEMPRE usamos presigned GCS streaming (ruta B) para evitar OOM en el worker.
 // La ruta A (base64 en RAM) causa WORKER_RESOURCE_LIMIT incluso con archivos pequeños.
 const DIRECT_UPLOAD_THRESHOLD_BYTES = 0;
@@ -109,9 +124,9 @@ serve(async (req) => {
       // Si no está 'success' en BD, refrescamos contra iBS antes de rechazar
       if (sigStatus !== "success") {
         try {
-          const ibsCheck = await fetch(`${IBS_API_URL}/signatures/${signatureId}`, {
+          const ibsCheck = await fetchWithTimeout(`${IBS_API_URL}/signatures/${signatureId}`, {
             headers: { Authorization: `Bearer ${IBS_API_KEY}` },
-          });
+          }, IBS_TIMEOUT_MS);
           if (ibsCheck.ok) {
             const ibsData = await ibsCheck.json();
             const realStatus = ibsData?.status as string | undefined;
@@ -361,9 +376,9 @@ serve(async (req) => {
       };
 
       console.log(`[IBS] PASO 1 — Sesión upload para work ${workId}, ${filesMeta.length} archivo(s)`);
-      const sessionRes = await fetch(`${IBS_API_URL}/evidences/uploads`, {
+      const sessionRes = await fetchWithTimeout(`${IBS_API_URL}/evidences/uploads`, {
         method: "POST", headers: ibsHeaders, body: JSON.stringify(sessionBody),
-      });
+      }, IBS_TIMEOUT_MS);
 
       if (!sessionRes.ok) {
         const errBody = await sessionRes.text();
@@ -396,7 +411,7 @@ serve(async (req) => {
 
         console.log(`[IBS] PASO 2 — Subiendo ${fileMeta.name} (${(fileMeta.size/1024/1024).toFixed(1)}MB) a GCS...`);
 
-        const fileRes = await fetch(fileMeta.signedUrl);
+        const fileRes = await fetchWithTimeout(fileMeta.signedUrl, {}, GCS_TIMEOUT_MS);
         if (!fileRes.ok || !fileRes.body) {
           await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `Download failed for ${fileMeta.name}`, creditCost);
           ctx.deducted = false;
@@ -406,7 +421,7 @@ serve(async (req) => {
           );
         }
 
-        const gcsRes = await fetch(uploadInfo.url, {
+        const gcsRes = await fetchWithTimeout(uploadInfo.url, {
           method: "PUT",
           headers: {
             "Content-Type": uploadInfo.headers?.["Content-Type"] || fileMeta.contentType,
@@ -415,7 +430,7 @@ serve(async (req) => {
           body: fileRes.body,
           // @ts-ignore Deno soporta duplex streaming
           duplex: "half",
-        });
+        }, GCS_TIMEOUT_MS);
 
         if (!gcsRes.ok) {
           const gcsErr = await gcsRes.text();
@@ -448,9 +463,10 @@ serve(async (req) => {
       let completeRes!: Response;
       let attempt = 0;
       while (attempt < 3) {
-        completeRes = await fetch(
+        completeRes = await fetchWithTimeout(
           `${IBS_API_URL}/evidences/uploads/${sessionId}/complete`,
-          { method: "POST", headers: ibsHeaders, body: JSON.stringify({}) }
+          { method: "POST", headers: ibsHeaders, body: JSON.stringify({}) },
+          IBS_TIMEOUT_MS
         );
         if (completeRes.ok) break;
         attempt++;
@@ -521,7 +537,21 @@ serve(async (req) => {
     );
 
   } catch (e: any) {
-    console.error("[IBS-REGISTER] Unhandled error:", e?.message || e);
+    const isTimeout = e?.name === "AbortError" || e?.message?.includes("AbortError");
+    const errMsg = isTimeout ? "timeout_calling_ibs" : (e?.message?.slice(0, 200) || "unknown");
+    console.error(`[IBS-REGISTER] ${isTimeout ? "TIMEOUT" : "Unhandled error"}:`, e?.message || e);
+
+    // Marcar el work como failed aunque no hayamos deducido crédito
+    // (el cron lo haría igual a los 30min, pero así queda el motivo real registrado)
+    if (ctx.supabaseAdmin && ctx.workId) {
+      try {
+        await ctx.supabaseAdmin.from("works")
+          .update({ status: "failed", failure_reason: errMsg, updated_at: new Date().toISOString() })
+          .eq("id", ctx.workId)
+          .in("status", ["processing", "draft"]);
+      } catch { /* ignore */ }
+    }
+
     if (ctx.deducted && ctx.supabaseAdmin && ctx.workId && ctx.userId && ctx.creditCost > 0) {
       try {
         await handleIbsFailure(

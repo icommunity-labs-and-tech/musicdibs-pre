@@ -10,6 +10,16 @@ function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 }
 
+// Tipos de transacción que justifican créditos elevados en cualquier plan
+const JUSTIFIED_TX_TYPES = ["migration", "admin_adjustment", "admin_reset", "adjustment", "prize", "topup", "renewal"];
+// Emails de cuentas internas que nunca deben generar alertas
+const INTERNAL_ACCOUNTS = ["mg@icommunity.io", "info@musicdibs.com", "marta.escabias@icommunity.io"];
+// Créditos máximos por tier (para cálculo de exceso)
+const TIER_MAX: Record<string, number> = {
+  free: 0, monthly: 8, annual_100: 100, annual_200: 200,
+  annual_300: 300, annual_500: 500, annual_1000: 1000,
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -21,86 +31,229 @@ serve(async (req) => {
   if (!isAuth) return json({ error: "Unauthorized" }, 401);
 
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
-  const anomalies: { type: string; severity: string; count: number; description: string }[] = [];
+  const anomalies: { type: string; severity: string; count: number; description: string; examples?: string[] }[] = [];
 
   try {
-    // 1. Plan activo en profiles pero sin suscripcion activa (excluir migrados)
-    const { data: activePlans } = await supabase.from("profiles").select("user_id, subscription_plan").in("subscription_plan", ["Annual", "Monthly"]);
+
+    // ── 1. Plan activo sin suscripción activa ─────────────────────────────────
+    // Excluir: migrados WP, suscripciones recientes <48h, past_due (Stripe aún reintentando)
+    const cutoff48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+    const { data: activePlans } = await supabase
+      .from("profiles").select("user_id, subscription_plan, created_at")
+      .in("subscription_plan", ["Annual", "Monthly"])
+      .lt("created_at", cutoff48h); // excluir altas recientes <48h
+
     if (activePlans && activePlans.length > 0) {
       const userIds = activePlans.map((p: any) => p.user_id);
-      const { data: activeSubs } = await supabase.from("subscriptions").select("user_id").in("user_id", userIds).eq("status", "active");
-      const { data: migrated } = await supabase.from("credit_transactions").select("user_id").eq("type", "migration").in("user_id", userIds);
+      const { data: activeSubs } = await supabase.from("subscriptions").select("user_id")
+        .in("user_id", userIds).in("status", ["active", "past_due"]);
+      const { data: migrated } = await supabase.from("credit_transactions").select("user_id")
+        .eq("type", "migration").in("user_id", userIds);
       const activeSubIds = new Set((activeSubs || []).map((s: any) => s.user_id));
       const migratedIds = new Set((migrated || []).map((m: any) => m.user_id));
-      const noSub = activePlans.filter((p: any) => !activeSubIds.has(p.user_id) && !migratedIds.has(p.user_id));
-      if (noSub.length > 0) anomalies.push({ type: "plan_activo_sin_suscripcion", severity: "warning", count: noSub.length, description: `${noSub.length} usuarios tienen plan Annual/Monthly pero NO tienen fila activa en subscriptions (excluidos migrados WP).` });
+      // Excluir también cuentas internas
+      const { data: internalUsers } = await supabase.auth.admin.listUsers();
+      const internalIds = new Set(
+        (internalUsers?.users || [])
+          .filter((u: any) => INTERNAL_ACCOUNTS.includes(u.email))
+          .map((u: any) => u.id)
+      );
+      const noSub = activePlans.filter((p: any) =>
+        !activeSubIds.has(p.user_id) &&
+        !migratedIds.has(p.user_id) &&
+        !internalIds.has(p.user_id)
+      );
+      if (noSub.length > 0) {
+        // Obtener emails de los afectados para el informe
+        const { data: emails } = await supabase.auth.admin.listUsers();
+        const emailMap = Object.fromEntries((emails?.users || []).map((u: any) => [u.id, u.email]));
+        const examples = noSub.slice(0, 5).map((p: any) => emailMap[p.user_id] || p.user_id);
+        anomalies.push({
+          type: "plan_activo_sin_suscripcion", severity: "warning", count: noSub.length,
+          description: `${noSub.length} usuarios con plan Annual/Monthly sin suscripción activa (excluidos: migrados WP, altas <48h, cuentas internas).`,
+          examples,
+        });
+      }
     }
 
-    // 2. Suscripciones vencidas >30 dias que siguen active
-    const { data: expiredActive } = await supabase.from("subscriptions").select("user_id").eq("status", "active").lt("current_period_end", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-    if (expiredActive && expiredActive.length > 0) anomalies.push({ type: "suscripciones_vencidas_activas", severity: "critical", count: expiredActive.length, description: `${expiredActive.length} suscripciones llevan >30 dias vencidas pero siguen activas. Posible fallo del cron de renovaciones.` });
+    // ── 2. Suscripciones vencidas >30 días que siguen "active" ────────────────
+    const { data: expiredActive } = await supabase.from("subscriptions").select("user_id")
+      .eq("status", "active")
+      .lt("current_period_end", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .not("current_period_end", "is", null);
+    if (expiredActive && expiredActive.length > 0) {
+      anomalies.push({
+        type: "suscripciones_vencidas_activas", severity: "critical", count: expiredActive.length,
+        description: `${expiredActive.length} suscripciones llevan >30 días vencidas pero siguen "active". Posible fallo del cron de renovaciones.`,
+      });
+    }
 
-    // 3. Usuarios Free con >50 creditos sin justificacion
-    const { data: freeHigh } = await supabase.from("profiles").select("user_id").eq("subscription_plan", "Free").gt("available_credits", 50).limit(100);
+    // ── 3. Free con créditos altos sin justificación ──────────────────────────
+    // Justificado si tiene: migration, admin_adjustment, admin_reset, adjustment, prize, topup
+    // O si tiene permanent_credits que explican el saldo
+    // Umbral: >100 créditos (antes era 50, demasiado agresivo)
+    const FREE_CREDIT_THRESHOLD = 100;
+    const { data: freeHigh } = await supabase.from("profiles").select("user_id, available_credits, permanent_credits")
+      .eq("subscription_plan", "Free")
+      .gt("available_credits", FREE_CREDIT_THRESHOLD);
     if (freeHigh && freeHigh.length > 0) {
-      const userIds = freeHigh.map((p: any) => p.user_id);
-      const { data: justified } = await supabase.from("credit_transactions").select("user_id").in("type", ["admin_adjustment", "migration"]).in("user_id", userIds);
-      const justifiedIds = new Set((justified || []).map((t: any) => t.user_id));
-      const suspicious = freeHigh.filter((p: any) => !justifiedIds.has(p.user_id));
-      if (suspicious.length > 0) anomalies.push({ type: "free_con_creditos_altos", severity: "warning", count: suspicious.length, description: `${suspicious.length} usuarios Free tienen >50 creditos sin migracion ni ajuste admin.` });
+      // Filtrar los que tienen créditos permanentes que explican el saldo
+      const notExplainedByPermanent = freeHigh.filter((p: any) =>
+        (p.available_credits - (p.permanent_credits || 0)) > FREE_CREDIT_THRESHOLD
+      );
+      if (notExplainedByPermanent.length > 0) {
+        const userIds = notExplainedByPermanent.map((p: any) => p.user_id);
+        const { data: justified } = await supabase.from("credit_transactions").select("user_id")
+          .in("type", JUSTIFIED_TX_TYPES).in("user_id", userIds);
+        const justifiedIds = new Set((justified || []).map((t: any) => t.user_id));
+        // También excluir cuentas internas
+        const { data: allUsers } = await supabase.auth.admin.listUsers();
+        const internalIds = new Set(
+          (allUsers?.users || [])
+            .filter((u: any) => INTERNAL_ACCOUNTS.includes(u.email))
+            .map((u: any) => u.id)
+        );
+        const suspicious = notExplainedByPermanent.filter((p: any) =>
+          !justifiedIds.has(p.user_id) && !internalIds.has(p.user_id)
+        );
+        if (suspicious.length > 0) {
+          anomalies.push({
+            type: "free_con_creditos_altos", severity: "warning", count: suspicious.length,
+            description: `${suspicious.length} usuarios Free tienen >${FREE_CREDIT_THRESHOLD} créditos no explicados por permanentes, migración ni ajuste admin.`,
+          });
+        }
+      }
     }
 
-    // 4. past_due >14 dias sin resolver
-    const { data: stalePastDue } = await supabase.from("subscriptions").select("user_id").eq("status", "past_due").lt("updated_at", new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString());
-    if (stalePastDue && stalePastDue.length > 0) anomalies.push({ type: "past_due_sin_resolver", severity: "warning", count: stalePastDue.length, description: `${stalePastDue.length} suscripciones llevan >14 dias en past_due. Stripe probablemente ya las cancelo.` });
+    // ── 4. past_due >14 días sin resolver ─────────────────────────────────────
+    const { data: stalePastDue } = await supabase.from("subscriptions").select("user_id")
+      .eq("status", "past_due")
+      .lt("updated_at", new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString());
+    if (stalePastDue && stalePastDue.length > 0) {
+      anomalies.push({
+        type: "past_due_sin_resolver", severity: "warning", count: stalePastDue.length,
+        description: `${stalePastDue.length} suscripciones llevan >14 días en past_due. Stripe probablemente ya las canceló.`,
+      });
+    }
 
-    // 5. Creditos negativos
+    // ── 5. Créditos negativos ─────────────────────────────────────────────────
     const { data: negCred } = await supabase.from("profiles").select("user_id").lt("available_credits", 0);
-    if (negCred && negCred.length > 0) anomalies.push({ type: "creditos_negativos", severity: "critical", count: negCred.length, description: `${negCred.length} usuarios tienen creditos NEGATIVOS. Revisar urgentemente.` });
+    if (negCred && negCred.length > 0) {
+      anomalies.push({
+        type: "creditos_negativos", severity: "critical", count: negCred.length,
+        description: `${negCred.length} usuarios con créditos NEGATIVOS. Revisar urgentemente.`,
+      });
+    }
 
-    // Stats semanales
-    const { data: activeSubs } = await supabase.from("subscriptions").select("user_id").eq("status", "active");
-    const { data: weekOrders } = await supabase.from("orders").select("id").gte("paid_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
-    const { data: weekUsers } = await supabase.from("profiles").select("user_id").gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+    // ── 6. Créditos excesivos en usuarios con plan activo ─────────────────────
+    // Solo alertar si los créditos superan en >3x el máximo del tier (indica doble-crédito real)
+    // Excluir: cuentas con permanent_credits, migrados, cuentas internas
+    // Margen: tier_max * 3 (cubre hasta 3 renovaciones acumuladas sin uso, que es posible)
+    const EXCESS_MULTIPLIER = 3;
+    const { data: highCredits } = await supabase.from("profiles")
+      .select("user_id, subscription_tier, available_credits, permanent_credits")
+      .not("subscription_tier", "in", '("free","null")')
+      .not("subscription_tier", "is", null)
+      .gt("available_credits", 0);
 
+    if (highCredits && highCredits.length > 0) {
+      const { data: allUsers2 } = await supabase.auth.admin.listUsers();
+      const internalIds2 = new Set(
+        (allUsers2?.users || [])
+          .filter((u: any) => INTERNAL_ACCOUNTS.includes(u.email))
+          .map((u: any) => u.id)
+      );
+      const { data: migratedUsers } = await supabase.from("credit_transactions").select("user_id")
+        .eq("type", "migration").in("user_id", highCredits.map((p: any) => p.user_id));
+      const migratedIds2 = new Set((migratedUsers || []).map((t: any) => t.user_id));
+
+      const realExcess = highCredits.filter((p: any) => {
+        if (internalIds2.has(p.user_id) || migratedIds2.has(p.user_id)) return false;
+        const tierMax = TIER_MAX[p.subscription_tier] || 0;
+        if (tierMax === 0) return false;
+        const creditsAbovePermanent = p.available_credits - (p.permanent_credits || 0);
+        return creditsAbovePermanent > tierMax * EXCESS_MULTIPLIER;
+      });
+
+      if (realExcess.length > 0) {
+        anomalies.push({
+          type: "creditos_excesivos", severity: "warning", count: realExcess.length,
+          description: `${realExcess.length} usuarios con créditos >${EXCESS_MULTIPLIER}x su tier (excluidos migrados WP, permanentes y cuentas internas). Posible doble-crédito real.`,
+        });
+      }
+    }
+
+    // ── 7. Evidencias pendientes de certificar >7 días ────────────────────────
+    const { data: pendingEvidence } = await supabase.from("purchase_evidences").select("id")
+      .eq("certification_status", "pending")
+      .lt("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+    if (pendingEvidence && pendingEvidence.length > 0) {
+      anomalies.push({
+        type: "evidencias_sin_certificar", severity: "warning", count: pendingEvidence.length,
+        description: `${pendingEvidence.length} evidencias de compra llevan >7 días sin certificar en IBS.`,
+      });
+    }
+
+    // ── Stats semanales ────────────────────────────────────────────────────────
+    const { data: activeSubsCount } = await supabase.from("subscriptions").select("user_id", { count: "exact", head: true }).eq("status", "active");
+    const { count: activeCount } = await supabase.from("subscriptions").select("*", { count: "exact", head: true }).eq("status", "active");
+    const { count: weekOrdersCount } = await supabase.from("orders").select("*", { count: "exact", head: true })
+      .gte("paid_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+    const { count: weekUsersCount } = await supabase.from("profiles").select("*", { count: "exact", head: true })
+      .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+    // ── Email ──────────────────────────────────────────────────────────────────
     const criticals = anomalies.filter(a => a.severity === "critical");
     const warnings = anomalies.filter(a => a.severity === "warning");
     const hasAnomalies = anomalies.length > 0;
-    const anomalyRows = anomalies.map(a => { const icon = a.severity === "critical" ? "🔴" : "🟡"; const bg = a.severity === "critical" ? "#fef2f2" : "#fffbeb"; const border = a.severity === "critical" ? "#fca5a5" : "#fde68a"; return `${icon} ${a.type.replace(/_/g,' ').toUpperCase()} — ${a.count} casos
-${a.description}`; }).join("");
-    const subject = hasAnomalies ? `${criticals.length > 0 ? "🚨" : "⚠️"} Monitoring MusicDibs — ${criticals.length} criticos, ${warnings.length} avisos` : "✅ Monitoring MusicDibs — Todo OK";
-    const html = `
 
+    const anomalyRows = anomalies.map(a => {
+      const icon = a.severity === "critical" ? "🔴" : "🟡";
+      const examplesStr = a.examples && a.examples.length > 0 ? `\nEjemplos: ${a.examples.join(", ")}` : "";
+      return `${icon} ${a.type.replace(/_/g, " ").toUpperCase()} — ${a.count} casos\n${a.description}${examplesStr}\n`;
+    }).join("\n");
+
+    const subject = hasAnomalies
+      ? `${criticals.length > 0 ? "🚨" : "⚠️"} Monitoring MusicDibs — ${criticals.length} criticos, ${warnings.length} avisos`
+      : "✅ Monitoring MusicDibs — Todo OK";
+
+    const html = `
 📊 Monitoring Semanal — MusicDibs
 
-${new Date().toLocaleDateString("es-ES",{weekday:"long",year:"numeric",month:"long",day:"numeric"})}
+${new Date().toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
 
 📈 Resumen de la semana
+Suscriptores activos: ${activeCount ?? 0}
+Pedidos últimos 7 días: ${weekOrdersCount ?? 0}
+Nuevos usuarios (7 días): ${weekUsersCount ?? 0}
 
-Suscriptores activos${(activeSubs||[]).length}Pedidos ultimos 7 dias${(weekOrders||[]).length}Nuevos usuarios (7 dias)${(weekUsers||[]).length}
-
-${hasAnomalies ? `
-
-⚠️ Anomalias detectadas (${anomalies.length})
-
-${anomalyRows}
-
-⚠️ Solo lectura — ningun dato fue modificado automaticamente.
-
-` : `
-
-✅ No se detectaron anomalias. Todo funciona correctamente.
-
-`}
+${hasAnomalies
+  ? `⚠️ Anomalias detectadas (${anomalies.length})\n\n${anomalyRows}\n⚠️ Solo lectura — ningún dato fue modificado automáticamente.`
+  : "✅ No se detectaron anomalias. Todo funciona correctamente."
+}
 
 MusicDibs Monitoring · Panel Admin
-
 `;
 
-    await supabase.rpc("enqueue_email", { queue_name: "transactional_emails", payload: { idempotency_key: `monitoring-weekly-${new Date().toISOString().slice(0,10)}`, message_id: crypto.randomUUID(), to: "info@musicdibs.com", from: "MusicDibs <noreply@notify.musicdibs.com>", sender_domain: "notify.musicdibs.com", subject, html, purpose: "transactional", label: "monitoring_weekly", queued_at: new Date().toISOString() } });
+    await supabase.rpc("enqueue_email", {
+      queue_name: "transactional_emails",
+      payload: {
+        idempotency_key: `monitoring-weekly-${new Date().toISOString().slice(0, 10)}`,
+        message_id: crypto.randomUUID(),
+        to: "info@musicdibs.com",
+        from: "MusicDibs <noreply@notify.musicdibs.com>",
+        sender_domain: "notify.musicdibs.com",
+        subject,
+        html,
+        purpose: "transactional",
+        label: "monitoring_weekly",
+        queued_at: new Date().toISOString(),
+      },
+    });
 
     console.log(`[MONITORING] ${subject}`);
     return json({ ok: true, anomalies_count: anomalies.length, criticals: criticals.length, warnings: warnings.length, anomalies });
+
   } catch (e: any) {
     console.error("[MONITORING] Fatal:", e);
     return json({ error: e?.message || "Internal error" }, 500);

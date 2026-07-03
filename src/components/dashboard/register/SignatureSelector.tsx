@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTranslation } from 'react-i18next';
-import { listIbsSignatures, createIbsSignature, syncIbsSignatures } from '@/services/dashboardApi';
+import { listIbsSignatures, createIbsSignature, syncIbsSignatures, retryIbsSignature } from '@/services/dashboardApi';
 import { supabase } from '@/integrations/supabase/client';
 import type { IbsSignature } from '@/types/dashboard';
 
@@ -20,6 +20,7 @@ export function SignatureSelector({ value, onChange }: SignatureSelectorProps) {
   const [signatures, setSignatures] = useState<IbsSignature[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [retrying, setRetrying] = useState(false);
   const [newName, setNewName] = useState('');
   const [kycUrl, setKycUrl] = useState<string | null>(null);
 
@@ -49,6 +50,13 @@ export function SignatureSelector({ value, onChange }: SignatureSelectorProps) {
     setCreating(true);
     try {
       const result = await createIbsSignature(newName.trim());
+      // FIX: si el backend detecta una firma existente (incluyendo 'failed') y
+      // devuelve shouldRetry, no hay firma nueva que crear — hay que reanudar
+      // la existente con retry (PUT), nunca crear otra en iBS.
+      if ((result as any)?.shouldRetry) {
+        await handleRetry((result as any).signatureId);
+        return;
+      }
       if (result.kycUrl) setKycUrl(result.kycUrl);
       setNewName('');
       await load();
@@ -58,8 +66,23 @@ export function SignatureSelector({ value, onChange }: SignatureSelectorProps) {
     setCreating(false);
   };
 
+  const handleRetry = async (signatureId: string) => {
+    setRetrying(true);
+    try {
+      const result = await retryIbsSignature(signatureId);
+      if (result.kycUrl) setKycUrl(result.kycUrl);
+      await load();
+    } catch (err) {
+      console.error('Error retrying signature:', err);
+    }
+    setRetrying(false);
+  };
+
   const active = signatures.filter((s: IbsSignature) => s.status === 'success');
-  const pending = signatures.filter((s: IbsSignature) => s.status === 'pending');
+  const pending = signatures.filter((s: IbsSignature) => s.status === 'pending' || s.status === 'initiated' || s.status === 'created');
+  // FIX: las firmas 'failed' deben ofrecer retry, no quedar ocultas mientras
+  // el usuario ve solo el formulario de "crear nueva" (lo que generaba firmas huérfanas).
+  const failed = signatures.filter((s: IbsSignature) => s.status === 'failed');
 
   if (loading) {
     return (
@@ -87,6 +110,26 @@ export function SignatureSelector({ value, onChange }: SignatureSelectorProps) {
             ))}
           </SelectContent>
         </Select>
+      </div>
+    );
+  }
+
+  // FIX: si hay una firma fallida, priorizar el retry sobre el formulario de "crear nueva".
+  // Esto evita que el usuario cree una segunda firma en iBS mientras la fallida
+  // queda abandonada como huérfana.
+  if (failed.length > 0 && !kycUrl) {
+    const sig = failed[0];
+    return (
+      <div className="space-y-2 p-3 rounded-lg border border-dashed border-red-400/50 bg-red-50/50 dark:bg-red-900/10">
+        <p className="text-xs text-red-700 dark:text-red-400">{t('wizard.signature.failedNeedRetry', { defaultValue: 'Tu verificación de identidad no se completó. Vuelve a intentarlo con la misma firma.' })}</p>
+        <Button
+          type="button" size="sm" className="h-8 text-xs gap-1.5"
+          disabled={retrying}
+          onClick={() => handleRetry(sig.ibs_signature_id)}
+        >
+          {retrying ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+          {t('wizard.signature.retry', { defaultValue: 'Reintentar verificación' })}
+        </Button>
       </div>
     );
   }

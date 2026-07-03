@@ -127,11 +127,16 @@ serve(async (req) => {
         });
       }
 
+      // FIX: "failed" también debe bloquear la creación de una firma nueva.
+      // Antes solo se protegían initiated/created/pending/success, por lo que un usuario
+      // con KYC fallido podía crear una segunda firma vía SignatureSelector (registro de obra),
+      // generando una firma huérfana en iBS mientras la fallida quedaba abandonada.
+      // El camino correcto para "failed" es el retry (PUT), no una nueva creación (POST).
       const { data: openSigs } = await supabaseAdmin
         .from("ibs_signatures")
         .select("ibs_signature_id, status, kyc_url")
         .eq("user_id", user.id)
-        .in("status", ["initiated", "created", "pending", "success"])
+        .in("status", ["initiated", "created", "pending", "success", "failed"])
         .order("created_at", { ascending: false })
         .limit(1);
 
@@ -143,6 +148,9 @@ serve(async (req) => {
           kycUrl: open.kyc_url,
           existing: true,
           existingStatus: open.status,
+          // El frontend debe llamar a action:'retry' cuando existingStatus === 'failed',
+          // no reintentar 'create'.
+          shouldRetry: open.status === "failed",
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

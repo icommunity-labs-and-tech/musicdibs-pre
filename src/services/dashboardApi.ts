@@ -392,6 +392,15 @@ export async function syncIbsSignatures(): Promise<void> {
   });
 }
 
+export async function retryIbsSignature(signatureId: string): Promise<{ signatureId: string; kycUrl?: string }> {
+  const { data, error } = await supabase.functions.invoke('ibs-signatures', {
+    body: { action: 'retry', signatureId },
+  });
+  if (error) throw new Error(error.message || 'Error retrying signature');
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
 export async function pollEvidenceStatus(evidenceId: string): Promise<any> {
   const { data: sessionData } = await supabase.auth.getSession();
   console.log('[pollEvidenceStatus] invoking', {
