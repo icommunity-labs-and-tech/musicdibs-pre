@@ -31,7 +31,7 @@ serve(async (req) => {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
   const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
 
-  const HOURS = 12;
+  const HOURS = 24; // ventana completa entre ejecuciones diarias (cron corre 1x/día a las 09:00)
   const since = new Date(Date.now() - HOURS * 60 * 60 * 1000);
   const issues: { type: string; severity: "critical" | "warning"; email: string; detail: string; charge_id?: string }[] = [];
 
