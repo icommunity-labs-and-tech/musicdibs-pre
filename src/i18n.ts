@@ -203,7 +203,21 @@ const resources = {
             '100 créditos anuales',
             'Mejor opción para lanzamientos',
           ],
+          starter: [
+            '20 créditos para registrar, generar y crear con IA',
+            'Registro legal con blockchain',
+            'Acceso al AI Music Studio',
+          ],
         },
+        starter: {
+          name: 'Anual Básico',
+          badge: 'Recomendado para empezar',
+          brief: 'La forma más económica de proteger y crear música durante todo un año.',
+          credits: '20 créditos, pago único anual',
+          cta: 'Empezar con Anual Básico',
+          upsell: 'Distribución a 220+ plataformas disponible en Plan Plus+',
+        },
+
       },
       tutorial: {
         heading: 'Así de fácil es empezar',
