@@ -424,45 +424,38 @@ serve(async (req) => {
     const CREDITS_COST = pricingRow?.credits_cost ?? 1;
     console.log(`[GENERATE-AUDIO] Pricing: ${operationKey} = ${CREDITS_COST} credits`);
 
-    if (!useKie) {
-      const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('available_credits')
-        .eq('user_id', userId)
-        .single();
+    // Guarda cuánto del descuento salió de permanent_credits, para poder
+    // revertir exactamente esa proporción si hace falta reembolsar despues.
+    let deductedFromPermanent = 0;
 
-      if (!profile || profile.available_credits < CREDITS_COST) {
+    if (!useKie) {
+      const { data: deductResult, error: deductError } = await supabaseAdmin.rpc('deduct_credits_ordered', {
+        p_user_id: userId,
+        p_amount: CREDITS_COST,
+        p_feature: operationKey,
+        p_description: `Generación audio (${mode || 'instrumental'}, ${provider}): ${prompt.slice(0, 80)}`,
+      });
+
+      if (deductError || !deductResult?.success) {
         return new Response(
-          JSON.stringify({ error: 'insufficient_credits', available: profile?.available_credits ?? 0, required: CREDITS_COST }),
+          JSON.stringify({ error: 'insufficient_credits', available: deductResult?.available ?? 0, required: CREDITS_COST }),
           { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
-
-      await supabaseAdmin.from('profiles').update({
-        available_credits: profile.available_credits - CREDITS_COST,
-        updated_at: new Date().toISOString(),
-      }).eq('user_id', userId).eq('available_credits', profile.available_credits);
-
-      await supabaseAdmin.from('credit_transactions').insert({
-        user_id: userId,
-        amount: -CREDITS_COST,
-        type: 'usage',
-        description: `Generación audio (${mode || 'instrumental'}, ${provider}): ${prompt.slice(0, 80)}`,
-      });
+      deductedFromPermanent = deductResult.from_permanent ?? 0;
     }
 
     const refundCredits = async (reason: string) => {
       if (useKie) return; // KIE handles its own refund inside kie-suno-generate / callback
-      const { data: p } = await supabaseAdmin.from('profiles').select('available_credits').eq('user_id', userId).single();
-      if (p) {
-        await supabaseAdmin.from('profiles').update({
-          available_credits: p.available_credits + CREDITS_COST,
-          updated_at: new Date().toISOString(),
-        }).eq('user_id', userId);
-        await supabaseAdmin.from('credit_transactions').insert({
-          user_id: userId, amount: CREDITS_COST, type: 'refund',
-          description: `Reembolso: ${reason}`.slice(0, 200),
-        });
+      const { error: refundError } = await supabaseAdmin.rpc('refund_credits_ordered', {
+        p_user_id: userId,
+        p_amount: CREDITS_COST,
+        p_from_permanent: deductedFromPermanent,
+        p_reason: `Reembolso: ${reason}`.slice(0, 200),
+      });
+      if (refundError) {
+        console.error(`[GENERATE-AUDIO] Refund RPC error:`, refundError.message);
+      } else {
         console.log(`[GENERATE-AUDIO] Refunded ${CREDITS_COST} credits: ${reason}`);
       }
     };
@@ -589,20 +582,18 @@ serve(async (req) => {
           console.log(`[GENERATE-AUDIO] KIE error — falling back to ${effectiveFallback}`);
           if (true) {
             // KIE didn't debit (dispatch failed) — debit now for fallback
-            const { data: prof } = await supabaseAdmin.from('profiles').select('available_credits').eq('user_id', userId).single();
-            if (!prof || prof.available_credits < CREDITS_COST) {
+            const { data: fbDeduct, error: fbDeductError } = await supabaseAdmin.rpc('deduct_credits_ordered', {
+              p_user_id: userId,
+              p_amount: CREDITS_COST,
+              p_feature: 'generate_audio_fallback',
+              p_description: `Generación audio (fallback ${effectiveFallback}): ${prompt.slice(0, 80)}`,
+            });
+            if (fbDeductError || !fbDeduct?.success) {
               return new Response(JSON.stringify({ error: 'insufficient_credits', required: CREDITS_COST }), {
                 status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
               });
             }
-            await supabaseAdmin.from('profiles').update({
-              available_credits: prof.available_credits - CREDITS_COST,
-              updated_at: new Date().toISOString(),
-            }).eq('user_id', userId).eq('available_credits', prof.available_credits);
-            await supabaseAdmin.from('credit_transactions').insert({
-              user_id: userId, amount: -CREDITS_COST, type: 'usage',
-              description: `Generación audio (fallback ${effectiveFallback}): ${prompt.slice(0, 80)}`,
-            });
+            const fbDeductedFromPermanent = fbDeduct.from_permanent ?? 0;
             actualProvider = effectiveFallback;
             usedFallback = true;
             console.log(`[GENERATE-AUDIO][FALLBACK] used_fallback=true | primary_provider_attempted=kie_suno | fallback=${effectiveFallback}`);
@@ -616,17 +607,12 @@ serve(async (req) => {
                 actualProvider = 'elevenlabs';
               }
             } catch (fbErr) {
-              const { data: p2 } = await supabaseAdmin.from('profiles').select('available_credits').eq('user_id', userId).single();
-              if (p2) {
-                await supabaseAdmin.from('profiles').update({
-                  available_credits: p2.available_credits + CREDITS_COST,
-                  updated_at: new Date().toISOString(),
-                }).eq('user_id', userId);
-                await supabaseAdmin.from('credit_transactions').insert({
-                  user_id: userId, amount: CREDITS_COST, type: 'refund',
-                  description: `Reembolso: KIE+fallback failed ${(fbErr as Error).message}`.slice(0, 200),
-                });
-              }
+              await supabaseAdmin.rpc('refund_credits_ordered', {
+                p_user_id: userId,
+                p_amount: CREDITS_COST,
+                p_from_permanent: fbDeductedFromPermanent,
+                p_reason: `Reembolso: KIE+fallback failed ${(fbErr as Error).message}`.slice(0, 200),
+              });
               return new Response(JSON.stringify({ error: 'provider_unavailable' }), {
                 status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
               });

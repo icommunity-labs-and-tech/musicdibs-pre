@@ -177,8 +177,17 @@ serve(async (req) => {
     }
     const { work, aiGen, lyrics } = meta;
 
-    await supabase.from('profiles').update({ available_credits: profile.available_credits - CREDITS_COST, updated_at: new Date().toISOString() }).eq('user_id', user.id);
-    await supabase.from('credit_transactions').insert({ user_id: user.id, amount: -CREDITS_COST, type: 'usage', feature_key: 'promo_social_generate', description: `Promoción RRSS: ${work.title}` });
+    let promoSocialDeductedFromPermanent = 0;
+    {
+      const { data: deductResult, error: deductError } = await supabase.rpc('deduct_credits_ordered', {
+        p_user_id: user.id, p_amount: CREDITS_COST, p_feature: 'promote_premium',
+        p_description: `Promoción RRSS: ${work.title}`,
+      });
+      if (deductError || !deductResult?.success) {
+        return new Response(JSON.stringify({ error: 'insufficient_credits' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      promoSocialDeductedFromPermanent = deductResult.from_permanent ?? 0;
+    }
 
     const { data: promo, error: promoError } = await supabase.from('social_promotions').insert({ user_id: user.id, work_id: itemId, status: 'generating', credits_spent: CREDITS_COST }).select().single();
     if (promoError || !promo) {
@@ -286,11 +295,7 @@ serve(async (req) => {
       } catch (bgError: any) {
         console.error('[PROMO-SOCIAL] Background error:', bgError);
         await supabase.from('social_promotions').update({ status: 'failed', error_detail: bgError.message, updated_at: new Date().toISOString() }).eq('id', promo.id);
-        const { data: p } = await supabase.from('profiles').select('available_credits').eq('user_id', user.id).single();
-        if (p) {
-          await supabase.from('profiles').update({ available_credits: p.available_credits + CREDITS_COST, updated_at: new Date().toISOString() }).eq('user_id', user.id);
-          await supabase.from('credit_transactions').insert({ user_id: user.id, amount: CREDITS_COST, type: 'refund', description: `Reembolso: fallo en promoción de "${work.title}"` });
-        }
+        await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: promoSocialDeductedFromPermanent, p_reason: `Reembolso: fallo en promoción de "${work.title}"` });
       }
     })();
 

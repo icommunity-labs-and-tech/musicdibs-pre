@@ -80,30 +80,15 @@ serve(async (req) => {
           status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('available_credits')
-        .eq('user_id', user.id)
-        .single();
-
-      if (!profile || profile.available_credits < REGEN_CREDIT_COST) {
+      const { data: deductResult, error: deductError } = await supabase.rpc('deduct_credits_ordered', {
+        p_user_id: user.id, p_amount: REGEN_CREDIT_COST, p_feature: 'promo_social_regenerate_copies',
+        p_description: `Regeneración copies (pagada)`,
+      });
+      if (deductError || !deductResult?.success) {
         return new Response(JSON.stringify({ error: 'insufficient_credits' }), {
           status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-
-      await supabase.from('profiles').update({
-        available_credits: profile.available_credits - REGEN_CREDIT_COST,
-        updated_at: new Date().toISOString(),
-      }).eq('user_id', user.id);
-
-      await supabase.from('credit_transactions').insert({
-        user_id: user.id,
-        amount: -REGEN_CREDIT_COST,
-        type: 'usage',
-        feature_key: 'promo_social_regenerate_copies',
-        description: `Regeneración copies (pagada)`,
-      });
     }
 
     const [workRes, genRes, lyricsRes, profileRes] = await Promise.all([

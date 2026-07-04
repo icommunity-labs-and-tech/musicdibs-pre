@@ -64,17 +64,19 @@ serve(async (req) => {
     }
 
     // Deduct credits upfront
-    await supabaseAdmin
-      .from('profiles')
-      .update({ available_credits: profile.available_credits - creditsNeeded })
-      .eq('user_id', user.id);
-
-    await supabaseAdmin.from('credit_transactions').insert({
-      user_id: user.id,
-      amount: -creditsNeeded,
-      type: 'voice_translation',
-      description: `Voice translation to ${targetLang} (${minutes} min)`,
-    });
+    let translateDeductedFromPermanent = 0;
+    {
+      const { data: deductResult, error: deductError } = await supabaseAdmin.rpc('deduct_credits_ordered', {
+        p_user_id: user.id, p_amount: creditsNeeded, p_feature: 'voice_translation_per_min',
+        p_description: `Voice translation to ${targetLang} (${minutes} min)`,
+      });
+      if (deductError || !deductResult?.success) {
+        return new Response(JSON.stringify({
+          error: 'Insufficient credits', needed: creditsNeeded, current: deductResult?.available ?? 0,
+        }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      translateDeductedFromPermanent = deductResult.from_permanent ?? 0;
+    }
 
     // Call ElevenLabs Speech-to-Speech API (multipart form)
     const elForm = new FormData();
@@ -102,16 +104,9 @@ serve(async (req) => {
       console.error('ElevenLabs STS error:', elResponse.status, errorText);
 
       // Refund credits on failure
-      await supabaseAdmin
-        .from('profiles')
-        .update({ available_credits: profile.available_credits })
-        .eq('user_id', user.id);
-
-      await supabaseAdmin.from('credit_transactions').insert({
-        user_id: user.id,
-        amount: creditsNeeded,
-        type: 'refund',
-        description: `Refund: voice translation failed (${targetLang})`,
+      await supabaseAdmin.rpc('refund_credits_ordered', {
+        p_user_id: user.id, p_amount: creditsNeeded, p_from_permanent: translateDeductedFromPermanent,
+        p_reason: `Refund: voice translation failed (${targetLang})`,
       });
 
       return new Response(JSON.stringify({ error: 'Translation failed', details: errorText }),

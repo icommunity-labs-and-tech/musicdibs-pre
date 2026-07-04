@@ -290,22 +290,15 @@ serve(async (req) => {
     }
 
     // ── Deduct credits (only after success) ─────────────────────
-    await supabaseAdmin
-      .from("profiles")
-      .update({
-        available_credits: profile.available_credits - CREDITS_COST,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", user.id)
-      .eq("available_credits", profile.available_credits)
-
-    await supabaseAdmin.from("credit_transactions").insert({
-      user_id: user.id,
-      amount: -CREDITS_COST,
-      type: "usage",
-      feature_key: "generate_cover",
-      description: `Portada IA: ${trackTitle || "Sin título"}`.slice(0, 200),
-    })
+    const { data: coverDeductResult, error: coverDeductError } = await supabaseAdmin.rpc("deduct_credits_ordered", {
+      p_user_id: user.id,
+      p_amount: CREDITS_COST,
+      p_feature: "generate_cover",
+      p_description: `Portada IA: ${trackTitle || "Sin título"}`.slice(0, 200),
+    });
+    if (coverDeductError || !coverDeductResult?.success) {
+      console.error("[COVER] Deduct RPC failed after success:", coverDeductError?.message || coverDeductResult?.error);
+    }
 
     console.log(`[COVER] Success for ${user.id}, ${CREDITS_COST} credit charged`)
 

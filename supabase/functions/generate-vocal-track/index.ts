@@ -30,11 +30,15 @@ serve(async (req) => {
     if (!voice_id) return new Response(JSON.stringify({ error: 'voice_id is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     const CREDITS_COST = await getOperationCost(supabase, 'generate_audio_elevenlabs', 1);
-    const { data: profile } = await supabase.from('profiles').select('available_credits').eq('user_id', user.id).single();
-    if (!profile || profile.available_credits < CREDITS_COST) return new Response(JSON.stringify({ error: 'insufficient_credits' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
-    await supabase.from('profiles').update({ available_credits: profile.available_credits - CREDITS_COST, updated_at: new Date().toISOString() }).eq('user_id', user.id);
-    await supabase.from('credit_transactions').insert({ user_id: user.id, amount: -CREDITS_COST, type: 'usage', description: `Pista vocal: ${voice_name || voice_id}` });
+    let vocalDeductedFromPermanent = 0;
+    {
+      const { data: deductResult, error: deductError } = await supabase.rpc('deduct_credits_ordered', {
+        p_user_id: user.id, p_amount: CREDITS_COST, p_feature: 'generate_audio_elevenlabs',
+        p_description: `Pista vocal: ${voice_name || voice_id}`,
+      });
+      if (deductError || !deductResult?.success) return new Response(JSON.stringify({ error: 'insufficient_credits' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      vocalDeductedFromPermanent = deductResult.from_permanent ?? 0;
+    }
 
     let formattedLyrics = lyrics.replace(/\[([^\]]+)\]/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 
@@ -66,11 +70,7 @@ serve(async (req) => {
     if (!ttsRes.ok) {
       const err = await ttsRes.text();
       console.error('[VOCAL-TRACK] ElevenLabs error:', err);
-      const { data: p } = await supabase.from('profiles').select('available_credits').eq('user_id', user.id).single();
-      if (p) {
-        await supabase.from('profiles').update({ available_credits: p.available_credits + CREDITS_COST }).eq('user_id', user.id);
-        await supabase.from('credit_transactions').insert({ user_id: user.id, amount: CREDITS_COST, type: 'refund', description: 'Reembolso: fallo vocal' });
-      }
+      await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: vocalDeductedFromPermanent, p_reason: 'Reembolso: fallo vocal' });
       return new Response(JSON.stringify({ error: 'TTS failed', details: err }), { status: ttsRes.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 

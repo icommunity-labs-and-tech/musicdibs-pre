@@ -59,35 +59,22 @@ serve(async (req) => {
 
     // Check credits (cost from operation_pricing)
     const creditsNeeded = await getOperationCost(supabaseAdmin, 'instagram_creative', 1);
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('available_credits')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!profile || profile.available_credits < creditsNeeded) {
-      return new Response(
-        JSON.stringify({
-          error: 'Insufficient credits',
-          needed: creditsNeeded,
-          current: profile?.available_credits || 0,
-        }),
-        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
     // Deduct credits upfront
-    await supabaseAdmin.rpc('decrement_credits', {
-      _user_id: user.id,
-      _amount: creditsNeeded,
-    });
-
-    await supabaseAdmin.from('credit_transactions').insert({
-      user_id: user.id,
-      amount: -creditsNeeded,
-      type: 'instagram_creative',
-      description: `Instagram ${format}: ${artist_name} - ${track_title}`,
-    });
+    let igDeductedFromPermanent = 0;
+    {
+      const { data: deductResult, error: deductError } = await supabaseAdmin.rpc('deduct_credits_ordered', {
+        p_user_id: user.id, p_amount: creditsNeeded, p_feature: 'instagram_creative',
+        p_description: `Instagram ${format}: ${artist_name} - ${track_title}`,
+      });
+      if (deductError || !deductResult?.success) {
+        return new Response(
+          JSON.stringify({ error: 'Insufficient credits', needed: creditsNeeded, current: deductResult?.available ?? 0 }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      igDeductedFromPermanent = deductResult.from_permanent ?? 0;
+    }
 
     try {
       // Generate image
@@ -112,16 +99,9 @@ serve(async (req) => {
     } catch (genError) {
       // Refund credits on failure
       console.error('Generation failed, refunding credits:', genError);
-      await supabaseAdmin
-        .from('profiles')
-        .update({ available_credits: profile.available_credits })
-        .eq('user_id', user.id);
-
-      await supabaseAdmin.from('credit_transactions').insert({
-        user_id: user.id,
-        amount: creditsNeeded,
-        type: 'refund',
-        description: `Refund: Instagram ${format} generation failed`,
+      await supabaseAdmin.rpc('refund_credits_ordered', {
+        p_user_id: user.id, p_amount: creditsNeeded, p_from_permanent: igDeductedFromPermanent,
+        p_reason: `Refund: Instagram ${format} generation failed`,
       });
 
       throw genError;

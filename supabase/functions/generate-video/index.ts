@@ -498,47 +498,34 @@ serve(async (req) => {
       // even when the generation failed and credits were refunded.
 
       const CREDITS_COST = await getOperationCost(supabaseAdmin, 'generate_video', 3);
-      const { data: profile } = await supabaseAdmin
-        .from('profiles')
-        .select('available_credits')
-        .eq('user_id', userId)
-        .single();
-
-      if (!profile || profile.available_credits < CREDITS_COST) {
-        return jsonResponse({
-          error: 'insufficient_credits',
-          available: profile?.available_credits ?? 0,
-          required: CREDITS_COST,
-        }, 402);
+      let videoDeductedFromPermanent = 0;
+      {
+        const { data: deductResult, error: deductError } = await supabaseAdmin.rpc('deduct_credits_ordered', {
+          p_user_id: userId,
+          p_amount: CREDITS_COST,
+          p_feature: 'generate_video',
+          p_description: `Video AI: ${promptText.slice(0, 80)}`,
+        });
+        if (deductError || !deductResult?.success) {
+          return jsonResponse({
+            error: 'insufficient_credits',
+            available: deductResult?.available ?? 0,
+            required: CREDITS_COST,
+          }, 402);
+        }
+        videoDeductedFromPermanent = deductResult.from_permanent ?? 0;
       }
 
-      await supabaseAdmin.from('profiles').update({
-        available_credits: profile.available_credits - CREDITS_COST,
-        updated_at: new Date().toISOString(),
-      }).eq('user_id', userId).eq('available_credits', profile.available_credits);
-
-      await supabaseAdmin.from('credit_transactions').insert({
-        user_id: userId,
-        amount: -CREDITS_COST,
-        type: 'usage',
-        description: `Video AI: ${promptText.slice(0, 80)}`,
-      });
-
       const refundCredits = async (reason: string) => {
-        const { data: p } = await supabaseAdmin.from('profiles').select('available_credits').eq('user_id', userId).single();
-        if (p) {
-          await supabaseAdmin.from('profiles').update({
-            available_credits: p.available_credits + CREDITS_COST,
-            updated_at: new Date().toISOString(),
-          }).eq('user_id', userId);
-
-          await supabaseAdmin.from('credit_transactions').insert({
-            user_id: userId,
-            amount: CREDITS_COST,
-            type: 'refund',
-            description: `Reembolso: ${reason}`.slice(0, 200),
-          });
-
+        const { error: refundError } = await supabaseAdmin.rpc('refund_credits_ordered', {
+          p_user_id: userId,
+          p_amount: CREDITS_COST,
+          p_from_permanent: videoDeductedFromPermanent,
+          p_reason: `Reembolso: ${reason}`.slice(0, 200),
+        });
+        if (refundError) {
+          console.error(`[VIDEO] Refund RPC error:`, refundError.message);
+        } else {
           console.log(`[VIDEO] Refunded ${CREDITS_COST} credits to user ${userId}: ${reason}`);
         }
       };

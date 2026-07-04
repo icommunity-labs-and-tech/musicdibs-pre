@@ -247,20 +247,17 @@ serve(async (req) => {
         // ── Refund credits if processing failed ──
         if (errored) {
           const CREDITS_COST = await getOperationCost(supabaseAdmin, 'enhance_audio', 1)
-          const { data: p } = await supabaseAdmin.from("profiles").select("available_credits").eq("user_id", user.id).single()
-          if (p) {
-            await supabaseAdmin.from("profiles").update({
-              available_credits: p.available_credits + CREDITS_COST,
-              updated_at: new Date().toISOString(),
-            }).eq("user_id", user.id)
-            await supabaseAdmin.from("credit_transactions").insert({
-              user_id: user.id,
-              amount: CREDITS_COST,
-              type: "refund",
-              description: `Reembolso: fallo RoEx (${errorMessage})`.slice(0, 200),
-            })
-            console.log(`[ROEX] Refunded ${CREDITS_COST} credit to user ${user.id}: processing error`)
-          }
+          // Nota: este es un callback asincrono independiente del request original que
+          // dedujo el credito, no tenemos aqui el from_permanent exacto de esa deduccion.
+          // Usamos 0 (restaura todo a available_credits) como valor seguro: en el peor
+          // caso el credito devuelto queda como "plan" en vez de "permanente", pero
+          // nunca se pierde ni se duplica.
+          const { error: refundError } = await supabaseAdmin.rpc("refund_credits_ordered", {
+            p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: 0,
+            p_reason: `Reembolso: fallo RoEx (${errorMessage})`.slice(0, 200),
+          })
+          if (refundError) console.error("[AUPHONIC] Refund RPC error:", refundError.message)
+          else console.log(`[ROEX] Refunded ${CREDITS_COST} credit to user ${user.id}: processing error`)
         }
       }
 
@@ -346,45 +343,27 @@ serve(async (req) => {
     }
 
     // ── Credit deduction ──────────────────────────────────────
-    const { data: profile } = await supabaseAdmin
-      .from("profiles")
-      .select("available_credits")
-      .eq("user_id", user.id)
-      .single()
-
-    if (!profile || profile.available_credits < CREDITS_COST) {
-      return new Response(JSON.stringify({ error: "insufficient_credits", available: profile?.available_credits ?? 0, required: CREDITS_COST }), {
-        status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      })
+    let auphonicDeductedFromPermanent = 0;
+    {
+      const { data: deductResult, error: deductError } = await supabaseAdmin.rpc("deduct_credits_ordered", {
+        p_user_id: user.id, p_amount: CREDITS_COST, p_feature: "enhance_audio",
+        p_description: `Masterización RoEx (${mode || "default"})`.slice(0, 200),
+      });
+      if (deductError || !deductResult?.success) {
+        return new Response(JSON.stringify({ error: "insufficient_credits", available: deductResult?.available ?? 0, required: CREDITS_COST }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" }
+        });
+      }
+      auphonicDeductedFromPermanent = deductResult.from_permanent ?? 0;
     }
 
-    await supabaseAdmin.from("profiles").update({
-      available_credits: profile.available_credits - CREDITS_COST,
-      updated_at: new Date().toISOString(),
-    }).eq("user_id", user.id).eq("available_credits", profile.available_credits)
-
-    await supabaseAdmin.from("credit_transactions").insert({
-      user_id: user.id,
-      amount: -CREDITS_COST,
-      type: "usage",
-      description: `Masterización RoEx (${mode || "default"})`.slice(0, 200),
-    })
-
     const refundCredits = async (reason: string) => {
-      const { data: p } = await supabaseAdmin.from("profiles").select("available_credits").eq("user_id", user.id).single()
-      if (p) {
-        await supabaseAdmin.from("profiles").update({
-          available_credits: p.available_credits + CREDITS_COST,
-          updated_at: new Date().toISOString(),
-        }).eq("user_id", user.id)
-        await supabaseAdmin.from("credit_transactions").insert({
-          user_id: user.id,
-          amount: CREDITS_COST,
-          type: "refund",
-          description: `Reembolso: ${reason}`.slice(0, 200),
-        })
-        console.log(`[ROEX] Refunded ${CREDITS_COST} credit to user ${user.id}: ${reason}`)
-      }
+      const { error: refundError } = await supabaseAdmin.rpc("refund_credits_ordered", {
+        p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: auphonicDeductedFromPermanent,
+        p_reason: `Reembolso: ${reason}`.slice(0, 200),
+      });
+      if (refundError) console.error("[AUPHONIC] Refund RPC error:", refundError.message);
+      else console.log(`[ROEX] Refunded ${CREDITS_COST} credit to user ${user.id}: ${reason}`)
     }
 
     // RoEx uses /masteringpreview to create the task, then /retrievefinalmaster to fetch the full result

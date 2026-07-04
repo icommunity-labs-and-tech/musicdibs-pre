@@ -189,21 +189,15 @@ serve(async (req) => {
     }
 
     // Deduct credits only after success
-    await supabaseAdmin
-      .from("profiles")
-      .update({
-        available_credits: profile.available_credits - CREDITS_COST,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", user.id)
-      .eq("available_credits", profile.available_credits)
-
-    await supabaseAdmin.from("credit_transactions").insert({
-      user_id: user.id,
-      amount: -CREDITS_COST,
-      type: "usage",
-      description: `Creatividad ${FORMAT_LABELS[format]}`.slice(0, 200),
-    })
+    const { data: promoDeductResult, error: promoDeductError } = await supabaseAdmin.rpc("deduct_credits_ordered", {
+      p_user_id: user.id,
+      p_amount: CREDITS_COST,
+      p_feature: "instagram_creative",
+      p_description: `Creatividad ${FORMAT_LABELS[format]}`.slice(0, 200),
+    });
+    if (promoDeductError || !promoDeductResult?.success) {
+      console.error("[PROMO-CREATIVE] Deduct RPC failed after success:", promoDeductError?.message || promoDeductResult?.error);
+    }
 
     console.log(`[PROMO-CREATIVE] Success for ${user.id}, format=${format}, ${CREDITS_COST} credit charged`)
 

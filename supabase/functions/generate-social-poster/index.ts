@@ -30,17 +30,23 @@ serve(async (req) => {
 
     const CREDITS_COST = await getOperationCost(supabaseAdmin, 'social_poster', 1);
 
-    const { data: profile } = await supabaseAdmin.from('profiles').select('available_credits').eq('user_id', user.id).single();
-    if (!profile || profile.available_credits < CREDITS_COST) {
-      return new Response(JSON.stringify({ error: 'Insufficient credits', needed: CREDITS_COST, current: profile?.available_credits || 0 }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    let posterDeductedFromPermanent = 0;
+    {
+      const { data: deductResult, error: deductError } = await supabaseAdmin.rpc('deduct_credits_ordered', {
+        p_user_id: user.id, p_amount: CREDITS_COST, p_feature: 'social_poster',
+        p_description: `Social poster (${format}): ${artist_name} - ${event_title}`,
+      });
+      if (deductError || !deductResult?.success) {
+        return new Response(JSON.stringify({ error: 'Insufficient credits', needed: CREDITS_COST, current: deductResult?.available ?? 0 }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      posterDeductedFromPermanent = deductResult.from_permanent ?? 0;
     }
 
-    await supabaseAdmin.rpc('decrement_credits', { _user_id: user.id, _amount: CREDITS_COST });
-    await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: -CREDITS_COST, type: 'social_poster', description: `Social poster (${format}): ${artist_name} - ${event_title}` });
-
     const refundCredits = async () => {
-      await supabaseAdmin.from('profiles').update({ available_credits: profile.available_credits }).eq('user_id', user.id);
-      await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: CREDITS_COST, type: 'refund', description: `Refund social poster: ${artist_name} - ${event_title}` });
+      await supabaseAdmin.rpc('refund_credits_ordered', {
+        p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: posterDeductedFromPermanent,
+        p_reason: `Refund social poster: ${artist_name} - ${event_title}`,
+      });
     };
 
     try {

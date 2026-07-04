@@ -38,12 +38,23 @@ serve(async (req) => {
     }
 
     // Deduct credit upfront
-    await supabaseAdmin.rpc('decrement_credits', { _user_id: user.id, _amount: CREDITS_COST });
-    await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: -CREDITS_COST, type: 'event_poster', description: `Event poster (${format}): ${artist_name} - ${event_title}` });
+    let posterDeductedFromPermanent = 0;
+    {
+      const { data: deductResult, error: deductError } = await supabaseAdmin.rpc('deduct_credits_ordered', {
+        p_user_id: user.id, p_amount: CREDITS_COST, p_feature: 'event_poster',
+        p_description: `Event poster (${format}): ${artist_name} - ${event_title}`,
+      });
+      if (deductError || !deductResult?.success) {
+        return new Response(JSON.stringify({ error: 'Insufficient credits', needed: CREDITS_COST, current: deductResult?.available ?? 0 }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      posterDeductedFromPermanent = deductResult.from_permanent ?? 0;
+    }
 
     const refundCredits = async () => {
-      await supabaseAdmin.from('profiles').update({ available_credits: profile.available_credits }).eq('user_id', user.id);
-      await supabaseAdmin.from('credit_transactions').insert({ user_id: user.id, amount: CREDITS_COST, type: 'refund', description: `Refund event poster: ${artist_name} - ${event_title}` });
+      await supabaseAdmin.rpc('refund_credits_ordered', {
+        p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: posterDeductedFromPermanent,
+        p_reason: `Refund event poster: ${artist_name} - ${event_title}`,
+      });
     };
 
     try {

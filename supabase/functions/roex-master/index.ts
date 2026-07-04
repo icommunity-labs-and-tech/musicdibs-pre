@@ -192,14 +192,17 @@ serve(async (req) => {
       }
       console.log(`[ROEX] enhance_audio cost resolved to ${CREDITS_COST} credits`);
 
-      const { data: profile } = await supabase.from('profiles').select('available_credits').eq('user_id', user.id).single();
-      if (!profile || profile.available_credits < CREDITS_COST) {
-        return new Response(JSON.stringify({ error: 'insufficient_credits' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      let roexDeductedFromPermanent = 0;
+      {
+        const { data: deductResult, error: deductErr } = await supabase.rpc('deduct_credits_ordered', {
+          p_user_id: user.id, p_amount: CREDITS_COST, p_feature: 'enhance_audio',
+          p_description: 'Masterización ROEX (final)',
+        });
+        if (deductErr || !deductResult?.success) {
+          return new Response(JSON.stringify({ error: 'insufficient_credits' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        roexDeductedFromPermanent = deductResult.from_permanent ?? 0;
       }
-
-      // Descontamos antes de la llamada y reembolsamos en caso de error
-      await supabase.from('profiles').update({ available_credits: profile.available_credits - CREDITS_COST, updated_at: new Date().toISOString() }).eq('user_id', user.id);
-      await supabase.from('credit_transactions').insert({ user_id: user.id, amount: -CREDITS_COST, type: 'usage', description: 'Masterización ROEX (final)' });
 
       const r = await fetch(`${ROEX_BASE}/retrievefinalmaster?key=${ROEX_API_KEY}`, {
         method: 'POST',
@@ -209,32 +212,20 @@ serve(async (req) => {
 
       if (r.status === 202) {
         // Aún procesando: reembolso (el cliente reintentará)
-        const { data: p } = await supabase.from('profiles').select('available_credits').eq('user_id', user.id).single();
-        if (p) {
-          await supabase.from('profiles').update({ available_credits: p.available_credits + CREDITS_COST }).eq('user_id', user.id);
-          await supabase.from('credit_transactions').insert({ user_id: user.id, amount: CREDITS_COST, type: 'refund', description: 'Reembolso: master aún procesando' });
-        }
+        await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: roexDeductedFromPermanent, p_reason: 'Reembolso: master aún procesando' });
         return new Response(JSON.stringify({ status: 'processing' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
       const j = await r.json().catch(() => ({}));
       if (!r.ok || j?.error) {
         console.error('[ROEX] final error:', r.status, j);
-        const { data: p } = await supabase.from('profiles').select('available_credits').eq('user_id', user.id).single();
-        if (p) {
-          await supabase.from('profiles').update({ available_credits: p.available_credits + CREDITS_COST }).eq('user_id', user.id);
-          await supabase.from('credit_transactions').insert({ user_id: user.id, amount: CREDITS_COST, type: 'refund', description: 'Reembolso: fallo master ROEX' });
-        }
+        await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: roexDeductedFromPermanent, p_reason: 'Reembolso: fallo master ROEX' });
         return new Response(JSON.stringify({ error: j?.message || 'roex_final_failed' }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
       const finalUrl = j?.finalMasterTaskResults?.download_url_mastered;
       if (!finalUrl) {
-        const { data: p } = await supabase.from('profiles').select('available_credits').eq('user_id', user.id).single();
-        if (p) {
-          await supabase.from('profiles').update({ available_credits: p.available_credits + CREDITS_COST }).eq('user_id', user.id);
-          await supabase.from('credit_transactions').insert({ user_id: user.id, amount: CREDITS_COST, type: 'refund', description: 'Reembolso: master sin URL' });
-        }
+        await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: roexDeductedFromPermanent, p_reason: 'Reembolso: master sin URL' });
         return new Response(JSON.stringify({ error: 'no_final_url' }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 

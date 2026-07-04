@@ -57,6 +57,7 @@ serve(async (req) => {
     workTitle: string;
     creditCost: number;
     deducted: boolean;
+    deductedFromPermanent: number;
   } = {
     supabaseAdmin: null,
     workId: null,
@@ -64,6 +65,7 @@ serve(async (req) => {
     workTitle: "",
     creditCost: 0,
     deducted: false,
+    deductedFromPermanent: 0,
   };
 
   try {
@@ -244,14 +246,21 @@ serve(async (req) => {
       }
     }
 
-    await supabaseAdmin.from("profiles")
-      .update({ available_credits: profile.available_credits - creditCost, updated_at: new Date().toISOString() })
-      .eq("user_id", user.id);
-    await supabaseAdmin.from("credit_transactions").insert({
-      user_id: user.id, amount: -creditCost, type: "usage", description: `Registro: ${work.title}`,
+    const { data: deductResult, error: deductRpcError } = await supabaseAdmin.rpc("deduct_credits_ordered", {
+      p_user_id: user.id,
+      p_amount: creditCost,
+      p_feature: "register_work",
+      p_description: `Registro: ${work.title}`,
     });
+    if (deductRpcError || !deductResult?.success) {
+      return new Response(
+        JSON.stringify({ error: "Créditos insuficientes", available: deductResult?.available ?? profile.available_credits, required: creditCost }),
+        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     ctx.deducted = true;
-    console.log(`[IBS] Credit deducted for work ${workId}: ${creditCost}`);
+    ctx.deductedFromPermanent = deductResult.from_permanent ?? 0;
+    console.log(`[IBS] Credit deducted for work ${workId}: ${creditCost} (from_permanent=${ctx.deductedFromPermanent})`);
 
     // ── Metadatos de archivos (HEAD, sin descargar) ───────────────────
     const allFilePaths: string[] = [work.file_path, ...(Array.isArray(additionalFilePaths) ? additionalFilePaths : [])];
@@ -271,7 +280,7 @@ serve(async (req) => {
     }
 
     if (filesMeta.length === 0) {
-      await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, "No valid files", creditCost);
+      await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, "No valid files", creditCost, ctx.deductedFromPermanent);
       ctx.deducted = false;
       return new Response(
         JSON.stringify({ success: false, error: "No valid files", workId, status: "failed", refunded: true }),
@@ -332,7 +341,7 @@ serve(async (req) => {
       }
 
       if (inlineFiles.length === 0) {
-        await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, "No files encoded", creditCost);
+        await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, "No files encoded", creditCost, ctx.deductedFromPermanent);
         ctx.deducted = false;
         return new Response(
           JSON.stringify({ success: false, error: "No files encoded", workId, status: "failed", refunded: true }),
@@ -351,7 +360,7 @@ serve(async (req) => {
       if (!ibsRes.ok) {
         const errBody = await ibsRes.text();
         console.error(`[IBS] Ruta A fallida [${ibsRes.status}]:`, errBody);
-        await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `iBS direct error ${ibsRes.status}: ${errBody.slice(0, 200)}`, creditCost);
+        await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `iBS direct error ${ibsRes.status}: ${errBody.slice(0, 200)}`, creditCost, ctx.deductedFromPermanent);
         ctx.deducted = false;
         return new Response(
           JSON.stringify({ success: false, error: "iBS direct upload failed", workId, status: "failed", refunded: true }),
@@ -383,7 +392,7 @@ serve(async (req) => {
       if (!sessionRes.ok) {
         const errBody = await sessionRes.text();
         console.error(`[IBS] Sesión fallida [${sessionRes.status}]:`, errBody);
-        await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `iBS session error ${sessionRes.status}: ${errBody.slice(0, 200)}`, creditCost);
+        await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `iBS session error ${sessionRes.status}: ${errBody.slice(0, 200)}`, creditCost, ctx.deductedFromPermanent);
         ctx.deducted = false;
         return new Response(
           JSON.stringify({ success: false, error: "iBS session failed", workId, status: "failed", refunded: true }),
@@ -401,7 +410,7 @@ serve(async (req) => {
         const uploadInfo = session.files[i]?.upload;
 
         if (!uploadInfo?.url) {
-          await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `No upload URL for ${fileMeta.name}`, creditCost);
+          await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `No upload URL for ${fileMeta.name}`, creditCost, ctx.deductedFromPermanent);
           ctx.deducted = false;
           return new Response(
             JSON.stringify({ success: false, error: "No upload URL", workId, status: "failed", refunded: true }),
@@ -413,7 +422,7 @@ serve(async (req) => {
 
         const fileRes = await fetchWithTimeout(fileMeta.signedUrl, {}, GCS_TIMEOUT_MS);
         if (!fileRes.ok || !fileRes.body) {
-          await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `Download failed for ${fileMeta.name}`, creditCost);
+          await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `Download failed for ${fileMeta.name}`, creditCost, ctx.deductedFromPermanent);
           ctx.deducted = false;
           return new Response(
             JSON.stringify({ success: false, error: "File download failed", workId, status: "failed", refunded: true }),
@@ -435,7 +444,7 @@ serve(async (req) => {
         if (!gcsRes.ok) {
           const gcsErr = await gcsRes.text();
           console.error(`[IBS] GCS upload fallido [${gcsRes.status}]:`, gcsErr.slice(0, 200));
-          await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `GCS upload error ${gcsRes.status}`, creditCost);
+          await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `GCS upload error ${gcsRes.status}`, creditCost, ctx.deductedFromPermanent);
           ctx.deducted = false;
           return new Response(
             JSON.stringify({ success: false, error: "GCS upload failed", workId, status: "failed", refunded: true }),
@@ -478,7 +487,7 @@ serve(async (req) => {
         const errText = await completeRes.text().catch(() => "unknown");
         console.error(`[IBS] PASO 3 fallido [${completeRes.status}]: ${errText.slice(0, 300)}`);
         await handleIbsFailure(supabaseAdmin, workId, user.id, work.title,
-          `complete error ${completeRes.status}`, creditCost);
+          `complete error ${completeRes.status}`, creditCost, ctx.deductedFromPermanent);
         ctx.deducted = false;
         return new Response(
           JSON.stringify({ success: false, error: "IBS complete failed", workId, status: "failed", refunded: true }),
@@ -556,7 +565,7 @@ serve(async (req) => {
       try {
         await handleIbsFailure(
           ctx.supabaseAdmin, ctx.workId, ctx.userId, ctx.workTitle,
-          `crash: ${e?.message?.slice(0, 200) || "unknown"}`, ctx.creditCost
+          `crash: ${e?.message?.slice(0, 200) || "unknown"}`, ctx.creditCost, ctx.deductedFromPermanent
         );
         ctx.deducted = false;
         return new Response(
@@ -576,7 +585,7 @@ serve(async (req) => {
 
 async function handleIbsFailure(
   supabaseAdmin: ReturnType<typeof createClient>,
-  workId: string, userId: string, workTitle: string, reason: string, creditCost = 0
+  workId: string, userId: string, workTitle: string, reason: string, creditCost = 0, fromPermanent = 0
 ) {
   await supabaseAdmin.from("works")
     .update({ status: "failed", failure_reason: reason, updated_at: new Date().toISOString() })
@@ -587,15 +596,15 @@ async function handleIbsFailure(
       .eq("user_id", userId).eq("type", "refund")
       .ilike("description", `%${workId}%`).maybeSingle();
     if (existing) { console.log(`[IBS] Refund already exists for ${workId}, skipping`); return; }
-    const { data: p } = await supabaseAdmin.from("profiles").select("available_credits").eq("user_id", userId).single();
-    if (p) {
-      await supabaseAdmin.from("profiles")
-        .update({ available_credits: p.available_credits + creditCost, updated_at: new Date().toISOString() })
-        .eq("user_id", userId);
-      await supabaseAdmin.from("credit_transactions").insert({
-        user_id: userId, amount: creditCost, type: "refund",
-        description: `Reembolso por fallo iBS [${workId}]: ${workTitle} — ${reason.slice(0, 80)}`,
-      });
+    const { error: refundError } = await supabaseAdmin.rpc("refund_credits_ordered", {
+      p_user_id: userId,
+      p_amount: creditCost,
+      p_from_permanent: fromPermanent,
+      p_reason: `Reembolso por fallo iBS [${workId}]: ${workTitle} — ${reason.slice(0, 80)}`,
+    });
+    if (refundError) {
+      console.error(`[IBS] Refund RPC error:`, refundError.message);
+    } else {
       console.log(`[IBS] Refunded ${creditCost} credit(s) for work ${workId}. Reason: ${reason}`);
     }
   }

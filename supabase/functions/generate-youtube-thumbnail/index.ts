@@ -55,35 +55,22 @@ serve(async (req) => {
 
     // Check credits (cost from operation_pricing)
     const creditsNeeded = await getOperationCost(supabaseAdmin, 'youtube_thumbnail', 1);
-    const { data: profile } = await supabaseAdmin
-      .from('profiles')
-      .select('available_credits')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!profile || profile.available_credits < creditsNeeded) {
-      return new Response(
-        JSON.stringify({
-          error: 'Insufficient credits',
-          needed: creditsNeeded,
-          current: profile?.available_credits || 0,
-        }),
-        { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
 
     // Deduct credits upfront
-    await supabaseAdmin.rpc('decrement_credits', {
-      _user_id: user.id,
-      _amount: creditsNeeded,
-    });
-
-    await supabaseAdmin.from('credit_transactions').insert({
-      user_id: user.id,
-      amount: -creditsNeeded,
-      type: 'youtube_thumbnail',
-      description: `YouTube thumbnail: ${video_title}`,
-    });
+    let thumbDeductedFromPermanent = 0;
+    {
+      const { data: deductResult, error: deductError } = await supabaseAdmin.rpc('deduct_credits_ordered', {
+        p_user_id: user.id, p_amount: creditsNeeded, p_feature: 'youtube_thumbnail',
+        p_description: `YouTube thumbnail: ${video_title}`,
+      });
+      if (deductError || !deductResult?.success) {
+        return new Response(
+          JSON.stringify({ error: 'Insufficient credits', needed: creditsNeeded, current: deductResult?.available ?? 0 }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      thumbDeductedFromPermanent = deductResult.from_permanent ?? 0;
+    }
 
     try {
       const imagePrompt = buildThumbnailPrompt(video_title, visual_style, thumbnail_description, include_text, highlight_text);
@@ -100,16 +87,9 @@ serve(async (req) => {
     } catch (genError) {
       // Refund on failure
       console.error('Generation failed, refunding:', genError);
-      await supabaseAdmin
-        .from('profiles')
-        .update({ available_credits: profile.available_credits })
-        .eq('user_id', user.id);
-
-      await supabaseAdmin.from('credit_transactions').insert({
-        user_id: user.id,
-        amount: creditsNeeded,
-        type: 'refund',
-        description: `Refund: YouTube thumbnail generation failed`,
+      await supabaseAdmin.rpc('refund_credits_ordered', {
+        p_user_id: user.id, p_amount: creditsNeeded, p_from_permanent: thumbDeductedFromPermanent,
+        p_reason: `Refund: YouTube thumbnail generation failed`,
       });
 
       throw genError;

@@ -81,49 +81,29 @@ serve(async (req) => {
       });
     }
 
-    // Atomic optimistic-lock deduction
-    const { data: deducted, error: deductError } = await supabase
-      .from('profiles')
-      .update({ available_credits: currentBalance - creditCost })
-      .eq('user_id', user.id)
-      .eq('available_credits', currentBalance)
-      .select('available_credits')
-      .maybeSingle();
-
-    if (deductError || !deducted) {
-      return new Response(JSON.stringify({ error: 'Credit deduction conflict, please retry' }), {
-        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Atomic deduction (plan credits primero, luego permanentes)
+    let premiumDeductedFromPermanent = 0;
+    {
+      const { data: deductResult, error: deductError } = await supabase.rpc('deduct_credits_ordered', {
+        p_user_id: user.id, p_amount: creditCost, p_feature: 'promote_premium',
+        p_description: `Premium promo: ${song_title}`,
       });
+      if (deductError || !deductResult?.success) {
+        return new Response(JSON.stringify({ error: 'insufficient_credits', required: creditCost, available: deductResult?.available ?? currentBalance }), {
+          status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      premiumDeductedFromPermanent = deductResult.from_permanent ?? 0;
     }
-
-    // Log the credit transaction
-    await supabase.from('credit_transactions').insert({
-      user_id: user.id,
-      amount: -creditCost,
-      type: 'promote_premium',
-      description: `Premium promo: ${song_title}`,
-    });
 
     // Helper for refund on failure
     const refundCredits = async (reason: string) => {
       console.error(`[PREMIUM-PROMO] Refunding ${creditCost} credits to ${user.id}: ${reason}`);
-      const { data: p } = await supabase
-        .from('profiles')
-        .select('available_credits')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (p) {
-        await supabase
-          .from('profiles')
-          .update({ available_credits: (p.available_credits ?? 0) + creditCost })
-          .eq('user_id', user.id);
-        await supabase.from('credit_transactions').insert({
-          user_id: user.id,
-          amount: creditCost,
-          type: 'refund',
-          description: `Refund premium promo (${reason})`,
-        });
-      }
+      const { error: refundError } = await supabase.rpc('refund_credits_ordered', {
+        p_user_id: user.id, p_amount: creditCost, p_from_permanent: premiumDeductedFromPermanent,
+        p_reason: `Refund premium promo (${reason})`,
+      });
+      if (refundError) console.error('[PREMIUM-PROMO] Refund RPC error:', refundError.message);
     };
 
     // Insert premium promo request
