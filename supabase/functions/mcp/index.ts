@@ -25,13 +25,216 @@ var ping_default = defineTool({
   })
 });
 
+// src/lib/mcp/tools/get-app-info.ts
+import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
+
+// src/lib/mcp/_helpers.ts
+import { createClient } from "npm:@supabase/supabase-js@^2.103.0";
+function getPublicSupabase() {
+  const url = process.env.SUPABASE_URL ?? "https://kmwehyixenybegwhqljx.supabase.co";
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY ?? "";
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+function textContent(text) {
+  return { content: [{ type: "text", text }] };
+}
+function jsonContent(data) {
+  return {
+    content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    structuredContent: { data }
+  };
+}
+
+// src/lib/mcp/tools/get-app-info.ts
+var get_app_info_default = defineTool2({
+  name: "get_app_info",
+  title: "Get MusicDibs app info",
+  description: "Return high-level information about the MusicDibs platform: purpose, main modules, key URLs, supported languages and legal notes. Useful as a first call to understand what the app does.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: () => jsonContent({
+    name: "MusicDibs",
+    tagline: "Register music IP on blockchain and create with AI.",
+    website: "https://musicdibs.com",
+    languages: ["es", "en", "pt"],
+    modules: [
+      {
+        key: "registration",
+        title: "Music copyright registration",
+        description: "Register works on iCommunity Blockchain (iBS) with certificate download."
+      },
+      {
+        key: "ai_studio",
+        title: "AI Studio",
+        description: "Generate songs, lyrics, covers, videos, virtual artists and promo material."
+      },
+      {
+        key: "distribution",
+        title: "Distribution",
+        description: "Distribute music to streaming platforms with 100% royalties to artists."
+      },
+      {
+        key: "promotion",
+        title: "Social promotion",
+        description: "Reach +200k across Instagram, TikTok and YouTube."
+      },
+      {
+        key: "managers",
+        title: "Managers & agencies",
+        description: "Multi-artist dashboard for labels and managers."
+      }
+    ],
+    royalty_policy: "100% royalties to the artist. 0% platform fee.",
+    support_email: "hola@musicdibs.com"
+  })
+});
+
+// src/lib/mcp/tools/list-blog-posts.ts
+import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z2 } from "npm:zod@^3.25.76";
+var list_blog_posts_default = defineTool3({
+  name: "list_blog_posts",
+  title: "List blog posts",
+  description: "List published MusicDibs blog posts (title, slug, excerpt, language, published date). Use to discover recent articles about music copyright, distribution and AI tools.",
+  inputSchema: {
+    language: z2.enum(["es", "en", "pt"]).optional().describe("Filter by language code."),
+    limit: z2.number().int().min(1).max(50).optional().describe("Max posts (default 10).")
+  },
+  annotations: { readOnlyHint: true, openWorldHint: false },
+  handler: async ({ language, limit }) => {
+    const supabase = getPublicSupabase();
+    let q = supabase.from("blog_posts").select("title, slug, excerpt, language, published_at").eq("status", "published").order("published_at", { ascending: false }).limit(limit ?? 10);
+    if (language) q = q.eq("language", language);
+    const { data, error } = await q;
+    if (error) return { ...textContent(`Error: ${error.message}`), isError: true };
+    return jsonContent(data ?? []);
+  }
+});
+
+// src/lib/mcp/tools/get-operation-pricing.ts
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z3 } from "npm:zod@^3.25.76";
+var get_operation_pricing_default = defineTool4({
+  name: "get_operation_pricing",
+  title: "Get operation pricing (credits)",
+  description: "List MusicDibs operations (music generation, mastering, lyrics, covers, video, promo, distribution, etc.) with their credit cost. Useful for cost estimation before invoking an AI feature.",
+  inputSchema: {
+    operation_key: z3.string().optional().describe("If provided, return only that operation.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ operation_key }) => {
+    const supabase = getPublicSupabase();
+    let q = supabase.from("operation_pricing").select("operation_key, label, credits_cost, category, description, is_active").eq("is_active", true).order("category").order("operation_key");
+    if (operation_key) q = q.eq("operation_key", operation_key);
+    const { data, error } = await q;
+    if (error) return { ...textContent(`Error: ${error.message}`), isError: true };
+    return jsonContent(data ?? []);
+  }
+});
+
+// src/lib/mcp/tools/get-pricing-catalog.ts
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.0";
+var get_pricing_catalog_default = defineTool5({
+  name: "get_pricing_catalog",
+  title: "Get subscription pricing catalog",
+  description: "Return the live MusicDibs subscription plans and one-off credit packs from Stripe: id, name, price, currency, billing period and included credits. Use to answer 'how much does plan X cost?'.",
+  inputSchema: {},
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
+  handler: async () => {
+    const url = (process.env.SUPABASE_URL ?? "https://kmwehyixenybegwhqljx.supabase.co") + "/functions/v1/stripe-pricing-catalog";
+    const apikey = process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY ?? "";
+    try {
+      const res = await fetch(url, {
+        headers: { apikey, Authorization: `Bearer ${apikey}` }
+      });
+      if (!res.ok) {
+        return {
+          ...textContent(`Pricing catalog error ${res.status}: ${await res.text()}`),
+          isError: true
+        };
+      }
+      return jsonContent(await res.json());
+    } catch (err) {
+      return {
+        ...textContent(`Fetch failed: ${err instanceof Error ? err.message : String(err)}`),
+        isError: true
+      };
+    }
+  }
+});
+
+// src/lib/mcp/tools/calculate-royalties.ts
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z4 } from "npm:zod@^3.25.76";
+var calculate_royalties_default = defineTool6({
+  name: "calculate_royalties",
+  title: "Calculate music royalties",
+  description: "Estimate net royalties for the artist given gross streaming revenue. MusicDibs policy: 100% of royalties go to the artist (0% platform fee).",
+  inputSchema: {
+    streams: z4.number().int().min(0).describe("Total number of streams."),
+    revenue_per_stream_usd: z4.number().min(0).optional().describe("Revenue per stream in USD. Defaults to 0.004 (industry average).")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: ({ streams, revenue_per_stream_usd }) => {
+    const rate = revenue_per_stream_usd ?? 4e-3;
+    const gross = streams * rate;
+    const platform_fee_pct = 0;
+    const artist_share = gross * (1 - platform_fee_pct);
+    return jsonContent({
+      streams,
+      rate_per_stream_usd: rate,
+      gross_usd: Number(gross.toFixed(2)),
+      platform_fee_pct,
+      artist_net_usd: Number(artist_share.toFixed(2)),
+      note: "MusicDibs pays 100% of royalties to artists."
+    });
+  }
+});
+
+// src/lib/mcp/tools/submit-contact-message.ts
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z5 } from "npm:zod@^3.25.76";
+var submit_contact_message_default = defineTool7({
+  name: "submit_contact_message",
+  title: "Submit contact message",
+  description: "Send a contact form message to the MusicDibs team. Use only when the caller has explicit user intent to contact support/sales.",
+  inputSchema: {
+    name: z5.string().min(1).max(120).describe("Sender name."),
+    email: z5.string().email().describe("Sender email."),
+    subject: z5.string().min(1).max(200).describe("Message subject."),
+    message: z5.string().min(10).max(4e3).describe("Message body.")
+  },
+  annotations: {
+    readOnlyHint: false,
+    destructiveHint: false,
+    idempotentHint: false,
+    openWorldHint: false
+  },
+  handler: async ({ name, email, subject, message }) => {
+    const supabase = getPublicSupabase();
+    const { error } = await supabase.from("contact_submissions").insert({ name, email, subject, message });
+    if (error) return { ...textContent(`Error: ${error.message}`), isError: true };
+    return jsonContent({ ok: true, message: "Contact message received." });
+  }
+});
+
 // src/lib/mcp/index.ts
 var mcp_default = defineMcp({
   name: "musicdibs-mcp",
   title: "MusicDibs MCP",
-  version: "0.1.0",
-  instructions: "Tools exposed by the MusicDibs app (music IP registration on blockchain with AI studio). Use `ping` to verify connectivity. More tools can be added to expose credits balance, works, and AI Studio actions.",
-  tools: [ping_default]
+  version: "0.2.0",
+  instructions: "MusicDibs is a music IP registration platform with an AI Studio (songs, lyrics, covers, videos, virtual artists) and distribution. These tools expose PUBLIC data: app info, blog posts, subscription plans, credit costs per operation, royalty estimator, and a contact form. Use `get_app_info` first to understand the platform. Per-user tools (credits balance, my works, my AI generations) are not exposed because this app uses external Supabase without an OAuth 2.1 authorization server.",
+  tools: [
+    ping_default,
+    get_app_info_default,
+    list_blog_posts_default,
+    get_operation_pricing_default,
+    get_pricing_catalog_default,
+    calculate_royalties_default,
+    submit_contact_message_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts

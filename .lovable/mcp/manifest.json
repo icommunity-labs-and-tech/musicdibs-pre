@@ -8,7 +8,7 @@
   "mcp": {
     "server": {
       "name": "musicdibs-mcp",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "MusicDibs MCP"
     },
     "tools": [
@@ -31,6 +31,171 @@
             }
           },
           "required": [
+            "message"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_app_info",
+        "title": "Get MusicDibs app info",
+        "description": "Return high-level information about the MusicDibs platform: purpose, main modules, key URLs, supported languages and legal notes. Useful as a first call to understand what the app does.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_blog_posts",
+        "title": "List blog posts",
+        "description": "List published MusicDibs blog posts (title, slug, excerpt, language, published date). Use to discover recent articles about music copyright, distribution and AI tools.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "language": {
+              "type": "string",
+              "enum": [
+                "es",
+                "en",
+                "pt"
+              ],
+              "description": "Filter by language code."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50,
+              "description": "Max posts (default 10)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_operation_pricing",
+        "title": "Get operation pricing (credits)",
+        "description": "List MusicDibs operations (music generation, mastering, lyrics, covers, video, promo, distribution, etc.) with their credit cost. Useful for cost estimation before invoking an AI feature.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "operation_key": {
+              "type": "string",
+              "description": "If provided, return only that operation."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_pricing_catalog",
+        "title": "Get subscription pricing catalog",
+        "description": "Return the live MusicDibs subscription plans and one-off credit packs from Stripe: id, name, price, currency, billing period and included credits. Use to answer 'how much does plan X cost?'.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": true
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "calculate_royalties",
+        "title": "Calculate music royalties",
+        "description": "Estimate net royalties for the artist given gross streaming revenue. MusicDibs policy: 100% of royalties go to the artist (0% platform fee).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "streams": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Total number of streams."
+            },
+            "revenue_per_stream_usd": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Revenue per stream in USD. Defaults to 0.004 (industry average)."
+            }
+          },
+          "required": [
+            "streams"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "submit_contact_message",
+        "title": "Submit contact message",
+        "description": "Send a contact form message to the MusicDibs team. Use only when the caller has explicit user intent to contact support/sales.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "Sender name."
+            },
+            "email": {
+              "type": "string",
+              "format": "email",
+              "description": "Sender email."
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Message subject."
+            },
+            "message": {
+              "type": "string",
+              "minLength": 10,
+              "maxLength": 4000,
+              "description": "Message body."
+            }
+          },
+          "required": [
+            "name",
+            "email",
+            "subject",
             "message"
           ],
           "additionalProperties": false,
