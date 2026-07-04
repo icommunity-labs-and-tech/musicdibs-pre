@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getOperationCost } from '../_shared/operation-pricing.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,7 +8,6 @@ const corsHeaders = {
 };
 
 const MAX_FREE_REGENERATIONS = 3;
-const REGEN_CREDIT_COST = 5;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -80,6 +80,7 @@ serve(async (req) => {
           status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+      const REGEN_CREDIT_COST = await getOperationCost(supabase, 'promo_social_regenerate_copies', 5);
       const { data: deductResult, error: deductError } = await supabase.rpc('deduct_credits_ordered', {
         p_user_id: user.id, p_amount: REGEN_CREDIT_COST, p_feature: 'promo_social_regenerate_copies',
         p_description: `Regeneración copies (pagada)`,

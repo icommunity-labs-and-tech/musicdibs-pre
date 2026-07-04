@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { getOperationCost } from '../_shared/operation-pricing.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,7 +47,8 @@ serve(async (req) => {
     // Estimate duration from file size (approximate: 128kbps = 16KB/s)
     const estimatedDuration = audioFile.size / (128000 / 8);
     const minutes = Math.max(1, Math.ceil(estimatedDuration / 60));
-    const creditsNeeded = minutes * 2;
+    const creditsPerMinute = await getOperationCost(supabaseAdmin, 'voice_translation_per_min', 2);
+    const creditsNeeded = minutes * creditsPerMinute;
 
     // Check credits
     const { data: profile } = await supabaseAdmin
