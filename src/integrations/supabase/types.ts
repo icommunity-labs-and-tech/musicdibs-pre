@@ -3944,6 +3944,15 @@ export type Database = {
         Args: { _amount: number; _user_id: string }
         Returns: undefined
       }
+      deduct_credits_ordered: {
+        Args: {
+          p_amount: number
+          p_description?: string
+          p_feature: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -4098,6 +4107,15 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      refund_credits_ordered: {
+        Args: {
+          p_amount: number
+          p_from_permanent?: number
+          p_reason?: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       refund_user_credits: {
         Args: { p_amount: number; p_reason?: string; p_user_id: string }
