@@ -7,6 +7,15 @@
 -- (respeta: si ya está verificado no envía nada, y queda registrado en
 -- kyc_reminder_log/email_send_log igual que cualquier otro recordatorio).
 --
+-- FIX (2026-07-04): la primera versión de este cambio usaba el secreto del
+-- vault 'email_queue_service_role_key' (Authorization: Bearer) igual que
+-- send-welcome-email. Esa clave rotó de forma independiente y sin aviso
+-- entre las 14:41 y las 15:43 UTC, causando 401 Unauthorized silenciosos
+-- en kyc-reminder (que valida el secreto estrictamente, a diferencia de
+-- send-welcome-email, que no lo valida y por eso seguía "funcionando" pese
+-- al mismo problema). Cambiado a x-cron-secret con CRON_SECRET, el mismo
+-- mecanismo estable usado por todos los crons de este proyecto.
+--
 -- El bloque va en su propio BEGIN/EXCEPTION para que un fallo aquí nunca
 -- impida la creación del usuario (mismo patrón defensivo que ya usaba el
 -- envío del email de bienvenida).
@@ -21,6 +30,7 @@ DECLARE
   _display_name TEXT;
   _supabase_url TEXT;
   _service_key  TEXT;
+  _cron_secret  TEXT := 'W4-WCTgtYjeNi1cHFYWvQ37wTaLHYw9oWXE9ifmmJ1E';
   _welcome_credits INT := 3;  -- Ampliado de 1 a 3
   _inserted BOOLEAN := false;
 BEGIN
@@ -34,7 +44,6 @@ BEGIN
   ON CONFLICT (user_id) DO NOTHING
   RETURNING true INTO _inserted;
 
-  -- Log welcome bonus only when the profile row was actually created here
   IF _inserted THEN
     BEGIN
       INSERT INTO public.credit_transactions (user_id, amount, type, description)
@@ -44,13 +53,13 @@ BEGIN
     END;
   END IF;
 
+  _supabase_url := 'https://kmwehyixenybegwhqljx.supabase.co';
+
   BEGIN
     SELECT decrypted_secret INTO _service_key
     FROM vault.decrypted_secrets
     WHERE name = 'email_queue_service_role_key'
     LIMIT 1;
-
-    _supabase_url := 'https://kmwehyixenybegwhqljx.supabase.co';
 
     IF _service_key IS NOT NULL THEN
       PERFORM net.http_post(
@@ -72,24 +81,20 @@ BEGIN
     RAISE LOG '[handle_new_user] welcome email failed for %: %', NEW.id, SQLERRM;
   END;
 
-  -- NUEVO: notificación automática de KYC al registrarse.
+  -- Notificación automática de KYC al registrarse (usa x-cron-secret, ver nota arriba).
   BEGIN
-    IF _service_key IS NOT NULL THEN
-      PERFORM net.http_post(
-        url     := _supabase_url || '/functions/v1/kyc-reminder',
-        headers := jsonb_build_object(
-          'Content-Type',  'application/json',
-          'Authorization', 'Bearer ' || _service_key
-        ),
-        body    := jsonb_build_object(
-          'user_id',  NEW.id::text,
-          'email',    NEW.email,
-          'name',     _display_name
-        )
-      );
-    ELSE
-      RAISE LOG '[handle_new_user] vault secret not found — kyc notification skipped for %', NEW.id;
-    END IF;
+    PERFORM net.http_post(
+      url     := _supabase_url || '/functions/v1/kyc-reminder',
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'x-cron-secret', _cron_secret
+      ),
+      body    := jsonb_build_object(
+        'user_id',  NEW.id::text,
+        'email',    NEW.email,
+        'name',     _display_name
+      )
+    );
   EXCEPTION WHEN OTHERS THEN
     RAISE LOG '[handle_new_user] kyc notification failed for %: %', NEW.id, SQLERRM;
   END;
