@@ -3148,8 +3148,14 @@ export type Database = {
           current_period_start: string | null
           id: string
           lifetime_coupon: string | null
+          pending_credits: number | null
+          pending_effective_at: string | null
+          pending_plan_id: string | null
+          pending_plan_label: string | null
+          pending_price_id: string | null
           plan: string
           plan_type: string | null
+          schedule_id: string | null
           status: string
           stripe_customer_id: string | null
           stripe_price_id: string | null
@@ -3168,8 +3174,14 @@ export type Database = {
           current_period_start?: string | null
           id?: string
           lifetime_coupon?: string | null
+          pending_credits?: number | null
+          pending_effective_at?: string | null
+          pending_plan_id?: string | null
+          pending_plan_label?: string | null
+          pending_price_id?: string | null
           plan: string
           plan_type?: string | null
+          schedule_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -3188,8 +3200,14 @@ export type Database = {
           current_period_start?: string | null
           id?: string
           lifetime_coupon?: string | null
+          pending_credits?: number | null
+          pending_effective_at?: string | null
+          pending_plan_id?: string | null
+          pending_plan_label?: string | null
+          pending_price_id?: string | null
           plan?: string
           plan_type?: string | null
+          schedule_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
