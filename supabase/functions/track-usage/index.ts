@@ -31,10 +31,11 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
+    const token = authHeader.replace(/^Bearer\s+/i, "");
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser(token);
 
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "unauthorized" }), {
