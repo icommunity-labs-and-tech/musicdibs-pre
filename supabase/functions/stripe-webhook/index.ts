@@ -240,6 +240,7 @@ async function createOrderRecord(
     promotionCode?: string;
     metadata?: Record<string, any>;
     paidAt?: string;
+    orderStatus?: string;
   }
 ) {
   try {
@@ -306,6 +307,7 @@ async function createOrderRecord(
       landing_path: meta.landing_path || null,
       metadata: meta,
       paid_at: params.paidAt || new Date().toISOString(),
+      order_status: params.orderStatus || "paid",
     };
 
     const { data: order, error } = await supabase.from("orders").insert(orderData).select("id").single();
@@ -1520,6 +1522,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
               billingInterval: null, amountGross: 0, stripeFee: 0, currency: "eur",
               isSubscription: true, isRenewal: false,
               metadata: { cancellation_reason: "payment_failed_definitive", attempt_count: attemptCount },
+              orderStatus: "cancelled",
             });
             const { data: { user: failedUser } } = await supabase.auth.admin.getUserById(profile.user_id);
             const { data: failedDisp } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
@@ -1768,6 +1771,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
             billingInterval: null, amountGross: 0, stripeFee: 0, currency: "eur",
             isSubscription: true, isRenewal: false,
             metadata: { cancellation_reason: cancelReason },
+            orderStatus: "cancelled",
           });
           const { data: { user: cancelEvUser } } = await supabase.auth.admin.getUserById(profile.user_id);
           const { data: cancelEvProf } = await supabase.from("profiles").select("display_name").eq("user_id", profile.user_id).single();
