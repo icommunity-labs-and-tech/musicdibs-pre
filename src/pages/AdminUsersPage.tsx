@@ -515,7 +515,7 @@ export default function AdminUsersPage() {
           <SelectTrigger className="w-[220px] h-8"><SelectValue placeholder="Recordatorio KYC" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Recordatorio KYC (todos)</SelectItem>
-            <SelectItem value="eligible">📧 Elegibles (no verif. + ≥5 días sin aviso)</SelectItem>
+            <SelectItem value="eligible">📧 Elegibles (no verif. + &lt;3 avisos + ≥5 días)</SelectItem>
           </SelectContent>
         </Select>
         {activeFiltersCount > 0 && (

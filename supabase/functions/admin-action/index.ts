@@ -382,7 +382,7 @@ serve(async (req) => {
       if (creditsFilter === "no_permanent")
         query = query.or("permanent_credits.is.null,permanent_credits.eq.0");
 
-      // Recordatorio KYC elegible: KYC no verificado Y (sin recordatorio O último envío hace ≥5 días)
+      // Recordatorio KYC elegible: KYC no verificado Y < 3 avisos enviados Y (sin recordatorio O último envío hace ≥5 días)
       // El exclude set puede tener miles de UUIDs → no se puede meter en la URL como not.in.
       // Resolvemos el filtrado en memoria.
       let eligibleExcludeSet: Set<string> | null = null;
@@ -396,6 +396,17 @@ serve(async (req) => {
             .from("kyc_reminder_log")
             .select("user_id")
             .gte("sent_at", cutoff)
+            .range(from, from + PAGE - 1);
+          if (chunkErr) break;
+          (chunk || []).forEach((r: any) => r.user_id && recentIds.add(r.user_id));
+          if (!chunk || chunk.length < PAGE) break;
+        }
+        // También excluir usuarios que ya tienen 3 recordatorios enviados
+        for (let from = 0; ; from += PAGE) {
+          const { data: chunk, error: chunkErr } = await admin
+            .from("kyc_reminder_log")
+            .select("user_id")
+            .gte("reminder_number", 3)
             .range(from, from + PAGE - 1);
           if (chunkErr) break;
           (chunk || []).forEach((r: any) => r.user_id && recentIds.add(r.user_id));
