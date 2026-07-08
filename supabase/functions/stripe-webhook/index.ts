@@ -1482,10 +1482,20 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
         }
       } else {
-        const invoice = obj;
+        // FIX: no confiar en el payload crudo del evento — next_payment_attempt
+        // puede no estar calculado aun en el momento exacto del webhook (Smart
+        // Retries lo resuelve de forma asincrona). Releer la invoice fresca.
+        const staleInvoice = obj;
+        const invoiceId = staleInvoice.id;
+        let invoice = staleInvoice;
+        try {
+          invoice = await stripe.invoices.retrieve(invoiceId);
+        } catch (reErr) {
+          console.warn("[WEBHOOK] invoice.payment_failed: no se pudo releer invoice, usando payload original:", reErr);
+        }
         customerId = getInvoiceCustomerId(invoice);
-        attemptCount = invoice.attempt_count;
-        nextAttempt = invoice.next_payment_attempt ? new Date(invoice.next_payment_attempt * 1000).toISOString() : null;
+        attemptCount = invoice.attempt_count ?? staleInvoice.attempt_count;
+        nextAttempt = invoice.next_payment_attempt ? new Date((invoice.next_payment_attempt as number) * 1000).toISOString() : null;
       }
 
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
