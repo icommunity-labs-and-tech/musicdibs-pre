@@ -270,7 +270,13 @@ serve(async (req) => {
     for (const fp of allFilePaths) {
       const { data: urlData } = await supabaseAdmin.storage.from("works-files").createSignedUrl(fp, 1800);
       if (!urlData?.signedUrl) { console.warn(`[IBS] No signed URL for ${fp}`); continue; }
-      const head = await fetch(urlData.signedUrl, { method: "HEAD" });
+      let head: Response;
+      try {
+        head = await fetchWithTimeout(urlData.signedUrl, { method: "HEAD" }, 10_000);
+      } catch (headErr) {
+        console.warn(`[IBS] HEAD request timeout/error for ${fp}:`, headErr);
+        continue;
+      }
       const size = parseInt(head.headers.get("content-length") || "0", 10);
       const ct = head.headers.get("content-type") || "application/octet-stream";
       if (!size) { console.warn(`[IBS] File ${fp} has size=0, skipping`); continue; }
