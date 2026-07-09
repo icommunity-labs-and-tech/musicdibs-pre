@@ -35,6 +35,21 @@ async function fetchWithTimeout(url: string, opts: RequestInit & { duplex?: stri
   }
 }
 
+// Generic timeout wrapper para cualquier promise (RPC de supabase-js, storage SDK, etc.)
+// que no acepte AbortSignal directamente. Usado para evitar cuelgues silenciosos
+// en llamadas de red del SDK que no son fetch() directo.
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, label: string): Promise<T> {
+  let timer: number;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`timeout: ${label}`)), timeoutMs);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer!);
+  }
+}
+
 // SIEMPRE usamos presigned GCS streaming (ruta B) para evitar OOM en el worker.
 // La ruta A (base64 en RAM) causa WORKER_RESOURCE_LIMIT incluso con archivos pequeños.
 const DIRECT_UPLOAD_THRESHOLD_BYTES = 0;
@@ -246,12 +261,31 @@ serve(async (req) => {
       }
     }
 
-    const { data: deductResult, error: deductRpcError } = await supabaseAdmin.rpc("deduct_credits_ordered", {
-      p_user_id: user.id,
-      p_amount: creditCost,
-      p_feature: "register_work",
-      p_description: `Registro: ${work.title}`,
-    });
+    let deductResult: any = null;
+    let deductRpcError: any = null;
+    try {
+      const rpcRes = await withTimeout(
+        supabaseAdmin.rpc("deduct_credits_ordered", {
+          p_user_id: user.id,
+          p_amount: creditCost,
+          p_feature: "register_work",
+          p_description: `Registro: ${work.title}`,
+        }),
+        15_000,
+        "deduct_credits_ordered"
+      );
+      deductResult = rpcRes.data;
+      deductRpcError = rpcRes.error;
+    } catch (rpcTimeoutErr) {
+      console.error(`[IBS] deduct_credits_ordered timeout for work ${workId}:`, rpcTimeoutErr);
+      await supabaseAdmin.from("works").update({
+        status: "failed", failure_reason: "credit_deduction_timeout", updated_at: new Date().toISOString(),
+      }).eq("id", workId);
+      return new Response(
+        JSON.stringify({ error: "Timeout procesando creditos, intenta de nuevo", workId, status: "failed" }),
+        { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     if (deductRpcError || !deductResult?.success) {
       return new Response(
         JSON.stringify({ error: "Créditos insuficientes", available: deductResult?.available ?? profile.available_credits, required: creditCost }),
