@@ -350,7 +350,13 @@ serve(async (req) => {
 
       const inlineFiles: Array<{ name: string; file: string }> = [];
       for (const fm of filesMeta) {
-        const fileRes = await fetch(fm.signedUrl);
+        let fileRes: Response;
+        try {
+          fileRes = await fetchWithTimeout(fm.signedUrl, {}, 30_000);
+        } catch (fetchErr) {
+          console.warn(`[IBS] Timeout/error downloading ${fm.name}:`, fetchErr);
+          continue;
+        }
         if (!fileRes.ok) { console.warn(`[IBS] Failed to fetch ${fm.name}: ${fileRes.status}`); continue; }
         const buf = await fileRes.arrayBuffer();
         inlineFiles.push({ name: fm.name, file: base64Encode(new Uint8Array(buf) as any) });
@@ -369,10 +375,10 @@ serve(async (req) => {
       const ibsPayload: Record<string, unknown> = { title: work.title, files: inlineFiles };
       if (enrichedDescription) ibsPayload.description = enrichedDescription;
 
-      const ibsRes = await fetch(`${IBS_API_URL}/evidences`, {
+      const ibsRes = await fetchWithTimeout(`${IBS_API_URL}/evidences`, {
         method: "POST", headers: ibsHeaders,
         body: JSON.stringify({ payload: ibsPayload, signatures: [{ id: signatureId }] }),
-      });
+      }, IBS_TIMEOUT_MS);
 
       if (!ibsRes.ok) {
         const errBody = await ibsRes.text();
