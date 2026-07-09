@@ -268,7 +268,18 @@ serve(async (req) => {
     const filesMeta: Array<{ path: string; name: string; size: number; contentType: string; signedUrl: string }> = [];
 
     for (const fp of allFilePaths) {
-      const { data: urlData } = await supabaseAdmin.storage.from("works-files").createSignedUrl(fp, 1800);
+      let urlData: { signedUrl: string } | null = null;
+      try {
+        const signedUrlPromise = supabaseAdmin.storage.from("works-files").createSignedUrl(fp, 1800);
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("createSignedUrl timeout")), 10_000)
+        );
+        const result = await Promise.race([signedUrlPromise, timeoutPromise]) as any;
+        urlData = result?.data ?? null;
+      } catch (signedUrlErr) {
+        console.warn(`[IBS] createSignedUrl timeout/error for ${fp}:`, signedUrlErr);
+        continue;
+      }
       if (!urlData?.signedUrl) { console.warn(`[IBS] No signed URL for ${fp}`); continue; }
       let head: Response;
       try {
