@@ -249,7 +249,7 @@ serve(async (req) => {
     ctx.creditCost = creditCost;
 
     const { data: profile } = await supabaseAdmin
-      .from("profiles").select("available_credits, subscription_plan")
+      .from("profiles").select("available_credits, permanent_credits, subscription_plan")
       .eq("user_id", user.id).single();
 
     if (!profile || profile.available_credits < creditCost) {
@@ -261,8 +261,16 @@ serve(async (req) => {
     }
 
 
-    // ── Free tier: máximo 1 registro de obra por cuenta gratuita ──
-    if (profile && profile.subscription_plan === "Free") {
+    // ── Free tier: max 1 registro SOLO con el welcome bonus (anti-picaresca) ──
+    // FIX 2026-07-09: el limite original bloqueaba a CUALQUIER usuario Free con 1+
+    // obra registrada, sin importar el origen de sus creditos disponibles. Esto
+    // afectaba injustamente a creadores de contenido, partners, ganadores de
+    // concursos y usuarios con cupones — cualquiera con creditos permanentes
+    // legitimos (no del welcome bonus) debe poder seguir registrando. El limite
+    // ahora solo aplica si el usuario NO tiene ningun credito permanente, es decir,
+    // si todo lo que tiene disponible proviene unicamente del welcome bonus gratuito.
+    const hasNonWelcomeCredits = (profile?.permanent_credits ?? 0) > 0;
+    if (profile && profile.subscription_plan === "Free" && !hasNonWelcomeCredits) {
       const { count } = await supabaseAdmin
         .from("works")
         .select("id", { count: "exact", head: true })
@@ -272,7 +280,7 @@ serve(async (req) => {
         await markDraftAsFailed(supabaseAdmin, workId, "free_register_limit");
         return new Response(
           JSON.stringify({
-            error: "Los usuarios gratuitos solo pueden registrar 1 obra. Actualiza tu plan para registrar mas.",
+            error: "Los usuarios gratuitos solo pueden registrar 1 obra con el credito de bienvenida. Actualiza tu plan para registrar mas.",
             code: "FREE_REGISTER_LIMIT",
           }),
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
