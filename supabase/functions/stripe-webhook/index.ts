@@ -639,6 +639,34 @@ serve(async (req) => {
           });
         }
 
+        // -- Idempotency guard (simetrico al #2b de subscription_create) --
+        // Si el evento "Alta suscripcion" (invoice/subscription_create) ya llego
+        // ANTES que este checkout.session.completed y concedio creditos para el
+        // mismo customer en la ultima hora, no volver a conceder aqui.
+        // Cubre el caso de orden de llegada invertido (tapiabismarck464@gmail.com,
+        // 2026-07-09: Alta suscripcion llego 31 min antes que checkout.session.completed).
+        const dupCheckWindow = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+        const _checkoutCustIdForDup = typeof session.customer === "string" ? session.customer : (session.customer as any)?.id || null;
+        if (_checkoutCustIdForDup) {
+          const { data: existingSubCreateOrder } = await supabase
+            .from("orders")
+            .select("id")
+            .eq("stripe_customer_id", _checkoutCustIdForDup)
+            .eq("is_subscription", true)
+            .eq("is_renewal", false)
+            .is("stripe_checkout_session_id", null)
+            .gte("created_at", dupCheckWindow)
+            .maybeSingle();
+
+          if (existingSubCreateOrder) {
+            console.log(`[WEBHOOK] checkout.session.completed: ya se concedieron creditos via subscription_create para customer ${_checkoutCustIdForDup} - skipping duplicate`);
+            return new Response(JSON.stringify({ received: true, duplicate: true }), {
+              headers: { "Content-Type": "application/json" }
+            });
+          }
+        }
+
+
         // Fetch previous plan BEFORE updating (to detect first annual purchase + plan switch)
         const { data: prevProfile } = await supabase
           .from("profiles").select("subscription_plan, available_credits, permanent_credits").eq("user_id", userId).single();
