@@ -720,9 +720,15 @@ async function markDraftAsFailed(
 ) {
   if (!workId) return;
   try {
+    // FIX 2026-07-09: esta funcion se llama tanto ANTES del lock atomico (status='draft')
+    // como DESPUES de el (status='processing', p.ej. insufficient_credits, free_register_limit).
+    // La condicion original .eq("status","draft") no afectaba ninguna fila en el segundo caso,
+    // dejando el work atascado en 'processing' para siempre aunque la funcion ya habia
+    // respondido 402/403 al frontend. Ver incidente 2026-07-09 (usuarios Free con obras
+    // previas registradas: mg@icommunity.io y cuentas relacionadas).
     await supabaseAdmin.from("works")
       .update({ status: "failed", failure_reason: reason, updated_at: new Date().toISOString() })
-      .eq("id", workId).eq("status", "draft");
+      .eq("id", workId).in("status", ["draft", "processing"]);
     console.log(`[markDraftAsFailed] ${workId} -> failed (${reason})`);
   } catch (e) { console.error(`[markDraftAsFailed] exception:`, e); }
 }
