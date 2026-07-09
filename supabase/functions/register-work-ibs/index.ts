@@ -60,6 +60,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const GLOBAL_TIMEOUT_MS = 50_000; // limite absoluto de la funcion completa
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -83,6 +85,23 @@ serve(async (req) => {
     deductedFromPermanent: 0,
   };
 
+  // Timeout global: si CUALQUIER punto del proceso se cuelga silenciosamente
+  // (llamadas del SDK de supabase-js sin AbortSignal, problemas de red no
+  // capturados por los timeouts puntuales, etc.), este limite absoluto
+  // garantiza que el usuario nunca se quede bloqueado en 'processing' para
+  // siempre. Ver incidente 2026-07-09 (Mario testing jueves 1-7).
+  let globalTimedOut = false;
+  const globalTimeoutPromise = new Promise<Response>((resolve) => {
+    setTimeout(() => {
+      globalTimedOut = true;
+      resolve(new Response(
+        JSON.stringify({ error: "global_timeout", workId: ctx.workId, status: "failed" }),
+        { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      ));
+    }, GLOBAL_TIMEOUT_MS);
+  });
+
+  const corePromise = (async (): Promise<Response> => {
   try {
     const IBS_API_KEY = Deno.env.get("IBS_API_KEY");
     if (!IBS_API_KEY) throw new Error("IBS_API_KEY is not configured");
@@ -638,6 +657,35 @@ serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
+  })();
+
+  const result = await Promise.race([corePromise, globalTimeoutPromise]);
+
+  if (globalTimedOut) {
+    console.error(`[IBS-REGISTER] GLOBAL TIMEOUT after ${GLOBAL_TIMEOUT_MS}ms for work ${ctx.workId} — marking failed + refund`);
+    if (ctx.supabaseAdmin && ctx.workId) {
+      try {
+        await ctx.supabaseAdmin.from("works")
+          .update({ status: "failed", failure_reason: "global_timeout", updated_at: new Date().toISOString() })
+          .eq("id", ctx.workId)
+          .in("status", ["processing", "draft"]);
+      } catch (cleanupErr) {
+        console.error("[IBS-REGISTER] global timeout cleanup (works update) failed:", cleanupErr);
+      }
+      if (ctx.deducted && ctx.userId && ctx.creditCost > 0) {
+        try {
+          await handleIbsFailure(
+            ctx.supabaseAdmin, ctx.workId, ctx.userId, ctx.workTitle,
+            "global_timeout", ctx.creditCost, ctx.deductedFromPermanent
+          );
+        } catch (refundErr) {
+          console.error("[IBS-REGISTER] global timeout refund failed:", refundErr);
+        }
+      }
+    }
+  }
+
+  return result;
 });
 
 async function handleIbsFailure(
