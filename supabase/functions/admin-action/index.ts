@@ -426,6 +426,8 @@ serve(async (req) => {
                 .from("kyc_reminder_log")
                 .select("user_id, sent_at")
                 .in("user_id", idsChunk)
+                .order("user_id", { ascending: true })
+                .order("sent_at", { ascending: true })
                 .range(from, from + PAGE - 1);
               if (reminderErr) return json({ error: reminderErr.message }, 500);
               const rows = (reminderChunk || []) as any[];
