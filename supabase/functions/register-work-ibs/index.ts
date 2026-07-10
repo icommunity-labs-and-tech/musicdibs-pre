@@ -675,17 +675,31 @@ serve(async (req) => {
   const result = await Promise.race([corePromise, globalTimeoutPromise]);
 
   if (globalTimedOut) {
-    console.error(`[IBS-REGISTER] GLOBAL TIMEOUT after ${GLOBAL_TIMEOUT_MS}ms for work ${ctx.workId} — marking failed + refund`);
+    console.error(`[IBS-REGISTER] GLOBAL TIMEOUT after ${GLOBAL_TIMEOUT_MS}ms for work ${ctx.workId} — attempting safe cleanup`);
     if (ctx.supabaseAdmin && ctx.workId) {
+      // Guardar contra race: si corePromise ya termino registrando el work
+      // (tiene ibs_evidence_id o salio de processing/draft), NO forzamos
+      // failed ni reembolsamos — el registro fue exitoso en iBS.
+      let shouldRefund = false;
       try {
-        await ctx.supabaseAdmin.from("works")
+        const { data: updatedRows, error: updateErr } = await ctx.supabaseAdmin
+          .from("works")
           .update({ status: "failed", failure_reason: "global_timeout", updated_at: new Date().toISOString() })
           .eq("id", ctx.workId)
-          .in("status", ["processing", "draft"]);
+          .in("status", ["processing", "draft"])
+          .is("ibs_evidence_id", null)
+          .select("id");
+        if (updateErr) {
+          console.error("[IBS-REGISTER] global timeout cleanup (works update) failed:", updateErr);
+        } else if (updatedRows && updatedRows.length > 0) {
+          shouldRefund = true;
+        } else {
+          console.log(`[IBS-REGISTER] global timeout: work ${ctx.workId} already completed by corePromise — skipping refund`);
+        }
       } catch (cleanupErr) {
-        console.error("[IBS-REGISTER] global timeout cleanup (works update) failed:", cleanupErr);
+        console.error("[IBS-REGISTER] global timeout cleanup (works update) exception:", cleanupErr);
       }
-      if (ctx.deducted && ctx.userId && ctx.creditCost > 0) {
+      if (shouldRefund && ctx.deducted && ctx.userId && ctx.creditCost > 0) {
         try {
           await handleIbsFailure(
             ctx.supabaseAdmin, ctx.workId, ctx.userId, ctx.workTitle,
