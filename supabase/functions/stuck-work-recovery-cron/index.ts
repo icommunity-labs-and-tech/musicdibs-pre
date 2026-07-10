@@ -55,6 +55,18 @@ Deno.serve(async (req) => {
     let recovered = 0;
     const errors: string[] = [];
 
+    // Coste real del registro (single source of truth: operation_pricing)
+    let creditCost = 1;
+    try {
+      const { data: pricing } = await supabaseAdmin
+        .from("operation_pricing")
+        .select("credits_cost")
+        .eq("operation_key", "register_work")
+        .eq("is_active", true)
+        .maybeSingle();
+      if (pricing?.credits_cost != null) creditCost = pricing.credits_cost;
+    } catch (_) { /* fallback 1 */ }
+
     for (const work of stuckWorks) {
       try {
         // Verificar que no tenga entrada en ibs_sync_queue (si la tiene, el
@@ -70,8 +82,10 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Marcar como failed y devolver credito
-        const { error: updateErr } = await supabaseAdmin
+        // Marcar como failed SOLO si sigue en processing sin evidencia iBS.
+        // .select() para conocer las filas afectadas: si el registro termino
+        // entre la lectura y el update, matched=0 y NO reembolsamos.
+        const { data: updatedRows, error: updateErr } = await supabaseAdmin
           .from("works")
           .update({
             status: "failed",
@@ -79,35 +93,54 @@ Deno.serve(async (req) => {
             updated_at: new Date().toISOString(),
           })
           .eq("id", work.id)
-          .eq("status", "processing"); // solo si sigue en processing (evita race con ejecucion tardia)
+          .eq("status", "processing")
+          .is("ibs_evidence_id", null)
+          .select("id");
 
         if (updateErr) {
           errors.push(`${work.id}: ${updateErr.message}`);
           continue;
         }
 
-        // Devolver 1 credito (coste estandar de registro)
-        const { data: profile } = await supabaseAdmin
-          .from("profiles")
-          .select("available_credits")
-          .eq("user_id", work.user_id)
-          .single();
-
-        if (profile) {
-          await supabaseAdmin
-            .from("profiles")
-            .update({ available_credits: profile.available_credits + 1, updated_at: new Date().toISOString() })
-            .eq("user_id", work.user_id);
-
-          await supabaseAdmin.from("credit_transactions").insert({
-            user_id: work.user_id,
-            amount: 1,
-            type: "admin_adjustment",
-            description: `Devolucion automatica: registro "${work.title}" atascado en processing >${STUCK_THRESHOLD_MINUTES}min sin avanzar a iBS`,
-          });
+        if (!updatedRows || updatedRows.length === 0) {
+          console.log(`[STUCK-RECOVERY] Work ${work.id} ya no esta en processing (registrado o fallado entre la lectura y el update) — skip refund`);
+          continue;
         }
 
-        console.log(`[STUCK-RECOVERY] Work ${work.id} recuperado - marcado failed, credito devuelto`);
+        // Idempotencia: si ya existe un refund para este work, no duplicar
+        const { data: existingRefund } = await supabaseAdmin
+          .from("credit_transactions")
+          .select("id")
+          .eq("user_id", work.user_id)
+          .in("type", ["refund", "admin_adjustment"])
+          .ilike("description", `%${work.id}%`)
+          .maybeSingle();
+
+        if (existingRefund) {
+          console.log(`[STUCK-RECOVERY] Refund already exists for ${work.id}, skipping`);
+          recovered++;
+          continue;
+        }
+
+        // Devolver credito usando refund_credits_ordered (misma RPC que la
+        // ruta normal de fallo iBS). Como no sabemos que porcion vino del
+        // bucket permanente (deduct_credits_ordered no persiste el split),
+        // asumimos p_from_permanent=creditCost para NO degradar creditos
+        // permanentes a expirables (favorece al usuario en el edge case).
+        const { error: refundErr } = await supabaseAdmin.rpc("refund_credits_ordered", {
+          p_user_id: work.user_id,
+          p_amount: creditCost,
+          p_from_permanent: creditCost,
+          p_reason: `Reembolso automatico [${work.id}]: "${work.title}" atascado en processing >${STUCK_THRESHOLD_MINUTES}min sin avanzar a iBS`,
+        });
+
+        if (refundErr) {
+          errors.push(`${work.id}: refund_rpc: ${refundErr.message}`);
+          console.error(`[STUCK-RECOVERY] refund RPC failed for ${work.id}:`, refundErr.message);
+          continue;
+        }
+
+        console.log(`[STUCK-RECOVERY] Work ${work.id} recuperado - marcado failed, ${creditCost} credito(s) devuelto(s)`);
         recovered++;
       } catch (workErr) {
         errors.push(`${work.id}: ${workErr}`);
