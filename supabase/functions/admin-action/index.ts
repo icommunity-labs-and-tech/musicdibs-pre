@@ -418,7 +418,7 @@ serve(async (req) => {
 
         const remStats: Record<string, { count: number; last: number | null }> = {};
         if (isReminderSort || isEligibleReminderFilter) {
-          const ID_CHUNK_SIZE = 500;
+          const ID_CHUNK_SIZE = 100;
           for (let i = 0; i < allIds.length; i += ID_CHUNK_SIZE) {
             const idsChunk = allIds.slice(i, i + ID_CHUNK_SIZE);
             for (let from = 0; ; from += PAGE) {
