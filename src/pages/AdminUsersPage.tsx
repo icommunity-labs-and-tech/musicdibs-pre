@@ -183,7 +183,10 @@ export default function AdminUsersPage() {
         sort_by: sortBy,
         sort_dir: sortDir,
       });
-      setUsers(res.users || []);
+      const loadedUsers = reminderFilter === 'eligible'
+        ? (res.users || []).filter((u: any) => (u.kyc_reminders_count ?? 0) < 3)
+        : (res.users || []);
+      setUsers(loadedUsers);
       setTotal(res.total || 0);
     } catch (e: any) {
       toast.error(e.message);
