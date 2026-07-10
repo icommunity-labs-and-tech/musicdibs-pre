@@ -350,6 +350,11 @@ serve(async (req) => {
   const logs: any[] = [];
 
   for (const u of eligible as any[]) {
+    if (!u.email || !isValidEmail(u.email)) {
+      console.warn(`[KYC-REMINDER] Skipping user ${u.user_id} — invalid email: ${u.email}`);
+      totalFailed++;
+      continue;
+    }
     const locale = normalizeLocale(u.language);
     const reminderNumber = (u.reminder_count || 0) + 1;
     const name = u.full_name || (u.email ? u.email.split("@")[0] : "");
