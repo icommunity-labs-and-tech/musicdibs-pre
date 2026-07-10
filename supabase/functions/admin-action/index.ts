@@ -382,54 +382,23 @@ serve(async (req) => {
       if (creditsFilter === "no_permanent")
         query = query.or("permanent_credits.is.null,permanent_credits.eq.0");
 
-      // Recordatorio KYC elegible: KYC no verificado Y < 3 avisos enviados Y (sin recordatorio O último envío hace ≥5 días)
-      // El exclude set puede tener miles de UUIDs → no se puede meter en la URL como not.in.
-      // Resolvemos el filtrado en memoria.
-      let eligibleExcludeSet: Set<string> | null = null;
-      if (reminderFilter === "eligible") {
+      // Recordatorio KYC elegible: KYC no verificado Y < 3 avisos enviados Y (sin recordatorio O último envío hace ≥5 días).
+      // Se calcula sobre los candidatos ya filtrados para no depender de una lectura global de kyc_reminder_log.
+      const isEligibleReminderFilter = reminderFilter === "eligible";
+      const MAX_KYC_REMINDERS = 3;
+      const KYC_REMINDER_COOLDOWN_DAYS = 5;
+      const eligibleReminderCutoffMs = Date.now() - KYC_REMINDER_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+      if (isEligibleReminderFilter) {
         query = query.neq("kyc_status", "verified");
-        const cutoff = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
-        const recentIds = new Set<string>();
-        const PAGE = 1000;
-        for (let from = 0; ; from += PAGE) {
-          const { data: chunk, error: chunkErr } = await admin
-            .from("kyc_reminder_log")
-            .select("user_id")
-            .gte("sent_at", cutoff)
-            .range(from, from + PAGE - 1);
-          if (chunkErr) break;
-          (chunk || []).forEach((r: any) => r.user_id && recentIds.add(r.user_id));
-          if (!chunk || chunk.length < PAGE) break;
-        }
-        // También excluir usuarios que ya tienen >=3 recordatorios enviados (contando filas)
-        const reminderCounts: Record<string, number> = {};
-        for (let from = 0; ; from += PAGE) {
-          const { data: chunk, error: chunkErr } = await admin
-            .from("kyc_reminder_log")
-            .select("user_id")
-            .order("user_id", { ascending: true })
-            .range(from, from + PAGE - 1);
-          if (chunkErr) break;
-          (chunk || []).forEach((r: any) => {
-            if (!r.user_id) return;
-            reminderCounts[r.user_id] = (reminderCounts[r.user_id] || 0) + 1;
-          });
-          if (!chunk || chunk.length < PAGE) break;
-        }
-        for (const [uid, count] of Object.entries(reminderCounts)) {
-          if (count >= 3) recentIds.add(uid);
-        }
-
-        eligibleExcludeSet = recentIds;
       }
 
       let profiles: any[] = [];
       let profilesCount = 0;
       let error: any = null;
 
-      if (isReminderSort || eligibleExcludeSet) {
+      if (isReminderSort || isEligibleReminderFilter) {
         // Fetch all matching profile ids (capped), filter excludes in memory, sort, paginate, refetch.
-        const allIds: string[] = [];
+        let allIds: string[] = [];
         const PAGE = 1000;
         for (let from = 0; from < 50000; from += PAGE) {
           const { data: idChunk, error: idErr } = await query
@@ -441,25 +410,46 @@ serve(async (req) => {
           }
           const rows = (idChunk || []) as any[];
           for (const r of rows) {
-            if (eligibleExcludeSet && eligibleExcludeSet.has(r.user_id)) continue;
             allIds.push(r.user_id);
           }
           if (rows.length < PAGE) break;
         }
         if (allIds.length === 0) return json({ users: [], total: 0 });
 
-        if (isReminderSort) {
-          const { data: allReminders } = await admin
-            .from("kyc_reminder_log")
-            .select("user_id, sent_at")
-            .in("user_id", allIds);
-          const remStats: Record<string, { count: number; last: number | null }> = {};
-          (allReminders || []).forEach((r: any) => {
-            const s = (remStats[r.user_id] ||= { count: 0, last: null });
-            s.count++;
-            const t = r.sent_at ? new Date(r.sent_at).getTime() : null;
-            if (t !== null && (s.last === null || t > s.last)) s.last = t;
+        const remStats: Record<string, { count: number; last: number | null }> = {};
+        if (isReminderSort || isEligibleReminderFilter) {
+          const ID_CHUNK_SIZE = 500;
+          for (let i = 0; i < allIds.length; i += ID_CHUNK_SIZE) {
+            const idsChunk = allIds.slice(i, i + ID_CHUNK_SIZE);
+            for (let from = 0; ; from += PAGE) {
+              const { data: reminderChunk, error: reminderErr } = await admin
+                .from("kyc_reminder_log")
+                .select("user_id, sent_at")
+                .in("user_id", idsChunk)
+                .range(from, from + PAGE - 1);
+              if (reminderErr) return json({ error: reminderErr.message }, 500);
+              const rows = (reminderChunk || []) as any[];
+              rows.forEach((r: any) => {
+                if (!r.user_id) return;
+                const s = (remStats[r.user_id] ||= { count: 0, last: null });
+                s.count++;
+                const t = r.sent_at ? new Date(r.sent_at).getTime() : null;
+                if (t !== null && (s.last === null || t > s.last)) s.last = t;
+              });
+              if (rows.length < PAGE) break;
+            }
+          }
+        }
+
+        if (isEligibleReminderFilter) {
+          allIds = allIds.filter((id) => {
+            const stats = remStats[id] || { count: 0, last: null };
+            return stats.count < MAX_KYC_REMINDERS && (stats.last === null || stats.last <= eligibleReminderCutoffMs);
           });
+          if (allIds.length === 0) return json({ users: [], total: 0 });
+        }
+
+        if (isReminderSort) {
           const sortable = allIds.map((id) => ({
             id,
             count: remStats[id]?.count || 0,
