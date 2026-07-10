@@ -60,7 +60,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GLOBAL_TIMEOUT_MS = 50_000; // limite absoluto de la funcion completa
+// Limite absoluto de la funcion completa. Debe ser >= suma realista de los
+// timeouts internos (GCS 55s + iBS 45s * varios pasos + reintentos de PASO 3
+// hasta 3 * 45s). Con 50s se cortaba a mitad de la subida de archivos >15MB,
+// dejando el work en estado inconsistente (failed en app pero registrado en
+// iBS). Usamos 300s (Edge Functions permiten hasta ~400s).
+const GLOBAL_TIMEOUT_MS = 300_000;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
