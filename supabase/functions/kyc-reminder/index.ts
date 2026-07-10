@@ -41,6 +41,19 @@ function asNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+// Valida formato de email compatible con Resend (rechaza puntos consecutivos,
+// espacios, y otros patrones que devuelven 422 validation_error).
+function isValidEmail(email: string): boolean {
+  if (!email || typeof email !== "string") return false;
+  const trimmed = email.trim();
+  if (trimmed.length > 254) return false;
+  // Rechazar puntos consecutivos, punto al inicio/fin del local part, espacios
+  if (/\.\./.test(trimmed)) return false;
+  if (/\s/.test(trimmed)) return false;
+  const re = /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
+  return re.test(trimmed);
+}
+
 function getBodyTargets(body: Record<string, unknown>): ReminderTarget[] | null {
   if (!Array.isArray(body.users)) return null;
   return body.users
@@ -133,6 +146,10 @@ async function sendManualReminder(
   if (resolved.skipReason) return { ok: false, reason: resolved.skipReason, user_id: target.user_id };
   if (resolved.kyc_status === "verified") return { ok: false, reason: "User already verified", user_id: target.user_id };
   if (!resolved.email) return { ok: false, reason: "No email on auth user", user_id: target.user_id };
+  if (!isValidEmail(resolved.email)) {
+    console.warn(`[KYC-REMINDER] Skipping invalid email format: ${resolved.email} (user ${target.user_id})`);
+    return { ok: false, reason: "Invalid email format", user_id: target.user_id };
+  }
 
   const { lastSentAt, count } = await getReminderStats(supabaseAdmin, resolved);
   if (lastSentAt) {
@@ -333,6 +350,11 @@ serve(async (req) => {
   const logs: any[] = [];
 
   for (const u of eligible as any[]) {
+    if (!u.email || !isValidEmail(u.email)) {
+      console.warn(`[KYC-REMINDER] Skipping user ${u.user_id} — invalid email: ${u.email}`);
+      totalFailed++;
+      continue;
+    }
     const locale = normalizeLocale(u.language);
     const reminderNumber = (u.reminder_count || 0) + 1;
     const name = u.full_name || (u.email ? u.email.split("@")[0] : "");
