@@ -401,17 +401,25 @@ serve(async (req) => {
           (chunk || []).forEach((r: any) => r.user_id && recentIds.add(r.user_id));
           if (!chunk || chunk.length < PAGE) break;
         }
-        // También excluir usuarios que ya tienen 3 recordatorios enviados
+        // También excluir usuarios que ya tienen >=3 recordatorios enviados (contando filas)
+        const reminderCounts: Record<string, number> = {};
         for (let from = 0; ; from += PAGE) {
           const { data: chunk, error: chunkErr } = await admin
             .from("kyc_reminder_log")
             .select("user_id")
-            .gte("reminder_number", 3)
+            .order("user_id", { ascending: true })
             .range(from, from + PAGE - 1);
           if (chunkErr) break;
-          (chunk || []).forEach((r: any) => r.user_id && recentIds.add(r.user_id));
+          (chunk || []).forEach((r: any) => {
+            if (!r.user_id) return;
+            reminderCounts[r.user_id] = (reminderCounts[r.user_id] || 0) + 1;
+          });
           if (!chunk || chunk.length < PAGE) break;
         }
+        for (const [uid, count] of Object.entries(reminderCounts)) {
+          if (count >= 3) recentIds.add(uid);
+        }
+
         eligibleExcludeSet = recentIds;
       }
 
