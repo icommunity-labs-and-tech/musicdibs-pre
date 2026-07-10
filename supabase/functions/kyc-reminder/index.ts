@@ -133,6 +133,10 @@ async function sendManualReminder(
   if (resolved.skipReason) return { ok: false, reason: resolved.skipReason, user_id: target.user_id };
   if (resolved.kyc_status === "verified") return { ok: false, reason: "User already verified", user_id: target.user_id };
   if (!resolved.email) return { ok: false, reason: "No email on auth user", user_id: target.user_id };
+  if (!isValidEmail(resolved.email)) {
+    console.warn(`[KYC-REMINDER] Skipping invalid email format: ${resolved.email} (user ${target.user_id})`);
+    return { ok: false, reason: "Invalid email format", user_id: target.user_id };
+  }
 
   const { lastSentAt, count } = await getReminderStats(supabaseAdmin, resolved);
   if (lastSentAt) {
