@@ -39,3 +39,6 @@ verify_jwt = false
 [functions.admin-action]
 verify_jwt = false
 
+[functions.track-usage]
+verify_jwt = false
+
