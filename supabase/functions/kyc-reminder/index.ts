@@ -41,6 +41,19 @@ function asNumber(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+// Valida formato de email compatible con Resend (rechaza puntos consecutivos,
+// espacios, y otros patrones que devuelven 422 validation_error).
+function isValidEmail(email: string): boolean {
+  if (!email || typeof email !== "string") return false;
+  const trimmed = email.trim();
+  if (trimmed.length > 254) return false;
+  // Rechazar puntos consecutivos, punto al inicio/fin del local part, espacios
+  if (/\.\./.test(trimmed)) return false;
+  if (/\s/.test(trimmed)) return false;
+  const re = /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$/;
+  return re.test(trimmed);
+}
+
 function getBodyTargets(body: Record<string, unknown>): ReminderTarget[] | null {
   if (!Array.isArray(body.users)) return null;
   return body.users
