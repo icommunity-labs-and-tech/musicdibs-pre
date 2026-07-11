@@ -152,6 +152,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         errorGeneric: 'Error al registrar la obra',
         throttle: 'Tienes un registro en curso ("{{title}}"). Espera a que finalice antes de registrar otra obra.',
         uploadFailed: 'No se pudo subir el archivo correctamente. Comprueba tu conexión a internet e inténtalo de nuevo.',
+        freeRegisterLimitCta: 'Ver planes y precios',
       },
       // Step labels for stepper
       steps: {
