@@ -162,6 +162,7 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
   blockchainHash?: string;
   ibsError?: string;
   evidenceId?: string;
+  code?: string;
 }> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
@@ -344,6 +345,31 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
 
   if (ibsError) {
     console.error('[registerWork] IBS call error:', ibsError);
+
+    // Detect the specific Free plan registration limit returned by the edge function
+    const status = (ibsError as any)?.status ?? (ibsError as any)?.context?.status;
+    if (status === 403) {
+      try {
+        const ctx = (ibsError as any).context;
+        if (ctx && typeof ctx.json === 'function') {
+          const body = await ctx.clone().json();
+          if (body?.code === 'FREE_REGISTER_LIMIT') {
+            await supabase
+              .from('works')
+              .update({ status: 'failed', failure_reason: 'free_register_limit' })
+              .eq('id', work.id)
+              .eq('user_id', user.id);
+            return {
+              registrationId: work.id,
+              status: 'failed',
+              ibsError: body.error,
+              code: 'FREE_REGISTER_LIMIT',
+            };
+          }
+        }
+      } catch { /* fall through to generic handling */ }
+    }
+
     // Mark draft as failed so it doesn't get stuck forever in 'draft'
     await supabase
       .from('works')

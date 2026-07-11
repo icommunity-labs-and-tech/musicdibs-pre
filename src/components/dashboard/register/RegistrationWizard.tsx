@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
-import { ShieldAlert, Shield, Loader2 } from 'lucide-react';
+import { ShieldAlert, Shield, Loader2, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -249,7 +249,24 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
       });
 
       if (res.ibsError || res.status === 'failed') {
-        toast.error(res.ibsError || t('wizard.rw.errorRegister'));
+        if (res.code === 'FREE_REGISTER_LIMIT') {
+          toast.error(
+            <div className="space-y-3 min-w-[260px]">
+              <p className="text-sm font-medium">{res.ibsError}</p>
+              <Button
+                size="sm"
+                className="w-full gap-1.5"
+                onClick={() => navigate('/dashboard/credits')}
+              >
+                {t('wizard.rw.freeRegisterLimitCta')}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>,
+            { duration: 20_000 }
+          );
+        } else {
+          toast.error(res.ibsError || t('wizard.rw.errorRegister'));
+        }
         setLoading(false);
         return;
       }
