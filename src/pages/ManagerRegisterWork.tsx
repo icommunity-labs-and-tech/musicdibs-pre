@@ -15,6 +15,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AlertTriangle, Upload, Search, Link2, X, FileUp, Plus } from 'lucide-react';
 import { SignatureSelector } from '@/components/dashboard/register/SignatureSelector';
+import { buildWorksFilePath, assertWorksPathBelongsToUser } from '@/lib/worksStoragePath';
 
 const WORK_TYPES = [
   { value: 'audio', label: 'Canción' },
