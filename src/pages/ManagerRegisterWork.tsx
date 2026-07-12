@@ -161,12 +161,10 @@ export default function ManagerRegisterWork() {
       // Upload all files
       const filePaths: string[] = [];
       for (const f of files) {
-        const ext = f.name.split('.').pop();
-        const safeName = f.name
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/[^a-zA-Z0-9._-]/g, '_');
-        const path = `${user.id}/${Date.now()}_${safeName}`;
+        // Central helper: guarantees `${user.id}/...` prefix and consistent
+        // filename sanitization. Never construct works-files paths inline.
+        const path = buildWorksFilePath(user.id, f.name);
+        assertWorksPathBelongsToUser(path, user.id);
         const { error: uploadErr } = await supabase.storage.from('works-files').upload(path, f);
         if (uploadErr) { toast.error('Error subiendo archivo: ' + uploadErr.message); setSubmitting(false); return; }
         filePaths.push(path);
