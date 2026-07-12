@@ -167,6 +167,23 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
+  // Refresh session BEFORE uploads. Long/multi-file uploads (100MB, multiple
+  // files) can outlive the access-token TTL; if autoRefreshToken swaps the
+  // token mid-upload, in-flight requests may reach Postgres with a stale JWT
+  // and auth.uid() resolves to NULL → RLS on storage.objects rejects the
+  // upload as "new row violates row-level security policy". Refreshing here
+  // buys ~1h of guaranteed valid token for the whole upload sequence.
+  try {
+    const { data: { session: freshBeforeUpload }, error: refreshBefErr } = await supabase.auth.refreshSession();
+    if (refreshBefErr || !freshBeforeUpload) {
+      console.warn('[registerWork] pre-upload session refresh failed (continuing with existing session):', refreshBefErr);
+    } else {
+      console.log('[registerWork] pre-upload session refresh OK, uid:', freshBeforeUpload.user?.id);
+    }
+  } catch (err) {
+    console.warn('[registerWork] pre-upload session refresh threw (continuing):', err);
+  }
+
   // Credit validation — actual deduction happens inside register-work-ibs edge function
   const { data: spendResult, error: spendError } = await supabase.functions.invoke('spend-credits', {
     body: { feature: 'register_work', description: `Registro: ${data.title}` },
