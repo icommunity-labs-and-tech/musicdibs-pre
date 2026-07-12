@@ -252,11 +252,10 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
 
   const filePaths: string[] = [];
   for (const f of allFiles) {
-    const safeName = f.name
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-zA-Z0-9._-]/g, '_');
-    const filePath = `${user.id}/${Date.now()}_${safeName}`;
+    // Central helper: guarantees `${user.id}/...` prefix and consistent
+    // filename sanitization. Never construct works-files paths inline.
+    const filePath = buildWorksFilePath(user.id, f.name);
+    assertWorksPathBelongsToUser(filePath, user.id);
     await uploadWithRetry(filePath, f);
     filePaths.push(filePath);
   }
