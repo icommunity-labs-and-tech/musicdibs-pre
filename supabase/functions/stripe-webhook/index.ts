@@ -39,6 +39,7 @@ function planToMailerLiteType(plan: string | undefined): string {
 }
 
 const PRICE_CREDITS: Record<string, number> = {
+  "price_1Tp90nFULeu7PzK67hoGodWv": 20,
   "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": 120,
   "price_1THT7cF9ZCIiqrz6sWS67Q4V": 100,
   "price_1THT7gF9ZCIiqrz6Acb2CkDC": 200,
