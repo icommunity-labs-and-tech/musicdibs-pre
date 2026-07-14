@@ -58,12 +58,13 @@
     }
     </script>
 
-    <!-- Google Analytics (GA4) - deferred to after page load -->
+    <!-- Google Analytics (GA4) + Google Ads conversion tag - deferred to after page load -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-518359138');
+      gtag('config', 'AW-18310773693');
       window.addEventListener('load', function() {
         var loadAnalytics = function() {
           var s = document.createElement('script');
