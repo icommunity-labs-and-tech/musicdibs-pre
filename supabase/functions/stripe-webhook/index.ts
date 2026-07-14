@@ -1327,18 +1327,70 @@ serve(async (req) => {
             }
           }
 
-          // Resolve price from subscription (more reliable than invoice line items)
+          // Resolve price from subscription (more reliable than invoice line items).
+          // Retrieve the full subscription object ONCE and reuse it below for the
+          // subscriptions-table sync, instead of adding a second sequential Stripe
+          // call to an already call-heavy branch (timeout risk, see incident notes).
           let actualPriceId = priceId;
+          let fullSubscription: any = null;
           if (subscriptionId) {
-            const subPriceId = await getSubscriptionPriceId(stripe, subscriptionId);
-            if (subPriceId) {
-              actualPriceId = subPriceId;
-              console.log(`[WEBHOOK] subscription_create: resolved price ${actualPriceId} from subscription ${subscriptionId}`);
+            try {
+              fullSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+              const subPriceId = fullSubscription.items?.data?.[0]?.price?.id;
+              if (subPriceId) {
+                actualPriceId = subPriceId;
+                console.log(`[WEBHOOK] subscription_create: resolved price ${actualPriceId} from subscription ${subscriptionId}`);
+              }
+            } catch (e) {
+              console.warn("[WEBHOOK] subscription_create: failed to retrieve subscription:", e);
             }
           }
 
           const resolvedPlanId = actualPriceId ? (PRICE_TO_PLAN_ID[actualPriceId] || null) : null;
           const planName = resolvedPlanId ? (PLAN_ID_TO_PLAN_NAME[resolvedPlanId] || null) : null;
+
+          // ── Sincronizar tabla subscriptions local ──────────────────────────
+          // FIX 2026-07-14: esta rama (alta directa vía invoice.payment_succeeded,
+          // billing_reason=subscription_create, SIN Checkout Session) es la única
+          // de las cuatro rutas de alta/cambio de suscripción que NUNCA escribía en
+          // `subscriptions` — checkout.session.completed, customer.subscription.updated
+          // y customer.subscription.deleted sí lo hacen. Resultado: perfiles con plan
+          // activo y créditos concedidos pero sin fila en `subscriptions`, detectados
+          // por detect_active_plan_without_subscription. Se corre ANTES de conceder
+          // créditos (igual que en checkout.session.completed) para que quede
+          // persistida incluso si algo falla más adelante en la rama.
+          if (subscriptionId) {
+            const subItem = fullSubscription?.items?.data?.[0] as any;
+            const periodStartRaw = subItem?.current_period_start ?? fullSubscription?.current_period_start;
+            const periodEndRaw = subItem?.current_period_end ?? fullSubscription?.current_period_end;
+            const { error: subSyncError } = await supabase.from("subscriptions").upsert({
+              user_id: profile.user_id,
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscriptionId,
+              plan: planName || "Annual",
+              status: fullSubscription?.status ? mapStripeStatus(fullSubscription.status) : "active",
+              current_period_start: periodStartRaw ? new Date(periodStartRaw * 1000).toISOString() : null,
+              current_period_end: periodEndRaw ? new Date(periodEndRaw * 1000).toISOString() : null,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "user_id" });
+            if (subSyncError) {
+              console.error(`[WEBHOOK] subscription_create: FAILED to upsert subscriptions for user ${profile.user_id}:`, subSyncError.message);
+              await supabase.from("admin_alerts").insert({
+                source: "stripe-webhook:subscription_create",
+                severity: "warning",
+                message: `No se pudo sincronizar subscriptions para user ${profile.user_id} sub=${subscriptionId}: ${subSyncError.message}`,
+              });
+            } else {
+              console.log(`[WEBHOOK] subscription_create: upserted subscriptions sub=${subscriptionId} user=${profile.user_id}`);
+            }
+          } else {
+            console.warn(`[WEBHOOK] subscription_create: no subscriptionId resolved — subscriptions table NOT synced for customer ${customerId}`);
+            await supabase.from("admin_alerts").insert({
+              source: "stripe-webhook:subscription_create",
+              severity: "warning",
+              message: `subscription_create sin subscriptionId resuelto para customer ${customerId} (invoice ${invoiceId ?? "n/a"}) — revisar manualmente, subscriptions no sincronizada.`,
+            });
+          }
 
           // Update plan/tier in profile
           if (planName && resolvedPlanId) {
