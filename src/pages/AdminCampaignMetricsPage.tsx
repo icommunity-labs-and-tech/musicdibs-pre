@@ -741,15 +741,13 @@ export default function AdminCampaignMetricsPage() {
             cecidover: 'Ceci Dover',
           };
 
-          // Conteo de referral por influencer normalizado
+          // Conteo de referral por influencer normalizado — HISTÓRICO COMPLETO
           const referralByInfluencer: Record<string, number> = {};
-          referralRows
-            .filter(r => r.referral_source === 'influencer')
-            .forEach(r => {
-              const k = normalizeInfluencer(r.referral_influencer);
-              if (!k) return;
-              referralByInfluencer[k] = (referralByInfluencer[k] || 0) + 1;
-            });
+          Object.entries(historicReferralByInfluencer).forEach(([raw, count]) => {
+            const k = normalizeInfluencer(raw);
+            if (!k) return;
+            referralByInfluencer[k] = (referralByInfluencer[k] || 0) + count;
+          });
 
           const influencerCoupons = coupons.filter(c => c.type === 'influencer');
           const seenKeys = new Set<string>();
@@ -758,7 +756,8 @@ export default function AdminCampaignMetricsPage() {
             const key = normalizeInfluencer(c.owner);
             seenKeys.add(key);
             const refCount = referralByInfluencer[key] || 0;
-            const couponReg = couponRegByCode[canonicalCouponCode(c.coupon_code)] || 0;
+            // Registros por cupón: histórico completo
+            const couponReg = historicCouponRegByCode[canonicalCouponCode(c.coupon_code)] || 0;
             // Total combinado = suma directa de referral + cupón
             const total = refCount + couponReg;
             return {
@@ -796,11 +795,12 @@ export default function AdminCampaignMetricsPage() {
             <Card className="border-border/40">
               <CardHeader>
                 <CardTitle className="text-base">🎥 Influencers (cupones + referral unificado)</CardTitle>
-                <CardDescription>Fusión de datos de cupones y modal de bienvenida · {getPeriodLabel(periodType, weekStart, selectedMonth, selectedYear)}</CardDescription>
+                <CardDescription>Fusión de datos de cupones y modal de bienvenida · histórico completo (todos los periodos)</CardDescription>
               </CardHeader>
               <CardContent className="overflow-x-auto">
-                {loadingCoupons || loadingReferral ? (
+                {loadingCoupons || loadingHistoric ? (
                   <div className="flex items-center justify-center py-8 text-muted-foreground">
+
                     <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
                   </div>
                 ) : unifiedRows.length === 0 ? (
