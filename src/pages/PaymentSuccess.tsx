@@ -1,15 +1,24 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const ranRef = useRef(false);
 
   useEffect(() => {
     if (ranRef.current) return;
     ranRef.current = true;
+
+    const sessionId = searchParams.get('session_id');
+    // Propagamos payment=success&session_id a /dashboard/credits para que
+    // dispare el mismo tracking de conversion de compra que usan los usuarios
+    // logueados (ver trackPurchaseConversion en googleAdsConversions.ts).
+    const dashboardDestination = sessionId
+      ? `/dashboard/credits?welcome=true&payment=success&session_id=${encodeURIComponent(sessionId)}`
+      : '/dashboard/credits?welcome=true';
 
     (async () => {
       const email = sessionStorage.getItem('guest_checkout_email');
@@ -20,7 +29,7 @@ export default function PaymentSuccess() {
       if (sessionData?.session) {
         sessionStorage.removeItem('guest_checkout_email');
         sessionStorage.removeItem('guest_checkout_password');
-        navigate('/dashboard/credits?welcome=true', { replace: true });
+        navigate(dashboardDestination, { replace: true });
         return;
       }
 
@@ -29,7 +38,7 @@ export default function PaymentSuccess() {
         if (!error) {
           sessionStorage.removeItem('guest_checkout_email');
           sessionStorage.removeItem('guest_checkout_password');
-          navigate('/dashboard/credits?welcome=true', { replace: true });
+          navigate(dashboardDestination, { replace: true });
           return;
         }
         console.error('[PaymentSuccess] auto-login failed:', error.message);
@@ -38,7 +47,7 @@ export default function PaymentSuccess() {
       // Fallback: ir al login con mensaje de éxito de pago
       navigate('/login?payment_success=true', { replace: true });
     })();
-  }, [navigate]);
+  }, [navigate, searchParams]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background px-4">

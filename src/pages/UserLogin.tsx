@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Loader2, AlertCircle, CheckCircle2, Eye, EyeOff, Check, X, Wand2 } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import { trackSignupConversion } from '@/lib/googleAdsConversions';
 
 export default function UserLogin() {
   const { t, i18n } = useTranslation();
@@ -157,7 +158,7 @@ export default function UserLogin() {
     const signUpLang = i18n.resolvedLanguage || 'es';
     const { error } = await signUp(form.get('email') as string, form.get('password') as string, { language: signUpLang });
     setLoading(false);
-    if (error) setError(error.message); else setSuccess(t('userLogin.checkEmailConfirm'));
+    if (error) { setError(error.message); } else { setSuccess(t('userLogin.checkEmailConfirm')); trackSignupConversion(); }
   };
 
   const GoogleIcon = () => (
