@@ -109,6 +109,11 @@ export default function AdminCampaignMetricsPage() {
   const [couponRegByCode, setCouponRegByCode] = useState<Record<string, number>>({});
   const [loadingReferral, setLoadingReferral] = useState(true);
 
+  // Histórico completo (sin filtro de periodo) para la tabla unificada de influencers
+  const [historicReferralByInfluencer, setHistoricReferralByInfluencer] = useState<Record<string, number>>({});
+  const [historicCouponRegByCode, setHistoricCouponRegByCode] = useState<Record<string, number>>({});
+  const [loadingHistoric, setLoadingHistoric] = useState(true);
+
   const [referralProgramStats, setReferralProgramStats] = useState<{ total: number; active: number; revoked: number; creditsGranted: number; creditsRevoked: number; creditsNet: number; revocationRate: number }>({ total: 0, active: 0, revoked: 0, creditsGranted: 0, creditsRevoked: 0, creditsNet: 0, revocationRate: 0 });
   const [topReferrers, setTopReferrers] = useState<Array<{ referrer_id: string; display_name: string; code: string | null; subscription_tier: string | null; invitedActive: number; invitedRevoked: number; creditsEarned: number; creditsRevoked: number }>>([]);
   const [loadingReferralProgram, setLoadingReferralProgram] = useState(true);
@@ -211,6 +216,65 @@ export default function AdminCampaignMetricsPage() {
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
   useEffect(() => { loadReferral(); }, [loadReferral]);
+
+  // Carga histórica completa (sin filtro de periodo) para la tabla unificada de Influencers
+  const loadHistoricInfluencers = useCallback(async () => {
+    setLoadingHistoric(true);
+    try {
+      const PAGE = 1000;
+
+      // Referral histórico (todos los profiles con referral_source=influencer)
+      const refByInfluencer: Record<string, { user_id: string; ref: string | null }[]> = {};
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id, referral_influencer')
+          .eq('referral_source', 'influencer')
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const rows = (data || []) as any[];
+        rows.forEach(r => {
+          const k = (r.referral_influencer || '').toString();
+          if (!refByInfluencer[k]) refByInfluencer[k] = [];
+          refByInfluencer[k].push({ user_id: r.user_id, ref: r.referral_influencer });
+        });
+        if (rows.length < PAGE) break;
+        from += PAGE;
+      }
+      // Reducimos a conteos por clave cruda; la normalización se hace en la tabla
+      const rawCounts: Record<string, number> = {};
+      Object.entries(refByInfluencer).forEach(([k, arr]) => { rawCounts[k] = arr.length; });
+      setHistoricReferralByInfluencer(rawCounts);
+
+      // Órdenes históricas con cupón (promotion_code o coupon_code)
+      const byCode: Record<string, number> = {};
+      from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('promotion_code, coupon_code')
+          .or('promotion_code.not.is.null,coupon_code.not.is.null')
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const rows = (data || []) as any[];
+        rows.forEach((o: any) => {
+          const code = canonicalCouponCode(o.promotion_code || o.coupon_code);
+          if (!code) return;
+          byCode[code] = (byCode[code] || 0) + 1;
+        });
+        if (rows.length < PAGE) break;
+        from += PAGE;
+      }
+      setHistoricCouponRegByCode(byCode);
+    } catch (e: any) {
+      toast.error('Error cargando histórico de influencers');
+    }
+    setLoadingHistoric(false);
+  }, []);
+
+  useEffect(() => { loadHistoricInfluencers(); }, [loadHistoricInfluencers]);
+
 
   const loadReferralProgram = useCallback(async () => {
     setLoadingReferralProgram(true);
@@ -677,15 +741,13 @@ export default function AdminCampaignMetricsPage() {
             cecidover: 'Ceci Dover',
           };
 
-          // Conteo de referral por influencer normalizado
+          // Conteo de referral por influencer normalizado — HISTÓRICO COMPLETO
           const referralByInfluencer: Record<string, number> = {};
-          referralRows
-            .filter(r => r.referral_source === 'influencer')
-            .forEach(r => {
-              const k = normalizeInfluencer(r.referral_influencer);
-              if (!k) return;
-              referralByInfluencer[k] = (referralByInfluencer[k] || 0) + 1;
-            });
+          Object.entries(historicReferralByInfluencer).forEach(([raw, count]) => {
+            const k = normalizeInfluencer(raw);
+            if (!k) return;
+            referralByInfluencer[k] = (referralByInfluencer[k] || 0) + count;
+          });
 
           const influencerCoupons = coupons.filter(c => c.type === 'influencer');
           const seenKeys = new Set<string>();
@@ -694,7 +756,8 @@ export default function AdminCampaignMetricsPage() {
             const key = normalizeInfluencer(c.owner);
             seenKeys.add(key);
             const refCount = referralByInfluencer[key] || 0;
-            const couponReg = couponRegByCode[canonicalCouponCode(c.coupon_code)] || 0;
+            // Registros por cupón: histórico completo
+            const couponReg = historicCouponRegByCode[canonicalCouponCode(c.coupon_code)] || 0;
             // Total combinado = suma directa de referral + cupón
             const total = refCount + couponReg;
             return {
@@ -732,11 +795,12 @@ export default function AdminCampaignMetricsPage() {
             <Card className="border-border/40">
               <CardHeader>
                 <CardTitle className="text-base">🎥 Influencers (cupones + referral unificado)</CardTitle>
-                <CardDescription>Fusión de datos de cupones y modal de bienvenida · {getPeriodLabel(periodType, weekStart, selectedMonth, selectedYear)}</CardDescription>
+                <CardDescription>Fusión de datos de cupones y modal de bienvenida · histórico completo (todos los periodos)</CardDescription>
               </CardHeader>
               <CardContent className="overflow-x-auto">
-                {loadingCoupons || loadingReferral ? (
+                {loadingCoupons || loadingHistoric ? (
                   <div className="flex items-center justify-center py-8 text-muted-foreground">
+
                     <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
                   </div>
                 ) : unifiedRows.length === 0 ? (
