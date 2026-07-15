@@ -588,14 +588,25 @@ serve(async (req) => {
       }
 
       //  Fallback B: recover credits/planId when missing from metadata 
-      if (credits === 0 && session.mode === "payment") {
+      // FIX 2026-07-15: originally gated to session.mode === "payment" only, so
+      // subscription-mode checkouts with missing metadata had NO recovery path —
+      // credits stayed 0 and planId stayed "unknown" with no way to resolve them.
+      // Root cause of the annual_20/annual_100 mismatch for aurelioecheverria@gmail.com
+      // (paid annual_20 checkout, order recorded as "unknown", profile later drifted
+      // to annual_100 via a separate reconciliation path). PRICE_CREDITS already
+      // covers subscription price IDs (annual_100 legacy, monthly legacy, etc.), and
+      // listLineItems works identically for both checkout modes, so this is a safe
+      // widen — no new Stripe call shape, just removing the mode restriction.
+      if (credits === 0 && (session.mode === "payment" || session.mode === "subscription")) {
         try {
           const lineItems = await stripe.checkout.sessions.listLineItems(session.id, { limit: 5, expand: ["data.price"] });
           const priceId = (lineItems.data[0] as any)?.price?.id;
           if (priceId && PRICE_CREDITS[priceId] !== undefined) {
             credits = PRICE_CREDITS[priceId];
             planId  = PRICE_TO_PLAN_ID[priceId] || "unknown";
-            console.log(`[WEBHOOK] checkout.session.completed: recovered credits=${credits} planId=${planId} from price ${priceId}`);
+            console.log(`[WEBHOOK] checkout.session.completed: recovered credits=${credits} planId=${planId} from price ${priceId} (mode=${session.mode})`);
+          } else {
+            console.warn(`[WEBHOOK] checkout.session.completed: fallback B could not resolve price ${priceId} (mode=${session.mode}) — credits/planId remain unresolved`);
           }
         } catch (lineItemErr) {
           console.warn("[WEBHOOK] checkout.session.completed: could not fetch line items for fallback:", lineItemErr);
