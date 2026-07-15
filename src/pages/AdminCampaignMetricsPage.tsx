@@ -217,6 +217,65 @@ export default function AdminCampaignMetricsPage() {
 
   useEffect(() => { loadReferral(); }, [loadReferral]);
 
+  // Carga histórica completa (sin filtro de periodo) para la tabla unificada de Influencers
+  const loadHistoricInfluencers = useCallback(async () => {
+    setLoadingHistoric(true);
+    try {
+      const PAGE = 1000;
+
+      // Referral histórico (todos los profiles con referral_source=influencer)
+      const refByInfluencer: Record<string, { user_id: string; ref: string | null }[]> = {};
+      let from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('user_id, referral_influencer')
+          .eq('referral_source', 'influencer')
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const rows = (data || []) as any[];
+        rows.forEach(r => {
+          const k = (r.referral_influencer || '').toString();
+          if (!refByInfluencer[k]) refByInfluencer[k] = [];
+          refByInfluencer[k].push({ user_id: r.user_id, ref: r.referral_influencer });
+        });
+        if (rows.length < PAGE) break;
+        from += PAGE;
+      }
+      // Reducimos a conteos por clave cruda; la normalización se hace en la tabla
+      const rawCounts: Record<string, number> = {};
+      Object.entries(refByInfluencer).forEach(([k, arr]) => { rawCounts[k] = arr.length; });
+      setHistoricReferralByInfluencer(rawCounts);
+
+      // Órdenes históricas con cupón (promotion_code o coupon_code)
+      const byCode: Record<string, number> = {};
+      from = 0;
+      while (true) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('promotion_code, coupon_code')
+          .or('promotion_code.not.is.null,coupon_code.not.is.null')
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        const rows = (data || []) as any[];
+        rows.forEach((o: any) => {
+          const code = canonicalCouponCode(o.promotion_code || o.coupon_code);
+          if (!code) return;
+          byCode[code] = (byCode[code] || 0) + 1;
+        });
+        if (rows.length < PAGE) break;
+        from += PAGE;
+      }
+      setHistoricCouponRegByCode(byCode);
+    } catch (e: any) {
+      toast.error('Error cargando histórico de influencers');
+    }
+    setLoadingHistoric(false);
+  }, []);
+
+  useEffect(() => { loadHistoricInfluencers(); }, [loadHistoricInfluencers]);
+
+
   const loadReferralProgram = useCallback(async () => {
     setLoadingReferralProgram(true);
     try {
