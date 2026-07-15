@@ -82,7 +82,7 @@ const KNOWN_ERRORS: Array<[RegExp, string]> = [
   // ── Audio validation ──────────────────────────────────────────────────────
   [/auphonic_invalid_audio|invalid.?audio|unsupported.?format/i, 'aiShared.aiInvalidAudio'],
   // ── KIE Suno: message-based fallbacks (when code prefix is absent) ─────────
-  [/uploaded audio matches|matches existing work|existing work of art/i, 'aiShared.kieAudioCopyrightMatch'],
+  [/uploaded audio matches|matches (an )?existing (work|recording)|existing work of art|existing recording in our catalog/i, 'aiShared.kieAudioCopyrightMatch'],
   [/extending lyrics are empty|lyrics field|lyrics.*(empty|short|malformed)/i, 'aiShared.kieLyricsRequired'],
   [/copyright|theme violation/i, 'aiShared.kieCopyrightContent'],
   [/download failed|upload.*failed|invalid.*audio.*url|cannot.*download/i, 'aiShared.kieDownloadFailed'],
