@@ -109,6 +109,11 @@ export default function AdminCampaignMetricsPage() {
   const [couponRegByCode, setCouponRegByCode] = useState<Record<string, number>>({});
   const [loadingReferral, setLoadingReferral] = useState(true);
 
+  // Histórico completo (sin filtro de periodo) para la tabla unificada de influencers
+  const [historicReferralByInfluencer, setHistoricReferralByInfluencer] = useState<Record<string, number>>({});
+  const [historicCouponRegByCode, setHistoricCouponRegByCode] = useState<Record<string, number>>({});
+  const [loadingHistoric, setLoadingHistoric] = useState(true);
+
   const [referralProgramStats, setReferralProgramStats] = useState<{ total: number; active: number; revoked: number; creditsGranted: number; creditsRevoked: number; creditsNet: number; revocationRate: number }>({ total: 0, active: 0, revoked: 0, creditsGranted: 0, creditsRevoked: 0, creditsNet: 0, revocationRate: 0 });
   const [topReferrers, setTopReferrers] = useState<Array<{ referrer_id: string; display_name: string; code: string | null; subscription_tier: string | null; invitedActive: number; invitedRevoked: number; creditsEarned: number; creditsRevoked: number }>>([]);
   const [loadingReferralProgram, setLoadingReferralProgram] = useState(true);
