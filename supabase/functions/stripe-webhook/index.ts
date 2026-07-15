@@ -501,7 +501,7 @@ serve(async (req) => {
             submitted_at: new Date().toISOString(),
           }).eq("id", requestId);
 
-          await createOrderRecord(supabase, {
+          const ytOrder = await createOrderRecord(supabase, {
             userId: ytUserId || "",
             stripeCheckoutSessionId: session.id,
             stripeCustomerId: typeof session.customer === "string" ? session.customer : undefined,
@@ -516,6 +516,32 @@ serve(async (req) => {
             isRenewal: false,
             metadata: session.metadata || {},
           });
+
+          // FIX 2026-07-15: este branch (youtube_service, cubre tanto OAC como
+          // Content ID) era el unico de los 7 puntos de creacion de ordenes en
+          // este webhook que nunca llamaba a createPurchaseEvidence — causa del
+          // gap detectado para lazlessa@gmail.com (orden sin evidencia IBS).
+          if (ytUserId) {
+            try {
+              const { data: { user: ytUserForEvidence } } = await supabase.auth.admin.getUserById(ytUserId);
+              const { data: ytProfileForEvidence } = await supabase.from("profiles").select("display_name").eq("user_id", ytUserId).maybeSingle();
+              await createPurchaseEvidence(supabase, {
+                userId: ytUserId,
+                orderId: ytOrder?.id,
+                email: ytUserForEvidence?.email || undefined,
+                displayName: ytProfileForEvidence?.display_name || undefined,
+                productType: "youtube_service",
+                productName: serviceType === "oac" ? "Canal Oficial de Artista (OAC)" : "YouTube Content ID",
+                amount: (session.amount_total || 5000) / 100,
+                currency: session.currency || "eur",
+                checkoutSessionId: session.id,
+                paymentIntentId: piId || undefined,
+                paymentStatus: "succeeded",
+              });
+            } catch (evErr) {
+              console.error("[WEBHOOK] youtube_service: failed to create purchase evidence:", evErr);
+            }
+          }
 
           if (ytUserId) {
             try {
