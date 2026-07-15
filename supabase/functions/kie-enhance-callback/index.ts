@@ -115,7 +115,7 @@ serve(async (req) => {
         .from("ai_generation_logs")
         .update({
           status: "failed",
-          error_message: body?.msg || `KIE code ${code}`,
+          error_message: `code=${code}: ${body?.msg || "KIE failure"}`,
           response_payload: body,
           output_url: null,
         })

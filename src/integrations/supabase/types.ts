@@ -3975,6 +3975,37 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      detect_active_plan_without_subscription: {
+        Args: { cutoff_48h: string }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
+      detect_free_high_credits: {
+        Args: { justified_types: string[]; threshold: number }
+        Returns: {
+          user_id: string
+        }[]
+      }
+      detect_high_credit_candidates: {
+        Args: never
+        Returns: {
+          available_credits: number
+          permanent_credits: number
+          subscription_tier: string
+          user_id: string
+        }[]
+      }
+      detect_profiles_missing_subscription_row: {
+        Args: never
+        Returns: {
+          email: string
+          stripe_customer_id: string
+          subscription_plan: string
+          user_id: string
+        }[]
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
