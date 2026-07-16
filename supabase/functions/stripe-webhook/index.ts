@@ -1762,8 +1762,17 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
 
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
       if (profile) {
-        const planName = priceId ? (PRICE_PLAN[priceId] || null) : null;
+        // FIX 2026-07-16: PRICE_PLAN es un mapa viejo e incompleto que nunca
+        // incluyo varios precios "Live production" (annual_20, annual_200/300/
+        // 500/1000 TMDVw, el segundo monthly TMDW3, topups, individual). Para
+        // esos precios planName salia null aunque planTier (via PRICE_TO_PLAN_ID,
+        // que si esta completo) resolvia bien - dejando profiles.subscription_plan
+        // desincronizado o con un valor viejo (caso aurelioecheverria@gmail.com:
+        // quedo en "Monthly" pese a estar en annual_20). Se deriva planName desde
+        // PLAN_ID_TO_PLAN_NAME[planTier], la misma fuente que ya usan
+        // subscription_create y checkout.session.completed - PRICE_PLAN queda sin uso.
         const planTier = priceId ? (PRICE_TO_PLAN_ID[priceId] || null) : null;
+        const planName = planTier ? (PLAN_ID_TO_PLAN_NAME[planTier] || null) : null;
         // Capture previous plan BEFORE updating so we can detect Monthly→Annual transitions
         const { data: prevUpdProfile } = await supabase
           .from("profiles").select("subscription_plan").eq("user_id", profile.user_id).single();
