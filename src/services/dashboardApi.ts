@@ -177,12 +177,24 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
   try {
     const { data: { session: freshBeforeUpload }, error: refreshBefErr } = await supabase.auth.refreshSession();
     if (refreshBefErr || !freshBeforeUpload) {
-      console.warn('[registerWork] pre-upload session refresh failed (continuing with existing session):', refreshBefErr);
-    } else {
-      console.log('[registerWork] pre-upload session refresh OK, uid:', freshBeforeUpload.user?.id);
+      // FIX: antes esto solo avisaba por consola y CONTINUABA con la sesión
+      // vieja/muerta -> el usuario terminaba viendo el error crudo de Postgres
+      // "new row violates row-level security policy" en vez de un mensaje claro.
+      // Si el refresh falla aquí, es porque el refresh token ya no es válido
+      // (sesión realmente expirada, no solo el access token a punto de vencer),
+      // así que no tiene sentido seguir: subida e insert van a fallar seguro.
+      console.error('[registerWork] pre-upload session refresh failed, aborting:', refreshBefErr);
+      throw new Error(
+        i18n.t('wizard.rw.sessionExpired') ||
+          'Tu sesión ha expirado. Por favor, cierra sesión e inicia sesión de nuevo.'
+      );
     }
+    console.log('[registerWork] pre-upload session refresh OK, uid:', freshBeforeUpload.user?.id);
   } catch (err) {
-    console.warn('[registerWork] pre-upload session refresh threw (continuing):', err);
+    if (err instanceof Error && err.message.includes(i18n.t('wizard.rw.sessionExpired') || 'Tu sesión ha expirado')) {
+      throw err; // re-lanzar el error de sesión expirada, no tragárselo
+    }
+    console.warn('[registerWork] pre-upload session refresh threw unexpectedly (continuing):', err);
   }
 
   // Credit validation — actual deduction happens inside register-work-ibs edge function
