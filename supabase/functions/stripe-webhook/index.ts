@@ -770,7 +770,28 @@ serve(async (req) => {
         const amountTotal = session.amount_total ? session.amount_total / 100 : 0;
         const amountNet = netFromSession(session);
         const stripeSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
-        const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
+        let paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
+
+        // FIX 2026-07-15: en checkouts de suscripcion (session.mode === "subscription"),
+        // Stripe NUNCA rellena session.payment_intent - usa session.invoice en su lugar.
+        // Sin este fallback, stripe_payment_intent_id/stripe_charge_id/stripe_invoice_id
+        // quedaban null en la orden pese a que la suscripcion y el cobro eran reales,
+        // causando falsos positivos "charge_sin_order" en la auditoria diaria
+        // (fruluvejizo-3263@yopmail.com, jemelloikuzo-2096@yopmail.com, 2026-07-15).
+        let checkoutInvoiceId: string | null = null;
+        if (!paymentIntentId && session.mode === "subscription") {
+          checkoutInvoiceId = typeof session.invoice === "string" ? session.invoice : (session.invoice as any)?.id || null;
+          if (checkoutInvoiceId) {
+            try {
+              const inv = await stripe.invoices.retrieve(checkoutInvoiceId);
+              const invPi = (inv as any)?.payment_intent;
+              paymentIntentId = typeof invPi === "string" ? invPi : (invPi?.id ?? null);
+              console.log(`[WEBHOOK] checkout.session.completed: resolved paymentIntent ${paymentIntentId} from invoice ${checkoutInvoiceId} (subscription mode)`);
+            } catch (e) {
+              console.warn(`[WEBHOOK] checkout.session.completed: failed to retrieve invoice ${checkoutInvoiceId}:`, e);
+            }
+          }
+        }
 
         // Check for discount/coupon
         let couponCode: string | undefined;
@@ -799,6 +820,7 @@ serve(async (req) => {
         const order = await createOrderRecord(supabase, {
           userId,
           stripeCheckoutSessionId: session.id,
+          stripeInvoiceId: checkoutInvoiceId || undefined,
           stripeSubscriptionId: stripeSubId,
           stripePaymentIntentId: paymentIntentId,
           stripeChargeId: checkoutChargeId || undefined,
