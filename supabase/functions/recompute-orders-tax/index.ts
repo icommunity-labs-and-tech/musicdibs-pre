@@ -8,7 +8,7 @@
 //
 // Defaults: only_null = false (recompute all), limit = 500, dry_run = false.
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import Stripe from "npm:stripe@17";
 import { netFromCharge, netFromInvoice, netFromSession } from "../_shared/stripe-net.ts";
 

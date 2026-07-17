@@ -2,7 +2,7 @@
 // Triggered by a daily pg_cron job and/or manually by an admin.
 
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_search_console/webmasters/v3';
 const SITE_URL = 'sc-domain:musicdibs.com';
