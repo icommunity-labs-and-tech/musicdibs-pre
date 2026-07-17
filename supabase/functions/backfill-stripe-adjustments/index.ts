@@ -13,7 +13,7 @@
 // Body (all optional):
 //   { from?: ISO date, to?: ISO date, limit?: number, dry_run?: boolean }
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import Stripe from "npm:stripe@17";
 
 const corsHeaders = {

@@ -4,7 +4,7 @@
 // from that timestamp onward and insert any missing succeeded charges (excluding
 // certyfile descriptions). Mirrors the insert shape of stripe-historical-backfill.
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import Stripe from "npm:stripe@17";
 import { netFromCharge } from "../_shared/stripe-net.ts";
 
