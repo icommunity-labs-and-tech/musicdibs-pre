@@ -2362,11 +2362,29 @@ serve(async (req) => {
           return o;
         };
 
+        // Cap Stripe API work per request to avoid timeouts on wide windows
+        // (e.g. year view). Rows past the cap keep their stored values —
+        // subsequent cached runs / monthly views will backfill them.
+        // Year periods skip enrichment entirely; monthly/weekly runs already
+        // enrich those rows and persist amount_net/stripe_fee back to orders.
+        const MAX_ENRICH = periodType === "year" ? 0 : 200;
+        if (MAX_ENRICH === 0) return orders;
+
+        let enrichedCount = 0;
         const enriched: any[] = [];
         const CONCURRENCY = 8;
         for (let i = 0; i < orders.length; i += CONCURRENCY) {
           const chunk = orders.slice(i, i + CONCURRENCY);
-          enriched.push(...await Promise.all(chunk.map(enrichOne)));
+          const remaining = MAX_ENRICH - enrichedCount;
+          if (remaining <= 0) {
+            enriched.push(...chunk);
+            continue;
+          }
+          const toEnrich = chunk.slice(0, remaining);
+          const passthrough = chunk.slice(remaining);
+          enriched.push(...await Promise.all(toEnrich.map(enrichOne)));
+          enriched.push(...passthrough);
+          enrichedCount += toEnrich.length;
         }
         return enriched;
       };
