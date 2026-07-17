@@ -2148,7 +2148,9 @@ serve(async (req) => {
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
       // force_refresh → trigger incremental Stripe→orders sync first, then recompute from DB.
-      if (force_refresh) {
+      // Skip for year view: monthly/weekly runs already persisted amount_net/stripe_fee
+      // for previous months, and syncing a full year would exceed the request budget.
+      if (force_refresh && periodType !== "year") {
         try {
           const cronSecret = Deno.env.get("CRON_SECRET");
           const supaUrl = Deno.env.get("SUPABASE_URL");
@@ -2162,6 +2164,8 @@ serve(async (req) => {
         } catch (e: any) {
           console.warn("[get_saas_metrics] daily-sync trigger failed:", e?.message);
         }
+      } else if (force_refresh && periodType === "year") {
+        console.log("[get_saas_metrics] year view: skipping stripe-daily-sync (months already persisted)");
       }
 
       if (!force_refresh) {
