@@ -3595,11 +3595,13 @@ export type Database = {
           file_hash: string | null
           file_hash_sha512_b64: string | null
           file_path: string | null
+          file_size: number | null
           ibs_evidence_id: string | null
           ibs_payload_algorithm: string | null
           ibs_payload_checksum: string | null
           ibs_signature_id: string | null
           id: string
+          original_filename: string | null
           status: string
           title: string
           type: string
@@ -3623,11 +3625,13 @@ export type Database = {
           file_hash?: string | null
           file_hash_sha512_b64?: string | null
           file_path?: string | null
+          file_size?: number | null
           ibs_evidence_id?: string | null
           ibs_payload_algorithm?: string | null
           ibs_payload_checksum?: string | null
           ibs_signature_id?: string | null
           id?: string
+          original_filename?: string | null
           status?: string
           title: string
           type?: string
@@ -3651,11 +3655,13 @@ export type Database = {
           file_hash?: string | null
           file_hash_sha512_b64?: string | null
           file_path?: string | null
+          file_size?: number | null
           ibs_evidence_id?: string | null
           ibs_payload_algorithm?: string | null
           ibs_payload_checksum?: string | null
           ibs_signature_id?: string | null
           id?: string
+          original_filename?: string | null
           status?: string
           title?: string
           type?: string
@@ -3818,6 +3824,25 @@ export type Database = {
         }
         Relationships: []
       }
+      manager_accounts_overview: {
+        Row: {
+          annual_price_eur: number | null
+          annual_works_quota: number | null
+          artists_used: number | null
+          company_name: string | null
+          contact_email: string | null
+          contract_end: string | null
+          contract_id: string | null
+          contract_start: string | null
+          credits_included: number | null
+          includes_ai_studio: boolean | null
+          includes_distribution: boolean | null
+          manager_user_id: string | null
+          max_artists: number | null
+          status: string | null
+        }
+        Relationships: []
+      }
       manager_dashboard: {
         Row: {
           artist_email: string | null
@@ -3933,6 +3958,20 @@ export type Database = {
       }
     }
     Functions: {
+      add_managed_artist: {
+        Args: {
+          p_artist_country?: string
+          p_artist_email?: string
+          p_artist_name: string
+          p_artist_phone?: string
+          p_artist_user_id?: string
+          p_contract_reference?: string
+          p_manager_user_id: string
+          p_notes?: string
+          p_representation_type?: string
+        }
+        Returns: string
+      }
       admin_get_user_credit_audit: {
         Args: { p_limit?: number; p_user_id: string }
         Returns: {
@@ -3954,6 +3993,25 @@ export type Database = {
         }[]
       }
       check_renewals_cron_health: { Args: never; Returns: undefined }
+      create_manager_contract: {
+        Args: {
+          p_annual_price_eur: number
+          p_annual_works_quota: number
+          p_company_name: string
+          p_contact_email: string
+          p_contact_phone?: string
+          p_contact_request_id?: string
+          p_contract_end?: string
+          p_contract_start?: string
+          p_credits_included: number
+          p_includes_ai_studio?: boolean
+          p_includes_distribution?: boolean
+          p_manager_user_id: string
+          p_max_artists: number
+          p_notes?: string
+        }
+        Returns: string
+      }
       debit_user_credits: {
         Args: { p_amount: number; p_description: string; p_user_id: string }
         Returns: number
@@ -4135,6 +4193,15 @@ export type Database = {
         Returns: undefined
       }
       is_active_manager: { Args: { _user_id: string }; Returns: boolean }
+      link_managed_work: {
+        Args: {
+          p_authorized_by?: string
+          p_managed_artist_id: string
+          p_manager_user_id: string
+          p_work_id: string
+        }
+        Returns: string
+      }
       manager_can_access_artist: {
         Args: { _artist_id: string; _manager_id: string }
         Returns: boolean
