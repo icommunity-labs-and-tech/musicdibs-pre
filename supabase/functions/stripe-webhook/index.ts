@@ -751,8 +751,49 @@ serve(async (req) => {
         const planName = PLAN_ID_TO_PLAN_NAME[planId];
         // Guard: topups e individuales NUNCA deben sobrescribir subscription_plan
         if (planName && !planId.startsWith("topup_") && planId !== "individual") {
-          await supabase.from("profiles").update({ subscription_plan: planName, subscription_tier: planId }).eq("user_id", userId);
-          console.log(`[WEBHOOK] Updated subscription_plan to ${planName} (tier=${planId}) for user ${userId}`);
+          // FIX 2026-07-17: esta actualizacion no comprobaba su propio resultado
+          // ni se verificaba despues. Al menos 2 casos (fruluvejizo-3263@yopmail.com
+          // 2026-07-15, faustorode@gmail.com 2026-07-16) quedaron con
+          // subscription_plan="Monthly"/subscription_tier=null tras comprar
+          // annual_20 pese a que este codigo se ejecuto sin lanzar excepcion
+          // visible - causa exacta no reproducida aun. En vez de seguir
+          // adivinando, se verifica el resultado inline: si el update no dejo
+          // el tier correcto, se reintenta una vez y se alerta si sigue mal.
+          const { error: tierUpdateErr } = await supabase
+            .from("profiles")
+            .update({ subscription_plan: planName, subscription_tier: planId, updated_at: new Date().toISOString() })
+            .eq("user_id", userId);
+          if (tierUpdateErr) {
+            console.error(`[WEBHOOK] checkout.session.completed: profile tier update FAILED for user ${userId} (${planId}):`, tierUpdateErr.message);
+          }
+          const { data: verifyProfile } = await supabase
+            .from("profiles")
+            .select("subscription_plan, subscription_tier")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (verifyProfile?.subscription_tier !== planId) {
+            console.error(`[WEBHOOK] checkout.session.completed: tier verification MISMATCH for user ${userId} - expected ${planId}, got ${verifyProfile?.subscription_tier}. Retrying once.`);
+            const { error: retryErr } = await supabase
+              .from("profiles")
+              .update({ subscription_plan: planName, subscription_tier: planId, updated_at: new Date().toISOString() })
+              .eq("user_id", userId);
+            const { data: verifyAgain } = await supabase
+              .from("profiles")
+              .select("subscription_tier")
+              .eq("user_id", userId)
+              .maybeSingle();
+            if (retryErr || verifyAgain?.subscription_tier !== planId) {
+              await supabase.from("admin_alerts").insert({
+                source: "stripe-webhook:checkout.session.completed",
+                severity: "error",
+                message: `Tier update failed for user ${userId} tras compra de ${planId} (session ${session.id}). Primer error: ${tierUpdateErr?.message ?? "ninguno"}. Reintento error: ${retryErr?.message ?? "ninguno"}. subscription_tier actual: ${verifyAgain?.subscription_tier ?? "desconocido"}. Revisar y corregir manualmente.`,
+              });
+            } else {
+              console.log(`[WEBHOOK] checkout.session.completed: tier retry succeeded for user ${userId} (${planId})`);
+            }
+          } else {
+            console.log(`[WEBHOOK] Updated subscription_plan to ${planName} (tier=${planId}) for user ${userId}`);
+          }
         } else if (planName) {
           console.log(`[WEBHOOK] Skipping subscription_plan update for ${planId} (topup/individual)`);
         }
