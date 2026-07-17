@@ -299,6 +299,14 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
       })).filter((c) => c.name)
     : null;
 
+  // FIX 2026-07-17: buildWorksFilePath sanitiza el nombre (espacios/paréntesis
+  // -> "_") y le antepone un timestamp para el storage path. Guardamos el
+  // nombre y tamaño ORIGINALES del archivo tal como los subió el usuario para
+  // que el certificado (CertificateButton.tsx ya los prioriza) no tenga que
+  // derivarlos del path de storage.
+  const originalFilename = allFiles[0]?.name;
+  const originalFileSize = allFiles[0]?.size;
+
   if (data.resumeWorkId) {
     const { data: updated, error: updErr } = await supabase.from('works').update({
       title: data.title,
@@ -308,6 +316,8 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
       file_path: filePaths[0],
       file_hash: fileHash,
       file_hash_sha512_b64: fileHashSha512B64,
+      original_filename: originalFilename,
+      file_size: originalFileSize,
       creators: creatorsPayload as any,
       status: 'draft',
     }).eq('id', data.resumeWorkId).eq('user_id', user.id).select('id').single();
@@ -323,6 +333,8 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
       file_path: filePaths[0],
       file_hash: fileHash,
       file_hash_sha512_b64: fileHashSha512B64,
+      original_filename: originalFilename,
+      file_size: originalFileSize,
       creators: creatorsPayload as any,
       status: 'draft',
     }).select('id').single();

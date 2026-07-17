@@ -208,7 +208,7 @@ serve(async (req) => {
 
     const { data: work, error: workError } = await supabaseAdmin
       .from("works")
-      .select("id, user_id, title, description, status, file_path, file_hash, file_hash_sha512_b64, creators, type, author")
+      .select("id, user_id, title, description, status, file_path, original_filename, file_hash, file_hash_sha512_b64, creators, type, author")
       .eq("id", workId).single();
 
     if (workError || !work) {
@@ -274,12 +274,21 @@ serve(async (req) => {
     // legitimos (no del welcome bonus) debe poder seguir registrando. El limite
     // ahora solo aplica si el usuario NO tiene ningun credito permanente, es decir,
     // si todo lo que tiene disponible proviene unicamente del welcome bonus gratuito.
+    //
+    // FIX 2026-07-10 (bug critico): esta obra YA fue puesta en status='processing'
+    // por el lock atomico de arriba, ANTES de este chequeo. El conteo original no
+    // excluia el workId actual, asi que SIEMPRE se contaba a si misma -- bloqueando
+    // el primer intento de cualquier usuario Free sin creditos permanentes, el
+    // 100% de las veces. Confirmado: 13 rechazos / 1 exito desde el fix del 9-jul,
+    // los 13 rechazados con 0 obras reales previamente registradas. Se anade
+    // .neq("id", workId) para excluir la obra actual del conteo.
     const hasNonWelcomeCredits = (profile?.permanent_credits ?? 0) > 0;
     if (profile && profile.subscription_plan === "Free" && !hasNonWelcomeCredits) {
       const { count } = await supabaseAdmin
         .from("works")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
+        .neq("id", workId)
         .in("status", ["registered", "processing", "certified"]);
       if ((count ?? 0) >= 1) {
         await markDraftAsFailed(supabaseAdmin, workId, "free_register_limit");
@@ -357,7 +366,16 @@ serve(async (req) => {
       const size = parseInt(head.headers.get("content-length") || "0", 10);
       const ct = head.headers.get("content-type") || "application/octet-stream";
       if (!size) { console.warn(`[IBS] File ${fp} has size=0, skipping`); continue; }
-      const name = (fp.split("/").pop() || "file").replace(/^\d+_/, "");
+      // FIX 2026-07-17: para el archivo principal (work.file_path), preferimos
+      // el nombre original guardado en works.original_filename (tal como lo
+      // subió el usuario, con espacios/paréntesis) sobre el nombre derivado
+      // del storage path (que lleva timestamp + sanitización aplicada por
+      // buildWorksFilePath en el frontend). Los archivos adicionales
+      // (additionalFilePaths, p.ej. imágenes de coautores) no tienen un
+      // original_filename rastreado, así que mantienen el comportamiento
+      // anterior (nombre derivado del path, sin el prefijo de timestamp).
+      const strippedName = (fp.split("/").pop() || "file").replace(/^\d+_/, "");
+      const name = (fp === work.file_path && work.original_filename) ? work.original_filename : strippedName;
       filesMeta.push({ path: fp, name, size, contentType: ct, signedUrl: urlData.signedUrl });
       console.log(`[IBS] File: ${name} | ${(size/1024/1024).toFixed(1)}MB | ${ct}`);
     }

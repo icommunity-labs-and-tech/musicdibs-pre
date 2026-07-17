@@ -541,7 +541,13 @@ serve(async (req) => {
         detail: {
           title: readString(payload?.title, evidence?.title),
           description: readString(payload?.description, evidence?.description),
-          fileName: readString(fileEntry?.name, fileEntry?.filename),
+          // FIX 2026-07-17: la respuesta real de iBS no incluye payload.files —
+          // el nombre de archivo (ya sin el prefijo de timestamp, gracias al fix
+          // en register-work-ibs) viene en payload.integrity[0].name. fileEntry
+          // siempre resultaba null y fileName undefined, haciendo que el frontend
+          // cayera al nombre crudo de storage (con timestamp y userId) en vez del
+          // nombre limpio que iBS ya tiene certificado.
+          fileName: readString(fileEntry?.name, fileEntry?.filename, integrityEntry?.name),
           fileSize: fileEntry?.size ?? fileEntry?.file_size ?? null,
           metadata: jsonToText(metadata),
           externalContent: jsonToText(externalContent),

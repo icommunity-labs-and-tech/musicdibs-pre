@@ -171,6 +171,8 @@ export default function ManagerRegisterWork() {
       }
 
       // Insert work
+      // FIX 2026-07-17: capturamos nombre/tamaño originales antes de que
+      // buildWorksFilePath sanitice el nombre para el storage path.
       const { data: work, error: workErr } = await supabase.from('works').insert({
         user_id: workUserId,
         title: title.trim(),
@@ -179,6 +181,8 @@ export default function ManagerRegisterWork() {
         author: author.trim() || null,
         file_path: filePaths[0],
         file_hash: fileHash,
+        original_filename: files[0]?.name,
+        file_size: files[0]?.size,
         status: 'processing',
       }).select('id').single();
 
