@@ -101,6 +101,24 @@ export const OAC_STEPS: WizardStep[] = [
     key: 'artistChannelUrl', placeholder: 'https://www.youtube.com/@nombreartista', required: true,
     checklist: ['Al menos un video musical publicado', 'Al menos una red social vinculada', 'Mismo nombre que el Topic Channel'],
   },
+  {
+    id: 'oac_channel_id', type: 'text',
+    title: 'Channel ID del canal propio (empieza por UC...)',
+    subtitle: 'YouTube y el distribuidor identifican el canal por este ID, no solo por la URL.',
+    key: 'channelId', placeholder: 'UCxxxxxxxxxxxxxxxxxxxxxx', required: true,
+    hint: 'Inicia sesion en YouTube, ve a tu foto de perfil > Configuracion > Configuracion avanzada. Alli aparece tu Channel ID. Debes estar identificado como el propietario principal del canal para verlo.',
+  },
+  {
+    id: 'oac_eligibility_confirm', type: 'checkbox',
+    title: 'Confirmacion de elegibilidad',
+    key: 'eligibilityConfirmed', required: true,
+    hint: 'Confirmo que el canal no tiene strikes activos de Copyright ni de Normas de la comunidad, que su contenido no mezcla musica con vlogs, gaming u otro contenido ajeno, y que toda la informacion aportada es correcta.',
+    checklist: [
+      'Sin strikes de copyright ni de normas de la comunidad activos',
+      'El canal no mezcla musica con vlogs, gaming u otro contenido no musical',
+      'El nombre del canal coincide exactamente (mayusculas y caracteres especiales incluidos) con el nombre de artista en el distribuidor',
+    ],
+  },
   { id: 'oac_payment', type: 'payment', title: 'Confirma tu solicitud', subtitle: 'Precio: <strong>50 EUR</strong>. Plazo de resolucion: <strong>5 dias laborables</strong>.' },
 ];
 
