@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anthropicApiKey = Deno.env.get("ANTHROPIC_API_KEY")!;
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY")!;
     const cronSecret = Deno.env.get("CRON_SECRET");
 
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
@@ -108,7 +108,7 @@ Excerpt: ${post.excerpt || ""}
 
 Content: ${post.content || ""}`;
 
-        let rawContent = await translateWithClaude(systemPrompt, prompt, anthropicApiKey);
+        let rawContent = await translateWithGemini(systemPrompt, prompt, geminiApiKey);
         rawContent = rawContent.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
 
         let translatedData: { title: string; excerpt: string; content: string };
@@ -211,10 +211,10 @@ Title: ${post.title}
 Excerpt: ${post.excerpt || ""}
 Content: ${post.content || ""}`;
 
-        let rawContent = await translateWithClaude(
+        let rawContent = await translateWithGemini(
           "You are a professional translator. Return only valid JSON. Preserve HTML tags.",
           prompt,
-          anthropicApiKey
+          geminiApiKey
         );
         rawContent = rawContent.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/i, "").trim();
 

@@ -44,14 +44,10 @@ async function mlRequest(path: string, method: string, body?: unknown) {
   return res.status === 204 ? null : res.json();
 }
 
-async function addToContestGroup(email: string, name: string, contest: string, instagram: string) {
+async function addToContestGroup(email: string, name: string, contest: string) {
   return mlRequest('/subscribers', 'POST', {
     email,
-    fields: {
-      name,
-      ...(contest ? { last_name: contest } : {}),
-      ...(instagram ? { company: instagram } : {}),
-    },
+    fields: { name, ...(contest ? { last_name: contest } : {}) },
     groups: [ML_GROUP_CONCURSOS],
     resubscribe: true,
     autoresponders: true,
@@ -95,15 +91,13 @@ Deno.serve(async (req: Request) => {
   let name: string;
   let contest: string;
   let mode: string;
-  let instagram: string;
 
   try {
     const body = await req.json();
-    email     = (body.email     ?? '').trim().toLowerCase();
-    name      = (body.name      ?? '').trim();
-    contest   = (body.contest   ?? '').trim();
-    mode      = (body.mode      ?? 'sync').trim();
-    instagram = (body.instagram ?? '').trim().toLowerCase();
+    email   = (body.email   ?? '').trim().toLowerCase();
+    name    = (body.name    ?? '').trim();
+    contest = (body.contest ?? '').trim();
+    mode    = (body.mode    ?? 'sync').trim();
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
       status: 400,
@@ -151,38 +145,6 @@ Deno.serve(async (req: Request) => {
       const groups = json?.data?.groups ?? [];
       const inGroup = Array.isArray(groups) && groups.some((g: { id?: string }) => String(g?.id) === ML_GROUP_CONCURSOS);
 
-      // Si email no participó, comprobar por Instagram
-      if (!inGroup && instagram) {
-        const ig = instagram.startsWith('@') ? instagram : `@${instagram}`;
-        let cursor: string | null = null;
-        let foundByIg = false;
-        do {
-          const url = new URL(`${ML_BASE}/subscribers`);
-          url.searchParams.set('filter[group]', ML_GROUP_CONCURSOS);
-          url.searchParams.set('limit', '100');
-          if (cursor) url.searchParams.set('cursor', cursor);
-          const r: Response = await fetch(url.toString(), {
-            headers: { Accept: 'application/json', Authorization: `Bearer ${ML_API_KEY}` },
-          });
-          if (!r.ok) break;
-          const j = await r.json();
-          const subs = j?.data ?? [];
-          if (subs.some((s: { fields?: { company?: string } }) =>
-            String(s?.fields?.company ?? '').trim().toLowerCase() === ig
-          )) {
-            foundByIg = true;
-            break;
-          }
-          cursor = j?.meta?.next_cursor ?? null;
-        } while (cursor);
-        if (foundByIg) {
-          return new Response(JSON.stringify({ alreadyParticipated: true }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
-          });
-        }
-      }
-
       return new Response(JSON.stringify({ alreadyParticipated: inGroup }), {
         status: 200,
         headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
@@ -197,7 +159,7 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    await addToContestGroup(email, name, contest, instagram);
+    await addToContestGroup(email, name, contest);
     console.log(`✅  ${email} añadido al grupo "Concursos y sorteos" [${contest}]`);
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,

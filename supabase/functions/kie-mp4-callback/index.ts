@@ -4,7 +4,7 @@
 // (las URLs de KIE expiran a los 14 días).
 // Actualiza ai_generations.mp4_url y mp4_status = 'completed'.
 //
-// verify_jwt = false  ← añadir en supabase/config.toml
+// verify_jwt = false
 // Deploy: supabase functions deploy kie-mp4-callback
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
@@ -134,8 +134,8 @@ serve(async (req) => {
       return ok({ warning: "no video_url" });
     }
 
-    // ── Descargar MP4 desde KIE (URLs expiran a 14 días — debemos persistirlo) ─
-    let permanentUrl = kieVideoUrl; // fallback si falla la subida
+    // ── Descargar MP4 y subir a Supabase Storage (URLs KIE expiran en 14 días) ─
+    let permanentUrl = kieVideoUrl;
 
     try {
       console.log("[kie-mp4-callback] downloading from KIE...", { kieVideoUrl });
@@ -145,7 +145,7 @@ serve(async (req) => {
       const videoBuffer = await videoRes.arrayBuffer();
       const storagePath = `mp4-visualizers/${userId}/${generationId ?? logId}.mp4`;
 
-      const { data: uploadData, error: uploadErr } = await supabase.storage
+      const { error: uploadErr } = await supabase.storage
         .from(BUCKET)
         .upload(storagePath, videoBuffer, {
           contentType: "video/mp4",
@@ -154,7 +154,6 @@ serve(async (req) => {
 
       if (uploadErr) {
         console.error("[kie-mp4-callback] storage upload failed", uploadErr.message);
-        // Seguimos con URL de KIE como fallback — mejor que fallar
       } else {
         const { data: publicUrlData } = supabase.storage
           .from(BUCKET)
@@ -164,7 +163,6 @@ serve(async (req) => {
       }
     } catch (downloadErr) {
       console.error("[kie-mp4-callback] download/upload error — using KIE URL as fallback", downloadErr);
-      // permanentUrl ya tiene kieVideoUrl como fallback
     }
 
     // ── Marcar log como completado ─────────────────────────────────────────────
@@ -177,7 +175,7 @@ serve(async (req) => {
       })
       .eq("id", logId);
 
-    // ── Actualizar ai_generations con la URL permanente ────────────────────────
+    // ── Actualizar ai_generations ──────────────────────────────────────────────
     if (generationId) {
       await supabase
         .from("ai_generations")

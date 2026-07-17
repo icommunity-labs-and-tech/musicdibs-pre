@@ -14,17 +14,19 @@ function json(body: unknown, status = 200) {
  * subscription-reconciliation-cron
  *
  * Red de seguridad contra fallos de entrega de webhooks de Stripe.
- * Cruza cada perfil con plan de pago activo contra el estado REAL y en vivo
- * de su suscripción en Stripe. Si Stripe confirma que la suscripción ya no
- * está activa (cancelada / incompleta / sin ninguna suscripción), y la
- * "vigencia" restante no corresponde a una invoice realmente pagada,
- * corrige activamente: plan/tier -> Free, créditos de plan -> 0
- * (créditos permanentes de topups intactos).
  *
- * A diferencia de purchase-integrity-monitor (solo lectura), este cron SÍ
- * corrige — el propio negocio pidió corrección activa para este caso
- * concreto: "cuando se cancela... y la fecha ya no esta vigente, debemos
- * cancelarla (pasar a Free) y resetear a 0 los creditos de plan".
+ * PASADA 1 (histórica): perfiles con plan activo y una fila en `subscriptions`
+ * que ya no refleja el estado real (Stripe la dio de baja pero seguimos
+ * mostrando "active" localmente). Corrige activamente: plan/tier -> Free.
+ *
+ * PASADA 2 (nueva, 2026-07-14): perfiles con plan activo y stripe_customer_id
+ * pero SIN NINGUNA fila en `subscriptions` en absoluto — el caso opuesto,
+ * causado por un webhook de creación que nunca persistió la fila (detectado
+ * en auditoría: 14 casos acumulados en ~4 semanas, todos con suscripción
+ * genuinamente activa en Stripe). Si Stripe confirma una suscripción activa,
+ * se INSERTA la fila que falta. Si Stripe no confirma nada, solo se alerta
+ * para revisión manual — nunca se toca `profiles` en este caso (podría ser
+ * legítimamente Free y el plan del perfil estar mal, no al revés).
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -40,15 +42,11 @@ serve(async (req) => {
   const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
 
   const corrections: { email: string; before: string; after: string; reason: string }[] = [];
+  const insertions: { email: string; stripe_subscription_id: string; plan: string }[] = [];
   const errors: { email: string; error: string }[] = [];
 
   try {
-    // Todos los perfiles con plan de pago activo Y stripe_customer_id
-    // FIX: con 500+ suscriptores activos, comprobar TODOS contra Stripe cada día
-    // agota el timeout de la function. Prefiltro barato en DB: solo revisamos
-    // los que llevan más tiempo sin actualizarse del esperado por su ciclo de
-    // facturación (mensual >35 días, anual >370 días) — la inmensa mayoría se
-    // renueva correctamente vía webhook y no necesita ni tocar la API de Stripe.
+    // ── PASADA 1: local dice "active" pero Stripe ya no lo confirma ───────────
     const staleMonthlyCutoff = new Date(Date.now() - 35 * 24 * 60 * 60 * 1000).toISOString();
     const staleAnnualCutoff = new Date(Date.now() - 370 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -64,55 +62,32 @@ serve(async (req) => {
       : { data: [] };
     const subsRowByUser = new Map((subsRows || []).map((s) => [s.user_id, s]));
 
-    // FIX CRÍTICO (2026-07-04): el filtro anterior consideraba "candidato" a
-    // CUALQUIERA con subscription_plan activo, sin exigir evidencia de que esa
-    // persona alguna vez tuvo una suscripción de Stripe REAL. Esto disparó 30
-    // falsos positivos en la primera prueba: usuarios cuyo saldo venia de
-    // migración WordPress o de una concesión manual de soporte (admin_grant),
-    // cuyo campo subscription_plan se puso en Monthly/Annual sin que existiera
-    // NUNCA una suscripción de Stripe detrás. Ahora exigimos explícitamente
-    // un stripe_subscription_id real registrado en nuestra tabla subscriptions
-    // — sin eso, no hay "webhook perdido" que reconciliar, es otro problema
-    // (migración/ajuste manual) que este cron NO debe tocar.
     const staleCandidates = (candidateProfiles || []).filter((p) => {
       const subRow = subsRowByUser.get(p.user_id);
-      if (!subRow?.stripe_subscription_id) return false; // sin evidencia de sub real -> no tocar
+      if (!subRow?.stripe_subscription_id) return false; // sin evidencia de sub real -> lo cubre la Pasada 2
       const cutoff = p.subscription_plan === "Annual" ? staleAnnualCutoff : staleMonthlyCutoff;
       return subRow.updated_at < cutoff;
     });
 
-    console.log(`[RECONCILIATION] ${candidateProfiles?.length ?? 0} perfiles con plan activo, ${staleCandidates.length} candidatos con suscripción Stripe real y "stale" a verificar`);
+    console.log(`[RECONCILIATION] Pasada 1: ${candidateProfiles?.length ?? 0} perfiles con plan activo, ${staleCandidates.length} candidatos stale a verificar`);
 
     for (const profile of staleCandidates) {
       try {
-        // Suscripciones activas o en trial en Stripe (fuente de verdad en vivo)
         const subs = await stripe.subscriptions.list({
           customer: profile.stripe_customer_id!,
           status: "all",
           limit: 5,
         });
 
-        // Si Stripe no devuelve NINGUNA suscripción (ni siquiera cancelada),
-        // algo no cuadra con nuestro registro de un stripe_subscription_id real
-        // -- no corregimos por precaución, solo alertamos para revisión manual.
         if (subs.data.length === 0) {
           const { data: { user: emptyUser } } = await supabase.auth.admin.getUserById(profile.user_id);
           errors.push({ email: emptyUser?.email || profile.user_id, error: `subscriptions.list vacío pese a tener stripe_subscription_id registrado — revisar manualmente` });
           continue;
         }
 
-        // ¿Alguna suscripción está genuinamente activa (con acceso pagado real)?
-        const genuinelyActive = subs.data.find((s) => {
-          if (!["active", "trialing", "past_due"].includes(s.status)) return false;
-          return true;
-        });
+        const genuinelyActive = subs.data.find((s) => ["active", "trialing", "past_due"].includes(s.status));
+        if (genuinelyActive) continue;
 
-        if (genuinelyActive) continue; // todo correcto, nada que corregir
-
-        // FIX: además, si el saldo actual de créditos "de plan" (available -
-        // permanent) proviene ÚNICAMENTE de transacciones type IN
-        // ('migration','admin_grant') sin ningún 'purchase'/'subscription' de
-        // por medio, no lo tocamos — no es un caso de webhook perdido.
         const { data: creditHistory } = await supabase
           .from("credit_transactions")
           .select("type, amount")
@@ -124,10 +99,6 @@ serve(async (req) => {
           continue;
         }
 
-        // Ninguna suscripción activa en Stripe. Verificar que no sea un falso
-        // positivo por "vigencia" de un periodo cuya invoice nunca se pagó
-        // (el bug exacto que motivó este cron): comprobar la ÚLTIMA invoice
-        // conocida de la suscripción más reciente.
         const mostRecentSub = subs.data.sort((a, b) => b.created - a.created)[0];
         if (mostRecentSub?.latest_invoice) {
           const invoiceId = typeof mostRecentSub.latest_invoice === "string"
@@ -135,8 +106,6 @@ serve(async (req) => {
             : mostRecentSub.latest_invoice.id;
           try {
             const invoice = await stripe.invoices.retrieve(invoiceId);
-            // Si la última invoice SÍ está pagada y su periodo cubre el momento
-            // actual, no corregimos (acceso legítimamente vigente).
             if (invoice.status === "paid") {
               const periodEnd = invoice.lines?.data?.[0]?.period?.end;
               if (periodEnd && periodEnd * 1000 > Date.now()) continue;
@@ -144,7 +113,6 @@ serve(async (req) => {
           } catch { /* si falla la consulta, seguimos con la corrección por precaución */ }
         }
 
-        // Confirmado: sin suscripción activa real en Stripe. Corregir.
         const { data: { user } } = await supabase.auth.admin.getUserById(profile.user_id);
         const email = user?.email || "unknown";
         const planCredits = Math.max(0, (profile.available_credits ?? 0) - (profile.permanent_credits ?? 0));
@@ -183,20 +151,93 @@ serve(async (req) => {
       }
     }
 
-    // ── Email de resumen ────────────────────────────────────────────────────
-    const hasActivity = corrections.length > 0 || errors.length > 0;
+    // ── PASADA 2 (nueva): plan activo + stripe_customer_id, sin fila en subscriptions ──
+    const { data: missingRowCandidates, error: missingRowErr } = await supabase.rpc("detect_profiles_missing_subscription_row");
+    if (missingRowErr) throw missingRowErr;
+
+    console.log(`[RECONCILIATION] Pasada 2: ${missingRowCandidates?.length ?? 0} perfiles con plan activo sin ninguna fila en subscriptions`);
+
+    for (const candidate of (missingRowCandidates || [])) {
+      const email = candidate.email || candidate.user_id;
+      try {
+        const subs = await stripe.subscriptions.list({
+          customer: candidate.stripe_customer_id,
+          status: "all",
+          limit: 5,
+        });
+
+        const genuinelyActive = subs.data
+          .filter((s) => ["active", "trialing", "past_due"].includes(s.status))
+          .sort((a, b) => b.created - a.created)[0];
+
+        if (!genuinelyActive) {
+          // Stripe no confirma nada activo -> no tocamos profiles, solo alertamos.
+          await supabase.from("admin_alerts").insert({
+            source: "subscription-reconciliation-cron", severity: "warn",
+            message: `${email} tiene plan ${candidate.subscription_plan} activo en profiles y stripe_customer_id, pero SIN fila en subscriptions y SIN suscripción activa confirmada en Stripe. Revisar manualmente (posible plan mal asignado).`,
+            context: { user_id: candidate.user_id, email, subscription_plan: candidate.subscription_plan, stripe_customer_id: candidate.stripe_customer_id },
+            resolved: false,
+          });
+          errors.push({ email, error: "sin fila en subscriptions y sin suscripción activa confirmada en Stripe — alertado para revisión manual" });
+          continue;
+        }
+
+        const item = genuinelyActive.items.data[0];
+        const price = item?.price;
+        const planLabel = candidate.subscription_plan; // 'Monthly' | 'Annual'
+        const tier = price?.metadata?.musicdibs_plan_id || (planLabel === "Annual" ? "annual_100" : "monthly");
+        const amount = price?.unit_amount != null ? price.unit_amount / 100 : null;
+
+        const { error: insertErr } = await supabase.from("subscriptions").insert({
+          user_id: candidate.user_id,
+          stripe_customer_id: candidate.stripe_customer_id,
+          stripe_subscription_id: genuinelyActive.id,
+          stripe_price_id: price?.id || null,
+          plan: planLabel,
+          tier,
+          plan_type: "recurring",
+          status: genuinelyActive.status,
+          amount,
+          currency: genuinelyActive.currency,
+          current_period_start: new Date(item.current_period_start * 1000).toISOString(),
+          current_period_end: new Date(item.current_period_end * 1000).toISOString(),
+          cancel_at_period_end: genuinelyActive.cancel_at_period_end,
+          canceled_at: genuinelyActive.canceled_at ? new Date(genuinelyActive.canceled_at * 1000).toISOString() : null,
+        });
+        if (insertErr) throw insertErr;
+
+        await supabase.from("admin_alerts").insert({
+          source: "subscription-reconciliation-cron", severity: "info",
+          message: `Fila de suscripción faltante restaurada automáticamente para ${email} (webhook de creación probablemente no procesado). Suscripción Stripe ${genuinelyActive.id} confirmada activa.`,
+          context: { user_id: candidate.user_id, email, stripe_subscription_id: genuinelyActive.id, plan: planLabel },
+          resolved: true,
+        });
+
+        insertions.push({ email, stripe_subscription_id: genuinelyActive.id, plan: planLabel });
+        console.log(`[RECONCILIATION] Fila restaurada para ${email} (${genuinelyActive.id})`);
+      } catch (e: any) {
+        errors.push({ email, error: e?.message || "unknown error" });
+        console.error(`[RECONCILIATION] Error en Pasada 2 procesando ${candidate.user_id}:`, e?.message);
+      }
+    }
+
+    // ── Email de resumen ───────────────────────────────────────────────────────
+    const hasActivity = corrections.length > 0 || insertions.length > 0 || errors.length > 0;
     if (hasActivity) {
       const rows = corrections.map(c => `✅ ${c.email}: ${c.before} → ${c.after} (${c.reason})`).join("\n");
+      const insertRows = insertions.map(i => `🆕 ${i.email}: fila de suscripción restaurada (${i.plan}, ${i.stripe_subscription_id})`).join("\n");
       const errRows = errors.map(e => `⚠️ ${e.email}: ${e.error}`).join("\n");
       const html = `
 🔄 Reconciliación de Suscripciones — MusicDibs
 
-Se revisaron ${candidateProfiles?.length ?? 0} perfiles con plan de pago activo. De ellos, ${staleCandidates.length} llevaban más tiempo sin actualizarse del esperado por su ciclo de facturación y se verificaron en vivo contra Stripe.
+Pasada 1 (local activo, Stripe no lo confirma): ${candidateProfiles?.length ?? 0} perfiles revisados, ${staleCandidates.length} candidatos "stale" verificados en vivo.
+Pasada 2 (sin fila local, plan activo en profiles): ${missingRowCandidates?.length ?? 0} candidatos verificados en vivo.
 
-${corrections.length > 0 ? `Correcciones aplicadas (${corrections.length}):\n\n${rows}\n` : ""}
-${errors.length > 0 ? `\nErrores al procesar (${errors.length}):\n\n${errRows}\n` : ""}
+${corrections.length > 0 ? `Correcciones a Free (${corrections.length}):\n\n${rows}\n` : ""}
+${insertions.length > 0 ? `\nFilas de suscripción restauradas (${insertions.length}):\n\n${insertRows}\n` : ""}
+${errors.length > 0 ? `\nErrores / alertas para revisión manual (${errors.length}):\n\n${errRows}\n` : ""}
 
-Este cron SÍ modifica datos automáticamente (a diferencia del monitor de compras, que es solo lectura) — es la red de seguridad para cuando un webhook de cancelación de Stripe no llega a procesarse.
+Este cron SÍ modifica datos automáticamente — es la red de seguridad para cuando un webhook de Stripe (creación o cancelación) no llega a procesarse.
 
 MusicDibs Monitoring · Reconciliación diaria
 `;
@@ -208,14 +249,23 @@ MusicDibs Monitoring · Reconciliación diaria
           to: "info@musicdibs.com",
           from: "MusicDibs <noreply@notify.musicdibs.com>",
           sender_domain: "notify.musicdibs.com",
-          subject: `🔄 Reconciliación de suscripciones — ${corrections.length} corregidas${errors.length ? `, ${errors.length} errores` : ""}`,
+          subject: `🔄 Reconciliación de suscripciones — ${corrections.length} a Free, ${insertions.length} restauradas${errors.length ? `, ${errors.length} alertas` : ""}`,
           html, purpose: "transactional", label: "subscription_reconciliation",
           queued_at: new Date().toISOString(),
         },
       });
     }
 
-    return json({ ok: true, total_active: candidateProfiles?.length ?? 0, checked_stale: staleCandidates.length, corrections: corrections.length, errors: errors.length, details: corrections });
+    return json({
+      ok: true,
+      pass1_total_active: candidateProfiles?.length ?? 0,
+      pass1_checked_stale: staleCandidates.length,
+      pass1_corrections: corrections.length,
+      pass2_missing_row_candidates: missingRowCandidates?.length ?? 0,
+      pass2_insertions: insertions.length,
+      errors: errors.length,
+      corrections, insertions, error_details: errors,
+    });
   } catch (e: any) {
     console.error("[RECONCILIATION] Fatal:", e);
     return json({ error: e?.message || "Internal error" }, 500);

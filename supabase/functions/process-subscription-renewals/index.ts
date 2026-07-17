@@ -1,29 +1,16 @@
-// deno-lint-ignore-file no-explicit-any
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { TIER_TO_PRICE_ID, TIER_CREDITS } from "./_shared/stripe-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
-// Special discount coupons (50% lifetime) for migrated users
-const LIFETIME_50_COUPON = "PA0H0IaT";
-const SPECIAL_DISCOUNT_EMAILS = new Set([
-  "cool_2113@hotmail.com",
-  "javichiplayer@gmail.com",
-]);
-
 function getPriceId(tier: string): { priceId: string; credits: number } {
-  const map: Record<string, { priceId: string; credits: number }> = {
-    'monthly':    { priceId: 'price_1T8n6lFULeu7PzK60TbO76hE', credits: 8    },
-    'annual_100': { priceId: 'price_1T8n6CFULeu7PzK6vs7NZyiJ', credits: 100  },
-    'annual_200': { priceId: 'price_1TMapTFULeu7PzK640B5uuEq', credits: 200  },
-    'annual_300': { priceId: 'price_1TMapTFULeu7PzK6D4GnB3Il', credits: 300  },
-    'annual_400': { priceId: 'price_1TMapTFULeu7PzK6cNJMf2oL', credits: 500  },
-    'annual_500': { priceId: 'price_1TMapTFULeu7PzK6ziUW5fLn', credits: 1000 },
-  };
-  return map[tier] ?? map['annual_100'];
+  const priceId = TIER_TO_PRICE_ID[tier] ?? TIER_TO_PRICE_ID["annual_100"];
+  const credits = TIER_CREDITS[tier] ?? TIER_CREDITS["annual_100"];
+  return { priceId, credits };
 }
 
 Deno.serve(async (req) => {
@@ -34,8 +21,6 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Auth: real execution requires CRON_SECRET or service role key.
-  // Admin JWTs are accepted only for safe manual/dry-run checks from the admin UI/tools.
   const cronSecret = Deno.env.get("CRON_SECRET") || "";
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
   const authHeader = req.headers.get("Authorization") || "";
@@ -76,21 +61,153 @@ Deno.serve(async (req) => {
     await supabase.from("renewal_log").insert(entry);
   };
 
-  // Parse optional body for dry_run flag
   let dryRun = false;
   try {
     const bodyText = await req.text();
-    const bodyJson = bodyText ? JSON.parse(bodyText) : {};
+    const bodyJson = bodyText ? JSON.parse(bodyText) as Record<string, unknown> : {};
     dryRun = bodyJson.dry_run === true;
   } catch (_) { /* ignore body parse errors */ }
   if (isAdminAuth && !isSystemAuth) dryRun = true;
-  if (dryRun) console.log('[renewals] *** DRY RUN MODE — no changes will be made ***');
-  const dryRunResults: any[] = [];
+  if (dryRun) console.log("[renewals] *** DRY RUN MODE — no changes will be made ***");
+
+  interface DryRunResult {
+    user_id: string;
+    email: string | null;
+    tier: string;
+    customer_id: string;
+    credits_would_reset_to: number;
+    permanent_credits: number;
+    total_credits_after: number;
+    lifetime_coupon?: string | null;
+    action: string;
+  }
+  const dryRunResults: DryRunResult[] = [];
+
+  interface ExpiredCancelledResult {
+    user_id: string;
+    email: string | null;
+    tier: string;
+    subscription_credits_removed: number;
+    permanent_credits: number;
+    available_credits_after: number;
+    action: string;
+  }
+  const expiredCancelledResults: ExpiredCancelledResult[] = [];
+
+  let expiredCancelledCount = 0;
+  let expiredCancelledFailed = 0;
 
   try {
-    // ─────────────────────────────────────────────────────────────
-    // 1. SAFETY FLAG CHECK — must run before ANY Stripe call
-    // ─────────────────────────────────────────────────────────────
+    // 0. DEFERRED RESET: cancelaciones anticipadas cuyo periodo ya terminó.
+    // Estas suscripciones tienen status='cancelled' y cancel_at_period_end=true
+    // (el usuario canceló pero conservó plan/créditos hasta el fin del periodo
+    // ya pagado). Cuando current_period_end <= now, toca aplicar el downgrade
+    // a Free y retirar los créditos temporales de la suscripción, conservando
+    // los permanent_credits. Este bloque corre SIEMPRE, independientemente del
+    // flag subscription_billing_enabled (no genera cargos ni renovaciones,
+    // solo cierra el ciclo de cancelaciones ya decididas).
+    const nowISO = new Date().toISOString();
+    const { data: expiredCancelledSubs, error: expiredErr } = await supabase
+      .from("subscriptions")
+      .select("id, user_id, tier, plan, status, current_period_end, cancel_at_period_end, stripe_customer_id")
+      .eq("status", "cancelled")
+      .eq("cancel_at_period_end", true)
+      .lte("current_period_end", nowISO);
+
+    if (expiredErr) throw expiredErr;
+
+    if (expiredCancelledSubs && expiredCancelledSubs.length > 0) {
+      const expiredUserIds = expiredCancelledSubs.map((s) => s.user_id);
+      const { data: expiredProfiles } = await supabase
+        .from("profiles")
+        .select("user_id, available_credits, permanent_credits, subscription_plan, subscription_tier")
+        .in("user_id", expiredUserIds);
+
+      const expiredProfileMap = new Map(
+        (expiredProfiles ?? []).map((p) => [p.user_id, p]),
+      );
+
+      const expiredEmailMap = new Map<string, string>();
+      for (const uid of expiredUserIds) {
+        const { data: u } = await supabase.auth.admin.getUserById(uid);
+        if (u?.user?.email) expiredEmailMap.set(uid, u.user.email);
+      }
+
+      for (const sub of expiredCancelledSubs) {
+        const email = expiredEmailMap.get(sub.user_id) ?? null;
+        const profile = expiredProfileMap.get(sub.user_id);
+        const tier = sub.tier ?? sub.plan ?? "annual_100";
+        const currentAvailable = profile?.available_credits ?? 0;
+        const permanentCredits = profile?.permanent_credits ?? 0;
+
+        // FIX: usar min(currentAvailable, permanentCredits) en lugar de permanentCredits a secas.
+        // Evita devolver créditos permanentes que el usuario ya había gastado antes de cancelar.
+        // Ejemplos:
+        //   avail=20, perm=10 → newAvailable=10 (remove 10 subscription credits, keep 10 perm) ✓
+        //   avail=7,  perm=25 → newAvailable=7  (don't restore 18 already-spent perm credits)  ✓
+        //   avail=0,  perm=0  → newAvailable=0  (nothing to remove)                            ✓
+        const newAvailable = Math.min(currentAvailable, permanentCredits);
+        const subscriptionCredits = currentAvailable - newAvailable;
+
+        if (dryRun) {
+          expiredCancelledResults.push({
+            user_id: sub.user_id,
+            email,
+            tier,
+            subscription_credits_removed: subscriptionCredits,
+            permanent_credits: permanentCredits,
+            available_credits_after: newAvailable,
+            action: "would_expire_cancelled",
+          });
+          expiredCancelledCount++;
+          continue;
+        }
+
+        try {
+          await supabase
+            .from("profiles")
+            .update({
+              available_credits: newAvailable,
+              subscription_plan: "Free",
+              subscription_tier: null,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", sub.user_id);
+
+          if (subscriptionCredits > 0) {
+            await supabase.from("credit_transactions").insert({
+              user_id: sub.user_id,
+              amount: -subscriptionCredits,
+              type: "admin_reset",
+              description: `Fin de periodo tras cancelación: se retiran ${subscriptionCredits} créditos de suscripción (${tier}). Permanentes conservados: ${permanentCredits}.`,
+            });
+          }
+
+          await supabase
+            .from("subscriptions")
+            .update({
+              status: "expired",
+              cancel_at_period_end: false,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", sub.id);
+
+          await log({
+            user_id: sub.user_id,
+            email,
+            action: "expired_cancelled",
+            detail: `Cancelación anticipada finalizada: tier=${tier} subscription_credits_removed=${subscriptionCredits} permanent=${permanentCredits} available_after=${newAvailable}`,
+          });
+          expiredCancelledCount++;
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          await log({ user_id: sub.user_id, email, action: "expired_cancelled_failed", detail: msg.slice(0, 500) });
+          expiredCancelledFailed++;
+        }
+      }
+    }
+
+    // 1. SAFETY FLAG CHECK
     const { data: flagRow, error: flagErr } = await supabase
       .from("app_settings")
       .select("value")
@@ -109,52 +226,65 @@ Deno.serve(async (req) => {
     if (!enabled) {
       console.log("[renewals] subscription_billing_enabled=false → exiting");
       return new Response(
-        JSON.stringify({ ok: true, skipped: true, reason: "billing disabled" }),
+        JSON.stringify({
+          ok: true,
+          skipped: true,
+          reason: "billing disabled",
+          dry_run: dryRun,
+          expired_cancelled: expiredCancelledCount,
+          expired_cancelled_failed: expiredCancelledFailed,
+          expired_cancelled_results: dryRun ? expiredCancelledResults : undefined,
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // 2. Stripe client (only after flag check)
-    // ─────────────────────────────────────────────────────────────
+    // 2. Stripe client
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
-      apiVersion: "2024-06-20",
+      apiVersion: "2025-08-27.basil",
       httpClient: Stripe.createFetchHttpClient(),
     });
 
-    // ─────────────────────────────────────────────────────────────
     // 3. Fetch subscriptions due today or already expired
-    // ─────────────────────────────────────────────────────────────
     const cutoffISO = new Date().toISOString();
     const { data: subs, error: subsErr } = await supabase
       .from("subscriptions")
-      .select("id, user_id, tier, plan, status, current_period_start, current_period_end, stripe_customer_id")
+      .select("id, user_id, tier, plan, status, current_period_start, current_period_end, stripe_customer_id, lifetime_coupon")
       .eq("status", "active")
       .lte("current_period_end", cutoffISO);
 
     if (subsErr) throw subsErr;
 
-    // Heartbeat: always log a run so watchdog can detect cron health, even with 0 subs
-    await log({ action: "heartbeat", detail: `subs_due=${subs?.length ?? 0}` });
+    await log({ action: "heartbeat", detail: `subs_due=${subs?.length ?? 0} expired_cancelled=${expiredCancelledCount}` });
 
     if (!subs || subs.length === 0) {
-      return new Response(JSON.stringify({ ok: true, dry_run: dryRun, processed: 0, results: dryRun ? [] : undefined }), {
+      return new Response(JSON.stringify({
+        ok: true,
+        dry_run: dryRun,
+        processed: 0,
+        results: dryRun ? [] : undefined,
+        expired_cancelled: expiredCancelledCount,
+        expired_cancelled_failed: expiredCancelledFailed,
+        expired_cancelled_results: dryRun ? expiredCancelledResults : undefined,
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Resolve customer ids + emails
+    // 4. Resolve customer ids, emails y permanent_credits
     const userIds = subs.map((s) => s.user_id);
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("user_id, stripe_customer_id")
+      .select("user_id, stripe_customer_id, permanent_credits")
       .in("user_id", userIds);
 
     const profileMap = new Map(
-      (profiles ?? []).map((p) => [p.user_id, p.stripe_customer_id]),
+      (profiles ?? []).map((p) => [p.user_id, {
+        stripe_customer_id: p.stripe_customer_id,
+        permanent_credits: p.permanent_credits ?? 0,
+      }]),
     );
 
-    // Get emails via admin auth
     const emailMap = new Map<string, string>();
     for (const uid of userIds) {
       const { data: u } = await supabase.auth.admin.getUserById(uid);
@@ -165,33 +295,36 @@ Deno.serve(async (req) => {
 
     for (const sub of subs) {
       const email = emailMap.get(sub.user_id) ?? null;
-      const customerId = sub.stripe_customer_id ?? profileMap.get(sub.user_id);
+      const profileData = profileMap.get(sub.user_id);
+      const customerId = sub.stripe_customer_id ?? profileData?.stripe_customer_id;
+      // permanent_credits: porción fija que siempre se conserva en available_credits
+      const permanentCredits = profileData?.permanent_credits ?? 0;
 
       if (!customerId) {
         if (dryRun) {
+          const { credits: tierCredits } = getPriceId(sub.tier ?? sub.plan ?? "annual_100");
           dryRunResults.push({
             user_id: sub.user_id,
             email,
-            tier: sub.tier ?? sub.plan ?? 'annual_100',
-            customer_id: 'MISSING',
-            credits_would_reset_to: getPriceId(sub.tier ?? sub.plan ?? 'annual_100').credits,
-            action: 'would_skip_no_customer',
+            tier: sub.tier ?? sub.plan ?? "annual_100",
+            customer_id: "MISSING",
+            credits_would_reset_to: tierCredits,
+            permanent_credits: permanentCredits,
+            total_credits_after: tierCredits + permanentCredits,
+            action: "would_skip_no_customer",
           });
           skipped++;
           continue;
         }
-        await log({
-          user_id: sub.user_id,
-          email,
-          action: "skipped",
-          detail: "missing stripe_customer_id",
-        });
+        await log({ user_id: sub.user_id, email, action: "skipped", detail: "missing stripe_customer_id" });
         skipped++;
         continue;
       }
 
       const tier = sub.tier ?? sub.plan ?? "annual_100";
       const { priceId, credits: tierCredits } = getPriceId(tier);
+      // Total créditos tras renovar = créditos del plan (temporales) + permanentes
+      const totalCreditsAfterRenewal = tierCredits + permanentCredits;
 
       if (dryRun) {
         dryRunResults.push({
@@ -200,65 +333,60 @@ Deno.serve(async (req) => {
           tier,
           customer_id: customerId,
           credits_would_reset_to: tierCredits,
-          action: 'would_renew',
+          permanent_credits: permanentCredits,
+          total_credits_after: totalCreditsAfterRenewal,
+          lifetime_coupon: sub.lifetime_coupon ?? null,
+          action: "would_renew",
         });
         created++;
         continue;
       }
 
       try {
-        // a) Already has an active or trialing Stripe subscription?
-        // Check both statuses in parallel — "trialing" is a valid active subscription
-        // (trial_end in the future) and must NOT trigger a new subscription creation.
-        const [existingActive, existingTrialing] = await Promise.all([
-          stripe.subscriptions.list({ customer: customerId, status: "active", limit: 1 }),
-          stripe.subscriptions.list({ customer: customerId, status: "trialing", limit: 1 }),
-        ]);
+        // a) Already has an active Stripe subscription?
+        const existing = await stripe.subscriptions.list({
+          customer: customerId,
+          status: "active",
+          limit: 1,
+        });
 
-        const existingSub = existingActive.data[0] ?? existingTrialing.data[0];
-
-        if (existingSub) {
-          const ss = existingSub;
+        if (existing.data.length > 0) {
+          const ss = existing.data[0];
           await supabase
             .from("subscriptions")
             .update({
               stripe_subscription_id: ss.id,
-              current_period_start: new Date((ss as any).current_period_start * 1000).toISOString(),
-              current_period_end: new Date((ss as any).current_period_end * 1000).toISOString(),
+              current_period_start: new Date(ss.current_period_start * 1000).toISOString(),
+              current_period_end: new Date(ss.current_period_end * 1000).toISOString(),
               updated_at: new Date().toISOString(),
             })
             .eq("id", sub.id);
 
-          await log({
-            user_id: sub.user_id,
-            email,
-            action: "skipped",
-            detail: `already has active/trialing stripe subscription ${ss.id} (status=${ss.status})`,
-          });
+          await log({ user_id: sub.user_id, email, action: "skipped", detail: `already has active stripe subscription ${ss.id}` });
           skipped++;
           continue;
         }
 
         // b) Create new Stripe subscription
-        const createParams: any = {
+        const periodEndDate = sub.current_period_end
+          ? sub.current_period_end.slice(0, 10)
+          : new Date().toISOString().slice(0, 10);
+        const idempotencyKey = `renewal-${sub.id}-${periodEndDate}`;
+
+        const createParams: Stripe.SubscriptionCreateParams = {
           customer: customerId,
           items: [{ price: priceId }],
           payment_behavior: "allow_incomplete",
           proration_behavior: "none",
-          metadata: {
-            user_id: sub.user_id,
-            migrated: "true",
-            tier,
-          },
+          metadata: { user_id: sub.user_id, migrated: "true", tier },
         };
 
-        if (email && SPECIAL_DISCOUNT_EMAILS.has(email.toLowerCase())) {
-          createParams.coupon = LIFETIME_50_COUPON;
+        if (sub.lifetime_coupon) {
+          createParams.coupon = sub.lifetime_coupon;
         }
 
-        const newSub = await stripe.subscriptions.create(createParams);
+        const newSub = await stripe.subscriptions.create(createParams, { idempotencyKey });
 
-        // Map Stripe status to our status
         const KNOWN_STATUSES = ["active","trialing","incomplete","past_due","incomplete_expired","canceled","unpaid","paused"];
         let newStatus = "active";
         if (newSub.status === "active" || newSub.status === "trialing") {
@@ -267,54 +395,51 @@ Deno.serve(async (req) => {
           newStatus = "past_due";
         } else {
           newStatus = "past_due";
-          // Unknown / unmapped Stripe status → raise admin alert
           if (!KNOWN_STATUSES.includes(newSub.status)) {
             await supabase.from("admin_alerts").insert({
               source: "stripe_unmapped_status",
               severity: "error",
               message: `Estado Stripe no mapeado al renovar: "${newSub.status}"`,
-              context: {
-                stripe_subscription_id: newSub.id,
-                stripe_status: newSub.status,
-                user_id: sub.user_id,
-                email,
-                tier,
-              },
+              context: { stripe_subscription_id: newSub.id, stripe_status: newSub.status, user_id: sub.user_id, email, tier },
             });
           }
         }
 
-        // Calculate credits to add (only if payment succeeded)
-        const { credits } = getPriceId(tier);
         const shouldAddCredits = newStatus === "active";
+
+        const periodStart = newSub.current_period_start
+          ? new Date(newSub.current_period_start * 1000).toISOString() : null;
+        const periodEnd = newSub.current_period_end
+          ? new Date(newSub.current_period_end * 1000).toISOString() : null;
 
         await supabase
           .from("subscriptions")
           .update({
             stripe_subscription_id: newSub.id,
             stripe_customer_id: customerId,
-            current_period_start: new Date((newSub as any).current_period_start * 1000).toISOString(),
-            current_period_end: new Date((newSub as any).current_period_end * 1000).toISOString(),
+            current_period_start: periodStart,
+            current_period_end: periodEnd,
             status: newStatus,
             updated_at: new Date().toISOString(),
           })
           .eq("id", sub.id);
 
-        // Reset credits to plan value (no acumular) only if payment succeeded
-        if (shouldAddCredits && credits > 0) {
+        if (shouldAddCredits && tierCredits > 0) {
+          // available_credits = créditos del plan (temporales, reset al periodo) + permanent_credits.
+          // Los permanent_credits nunca se tocan: la suma garantiza que siempre están presentes.
           await supabase
             .from("profiles")
             .update({
-              available_credits: credits,
+              available_credits: totalCreditsAfterRenewal,
               updated_at: new Date().toISOString(),
             })
             .eq("user_id", sub.user_id);
 
           await supabase.from("credit_transactions").insert({
             user_id: sub.user_id,
-            amount: credits,
+            amount: tierCredits,
             type: "renewal",
-            description: `Renovacion: creditos reiniciados a ${credits} (${tier})`,
+            description: `Renovación: créditos suscripción reiniciados a ${tierCredits} (${tier}). Permanentes: ${permanentCredits}. Total: ${totalCreditsAfterRenewal}.`,
           });
         }
 
@@ -322,33 +447,19 @@ Deno.serve(async (req) => {
           user_id: sub.user_id,
           email,
           action: "created",
-          detail: `stripe sub ${newSub.id} status=${newSub.status} credits_reset=${shouldAddCredits}`,
+          detail: `stripe sub ${newSub.id} status=${newSub.status} tier_credits=${tierCredits} permanent=${permanentCredits} total=${totalCreditsAfterRenewal} idempotency_key=${idempotencyKey}`,
         });
         created++;
-      } catch (err: any) {
-        const msg = String(err?.message ?? err);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         const isPM = /payment method|no.*source|invoice.*payment/i.test(msg);
 
         if (isPM) {
-          await supabase
-            .from("subscriptions")
-            .update({ status: "past_due", updated_at: new Date().toISOString() })
-            .eq("id", sub.id);
-
-          await log({
-            user_id: sub.user_id,
-            email,
-            action: "no_payment_method",
-            detail: msg.slice(0, 500),
-          });
+          await supabase.from("subscriptions").update({ status: "past_due", updated_at: new Date().toISOString() }).eq("id", sub.id);
+          await log({ user_id: sub.user_id, email, action: "no_payment_method", detail: msg.slice(0, 500) });
           noPM++;
         } else {
-          await log({
-            user_id: sub.user_id,
-            email,
-            action: "failed",
-            detail: msg.slice(0, 500),
-          });
+          await log({ user_id: sub.user_id, email, action: "failed", detail: msg.slice(0, 500) });
           failed++;
         }
       }
@@ -363,6 +474,8 @@ Deno.serve(async (req) => {
           would_renew: created,
           would_skip: skipped,
           results: dryRunResults,
+          expired_cancelled: expiredCancelledCount,
+          expired_cancelled_results: expiredCancelledResults,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -376,20 +489,23 @@ Deno.serve(async (req) => {
         skipped,
         no_payment_method: noPM,
         failed,
+        expired_cancelled: expiredCancelledCount,
+        expired_cancelled_failed: expiredCancelledFailed,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-  } catch (err: any) {
-    console.error("[renewals] Fatal error:", err);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[renewals] Fatal error:", msg);
     try {
       await supabase.from("admin_alerts").insert({
         source: "renewals_fatal",
         severity: "critical",
         message: "Fallo fatal en process-subscription-renewals",
-        context: { error: String(err?.message ?? err).slice(0, 1000) },
+        context: { error: msg.slice(0, 1000) },
       });
     } catch (_) { /* swallow */ }
-    return new Response(JSON.stringify({ error: String(err?.message ?? err) }), {
+    return new Response(JSON.stringify({ error: msg }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

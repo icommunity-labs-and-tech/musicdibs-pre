@@ -115,7 +115,7 @@ serve(async (req) => {
         .from("ai_generation_logs")
         .update({
           status: "failed",
-          error_message: `code=${code}: ${body?.msg || "KIE failure"}`,
+          error_message: body?.msg || `KIE code ${code}`,
           response_payload: body,
           output_url: null,
         })
@@ -125,9 +125,6 @@ serve(async (req) => {
     }
 
     // ── Extraer audio URL del resultado ───────────────────────────────────────
-    // KIE devuelve 2 tracks por generación. Tomamos el primero.
-    // add-instrumental devuelve: body.data.data[].audio_url (tempfile.aiquickdraw.com)
-    // También existe stream_audio_url (musicfile.kie.ai) — sin extensión, menos fiable
     const tracks: Array<Record<string, unknown>> = Array.isArray(body?.data?.data)
       ? body.data.data
       : [];
@@ -154,9 +151,7 @@ serve(async (req) => {
     }
 
     // ── Re-alojar en Supabase Storage para URL permanente sin CORS ────────────
-    // tempfile.aiquickdraw.com es temporal y puede tener restricciones de CORS.
-    // Descargamos el audio y lo subimos a nuestro bucket para URL estable.
-    let outputUrl = kieAudioUrl; // fallback: URL de KIE si falla la re-subida
+    let outputUrl = kieAudioUrl;
     try {
       const audioRes = await fetch(kieAudioUrl, { headers: { "User-Agent": "MusicDibs/1.0" } });
       if (audioRes.ok) {
@@ -185,8 +180,6 @@ serve(async (req) => {
     }
 
     // ── Marcar como completado ────────────────────────────────────────────────
-    // Guardamos provider_task_id para que kie-midi-generate pueda usar
-    // este resultado como fuente de separación de stems → MIDI.
     await supabase
       .from("ai_generation_logs")
       .update({
@@ -198,7 +191,6 @@ serve(async (req) => {
       .eq("id", logId);
 
     // ── Registrar en la biblioteca (ai_generations) ───────────────────────────
-    // Para que la canción mejorada aparezca en /dashboard/library como un asset más.
     try {
       const reqPayload = (logRow.request_payload as Record<string, unknown>) || {};
       const mode = (reqPayload.mode as string) || "enhance";
@@ -240,4 +232,13 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-    }
+    });
+  }
+});
+
+function ok(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}

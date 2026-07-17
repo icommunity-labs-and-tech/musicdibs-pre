@@ -1,36 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "../_shared/supabase-client.ts";
+import { createClient } from "./_shared/supabase-client.ts";
+import { PRICE_PLAN, PRICE_TO_TIER } from "./_shared/stripe-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const logStep = (step: string, details?: any) => {
+const logStep = (step: string, details?: unknown) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
-const PRICE_TO_PLAN: Record<string, string> = {
-  // Annual plans — producción (FULeu7PzK6)
-  "price_1T8n6CFULeu7PzK6vs7NZyiJ": "Annual",  // annual_100
-  "price_1TMapTFULeu7PzK640B5uuEq": "Annual",  // annual_200
-  "price_1TMapTFULeu7PzK6D4GnB3Il": "Annual",  // annual_300
-  "price_1TMapTFULeu7PzK6cNJMf2oL": "Annual",  // annual_400
-  "price_1TMapTFULeu7PzK6ziUW5fLn": "Annual",  // annual_500
-  // Monthly plan — producción (FULeu7PzK6)
-  "price_1T8n6lFULeu7PzK60TbO76hE": "Monthly",
-};
-
-const PRICE_TO_TIER: Record<string, string> = {
-  "price_1T8n6CFULeu7PzK6vs7NZyiJ": "annual_100",
-  "price_1TMapTFULeu7PzK640B5uuEq": "annual_200",
-  "price_1TMapTFULeu7PzK6D4GnB3Il": "annual_300",
-  "price_1TMapTFULeu7PzK6cNJMf2oL": "annual_400",
-  "price_1TMapTFULeu7PzK6ziUW5fLn": "annual_500",
-  "price_1T8n6lFULeu7PzK60TbO76hE": "monthly",
-};
+// D1: Stripe singleton at module level — reuses HTTP connections across requests
+const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
+  apiVersion: "2026-02-25.clover",
+});
 
 const ACTIVE_SUB_STATUSES = new Set(["active", "trialing", "past_due", "unpaid"]);
 
@@ -43,25 +29,34 @@ const toIsoDate = (value: unknown): string | null => {
   }
   if (value instanceof Date) return value.toISOString();
   if (typeof value === "object" && value !== null && "toISOString" in value) {
-    try {
-      return (value as { toISOString: () => string }).toISOString();
-    } catch {
-      return null;
-    }
+    try { return (value as { toISOString: () => string }).toISOString(); } catch { return null; }
   }
   return null;
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+async function withRetry<T>(fn: () => Promise<T>, maxAttempts = 3, label = ""): Promise<T> {
+  for (let i = 0; i < maxAttempts; i++) {
+    try { return await fn(); }
+    catch (err: unknown) {
+      const e = err as { type?: string; statusCode?: number };
+      const isRetryable = e?.type === "StripeRateLimitError" || (e?.statusCode ?? 0) >= 500;
+      if (isRetryable && i < maxAttempts - 1) {
+        const delay = 500 * Math.pow(2, i);
+        console.warn(`[CHECK-SUBSCRIPTION] Retrying ${label} after ${delay}ms (attempt ${i + 1})`);
+        await new Promise(r => setTimeout(r, delay));
+      } else throw err;
+    }
   }
+  throw new Error("withRetry: max attempts exceeded");
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!Deno.env.get("STRIPE_SECRET_KEY")) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -92,38 +87,51 @@ serve(async (req) => {
       { auth: { persistSession: false } },
     );
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2026-02-25.clover" });
-    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
+    // M3: Check DB for cached stripe_customer_id first — avoids slow email lookup on every call
+    const { data: cachedProfile } = await supabaseClient
+      .from("profiles")
+      .select("stripe_customer_id")
+      .eq("user_id", userId)
+      .maybeSingle();
 
-    if (customers.data.length === 0) {
-      logStep("No Stripe customer found, setting Free plan");
-      await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", userId);
-      return new Response(JSON.stringify({ subscribed: false, plan: "Free", cancel_at_period_end: false, subscription_end: null }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    let customerId: string | null = cachedProfile?.stripe_customer_id ?? null;
+
+    if (customerId) {
+      logStep("Found stripe_customer_id in DB cache", { customerId });
+    } else {
+      logStep("stripe_customer_id not cached, falling back to Stripe email lookup");
+      const customers = await withRetry(
+        () => stripe.customers.list({ email: userEmail, limit: 1 }),
+        3, "customers.list"
+      );
+      if (customers.data.length === 0) {
+        logStep("No Stripe customer found, setting Free plan");
+        await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", userId);
+        return new Response(JSON.stringify({ subscribed: false, plan: "Free", cancel_at_period_end: false, subscription_end: null }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      customerId = customers.data[0].id;
+      logStep("Found Stripe customer via email lookup", { customerId });
     }
 
-    const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
-
+    // Persist customer_id if not yet cached in DB
     await supabaseClient
       .from("profiles")
       .update({ stripe_customer_id: customerId })
       .eq("user_id", userId)
       .is("stripe_customer_id", null);
 
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "all",
-      limit: 10,
-    });
+    const subscriptions = await withRetry(
+      () => stripe.subscriptions.list({ customer: customerId!, status: "all", limit: 10 }),
+      3, "subscriptions.list"
+    );
 
-    const subscription = subscriptions.data.find((sub: any) => ACTIVE_SUB_STATUSES.has(sub.status));
+    const subscription = subscriptions.data.find((sub) => ACTIVE_SUB_STATUSES.has(sub.status));
 
     if (!subscription) {
       logStep("No active Stripe subscription — checking local subscriptions table");
 
-      // ── Buscar suscripción local vigente (usuarios migrados sin Stripe Sub object) ──
       const { data: localSub } = await supabaseClient
         .from("subscriptions")
         .select("id, user_id, plan, status, current_period_end, tier, cancel_at_period_end")
@@ -133,32 +141,18 @@ serve(async (req) => {
         .maybeSingle();
 
       if (localSub) {
-        logStep("Found valid local subscription", {
-          plan: localSub.plan,
-          current_period_end: localSub.current_period_end,
-          cancel_at_period_end: localSub.cancel_at_period_end,
-        });
-
-        // Sincronizar profiles por si acaso
+        logStep("Found valid local subscription", { plan: localSub.plan, current_period_end: localSub.current_period_end });
         await supabaseClient
           .from("profiles")
           .update({ subscription_plan: localSub.plan, updated_at: new Date().toISOString() })
           .eq("user_id", userId)
           .neq("subscription_plan", localSub.plan);
-
         return new Response(
-          JSON.stringify({
-            subscribed: true,
-            plan: localSub.plan,
-            subscription_end: localSub.current_period_end,
-            cancel_at_period_end: localSub.cancel_at_period_end ?? false,
-            source: "local_subscription",
-          }),
+          JSON.stringify({ subscribed: true, plan: localSub.plan, subscription_end: localSub.current_period_end, cancel_at_period_end: localSub.cancel_at_period_end ?? false, source: "local_subscription" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
 
-      // ── Auto-expiración: si hay una sub active pero ya vencida → corregirla ──
       const { data: staleSub } = await supabaseClient
         .from("subscriptions")
         .select("id, user_id, plan")
@@ -169,69 +163,65 @@ serve(async (req) => {
 
       if (staleSub) {
         logStep("Auto-expiring stale subscription", { subId: staleSub.id, plan: staleSub.plan });
-        await supabaseClient
-          .from("subscriptions")
-          .update({ status: "expired", updated_at: new Date().toISOString() })
-          .eq("id", staleSub.id);
-
-        await supabaseClient
-          .from("profiles")
-          .update({ subscription_plan: "Free", subscription_tier: null, updated_at: new Date().toISOString() })
-          .eq("user_id", staleSub.user_id)
-          .neq("subscription_plan", "Free");
-
+        await supabaseClient.from("subscriptions").update({ status: "expired", updated_at: new Date().toISOString() }).eq("id", staleSub.id);
+        await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: null, updated_at: new Date().toISOString() }).eq("user_id", staleSub.user_id).neq("subscription_plan", "Free");
         logStep(`Auto-expired stale sub for user ${staleSub.user_id} (was ${staleSub.plan})`);
       }
 
-      // ── Sin suscripción válida → Free ──
       logStep("No valid subscription found, setting Free plan");
-      await supabaseClient
-        .from("profiles")
-        .update({ subscription_plan: "Free", subscription_tier: null })
-        .eq("user_id", userId);
-
+      await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", userId);
       return new Response(
-        JSON.stringify({
-          subscribed: false,
-          plan: "Free",
-          cancel_at_period_end: false,
-          subscription_end: null,
-        }),
+        JSON.stringify({ subscribed: false, plan: "Free", cancel_at_period_end: false, subscription_end: null }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
+    // Grace period check for past_due / unpaid subscriptions.
+    // If payment_grace_expires_at is set and has passed → deny access.
+    // This prevents monthly subscribers from getting ~30 free days during Stripe's dunning period.
+    if (subscription.status === "past_due" || subscription.status === "unpaid") {
+      const { data: graceProfile } = await supabaseClient
+        .from("profiles")
+        .select("payment_grace_expires_at")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (graceProfile?.payment_grace_expires_at) {
+        const graceExpires = new Date(graceProfile.payment_grace_expires_at);
+        if (graceExpires < new Date()) {
+          logStep("Grace period expired — denying access", {
+            userId,
+            expired: graceProfile.payment_grace_expires_at,
+            stripeStatus: subscription.status,
+          });
+          await supabaseClient
+            .from("profiles")
+            .update({ subscription_plan: "Free", subscription_tier: null })
+            .eq("user_id", userId);
+          return new Response(
+            JSON.stringify({ subscribed: false, plan: "Free", cancel_at_period_end: false, subscription_end: null }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        logStep("Grace period still active", { userId, expires: graceProfile.payment_grace_expires_at });
+      }
+    }
+
     const priceId = subscription.items.data[0]?.price?.id;
-    const plan = priceId ? (PRICE_TO_PLAN[priceId] || "Monthly") : "Monthly";
-    const tier = priceId ? (PRICE_TO_TIER[priceId] || null) : null;
+    // D3: Use shared PRICE_PLAN and PRICE_TO_TIER maps (fixes annual_400/annual_500 tier name bugs)
+    const plan = priceId ? (PRICE_PLAN[priceId] || "Monthly") : "Monthly";
+    const tier = priceId ? (PRICE_TO_TIER[priceId] ?? null) : null;
     const cancelAtPeriodEnd = subscription.cancel_at_period_end === true;
 
-    // In Clover API, current_period_end moved to subscription items level
-    const itemPeriodEnd = (subscription.items.data[0] as any)?.current_period_end;
-    const periodEndRaw = itemPeriodEnd ?? (subscription as any).current_period_end ?? (subscription as any).cancel_at ?? (subscription as any).ended_at;
+    const itemPeriodEnd = (subscription.items.data[0] as { current_period_end?: number })?.current_period_end;
+    const periodEndRaw = itemPeriodEnd ?? (subscription as unknown as { current_period_end?: number }).current_period_end ?? (subscription as unknown as { cancel_at?: number }).cancel_at ?? (subscription as unknown as { ended_at?: number }).ended_at;
     const subscriptionEnd = toIsoDate(periodEndRaw);
 
-    logStep("Subscription resolved", {
-      status: subscription.status,
-      plan,
-      tier,
-      priceId,
-      cancelAtPeriodEnd,
-      periodEndRaw,
-      subscriptionEnd,
-    });
+    logStep("Subscription resolved", { status: subscription.status, plan, tier, priceId, cancelAtPeriodEnd, subscriptionEnd });
 
-    await supabaseClient
-      .from("profiles")
-      .update({ subscription_plan: plan, subscription_tier: tier })
-      .eq("user_id", userId);
+    await supabaseClient.from("profiles").update({ subscription_plan: plan, subscription_tier: tier }).eq("user_id", userId);
 
-    return new Response(JSON.stringify({
-      subscribed: true,
-      plan,
-      subscription_end: subscriptionEnd,
-      cancel_at_period_end: cancelAtPeriodEnd,
-    }), {
+    return new Response(JSON.stringify({ subscribed: true, plan, subscription_end: subscriptionEnd, cancel_at_period_end: cancelAtPeriodEnd }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {

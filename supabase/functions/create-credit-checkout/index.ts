@@ -39,6 +39,27 @@ const PLAN_DEFINITIONS: PlanDefinition[] = [
 
 const TOPUP_PLANS = PLAN_DEFINITIONS.filter((plan) => plan.productType === "topup").map((plan) => plan.planId);
 
+// Credit value used ONLY to decide upgrade vs downgrade direction when switching
+// between subscription plans. Kept in sync with PLAN_DEFINITIONS credits.
+const TIER_CREDITS: Record<string, number> = {
+  annual_20: 20,
+  annual_100: 100,
+  annual_200: 200,
+  annual_300: 300,
+  annual_500: 500,
+  annual_1000: 1000,
+  monthly: 8,
+};
+const TIER_LABELS: Record<string, string> = {
+  annual_20: "Anual Básico 20 créditos",
+  annual_100: "Anual 100 créditos",
+  annual_200: "Anual 200 créditos",
+  annual_300: "Anual 300 créditos",
+  annual_500: "Anual 500 créditos",
+  annual_1000: "Anual 1000 créditos",
+  monthly: "Mensual 8 créditos",
+};
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -184,8 +205,26 @@ async function resolvePlan(stripe: Stripe, planId: string): Promise<ResolvedPlan
   };
 }
 
+// Uso general: localizar "la" suscripcion del cliente (para cancelar renovacion,
+// para decidir si hay que hacer upgrade/downgrade, etc.) incluye estados con
+// problemas de cobro porque en esos casos SI queremos encontrar la suscripcion
+// (p.ej. para permitir que el usuario la arregle haciendo un cambio de plan).
 function isSubscriptionActive(subscription: Stripe.Subscription) {
   return ["active", "trialing", "past_due", "unpaid"].includes(subscription.status);
+}
+
+// FIX (2026-07-08, caso andrerabinovici@gmail.com): comprobacion MAS ESTRICTA,
+// usada UNICAMENTE como puerta de entrada para comprar top-ups. isSubscriptionActive
+// (de arriba) trata 'past_due'/'unpaid' como "activa" -- correcto para localizar
+// la suscripcion en otros contextos, pero PELIGROSO aqui: permitia que cualquier
+// usuario cuya renovacion hubiera fallado (en periodo de gracia, con la suscripcion
+// en past_due durante varios dias) siguiera comprando top-ups como si tuviera la
+// suscripcion al dia -- exactamente el hueco que permitiria dejar de pagar la
+// renovacion adrede y aprovechar el periodo de gracia para comprar creditos con
+// el beneficio reservado a clientes al corriente de pago. Los top-ups exigen
+// evidencia de pago genuinamente al dia: solo 'active' o 'trialing'.
+function isSubscriptionGenuinelyPaidUp(subscription: Stripe.Subscription) {
+  return ["active", "trialing"].includes(subscription.status);
 }
 
 serve(async (req) => {
@@ -266,6 +305,34 @@ serve(async (req) => {
       return json({ message: "Renovación cancelada. Tu plan seguirá activo hasta fin de periodo." });
     }
 
+    // NUEVO: cancelar un downgrade programado y volver a "seguir en el plan actual"
+    if (action === "cancel_scheduled_downgrade") {
+      if (!user) throw new Error("Authentication required");
+      const { data: subRow } = await supabaseAdmin
+        .from("subscriptions")
+        .select("schedule_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (!subRow?.schedule_id) {
+        return json({ message: "No tienes ningún cambio de plan programado." });
+      }
+      try {
+        await stripe.subscriptionSchedules.release(subRow.schedule_id);
+      } catch (e) {
+        console.warn("[CHECKOUT] release schedule on cancel:", e);
+      }
+      await supabaseAdmin.from("subscriptions").update({
+        schedule_id: null,
+        pending_price_id: null,
+        pending_plan_id: null,
+        pending_plan_label: null,
+        pending_credits: null,
+        pending_effective_at: null,
+        updated_at: new Date().toISOString(),
+      }).eq("user_id", user.id);
+      return json({ message: "Cambio de plan programado cancelado. Seguirás en tu plan actual." });
+    }
+
     const plan = await resolvePlan(stripe, planId);
 
     if (TOPUP_PLANS.includes(planId)) {
@@ -274,8 +341,11 @@ serve(async (req) => {
       if (!customers2.data.length) throw new Error("Top-ups require an active subscription. Please subscribe first.");
 
       const subs = await stripe.subscriptions.list({ customer: customers2.data[0].id, status: "all", limit: 10 });
-      const activeSub = subs.data.find((subscription: Stripe.Subscription) => isSubscriptionActive(subscription) && !subscription.cancel_at_period_end);
-      if (!activeSub) throw new Error("Top-ups require an active subscription. Please subscribe first.");
+      // FIX: exige suscripcion GENUINAMENTE al dia (active/trialing), no solo
+      // "encontrable" (past_due/unpaid tambien cuentan para isSubscriptionActive).
+      // Ver comentario en la definicion de isSubscriptionGenuinelyPaidUp.
+      const activeSub = subs.data.find((subscription: Stripe.Subscription) => isSubscriptionGenuinelyPaidUp(subscription) && !subscription.cancel_at_period_end);
+      if (!activeSub) throw new Error("Los top-ups de créditos requieren una suscripción activa y al día (sin problemas de cobro pendientes). Si tu renovación falló, actualiza tu método de pago antes de comprar créditos adicionales.");
     }
 
     let customerId: string | undefined;
@@ -294,12 +364,130 @@ serve(async (req) => {
 
       if (activeSub) {
         const currentPriceId = activeSub.items.data[0]?.price?.id;
-        if (currentPriceId === plan.priceId && !activeSub.cancel_at_period_end) {
+        if (currentPriceId === plan.priceId && !activeSub.cancel_at_period_end && !activeSub.schedule) {
           return json({ already_subscribed: true, message: "Ya tienes este plan activo." });
         }
         if (currentPriceId === plan.priceId && activeSub.cancel_at_period_end) {
           await stripe.subscriptions.update(activeSub.id, { cancel_at_period_end: false });
           return json({ switched: true, reactivated: true, message: "Plan reactivado correctamente." });
+        }
+
+        // ─── Determinar si es upgrade o downgrade ───────────────────────────
+        // Regla de negocio (estandar de la industria: Netflix, Spotify, la gran
+        // mayoria de SaaS): los upgrades se aplican YA con prorrateo (el usuario
+        // quiere el beneficio ya, es justo que pague por ello ya). Los downgrades
+        // se PROGRAMAN para el final del periodo ya pagado, sin ningun tipo de
+        // reembolso ni compensacion -- el usuario disfruta lo que ya pago hasta
+        // el final, y el plan nuevo (mas barato) empieza a aplicarse solo en la
+        // renovacion siguiente.
+        const { data: profileRowForDirection } = await supabaseAdmin
+          .from("profiles")
+          .select("subscription_tier")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const currentDbTier = profileRowForDirection?.subscription_tier as string | null | undefined;
+
+        let currentCredits: number;
+        if (currentDbTier && TIER_CREDITS[currentDbTier] !== undefined) {
+          currentCredits = TIER_CREDITS[currentDbTier];
+        } else {
+          try {
+            const currentPrice = currentPriceId ? await stripe.prices.retrieve(currentPriceId, { expand: ["product"] }) : null;
+            const matchedCurrentDef = currentPrice ? PLAN_DEFINITIONS.find((d) => matchesDefinition(currentPrice, d)) : undefined;
+            currentCredits = matchedCurrentDef ? resolveCredits(currentPrice!, matchedCurrentDef) : plan.credits;
+          } catch {
+            currentCredits = plan.credits;
+          }
+        }
+
+        const isDowngrade = plan.credits < currentCredits;
+
+        if (isDowngrade) {
+          // ─── DOWNGRADE: programar para fin de periodo via Subscription Schedule ───
+          try {
+            // Si ya habia un downgrade programado, liberar el schedule anterior antes
+            // de crear uno nuevo -- Stripe no permite tocar una sub adjunta a un
+            // schedule sin liberarla primero, y el usuario puede haber cambiado de
+            // opinion sobre a que plan bajar.
+            if (activeSub.schedule) {
+              const existingScheduleId = typeof activeSub.schedule === "string" ? activeSub.schedule : (activeSub.schedule as Stripe.SubscriptionSchedule).id;
+              try {
+                await stripe.subscriptionSchedules.release(existingScheduleId);
+              } catch (releaseErr) {
+                console.warn("[CHECKOUT] Could not release existing schedule (may already be released):", releaseErr);
+              }
+            }
+
+            const schedule = await stripe.subscriptionSchedules.create({ from_subscription: activeSub.id });
+            const currentPhaseStart = schedule.phases[0].start_date;
+            const periodEndRaw =
+              (activeSub as unknown as { current_period_end?: number }).current_period_end ??
+              (activeSub.items.data[0] as unknown as { current_period_end?: number })?.current_period_end;
+            if (!periodEndRaw) throw new Error("Could not resolve current_period_end for scheduling");
+
+            await stripe.subscriptionSchedules.update(schedule.id, {
+              end_behavior: "release",
+              phases: [
+                {
+                  items: [{ price: currentPriceId!, quantity: 1 }],
+                  start_date: currentPhaseStart,
+                  end_date: periodEndRaw,
+                },
+                {
+                  items: [{ price: plan.priceId, quantity: 1 }],
+                },
+              ],
+            });
+
+            const effectiveAtIso = new Date(periodEndRaw * 1000).toISOString();
+
+            await supabaseAdmin.from("subscriptions").update({
+              schedule_id: schedule.id,
+              pending_price_id: plan.priceId,
+              pending_plan_id: plan.planId,
+              pending_plan_label: TIER_LABELS[plan.planId] ?? plan.label,
+              pending_credits: plan.credits,
+              pending_effective_at: effectiveAtIso,
+              cancel_at_period_end: false,
+              updated_at: new Date().toISOString(),
+            }).eq("user_id", user.id);
+
+            const effectiveDateHuman = new Date(periodEndRaw * 1000).toLocaleDateString("es-ES");
+
+            return json({
+              scheduled: true,
+              message: `Tu plan actual seguirá activo hasta el ${effectiveDateHuman}. A partir de esa fecha pasarás automáticamente a ${plan.label}, sin ningún cargo ni compensación adicional.`,
+              pending_plan: plan.planId,
+              pending_credits: plan.credits,
+              effective_at: effectiveAtIso,
+            });
+          } catch (scheduleErr) {
+            const message = scheduleErr instanceof Error ? scheduleErr.message : "Unknown error";
+            console.error("[CHECKOUT] Failed to schedule downgrade:", message);
+            return json({ error: `No se pudo programar el cambio de plan: ${message}` }, 500);
+          }
+        }
+
+        // ─── UPGRADE (o lateral): aplicar inmediatamente con prorrateo ───────
+        // Si habia un downgrade programado y el usuario ahora sube de plan,
+        // liberar el schedule primero (el upgrade inmediato sustituye cualquier
+        // cambio futuro programado).
+        if (activeSub.schedule) {
+          const existingScheduleId = typeof activeSub.schedule === "string" ? activeSub.schedule : (activeSub.schedule as Stripe.SubscriptionSchedule).id;
+          try {
+            await stripe.subscriptionSchedules.release(existingScheduleId);
+          } catch (releaseErr) {
+            console.warn("[CHECKOUT] Could not release existing schedule before upgrade:", releaseErr);
+          }
+          await supabaseAdmin.from("subscriptions").update({
+            schedule_id: null,
+            pending_price_id: null,
+            pending_plan_id: null,
+            pending_plan_label: null,
+            pending_credits: null,
+            pending_effective_at: null,
+            updated_at: new Date().toISOString(),
+          }).eq("user_id", user.id);
         }
 
         await stripe.subscriptions.update(activeSub.id, {
@@ -339,25 +527,6 @@ serve(async (req) => {
         // has a tier set in DB, that tier dictates credits — NOT the frontend planId
         // (which may be stale/wrong for migrated users whose Stripe price_ids don't
         // match the canonical live IDs).
-        const TIER_CREDITS: Record<string, number> = {
-          annual_20: 20,
-          annual_100: 100,
-          annual_200: 200,
-          annual_300: 300,
-          annual_500: 500,
-          annual_1000: 1000,
-          monthly: 8,
-        };
-        const TIER_LABELS: Record<string, string> = {
-          annual_20: "Anual Básico 20 créditos",
-          annual_100: "Anual 100 créditos",
-          annual_200: "Anual 200 créditos",
-          annual_300: "Anual 300 créditos",
-          annual_500: "Anual 500 créditos",
-          annual_1000: "Anual 1000 créditos",
-          monthly: "Mensual 8 créditos",
-        };
-
         const { data: profileRow } = await supabaseAdmin
           .from("profiles")
           .select("subscription_tier, available_credits")

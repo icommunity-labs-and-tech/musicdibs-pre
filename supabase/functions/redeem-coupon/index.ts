@@ -68,7 +68,7 @@ serve(async (req) => {
       return json({ error: "Cupón agotado" }, 400);
     }
 
-    // A user can only redeem each coupon once, but may redeem different coupons over time
+    // A user can only redeem each coupon once
     const { data: prevRedemption, error: prevErr } = await admin
       .from("coupon_redemptions")
       .select("id")
@@ -99,11 +99,14 @@ serve(async (req) => {
       return json({ error: "Error al canjear el cupón" }, 500);
     }
 
-    // Increment coupon counter
-    await admin
-      .from("coupons")
-      .update({ redemptions_count: (coupon.redemptions_count || 0) + 1 })
-      .eq("id", coupon.id);
+    // FIX A2: Incremento atómico via RPC — evita race condition de read-modify-write
+    const { error: incrErr } = await admin.rpc("increment_coupon_redemptions", {
+      coupon_id: coupon.id,
+    });
+    if (incrErr) {
+      // Non-fatal: redemption already inserted, just log the counter failure
+      console.error("[redeem-coupon] increment counter error", incrErr);
+    }
 
     // Update profile credits (available + permanent)
     const { data: profile } = await admin

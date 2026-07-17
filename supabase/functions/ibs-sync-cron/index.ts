@@ -108,7 +108,6 @@ serve(async (req) => {
 
     for (let i = 0; i < (pendingComplete?.length || 0); i++) {
       const item = pendingComplete![i];
-      // delay entre confirmaciones para no saturar iBS (no en la primera)
       if (i > 0) await new Promise((r) => setTimeout(r, 5000));
 
       try {
@@ -163,13 +162,14 @@ serve(async (req) => {
     }
 
     // ── FASE 2: Polling de estado (waiting/retrying) ──────────────────
+    // Filtro: 5 min mínimo desde creación (cron corre cada 5 min → peor caso ~10 min total)
     let q = supabaseAdmin
       .from("ibs_sync_queue")
       .select("*")
       .in("status", ["waiting", "retrying"])
       .limit(50);
     if (!force) {
-      q = q.lt("created_at", new Date(Date.now() - 15 * 60 * 1000).toISOString());
+      q = q.lt("created_at", new Date(Date.now() - 5 * 60 * 1000).toISOString());
     }
     if (targetUserId) {
       q = q.eq("user_id", targetUserId);
@@ -186,7 +186,6 @@ serve(async (req) => {
 
     summary.processed = items.length;
 
-
     for (const item of items) {
       try {
         const ibsRes = await fetch(`${IBS_API_URL}/evidences/${item.ibs_evidence_id}`, {
@@ -198,7 +197,6 @@ serve(async (req) => {
           const certification = evidence.certification || evidence.payload?.certification;
 
           if (evidence.status === "certified" && certification) {
-            // Resolve — update work to registered
             const checkerUrl =
               certification.links?.checker ||
               (certification.hash && certification.network
@@ -225,17 +223,55 @@ serve(async (req) => {
 
             summary.resolved++;
             console.log(`[IBS-SYNC] Resolved work ${item.work_id} via cron`);
+
+            // ── Email de certificación + upsell ──────────────────────────
+            try {
+              const { count: prevRegistered } = await supabaseAdmin
+                .from("works")
+                .select("id", { count: "exact", head: true })
+                .eq("user_id", item.user_id)
+                .eq("status", "registered")
+                .neq("id", item.work_id);
+
+              const isFirstWork = (prevRegistered ?? 0) === 0;
+
+              const { data: workRow } = await supabaseAdmin
+                .from("works")
+                .select("title")
+                .eq("id", item.work_id)
+                .single();
+
+              fetch(
+                `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-certification-email`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                  },
+                  body: JSON.stringify({
+                    userId: item.user_id,
+                    workId: item.work_id,
+                    workTitle: workRow?.title || "Tu obra",
+                    checkerUrl: checkerUrl || null,
+                    isFirstWork,
+                  }),
+                }
+              ).catch((e) => console.warn("[IBS-SYNC] cert email fire-and-forget error:", e));
+
+              console.log(`[IBS-SYNC] Certification email triggered for work ${item.work_id}, isFirstWork: ${isFirstWork}`);
+            } catch (emailErr) {
+              console.warn("[IBS-SYNC] cert email dispatch error (non-fatal):", emailErr);
+            }
+            // ─────────────────────────────────────────────────────────────
+
           } else {
-            // Not yet certified — retry or exhaust
             await handleRetryOrExhaust(supabaseAdmin, item, summary, "Not yet certified");
           }
         } else {
-          // iBS error — retry or exhaust
           const errText = await ibsRes.text().catch(() => "unknown");
-          // Calcular si se agotarán los reintentos tras este intento
           const newRetryCount = (item.retry_count || 0) + 1;
           const willExhaust = newRetryCount >= (item.max_retries || 3);
-          // Solo alertar si se agotan los reintentos (no en cada 500 transitorio)
           if (ibsRes.status >= 500 && willExhaust) {
             await supabaseAdmin.from("admin_alerts").insert({
               source: "ibs_certification",
@@ -256,7 +292,6 @@ serve(async (req) => {
           await handleRetryOrExhaust(supabaseAdmin, item, summary, `iBS ${ibsRes.status}: ${errText}`);
         }
       } catch (fetchErr) {
-        // Network error — retry or exhaust
         const msg = fetchErr instanceof Error ? fetchErr.message : "network error";
         await handleRetryOrExhaust(supabaseAdmin, item, summary, msg);
       }
@@ -303,15 +338,11 @@ async function handleRetryOrExhaust(
       })
       .eq("id", item.id);
 
-    // Mark work as failed — DB trigger `auto_refund_on_work_failure`
-    // is the single source of truth for refunding the credit. Do NOT
-    // refund here or we get duplicate refunds.
     await supabaseAdmin
       .from("works")
       .update({ status: "failed", updated_at: new Date().toISOString() })
       .eq("id", item.work_id);
 
-    // Raise admin alert: certification definitively failed and credit refunded
     await supabaseAdmin.from("admin_alerts").insert({
       source: "ibs_certification",
       severity: "critical",
