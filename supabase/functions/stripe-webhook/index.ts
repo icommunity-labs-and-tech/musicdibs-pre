@@ -772,24 +772,33 @@ serve(async (req) => {
         const stripeSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
         let paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as any)?.id || null;
 
-        // FIX 2026-07-15: en checkouts de suscripcion (session.mode === "subscription"),
-        // Stripe NUNCA rellena session.payment_intent - usa session.invoice en su lugar.
-        // Sin este fallback, stripe_payment_intent_id/stripe_charge_id/stripe_invoice_id
-        // quedaban null en la orden pese a que la suscripcion y el cobro eran reales,
-        // causando falsos positivos "charge_sin_order" en la auditoria diaria
-        // (fruluvejizo-3263@yopmail.com, jemelloikuzo-2096@yopmail.com, 2026-07-15).
+        // FIX 2026-07-15 / CORREGIDO 2026-07-17: en checkouts de suscripcion
+        // (session.mode === "subscription"), Stripe NUNCA rellena
+        // session.payment_intent - hay que resolverlo por otra via. El intento
+        // original (leer invoice.payment_intent) NO funciona en esta version de
+        // la API de Stripe: invoice.payment_intent ya no existe como campo
+        // (confirmado via API directa, caso faustorode@gmail.com 2026-07-17 -
+        // el expand de "payment_intent"/"charge" sobre el invoice vino vacio).
+        // Tampoco payment_intent tiene un campo "invoice" de vuelta en esta
+        // version. La unica via fiable es listar los charges del customer:
+        // para un alta nueva via Checkout, es practicamente siempre el unico
+        // cargo reciente de ese customer, asi que se toma el que coincide en
+        // importe (o el mas reciente si ninguno coincide exacto).
         let checkoutInvoiceId: string | null = null;
-        if (!paymentIntentId && session.mode === "subscription") {
+        if (session.mode === "subscription") {
           checkoutInvoiceId = typeof session.invoice === "string" ? session.invoice : (session.invoice as any)?.id || null;
-          if (checkoutInvoiceId) {
-            try {
-              const inv = await stripe.invoices.retrieve(checkoutInvoiceId);
-              const invPi = (inv as any)?.payment_intent;
-              paymentIntentId = typeof invPi === "string" ? invPi : (invPi?.id ?? null);
-              console.log(`[WEBHOOK] checkout.session.completed: resolved paymentIntent ${paymentIntentId} from invoice ${checkoutInvoiceId} (subscription mode)`);
-            } catch (e) {
-              console.warn(`[WEBHOOK] checkout.session.completed: failed to retrieve invoice ${checkoutInvoiceId}:`, e);
+        }
+        if (!paymentIntentId && session.mode === "subscription" && resolvedCustomerId) {
+          try {
+            const recentCharges = await stripe.charges.list({ customer: resolvedCustomerId, limit: 5 });
+            const expectedAmountCents = Math.round(amountTotal * 100);
+            const match = recentCharges.data.find((c: any) => c.amount === expectedAmountCents) || recentCharges.data[0];
+            if (match) {
+              paymentIntentId = typeof match.payment_intent === "string" ? match.payment_intent : (match.payment_intent as any)?.id || null;
+              console.log(`[WEBHOOK] checkout.session.completed: resolved paymentIntent ${paymentIntentId} via charges.list (customer=${resolvedCustomerId}, subscription mode)`);
             }
+          } catch (e) {
+            console.warn(`[WEBHOOK] checkout.session.completed: failed to list charges for customer ${resolvedCustomerId}:`, e);
           }
         }
 
