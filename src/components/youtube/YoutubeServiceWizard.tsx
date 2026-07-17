@@ -183,17 +183,19 @@ function FileStep({ step, value, onChange, onNext, uploading }: { step: WizardSt
   );
 }
 
-function PaymentStep({ serviceType, onPay, paying }: { serviceType: ServiceType; onPay: () => void; paying: boolean; }) {
+function PaymentStep({ serviceType, onPay, paying, vevoAddon }: { serviceType: ServiceType; onPay: () => void; paying: boolean; vevoAddon: boolean; }) {
   const config = SERVICE_CONFIG[serviceType];
+  const total = config.price + (vevoAddon ? 5 : 0);
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-white/60 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: 'Precio: <strong class="text-white">50 EUR</strong>. Plazo: <strong class="text-white">' + config.timeline + '</strong>.' }} />
+      <p className="text-white/60 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: 'Precio: <strong class="text-white">' + total + ' EUR</strong>. Plazo: <strong class="text-white">' + config.timeline + '</strong>.' }} />
       <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
         <div className="flex justify-between"><span className="text-sm text-white/60">Servicio</span><span className="text-sm text-white font-medium">{config.name}</span></div>
-        <div className="flex justify-between border-t border-white/10 pt-2 mt-2"><span className="text-sm font-semibold text-white">Total</span><span className="text-lg font-bold text-purple-400">50 EUR</span></div>
+        {vevoAddon && <div className="flex justify-between"><span className="text-sm text-white/60">Fusion canal VEVO</span><span className="text-sm text-white font-medium">+5 EUR</span></div>}
+        <div className="flex justify-between border-t border-white/10 pt-2 mt-2"><span className="text-sm font-semibold text-white">Total</span><span className="text-lg font-bold text-purple-400">{total} EUR</span></div>
       </div>
       <button onClick={onPay} disabled={paying} className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2">
-        {paying ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Procesando...</> : <>💳 Pagar 50 € y enviar solicitud</>}
+        {paying ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Procesando...</> : <>💳 Pagar {total} € y enviar solicitud</>}
       </button>
       <p className="text-xs text-white/30 text-center">Pago seguro via Stripe. Recibiras un recibo por email.</p>
     </div>
@@ -219,21 +221,23 @@ export function YoutubeServiceWizard({ serviceType, userProfile, onClose }: Wiza
   useEffect(() => {
     if (!userProfile) return;
     const prefills: Record<string, unknown> = {};
-    if (serviceType === 'oac') {
-      const parts = (userProfile.display_name || '').split(' ');
-      prefills['firstName'] = parts[0] || '';
-      prefills['lastName'] = parts.slice(1).join(' ') || '';
-      prefills['email'] = userProfile.email || '';
-    } else {
+    // Nota 2026-07-17: el paso "datos de contacto" se elimino del wizard de OAC --
+    // esos datos son del admin registrado en Sonosuite (siempre los mismos, propios
+    // del distribuidor), no del usuario final. No se piden ni se prefillan aqui.
+    if (serviceType === 'content_id') {
       // Email de administrador fijo (dato interno de gestor)
       prefills['adminEmail'] = 'hello@icommunity.io';
     }
-    setFormData(prev => ({ ...prefills, ...prev, adminEmail: serviceType === 'content_id' ? 'hello@icommunity.io' : (prev.adminEmail as string) }));
+    setFormData(prev => ({ ...prefills, ...prev }));
   }, [userProfile, serviceType]);
 
   useEffect(() => { setTimeout(() => inputRef.current?.focus(), 100); }, [currentStep]);
 
-  const shouldSkip = useCallback((s: WizardStep) => s.id === 'cid_promotion_details' && formData['contentPromotion'] !== 'yes_pr', [formData]);
+  const shouldSkip = useCallback((s: WizardStep) => {
+    if (s.id === 'cid_promotion_details') return formData['contentPromotion'] !== 'yes_pr';
+    if (s.id === 'oac_vevo_url') return formData['vevoMerge'] !== 'yes';
+    return false;
+  }, [formData]);
 
   const goNext = useCallback(() => {
     let next = currentStep + 1;
@@ -286,7 +290,7 @@ export function YoutubeServiceWizard({ serviceType, userProfile, onClose }: Wiza
       case 'radio': return <RadioStep step={step} value={getVal(step.key)} onChange={v => step.key && setVal(step.key, v)} onNext={goNext} />;
       case 'group': return <GroupStep step={step} values={formData as Record<string, string>} onChange={(k, v) => setVal(k, v)} onNext={goNext} />;
       case 'file': return <FileStep step={step} value={getVal(step.key)} onChange={url => step.key && setVal(step.key, url)} onNext={goNext} uploading={false} />;
-      case 'payment': return <PaymentStep serviceType={serviceType} onPay={handlePay} paying={paying} />;
+      case 'payment': return <PaymentStep serviceType={serviceType} onPay={handlePay} paying={paying} vevoAddon={formData['vevoMerge'] === 'yes'} />;
       default: return null;
     }
   };

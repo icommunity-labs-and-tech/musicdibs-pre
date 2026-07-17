@@ -40,6 +40,11 @@ serve(async (req) => {
     const priceId = SERVICE_PRICE_IDS[serviceType];
     if (!priceId) return json({ error: "Precio no configurado" }, 500);
 
+    // Add-on: fusion del canal VEVO con el OAC (+5 EUR). Solo aplica a serviceType 'oac'
+    // y solo si el usuario respondio 'yes' en el paso oac_vevo_merge del wizard.
+    const wantsVevoMerge = serviceType === "oac" && formData?.vevoMerge === "yes";
+    const amountGross = 50.0 + (wantsVevoMerge ? 5.0 : 0);
+
     const { data: reqRecord, error: dbErr } = await supabase
       .from("youtube_service_requests")
       .insert({
@@ -47,7 +52,7 @@ serve(async (req) => {
         service_type: serviceType,
         status: "pending_payment",
         form_data: formData,
-        amount_gross: 50.0,
+        amount_gross: amountGross,
         currency: "eur",
       })
       .select("id")
@@ -73,11 +78,22 @@ serve(async (req) => {
     }
 
     const origin = req.headers.get("origin") || "https://musicdibs.com";
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [{ price: priceId, quantity: 1 }];
+    if (wantsVevoMerge) {
+      lineItems.push({
+        price_data: {
+          currency: "eur",
+          unit_amount: 500,
+          product_data: { name: "Fusion del canal VEVO con el Canal Oficial de Artista (OAC)" },
+        },
+        quantity: 1,
+      });
+    }
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: "payment",
       payment_method_types: ["card"],
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: lineItems,
       success_url: origin + "/dashboard/youtube-services?success=1&session_id={CHECKOUT_SESSION_ID}",
       cancel_url: origin + "/dashboard/youtube-services?cancelled=1",
       metadata: {
@@ -85,6 +101,7 @@ serve(async (req) => {
         service_type: serviceType,
         youtube_request_id: reqRecord.id,
         user_id: user.id,
+        vevo_merge_addon: wantsVevoMerge ? "1" : "0",
       },
       payment_intent_data: {
         metadata: {
@@ -92,8 +109,9 @@ serve(async (req) => {
           service_type: serviceType,
           youtube_request_id: reqRecord.id,
           user_id: user.id,
+          vevo_merge_addon: wantsVevoMerge ? "1" : "0",
         },
-        description: SERVICE_NAMES[serviceType],
+        description: SERVICE_NAMES[serviceType] + (wantsVevoMerge ? " + fusion VEVO" : ""),
       },
     });
     await supabase
