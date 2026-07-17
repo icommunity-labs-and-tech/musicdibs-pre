@@ -39,8 +39,22 @@ function planToMailerLiteType(plan: string | undefined): string {
 }
 
 const PRICE_CREDITS: Record<string, number> = {
+  // FIX 2026-07-17: price IDs ACTIVOS actualmente en Stripe (cuenta FULeu7PzK6).
+  // Root cause de persistencia de subscriptions sin resolver desde sesiones previas:
+  // este mapa solo tenia los price IDs legacy (prefijo F9ZCIiqrz6, ya INACTIVOS en
+  // Stripe) para annual_200/300/500/1000. Si session.metadata.credits venia vacio
+  // (checkout sin metadata completa), el Fallback B buscaba PRICE_CREDITS[priceId]
+  // con el price ID real (FULeu7PzK6...), no lo encontraba, credits quedaba en 0,
+  // y el bloque completo `if (userId && credits > 0)` -- incluyendo el upsert a
+  // subscriptions -- se saltaba entero, en silencio (solo console.warn).
+  // Verificado contra Stripe en vivo (stripe.prices.list) el 2026-07-17.
+  "price_1TMapTFULeu7PzK640B5uuEq": 200,  // annual_200 (ACTIVO)
+  "price_1TMapTFULeu7PzK6D4GnB3Il": 300,  // annual_300 (ACTIVO)
+  "price_1TMapTFULeu7PzK6cNJMf2oL": 500,  // annual_500 (ACTIVO)
+  "price_1TMapTFULeu7PzK6ziUW5fLn": 1000, // annual_1000 (ACTIVO)
   "price_1Tp90nFULeu7PzK67hoGodWv": 20,
   "price_1T9TnyF9ZCIiqrz6ruOlBcnZ": 120,
+  // Legacy prices (cuenta F9ZCIiqrz6, verificar si siguen activos antes de asumirlo)
   "price_1THT7cF9ZCIiqrz6sWS67Q4V": 100,
   "price_1THT7gF9ZCIiqrz6Acb2CkDC": 200,
   "price_1THT7jF9ZCIiqrz6i02J4bj4": 300,
@@ -55,7 +69,7 @@ const PRICE_CREDITS: Record<string, number> = {
   "price_1THT8AF9ZCIiqrz626wSH9Rz": 200,
   "price_1T8n6CFULeu7PzK6vs7NZyiJ": 100, // annual_100 legacy
   "price_1T8n6lFULeu7PzK60TbO76hE": 8,   // monthly legacy
-  //  Top-up legacy prices (FULeu7PzK6 account) 
+  // Top-up legacy prices (FULeu7PzK6 account)
   "price_1TMDVkFULeu7PzK6aNdFYW91": 1,   // individual
   "price_1TMDVkFULeu7PzK6YxaKfBiJ": 10,  // topup_10
   "price_1TMDVkFULeu7PzK62A2zwaDO": 25,  // topup_25
@@ -136,6 +150,12 @@ const PRICE_TO_PLAN_ID: Record<string, string> = {
   "price_1TMDVkFULeu7PzK6e9omPpoB": "topup_200",
   // Anual Básico — tier intermedio LATAM (2026-07)
   "price_1Tp90nFULeu7PzK67hoGodWv": "annual_20",
+  // FIX 2026-07-17: price IDs REALMENTE activos en Stripe hoy (verificado via
+  // stripe.prices.list). Los de arriba con prefijo TMDVw pueden estar obsoletos.
+  "price_1TMapTFULeu7PzK640B5uuEq": "annual_200",
+  "price_1TMapTFULeu7PzK6D4GnB3Il": "annual_300",
+  "price_1TMapTFULeu7PzK6cNJMf2oL": "annual_500",
+  "price_1TMapTFULeu7PzK6ziUW5fLn": "annual_1000",
 };
 
 const PLAN_ID_TO_PLAN_NAME: Record<string, string> = {
@@ -637,6 +657,36 @@ serve(async (req) => {
         } catch (lineItemErr) {
           console.warn("[WEBHOOK] checkout.session.completed: could not fetch line items for fallback:", lineItemErr);
         }
+      }
+
+            // FIX 2026-07-17: structural safety net. Antes, si `credits` seguia en 0
+      // tras el Fallback B (p.ej. porque PRICE_CREDITS no tiene el price ID
+      // actual -- exactamente lo que paso con annual_200/300/500/1000), el
+      // bloque entero de abajo se saltaba: sin fila en `subscriptions`, sin
+      // orden, sin credito -- en silencio. Desacoplamos la persistencia de
+      // `subscriptions` de la resolucion de creditos: si hay userId y sesion
+      // de subscripcion, la fila se escribe SIEMPRE, y si credits no se pudo
+      // resolver se lanza un admin_alert explicito en vez de fallar callado.
+      if (userId && session.mode === "subscription" && credits === 0) {
+        console.error(`[WEBHOOK] checkout.session.completed: credits UNRESOLVED for user ${userId} (session ${session.id}, mode=subscription) - writing subscriptions row anyway y alertando`);
+        const _rescueSubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
+        const _rescueCustomerId = typeof session.customer === "string" ? session.customer : (session.customer as any)?.id || null;
+        if (_rescueSubId) {
+          await supabase.from("subscriptions").upsert({
+            user_id: userId,
+            stripe_customer_id: _rescueCustomerId,
+            stripe_subscription_id: _rescueSubId,
+            plan: "Annual",
+            status: "active",
+            updated_at: new Date().toISOString(),
+          }, { onConflict: "user_id" });
+        }
+        await supabase.from("admin_alerts").insert({
+          source: "stripe-webhook:checkout.session.completed",
+          severity: "error",
+          message: `Credits sin resolver para user ${userId} (session ${session.id}). PRICE_CREDITS no contiene el price ID de esta sesion o metadata vino vacia. Fila subscriptions escrita como red de seguridad, pero faltan creditos y actualizacion de plan/tier -- revisar y corregir manualmente PRICE_CREDITS/PRICE_TO_PLAN_ID.`,
+          context: { session_id: session.id, user_id: userId, stripe_subscription_id: _rescueSubId },
+        });
       }
 
       if (userId && credits > 0) {
