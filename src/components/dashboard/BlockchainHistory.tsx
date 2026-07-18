@@ -157,7 +157,7 @@ export function BlockchainHistory() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'works', filter: `user_id=eq.${user.id}` },
-        () => loadWorks(page)
+        () => { loadWorks(page); loadStats(); }
       )
       .subscribe();
 
