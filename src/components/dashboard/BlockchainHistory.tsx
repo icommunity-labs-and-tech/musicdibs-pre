@@ -118,11 +118,31 @@ export function BlockchainHistory() {
   };
 
   const [totalCount, setTotalCount] = useState(0);
+  const [stats, setStats] = useState({ certified: 0, processing: 0, failed: 0 });
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+
+  const loadStats = async () => {
+    if (!user) return;
+    const base = () => supabase
+      .from('works')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    const [c, p, f] = await Promise.all([
+      base().eq('status', 'registered'),
+      base().eq('status', 'processing'),
+      base().eq('status', 'failed'),
+    ]);
+    setStats({
+      certified: c.count || 0,
+      processing: p.count || 0,
+      failed: f.count || 0,
+    });
+  };
 
   useEffect(() => {
     setPage(0);
     loadWorks(0);
+    loadStats();
   }, [user, statusFilter]);
 
   useEffect(() => {
@@ -137,7 +157,7 @@ export function BlockchainHistory() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'works', filter: `user_id=eq.${user.id}` },
-        () => loadWorks(page)
+        () => { loadWorks(page); loadStats(); }
       )
       .subscribe();
 
@@ -244,7 +264,7 @@ export function BlockchainHistory() {
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{certified.length}</p>
+              <p className="text-2xl font-bold">{stats.certified}</p>
               <p className="text-xs text-muted-foreground">{t('dashboard.blockchainHistory.statCertified')}</p>
             </div>
           </CardContent>
@@ -255,7 +275,7 @@ export function BlockchainHistory() {
               <Clock className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{processing.length}</p>
+              <p className="text-2xl font-bold">{stats.processing}</p>
               <p className="text-xs text-muted-foreground">{t('dashboard.blockchainHistory.statProcessing')}</p>
             </div>
           </CardContent>
@@ -266,7 +286,7 @@ export function BlockchainHistory() {
               <XCircle className="h-5 w-5 text-destructive" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{failed.length}</p>
+              <p className="text-2xl font-bold">{stats.failed}</p>
               <p className="text-xs text-muted-foreground">{t('dashboard.blockchainHistory.statFailed')}</p>
             </div>
           </CardContent>
