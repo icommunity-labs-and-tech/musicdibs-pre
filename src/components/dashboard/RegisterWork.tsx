@@ -79,6 +79,12 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
   const { hasEnough, isLoading: creditsLoading } = useCredits();
   const noCredits = !creditsLoading && !hasEnough(FEATURE_COSTS.register_work);
   const kycBlocked = summary && summary.kycStatus !== 'verified';
+  // FIX 2026-07-18: antes solo se comprobaba el KYC; el limite de 1 registro
+  // gratuito en plan Free (mismos creditos de bienvenida, sin creditos permanentes)
+  // se descubria solo al final del wizard via el error FREE_REGISTER_LIMIT del
+  // backend. Ahora se avisa desde el principio si el backend ya indico que no
+  // se puede registrar por este motivo (ver fetchDashboardSummary).
+  const freeRegisterLimitReached = !kycBlocked && summary?.freeRegisterLimitReached === true;
 
   useEffect(() => {
     if (prefill) {
@@ -246,6 +252,17 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
             <Badge variant="outline" className="text-amber-600 border-amber-300">
               {t('dashboard.registerWork.statusLabel')}: {summary?.kycStatus === 'pending' ? t('dashboard.registerWork.statusPending') : t('dashboard.registerWork.statusUnverified')}
             </Badge>
+          </div>
+        ) : freeRegisterLimitReached ? (
+          <div className="space-y-3 py-2">
+            <div className="flex items-center gap-2 text-amber-600">
+              <ShieldAlert className="h-5 w-5" />
+              <span className="font-medium text-sm">{t('dashboard.registerWork.freeRegisterLimitTitle')}</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {t('dashboard.registerWork.freeRegisterLimitMsg')}
+            </p>
+            <PricingLink className="text-sm font-medium text-primary" />
           </div>
         ) : status === 'failed' ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">

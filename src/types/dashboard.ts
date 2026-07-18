@@ -6,6 +6,7 @@ export interface DashboardSummary {
   subscriptionPlan: string;
   subscriptionTier?: string | null;
   canRegisterWorks: boolean;
+  freeRegisterLimitReached: boolean;
 }
 
 export interface PromotionRequest {

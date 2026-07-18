@@ -46,6 +46,19 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     .eq('user_id', user.id)
     .eq('status', 'processing');
 
+  // FIX 2026-07-18: el backend (register-work-ibs) limita a los usuarios Free sin
+  // creditos permanentes a 1 sola obra registrada/en proceso/certificada (usando
+  // el mismo criterio in(['registered','processing','certified'])). Antes,
+  // canRegisterWorks solo miraba el KYC, asi que el frontend dejaba completar
+  // todo el wizard de registro y el usuario recien se enteraba del limite al
+  // final, con el backend devolviendo error FREE_REGISTER_LIMIT. Replicamos aqui
+  // el mismo conteo para poder avisar ANTES de empezar el wizard.
+  const { count: worksCountingTowardFreeLimit } = await supabase
+    .from('works')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .in('status', ['registered', 'processing', 'certified']);
+
   // Active subscription tier (e.g. annual_200) for detailed plan label
   const { data: activeSub } = await supabase
     .from('subscriptions')
@@ -56,6 +69,12 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     .limit(1)
     .maybeSingle();
 
+  const hasNonWelcomeCredits = (profile.permanent_credits ?? 0) > 0;
+  const freeRegisterLimitReached =
+    (profile.subscription_plan || 'Free') === 'Free' &&
+    !hasNonWelcomeCredits &&
+    (worksCountingTowardFreeLimit ?? 0) >= 1;
+
   return {
     registeredWorks: registeredWorks || 0,
     pendingRegistrations: pendingRegistrations || 0,
@@ -63,7 +82,8 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     kycStatus: profile.kyc_status as 'verified' | 'pending' | 'unverified',
     subscriptionPlan: profile.subscription_plan || 'Free',
     subscriptionTier: activeSub?.tier ?? null,
-    canRegisterWorks: profile.kyc_status === 'verified',
+    canRegisterWorks: profile.kyc_status === 'verified' && !freeRegisterLimitReached,
+    freeRegisterLimitReached,
   };
 }
 

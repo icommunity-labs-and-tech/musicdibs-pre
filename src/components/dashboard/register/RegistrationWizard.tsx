@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ShieldAlert, Shield, Loader2, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PricingLink } from '@/components/dashboard/PricingPopup';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { WizardStepper } from './WizardStepper';
@@ -150,6 +151,7 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
   const { hasEnough, isLoading: creditsLoading } = useCredits();
   const noCredits = !creditsLoading && !hasEnough(FEATURE_COSTS.register_work);
   const kycBlocked = summary && summary.kycStatus !== 'verified';
+  const freeRegisterLimitReached = !kycBlocked && summary?.freeRegisterLimitReached === true;
 
   const update = useCallback((patch: Partial<WizardData>) => {
     setData((prev) => ({ ...prev, ...patch }));
@@ -355,6 +357,21 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
               {t('wizard.rw.goToVerify')}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (freeRegisterLimitReached) {
+    return (
+      <Card className="border-border/40">
+        <CardContent className="p-6 space-y-4">
+          <div className="flex items-center gap-2 text-amber-600">
+            <ShieldAlert className="h-5 w-5" />
+            <span className="font-medium text-sm">{t('wizard.rw.freeRegisterLimitTitle')}</span>
+          </div>
+          <p className="text-sm text-muted-foreground">{t('wizard.rw.freeRegisterLimitMsg')}</p>
+          <PricingLink className="text-sm font-medium text-primary" />
         </CardContent>
       </Card>
     );
