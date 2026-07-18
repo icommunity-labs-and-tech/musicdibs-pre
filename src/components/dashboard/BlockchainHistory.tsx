@@ -264,7 +264,7 @@ export function BlockchainHistory() {
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{certified.length}</p>
+              <p className="text-2xl font-bold">{stats.certified}</p>
               <p className="text-xs text-muted-foreground">{t('dashboard.blockchainHistory.statCertified')}</p>
             </div>
           </CardContent>
@@ -275,7 +275,7 @@ export function BlockchainHistory() {
               <Clock className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{processing.length}</p>
+              <p className="text-2xl font-bold">{stats.processing}</p>
               <p className="text-xs text-muted-foreground">{t('dashboard.blockchainHistory.statProcessing')}</p>
             </div>
           </CardContent>
@@ -286,7 +286,7 @@ export function BlockchainHistory() {
               <XCircle className="h-5 w-5 text-destructive" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{failed.length}</p>
+              <p className="text-2xl font-bold">{stats.failed}</p>
               <p className="text-xs text-muted-foreground">{t('dashboard.blockchainHistory.statFailed')}</p>
             </div>
           </CardContent>
