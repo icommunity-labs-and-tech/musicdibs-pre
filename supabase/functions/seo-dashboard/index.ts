@@ -43,8 +43,19 @@ async function semrush(path: string, params: Record<string, string>) {
   });
   const text = await res.text();
   if (!res.ok) throw new Error(`Semrush ${path} [${res.status}]: ${text}`);
-  try { return JSON.parse(text); }
-  catch { throw new Error(`Semrush ${path}: invalid JSON: ${text.slice(0, 200)}`); }
+  // Semrush returns 200 with a JSON error body when quota/plan issues occur.
+  // Surface those so the UI shows the real cause instead of "empty".
+  let parsed: any;
+  try { parsed = JSON.parse(text); }
+  catch {
+    // Non-JSON error strings like "ERROR 134 :: TOTAL LIMIT EXCEEDED"
+    if (/^ERROR\s+\d+/i.test(text.trim())) throw new Error(text.trim());
+    throw new Error(`Semrush ${path}: invalid JSON: ${text.slice(0, 200)}`);
+  }
+  if (parsed && typeof parsed === "object" && parsed.error && !parsed.data) {
+    throw new Error(String(parsed.error));
+  }
+  return parsed;
 }
 
 function rowsToObjects(payload: any): any[] {
