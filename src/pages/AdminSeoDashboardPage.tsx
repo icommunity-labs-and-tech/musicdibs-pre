@@ -284,46 +284,63 @@ export default function AdminSeoDashboardPage() {
                         <TableRow>
                           <TableHead>Keyword</TableHead>
                           <TableHead className="text-right">Posición</TableHead>
-                          <TableHead className="text-right">Δ vs anterior</TableHead>
-                          <TableHead className="text-right">Volumen</TableHead>
-                          <TableHead className="text-right">CPC</TableHead>
-                          <TableHead className="text-right">Tráfico %</TableHead>
-                          <TableHead>URL</TableHead>
+                        <TableHead className="text-right">Δ vs anterior</TableHead>
+                        <TableHead className="text-right">Δ 7d</TableHead>
+                        <TableHead className="text-right">Δ 30d</TableHead>
+                        <TableHead className="text-right">Volumen</TableHead>
+                        <TableHead className="text-right">CPC</TableHead>
+                        <TableHead className="text-right">Tráfico %</TableHead>
+                        <TableHead>URL</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {currentDb.keywords.map((k, i) => (
+                        <TableRow key={`${k.phrase}-${i}`}>
+                          <TableCell className="font-medium">{k.phrase}</TableCell>
+                          <TableCell className="text-right">{k.position}</TableCell>
+                          <TableCell className="text-right">
+                            <DeltaBadge delta={k.delta} />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {k.delta7d === null ? (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            ) : (
+                              <DeltaBadge delta={k.delta7d} />
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {k.delta30d === null ? (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            ) : (
+                              <DeltaBadge delta={k.delta30d} />
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">{k.volume}</TableCell>
+                          <TableCell className="text-right">
+                            {k.cpc ? `$${k.cpc.toFixed(2)}` : "—"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {k.trafficShare
+                              ? `${k.trafficShare.toFixed(1)}%`
+                              : "—"}
+                          </TableCell>
+                          <TableCell className="max-w-xs truncate">
+                            {k.url ? (
+                              <a
+                                href={k.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-primary hover:underline text-xs"
+                              >
+                                {k.url.replace(/^https?:\/\//, "")}
+                              </a>
+                            ) : (
+                              "—"
+                            )}
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {currentDb.keywords.map((k, i) => (
-                          <TableRow key={`${k.phrase}-${i}`}>
-                            <TableCell className="font-medium">{k.phrase}</TableCell>
-                            <TableCell className="text-right">{k.position}</TableCell>
-                            <TableCell className="text-right">
-                              <DeltaBadge delta={k.delta} />
-                            </TableCell>
-                            <TableCell className="text-right">{k.volume}</TableCell>
-                            <TableCell className="text-right">
-                              {k.cpc ? `$${k.cpc.toFixed(2)}` : "—"}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {k.trafficShare
-                                ? `${k.trafficShare.toFixed(1)}%`
-                                : "—"}
-                            </TableCell>
-                            <TableCell className="max-w-xs truncate">
-                              {k.url ? (
-                                <a
-                                  href={k.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-primary hover:underline text-xs"
-                                >
-                                  {k.url.replace(/^https?:\/\//, "")}
-                                </a>
-                              ) : (
-                                "—"
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                      ))}
+
                       </TableBody>
                     </Table>
                   </div>
