@@ -158,11 +158,16 @@ async function syncUser(p: Profile): Promise<{ added: number; removed: number; c
 }
 
 serve(async (req) => {
-  const envSecret = Deno.env.get('CRON_SECRET') || '+mzY;A7C27[OO%T}';
+  // FIX 2026-07-19 (security scan): se elimina el fallback hardcodeado
+  // (secreto literal expuesto en el codigo fuente) y se falla cerrado si
+  // CRON_SECRET no esta seteado (antes, con CRON_SECRET vacio y sin header,
+  // la comparacion '' !== '' pasaba como valida).
+  const envSecret = Deno.env.get('CRON_SECRET') || '';
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
   const authHeader = req.headers.get('Authorization') || '';
   const cronHeader = req.headers.get('x-cron-secret') || '';
-  if (cronHeader !== envSecret && authHeader !== `Bearer ${envSecret}` && authHeader !== `Bearer ${serviceKey}`) {
+  const cronSecretOk = !!envSecret && (cronHeader === envSecret || authHeader === `Bearer ${envSecret}`);
+  if (!cronSecretOk && authHeader !== `Bearer ${serviceKey}`) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
   }
 

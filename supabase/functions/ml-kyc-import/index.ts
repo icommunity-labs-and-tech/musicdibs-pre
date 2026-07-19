@@ -3,7 +3,12 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
 const ML_KEY = Deno.env.get('MAILERLITE_API_KEY')!;
 const ML_URL = 'https://connect.mailerlite.com/api';
-const CRON_SECRET = Deno.env.get('CRON_SECRET') || '+mzY;A7C27[OO%T}';
+// FIX 2026-07-19 (security scan): se elimina el fallback hardcodeado
+// (secreto literal expuesto en el codigo fuente) que quedaba usable como
+// credencial de bypass si CRON_SECRET no estaba seteado. Ahora, si falta
+// la variable de entorno, CRON_SECRET queda vacio y ningun x-cron-secret vacio
+// puede autenticar (se exige ademas que CRON_SECRET no este vacio).
+const CRON_SECRET = Deno.env.get('CRON_SECRET') || '';
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const GROUPS = {
@@ -30,7 +35,8 @@ function sleep(ms:number){ return new Promise(r=>setTimeout(r,ms)); }
 serve(async (req) => {
   const auth = req.headers.get('Authorization')||'';
   const cron = req.headers.get('x-cron-secret')||'';
-  if (cron !== CRON_SECRET && auth !== `Bearer ${CRON_SECRET}` && auth !== `Bearer ${SERVICE_KEY}`) {
+  const cronSecretOk = !!CRON_SECRET && (cron === CRON_SECRET || auth === `Bearer ${CRON_SECRET}`);
+  if (!cronSecretOk && auth !== `Bearer ${SERVICE_KEY}`) {
     return new Response('Unauthorized', { status: 401 });
   }
 

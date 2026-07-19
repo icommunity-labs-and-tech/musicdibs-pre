@@ -6,9 +6,31 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
+};
+
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // FIX 2026-07-19 (security scan): este script de correccion puntual (fix del
+  // trial_end para suscripciones creadas 2026-05-12/13) no tenia NINGUNA
+  // autenticacion -- cualquiera en internet podia modificar trial_end de
+  // suscripciones reales en Stripe. Se anade el mismo patron de auth usado en
+  // el resto de crons/scripts administrativos.
+  const cronSecret = Deno.env.get("CRON_SECRET") || "";
+  const authHeader = req.headers.get("Authorization") || "";
+  const cronHeader = req.headers.get("x-cron-secret") || "";
+  const isAuth = authHeader === `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` || (!!cronSecret && cronHeader === cronSecret);
+  if (!isAuth) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   if (req.method !== "POST") {
-    return new Response("Method not allowed", { status: 405 });
+    return new Response("Method not allowed", { status: 405, headers: corsHeaders });
   }
   const body = await req.json().catch(() => ({}));
   const offset = Number(body.offset ?? 0);

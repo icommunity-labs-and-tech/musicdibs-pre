@@ -19,9 +19,10 @@ serve(async (req) => {
 
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const authHeader = req.headers.get("Authorization") || "";
-  const adminToken = req.headers.get("x-admin-token") || "";
-  const ONE_TIME_TOKEN = "backfill-musicdibs-2026-06-22-a7f3";
-  const isAuth = authHeader === `Bearer ${serviceKey}` || adminToken === ONE_TIME_TOKEN;
+  // FIX 2026-07-19 (security scan): se elimina el token hardcodeado que
+  // quedaba expuesto en el codigo fuente como bypass permanente. Solo se
+  // acepta autenticacion via service role.
+  const isAuth = authHeader === `Bearer ${serviceKey}`;
   if (!isAuth) return json({ error: "Unauthorized" }, 401);
 
   const url = new URL(req.url);

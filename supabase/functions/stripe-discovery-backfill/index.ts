@@ -3,12 +3,26 @@ import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
+  }
+
+  // FIX 2026-07-19 (security scan): sin autenticacion, cualquiera en internet
+  // podia disparar esta funcion e insertar filas nuevas en 'orders' desde el
+  // historial de cargos reales de Stripe de cualquier usuario verificado.
+  const supabaseServiceKeyForAuth = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const cronSecret = Deno.env.get("CRON_SECRET") || "";
+  const authHeader = req.headers.get("Authorization") || "";
+  const cronHeader = req.headers.get("x-cron-secret") || "";
+  const isAuth = authHeader === `Bearer ${supabaseServiceKeyForAuth}` || (!!cronSecret && cronHeader === cronSecret);
+  if (!isAuth) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

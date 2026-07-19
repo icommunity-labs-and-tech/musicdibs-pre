@@ -20,6 +20,19 @@ async function stripeGet(path: string): Promise<Record<string, unknown>> {
 }
 
 Deno.serve(async (req: Request) => {
+  // FIX 2026-07-19 (security scan): sin autenticacion, cualquiera en internet
+  // podia disparar esta funcion y escribir user_id/stripe_customer_id sobre
+  // registros financieros 'orders' haciendo coincidir datos de Stripe.
+  const cronSecret = Deno.env.get("CRON_SECRET") || "";
+  const authHeader = req.headers.get("Authorization") || "";
+  const cronHeader = req.headers.get("x-cron-secret") || "";
+  const isAuth = authHeader === `Bearer ${SUPABASE_SERVICE_KEY}` || (!!cronSecret && cronHeader === cronSecret);
+  if (!isAuth) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { "Content-Type": "application/json" },
+    });
+  }
+
   let dryRun = true;
   let batchSize = 100;
   let offset = 0;
