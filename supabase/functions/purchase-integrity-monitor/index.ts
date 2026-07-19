@@ -141,6 +141,13 @@ serve(async (req) => {
     }
 
     // ── 2. Verificar plan/tier coherente con la ultima compra ──────────────
+    // FIX 2026-07-19 (casos kevinbernalflores@gmail.com y smith121079@gmail.com):
+    // antes este chequeo solo REPORTABA el mismatch, dejando la correccion para
+    // revision manual. Ahora se autocorrige contra la verdad VIVA de Stripe (no
+    // contra o.product_code a ciegas) -- si el usuario hizo un upgrade posterior
+    // a la compra que disparo la alerta (caso Kevin: compro annual_20, subio a
+    // annual_100 horas despues), forzar el tier de la compra original habria sido
+    // un error. Se resuelve siempre contra la suscripcion activa real en Stripe.
     const { data: recentOrders } = await supabase
       .from("orders")
       .select("user_id, product_code, product_type, product_label, amount_gross, is_subscription, paid_at")
@@ -155,15 +162,61 @@ serve(async (req) => {
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("subscription_plan, subscription_tier")
+        .select("subscription_plan, subscription_tier, stripe_customer_id")
         .eq("user_id", o.user_id)
         .maybeSingle();
       if (!profile) continue;
       if (o.product_code && o.product_code !== "unknown" && profile.subscription_tier !== o.product_code) {
         const { data: { user } } = await supabase.auth.admin.getUserById(o.user_id);
+        const email = user?.email || "unknown";
+
+        let corrected = false;
+        let liveTier: string | null = null;
+        let livePlanName: string | null = null;
+        let livePeriodStart: string | null = null;
+        let livePeriodEnd: string | null = null;
+
+        if (profile.stripe_customer_id) {
+          try {
+            const subs = await stripe.subscriptions.list({ customer: profile.stripe_customer_id, status: "all", limit: 5 });
+            const liveSub = subs.data.find((s) => ["active", "trialing", "past_due"].includes(s.status));
+            const livePriceId = liveSub?.items?.data?.[0]?.price?.id;
+            if (liveSub && livePriceId) {
+              const livePrice = await stripe.prices.retrieve(livePriceId);
+              liveTier = (livePrice.metadata?.musicdibs_plan_id as string) || null;
+              if (liveTier) {
+                livePlanName = liveTier.startsWith("annual") ? "Annual" : liveTier === "monthly" ? "Monthly" : null;
+                const item = liveSub.items.data[0] as any;
+                livePeriodStart = item?.current_period_start ? new Date(item.current_period_start * 1000).toISOString() : null;
+                livePeriodEnd = item?.current_period_end ? new Date(item.current_period_end * 1000).toISOString() : null;
+
+                await supabase.from("profiles").update({
+                  subscription_plan: livePlanName || profile.subscription_plan,
+                  subscription_tier: liveTier,
+                  updated_at: new Date().toISOString(),
+                }).eq("user_id", o.user_id);
+
+                await supabase.from("subscriptions").update({
+                  plan: livePlanName || undefined,
+                  tier: liveTier,
+                  ...(livePeriodStart ? { current_period_start: livePeriodStart } : {}),
+                  ...(livePeriodEnd ? { current_period_end: livePeriodEnd } : {}),
+                  updated_at: new Date().toISOString(),
+                }).eq("user_id", o.user_id);
+
+                corrected = true;
+              }
+            }
+          } catch (e: any) {
+            console.warn(`[PURCHASE-AUDIT] tier_desincronizado: error resolviendo verdad Stripe para ${email}:`, e?.message);
+          }
+        }
+
         issues.push({
-          type: "tier_desincronizado", severity: "warning", email: user?.email || "unknown",
-          detail: `Compró ${o.product_code} pero profile.subscription_tier = ${profile.subscription_tier}`,
+          type: "tier_desincronizado", severity: corrected ? "warning" : "critical", email,
+          detail: corrected
+            ? `Compró ${o.product_code} pero profile.subscription_tier era ${profile.subscription_tier}. Autocorregido contra Stripe (verdad viva): tier=${liveTier}${liveTier !== o.product_code ? ` (distinto de la compra que disparó la alerta -- probablemente hubo un upgrade/downgrade posterior)` : ""}.`
+            : `Compró ${o.product_code} pero profile.subscription_tier = ${profile.subscription_tier}. No se pudo autocorregir (sin stripe_customer_id o sin suscripción activa en Stripe) -- revisar manualmente.`,
         });
       }
     }
