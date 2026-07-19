@@ -46,13 +46,16 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     .eq('user_id', user.id)
     .eq('status', 'processing');
 
-  // FIX 2026-07-18: el backend (register-work-ibs) limita a los usuarios Free sin
-  // creditos permanentes a 1 sola obra registrada/en proceso/certificada (usando
-  // el mismo criterio in(['registered','processing','certified'])). Antes,
-  // canRegisterWorks solo miraba el KYC, asi que el frontend dejaba completar
-  // todo el wizard de registro y el usuario recien se enteraba del limite al
-  // final, con el backend devolviendo error FREE_REGISTER_LIMIT. Replicamos aqui
-  // el mismo conteo para poder avisar ANTES de empezar el wizard.
+  // FIX 2026-07-19: el aviso "ya usaste 1 crédito de bienvenida en un registro"
+  // debe mostrarse SOLO al usuario Free que cumpla TODAS estas condiciones:
+  //   1) plan Free
+  //   2) exactamente 1 obra registrada/procesando/certificada
+  //   3) le queden exactamente 2 créditos disponibles (los 2 de bienvenida
+  //      restantes de los 3 iniciales — no ha gastado créditos en otras cosas)
+  //   4) nunca ha realizado ninguna compra de créditos ni suscripción
+  // En cualquier otro caso (Free con más registros, Free que ha comprado y
+  // agotado sus créditos, etc.) no bloqueamos el wizard desde el frontend: el
+  // backend seguirá aplicando FREE_REGISTER_LIMIT si corresponde.
   const { count: worksCountingTowardFreeLimit } = await supabase
     .from('works')
     .select('*', { count: 'exact', head: true })
@@ -69,11 +72,29 @@ export async function fetchDashboardSummary(): Promise<DashboardSummary> {
     .limit(1)
     .maybeSingle();
 
+  const isFreePlan = (profile.subscription_plan || 'Free') === 'Free';
+  const worksCount = worksCountingTowardFreeLimit ?? 0;
+  const availableCredits = profile.available_credits ?? 0;
   const hasNonWelcomeCredits = (profile.permanent_credits ?? 0) > 0;
+
+  // Solo consultamos histórico de compras si el resto de condiciones ya se cumplen
+  let hasEverPurchased = false;
+  if (isFreePlan && worksCount === 1 && availableCredits === 2 && !hasNonWelcomeCredits) {
+    const { count: purchaseCount } = await supabase
+      .from('credit_transactions')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .in('type', ['purchase', 'topup', 'individual']);
+    hasEverPurchased = (purchaseCount ?? 0) > 0;
+  }
+
   const freeRegisterLimitReached =
-    (profile.subscription_plan || 'Free') === 'Free' &&
+    isFreePlan &&
     !hasNonWelcomeCredits &&
-    (worksCountingTowardFreeLimit ?? 0) >= 1;
+    worksCount === 1 &&
+    availableCredits === 2 &&
+    !hasEverPurchased;
+
 
   return {
     registeredWorks: registeredWorks || 0,
