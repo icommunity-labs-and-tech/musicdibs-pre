@@ -1252,19 +1252,33 @@ serve(async (req) => {
           const newCreditsFromTier = newTierFromPrice ? (TIER_CREDITS[newTierFromPrice] ?? 0) : 0;
           console.log(`[WEBHOOK] subscription_update: prev tier=${previousTierBeforeUpgrade} new tier=${newTierFromPrice} credits=${newCreditsFromTier} price=${actualPriceId}`);
 
-          // FIX: releer el tier actual justo antes de decidir (no confiar en la lectura
-          // de arriba, que puede estar obsoleta si otro evento concurrente ya escribio
-          // mientras esperabamos el delay de estabilizacion).
+          // FIX 2026-07-19 (caso kevinbernalflores@gmail.com): tras un impago
+          // definitivo, un cron/webhook anterior puede haber puesto los creditos
+          // de plan a 0 SIN resetear subscription_tier (el tier se queda igual
+          // porque la suscripcion sigue siendo la misma en Stripe, solo cambio
+          // de estado). Si el usuario paga con exito despues (reintento manual o
+          // actualizacion de metodo de pago) para ese MISMO tier, el guard
+          // original solo miraba si el tier habia cambiado -- como no habia
+          // cambiado, se saltaba la concesion de creditos aunque el saldo real
+          // estuviera en 0. Ahora tambien se autorepara cuando el tier no cambio
+          // pero los creditos de plan actuales son menores que los esperados.
           const { data: freshProfileCheck } = await supabase
-            .from("profiles").select("subscription_tier").eq("user_id", profile.user_id).single();
+            .from("profiles").select("subscription_tier, available_credits, permanent_credits").eq("user_id", profile.user_id).single();
           const currentTierRightNow = freshProfileCheck?.subscription_tier ?? previousTierBeforeUpgrade;
+          const currentPlanCreditsNow = Math.max(0, (freshProfileCheck?.available_credits ?? 0) - (freshProfileCheck?.permanent_credits ?? 0));
 
           // Guard: only assign credits if the plan tier actually changed respecto al
-          // estado MAS RECIENTE en DB (no el que leimos al principio de la funcion).
+          // estado MAS RECIENTE en DB (no el que leimos al principio de la funcion),
+          // O si el tier es el mismo pero los creditos de plan estan por debajo de
+          // lo esperado (recuperacion tras impago que ya habia revertido creditos).
           const tierActuallyChanged = newTierFromPrice !== currentTierRightNow;
-          if (!tierActuallyChanged) {
-            console.log(`[WEBHOOK] subscription_update: tier unchanged, skipping credit assignment`);
+          const creditsUnderExpected = newCreditsFromTier > 0 && currentPlanCreditsNow < newCreditsFromTier;
+          if (!tierActuallyChanged && !creditsUnderExpected) {
+            console.log(`[WEBHOOK] subscription_update: tier unchanged y creditos ya correctos (${currentPlanCreditsNow}/${newCreditsFromTier}), skipping credit assignment`);
           } else if (newCreditsFromTier > 0) {
+            if (!tierActuallyChanged && creditsUnderExpected) {
+              console.log(`[WEBHOOK] subscription_update: tier unchanged pero creditos por debajo de lo esperado (${currentPlanCreditsNow}/${newCreditsFromTier}) -- autoreparando (probable recuperacion tras impago)`);
+            }
             // FIX: Resetear creditos al nuevo tier (no acumular) — cubre tanto upgrade como downgrade
             const { data: permProfile } = await supabase.from("profiles").select("permanent_credits").eq("user_id", profile.user_id).single();
             const permanentCr = permProfile?.permanent_credits ?? 0;
