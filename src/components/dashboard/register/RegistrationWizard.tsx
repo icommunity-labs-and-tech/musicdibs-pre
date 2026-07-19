@@ -5,7 +5,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ShieldAlert, Shield, Loader2, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { PricingLink } from '@/components/dashboard/PricingPopup';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { WizardStepper } from './WizardStepper';
@@ -371,7 +370,14 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
             <span className="font-medium text-sm">{t('wizard.rw.freeRegisterLimitTitle')}</span>
           </div>
           <p className="text-sm text-muted-foreground">{t('wizard.rw.freeRegisterLimitMsg')}</p>
-          <PricingLink className="text-sm font-medium text-primary" />
+          <Button
+            size="sm"
+            className="gap-1.5"
+            onClick={() => navigate('/dashboard/credits')}
+          >
+            {t('wizard.rw.freeRegisterLimitCta')}
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
         </CardContent>
       </Card>
     );
