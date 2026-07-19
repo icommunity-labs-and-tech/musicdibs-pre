@@ -373,22 +373,7 @@ serve(async (req) => {
           .filter((k) => Math.abs(k.delta) >= 3 && k.previous > 0)
           .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
           .slice(0, 15);
-        return {
-          db,
-          ...DATABASES[db],
-          overview: overview ? {
-            organicKeywords: Number(overview.Or) || 0,
-            organicTraffic: Number(overview.Ot) || 0,
-            organicCost: Number(overview.Oc) || 0,
-            rank: Number(overview.Rk) || 0,
-          } : null,
-          keywords: enriched,
-          alerts,
-          error,
-          cached,
-          cachedDate,
-        };
-      results.push({
+        results.push({
           db,
           ...DATABASES[db],
           overview: overview ? {
