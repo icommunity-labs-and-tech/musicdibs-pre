@@ -33,8 +33,14 @@ serve(async (req) => {
       );
     }
 
+    // FIX 2026-07-19 (security scan): antes solo se comprobaba que el header
+    // empezara por "Bearer " (cualquier string servia), sin verificar el
+    // token real -- cualquiera podia disparar el envio de "email de
+    // bienvenida" a cualquier direccion arbitraria (userId/email vienen del
+    // body, sin verificar). Ahora se exige que coincida con el service role
+    // real (esta funcion solo la llama register-guest-lead, servidor a servidor).
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
+    if (authHeader !== `Bearer ${serviceKey}`) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }

@@ -80,7 +80,9 @@ Deno.serve(async (req: Request) => {
   const CONTEST_SECRET = Deno.env.get('CONTEST_SECRET');
   const incomingSecret = req.headers.get('x-contest-secret');
 
-  if (CONTEST_SECRET && incomingSecret !== CONTEST_SECRET) {
+  // FIX 2026-07-19 (security scan): si CONTEST_SECRET no estaba configurado,
+  // la condicion se saltaba entera y el endpoint quedaba sin autenticacion.
+  if (!CONTEST_SECRET || incomingSecret !== CONTEST_SECRET) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },

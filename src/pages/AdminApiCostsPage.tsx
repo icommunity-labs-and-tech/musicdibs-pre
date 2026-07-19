@@ -69,14 +69,18 @@ export default function AdminApiCostsPage() {
     setLoading(true);
     const { from, to } = getDateRange();
 
+    // FIX 2026-07-19 (security scan): operation_pricing ya no expone las
+    // columnas de coste/margen (api_cost_eur, price_per_credit_eur, etc.) a
+    // authenticated directamente -- se leen via RPC admin-only.
     const [configRes, dailyRes] = await Promise.all([
-      supabase
-        .from('operation_pricing')
-        .select('operation_key, operation_name, operation_label, llm_provider, llm_model, credits_cost, price_per_credit_eur, api_cost_eur, api_cost_notes, is_active')
-        .eq('is_active', true)
-        .order('operation_key'),
+      supabase.rpc('get_operation_pricing_admin'),
       supabase.from('api_cost_daily').select('*').gte('date', from).lte('date', to).order('date', { ascending: false }),
     ]);
+    if (configRes.data) {
+      configRes.data = (configRes.data as any[])
+        .filter((r) => r.is_active)
+        .sort((a, b) => (a.operation_key > b.operation_key ? 1 : -1));
+    }
 
     if (configRes.data) {
       const mapped: ApiCostConfig[] = (configRes.data as any[]).map(r => ({

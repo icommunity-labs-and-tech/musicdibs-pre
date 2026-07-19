@@ -88,7 +88,13 @@ serve(async (req) => {
       await supabase.from("profiles").update({ stripe_customer_id: customer.id }).eq("user_id", user.id);
     }
 
-    const origin = req.headers.get("origin") || "https://musicdibs.com";
+    // FIX 2026-07-19 (security scan): el Origin header lo controla el cliente,
+    // no validarlo permitia construir URLs de retorno de Stripe hacia cualquier
+    // dominio arbitrario. Se valida contra la misma allowlist usada en
+    // create-credit-checkout.
+    const ALLOWED_ORIGINS = new Set(["https://musicdibs.com","https://www.musicdibs.com","https://aimusicdibs.com","https://www.aimusicdibs.com","https://musicdibs-pre.lovable.app"]);
+    const rawOrigin = req.headers.get("origin") || "";
+    const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://musicdibs.com";
     const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [{ price: priceId, quantity: 1 }];
     if (wantsVevoMerge) {
       lineItems.push({

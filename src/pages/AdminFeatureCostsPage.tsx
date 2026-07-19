@@ -59,15 +59,15 @@ export default function AdminFeatureCostsPage() {
   const [sortDir, setSortDir] = useState<SortDir>('asc');
 
   const load = async () => {
-    const { data, error } = await supabase
-      .from('operation_pricing')
-      .select('operation_key, operation_name, operation_icon, credits_cost, euro_cost, category, is_annual_only, display_order, is_active, description, model_name, llm_provider, llm_model')
-      .order('display_order');
+    // FIX 2026-07-19 (security scan): model_name/llm_provider/llm_model ya no
+    // son legibles directamente por authenticated -- se leen via RPC admin-only.
+    const { data, error } = await supabase.rpc('get_operation_pricing_admin');
     if (error) {
       toast.error('Error cargando precios');
       return;
     }
-    setRows((data as unknown as OperationRow[]) || []);
+    const sorted = ((data as unknown as OperationRow[]) || []).slice().sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0));
+    setRows(sorted);
     setLoading(false);
   };
 

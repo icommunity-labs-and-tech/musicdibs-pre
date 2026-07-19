@@ -152,8 +152,14 @@ serve(async (req) => {
       await addToMailerLite(normalizedEmail, lang);
     }
 
+    // FIX 2026-07-19 (security scan): antes se devolvia userId + isNewUser al
+    // caller. El frontend (PricingSection.tsx) solo comprueba data.ok -- ningun
+    // consumidor real necesita esos campos. isNewUser permitia enumeracion de
+    // email (saber si una direccion ya tiene cuenta) y userId exponia el UUID
+    // interno de cualquier usuario cuyo email se enviara a este endpoint
+    // publico sin autenticacion.
     return new Response(
-      JSON.stringify({ ok: true, userId, isNewUser, email: normalizedEmail }),
+      JSON.stringify({ ok: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {

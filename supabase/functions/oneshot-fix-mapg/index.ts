@@ -4,6 +4,20 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  // FIX 2026-07-19 (security scan): script de correccion puntual (ya aplicado)
+  // sin ninguna autenticacion -- cualquiera en internet podia volver a
+  // dispararlo (borrado de firma en iBS + reasignacion de perfil).
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const cronSecret = Deno.env.get("CRON_SECRET") || "";
+  const authHeader = req.headers.get("Authorization") || "";
+  const cronHeader = req.headers.get("x-cron-secret") || "";
+  const isAuth = authHeader === `Bearer ${serviceKey}` || (!!cronSecret && cronHeader === cronSecret);
+  if (!isAuth) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const SIG_ROW_ID = "84c4f511-b556-4b46-b927-976b97728849";
   const IBS_SIG_ID_TO_DELETE = "sig_ZDHuVeJVcHy3VnyjX3V6bc";
   const IBS_SIG_ID_TO_KEEP = "sig_62ASFmpDkMzjdxAsEQf845";

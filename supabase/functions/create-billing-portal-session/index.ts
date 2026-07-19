@@ -51,7 +51,12 @@ serve(async (req) => {
 
     if (!customerId) return json(404, { error: "No subscription found" });
 
-    const origin = req.headers.get("origin") || "https://musicdibs.com";
+    // FIX 2026-07-19 (security scan): el Origin header lo controla el cliente;
+    // sin validar, el return_url del portal de facturacion de Stripe podia
+    // apuntar a cualquier dominio arbitrario.
+    const ALLOWED_ORIGINS = new Set(["https://musicdibs.com","https://www.musicdibs.com","https://aimusicdibs.com","https://www.aimusicdibs.com","https://musicdibs-pre.lovable.app"]);
+    const rawOrigin = req.headers.get("origin") || "";
+    const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://musicdibs.com";
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${origin}/dashboard/billing`,

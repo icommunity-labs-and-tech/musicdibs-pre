@@ -66,8 +66,12 @@ serve(async (req) => {
     }
 
     // ── Validar token ──────────────────────────────────────────────────────────
-    if (callbackToken && logRow.callback_token !== callbackToken) {
-      console.warn("[kie-mp4-callback] token mismatch");
+    // FIX 2026-07-19 (security scan): si se omitia el parametro `token` en la
+    // URL, la validacion se saltaba entera (aunque el log row SI tuviera un
+    // callback_token esperado), permitiendo a cualquiera con un taskId
+    // adivinado o filtrado marcar una generacion como completada sin token.
+    if (!logRow.callback_token || logRow.callback_token !== callbackToken) {
+      console.warn("[kie-mp4-callback] token mismatch or missing");
       return new Response(JSON.stringify({ error: "invalid_token" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

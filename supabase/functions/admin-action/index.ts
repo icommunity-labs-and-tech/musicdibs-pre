@@ -1168,12 +1168,16 @@ serve(async (req) => {
         return json({ error: "Usuario no encontrado" }, 404);
       const targetEmail = targetAuth.user.email;
 
-      // Derive redirect URL from request origin (falls back to env SITE_URL)
-      const origin =
-        req.headers.get("origin") ||
-        req.headers.get("referer") ||
-        Deno.env.get("SITE_URL") ||
-        "";
+      // FIX 2026-07-19 (security scan): origin/referer son controlados por
+      // quien hace la peticion -- sin validar, se podia construir un enlace de
+      // reset de contraseña que redirigiera a un dominio arbitrario (phishing /
+      // robo de sesion). Se valida contra la misma allowlist usada en los
+      // checkouts de Stripe.
+      const ALLOWED_ORIGINS = new Set(["https://musicdibs.com", "https://www.musicdibs.com", "https://aimusicdibs.com", "https://www.aimusicdibs.com", "https://musicdibs-pre.lovable.app"]);
+      const rawOrigin = req.headers.get("origin") || req.headers.get("referer") || "";
+      let originHost = "";
+      try { originHost = new URL(rawOrigin).origin; } catch { /* invalid, ignore */ }
+      const origin = ALLOWED_ORIGINS.has(originHost) ? originHost : (Deno.env.get("SITE_URL") || "https://musicdibs.com");
       const cleanOrigin = origin
         .replace(/\/$/, "")
         .replace(/\/dashboard.*$/, "");
