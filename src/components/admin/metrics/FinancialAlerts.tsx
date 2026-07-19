@@ -235,10 +235,13 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
         <Alert className="border-blue-500/30 bg-blue-500/5">
           <Info className="h-4 w-4 text-blue-500" />
           <AlertDescription className="text-blue-600/90 text-xs">
-            Estás viendo un periodo pasado. Solo se muestran alertas calculadas
-            sobre el periodo seleccionado (ingresos, margen, payback, LTV/CAC,
-            concentración). Las alertas de snapshot global (MRR Stripe, churn,
-            NRR, quick ratio, runway, conversión) solo aplican al periodo actual.
+            Estás viendo un periodo pasado. Solo se evalúan las alertas
+            calculables sobre el periodo seleccionado: ingresos netos vs periodo
+            anterior proporcional, concentración del plan top, y margen bruto
+            (solo si hay COGS manual del mes). Las alertas de snapshot global
+            (MRR, churn, NRR, quick ratio, runway, conversión, LTV/CAC, payback)
+            solo aplican al periodo actual porque se derivan de ARPU y churn
+            mensuales globales.
           </AlertDescription>
         </Alert>
       )}
