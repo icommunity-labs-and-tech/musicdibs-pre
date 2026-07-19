@@ -420,17 +420,37 @@ serve(async (req) => {
           .eq("user_id", profile.user_id)
           .maybeSingle();
 
-        if (dbSub && dbSub.status !== relevantSub.status) {
-          await supabase.from("subscriptions").update({
-            status: relevantSub.status,
+        // FIX 2026-07-19: subscriptions.status tiene un CHECK constraint que solo
+        // permite 'active','cancelled','expired','past_due'. relevantSub.status
+        // puede venir de Stripe como 'trialing' o 'unpaid' (incluidos en el filtro
+        // de arriba), valores que ESE constraint rechaza -- el UPDATE fallaba en
+        // silencio (sin manejo de error) cada dia para la misma poblacion de
+        // usuarios, reportando "corregido" en el email sin haber escrito nada
+        // realmente. Se normaliza al vocabulario de 4 valores antes de comparar
+        // y escribir, y se comprueba el resultado del UPDATE en vez de asumirlo.
+        const normalizedStripeStatus =
+          relevantSub.status === "trialing" ? "active"
+          : relevantSub.status === "unpaid" ? "past_due"
+          : relevantSub.status;
+
+        if (dbSub && dbSub.status !== normalizedStripeStatus) {
+          const { error: statusUpdateErr } = await supabase.from("subscriptions").update({
+            status: normalizedStripeStatus,
             updated_at: new Date().toISOString(),
           }).eq("user_id", profile.user_id);
 
           const { data: { user } } = await supabase.auth.admin.getUserById(profile.user_id);
-          issues.push({
-            type: "subscription_status_desincronizado", severity: "warning", email: user?.email || "unknown",
-            detail: `subscriptions.status decia '${dbSub.status}' pero Stripe reporta '${relevantSub.status}'. Sincronizado automaticamente.`,
-          });
+          if (statusUpdateErr) {
+            issues.push({
+              type: "subscription_status_update_fallido", severity: "critical", email: user?.email || "unknown",
+              detail: `subscriptions.status decia '${dbSub.status}', Stripe reporta '${relevantSub.status}' (normalizado: '${normalizedStripeStatus}'), pero el UPDATE fallo: ${statusUpdateErr.message}. Revisar manualmente.`,
+            });
+          } else {
+            issues.push({
+              type: "subscription_status_desincronizado", severity: "warning", email: user?.email || "unknown",
+              detail: `subscriptions.status decia '${dbSub.status}' pero Stripe reporta '${relevantSub.status}' (normalizado: '${normalizedStripeStatus}'). Sincronizado automaticamente.`,
+            });
+          }
         }
 
         if (["past_due", "unpaid"].includes(relevantSub.status) && !profile.payment_grace_expires_at) {
