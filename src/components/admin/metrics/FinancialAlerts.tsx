@@ -203,7 +203,7 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
         <AlertDescription className="text-green-600/80">
           {isCurrentPeriod
             ? 'No se detectan alertas críticas. Todos los indicadores están en rango saludable.'
-            : 'No se detectan alertas sobre los indicadores period-aware (ingresos, margen, payback, LTV/CAC, concentración) para el periodo seleccionado.'}
+            : 'No se detectan alertas sobre los indicadores calculados para el periodo seleccionado (ingresos vs periodo anterior proporcional, concentración de plan top y margen bruto si hay COGS manual).'}
         </AlertDescription>
       </Alert>
     );
