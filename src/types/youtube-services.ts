@@ -122,8 +122,9 @@ export const OAC_STEPS: WizardStep[] = [
   {
     id: 'oac_vevo_url', type: 'url',
     title: 'URL del canal VEVO',
-    key: 'vevoChannelUrl', placeholder: 'https://www.youtube.com/...', required: false,
+    key: 'vevoChannelUrl', placeholder: 'https://www.youtube.com/...', required: true,
   },
+
   { id: 'oac_payment', type: 'payment', title: 'Confirma tu solicitud', subtitle: 'Precio: <strong>50 EUR</strong>. Plazo de resolucion: <strong>5 dias laborables</strong>.' },
 ];
 
