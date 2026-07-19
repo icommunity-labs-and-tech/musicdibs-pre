@@ -2941,6 +2941,45 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_keyword_snapshots: {
+        Row: {
+          captured_date: string
+          cpc: number | null
+          created_at: string
+          db: string
+          id: string
+          phrase: string
+          position: number
+          traffic_share: number | null
+          url: string | null
+          volume: number | null
+        }
+        Insert: {
+          captured_date?: string
+          cpc?: number | null
+          created_at?: string
+          db: string
+          id?: string
+          phrase: string
+          position: number
+          traffic_share?: number | null
+          url?: string | null
+          volume?: number | null
+        }
+        Update: {
+          captured_date?: string
+          cpc?: number | null
+          created_at?: string
+          db?: string
+          id?: string
+          phrase?: string
+          position?: number
+          traffic_share?: number | null
+          url?: string | null
+          volume?: number | null
+        }
+        Relationships: []
+      }
       social_promotions: {
         Row: {
           copy_ig_feed: string | null
