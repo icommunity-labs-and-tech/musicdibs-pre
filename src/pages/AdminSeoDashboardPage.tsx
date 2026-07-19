@@ -33,7 +33,11 @@ interface Keyword {
   cpc: number;
   url: string;
   trafficShare: number;
+  delta7d: number | null;
+  delta30d: number | null;
+  historyPoints: number;
 }
+
 interface DbBlock {
   db: string;
   country: string;
