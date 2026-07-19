@@ -324,7 +324,7 @@ serve(async (req) => {
       ? [dbParam].filter((d) => DATABASES[d])
       : Object.keys(DATABASES);
 
-    const results = [];
+    const results: any[] = [];
     let quotaExhausted = false;
     let quotaError: string | null = null;
 
