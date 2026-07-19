@@ -41,15 +41,16 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 2. CAC > LTV — unit economics negativas (period-aware: ARPU is period)
-  if (m.cac > 0 && m.ltv > 0 && m.cac > m.ltv) {
+  // 2. CAC > LTV — unit economics globales (ARPU/churn son mensuales globales).
+  //    Solo tiene sentido en el snapshot actual.
+  if (showLiveSnapshotAlerts && m.cac > 0 && m.ltv > 0 && m.cac > m.ltv) {
     alerts.push({
       severity: 'critical',
       title: `CAC (€${m.cac}) supera LTV (€${m.ltv})`,
       description: 'Cada nuevo usuario cuesta más de lo que genera. Revisar canales de adquisición, mejorar retención o subir pricing.',
       icon: DollarSign,
     });
-  } else if (m.ltvCacRatio > 0 && m.ltvCacRatio < 3) {
+  } else if (showLiveSnapshotAlerts && m.ltvCacRatio > 0 && m.ltvCacRatio < 3) {
     alerts.push({
       severity: 'warning',
       title: `LTV:CAC ratio bajo (${m.ltvCacRatio}x)`,
@@ -85,25 +86,31 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 5. Gross Margin bajo (period-aware)
-  if (m.grossMargin < 60 && m.grossMargin > 0) {
-    alerts.push({
-      severity: 'critical',
-      title: `Gross Margin bajo: ${m.grossMargin}%`,
-      description: 'El margen bruto está muy por debajo del benchmark SaaS (>70%). Revisar COGS y costes de infraestructura.',
-      icon: ShieldAlert,
-    });
-  } else if (m.grossMargin >= 60 && m.grossMargin < 70) {
-    alerts.push({
-      severity: 'warning',
-      title: `Gross Margin mejorable: ${m.grossMargin}%`,
-      description: 'El benchmark SaaS es >70-80%. Optimizar costes de APIs, hosting y servicios de terceros.',
-      icon: ShieldAlert,
-    });
+  // 5. Gross Margin bajo (period-aware) — SOLO si hay COGS manual real.
+  //    Sin `hasManualMetrics`, el backend devuelve 85 por defecto y la
+  //    comparación con umbrales no aporta información válida.
+  if (m.hasManualMetrics && m.cogsManual > 0) {
+    if (m.grossMargin < 60 && m.grossMargin > 0) {
+      alerts.push({
+        severity: 'critical',
+        title: `Gross Margin bajo: ${m.grossMargin}%`,
+        description: 'El margen bruto está muy por debajo del benchmark SaaS (>70%). Revisar COGS y costes de infraestructura.',
+        icon: ShieldAlert,
+      });
+    } else if (m.grossMargin >= 60 && m.grossMargin < 70) {
+      alerts.push({
+        severity: 'warning',
+        title: `Gross Margin mejorable: ${m.grossMargin}%`,
+        description: 'El benchmark SaaS es >70-80%. Optimizar costes de APIs, hosting y servicios de terceros.',
+        icon: ShieldAlert,
+      });
+    }
   }
 
-  // 6. Payback period > 18 meses (period-aware)
-  if (m.paybackPeriod > 18) {
+  // 6. Payback period > 18 meses — es una métrica mensual (CAC/ARPU mensual).
+  //    En vista semanal/anual `arpuPeriod` distorsiona el resultado, así que
+  //    solo mostramos la alerta en el snapshot actual.
+  if (showLiveSnapshotAlerts && m.paybackPeriod > 18) {
     alerts.push({
       severity: 'warning',
       title: `Payback period largo: ${m.paybackPeriod} meses`,
