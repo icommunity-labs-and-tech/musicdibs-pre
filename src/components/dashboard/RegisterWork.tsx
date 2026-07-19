@@ -262,7 +262,12 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
             <p className="text-sm text-muted-foreground">
               {t('dashboard.registerWork.freeRegisterLimitMsg')}
             </p>
-            <PricingLink className="text-sm font-medium text-primary" />
+            <Link
+              to="/dashboard/credits"
+              className="text-sm font-medium text-primary hover:underline underline-offset-2"
+            >
+              {t('dashboard.registerWork.freeRegisterLimitCta')}
+            </Link>
           </div>
         ) : status === 'failed' ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
