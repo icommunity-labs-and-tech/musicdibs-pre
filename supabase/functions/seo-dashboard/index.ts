@@ -58,6 +58,9 @@ async function semrush(path: string, params: Record<string, string>) {
   return parsed;
 }
 
+const isQuotaError = (error: unknown) =>
+  /ERROR\s+134|TOTAL\s+LIMIT\s+EXCEEDED/i.test(String(error));
+
 function rowsToObjects(payload: any): any[] {
   const cols: string[] = payload?.data?.columnNames ?? [];
   const rows: any[][] = payload?.data?.rows ?? [];
@@ -75,6 +78,15 @@ async function fetchDatabaseKeywords(db: string, limit: number) {
     export_columns: "Ph,Po,Pp,Nq,Cp,Ur,Tr",
     display_limit: String(limit),
   }).catch((e) => ({ __error: String(e) }));
+
+  if ((kwPayload as any).__error && isQuotaError((kwPayload as any).__error)) {
+    return {
+      keywords: [],
+      overview: null,
+      error: (kwPayload as any).__error,
+      quotaExhausted: true,
+    };
+  }
 
   const ovPayload = await semrush("/domains/domain_ranks", {
     domain: DOMAIN,
@@ -108,7 +120,48 @@ async function fetchDatabaseKeywords(db: string, limit: number) {
     keywords,
     overview,
     error: (kwPayload as any).__error || (ovPayload as any).__error || null,
+    quotaExhausted: isQuotaError((kwPayload as any).__error || (ovPayload as any).__error),
   };
+}
+
+async function loadCachedDatabase(admin: any, db: string, limit: number) {
+  const { data: latest, error: latestError } = await admin
+    .from("seo_keyword_snapshots")
+    .select("captured_date")
+    .eq("db", db)
+    .order("captured_date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (latestError || !latest?.captured_date) {
+    return { keywords: [], cachedDate: null };
+  }
+
+  const { data, error } = await admin
+    .from("seo_keyword_snapshots")
+    .select("phrase,position,volume,cpc,url,traffic_share,captured_date")
+    .eq("db", db)
+    .eq("captured_date", latest.captured_date)
+    .order("traffic_share", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.warn(`[cache] ${db}:`, error.message);
+    return { keywords: [], cachedDate: latest.captured_date };
+  }
+
+  const keywords = (data || []).map((r: any) => ({
+    phrase: r.phrase,
+    position: Number(r.position) || 0,
+    previous: 0,
+    delta: 0,
+    volume: Number(r.volume) || 0,
+    cpc: Number(r.cpc) || 0,
+    url: r.url,
+    trafficShare: Number(r.traffic_share) || 0,
+  }));
+
+  return { keywords, cachedDate: latest.captured_date };
 }
 
 async function snapshotDatabase(admin: any, db: string, keywords: any[]) {
@@ -211,11 +264,17 @@ serve(async (req) => {
         return json({ error: "Unauthorized" }, 401);
       }
       const results: Record<string, number> = {};
+      let quotaExhausted = false;
       for (const db of Object.keys(DATABASES)) {
-        const { keywords } = await fetchDatabaseKeywords(db, 100);
+        if (quotaExhausted) {
+          results[db] = 0;
+          continue;
+        }
+        const { keywords, quotaExhausted: hitQuota } = await fetchDatabaseKeywords(db, 100);
+        quotaExhausted = Boolean(hitQuota);
         results[db] = await snapshotDatabase(admin, db, keywords);
       }
-      return json({ ok: true, snapshotted: results, at: new Date().toISOString() });
+      return json({ ok: true, snapshotted: results, quotaExhausted, at: new Date().toISOString() });
     }
 
     // ── Admin dashboard mode ────────────────────────────────────────────
@@ -265,11 +324,40 @@ serve(async (req) => {
       ? [dbParam].filter((d) => DATABASES[d])
       : Object.keys(DATABASES);
 
-    const results = await Promise.all(
-      targets.map(async (db) => {
-        const { keywords, overview, error } = await fetchDatabaseKeywords(db, limit);
+    const results: any[] = [];
+    let quotaExhausted = false;
+    let quotaError: string | null = null;
+
+    for (const db of targets) {
+        let keywords: any[] = [];
+        let overview: any = null;
+        let error: string | null = null;
+        let cached = false;
+        let cachedDate: string | null = null;
+
+        if (quotaExhausted) {
+          const cachedData = await loadCachedDatabase(admin, db, limit);
+          keywords = cachedData.keywords;
+          cachedDate = cachedData.cachedDate;
+          cached = true;
+          error = quotaError;
+        } else {
+          const live = await fetchDatabaseKeywords(db, limit);
+          keywords = live.keywords;
+          overview = live.overview;
+          error = live.error;
+          if (live.quotaExhausted) {
+            quotaExhausted = true;
+            quotaError = live.error || "ERROR 134 :: TOTAL LIMIT EXCEEDED";
+            const cachedData = await loadCachedDatabase(admin, db, limit);
+            keywords = cachedData.keywords;
+            cachedDate = cachedData.cachedDate;
+            cached = true;
+          }
+        }
+
         // Persist today's snapshot opportunistically (idempotent per day)
-        if (persist && keywords.length) {
+        if (persist && keywords.length && !cached) {
           await snapshotDatabase(admin, db, keywords);
         }
         const history = await loadHistoryDeltas(
@@ -285,7 +373,7 @@ serve(async (req) => {
           .filter((k) => Math.abs(k.delta) >= 3 && k.previous > 0)
           .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
           .slice(0, 15);
-        return {
+        results.push({
           db,
           ...DATABASES[db],
           overview: overview ? {
@@ -297,14 +385,17 @@ serve(async (req) => {
           keywords: enriched,
           alerts,
           error,
-        };
-      }),
-    );
+          cached,
+          cachedDate,
+        });
+    }
 
     return json({
       domain: DOMAIN,
       generatedAt: new Date().toISOString(),
       databases: results,
+      quotaExhausted,
+      error: quotaError,
     });
   } catch (e) {
     console.error("[seo-dashboard]", e);

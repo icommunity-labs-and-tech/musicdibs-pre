@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Table,
@@ -53,11 +54,15 @@ interface DbBlock {
   keywords: Keyword[];
   alerts: Keyword[];
   error: string | null;
+  cached?: boolean;
+  cachedDate?: string | null;
 }
 interface ApiResp {
   domain: string;
   generatedAt: string;
   databases: DbBlock[];
+  quotaExhausted?: boolean;
+  error?: string | null;
 }
 
 const LANG_LABEL: Record<string, string> = {
@@ -65,6 +70,12 @@ const LANG_LABEL: Record<string, string> = {
   en: "Inglés",
   pt: "Portugués",
 };
+
+const isQuotaError = (message?: string | null) =>
+  /ERROR\s+134|TOTAL\s+LIMIT\s+EXCEEDED/i.test(message || "");
+
+const quotaMessage =
+  "La cuota de API de Semrush está agotada. No se pueden pedir datos nuevos hasta que Semrush reinicie la cuota o se conecte una cuenta/plan con más límite.";
 
 function DeltaBadge({ delta }: { delta: number }) {
   if (!delta)
@@ -87,6 +98,7 @@ function DeltaBadge({ delta }: { delta: number }) {
 export default function AdminSeoDashboardPage() {
   const [data, setData] = useState<ApiResp | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pageError, setPageError] = useState<string | null>(null);
   const [activeDb, setActiveDb] = useState("es");
   const [langFilter, setLangFilter] = useState<"all" | "es" | "en" | "pt">(
     "all",
@@ -94,16 +106,23 @@ export default function AdminSeoDashboardPage() {
 
   const load = async () => {
     setLoading(true);
+    setPageError(null);
     try {
       const { data: resp, error } = await supabase.functions.invoke(
         "seo-dashboard",
         { body: {} },
       );
       if (error) throw error;
-      if ((resp as any)?.error) throw new Error((resp as any).error);
+      if ((resp as any)?.error && !(resp as any)?.quotaExhausted) {
+        throw new Error((resp as any).error);
+      }
       setData(resp as ApiResp);
     } catch (e: any) {
-      toast.error("Error cargando datos SEO", { description: e.message });
+      const message = e?.message || "Error desconocido";
+      setPageError(message);
+      toast.error("Error cargando datos SEO", {
+        description: isQuotaError(message) ? quotaMessage : message,
+      });
     } finally {
       setLoading(false);
     }
@@ -134,6 +153,17 @@ export default function AdminSeoDashboardPage() {
       .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
       .slice(0, 20);
   }, [data]);
+
+  const quotaExhausted = Boolean(
+    data?.quotaExhausted ||
+      isQuotaError(data?.error) ||
+      data?.databases.some((db) => isQuotaError(db.error)) ||
+      isQuotaError(pageError),
+  );
+
+  const hasCachedData = Boolean(
+    data?.databases.some((db) => db.cached && db.keywords.length > 0),
+  );
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -173,6 +203,27 @@ export default function AdminSeoDashboardPage() {
         </div>
       )}
 
+      {quotaExhausted && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Cuota de Semrush agotada</AlertTitle>
+          <AlertDescription>
+            {quotaMessage}{" "}
+            {hasCachedData
+              ? "Mostrando el último snapshot guardado disponible."
+              : "Todavía no hay snapshots guardados para mostrar datos cacheados."}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {pageError && !quotaExhausted && !data && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>No se pudieron cargar los datos SEO</AlertTitle>
+          <AlertDescription>{pageError}</AlertDescription>
+        </Alert>
+      )}
+
       {data && (
         <>
           {/* Global overview cards */}
@@ -188,13 +239,20 @@ export default function AdminSeoDashboardPage() {
                 <CardContent className="p-3 space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-lg">{db.flag}</span>
-                    <Badge variant="outline" className="text-[10px]">
-                      {LANG_LABEL[db.language]}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      {db.cached && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          Cache
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className="text-[10px]">
+                        {LANG_LABEL[db.language]}
+                      </Badge>
+                    </div>
                   </div>
                   <div className="text-xs text-muted-foreground">{db.label}</div>
                   <div className="text-lg font-bold">
-                    {db.overview?.organicKeywords ?? 0}
+                    {db.overview?.organicKeywords ?? db.keywords.length}
                     <span className="text-xs font-normal text-muted-foreground ml-1">
                       kw
                     </span>
@@ -268,17 +326,40 @@ export default function AdminSeoDashboardPage() {
                 <CardTitle className="text-base flex items-center gap-2">
                   <span className="text-xl">{currentDb.flag}</span>
                   Keywords — {currentDb.label} ({LANG_LABEL[currentDb.language]})
+                  {currentDb.cached && (
+                    <Badge variant="secondary" className="ml-1">
+                      Cache {currentDb.cachedDate ? currentDb.cachedDate : ""}
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {currentDb.error ? (
-                  <p className="text-sm text-red-600">Error: {currentDb.error}</p>
+                {currentDb.error && !currentDb.keywords.length ? (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Error en Semrush</AlertTitle>
+                    <AlertDescription>
+                      {isQuotaError(currentDb.error) ? quotaMessage : currentDb.error}
+                    </AlertDescription>
+                  </Alert>
                 ) : currentDb.keywords.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Sin keywords rankeadas en este mercado.
                   </p>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div className="space-y-3">
+                    {currentDb.error && (
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Datos nuevos no disponibles</AlertTitle>
+                        <AlertDescription>
+                          {isQuotaError(currentDb.error)
+                            ? "Se muestra el último snapshot guardado porque Semrush ha agotado la cuota."
+                            : currentDb.error}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -343,6 +424,7 @@ export default function AdminSeoDashboardPage() {
 
                       </TableBody>
                     </Table>
+                    </div>
                   </div>
                 )}
               </CardContent>
