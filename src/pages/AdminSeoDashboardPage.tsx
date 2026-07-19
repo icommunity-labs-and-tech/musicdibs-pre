@@ -113,7 +113,9 @@ export default function AdminSeoDashboardPage() {
         { body: {} },
       );
       if (error) throw error;
-      if ((resp as any)?.error) throw new Error((resp as any).error);
+      if ((resp as any)?.error && !(resp as any)?.quotaExhausted) {
+        throw new Error((resp as any).error);
+      }
       setData(resp as ApiResp);
     } catch (e: any) {
       const message = e?.message || "Error desconocido";
@@ -250,7 +252,7 @@ export default function AdminSeoDashboardPage() {
                   </div>
                   <div className="text-xs text-muted-foreground">{db.label}</div>
                   <div className="text-lg font-bold">
-                    {db.overview?.organicKeywords ?? 0}
+                    {db.overview?.organicKeywords ?? db.keywords.length}
                     <span className="text-xs font-normal text-muted-foreground ml-1">
                       kw
                     </span>
