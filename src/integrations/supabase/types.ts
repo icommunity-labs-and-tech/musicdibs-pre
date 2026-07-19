@@ -4130,6 +4130,40 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_operation_pricing_admin: {
+        Args: never
+        Returns: {
+          api_cost_eur: number | null
+          api_cost_notes: string | null
+          category: string
+          created_at: string | null
+          credits_cost: number
+          description: string | null
+          display_order: number
+          euro_cost: number | null
+          id: string
+          is_active: boolean | null
+          is_annual_only: boolean | null
+          is_free: boolean | null
+          llm_model: string | null
+          llm_provider: string | null
+          llm_recommendation: string | null
+          margin_multiplier: number | null
+          model_name: string | null
+          operation_icon: string | null
+          operation_key: string
+          operation_label: string
+          operation_name: string
+          price_per_credit_eur: number | null
+          updated_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "operation_pricing"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_profiles_with_email: {
         Args: { p_limit: number; p_offset: number; p_order_asc: boolean }
         Returns: {
