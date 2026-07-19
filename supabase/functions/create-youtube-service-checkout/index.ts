@@ -43,7 +43,18 @@ serve(async (req) => {
     // Add-on: fusion del canal VEVO con el OAC (+5 EUR). Solo aplica a serviceType 'oac'
     // y solo si el usuario respondio 'yes' en el paso oac_vevo_merge del wizard.
     const wantsVevoMerge = serviceType === "oac" && formData?.vevoMerge === "yes";
+    // Server-side guard: si el usuario opto por la fusion VEVO (+5 EUR) es
+    // obligatorio adjuntar la URL del canal VEVO. Sin URL el admin no puede
+    // ejecutar la fusion y habria que devolver el cargo extra.
+    if (wantsVevoMerge) {
+      const vevoUrl = typeof formData?.vevoChannelUrl === "string" ? formData.vevoChannelUrl.trim() : "";
+      const isValidUrl = /^https?:\/\/\S+\.\S+/i.test(vevoUrl);
+      if (!isValidUrl) {
+        return json({ error: "Debes indicar la URL de tu canal VEVO para poder realizar la fusion." }, 400);
+      }
+    }
     const amountGross = 50.0 + (wantsVevoMerge ? 5.0 : 0);
+
 
     const { data: reqRecord, error: dbErr } = await supabase
       .from("youtube_service_requests")
