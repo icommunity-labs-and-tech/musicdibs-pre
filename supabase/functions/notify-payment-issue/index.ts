@@ -158,18 +158,30 @@ serve(async (req) => {
   if (!targetUserId) return json({ error: "user_id is required" }, 400);
 
   // Leer perfil del usuario objetivo
-  const { data: profile, error: profileErr } = await supabase
+  const { data: profileRow } = await supabase
     .from("profiles")
     .select("user_id, display_name, language, subscription_plan, payment_issue_count, payment_issue_notified_at, payment_grace_expires_at")
     .eq("user_id", targetUserId)
-    .single();
+    .maybeSingle();
 
-  if (profileErr || !profile) return json({ error: "User not found" }, 404);
-
-  // Leer email desde auth.users
-  const { data: authUser } = await supabase.auth.admin.getUserById(targetUserId);
-  const email = authUser?.user?.email;
+  // Leer email desde auth.users (fuente de verdad para el email)
+  const { data: authUser, error: authErr } = await supabase.auth.admin.getUserById(targetUserId);
+  if (authErr || !authUser?.user) {
+    console.warn(`[NOTIFY-PAYMENT-ISSUE] Auth user not found: ${targetUserId}`);
+    return json({ error: "User not found in auth" }, 404);
+  }
+  const email = authUser.user.email;
   if (!email) return json({ error: "User has no email" }, 400);
+
+  const profile = profileRow ?? {
+    user_id: targetUserId,
+    display_name: null as string | null,
+    language: authUser.user.user_metadata?.language ?? "es",
+    subscription_plan: null as string | null,
+    payment_issue_count: 0,
+    payment_issue_notified_at: null as string | null,
+    payment_grace_expires_at: null as string | null,
+  };
 
   // Calcular grace period
   const now = new Date();
