@@ -182,12 +182,13 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
     });
   }
 
-  // 10. Revenue concentration risk (period-aware: usa top plan del periodo)
+  // 10. Concentración de revenue en el plan top del periodo
   if (m.top10RevenuePercentage > 80) {
+    const topName = m.topPlanName && m.topPlanName !== 'N/A' ? m.topPlanName : 'el plan principal';
     alerts.push({
       severity: 'warning',
-      title: `Alta concentración de revenue: Top 10 = ${m.top10RevenuePercentage}%`,
-      description: 'Más del 80% del revenue depende de pocos usuarios. Diversificar base de clientes para reducir riesgo.',
+      title: `Alta concentración de revenue: ${topName} = ${m.top10RevenuePercentage}%`,
+      description: 'Más del 80% del revenue del periodo proviene de un único plan. Diversificar la mezcla de planes/ingresos para reducir riesgo.',
       icon: ShieldAlert,
     });
   }
