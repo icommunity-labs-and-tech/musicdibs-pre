@@ -489,6 +489,62 @@ const writeRoute = async (template, route) => {
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
+// ── Fetch blog posts for per-article prerender ────────────────────────────────
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://kmwehyixenybegwhqljx.supabase.co";
+const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+
+const fetchBlogRoutes = async () => {
+  if (!SUPABASE_KEY) {
+    console.warn("[prerender-seo] no VITE_SUPABASE_PUBLISHABLE_KEY — skipping blog prerender");
+    return [];
+  }
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/blog_posts?select=slug,title,excerpt,meta_description,language,image_url,published_at,updated_at,tags&published=eq.true`;
+    const res = await fetch(url, {
+      headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+    });
+    if (!res.ok) {
+      console.warn(`[prerender-seo] blog fetch failed: ${res.status}`);
+      return [];
+    }
+    const posts = await res.json();
+    return posts
+      .filter((p) => p.slug)
+      .map((p) => {
+        const locale = p.language === "en" ? "en" : p.language === "pt-BR" || p.language === "pt" ? "pt-BR" : "es";
+        const rawTitle = (p.title || p.slug).slice(0, 70);
+        const desc = (p.meta_description || p.excerpt || p.title || "Musicdibs").slice(0, 155);
+        return {
+          path: `/news/${p.slug}`,
+          locale,
+          title: `${rawTitle} | Musicdibs`,
+          description: desc,
+          jsonLd: {
+            "@context": "https://schema.org",
+            "@type": "Article",
+            headline: p.title,
+            description: desc,
+            image: p.image_url || DEFAULT_OG_IMAGE,
+            datePublished: p.published_at || undefined,
+            dateModified: p.updated_at || p.published_at || undefined,
+            author: { "@type": "Organization", name: "Musicdibs" },
+            publisher: {
+              "@type": "Organization",
+              name: "Musicdibs",
+              logo: { "@type": "ImageObject", url: `${BASE_URL}/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png` },
+            },
+            mainEntityOfPage: { "@type": "WebPage", "@id": `${BASE_URL}/news/${p.slug}` },
+            ...(p.tags && p.tags.length ? { keywords: p.tags.join(", ") } : {}),
+          },
+        };
+      });
+  } catch (err) {
+    console.warn(`[prerender-seo] blog fetch error: ${err?.message || err}`);
+    return [];
+  }
+};
+
 const main = async () => {
   const indexPath = path.join(DIST, "index.html");
   let template;
@@ -498,8 +554,10 @@ const main = async () => {
     console.warn(`[prerender-seo] dist/index.html not found — skipping (run vite build first)`);
     return;
   }
-  console.log(`[prerender-seo] generating static SEO HTML for ${ROUTES.length} routes:`);
-  await Promise.all(ROUTES.map((r) => writeRoute(template, r)));
+  const blogRoutes = await fetchBlogRoutes();
+  const allRoutes = [...ROUTES, ...blogRoutes];
+  console.log(`[prerender-seo] generating static SEO HTML for ${allRoutes.length} routes (${blogRoutes.length} blog posts):`);
+  await Promise.all(allRoutes.map((r) => writeRoute(template, r)));
   console.log(`[prerender-seo] done ✓`);
 };
 

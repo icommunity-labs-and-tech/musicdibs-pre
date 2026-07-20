@@ -12,8 +12,19 @@ Allow: /
 
 User-agent: *
 Allow: /
-# AI assistants: machine-readable site summary
 Allow: /llms.txt
 Allow: /sitemap.xml
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
 
 Sitemap: https://www.musicdibs.com/sitemap.xml
