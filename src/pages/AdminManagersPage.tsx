@@ -40,7 +40,6 @@ interface ManagerAccount {
   contact_phone?: string | null;
   max_artists: number;
   artists_used: number;
-  annual_works_quota: number;
   credits_included: number;
   includes_distribution: boolean;
   includes_ai_studio: boolean;
@@ -58,7 +57,7 @@ type ContractForm = {
   contact_email: string;
   contact_phone: string;
   max_artists: string;
-  annual_works_quota: string;
+  
   credits_included: string;
   includes_distribution: boolean;
   includes_ai_studio: boolean;
@@ -83,7 +82,6 @@ const emptyForm = (): ContractForm => ({
   contact_email: '',
   contact_phone: '',
   max_artists: '3',
-  annual_works_quota: '100',
   credits_included: '0',
   includes_distribution: true,
   includes_ai_studio: false,
@@ -143,7 +141,6 @@ export default function AdminManagersPage() {
       company_name: lead.name || '',
       contact_email: lead.email,
       max_artists: String(lead.num_artists_estimated || 1),
-      annual_works_quota: String(lead.annual_works_estimated || 100),
       includes_distribution: lead.needs_distribution ?? true,
       includes_ai_studio: lead.needs_ai_studio ?? false,
       notes: lead.internal_notes || '',
@@ -160,7 +157,7 @@ export default function AdminManagersPage() {
       contact_email: acc.contact_email,
       contact_phone: acc.contact_phone || '',
       max_artists: String(acc.max_artists),
-      annual_works_quota: String(acc.annual_works_quota),
+      
       credits_included: String(acc.credits_included),
       includes_distribution: acc.includes_distribution,
       includes_ai_studio: acc.includes_ai_studio,
@@ -193,7 +190,7 @@ export default function AdminManagersPage() {
         contact_email: (form.contact_email || form.manager_email).trim(),
         contact_phone: form.contact_phone.trim() || undefined,
         max_artists: maxA,
-        annual_works_quota: Number(form.annual_works_quota) || 100,
+        
         credits_included: Number(form.credits_included) || 0,
         includes_distribution: form.includes_distribution,
         includes_ai_studio: form.includes_ai_studio,
@@ -349,7 +346,7 @@ export default function AdminManagersPage() {
                         <TableHead>Empresa</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Artistas</TableHead>
-                        <TableHead>Obras/año</TableHead>
+                        
                         <TableHead>Precio/año</TableHead>
                         <TableHead>Inicio</TableHead>
                         <TableHead>Fin</TableHead>
@@ -377,7 +374,7 @@ export default function AdminManagersPage() {
                                 {a.artists_used} / {a.max_artists}
                               </span>
                             </TableCell>
-                            <TableCell>{a.annual_works_quota}</TableCell>
+                            
                             <TableCell>{a.annual_price_eur} €</TableCell>
                             <TableCell className="text-xs">{a.contract_start?.slice(0, 10)}</TableCell>
                             <TableCell className="text-xs">
@@ -456,10 +453,6 @@ export default function AdminManagersPage() {
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground mt-1">Solo estos tiers existen como price en Stripe. Para otros valores, marca abajo "no cobrar automáticamente".</p>
-            </div>
-            <div>
-              <Label>Cuota obras / año</Label>
-              <Input type="number" min={0} value={form.annual_works_quota} onChange={(e) => setForm({ ...form, annual_works_quota: e.target.value })} />
             </div>
             <div>
               <Label>Créditos incluidos</Label>

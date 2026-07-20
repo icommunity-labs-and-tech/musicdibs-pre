@@ -4061,6 +4061,7 @@ export type Database = {
           p_manager_user_id: string
           p_max_artists: number
           p_notes?: string
+          p_status?: string
         }
         Returns: string
       }
