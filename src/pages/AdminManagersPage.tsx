@@ -160,7 +160,7 @@ export default function AdminManagersPage() {
       contact_email: acc.contact_email,
       contact_phone: acc.contact_phone || '',
       max_artists: String(acc.max_artists),
-      annual_works_quota: String(acc.annual_works_quota),
+      
       credits_included: String(acc.credits_included),
       includes_distribution: acc.includes_distribution,
       includes_ai_studio: acc.includes_ai_studio,
