@@ -101,6 +101,38 @@ export default function AdminManagersPage() {
   const [form, setForm] = useState<ContractForm>(emptyForm());
   const [submitting, setSubmitting] = useState(false);
   const [editingContractId, setEditingContractId] = useState<string | null>(null);
+  const [activateTarget, setActivateTarget] = useState<ManagerAccount | null>(null);
+  const [activating, setActivating] = useState(false);
+
+  const activateContract = async () => {
+    if (!activateTarget) return;
+    setActivating(true);
+    try {
+      const res = await adminApi.callAction('activate_manager_contract', {
+        contract_id: activateTarget.contract_id,
+        manager_accepted: true,
+      });
+      if (res?.error) throw new Error(res.error);
+      const stripe = res?.stripe as
+        | { applied?: boolean; already_had_addon?: boolean; reason?: string; subscription_item_id?: string }
+        | undefined;
+      if (!stripe) {
+        toast.success('Contrato activado.');
+      } else if (stripe.applied && stripe.already_had_addon) {
+        toast.message('Contrato activado. El manager ya tenía este mismo tier en Stripe, no se duplicó ningún cobro.');
+      } else if (stripe.applied) {
+        toast.success('Contrato activado y add-on aplicado en Stripe (se facturará junto con su suscripción).');
+      } else {
+        toast.warning(`Contrato activado, pero: ${stripe.reason || 'no se pudo aplicar el add-on en Stripe. Aplícalo manualmente.'}`, { duration: 9000 });
+      }
+      setActivateTarget(null);
+      await loadAccounts();
+    } catch (e: any) {
+      toast.error(e?.message || 'Error al activar el contrato');
+    } finally {
+      setActivating(false);
+    }
+  };
 
   const loadLeads = useCallback(async () => {
     setLoadingLeads(true);
