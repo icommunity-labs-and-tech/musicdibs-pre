@@ -385,6 +385,17 @@ export default function AdminManagersPage() {
                               {expiring && <div className="text-orange-600 text-[10px]">en {days}d</div>}
                             </TableCell>
                             <TableCell><Badge>{a.status}</Badge></TableCell>
+                            <TableCell>
+                              {a.stripe_addon_item_id ? (
+                                <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-600">
+                                  <CheckCircle2 className="w-3 h-3" /> Add-on
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="gap-1 text-orange-600 border-orange-500/40">
+                                  <AlertCircle className="w-3 h-3" /> Sin add-on
+                                </Badge>
+                              )}
+                            </TableCell>
                             <TableCell className="text-right">
                               <Button size="sm" variant="outline" onClick={() => openEditAccount(a)}>
                                 <Pencil className="w-3 h-3 mr-1" /> Editar
