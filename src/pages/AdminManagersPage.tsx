@@ -539,6 +539,36 @@ export default function AdminManagersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!activateTarget} onOpenChange={(o) => !o && setActivateTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar aceptación y cobrar</DialogTitle>
+            <DialogDescription>
+              {activateTarget && (
+                <>
+                  ¿Confirmas que <strong>{activateTarget.company_name}</strong> ha aceptado la oferta de{' '}
+                  <strong>{activateTarget.annual_price_eur}€/año</strong> para gestionar hasta{' '}
+                  <strong>{activateTarget.max_artists} artistas</strong>?
+                  <br /><br />
+                  Esto activará el contrato y <strong>generará el cobro real en Stripe</strong> (add-on añadido a su suscripción).
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setActivateTarget(null)} disabled={activating}>Cancelar</Button>
+            <Button
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              onClick={activateContract}
+              disabled={activating}
+            >
+              {activating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              <CreditCard className="w-4 h-4 mr-2" /> Confirmar y cobrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
