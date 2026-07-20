@@ -48,6 +48,8 @@ export function VerifyRegistration() {
         locale,
         sourceFile: file,
         fallbackAlgorithm: 'SHA-512',
+        // FIX 2026-07-20: sin workId, resolveCreators() nunca se ejecuta.
+        workId: result.registrationId,
       });
       await generateCertificate(certData, locale);
       toast.success(t('dashboard.certificate.downloadSuccess'));

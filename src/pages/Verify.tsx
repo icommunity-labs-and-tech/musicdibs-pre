@@ -63,6 +63,10 @@ const Verify = () => {
         locale,
         sourceFile: file,
         fallbackAlgorithm: 'SHA-512',
+        // FIX 2026-07-20: sin workId, resolveCreators() nunca se ejecuta y
+        // el certificado descargado desde /verify nunca muestra coautores
+        // ni % de propiedad, pase lo que pase en la BD.
+        workId: result.registrationId,
       });
       await generateCertificate(certData, locale);
       toast.success(t('dashboard.certificate.downloadSuccess'));
