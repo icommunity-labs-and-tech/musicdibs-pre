@@ -443,8 +443,19 @@ export default function AdminManagersPage() {
               <Input value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} />
             </div>
             <div>
-              <Label>Máximo de artistas *</Label>
-              <Input type="number" min={1} value={form.max_artists} onChange={(e) => setForm({ ...form, max_artists: e.target.value })} />
+              <Label>Máximo de artistas * (tier Stripe)</Label>
+              <Select value={form.max_artists} onValueChange={(v) => setForm({ ...form, max_artists: v })}>
+                <SelectTrigger><SelectValue placeholder="Selecciona tier" /></SelectTrigger>
+                <SelectContent>
+                  {ARTIST_TIERS.map((t) => (
+                    <SelectItem key={t} value={String(t)}>{t} artistas</SelectItem>
+                  ))}
+                  {!ARTIST_TIERS.includes(Number(form.max_artists) as any) && form.max_artists && (
+                    <SelectItem value={form.max_artists}>{form.max_artists} (personalizado)</SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+              <p className="text-[11px] text-muted-foreground mt-1">Solo estos tiers existen como price en Stripe. Para otros valores, marca abajo "no cobrar automáticamente".</p>
             </div>
             <div>
               <Label>Cuota obras / año</Label>
