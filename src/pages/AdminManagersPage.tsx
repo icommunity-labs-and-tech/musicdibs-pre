@@ -201,22 +201,10 @@ export default function AdminManagersPage() {
       const res = await adminApi.callAction('upsert_manager_contract', payload);
       if (res?.error) throw new Error(res.error);
 
-      const savedMsg = editingContractId ? 'Contrato actualizado.' : 'Contrato guardado.';
-      const stripe = res?.stripe as
-        | { applied?: boolean; already_had_addon?: boolean; reason?: string }
-        | undefined;
-
-      if (form.skip_stripe_addon) {
-        toast.success(`${savedMsg} Add-on de Stripe omitido (facturación manual).`);
-      } else if (!stripe) {
-        toast.success(savedMsg);
-      } else if (stripe.applied && stripe.already_had_addon) {
-        toast.message(`${savedMsg} El manager ya tenía este mismo tier activo en Stripe, no se duplicó ningún cobro.`);
-      } else if (stripe.applied) {
-        toast.success(`${savedMsg} Add-on aplicado en Stripe (se facturará junto con su suscripción actual).`);
-      } else {
-        toast.warning(`${savedMsg} ${stripe.reason || 'No se pudo aplicar el add-on en Stripe. Aplícalo manualmente.'}`, { duration: 8000 });
-      }
+      const savedMsg = editingContractId
+        ? 'Contrato actualizado (pendiente de aceptación, no se ha cobrado nada).'
+        : 'Contrato guardado en estado "pendiente de aceptación". El cobro solo se hará al confirmar aceptación.';
+      toast.success(savedMsg, { duration: 6000 });
 
       setFormOpen(false);
       setTab('accounts');
