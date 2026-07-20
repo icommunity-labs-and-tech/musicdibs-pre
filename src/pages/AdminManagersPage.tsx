@@ -8,12 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
-import { Loader2, RefreshCw, Pencil, FileSignature, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Loader2, RefreshCw, Pencil, FileSignature, CheckCircle2, AlertCircle, CreditCard, Clock } from 'lucide-react';
 
 const ARTIST_TIERS = [3, 6, 10, 15, 25, 50] as const;
 
@@ -49,6 +48,7 @@ interface ManagerAccount {
   status: string;
   notes?: string | null;
   stripe_addon_item_id?: string | null;
+  stripe_addon_active?: boolean;
 }
 
 type ContractForm = {
@@ -57,7 +57,6 @@ type ContractForm = {
   contact_email: string;
   contact_phone: string;
   max_artists: string;
-  
   credits_included: string;
   includes_distribution: boolean;
   includes_ai_studio: boolean;
@@ -66,7 +65,6 @@ type ContractForm = {
   contract_end: string;
   notes: string;
   contact_request_id?: string;
-  skip_stripe_addon: boolean;
 };
 
 const isoToday = () => new Date().toISOString().slice(0, 10);
@@ -89,7 +87,6 @@ const emptyForm = (): ContractForm => ({
   contract_start: isoToday(),
   contract_end: isoPlusYear(),
   notes: '',
-  skip_stripe_addon: false,
 });
 
 export default function AdminManagersPage() {
@@ -104,6 +101,38 @@ export default function AdminManagersPage() {
   const [form, setForm] = useState<ContractForm>(emptyForm());
   const [submitting, setSubmitting] = useState(false);
   const [editingContractId, setEditingContractId] = useState<string | null>(null);
+  const [activateTarget, setActivateTarget] = useState<ManagerAccount | null>(null);
+  const [activating, setActivating] = useState(false);
+
+  const activateContract = async () => {
+    if (!activateTarget) return;
+    setActivating(true);
+    try {
+      const res = await adminApi.callAction('activate_manager_contract', {
+        contract_id: activateTarget.contract_id,
+        manager_accepted: true,
+      });
+      if (res?.error) throw new Error(res.error);
+      const stripe = res?.stripe as
+        | { applied?: boolean; already_had_addon?: boolean; reason?: string; subscription_item_id?: string }
+        | undefined;
+      if (!stripe) {
+        toast.success('Contrato activado.');
+      } else if (stripe.applied && stripe.already_had_addon) {
+        toast.message('Contrato activado. El manager ya tenía este mismo tier en Stripe, no se duplicó ningún cobro.');
+      } else if (stripe.applied) {
+        toast.success('Contrato activado y add-on aplicado en Stripe (se facturará junto con su suscripción).');
+      } else {
+        toast.warning(`Contrato activado, pero: ${stripe.reason || 'no se pudo aplicar el add-on en Stripe. Aplícalo manualmente.'}`, { duration: 9000 });
+      }
+      setActivateTarget(null);
+      await loadAccounts();
+    } catch (e: any) {
+      toast.error(e?.message || 'Error al activar el contrato');
+    } finally {
+      setActivating(false);
+    }
+  };
 
   const loadLeads = useCallback(async () => {
     setLoadingLeads(true);
@@ -165,7 +194,6 @@ export default function AdminManagersPage() {
       contract_start: acc.contract_start?.slice(0, 10) || isoToday(),
       contract_end: acc.contract_end?.slice(0, 10) || isoPlusYear(),
       notes: acc.notes || '',
-      skip_stripe_addon: !!acc.stripe_addon_item_id ? false : false,
     });
     setFormOpen(true);
   };
@@ -198,29 +226,16 @@ export default function AdminManagersPage() {
         contract_start: form.contract_start,
         contract_end: form.contract_end,
         notes: form.notes.trim() || undefined,
-        apply_stripe_addon: !form.skip_stripe_addon,
       };
       if (form.contact_request_id) payload.contact_request_id = form.contact_request_id;
 
       const res = await adminApi.callAction('upsert_manager_contract', payload);
       if (res?.error) throw new Error(res.error);
 
-      const savedMsg = editingContractId ? 'Contrato actualizado.' : 'Contrato guardado.';
-      const stripe = res?.stripe as
-        | { applied?: boolean; already_had_addon?: boolean; reason?: string }
-        | undefined;
-
-      if (form.skip_stripe_addon) {
-        toast.success(`${savedMsg} Add-on de Stripe omitido (facturación manual).`);
-      } else if (!stripe) {
-        toast.success(savedMsg);
-      } else if (stripe.applied && stripe.already_had_addon) {
-        toast.message(`${savedMsg} El manager ya tenía este mismo tier activo en Stripe, no se duplicó ningún cobro.`);
-      } else if (stripe.applied) {
-        toast.success(`${savedMsg} Add-on aplicado en Stripe (se facturará junto con su suscripción actual).`);
-      } else {
-        toast.warning(`${savedMsg} ${stripe.reason || 'No se pudo aplicar el add-on en Stripe. Aplícalo manualmente.'}`, { duration: 8000 });
-      }
+      const savedMsg = editingContractId
+        ? 'Contrato actualizado (pendiente de aceptación, no se ha cobrado nada).'
+        : 'Contrato guardado en estado "pendiente de aceptación". El cobro solo se hará al confirmar aceptación.';
+      toast.success(savedMsg, { duration: 6000 });
 
       setFormOpen(false);
       setTab('accounts');
@@ -381,22 +396,47 @@ export default function AdminManagersPage() {
                               {a.contract_end?.slice(0, 10)}
                               {expiring && <div className="text-orange-600 text-[10px]">en {days}d</div>}
                             </TableCell>
-                            <TableCell><Badge>{a.status}</Badge></TableCell>
                             <TableCell>
-                              {a.stripe_addon_item_id ? (
+                              {a.status === 'pending_acceptance' ? (
+                                <Badge variant="outline" className="gap-1 text-amber-600 border-amber-500/40">
+                                  <Clock className="w-3 h-3" /> Pendiente aceptación
+                                </Badge>
+                              ) : a.status === 'active' ? (
+                                <Badge className="bg-green-600 hover:bg-green-600">activo</Badge>
+                              ) : (
+                                <Badge variant="secondary">{a.status}</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {a.status === 'pending_acceptance' ? (
+                                <Badge variant="outline" className="gap-1 text-muted-foreground">
+                                  <Clock className="w-3 h-3" /> Sin cobrar
+                                </Badge>
+                              ) : a.stripe_addon_item_id ? (
                                 <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-600">
                                   <CheckCircle2 className="w-3 h-3" /> Add-on
                                 </Badge>
                               ) : (
-                                <Badge variant="outline" className="gap-1 text-orange-600 border-orange-500/40">
-                                  <AlertCircle className="w-3 h-3" /> Sin add-on
+                                <Badge variant="outline" className="gap-1 text-red-600 border-red-500/40">
+                                  <AlertCircle className="w-3 h-3" /> Activo sin add-on
                                 </Badge>
                               )}
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button size="sm" variant="outline" onClick={() => openEditAccount(a)}>
-                                <Pencil className="w-3 h-3 mr-1" /> Editar
-                              </Button>
+                              <div className="flex gap-1 justify-end flex-wrap">
+                                <Button size="sm" variant="outline" onClick={() => openEditAccount(a)}>
+                                  <Pencil className="w-3 h-3 mr-1" /> Editar
+                                </Button>
+                                {a.status === 'pending_acceptance' && (
+                                  <Button
+                                    size="sm"
+                                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                                    onClick={() => setActivateTarget(a)}
+                                  >
+                                    <CreditCard className="w-3 h-3 mr-1" /> Confirmar aceptación y cobrar
+                                  </Button>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
@@ -452,7 +492,7 @@ export default function AdminManagersPage() {
                   )}
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground mt-1">Solo estos tiers existen como price en Stripe. Para otros valores, marca abajo "no cobrar automáticamente".</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Solo estos tiers existen como price en Stripe. El cobro se aplicará al confirmar la aceptación del contrato.</p>
             </div>
             <div>
               <Label>Créditos incluidos</Label>
@@ -478,20 +518,12 @@ export default function AdminManagersPage() {
               <Label className="text-sm">Incluye AI Studio</Label>
               <Switch checked={form.includes_ai_studio} onCheckedChange={(v) => setForm({ ...form, includes_ai_studio: v })} />
             </div>
-            <div className="md:col-span-2 flex items-start gap-2 rounded border p-3 bg-muted/30">
-              <Checkbox
-                id="skip-stripe"
-                checked={form.skip_stripe_addon}
-                onCheckedChange={(v) => setForm({ ...form, skip_stripe_addon: v === true })}
-              />
-              <div className="grid gap-1 leading-none">
-                <Label htmlFor="skip-stripe" className="text-sm cursor-pointer">
-                  No cobrar automáticamente en Stripe (gestionar facturación aparte)
-                </Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Marca esto si el precio pactado no coincide con ningún tier fijo o si prefieres facturar manualmente.
-                </p>
-              </div>
+            <div className="md:col-span-2 flex items-start gap-2 rounded border p-3 bg-muted/30 text-xs text-muted-foreground">
+              <Clock className="w-4 h-4 mt-0.5 shrink-0" />
+              <p>
+                Al guardar, el contrato queda en estado <strong>pendiente de aceptación</strong>. No se genera ningún cobro en Stripe.
+                Cuando el manager confirme la oferta, pulsa <strong>“Confirmar aceptación y cobrar”</strong> en la lista de managers para aplicar el add-on.
+              </p>
             </div>
             <div className="md:col-span-2">
               <Label>Notas internas</Label>
@@ -503,6 +535,36 @@ export default function AdminManagersPage() {
             <Button onClick={submitContract} disabled={submitting}>
               {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Guardar contrato
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!activateTarget} onOpenChange={(o) => !o && setActivateTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar aceptación y cobrar</DialogTitle>
+            <DialogDescription>
+              {activateTarget && (
+                <>
+                  ¿Confirmas que <strong>{activateTarget.company_name}</strong> ha aceptado la oferta de{' '}
+                  <strong>{activateTarget.annual_price_eur}€/año</strong> para gestionar hasta{' '}
+                  <strong>{activateTarget.max_artists} artistas</strong>?
+                  <br /><br />
+                  Esto activará el contrato y <strong>generará el cobro real en Stripe</strong> (add-on añadido a su suscripción).
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setActivateTarget(null)} disabled={activating}>Cancelar</Button>
+            <Button
+              className="bg-amber-600 hover:bg-amber-700 text-white"
+              onClick={activateContract}
+              disabled={activating}
+            >
+              {activating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              <CreditCard className="w-4 h-4 mr-2" /> Confirmar y cobrar
             </Button>
           </DialogFooter>
         </DialogContent>
