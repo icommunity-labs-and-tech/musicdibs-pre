@@ -500,7 +500,7 @@ const fetchBlogRoutes = async () => {
     return [];
   }
   try {
-    const url = `${SUPABASE_URL}/rest/v1/blog_posts?select=slug,title,excerpt,meta_description,language,image_url,published_at,updated_at,tags&published=eq.true`;
+    const url = `${SUPABASE_URL}/rest/v1/blog_posts?select=slug,title,excerpt,language,image_url,published_at,updated_at,tags&published=eq.true`;
     const res = await fetch(url, {
       headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
     });
@@ -514,7 +514,7 @@ const fetchBlogRoutes = async () => {
       .map((p) => {
         const locale = p.language === "en" ? "en" : p.language === "pt-BR" || p.language === "pt" ? "pt-BR" : "es";
         const rawTitle = (p.title || p.slug).slice(0, 70);
-        const desc = (p.meta_description || p.excerpt || p.title || "Musicdibs").slice(0, 155);
+        const desc = (p.excerpt || p.title || "Musicdibs").slice(0, 155);
         return {
           path: `/news/${p.slug}`,
           locale,
