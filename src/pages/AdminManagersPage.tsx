@@ -193,7 +193,7 @@ export default function AdminManagersPage() {
         contact_email: (form.contact_email || form.manager_email).trim(),
         contact_phone: form.contact_phone.trim() || undefined,
         max_artists: maxA,
-        annual_works_quota: Number(form.annual_works_quota) || 100,
+        
         credits_included: Number(form.credits_included) || 0,
         includes_distribution: form.includes_distribution,
         includes_ai_studio: form.includes_ai_studio,
