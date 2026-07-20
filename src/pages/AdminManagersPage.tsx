@@ -485,6 +485,21 @@ export default function AdminManagersPage() {
               <Label className="text-sm">Incluye AI Studio</Label>
               <Switch checked={form.includes_ai_studio} onCheckedChange={(v) => setForm({ ...form, includes_ai_studio: v })} />
             </div>
+            <div className="md:col-span-2 flex items-start gap-2 rounded border p-3 bg-muted/30">
+              <Checkbox
+                id="skip-stripe"
+                checked={form.skip_stripe_addon}
+                onCheckedChange={(v) => setForm({ ...form, skip_stripe_addon: v === true })}
+              />
+              <div className="grid gap-1 leading-none">
+                <Label htmlFor="skip-stripe" className="text-sm cursor-pointer">
+                  No cobrar automáticamente en Stripe (gestionar facturación aparte)
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Marca esto si el precio pactado no coincide con ningún tier fijo o si prefieres facturar manualmente.
+                </p>
+              </div>
+            </div>
             <div className="md:col-span-2">
               <Label>Notas internas</Label>
               <Textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
