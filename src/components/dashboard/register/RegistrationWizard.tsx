@@ -247,6 +247,14 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
         ownershipDeclaration: true,
         signatureId: data.signatureId,
         resumeWorkId: resumeWorkId || undefined,
+        // FIX 2026-07-20: StepCreators.tsx recoge nombre/email/roles/% por
+        // autor, pero antes solo se enviaba el nombre unido en texto plano
+        // (campo `author`) -- el array estructurado nunca llegaba a
+        // registerWork(), asi que works.creators quedaba siempre null. Sin
+        // esto, ni el certificado (generateCertificate.ts) ni el payload
+        // enviado a iBS (register-work-ibs) podian mostrar coautores,
+        // roles ni % de propiedad.
+        creators: data.creators,
       });
 
       if (res.ibsError || res.status === 'failed') {
