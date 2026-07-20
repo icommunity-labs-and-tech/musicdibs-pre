@@ -96,13 +96,13 @@ serve(async (req) => {
 
     // ── CREATE via KYC ───────────────────────────────────────
     if (action === "create") {
-      const { signatureName } = body;
-      if (!signatureName) {
-        return new Response(JSON.stringify({ error: "signatureName is required" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      // FIX 2026-07-20: el nombre de firma NUNCA debe venir del cliente tal cual.
+      // Bug observado: RegisterWork.tsx expone un input libre (newSigName) que el
+      // usuario rellena con su alias ("Elmago", "Rokem", "Youyunior El maniático"),
+      // rompiendo el patrón "MusicDibs · email · fecha" usado para localizar firmas
+      // operativamente. Se ignora cualquier signatureName recibido del body y se
+      // reconstruye siempre server-side, igual que en IdentityVerificationPage.tsx.
+      const signatureName = `MusicDibs · ${user.email || user.id} · ${new Date().toISOString().slice(0, 10)}`;
 
       // ── GUARD: prevent duplicate signature creation ──────────
       // Bug observed in iBS console: a second signature gets created seconds after
@@ -296,13 +296,17 @@ serve(async (req) => {
 
     // ── CREATE from identity sources ─────────────────────────
     if (action === "create_source") {
-      const { signatureName, sources } = body;
-      if (!signatureName || !sources?.length) {
-        return new Response(JSON.stringify({ error: "signatureName and sources are required" }), {
+      // FIX 2026-07-20: mismo guardrail que action:'create'. No hay caller en el
+      // frontend actualmente, pero el endpoint queda expuesto vía API/manager flows,
+      // así que se aplica defensa en profundidad para no permitir nombres arbitrarios.
+      const { sources } = body;
+      if (!sources?.length) {
+        return new Response(JSON.stringify({ error: "sources are required" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      const signatureName = `MusicDibs · ${user.email || user.id} · ${new Date().toISOString().slice(0, 10)}`;
 
       const ibsRes = await fetch(`${IBS_API_URL}/signatures/identity`, {
         method: "POST",
