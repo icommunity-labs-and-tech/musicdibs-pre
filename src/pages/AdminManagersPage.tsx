@@ -67,6 +67,7 @@ type ContractForm = {
   contract_end: string;
   notes: string;
   contact_request_id?: string;
+  skip_stripe_addon: boolean;
 };
 
 const isoToday = () => new Date().toISOString().slice(0, 10);
