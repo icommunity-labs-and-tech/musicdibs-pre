@@ -57,7 +57,6 @@ type ContractForm = {
   contact_email: string;
   contact_phone: string;
   max_artists: string;
-  
   credits_included: string;
   includes_distribution: boolean;
   includes_ai_studio: boolean;
@@ -66,7 +65,6 @@ type ContractForm = {
   contract_end: string;
   notes: string;
   contact_request_id?: string;
-  skip_stripe_addon: boolean;
 };
 
 const isoToday = () => new Date().toISOString().slice(0, 10);
@@ -89,7 +87,6 @@ const emptyForm = (): ContractForm => ({
   contract_start: isoToday(),
   contract_end: isoPlusYear(),
   notes: '',
-  skip_stripe_addon: false,
 });
 
 export default function AdminManagersPage() {
