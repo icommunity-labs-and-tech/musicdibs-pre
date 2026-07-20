@@ -1184,6 +1184,20 @@ serve(async (req) => {
       return json({ accounts: data || [] });
     }
 
+    // Tiers fijos del add-on "MusicDibs — Gestion multi-artista" (prod_Uv5rAN6mdQGtWP).
+    // Creados 2026-07-20. Cada price tiene metadata.max_artists, pero se mantiene
+    // este mapa explicito aqui para no depender de una llamada a Stripe solo para
+    // resolver que price corresponde a un max_artists dado.
+    const MANAGER_ADDON_TIER_PRICES: Record<number, string> = {
+      3: "price_1TvFfXFULeu7PzK6AFh1LQsr",
+      6: "price_1TvFfcFULeu7PzK6sVY36IOj",
+      10: "price_1TvFfgFULeu7PzK62OlRkSyy",
+      15: "price_1TvFfmFULeu7PzK63kd9dqq1",
+      25: "price_1TvFfrFULeu7PzK6UNu7XslR",
+      50: "price_1TvFfvFULeu7PzK6GgkkGoww",
+    };
+    const MANAGER_ADDON_PRODUCT_ID = "prod_Uv5rAN6mdQGtWP";
+
     if (action === "upsert_manager_contract") {
       const {
         manager_user_id,
@@ -1201,6 +1215,7 @@ serve(async (req) => {
         contract_end,
         notes,
         contact_request_id,
+        apply_stripe_addon = true, // FIX 2026-07-20: por defecto SI se intenta cobrar en Stripe
       } = payload;
 
       if (!company_name || !contact_email) {
@@ -1224,6 +1239,19 @@ serve(async (req) => {
         return json({ error: "manager_user_id o manager_email requerido" }, 400);
       }
 
+      // ── Resolver tier de Stripe ANTES de tocar la BD, para poder devolver
+      // el error de tier invalido sin dejar un contrato a medio crear ──
+      let addonPriceId: string | null = null;
+      if (apply_stripe_addon) {
+        addonPriceId = MANAGER_ADDON_TIER_PRICES[max_artists] ?? null;
+        if (!addonPriceId) {
+          const validTiers = Object.keys(MANAGER_ADDON_TIER_PRICES).join(", ");
+          return json({
+            error: `max_artists=${max_artists} no coincide con ningun tier de Stripe (validos: ${validTiers}). Usa uno de esos valores, o pasa apply_stripe_addon=false para crear el contrato sin cobrar automaticamente (p.ej. facturacion manual aparte).`,
+          }, 400);
+        }
+      }
+
       const { data: contractId, error: rpcError } = await admin.rpc("create_manager_contract", {
         p_manager_user_id: resolvedManagerId,
         p_company_name: company_name,
@@ -1244,14 +1272,90 @@ serve(async (req) => {
       if (rpcError) return json({ error: rpcError.message }, 500);
 
       const { data: targetAuth } = await admin.auth.admin.getUserById(resolvedManagerId);
+
+      // ── Aplicar el add-on en Stripe sobre la suscripcion existente del manager ──
+      // No es fatal si falla: el contrato ya quedo creado en manager_contracts,
+      // asi que devolvemos el contract_id igual pero avisamos del problema de
+      // facturacion para que se resuelva aparte (p.ej. manager sin suscripcion
+      // Stripe activa todavia, o ya tiene el add-on aplicado).
+      let stripeResult: {
+        applied: boolean;
+        reason?: string;
+        subscription_item_id?: string;
+        already_had_addon?: boolean;
+      } = { applied: false };
+
+      if (apply_stripe_addon && addonPriceId) {
+        const { data: subRow } = await admin
+          .from("subscriptions")
+          .select("stripe_subscription_id, status")
+          .eq("user_id", resolvedManagerId)
+          .maybeSingle();
+
+        if (!subRow?.stripe_subscription_id) {
+          stripeResult = { applied: false, reason: "El manager no tiene una suscripcion Stripe activa registrada. Aplica el add-on manualmente cuando la tenga." };
+        } else {
+          try {
+            const stripeKey = Deno.env.get("STRIPE_LIVE_SECRET_KEY") ?? Deno.env.get("STRIPE_SECRET_KEY");
+            const stripe = new Stripe(stripeKey!, { apiVersion: "2025-08-27.basil" });
+
+            const existingSub = await stripe.subscriptions.retrieve(subRow.stripe_subscription_id);
+            const existingAddonItem = existingSub.items.data.find(
+              (it: any) => it.price?.product === MANAGER_ADDON_PRODUCT_ID
+            );
+
+            if (existingAddonItem && existingAddonItem.price.id === addonPriceId) {
+              // Ya tiene exactamente este tier aplicado — no duplicar
+              stripeResult = {
+                applied: true,
+                already_had_addon: true,
+                subscription_item_id: existingAddonItem.id,
+                reason: "El manager ya tenia este tier de add-on aplicado, no se duplico.",
+              };
+            } else if (existingAddonItem) {
+              // Tenia OTRO tier — actualizamos el item existente al nuevo price
+              // (upgrade/downgrade), en vez de crear un segundo item duplicado
+              const updatedSub = await stripe.subscriptions.update(subRow.stripe_subscription_id, {
+                items: [{ id: existingAddonItem.id, price: addonPriceId }],
+                proration_behavior: "create_prorations",
+              });
+              const newItem = updatedSub.items.data.find((it: any) => it.id === existingAddonItem.id);
+              stripeResult = { applied: true, subscription_item_id: newItem?.id };
+            } else {
+              // No tenia add-on — se añade como item nuevo
+              const updatedSub = await stripe.subscriptions.update(subRow.stripe_subscription_id, {
+                items: [{ price: addonPriceId, quantity: 1 }],
+                proration_behavior: "create_prorations",
+              });
+              const newItem = updatedSub.items.data.find(
+                (it: any) => it.price?.id === addonPriceId && !existingSub.items.data.some((old: any) => old.id === it.id)
+              );
+              stripeResult = { applied: true, subscription_item_id: newItem?.id };
+            }
+
+            if (stripeResult.applied && stripeResult.subscription_item_id) {
+              await admin.from("manager_contracts").update({
+                stripe_subscription_id: subRow.stripe_subscription_id,
+                stripe_addon_item_id: stripeResult.subscription_item_id,
+                stripe_addon_price_id: addonPriceId,
+                updated_at: new Date().toISOString(),
+              }).eq("id", contractId);
+            }
+          } catch (stripeErr: any) {
+            console.error("[upsert_manager_contract] Stripe addon error:", stripeErr?.message || stripeErr);
+            stripeResult = { applied: false, reason: `Error aplicando add-on en Stripe: ${stripeErr?.message || "unknown"}. El contrato se creo igualmente en la base de datos.` };
+          }
+        }
+      }
+
       await audit({
         action: "upsert_manager_contract",
         target_user_id: resolvedManagerId,
         target_email: targetAuth?.user?.email || contact_email,
-        details: { company_name, max_artists, annual_price_eur, contract_id: contractId },
+        details: { company_name, max_artists, annual_price_eur, contract_id: contractId, stripe: stripeResult },
       });
 
-      return json({ success: true, contract_id: contractId });
+      return json({ success: true, contract_id: contractId, stripe: stripeResult });
     }
 
     if (action === "send_password_reset") {
