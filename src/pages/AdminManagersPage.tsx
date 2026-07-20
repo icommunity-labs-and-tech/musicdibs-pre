@@ -349,7 +349,7 @@ export default function AdminManagersPage() {
                         <TableHead>Empresa</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Artistas</TableHead>
-                        <TableHead>Obras/año</TableHead>
+                        
                         <TableHead>Precio/año</TableHead>
                         <TableHead>Inicio</TableHead>
                         <TableHead>Fin</TableHead>
