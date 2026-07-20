@@ -3,10 +3,10 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.1";
 
 // src/lib/mcp/tools/ping.ts
-import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z } from "npm:zod@^3.25.76";
 var ping_default = defineTool({
   name: "ping",
@@ -26,7 +26,7 @@ var ping_default = defineTool({
 });
 
 // src/lib/mcp/tools/get-app-info.ts
-import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.1";
 
 // src/lib/mcp/_helpers.ts
 import { createClient } from "npm:@supabase/supabase-js@^2.103.0";
@@ -92,7 +92,7 @@ var get_app_info_default = defineTool2({
 });
 
 // src/lib/mcp/tools/list-blog-posts.ts
-import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z2 } from "npm:zod@^3.25.76";
 var list_blog_posts_default = defineTool3({
   name: "list_blog_posts",
@@ -114,7 +114,7 @@ var list_blog_posts_default = defineTool3({
 });
 
 // src/lib/mcp/tools/get-operation-pricing.ts
-import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z3 } from "npm:zod@^3.25.76";
 var get_operation_pricing_default = defineTool4({
   name: "get_operation_pricing",
@@ -135,7 +135,7 @@ var get_operation_pricing_default = defineTool4({
 });
 
 // src/lib/mcp/tools/get-pricing-catalog.ts
-import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.1";
 var get_pricing_catalog_default = defineTool5({
   name: "get_pricing_catalog",
   title: "Get subscription pricing catalog",
@@ -166,7 +166,7 @@ var get_pricing_catalog_default = defineTool5({
 });
 
 // src/lib/mcp/tools/calculate-royalties.ts
-import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z4 } from "npm:zod@^3.25.76";
 var calculate_royalties_default = defineTool6({
   name: "calculate_royalties",
@@ -194,7 +194,7 @@ var calculate_royalties_default = defineTool6({
 });
 
 // src/lib/mcp/tools/submit-contact-message.ts
-import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.20.1";
 import { z as z5 } from "npm:zod@^3.25.76";
 var submit_contact_message_default = defineTool7({
   name: "submit_contact_message",
@@ -238,5 +238,5 @@ var mcp_default = defineMcp({
 });
 
 // lovable-mcp-supabase-entry.ts
-import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.20.0/stacks/supabase";
+import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.20.1/stacks/supabase";
 Deno.serve(createSupabaseHandler(mcp_default, { functionName: "mcp" }));

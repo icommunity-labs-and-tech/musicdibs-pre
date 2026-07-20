@@ -1673,6 +1673,9 @@ export type Database = {
           max_artists: number
           notes: string | null
           status: string
+          stripe_addon_item_id: string | null
+          stripe_addon_price_id: string | null
+          stripe_subscription_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1692,6 +1695,9 @@ export type Database = {
           max_artists?: number
           notes?: string | null
           status?: string
+          stripe_addon_item_id?: string | null
+          stripe_addon_price_id?: string | null
+          stripe_subscription_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1711,6 +1717,9 @@ export type Database = {
           max_artists?: number
           notes?: string | null
           status?: string
+          stripe_addon_item_id?: string | null
+          stripe_addon_price_id?: string | null
+          stripe_subscription_id?: string | null
           updated_at?: string
         }
         Relationships: []
