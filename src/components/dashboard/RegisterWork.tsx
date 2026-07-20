@@ -116,14 +116,12 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
   };
 
   const handleCreateSignature = async () => {
-    if (!newSigName.trim()) return;
     setCreatingSignature(true);
     try {
-      const result = await createIbsSignature(newSigName.trim());
+      const result = await createIbsSignature('');
       if (result.kycUrl) {
         setKycUrl(result.kycUrl);
       }
-      setNewSigName('');
       await loadSignatures();
     } catch (err: any) {
       console.error('Error creating signature:', err);
