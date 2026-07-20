@@ -324,17 +324,11 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
                     {t('dashboard.registerWork.needSignature')}
                   </p>
                   <div className="flex gap-2">
-                    <Input
-                      placeholder={t('dashboard.registerWork.signatureName')}
-                      value={newSigName}
-                      onChange={(e) => setNewSigName(e.target.value)}
-                      className="h-8 text-xs flex-1"
-                    />
                     <Button
                       type="button"
                       size="sm"
                       className="h-8 text-xs"
-                      disabled={creatingSignature || !newSigName.trim()}
+                      disabled={creatingSignature}
                       onClick={handleCreateSignature}
                     >
                       {creatingSignature ? <Loader2 className="h-3 w-3 animate-spin" /> : t('dashboard.registerWork.create')}
