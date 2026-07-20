@@ -168,6 +168,7 @@ export default function AdminManagersPage() {
       contract_start: acc.contract_start?.slice(0, 10) || isoToday(),
       contract_end: acc.contract_end?.slice(0, 10) || isoPlusYear(),
       notes: acc.notes || '',
+      skip_stripe_addon: !!acc.stripe_addon_item_id ? false : false,
     });
     setFormOpen(true);
   };
