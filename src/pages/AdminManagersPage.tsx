@@ -201,12 +201,30 @@ export default function AdminManagersPage() {
         contract_start: form.contract_start,
         contract_end: form.contract_end,
         notes: form.notes.trim() || undefined,
+        apply_stripe_addon: !form.skip_stripe_addon,
       };
       if (form.contact_request_id) payload.contact_request_id = form.contact_request_id;
 
       const res = await adminApi.callAction('upsert_manager_contract', payload);
       if (res?.error) throw new Error(res.error);
-      toast.success(editingContractId ? 'Contrato actualizado' : 'Contrato creado');
+
+      const savedMsg = editingContractId ? 'Contrato actualizado.' : 'Contrato guardado.';
+      const stripe = res?.stripe as
+        | { applied?: boolean; already_had_addon?: boolean; reason?: string }
+        | undefined;
+
+      if (form.skip_stripe_addon) {
+        toast.success(`${savedMsg} Add-on de Stripe omitido (facturación manual).`);
+      } else if (!stripe) {
+        toast.success(savedMsg);
+      } else if (stripe.applied && stripe.already_had_addon) {
+        toast.message(`${savedMsg} El manager ya tenía este mismo tier activo en Stripe, no se duplicó ningún cobro.`);
+      } else if (stripe.applied) {
+        toast.success(`${savedMsg} Add-on aplicado en Stripe (se facturará junto con su suscripción actual).`);
+      } else {
+        toast.warning(`${savedMsg} ${stripe.reason || 'No se pudo aplicar el add-on en Stripe. Aplícalo manualmente.'}`, { duration: 8000 });
+      }
+
       setFormOpen(false);
       setTab('accounts');
       await Promise.all([loadAccounts(), loadLeads()]);
