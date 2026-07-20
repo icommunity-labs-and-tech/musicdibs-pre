@@ -354,6 +354,7 @@ export default function AdminManagersPage() {
                         <TableHead>Inicio</TableHead>
                         <TableHead>Fin</TableHead>
                         <TableHead>Estado</TableHead>
+                        <TableHead>Stripe</TableHead>
                         <TableHead className="text-right">Acción</TableHead>
                       </TableRow>
                     </TableHeader>
