@@ -1158,6 +1158,102 @@ serve(async (req) => {
       return json({ success: true });
     }
 
+    // ── MANAGER MULTI-ARTISTA: alta/consulta de contratos y leads ──────
+    // FIX 2026-07-20: antes esto solo se podia hacer via SQL directo pedido
+    // a Claude. Se expone aqui para que el admin lo use desde un panel propio
+    // (Lovable), sin depender de ejecutar SQL a mano para cada manager.
+
+    if (action === "get_manager_contact_requests") {
+      const status = payload.status || null;
+      let query = admin
+        .from("manager_contact_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (status) query = query.eq("status", status);
+      const { data, error } = await query.limit(200);
+      if (error) return json({ error: error.message }, 500);
+      return json({ requests: data || [] });
+    }
+
+    if (action === "get_manager_accounts") {
+      const { data, error } = await admin
+        .from("manager_accounts_overview")
+        .select("*")
+        .order("contract_start", { ascending: false });
+      if (error) return json({ error: error.message }, 500);
+      return json({ accounts: data || [] });
+    }
+
+    if (action === "upsert_manager_contract") {
+      const {
+        manager_user_id,
+        manager_email,
+        company_name,
+        contact_email,
+        contact_phone,
+        max_artists,
+        annual_works_quota,
+        credits_included,
+        includes_distribution,
+        includes_ai_studio,
+        annual_price_eur,
+        contract_start,
+        contract_end,
+        notes,
+        contact_request_id,
+      } = payload;
+
+      if (!company_name || !contact_email) {
+        return json({ error: "company_name y contact_email son requeridos" }, 400);
+      }
+      if (max_artists == null || max_artists < 1) {
+        return json({ error: "max_artists debe ser >= 1" }, 400);
+      }
+
+      // Resolver manager_user_id por email si no viene directo (caso mas comun
+      // desde un panel: el admin busca por email, no conoce el UUID de memoria)
+      let resolvedManagerId = manager_user_id as string | undefined;
+      if (!resolvedManagerId && manager_email) {
+        const found = await findAuthUserByEmail(manager_email);
+        if (!found) {
+          return json({ error: `No existe cuenta MusicDibs con email ${manager_email}. El manager debe registrarse primero.` }, 404);
+        }
+        resolvedManagerId = found.id;
+      }
+      if (!resolvedManagerId) {
+        return json({ error: "manager_user_id o manager_email requerido" }, 400);
+      }
+
+      const { data: contractId, error: rpcError } = await admin.rpc("create_manager_contract", {
+        p_manager_user_id: resolvedManagerId,
+        p_company_name: company_name,
+        p_contact_email: contact_email,
+        p_max_artists: max_artists,
+        p_annual_works_quota: annual_works_quota ?? 100,
+        p_credits_included: credits_included ?? 0,
+        p_annual_price_eur: annual_price_eur ?? 0,
+        p_contact_phone: contact_phone ?? null,
+        p_includes_distribution: includes_distribution ?? true,
+        p_includes_ai_studio: includes_ai_studio ?? false,
+        p_contract_start: contract_start ?? null,
+        p_contract_end: contract_end ?? null,
+        p_notes: notes ?? null,
+        p_contact_request_id: contact_request_id ?? null,
+      });
+
+      if (rpcError) return json({ error: rpcError.message }, 500);
+
+      const { data: targetAuth } = await admin.auth.admin.getUserById(resolvedManagerId);
+      await audit({
+        action: "upsert_manager_contract",
+        target_user_id: resolvedManagerId,
+        target_email: targetAuth?.user?.email || contact_email,
+        details: { company_name, max_artists, annual_price_eur, contract_id: contractId },
+      });
+
+      return json({ success: true, contract_id: contractId });
+    }
+
     if (action === "send_password_reset") {
       const { user_id } = payload;
       if (!user_id) return json({ error: "user_id required" }, 400);
