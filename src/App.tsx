@@ -261,6 +261,7 @@ const App = () => (
                 <Route path="admin/ai-models" element={<Suspense fallback={null}><AdminGuard><AdminAIModelsPage /></AdminGuard></Suspense>} />
                 <Route path="admin/credit-coupons" element={<Suspense fallback={null}><AdminGuard><AdminCreditCouponsPage /></AdminGuard></Suspense>} />
                 <Route path="admin/seo-dashboard" element={<Suspense fallback={null}><AdminGuard><AdminSeoDashboardPage /></AdminGuard></Suspense>} />
+                <Route path="admin/managers" element={<Suspense fallback={null}><AdminGuard><AdminManagersPage /></AdminGuard></Suspense>} />
                 <Route path="manager" element={<Suspense fallback={null}><ManagerGuard><ManagerDashboard /></ManagerGuard></Suspense>} />
                 <Route path="manager/artists" element={<Suspense fallback={null}><ManagerGuard><ManagerArtists /></ManagerGuard></Suspense>} />
                 <Route path="manager/artists/new" element={<Suspense fallback={null}><ManagerGuard><ManagerArtistNew /></ManagerGuard></Suspense>} />
