@@ -58,7 +58,7 @@ type ContractForm = {
   contact_email: string;
   contact_phone: string;
   max_artists: string;
-  annual_works_quota: string;
+  
   credits_included: string;
   includes_distribution: boolean;
   includes_ai_studio: boolean;
