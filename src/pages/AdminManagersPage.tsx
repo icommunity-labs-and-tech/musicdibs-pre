@@ -82,7 +82,7 @@ const emptyForm = (): ContractForm => ({
   company_name: '',
   contact_email: '',
   contact_phone: '',
-  max_artists: '1',
+  max_artists: '3',
   annual_works_quota: '100',
   credits_included: '0',
   includes_distribution: true,
@@ -91,6 +91,7 @@ const emptyForm = (): ContractForm => ({
   contract_start: isoToday(),
   contract_end: isoPlusYear(),
   notes: '',
+  skip_stripe_addon: false,
 });
 
 export default function AdminManagersPage() {
