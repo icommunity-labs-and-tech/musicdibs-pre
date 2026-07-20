@@ -222,6 +222,29 @@ const AIStudio = () => {
         title="Crea tu música con IA"
         description="Genera música, letras, portadas, vídeos y voces con IA en Musicdibs AI Studio. Crea, edita e inspírate al instante."
         path="/ai-studio"
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Musicdibs",
+            url: "https://www.musicdibs.com",
+            logo: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
+            sameAs: [
+              "https://twitter.com/musicdibs",
+              "https://www.instagram.com/musicdibs/",
+              "https://www.tiktok.com/@musicdibs_",
+              "https://www.youtube.com/@Musicdibs",
+            ],
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Musicdibs",
+            url: "https://www.musicdibs.com",
+            inLanguage: ["es", "en", "pt-BR"],
+            publisher: { "@type": "Organization", name: "Musicdibs", url: "https://www.musicdibs.com" },
+          },
+        ]}
       />
       <Navbar />
       <AIStudioThemeBar />

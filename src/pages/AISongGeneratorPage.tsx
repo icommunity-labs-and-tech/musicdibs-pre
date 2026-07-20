@@ -83,6 +83,29 @@ const FAQ = [
 ];
 
 const AISongGeneratorPage = () => {
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Musicdibs",
+    url: BASE_URL,
+    logo: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
+    sameAs: [
+      "https://twitter.com/musicdibs",
+      "https://www.instagram.com/musicdibs/",
+      "https://www.tiktok.com/@musicdibs_",
+      "https://www.youtube.com/@Musicdibs",
+    ],
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Musicdibs",
+    url: BASE_URL,
+    inLanguage: ["es", "en", "pt-BR"],
+    publisher: { "@type": "Organization", name: "Musicdibs", url: BASE_URL },
+  };
+
   const webPageSchema = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -140,7 +163,7 @@ const AISongGeneratorPage = () => {
         path={PATH}
         type="website"
         lang="en"
-        jsonLd={[webPageSchema, softwareSchema, faqSchema, breadcrumbSchema]}
+        jsonLd={[organizationSchema, websiteSchema, webPageSchema, softwareSchema, faqSchema, breadcrumbSchema]}
       />
       <Navbar />
 
