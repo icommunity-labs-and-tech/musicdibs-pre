@@ -9,9 +9,13 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
-import { Loader2, RefreshCw, Pencil, FileSignature } from 'lucide-react';
+import { Loader2, RefreshCw, Pencil, FileSignature, CheckCircle2, AlertCircle } from 'lucide-react';
+
+const ARTIST_TIERS = [3, 6, 10, 15, 25, 50] as const;
 
 interface ManagerLead {
   id: string;
