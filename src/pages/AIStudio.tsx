@@ -321,7 +321,9 @@ const AIStudio = () => {
             </Card>
           </>
         ) : activeView === "virtual-artists" ? (
-          <ArtistProfilesPage />
+          <Suspense fallback={null}>
+            <ArtistProfilesPage />
+          </Suspense>
         ) : null}
       </main>
       <AIKnowledgeModal open={knowledgeOpen} onOpenChange={setKnowledgeOpen} />
