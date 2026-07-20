@@ -56,6 +56,15 @@ export default function AdminWorksPage() {
         fallbackFingerprint: w.file_hash_sha512_b64,
         fallbackAlgorithm: 'SHA-512',
         workId: w.id,
+        // FIX 2026-07-20: resolveCreators() dentro de buildCertificateData hace
+        // una consulta DIRECTA desde el cliente sujeta a RLS ("Users can read
+        // own works": user_id = auth.uid()). El admin NO es el dueño de la obra
+        // que esta certificando, asi que esa consulta siempre devolvia vacio en
+        // este panel -- nunca aparecian coautores ni %, aunque works.creators
+        // estuviera perfectamente poblado. Se pasa coauthors explicitamente
+        // desde fileMetadata (ya resuelto server-side con service role via
+        // admin-action), que tiene prioridad sobre resolveCreators().
+        coauthors: fileMetadata.creators ?? undefined,
       });
       await generateCertificate(certData, 'es');
       toast.success('Certificado descargado');

@@ -4403,11 +4403,11 @@ serve(async (req) => {
 
       const { data: work, error: workErr } = await admin
         .from("works")
-        .select("file_path")
+        .select("file_path, creators")
         .eq("id", work_id)
         .maybeSingle();
       if (workErr) return json({ error: workErr.message }, 500);
-      if (!work?.file_path) return json({ filename: null, filesize: null });
+      if (!work?.file_path) return json({ filename: null, filesize: null, creators: work?.creators ?? null });
 
       const filePath = work.file_path as string;
       const slash = filePath.lastIndexOf("/");
@@ -4429,7 +4429,7 @@ serve(async (req) => {
             metadata.ContentLength,
         ) || null;
 
-      return json({ filename, filesize });
+      return json({ filename, filesize, creators: work.creators ?? null });
     }
 
     // ── delete_work ────────────────────────────────────────────
