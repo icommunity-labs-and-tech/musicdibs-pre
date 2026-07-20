@@ -72,7 +72,6 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
   const [selectedSignature, setSelectedSignature] = useState('');
   const [loadingSigs, setLoadingSigs] = useState(false);
   const [creatingSignature, setCreatingSignature] = useState(false);
-  const [newSigName, setNewSigName] = useState('');
   const [kycUrl, setKycUrl] = useState<string | null>(null);
   
 
