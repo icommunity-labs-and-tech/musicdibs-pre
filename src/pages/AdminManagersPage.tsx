@@ -458,10 +458,6 @@ export default function AdminManagersPage() {
               <p className="text-[11px] text-muted-foreground mt-1">Solo estos tiers existen como price en Stripe. Para otros valores, marca abajo "no cobrar automáticamente".</p>
             </div>
             <div>
-              <Label>Cuota obras / año</Label>
-              <Input type="number" min={0} value={form.annual_works_quota} onChange={(e) => setForm({ ...form, annual_works_quota: e.target.value })} />
-            </div>
-            <div>
               <Label>Créditos incluidos</Label>
               <Input type="number" min={0} value={form.credits_included} onChange={(e) => setForm({ ...form, credits_included: e.target.value })} />
             </div>
