@@ -396,22 +396,47 @@ export default function AdminManagersPage() {
                               {a.contract_end?.slice(0, 10)}
                               {expiring && <div className="text-orange-600 text-[10px]">en {days}d</div>}
                             </TableCell>
-                            <TableCell><Badge>{a.status}</Badge></TableCell>
                             <TableCell>
-                              {a.stripe_addon_item_id ? (
+                              {a.status === 'pending_acceptance' ? (
+                                <Badge variant="outline" className="gap-1 text-amber-600 border-amber-500/40">
+                                  <Clock className="w-3 h-3" /> Pendiente aceptación
+                                </Badge>
+                              ) : a.status === 'active' ? (
+                                <Badge className="bg-green-600 hover:bg-green-600">activo</Badge>
+                              ) : (
+                                <Badge variant="secondary">{a.status}</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {a.status === 'pending_acceptance' ? (
+                                <Badge variant="outline" className="gap-1 text-muted-foreground">
+                                  <Clock className="w-3 h-3" /> Sin cobrar
+                                </Badge>
+                              ) : a.stripe_addon_item_id ? (
                                 <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-600">
                                   <CheckCircle2 className="w-3 h-3" /> Add-on
                                 </Badge>
                               ) : (
-                                <Badge variant="outline" className="gap-1 text-orange-600 border-orange-500/40">
-                                  <AlertCircle className="w-3 h-3" /> Sin add-on
+                                <Badge variant="outline" className="gap-1 text-red-600 border-red-500/40">
+                                  <AlertCircle className="w-3 h-3" /> Activo sin add-on
                                 </Badge>
                               )}
                             </TableCell>
                             <TableCell className="text-right">
-                              <Button size="sm" variant="outline" onClick={() => openEditAccount(a)}>
-                                <Pencil className="w-3 h-3 mr-1" /> Editar
-                              </Button>
+                              <div className="flex gap-1 justify-end flex-wrap">
+                                <Button size="sm" variant="outline" onClick={() => openEditAccount(a)}>
+                                  <Pencil className="w-3 h-3 mr-1" /> Editar
+                                </Button>
+                                {a.status === 'pending_acceptance' && (
+                                  <Button
+                                    size="sm"
+                                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                                    onClick={() => setActivateTarget(a)}
+                                  >
+                                    <CreditCard className="w-3 h-3 mr-1" /> Confirmar aceptación y cobrar
+                                  </Button>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
