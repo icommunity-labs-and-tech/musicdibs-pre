@@ -194,7 +194,6 @@ export default function AdminManagersPage() {
         contract_start: form.contract_start,
         contract_end: form.contract_end,
         notes: form.notes.trim() || undefined,
-        apply_stripe_addon: !form.skip_stripe_addon,
       };
       if (form.contact_request_id) payload.contact_request_id = form.contact_request_id;
 
