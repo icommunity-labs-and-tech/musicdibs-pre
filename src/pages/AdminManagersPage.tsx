@@ -48,6 +48,7 @@ interface ManagerAccount {
   status: string;
   notes?: string | null;
   stripe_addon_item_id?: string | null;
+  stripe_addon_active?: boolean;
 }
 
 type ContractForm = {
