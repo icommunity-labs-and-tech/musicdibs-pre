@@ -377,7 +377,7 @@ export default function AdminManagersPage() {
                                 {a.artists_used} / {a.max_artists}
                               </span>
                             </TableCell>
-                            <TableCell>{a.annual_works_quota}</TableCell>
+                            
                             <TableCell>{a.annual_price_eur} €</TableCell>
                             <TableCell className="text-xs">{a.contract_start?.slice(0, 10)}</TableCell>
                             <TableCell className="text-xs">
