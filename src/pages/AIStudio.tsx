@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useProductTracking } from "@/hooks/useProductTracking";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,8 @@ import { useCredits } from "@/hooks/useCredits";
 import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { useTranslation } from "react-i18next";
-import ArtistProfilesPage from "@/pages/ArtistProfilesPage";
+// Heavy page — only loaded when the "virtual-artists" view is opened.
+const ArtistProfilesPage = lazy(() => import("@/pages/ArtistProfilesPage"));
 
 type ActiveView = "grid" | "virtual-artists";
 
