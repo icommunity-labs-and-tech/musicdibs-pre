@@ -58,7 +58,7 @@ const REASONS = [
 ];
 
 const AllInOneMusicPlatformPage = () => {
-  const seoTitle = "The All-in-One Music Platform: Create, Protect, Distribute, Promote";
+  const seoTitle = "All-in-One Music Platform for Independent Artists";
   const seoDesc =
     "One platform for the full music release workflow: AI-assisted creation, blockchain copyright protection, distribution to 200+ platforms and built-in promotion.";
 
@@ -71,7 +71,7 @@ const AllInOneMusicPlatformPage = () => {
     description: seoDesc,
     url: URL,
     inLanguage: "en",
-    offers: { "@type": "Offer", price: "0", priceCurrency: "USD", category: "freemium" },
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD", availability: "https://schema.org/InStock" },
     publisher: {
       "@type": "Organization",
       name: "Musicdibs",
