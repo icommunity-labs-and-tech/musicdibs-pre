@@ -162,7 +162,7 @@ const GeneradorCancionesIAPage = () => {
         path={PATH}
         type="website"
         lang="es"
-        jsonLd={[webPageSchema, softwareSchema, faqSchema, breadcrumbSchema]}
+        jsonLd={[organizationSchema, websiteSchema, webPageSchema, softwareSchema, faqSchema, breadcrumbSchema]}
       />
       <Navbar />
 
