@@ -102,6 +102,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.alerts', 'Alertas sistema'), url: '/dashboard/admin/alerts', icon: Bell },
     { title: 'Proveedores IA', url: '/dashboard/admin/ai-models', icon: Sparkles },
     { title: 'Panel SEO', url: '/dashboard/admin/seo-dashboard', icon: BarChart3 },
+    { title: 'Managers', url: '/dashboard/admin/managers', icon: Briefcase },
 
   ];
 
