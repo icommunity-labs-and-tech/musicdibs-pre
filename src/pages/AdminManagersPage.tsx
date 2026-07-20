@@ -461,20 +461,12 @@ export default function AdminManagersPage() {
               <Label className="text-sm">Incluye AI Studio</Label>
               <Switch checked={form.includes_ai_studio} onCheckedChange={(v) => setForm({ ...form, includes_ai_studio: v })} />
             </div>
-            <div className="md:col-span-2 flex items-start gap-2 rounded border p-3 bg-muted/30">
-              <Checkbox
-                id="skip-stripe"
-                checked={form.skip_stripe_addon}
-                onCheckedChange={(v) => setForm({ ...form, skip_stripe_addon: v === true })}
-              />
-              <div className="grid gap-1 leading-none">
-                <Label htmlFor="skip-stripe" className="text-sm cursor-pointer">
-                  No cobrar automáticamente en Stripe (gestionar facturación aparte)
-                </Label>
-                <p className="text-[11px] text-muted-foreground">
-                  Marca esto si el precio pactado no coincide con ningún tier fijo o si prefieres facturar manualmente.
-                </p>
-              </div>
+            <div className="md:col-span-2 flex items-start gap-2 rounded border p-3 bg-muted/30 text-xs text-muted-foreground">
+              <Clock className="w-4 h-4 mt-0.5 shrink-0" />
+              <p>
+                Al guardar, el contrato queda en estado <strong>pendiente de aceptación</strong>. No se genera ningún cobro en Stripe.
+                Cuando el manager confirme la oferta, pulsa <strong>“Confirmar aceptación y cobrar”</strong> en la lista de managers para aplicar el add-on.
+              </p>
             </div>
             <div className="md:col-span-2">
               <Label>Notas internas</Label>
