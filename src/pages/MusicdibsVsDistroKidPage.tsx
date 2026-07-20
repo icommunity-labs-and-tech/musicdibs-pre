@@ -64,12 +64,16 @@ const MusicdibsVsDistroKidPage = () => {
     headline: "Musicdibs vs DistroKid: Complete Workflow vs Distribution Only",
     description: seoDesc,
     inLanguage: "en",
+    image: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
+    datePublished: "2026-01-15",
+    dateModified: "2026-07-20",
+    author: { "@type": "Organization", name: "Musicdibs", url: "https://www.musicdibs.com" },
     mainEntityOfPage: { "@type": "WebPage", "@id": URL },
     publisher: {
       "@type": "Organization",
       name: "Musicdibs",
       url: "https://www.musicdibs.com",
-      logo: { "@type": "ImageObject", url: "https://www.musicdibs.com/og-image.png" },
+      logo: { "@type": "ImageObject", url: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png" },
     },
   };
 
