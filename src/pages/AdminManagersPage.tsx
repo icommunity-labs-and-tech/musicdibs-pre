@@ -492,7 +492,7 @@ export default function AdminManagersPage() {
                   )}
                 </SelectContent>
               </Select>
-              <p className="text-[11px] text-muted-foreground mt-1">Solo estos tiers existen como price en Stripe. Para otros valores, marca abajo "no cobrar automáticamente".</p>
+              <p className="text-[11px] text-muted-foreground mt-1">Solo estos tiers existen como price en Stripe. El cobro se aplicará al confirmar la aceptación del contrato.</p>
             </div>
             <div>
               <Label>Créditos incluidos</Label>
