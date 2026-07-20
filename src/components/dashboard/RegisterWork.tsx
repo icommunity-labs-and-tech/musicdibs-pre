@@ -72,7 +72,6 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
   const [selectedSignature, setSelectedSignature] = useState('');
   const [loadingSigs, setLoadingSigs] = useState(false);
   const [creatingSignature, setCreatingSignature] = useState(false);
-  const [newSigName, setNewSigName] = useState('');
   const [kycUrl, setKycUrl] = useState<string | null>(null);
   
 
@@ -116,14 +115,12 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
   };
 
   const handleCreateSignature = async () => {
-    if (!newSigName.trim()) return;
     setCreatingSignature(true);
     try {
-      const result = await createIbsSignature(newSigName.trim());
+      const result = await createIbsSignature('');
       if (result.kycUrl) {
         setKycUrl(result.kycUrl);
       }
-      setNewSigName('');
       await loadSignatures();
     } catch (err: any) {
       console.error('Error creating signature:', err);
@@ -324,17 +321,11 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
                     {t('dashboard.registerWork.needSignature')}
                   </p>
                   <div className="flex gap-2">
-                    <Input
-                      placeholder={t('dashboard.registerWork.signatureName')}
-                      value={newSigName}
-                      onChange={(e) => setNewSigName(e.target.value)}
-                      className="h-8 text-xs flex-1"
-                    />
                     <Button
                       type="button"
                       size="sm"
                       className="h-8 text-xs"
-                      disabled={creatingSignature || !newSigName.trim()}
+                      disabled={creatingSignature}
                       onClick={handleCreateSignature}
                     >
                       {creatingSignature ? <Loader2 className="h-3 w-3 animate-spin" /> : t('dashboard.registerWork.create')}
