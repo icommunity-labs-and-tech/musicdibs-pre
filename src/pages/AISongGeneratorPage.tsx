@@ -100,8 +100,17 @@ const AISongGeneratorPage = () => {
     applicationCategory: "MultimediaApplication",
     operatingSystem: "Web",
     url: FULL_URL,
-    offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
-    aggregateRating: { "@type": "AggregateRating", ratingValue: "4.8", reviewCount: "1240" },
+    image: "https://www.musicdibs.com/og-image.png",
+    description:
+      "Create complete songs with AI from a description or your own voice. Instrumentation, mixing and mastering included.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "EUR", availability: "https://schema.org/InStock" },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.8",
+      reviewCount: "1240",
+      bestRating: "5",
+      worstRating: "1",
+    },
   };
 
   const faqSchema = {

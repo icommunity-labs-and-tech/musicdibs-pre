@@ -99,8 +99,17 @@ const GeneradorCancionesIAPage = () => {
     applicationCategory: "MultimediaApplication",
     operatingSystem: "Web",
     url: FULL_URL,
-    offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
-    aggregateRating: { "@type": "AggregateRating", ratingValue: "4.8", reviewCount: "1240" },
+    image: "https://www.musicdibs.com/og-image.png",
+    description:
+      "Genera canciones completas con IA desde una descripción o tu propia voz. Instrumentación, mezcla y masterización incluidas.",
+    offers: { "@type": "Offer", price: "0", priceCurrency: "EUR", availability: "https://schema.org/InStock" },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.8",
+      reviewCount: "1240",
+      bestRating: "5",
+      worstRating: "1",
+    },
   };
 
   const faqSchema = {
