@@ -40,7 +40,6 @@ interface ManagerAccount {
   contact_phone?: string | null;
   max_artists: number;
   artists_used: number;
-  annual_works_quota: number;
   credits_included: number;
   includes_distribution: boolean;
   includes_ai_studio: boolean;
@@ -83,7 +82,6 @@ const emptyForm = (): ContractForm => ({
   contact_email: '',
   contact_phone: '',
   max_artists: '3',
-  annual_works_quota: '100',
   credits_included: '0',
   includes_distribution: true,
   includes_ai_studio: false,
@@ -143,7 +141,6 @@ export default function AdminManagersPage() {
       company_name: lead.name || '',
       contact_email: lead.email,
       max_artists: String(lead.num_artists_estimated || 1),
-      annual_works_quota: String(lead.annual_works_estimated || 100),
       includes_distribution: lead.needs_distribution ?? true,
       includes_ai_studio: lead.needs_ai_studio ?? false,
       notes: lead.internal_notes || '',
