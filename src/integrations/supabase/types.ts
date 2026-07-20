@@ -3888,6 +3888,10 @@ export type Database = {
           manager_user_id: string | null
           max_artists: number | null
           status: string | null
+          stripe_addon_active: boolean | null
+          stripe_addon_item_id: string | null
+          stripe_addon_price_id: string | null
+          stripe_subscription_id: string | null
         }
         Relationships: []
       }
