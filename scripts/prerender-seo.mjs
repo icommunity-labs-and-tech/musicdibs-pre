@@ -358,6 +358,48 @@ const ROUTES = [
       applicationCategory: "UtilityApplication",
     },
   },
+
+  // ── LEGAL ───────────────────────────────────────────────────────────────────
+  {
+    path: "/cookies",
+    locale: "es",
+    title: "Política de Cookies | Musicdibs",
+    description: "Política de cookies de Musicdibs: qué cookies usamos, para qué sirven y cómo gestionarlas desde tu navegador.",
+  },
+  {
+    path: "/terms",
+    locale: "es",
+    title: "Términos y Condiciones de Uso | Musicdibs",
+    description: "Términos y condiciones de uso de Musicdibs. Condiciones del servicio de registro blockchain, distribución musical y herramientas de IA.",
+  },
+  {
+    path: "/privacy",
+    locale: "es",
+    title: "Política de Privacidad y Protección de Datos | Musicdibs",
+    description: "Política de privacidad de Musicdibs: cómo recopilamos, tratamos y protegemos tus datos personales según GDPR y la normativa española.",
+  },
+
+  // ── PILLAR / COMPARISON LANDINGS ───────────────────────────────────────────
+  {
+    path: "/all-in-one-music-platform",
+    locale: "en",
+    title: "All-in-One Music Platform for Independent Artists | Musicdibs",
+    description: "One platform for the full music release workflow: AI-assisted creation, blockchain copyright protection, distribution to 200+ platforms and built-in promotion.",
+  },
+  {
+    path: "/musicdibs-vs-distrokid",
+    locale: "en",
+    title: "Musicdibs vs DistroKid: Complete Workflow vs Distribution | Musicdibs",
+    description: "DistroKid is great at distribution. See what's missing — and how Musicdibs covers creation, protection, distribution and promotion in one place.",
+  },
+
+  // ── NEWS INDEX ─────────────────────────────────────────────────────────────
+  {
+    path: "/news",
+    locale: "es",
+    title: "Blog y Novedades sobre Música, IA y Distribución | Musicdibs",
+    description: "Noticias, guías y tutoriales sobre distribución musical, registro blockchain, IA aplicada a la música y crecimiento de artistas independientes.",
+  },
 ];
 
 // ── HTML manipulation helpers ─────────────────────────────────────────────────
