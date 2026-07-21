@@ -27,4 +27,30 @@ Disallow: /identity-verification
 Disallow: /manager
 Disallow: /manager/
 
+# Legacy WordPress paths — no longer served, avoid crawl waste
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /pt/
+Disallow: /pt-BR/
+Disallow: /pt-br/
+Disallow: /faq-items/
+Disallow: /inicio-sesion/
+Disallow: /author/
+Disallow: /tag/
+Disallow: /dibs/
+Disallow: /dist/
+Disallow: /store/
+Disallow: /producto/
+Disallow: /categoria-producto/
+Disallow: /etiqueta-producto/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /hc/
+Disallow: /noticias/
+Disallow: /entrevistas/
+Disallow: /verificar/
+Disallow: /politica-privacidad/
+Disallow: /politica-de-privacidad/
+
 Sitemap: https://www.musicdibs.com/sitemap.xml
