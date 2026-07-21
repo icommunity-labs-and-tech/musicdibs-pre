@@ -549,7 +549,13 @@ const fetchBlogRoutes = async () => {
       .map((p) => {
         const locale = p.language === "en" ? "en" : p.language === "pt-BR" || p.language === "pt" ? "pt-BR" : "es";
         const rawTitle = (p.title || p.slug).slice(0, 70);
-        const desc = (p.excerpt || p.title || "Musicdibs").slice(0, 155);
+        // Build a robust, unique description: excerpt → title+slug hint → slug words.
+        // Never rely on a shared fallback string (that would create duplicates across posts).
+        const slugWords = String(p.slug).replace(/[-_]+/g, " ").trim();
+        const baseDesc = (p.excerpt && p.excerpt.trim())
+          || (p.title ? `${p.title} — ${slugWords}` : slugWords)
+          || `Musicdibs · ${p.slug}`;
+        const desc = baseDesc.slice(0, 155);
         return {
           path: `/news/${p.slug}`,
           locale,
