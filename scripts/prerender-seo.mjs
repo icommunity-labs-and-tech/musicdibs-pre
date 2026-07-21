@@ -521,8 +521,13 @@ const writeRoute = async (template, route) => {
 
 // ── Fetch blog posts for per-article prerender ────────────────────────────────
 
+// Hardcoded anon-key fallback so the postbuild prerender still runs when the
+// build environment doesn't inject VITE_SUPABASE_* (Lovable's build step
+// sometimes does not). This is the same publishable anon key shipped in the
+// client bundle — safe to embed.
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://kmwehyixenybegwhqljx.supabase.co";
-const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
+const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY
+  || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imttd2VoeWl4ZW55YmVnd2hxbGp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NDEwMzQsImV4cCI6MjA5MDAxNzAzNH0.DZ2gEjz_DAkHfEetYo72NAUbdhq2lui9rIrMysWJUNo";
 
 const fetchBlogRoutes = async () => {
   if (!SUPABASE_KEY) {
