@@ -53,6 +53,8 @@
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "customer service",
+        "email": "info@musicdibs.com",
+        "areaServed": ["ES", "EU", "US", "MX", "AR", "CO", "BR"],
         "availableLanguage": ["Spanish", "English", "Portuguese"]
       }
     }
@@ -72,7 +74,10 @@
       },
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://www.musicdibs.com/news?q={search_term_string}",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://www.musicdibs.com/news?q={search_term_string}"
+        },
         "query-input": "required name=search_term_string"
       }
     }
@@ -91,14 +96,15 @@
         "@type": "Offer",
         "price": "6.90",
         "priceCurrency": "EUR",
-        "availability": "https://schema.org/InStock"
+        "availability": "https://schema.org/InStock",
+        "url": "https://www.musicdibs.com/#pricing"
       },
       "aggregateRating": {
         "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "reviewCount": "1240",
-        "bestRating": "5",
-        "worstRating": "1"
+        "ratingValue": 4.8,
+        "reviewCount": 1240,
+        "bestRating": 5,
+        "worstRating": 1
       }
     }
     </script>
