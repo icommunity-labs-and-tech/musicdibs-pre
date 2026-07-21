@@ -27,42 +27,7 @@ Disallow: /identity-verification
 Disallow: /manager
 Disallow: /manager/
 
-# Legacy WordPress paths — no longer served, avoid crawl waste
-Disallow: /en/
-Disallow: /eng/
-Disallow: /esp/
-Disallow: /pt/
-Disallow: /pt-BR/
-Disallow: /pt-br/
-Disallow: /faq-items/
-Disallow: /inicio-sesion/
-Disallow: /author/
-Disallow: /tag/
-Disallow: /dibs/
-Disallow: /dist/
-Disallow: /store/
-Disallow: /producto/
-Disallow: /categoria-producto/
-Disallow: /etiqueta-producto/
-Disallow: /wp-content/
-Disallow: /wp-includes/
-Disallow: /wp-admin/
-Disallow: /wp-json/
-Disallow: /hc/
-Disallow: /noticias/
-Disallow: /entrevistas/
-Disallow: /verificar/
-Disallow: /politica-privacidad/
-Disallow: /politica-de-privacidad/
-Disallow: /politica-de-cookies/
-Disallow: /certification
-Disallow: /certification/
-Disallow: /ajustes/
-Disallow: /register/
-Disallow: /eng
-Disallow: /esp
-Disallow: /pt
-Disallow: /en
+# Legacy WordPress/WooCommerce paths now redirect via 301 — let crawlers follow them
 
 # Legacy WooCommerce query strings — thousands of duplicate variants
 Disallow: /*?add-to-cart=
