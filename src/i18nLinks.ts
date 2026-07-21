@@ -72,7 +72,7 @@ export const getFooterLinks = (lang?: string) => {
     },
     corporate: {
       contact: 'https://musicdibs.com/en/contact/',
-      dibs: 'https://musicdibs.com/dibs/en',
+      dibs: 'https://dibs.musicdibs.com/',
       sla: 'https://musicdibs.com/en/service-level-agreement/',
       privacy: 'https://musicdibs.com/en/politica-de-privacidad/',
       terms: 'https://musicdibs.com/en/purchase-terms-and-condition/',
@@ -90,7 +90,7 @@ export const getFooterLinks = (lang?: string) => {
     },
     corporate: {
       contact: 'https://musicdibs.com/contacto/',
-      dibs: 'https://musicdibs.com/dibs/',
+      dibs: 'https://dibs.musicdibs.com/',
       sla: 'https://musicdibs.com/acuerdo-de-nivel-de-servicios/',
       privacy: 'https://musicdibs.com/politica-privacidad/',
       terms: 'https://musicdibs.com/compra-y-reembolso/',
@@ -108,7 +108,7 @@ export const getFooterLinks = (lang?: string) => {
     },
     corporate: {
       contact: 'https://musicdibs.com/pt-br/contato/',
-      dibs: 'https://musicdibs.com/dibs/en', // not provided, use EN
+      dibs: 'https://dibs.musicdibs.com/',
       sla: 'https://musicdibs.com/pt-br/acordo-de-nivel-de-servico/',
       privacy: 'https://musicdibs.com/pt-br/politica-de-privacidade-e-protecao-de-dados/',
       terms: 'https://musicdibs.com/pt-br/termos-e-condicoes/',
