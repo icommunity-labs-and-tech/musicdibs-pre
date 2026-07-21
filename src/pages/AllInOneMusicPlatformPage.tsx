@@ -95,13 +95,13 @@ const AllInOneMusicPlatformPage = () => {
     url: URL,
     image: "https://www.musicdibs.com/og-image.png",
     inLanguage: "en",
-    offers: { "@type": "Offer", price: "0", priceCurrency: "USD", availability: "https://schema.org/InStock" },
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD", availability: "https://schema.org/InStock", url: "https://www.musicdibs.com/#pricing" },
     aggregateRating: {
       "@type": "AggregateRating",
-      ratingValue: "4.8",
-      reviewCount: "1240",
-      bestRating: "5",
-      worstRating: "1",
+      ratingValue: 4.8,
+      reviewCount: 1240,
+      bestRating: 5,
+      worstRating: 1,
     },
     publisher: {
       "@type": "Organization",
