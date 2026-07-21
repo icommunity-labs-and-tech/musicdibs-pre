@@ -11,7 +11,7 @@ export const DistributionSection = () => {
       id="services-section"
       className="py-20 bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 relative overflow-hidden"
       style={{
-        backgroundImage: `url(/lovable-uploads/8b326f67-4441-49bb-b3f4-d2f9a297c964.png)`,
+        backgroundImage: `url(/lovable-uploads/8b326f67-4441-49bb-b3f4-d2f9a297c964.webp)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
