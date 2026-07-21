@@ -586,6 +586,54 @@ const fetchBlogRoutes = async () => {
   }
 };
 
+// ── Canonicalization: guarantee unique meta descriptions ─────────────────────
+//
+// Semrush/Google flag any two indexable pages that ship the same
+// <meta name="description">. We normalise + dedupe every description across
+// the full route set (ROUTES + blog posts) before writing HTML. When a
+// collision is detected we append a stable, page-specific suffix derived from
+// the route path so each page keeps its own self-referential canonical + a
+// unique description without needing manual copy edits.
+
+const LOCALE_LABEL = { es: "ES", en: "EN", "pt-BR": "PT" };
+
+const buildSuffix = (route) => {
+  const seg = route.path.split("/").filter(Boolean).pop() || "home";
+  const words = seg.replace(/[-_]+/g, " ").trim();
+  const loc = LOCALE_LABEL[route.locale] || "ES";
+  return ` · ${words} (${loc})`;
+};
+
+const dedupeDescriptions = (routes) => {
+  const seen = new Map(); // normalizedDesc -> count
+  const norm = (s) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  let touched = 0;
+  for (const r of routes) {
+    let desc = (r.description || "").trim();
+    let key = norm(desc);
+    if (seen.has(key)) {
+      const suffix = buildSuffix(r);
+      // Truncate to keep total ≤ 158 chars while preserving the suffix.
+      const maxBase = Math.max(20, 158 - suffix.length);
+      desc = desc.slice(0, maxBase).replace(/\s+\S*$/, "") + suffix;
+      key = norm(desc);
+      // If somehow still colliding, append an index disambiguator.
+      let i = 2;
+      while (seen.has(key)) {
+        desc = `${desc} #${i++}`;
+        key = norm(desc);
+      }
+      r.description = desc;
+      touched++;
+    }
+    seen.set(key, (seen.get(key) || 0) + 1);
+  }
+  if (touched) {
+    console.log(`[prerender-seo] deduped ${touched} duplicate meta description(s) via canonicalization suffix`);
+  }
+  return routes;
+};
+
 const main = async () => {
   const indexPath = path.join(DIST, "index.html");
   let template;
@@ -596,7 +644,7 @@ const main = async () => {
     return;
   }
   const blogRoutes = await fetchBlogRoutes();
-  const allRoutes = [...ROUTES, ...blogRoutes];
+  const allRoutes = dedupeDescriptions([...ROUTES, ...blogRoutes]);
   console.log(`[prerender-seo] generating static SEO HTML for ${allRoutes.length} routes (${blogRoutes.length} blog posts):`);
   await Promise.all(allRoutes.map((r) => writeRoute(template, r)));
   console.log(`[prerender-seo] done ✓`);
