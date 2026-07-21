@@ -46,11 +46,31 @@ Disallow: /categoria-producto/
 Disallow: /etiqueta-producto/
 Disallow: /wp-content/
 Disallow: /wp-includes/
+Disallow: /wp-admin/
+Disallow: /wp-json/
 Disallow: /hc/
 Disallow: /noticias/
 Disallow: /entrevistas/
 Disallow: /verificar/
 Disallow: /politica-privacidad/
 Disallow: /politica-de-privacidad/
+Disallow: /politica-de-cookies/
+Disallow: /certification
+Disallow: /certification/
+Disallow: /ajustes/
+Disallow: /register/
+Disallow: /eng
+Disallow: /esp
+Disallow: /pt
+Disallow: /en
+
+# Legacy WooCommerce query strings — thousands of duplicate variants
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
 
 Sitemap: https://www.musicdibs.com/sitemap.xml
