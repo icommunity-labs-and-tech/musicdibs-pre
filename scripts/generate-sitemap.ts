@@ -58,6 +58,9 @@ const staticEntries: SitemapEntry[] = [
   { path: "/musicdibs-vs-loudly", changefreq: "monthly", priority: "0.6" },
   { path: "/musicdibs-vs-landr", changefreq: "monthly", priority: "0.6" },
   { path: "/musicdibs-vs-diy-stack", changefreq: "monthly", priority: "0.6" },
+  { path: "/musicdibs-vs-udio", changefreq: "monthly", priority: "0.8" },
+  { path: "/music-maker", changefreq: "monthly", priority: "0.9" },
+  { path: "/creador-de-musica", changefreq: "monthly", priority: "0.9" },
 ];
 
 async function fetchBlogPosts(): Promise<SitemapEntry[]> {

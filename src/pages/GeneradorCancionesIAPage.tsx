@@ -157,8 +157,8 @@ const GeneradorCancionesIAPage = () => {
   return (
     <div className="min-h-screen page-bg">
       <SEO
-        title="Generador de canciones con IA"
-        description="Crea, protege y distribuye música generada con IA desde una sola plataforma. Voces IA, letras, masterización, copyright blockchain y distribución global."
+        title="Generador de Música con IA: Crea, Registra y Distribuye Canciones | Musicdibs"
+        description="Generador de música con IA con voces, letras y masterización. Registra tu copyright en blockchain y distribuye a Spotify, Apple Music y +220 plataformas desde una sola app."
         path={PATH}
         type="website"
         lang="es"
@@ -176,10 +176,10 @@ const GeneradorCancionesIAPage = () => {
             <span className="text-white/80 text-sm font-medium">Crea. Protege. Distribuye. Promociona.</span>
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-br from-white via-pink-200 to-purple-300 bg-clip-text text-transparent leading-tight animate-fade-in">
-            Generador de canciones con IA para creadores
+            Generador de música con IA para lanzamientos reales
           </h1>
           <p className="text-white/70 text-lg md:text-2xl max-w-3xl mx-auto mb-10 animate-fade-in">
-            Crea, protege y distribuye música generada con IA desde una sola plataforma.
+            El generador de canciones con IA que además registra tu copyright y las distribuye — desde una sola cuenta.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mb-16 animate-fade-in">
             <Link to="/login">
