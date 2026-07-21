@@ -3856,19 +3856,49 @@ export type Database = {
       }
       feature_costs: {
         Row: {
+          category: string | null
           credit_cost: number | null
+          credits_cost: number | null
+          description: string | null
+          display_order: number | null
+          euro_cost: number | null
           feature_key: string | null
+          is_active: boolean | null
+          is_annual_only: boolean | null
           label: string | null
+          operation_icon: string | null
+          operation_key: string | null
+          operation_name: string | null
         }
         Insert: {
+          category?: string | null
           credit_cost?: number | null
+          credits_cost?: number | null
+          description?: string | null
+          display_order?: number | null
+          euro_cost?: number | null
           feature_key?: string | null
+          is_active?: boolean | null
+          is_annual_only?: boolean | null
           label?: never
+          operation_icon?: string | null
+          operation_key?: string | null
+          operation_name?: string | null
         }
         Update: {
+          category?: string | null
           credit_cost?: number | null
+          credits_cost?: number | null
+          description?: string | null
+          display_order?: number | null
+          euro_cost?: number | null
           feature_key?: string | null
+          is_active?: boolean | null
+          is_annual_only?: boolean | null
           label?: never
+          operation_icon?: string | null
+          operation_key?: string | null
+          operation_name?: string | null
         }
         Relationships: []
       }

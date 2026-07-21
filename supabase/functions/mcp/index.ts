@@ -126,7 +126,7 @@ var get_operation_pricing_default = defineTool4({
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
   handler: async ({ operation_key }) => {
     const supabase = getPublicSupabase();
-    let q = supabase.from("operation_pricing").select("operation_key, label, credits_cost, category, description, is_active").eq("is_active", true).order("category").order("operation_key");
+    let q = supabase.from("feature_costs").select("operation_key, label, credits_cost, category, description, is_active").eq("is_active", true).order("category").order("operation_key");
     if (operation_key) q = q.eq("operation_key", operation_key);
     const { data, error } = await q;
     if (error) return { ...textContent(`Error: ${error.message}`), isError: true };
