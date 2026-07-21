@@ -88,7 +88,7 @@ const Verify = () => {
 
   return (
     <div className="min-h-screen page-bg" key={i18n.language}>
-      <SEO title={t('verify.seoTitle')} description={t('verify.seoDesc')} path="/verify" noIndex />
+      <SEO title={t('verify.seoTitle')} description={t('verify.seoDesc')} path="/verify" />
       <Navbar />
 
       {/* Hero */}
