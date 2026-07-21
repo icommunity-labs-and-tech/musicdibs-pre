@@ -93,7 +93,7 @@ export const DistributionSection = () => {
                     className="w-32 h-40 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300 block"
                     aria-label="Instagram @musicdibs"
                   >
-                    <img src="/lovable-uploads/ff17291e-4f59-4201-8e1b-8964a98b22f6.png" alt="Instagram Promotion" className="w-full h-full object-cover" width={122} height={152} loading="lazy" />
+                    <img src="/lovable-uploads/ff17291e-4f59-4201-8e1b-8964a98b22f6.webp" alt="Instagram Promotion" className="w-full h-full object-cover" width={122} height={152} loading="lazy" decoding="async" />
                   </a>
                   <a
                     href="https://www.tiktok.com/@musicdibs_"
