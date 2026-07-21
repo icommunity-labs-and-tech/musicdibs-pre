@@ -1577,6 +1577,32 @@ serve(async (req) => {
           const { credits: createCredits, source: createSource, tier: createTier } = await resolveCreditsForUser(supabase, profile.user_id, actualPriceId);
           console.log(`[WEBHOOK] subscription_create: credits=${createCredits} source=${createSource} tier=${createTier} price=${actualPriceId}`);
 
+          // FIX 2026-07-21: guard #2/#2b (por subscriptionId exacto, o por
+          // customerId solo cuando subscriptionId no se resolvio) fallaron en la
+          // practica en 3 casos en 48h (thebestcompositor@gmail.com,
+          // sirphoenyxmusic2025@gmail.com, martinzamora@rocketmail.com) --
+          // "Alta suscripcion undefined" duplico creditos ya otorgados por
+          // checkout.session.completed segundos antes, pese a que los guards
+          // existentes deberian haberlo detectado. Sin poder confirmar la causa
+          // exacta (logs ya rotados), se anade una ultima comprobacion
+          // INCONDICIONAL por customerId (no solo cuando falta subscriptionId)
+          // justo antes de conceder creditos, como red de seguridad adicional.
+          if (customerId) {
+            const finalDupWindow = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+            const { data: finalExistingOrder } = await supabase
+              .from("orders")
+              .select("id, created_at")
+              .eq("stripe_customer_id", customerId)
+              .eq("is_subscription", true)
+              .eq("is_renewal", false)
+              .gte("created_at", finalDupWindow)
+              .maybeSingle();
+            if (finalExistingOrder) {
+              console.log(`[WEBHOOK] subscription_create: FINAL GUARD blocked dup for customer ${customerId} (existing order ${finalExistingOrder.id} at ${finalExistingOrder.created_at}) — skipping credit grant`);
+              return new Response(JSON.stringify({ received: true, duplicate: true, finalGuard: true }), { headers: { "Content-Type": "application/json" } });
+            }
+          }
+
           if (createCredits > 0) {
             // ATOMIC DEDUP via grant_credits_atomic (ON CONFLICT stripe_event_key)
             const atomicKey = invoiceId ? `inv_create_${invoiceId}` : `cust_${customerId}_${Date.now()}`;
