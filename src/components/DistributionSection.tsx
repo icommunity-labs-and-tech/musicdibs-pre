@@ -11,7 +11,7 @@ export const DistributionSection = () => {
       id="services-section"
       className="py-20 bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 relative overflow-hidden"
       style={{
-        backgroundImage: `url(/lovable-uploads/8b326f67-4441-49bb-b3f4-d2f9a297c964.png)`,
+        backgroundImage: `url(/lovable-uploads/8b326f67-4441-49bb-b3f4-d2f9a297c964.webp)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
@@ -93,7 +93,7 @@ export const DistributionSection = () => {
                     className="w-32 h-40 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300 block"
                     aria-label="Instagram @musicdibs"
                   >
-                    <img src="/lovable-uploads/ff17291e-4f59-4201-8e1b-8964a98b22f6.png" alt="Instagram Promotion" className="w-full h-full object-cover" width={122} height={152} loading="lazy" />
+                    <img src="/lovable-uploads/ff17291e-4f59-4201-8e1b-8964a98b22f6.webp" alt="Instagram Promotion" className="w-full h-full object-cover" width={122} height={152} loading="lazy" decoding="async" />
                   </a>
                   <a
                     href="https://www.tiktok.com/@musicdibs_"
@@ -103,7 +103,7 @@ export const DistributionSection = () => {
                     className="w-32 h-40 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300 block"
                     aria-label="TikTok @musicdibs_"
                   >
-                    <img src="/lovable-uploads/6a1dd10b-22a7-4382-990a-94d322fcae13.png" alt="TikTok Promotion" className="w-full h-full object-cover" width={122} height={152} loading="lazy" />
+                    <img src="/lovable-uploads/6a1dd10b-22a7-4382-990a-94d322fcae13.webp" alt="TikTok Promotion" className="w-full h-full object-cover" width={122} height={152} loading="lazy" decoding="async" />
                   </a>
                 </div>
 
