@@ -45,6 +45,19 @@ const staticEntries: SitemapEntry[] = [
   { path: "/terms", changefreq: "yearly", priority: "0.3" },
   { path: "/cookies", changefreq: "yearly", priority: "0.3" },
   { path: "/login", changefreq: "yearly", priority: "0.4" },
+  { path: "/ia-music-studio", changefreq: "monthly", priority: "0.9" },
+  { path: "/promocion-musical", changefreq: "monthly", priority: "0.8" },
+  { path: "/features", changefreq: "monthly", priority: "0.8" },
+  { path: "/ai-song-generator", changefreq: "monthly", priority: "0.9" },
+  { path: "/generador-canciones-ia", changefreq: "monthly", priority: "0.9" },
+  { path: "/registro-musical", changefreq: "monthly", priority: "0.9" },
+  { path: "/all-in-one-music-platform", changefreq: "monthly", priority: "0.9" },
+  { path: "/switch-to-musicdibs", changefreq: "monthly", priority: "0.8" },
+  { path: "/tools/metadata-finder", changefreq: "monthly", priority: "0.7" },
+  { path: "/musicdibs-vs-distrokid", changefreq: "monthly", priority: "0.6" },
+  { path: "/musicdibs-vs-loudly", changefreq: "monthly", priority: "0.6" },
+  { path: "/musicdibs-vs-landr", changefreq: "monthly", priority: "0.6" },
+  { path: "/musicdibs-vs-diy-stack", changefreq: "monthly", priority: "0.6" },
 ];
 
 async function fetchBlogPosts(): Promise<SitemapEntry[]> {
