@@ -216,6 +216,7 @@ const App = () => (
               <Route path="/musicdibs-vs-diy-stack" element={<MusicdibsVsDiyStackPage />} />
               <Route path="/all-in-one-music-platform" element={<AllInOneMusicPlatformPage />} />
               <Route path="/switch-to-musicdibs" element={<SwitchToMusicdibsPage />} />
+              <Route path="/tools/metadata-finder" element={<MetadataFinderPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
               {/* Legacy /en/news/* URLs indexed by crawlers — serve the same
