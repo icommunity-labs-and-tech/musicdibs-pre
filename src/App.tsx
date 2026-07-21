@@ -98,6 +98,7 @@ const MusicdibsVsLandrPage = lazyWithRetry(() => import("./pages/MusicdibsVsLand
 const MusicdibsVsDiyStackPage = lazyWithRetry(() => import("./pages/MusicdibsVsDiyStackPage"));
 const AllInOneMusicPlatformPage = lazyWithRetry(() => import("./pages/AllInOneMusicPlatformPage"));
 const SwitchToMusicdibsPage = lazyWithRetry(() => import("./pages/SwitchToMusicdibsPage"));
+const MetadataFinderPage = lazyWithRetry(() => import("./pages/MetadataFinderPage"));
 
 const AdminCampaignMetricsPage = lazyWithRetry(() => import("./pages/AdminCampaignMetricsPage"));
 const AdminChurnPage = lazyWithRetry(() => import("./pages/AdminChurnPage"));
@@ -215,6 +216,7 @@ const App = () => (
               <Route path="/musicdibs-vs-diy-stack" element={<MusicdibsVsDiyStackPage />} />
               <Route path="/all-in-one-music-platform" element={<AllInOneMusicPlatformPage />} />
               <Route path="/switch-to-musicdibs" element={<SwitchToMusicdibsPage />} />
+              <Route path="/tools/metadata-finder" element={<MetadataFinderPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
               {/* Legacy /en/news/* URLs indexed by crawlers — serve the same
