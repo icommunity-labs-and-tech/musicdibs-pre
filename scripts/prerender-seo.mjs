@@ -422,6 +422,25 @@ const ROUTES = [
     title: "Musicdibs vs DistroKid: Complete Workflow vs Distribution | Musicdibs",
     description: "DistroKid is great at distribution. See what's missing — and how Musicdibs covers creation, protection, distribution and promotion in one place.",
   },
+  {
+    path: "/musicdibs-vs-udio",
+    locale: "en",
+    title: "Musicdibs vs Udio: AI Song Generation Plus Copyright and Distribution",
+    description: "Udio generates AI songs. Musicdibs generates them, blockchain-certifies your copyright and distributes to Spotify and 220+ platforms. Honest 2026 comparison.",
+  },
+  {
+    path: "/music-maker",
+    locale: "en",
+    title: "AI Music Maker: Create, Copyright and Release Songs in Minutes | Musicdibs",
+    description: "The all-in-one AI music maker: generate full songs with AI vocals and lyrics, protect your copyright on blockchain, and release to Spotify and 220+ platforms.",
+  },
+  {
+    path: "/creador-de-musica",
+    locale: "es",
+    title: "Creador de Música con IA: Crea, Registra y Publica Canciones en Minutos | Musicdibs",
+    description: "El creador de música con IA todo-en-uno: genera canciones completas con voces y letras, registra tu copyright en blockchain y publica en Spotify y +220 plataformas.",
+  },
+
 
   // ── NEWS INDEX ─────────────────────────────────────────────────────────────
   {
