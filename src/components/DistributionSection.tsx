@@ -103,7 +103,7 @@ export const DistributionSection = () => {
                     className="w-32 h-40 rounded-xl overflow-hidden hover:scale-105 transition-transform duration-300 block"
                     aria-label="TikTok @musicdibs_"
                   >
-                    <img src="/lovable-uploads/6a1dd10b-22a7-4382-990a-94d322fcae13.png" alt="TikTok Promotion" className="w-full h-full object-cover" width={122} height={152} loading="lazy" />
+                    <img src="/lovable-uploads/6a1dd10b-22a7-4382-990a-94d322fcae13.webp" alt="TikTok Promotion" className="w-full h-full object-cover" width={122} height={152} loading="lazy" decoding="async" />
                   </a>
                 </div>
 
