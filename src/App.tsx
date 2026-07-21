@@ -96,6 +96,9 @@ const MusicdibsVsDistroKidPage = lazyWithRetry(() => import("./pages/MusicdibsVs
 const MusicdibsVsLoudlyPage = lazyWithRetry(() => import("./pages/MusicdibsVsLoudlyPage"));
 const MusicdibsVsLandrPage = lazyWithRetry(() => import("./pages/MusicdibsVsLandrPage"));
 const MusicdibsVsDiyStackPage = lazyWithRetry(() => import("./pages/MusicdibsVsDiyStackPage"));
+const MusicdibsVsUdioPage = lazyWithRetry(() => import("./pages/MusicdibsVsUdioPage"));
+const MusicMakerPage = lazyWithRetry(() => import("./pages/MusicMakerPage"));
+const CreadorDeMusicaPage = lazyWithRetry(() => import("./pages/CreadorDeMusicaPage"));
 const AllInOneMusicPlatformPage = lazyWithRetry(() => import("./pages/AllInOneMusicPlatformPage"));
 const SwitchToMusicdibsPage = lazyWithRetry(() => import("./pages/SwitchToMusicdibsPage"));
 const MetadataFinderPage = lazyWithRetry(() => import("./pages/MetadataFinderPage"));
@@ -214,6 +217,9 @@ const App = () => (
               <Route path="/musicdibs-vs-loudly" element={<MusicdibsVsLoudlyPage />} />
               <Route path="/musicdibs-vs-landr" element={<MusicdibsVsLandrPage />} />
               <Route path="/musicdibs-vs-diy-stack" element={<MusicdibsVsDiyStackPage />} />
+              <Route path="/musicdibs-vs-udio" element={<MusicdibsVsUdioPage />} />
+              <Route path="/music-maker" element={<MusicMakerPage />} />
+              <Route path="/creador-de-musica" element={<CreadorDeMusicaPage />} />
               <Route path="/all-in-one-music-platform" element={<AllInOneMusicPlatformPage />} />
               <Route path="/switch-to-musicdibs" element={<SwitchToMusicdibsPage />} />
               <Route path="/tools/metadata-finder" element={<MetadataFinderPage />} />
