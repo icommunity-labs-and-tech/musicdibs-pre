@@ -1758,6 +1758,36 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         await supabase.from("credit_transactions").insert({ user_id: profile.user_id, amount: 0, type: "payment_failed", description });
         console.log(`[WEBHOOK] Payment failed for user ${profile.user_id} (attempt ${attemptCount})`);
 
+        // FIX 2026-07-21: antes, este handler nunca inicializaba el seguimiento
+        // de periodo de gracia (payment_grace_expires_at / payment_issue_count /
+        // payment_issue_notified_at). Dependia enteramente de que el cron de
+        // reconciliacion diario lo detectara y corrigiera -- hasta 24h de
+        // ventana en la que un impago real no tenia gracia registrada en
+        // nuestro sistema. Detectado 2026-07-21 via auditoria (bruno.drdireito@
+        // gmail.com, juanmabastidas49@gmail.com: factura fallo a las 05:53 UTC,
+        // gracia no inicializada hasta que el cron la corrigio a las ~07:00 UTC).
+        // Se inicializa aqui en tiempo real, con la misma ventana de 7 dias que
+        // usa el cron, y SOLO si no habia ya una gracia activa (no pisar una
+        // gracia mas larga si ya estaba en curso por un intento anterior).
+        try {
+          const { data: currentProfile } = await supabase.from("profiles")
+            .select("payment_grace_expires_at, payment_issue_count")
+            .eq("user_id", profile.user_id).single();
+          const graceStillActive = currentProfile?.payment_grace_expires_at &&
+            new Date(currentProfile.payment_grace_expires_at) > new Date();
+          if (!graceStillActive) {
+            const graceExpiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+            await supabase.from("profiles").update({
+              payment_grace_expires_at: graceExpiresAt,
+              payment_issue_count: (currentProfile?.payment_issue_count ?? 0) + 1,
+              payment_issue_notified_at: new Date().toISOString(),
+            }).eq("user_id", profile.user_id);
+            console.log(`[WEBHOOK] payment_failed: grace period initialized for user ${profile.user_id}, expires ${graceExpiresAt}`);
+          }
+        } catch (graceErr) {
+          console.error("[WEBHOOK] payment_failed: error initializing grace period:", graceErr);
+        }
+
         // FIX: Si no hay mas reintentos (impago definitivo), resetear creditos de plan
         // y crear evidencia IBS de "cancelacion por impago" inmediatamente (no esperar
         // al subscription.deleted, que puede tardar dias en llegar).
