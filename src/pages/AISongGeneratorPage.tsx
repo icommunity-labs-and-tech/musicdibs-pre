@@ -158,8 +158,8 @@ const AISongGeneratorPage = () => {
   return (
     <div className="min-h-screen page-bg">
       <SEO
-        title="AI Song Generator for Creators"
-        description="Create, protect and distribute AI-generated music from one platform. AI vocals, lyrics, mastering, blockchain copyright and global distribution."
+        title="AI Music Generator: Create, Copyright and Distribute Songs | Musicdibs"
+        description="AI music generator with vocals, lyrics and mastering. Copyright your songs on blockchain and distribute to Spotify, Apple Music and 220+ platforms — all in one platform."
         path={PATH}
         type="website"
         lang="en"
@@ -177,10 +177,10 @@ const AISongGeneratorPage = () => {
             <span className="text-white/80 text-sm font-medium">Create. Protect. Distribute. Promote.</span>
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-br from-white via-pink-200 to-purple-300 bg-clip-text text-transparent leading-tight animate-fade-in">
-            AI Song Generator for Creators
+            AI Music Generator for Real Releases
           </h1>
           <p className="text-white/70 text-lg md:text-2xl max-w-3xl mx-auto mb-10 animate-fade-in">
-            Create, protect and distribute AI-generated music from one platform.
+            The AI song generator that also copyrights and distributes your music — from one account.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mb-16 animate-fade-in">
             <Link to="/login">
