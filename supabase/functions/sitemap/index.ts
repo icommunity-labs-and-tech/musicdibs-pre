@@ -22,6 +22,19 @@ const STATIC_ROUTES = [
   { path: "/privacy", priority: "0.3", changefreq: "yearly" },
   { path: "/terms", priority: "0.3", changefreq: "yearly" },
   { path: "/cookies", priority: "0.3", changefreq: "yearly" },
+  { path: "/ia-music-studio", priority: "0.9", changefreq: "monthly" },
+  { path: "/promocion-musical", priority: "0.8", changefreq: "monthly" },
+  { path: "/features", priority: "0.8", changefreq: "monthly" },
+  { path: "/ai-song-generator", priority: "0.9", changefreq: "monthly" },
+  { path: "/generador-canciones-ia", priority: "0.9", changefreq: "monthly" },
+  { path: "/registro-musical", priority: "0.9", changefreq: "monthly" },
+  { path: "/all-in-one-music-platform", priority: "0.9", changefreq: "monthly" },
+  { path: "/switch-to-musicdibs", priority: "0.8", changefreq: "monthly" },
+  { path: "/tools/metadata-finder", priority: "0.7", changefreq: "monthly" },
+  { path: "/musicdibs-vs-distrokid", priority: "0.6", changefreq: "monthly" },
+  { path: "/musicdibs-vs-loudly", priority: "0.6", changefreq: "monthly" },
+  { path: "/musicdibs-vs-landr", priority: "0.6", changefreq: "monthly" },
+  { path: "/musicdibs-vs-diy-stack", priority: "0.6", changefreq: "monthly" },
 ];
 
 Deno.serve(async (req) => {
