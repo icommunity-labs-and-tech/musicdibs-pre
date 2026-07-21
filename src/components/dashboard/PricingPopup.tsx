@@ -36,7 +36,7 @@ export function PricingPopup({ open, onOpenChange }: { open: boolean; onOpenChan
     if (!open) return;
     setLoading(true);
     supabase
-      .from('operation_pricing')
+      .from('feature_costs')
       .select('operation_key, operation_name, operation_icon, credits_cost, euro_cost, category, is_annual_only, display_order, description')
       .eq('is_active', true)
       .order('display_order')

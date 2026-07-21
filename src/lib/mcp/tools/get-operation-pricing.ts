@@ -17,7 +17,7 @@ export default defineTool({
   handler: async ({ operation_key }) => {
     const supabase = getPublicSupabase();
     let q = supabase
-      .from("operation_pricing")
+      .from("feature_costs")
       .select("operation_key, label, credits_cost, category, description, is_active")
       .eq("is_active", true)
       .order("category")
