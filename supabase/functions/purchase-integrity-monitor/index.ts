@@ -273,6 +273,68 @@ serve(async (req) => {
       }
     }
 
+    // ── 2c. Doble asignacion de creditos (checkout.session.completed +
+    // subscription_create otorgando ambos para la misma compra) ─────────────
+    // FIX 2026-07-21: detectado en produccion via reporte de usuario
+    // (thebestcompositor@gmail.com) e investigacion posterior (30+ casos
+    // historicos, 3 duplicados confirmados en 48h + 1 mas incluso tras anadir
+    // un guard adicional). Causa raiz: grant_credits_atomic usaba claves de
+    // idempotencia distintas segun el evento (checkout_${session.id} vs
+    // inv_create_${invoiceId}) para la MISMA compra, asi que el UNIQUE
+    // constraint nunca detectaba el cruce -- corregido unificando la clave por
+    // subscriptionId. Este chequeo es la red de seguridad de nivel auditoria:
+    // detecta y autocorrige cualquier caso que aun se escape.
+    const { data: recentPurchaseTx } = await supabase
+      .from("credit_transactions")
+      .select("id, user_id, amount, description, created_at")
+      .eq("type", "purchase")
+      .gte("created_at", since.toISOString())
+      .order("user_id")
+      .order("created_at");
+
+    const dupWindowMs = 10 * 60 * 1000; // 10 minutos
+    const seenByUser = new Map<string, typeof recentPurchaseTx>();
+    for (const tx of recentPurchaseTx || []) {
+      if (!seenByUser.has(tx.user_id)) seenByUser.set(tx.user_id, []);
+      seenByUser.get(tx.user_id)!.push(tx);
+    }
+    for (const [userId, txs] of seenByUser.entries()) {
+      for (let i = 0; i < txs.length; i++) {
+        for (let j = i + 1; j < txs.length; j++) {
+          const a = txs[i], b = txs[j];
+          if (a.amount !== b.amount) continue;
+          const deltaMs = Math.abs(new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          if (deltaMs > dupWindowMs) continue;
+
+          const { data: { user } } = await supabase.auth.admin.getUserById(userId);
+          const email = user?.email || "unknown";
+
+          // Autocorregir: revertir la segunda transaccion (la mas reciente)
+          const { error: revertErr } = await supabase.from("credit_transactions").insert({
+            user_id: userId, type: "admin_reset", amount: -b.amount,
+            description: `Autocorreccion doble asignacion (auditoria): "${a.description}" (${a.id}) y "${b.description}" (${b.id}) -- mismo importe, ${Math.round(deltaMs / 1000)}s de diferencia. Se revierte la segunda.`,
+          });
+          if (!revertErr) {
+            await supabase.rpc("increment_user_credits", { p_user_id: userId, p_delta: -b.amount }).then(
+              () => {},
+              async () => {
+                // Fallback si el RPC no esta disponible por algun motivo: update directo
+                const { data: prof } = await supabase.from("profiles").select("available_credits").eq("user_id", userId).single();
+                if (prof) await supabase.from("profiles").update({ available_credits: Math.max(0, (prof.available_credits ?? 0) - b.amount), updated_at: new Date().toISOString() }).eq("user_id", userId);
+              }
+            );
+          }
+
+          issues.push({
+            type: "doble_asignacion_creditos", severity: revertErr ? "critical" : "warning", email,
+            detail: revertErr
+              ? `Posible doble credito de +${b.amount} (transacciones ${a.id} / ${b.id}, ${Math.round(deltaMs / 1000)}s de diferencia) -- fallo al autocorregir: ${revertErr.message}. Revisar manualmente.`
+              : `Doble credito de +${b.amount} detectado y autocorregido (transacciones ${a.id} / ${b.id}, ${Math.round(deltaMs / 1000)}s de diferencia).`,
+          });
+        }
+      }
+    }
+
     // ── 3. Cancelaciones/impagos: créditos de plan deben estar en 0 ──────────
     const { data: cancelledSubs } = await supabase
       .from("subscriptions")

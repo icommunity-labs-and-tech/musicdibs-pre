@@ -774,7 +774,21 @@ serve(async (req) => {
 
         // ATOMIC DEDUP: checkout session ID es unico -- bloquea duplicados a nivel DB
         // (previene el race condition entre checkout.session.completed e invoice.payment_succeeded)
-        const checkoutAtomicKey = `checkout_${session.id}`;
+        // FIX 2026-07-21: la clave anterior (`checkout_${session.id}`) es UNICA para este
+        // evento checkout.session.completed, pero NUNCA coincide con la clave que usa el
+        // handler subscription_create (`inv_create_${invoiceId}`) para la MISMA compra --
+        // son namespaces distintos, asi que el UNIQUE constraint jamas detecta el cruce
+        // entre ambos eventos (solo protege contra reintentos del MISMO evento). Confirmado
+        // en produccion: 30+ casos de "Alta suscripcion" con timing de 1-2s tras "Compra
+        // plan X", varios de ellos duplicados reales de credito (thebestcompositor,
+        // sirphoenyxmusic2025, martinzamora, y uno mas incluso DESPUES de anadir un guard
+        // adicional por tiempo -- confirmando que es una carrera TOCTOU real, no un problema
+        // de timing/reintentos que un guard basado en SELECT-antes-de-INSERT pueda cerrar).
+        // Se usa el subscriptionId (disponible en AMBOS eventos para el mismo alta) como
+        // clave compartida -- asi el UNIQUE constraint bloquea atomicamente al segundo
+        // evento que llegue, sea cual sea el orden o el intervalo entre ambos.
+        const sharedSubIdForKey = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
+        const checkoutAtomicKey = sharedSubIdForKey ? `initial_credit_sub_${sharedSubIdForKey}` : `checkout_${session.id}`;
         const checkoutAtomic = await supabase.rpc("grant_credits_atomic", {
           p_stripe_event_key: checkoutAtomicKey,
           p_user_id: userId,
@@ -1605,7 +1619,10 @@ serve(async (req) => {
 
           if (createCredits > 0) {
             // ATOMIC DEDUP via grant_credits_atomic (ON CONFLICT stripe_event_key)
-            const atomicKey = invoiceId ? `inv_create_${invoiceId}` : `cust_${customerId}_${Date.now()}`;
+            // FIX 2026-07-21: usar la MISMA clave compartida que checkout.session.completed
+            // (basada en subscriptionId) para que el UNIQUE constraint de grant_credits_atomic
+            // bloquee de verdad el cruce entre ambos eventos para la misma alta de suscripcion.
+            const atomicKey = subscriptionId ? `initial_credit_sub_${subscriptionId}` : (invoiceId ? `inv_create_${invoiceId}` : `cust_${customerId}_${Date.now()}`);
             const atomicResult = await supabase.rpc("grant_credits_atomic", {
               p_stripe_event_key: atomicKey,
               p_user_id: profile.user_id,
