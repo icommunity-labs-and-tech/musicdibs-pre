@@ -26,6 +26,7 @@ interface PremiumPromo {
   status: string;
   created_at: string;
   credits_spent: number;
+  scheduled_publish_date?: string | null;
 }
 
 const getStatusMap = (t: (key: string, fallback: string) => string): Record<string, { label: string; color: string }> => ({
@@ -87,7 +88,7 @@ export default function PromotePage() {
     try {
       const { data } = await supabase
         .from('premium_social_promotions')
-        .select('id, artist_name, song_title, status, created_at, credits_spent')
+        .select('id, artist_name, song_title, status, created_at, credits_spent, scheduled_publish_date')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       setPremiumPromos(data || []);
@@ -198,6 +199,11 @@ export default function PromotePage() {
                         <p className="text-[11px] text-muted-foreground">
                           {new Date(p.created_at).toLocaleDateString()}
                         </p>
+                        {p.scheduled_publish_date && (
+                          <p className="text-[11px] text-violet-600 font-medium mt-0.5">
+                            {t('dashboard.premium.scheduledFor', 'Publicación estimada')}: {new Date(p.scheduled_publish_date + 'T00:00:00').toLocaleDateString()}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <Badge variant="outline" className={`text-[10px] shrink-0 ${st.color}`}>
