@@ -1064,6 +1064,34 @@ serve(async (req) => {
       return json({ success: true, ibs_status: ibsStatus, reassigned });
     }
 
+    // ── update_user_email ──────────────────────────────────────
+    // Cambia el email de LOGIN de un usuario (auth.users), separado de
+    // cualquier email de notificaciones/lanzamientos gestionado en sistemas
+    // externos (ej. SonoSuite). Supabase Auth ya rechaza el cambio si el
+    // nuevo email esta en uso por otra cuenta (constraint unico).
+    if (action === "update_user_email") {
+      const { user_id, new_email } = payload;
+      if (!user_id || !new_email) return json({ error: "user_id and new_email are required" }, 400);
+      const normalizedEmail = String(new_email).trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+        return json({ error: "Email invalido" }, 400);
+      }
+
+      const { data: updated, error: updErr } = await admin.auth.admin.updateUserById(user_id, {
+        email: normalizedEmail,
+        email_confirm: true,
+      });
+      if (updErr) return json({ error: updErr.message }, 500);
+
+      await audit({
+        action: "update_user_email",
+        target_user_id: user_id,
+        details: { new_email: normalizedEmail },
+      });
+
+      return json({ success: true, user: { id: updated?.user?.id, email: updated?.user?.email } });
+    }
+
     if (action === "toggle_block") {
       const { user_id, blocked } = payload;
       if (!user_id || typeof blocked !== "boolean")
