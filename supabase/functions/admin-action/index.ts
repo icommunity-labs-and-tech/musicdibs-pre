@@ -357,9 +357,7 @@ serve(async (req) => {
         if (planFilter === "Free") {
           query = query.eq("subscription_plan", "Free");
         } else if (planFilter === "Annual") {
-          query = query
-            .eq("subscription_plan", "Annual")
-            .is("subscription_tier", null);
+          query = query.eq("subscription_plan", "Annual");
         } else if (planFilter === "Monthly") {
           query = query.eq("subscription_tier", "monthly");
         } else if (planFilter.startsWith("annual_")) {
@@ -2014,9 +2012,7 @@ serve(async (req) => {
             if (planFilter === "Free")
               q = q.eq("subscription_plan", "Free");
             else if (planFilter === "Annual")
-              q = q
-                .eq("subscription_plan", "Annual")
-                .is("subscription_tier", null);
+              q = q.eq("subscription_plan", "Annual");
             else if (planFilter === "Monthly")
               q = q.eq("subscription_tier", "monthly");
             else if (planFilter.startsWith("annual_"))
