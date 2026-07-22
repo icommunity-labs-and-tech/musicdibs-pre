@@ -813,6 +813,26 @@ serve(async (req) => {
         }
 
         const planName = PLAN_ID_TO_PLAN_NAME[planId];
+
+        // Diagnostico: capturar lineItems crudos + metadata + resolucion final
+        // para poder investigar si esto vuelve a resolver mal en el futuro.
+        {
+          let diagLineItems: unknown = null;
+          try {
+            diagLineItems = (await stripe.checkout.sessions.listLineItems(session.id, { limit: 5, expand: ["data.price"] })).data;
+          } catch { /* best-effort, no bloquea */ }
+          await logPriceResolution(supabase, {
+            sourceEvent: "checkout_completed",
+            sessionOrInvoiceId: session.id,
+            customerId: typeof session.customer === "string" ? session.customer : (session.customer as any)?.id ?? null,
+            userId,
+            resolvedPriceId: (diagLineItems as any)?.[0]?.price?.id ?? null,
+            resolvedPlanId: planId,
+            resolvedPlanName: planName ?? null,
+            lineItemsRaw: { metadata: session.metadata ?? null, lineItems: diagLineItems, sessionMode: session.mode },
+          });
+        }
+
         // Guard: topups e individuales NUNCA deben sobrescribir subscription_plan
         if (planName && !planId.startsWith("topup_") && planId !== "individual") {
           // FIX 2026-07-17: esta actualizacion no comprobaba su propio resultado
@@ -1578,6 +1598,18 @@ serve(async (req) => {
               message: `subscription_create sin subscriptionId resuelto para customer ${customerId} (invoice ${invoiceId ?? "n/a"}) — revisar manualmente, subscriptions no sincronizada.`,
             });
           }
+
+          // Diagnostico: mismo registro que en checkout.session.completed.
+          await logPriceResolution(supabase, {
+            sourceEvent: "subscription_create",
+            sessionOrInvoiceId: invoiceId,
+            customerId,
+            userId: profile.user_id,
+            resolvedPriceId: actualPriceId,
+            resolvedPlanId: resolvedPlanId ?? null,
+            resolvedPlanName: planName ?? null,
+            lineItemsRaw: { subscriptionId, note: "subscription_create branch" },
+          });
 
           // Update plan/tier in profile
           if (planName && resolvedPlanId) {
@@ -2377,6 +2409,40 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
     return new Response(JSON.stringify({ error: msg }), { headers: { "Content-Type": "application/json" }, status: 400 });
   }
 });
+
+// FIX 2026-07-22: diagnostico persistente para el bug intermitente
+// "subscription_plan=Monthly/subscription_tier=null tras comprar annual_20
+// /annual_100" (documentado sin reproducir desde 2026-07-15/16, segunda
+// ocurrencia confirmada con yaugika@gmail.com el 2026-07-22). Los logs de
+// Supabase solo retienen ~24h, insuficiente para un bug intermitente y poco
+// frecuente. Se persiste la resolucion de precio/plan de cada compra de
+// suscripcion en stripe_price_resolution_log (best-effort, nunca bloquea
+// ni rompe el flujo principal si falla).
+async function logPriceResolution(supabase: any, params: {
+  sourceEvent: string;
+  sessionOrInvoiceId?: string | null;
+  customerId?: string | null;
+  userId?: string | null;
+  resolvedPriceId?: string | null;
+  resolvedPlanId?: string | null;
+  resolvedPlanName?: string | null;
+  lineItemsRaw?: unknown;
+}) {
+  try {
+    await supabase.from("stripe_price_resolution_log").insert({
+      source_event: params.sourceEvent,
+      session_or_invoice_id: params.sessionOrInvoiceId ?? null,
+      stripe_customer_id: params.customerId ?? null,
+      user_id: params.userId ?? null,
+      resolved_price_id: params.resolvedPriceId ?? null,
+      resolved_plan_id: params.resolvedPlanId ?? null,
+      resolved_plan_name: params.resolvedPlanName ?? null,
+      line_items_raw: params.lineItemsRaw ?? null,
+    });
+  } catch (e) {
+    console.warn("[WEBHOOK] logPriceResolution failed (non-blocking):", e);
+  }
+}
 
 async function addCredits(supabase: any, userId: string, credits: number, description: string) {
   await supabase.from("credit_transactions").insert({ user_id: userId, amount: credits, type: "purchase", description });
