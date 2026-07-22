@@ -229,7 +229,58 @@ serve(async (req) => {
         return new Response(JSON.stringify({ error: 'no_final_url' }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      return new Response(JSON.stringify({ success: true, finalUrl }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      // FIX 2026-07-22 (reportado por aarampulparick@gmail.com: "Dime que
+      // Diablos" desaparecio tras masterizar): a diferencia del resto de
+      // funciones de AI Studio (generate-audio, mureka-generate-song, etc.),
+      // roex-master no persistia el resultado en ninguna tabla -- el
+      // finalUrl solo vivia en el estado de React de la pagina, y se perdia
+      // por completo si el usuario navegaba fuera o recargaba antes de
+      // descargarlo. Se descarga el master final de ROEX y se sube a
+      // nuestro propio storage (bucket ai-generations), insertando una fila
+      // en ai_generations para que aparezca en la biblioteca del usuario
+      // igual que el resto de generaciones. Best-effort: si esto falla, no
+      // bloquea la respuesta al usuario (ya pago el credito y tiene el
+      // finalUrl de ROEX para descargar en el momento), pero se deja
+      // constancia en logs para poder detectarlo.
+      let persistedAudioUrl: string | null = null;
+      let persistedStoragePath: string | null = null;
+      try {
+        const fileRes = await fetch(finalUrl);
+        if (fileRes.ok) {
+          const fileBuf = await fileRes.arrayBuffer();
+          const storagePath = `${user.id}/${Date.now()}_mastered.wav`;
+          const { error: upErr } = await supabase.storage
+            .from('ai-generations')
+            .upload(storagePath, fileBuf, { contentType: 'audio/wav', upsert: true });
+          if (upErr) {
+            console.error('[ROEX] final: failed to persist master to storage:', upErr.message);
+          } else {
+            const { data: publicUrlData } = supabase.storage
+              .from('ai-generations')
+              .getPublicUrl(storagePath);
+            persistedStoragePath = storagePath;
+            persistedAudioUrl = publicUrlData?.publicUrl ?? null;
+
+            const { error: insErr } = await supabase.from('ai_generations').insert({
+              user_id: user.id,
+              prompt: 'Masterización ROEX',
+              provider: 'roex',
+              model: 'mastering',
+              audio_url: persistedAudioUrl,
+              storage_path: persistedStoragePath,
+              storage_bucket: 'ai-generations',
+            });
+            if (insErr) console.error('[ROEX] final: failed to insert ai_generations row:', insErr.message);
+            else console.log(`[ROEX] final: persisted master for user ${user.id} at ${storagePath}`);
+          }
+        } else {
+          console.error('[ROEX] final: could not download master from ROEX for persistence, status', fileRes.status);
+        }
+      } catch (persistErr) {
+        console.error('[ROEX] final: persistence step threw (non-blocking):', persistErr);
+      }
+
+      return new Response(JSON.stringify({ success: true, finalUrl, persistedAudioUrl }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     return new Response(JSON.stringify({ error: 'invalid_action' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

@@ -4419,6 +4419,36 @@ serve(async (req) => {
       return json({ signed_url: data.signedUrl });
     }
 
+    // ── get_work_audio_url ───────────────────────────────────────
+    // Genera un enlace firmado temporal al archivo de audio ORIGINAL de una
+    // obra (el que se subio al registrarla). Uso: soporte a usuarios que
+    // necesitan re-descargar su archivo cuando la UI normal solo ofrece el
+    // certificado (no hay boton de descarga de audio para el usuario final).
+    if (action === "get_work_audio_url") {
+      const { work_id, expires_in_seconds } = payload;
+      if (!work_id) return json({ error: "work_id required" }, 400);
+
+      const { data: work, error: workErr } = await admin
+        .from("works")
+        .select("file_path, original_filename, user_id")
+        .eq("id", work_id)
+        .single();
+      if (workErr || !work?.file_path) return json({ error: "Work or file_path not found" }, 404);
+
+      const { data, error: signErr } = await admin.storage
+        .from("works-files")
+        .createSignedUrl(work.file_path, Math.min(Number(expires_in_seconds) || 86400, 604800));
+      if (signErr) return json({ error: signErr.message }, 500);
+
+      await audit({
+        action: "get_work_audio_url",
+        target_user_id: work.user_id,
+        details: { work_id },
+      });
+
+      return json({ signed_url: data.signedUrl, original_filename: work.original_filename });
+    }
+
     // ── get_work_file_metadata ────────────────────────────────
     if (action === "get_work_file_metadata") {
       const { work_id } = payload;

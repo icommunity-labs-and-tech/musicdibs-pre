@@ -150,6 +150,7 @@ export const adminApi = {
   updateYoutubeServiceRequest: (request_id: string, patch: { new_status?: string; rejection_reason?: string; admin_notes?: string; service_type?: string }) => adminAction('update_youtube_service_request', { request_id, ...patch }),
   deleteWork: (work_id: string) => adminAction('delete_work', { work_id }),
   getWorkFileMetadata: (work_id: string) => adminAction('get_work_file_metadata', { work_id }) as Promise<{ filename?: string | null; filesize?: number | null; creators?: Array<{ name: string; email?: string | null; roles?: string[]; percentage?: number | null }> | null }>,
+  getWorkAudioUrl: (work_id: string, expires_in_seconds?: number) => adminAction('get_work_audio_url', { work_id, expires_in_seconds }) as Promise<{ signed_url: string; original_filename: string | null }>,
   getCampaignsCatalog: () => adminAction('get_campaigns_catalog'),
   saveCampaign: (campaign: AdminActionPayload) => adminAction('save_campaign', campaign),
   syncStripeCoupons: () => adminAction('sync_stripe_coupons'),

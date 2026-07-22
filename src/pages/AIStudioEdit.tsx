@@ -310,7 +310,7 @@ const AIStudioEdit = () => {
             setActiveStep(PROCESSING_STEPS.length - 1);
 
             setTimeout(() => {
-              setProcessedUrl(finalData.finalUrl);
+              setProcessedUrl(finalData.persistedAudioUrl || finalData.finalUrl);
               setIsProcessing(false);
               toast({ title: tr('success.title') });
               track('enhance_audio_completed', { feature: 'enhance_audio' });
