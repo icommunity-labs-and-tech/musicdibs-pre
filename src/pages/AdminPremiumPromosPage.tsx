@@ -65,6 +65,10 @@ export default function AdminPremiumPromosPage() {
   const [filesTarget, setFilesTarget] = useState<any | null>(null);
   const [mediaPreviewUrl, setMediaPreviewUrl] = useState<string | null>(null);
 
+  // Scheduled publish date state
+  const [scheduledDateDraft, setScheduledDateDraft] = useState('');
+  const [savingScheduledDate, setSavingScheduledDate] = useState(false);
+
   const load = async () => {
     setLoading(true);
     try {
@@ -76,6 +80,8 @@ export default function AdminPremiumPromosPage() {
 
   useEffect(() => { load(); }, [offset, statusFilter]);
 
+  useEffect(() => { setScheduledDateDraft(selected?.scheduled_publish_date || ''); }, [selected]);
+
   const changeStatus = async (promoId: string, newStatus: string, reason?: string, ig?: string, tiktok?: string) => {
     try {
       await adminApi.updatePremiumPromoStatus(promoId, newStatus, reason, ig, tiktok);
@@ -83,6 +89,17 @@ export default function AdminPremiumPromosPage() {
       load();
       if (selected?.id === promoId) setSelected((prev: any) => ({ ...prev, status: newStatus }));
     } catch (e: any) { toast.error(e.message); }
+  };
+
+  const saveScheduledDate = async (promoId: string) => {
+    setSavingScheduledDate(true);
+    try {
+      await adminApi.updatePremiumPromoScheduledDate(promoId, scheduledDateDraft || null);
+      toast.success('Fecha programada guardada');
+      load();
+      setSelected((prev: any) => prev && prev.id === promoId ? { ...prev, scheduled_publish_date: scheduledDateDraft || null } : prev);
+    } catch (e: any) { toast.error(e.message); }
+    setSavingScheduledDate(false);
   };
 
   const openRejectDialog = (promo: any) => {
@@ -285,6 +302,27 @@ export default function AdminPremiumPromosPage() {
                   </>
                 )}
                 <span className="text-muted-foreground">Obra (ID)</span><span className="text-xs text-muted-foreground break-all">{selected.work_id || '—'}</span>
+              </div>
+              <div className="border-t pt-3 space-y-2">
+                <Label htmlFor="scheduled-publish-date" className="text-muted-foreground">Fecha programada de publicación</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="scheduled-publish-date"
+                    type="date"
+                    value={scheduledDateDraft}
+                    onChange={(e) => setScheduledDateDraft(e.target.value)}
+                    className="max-w-[180px]"
+                  />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={savingScheduledDate}
+                    onClick={() => saveScheduledDate(selected.id)}
+                  >
+                    Guardar
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Visible para el usuario en su historial de promos premium.</p>
               </div>
             </div>
           )}

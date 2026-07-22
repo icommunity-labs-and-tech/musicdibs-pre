@@ -4183,6 +4183,33 @@ serve(async (req) => {
       return json({ promos: enriched });
     }
 
+    // ── update_premium_promo_scheduled_date ────────────────────────
+    if (action === "update_premium_promo_scheduled_date") {
+      const { promo_id, scheduled_publish_date } = payload;
+      if (!promo_id) return json({ error: "promo_id required" }, 400);
+
+      const { data: promo, error: fetchErr } = await admin
+        .from("premium_social_promotions")
+        .select("user_id, status")
+        .eq("id", promo_id)
+        .single();
+      if (fetchErr || !promo) return json({ error: "Promo not found" }, 404);
+
+      const { error: upErr } = await admin
+        .from("premium_social_promotions")
+        .update({ scheduled_publish_date: scheduled_publish_date || null, updated_at: new Date().toISOString() })
+        .eq("id", promo_id);
+      if (upErr) return json({ error: upErr.message }, 500);
+
+      await audit({
+        action: "update_premium_promo_scheduled_date",
+        target_user_id: promo.user_id,
+        details: { promo_id, scheduled_publish_date: scheduled_publish_date || null },
+      });
+
+      return json({ ok: true });
+    }
+
     // ── update_premium_promo_status ───────────────────────────────
     if (action === "update_premium_promo_status") {
       const { promo_id, new_status, rejection_reason, ig_url, tiktok_url } =

@@ -144,6 +144,7 @@ export const adminApi = {
   getAuditLog: (offset = 0, action_filter = '') => adminAction('get_audit_log', { offset, action_filter }),
   callAction: (action: string, payload: AdminActionPayload = {}) => adminAction(action, payload),
   getPremiumPromos: (offset = 0, status_filter = '') => adminAction('get_premium_promos', { offset, status_filter }),
+  updatePremiumPromoScheduledDate: (promo_id: string, scheduled_publish_date: string | null) => adminAction('update_premium_promo_scheduled_date', { promo_id, scheduled_publish_date }),
   updatePremiumPromoStatus: (promo_id: string, new_status: string, rejection_reason?: string, ig_url?: string, tiktok_url?: string) => adminAction('update_premium_promo_status', { promo_id, new_status, ...(rejection_reason ? { rejection_reason } : {}), ...(ig_url ? { ig_url } : {}), ...(tiktok_url ? { tiktok_url } : {}) }),
   listYoutubeServiceRequests: (status_filter = '', service_type_filter = '') => adminAction('list_youtube_service_requests', { ...(status_filter ? { status_filter } : {}), ...(service_type_filter ? { service_type_filter } : {}) }),
   updateYoutubeServiceRequest: (request_id: string, patch: { new_status?: string; rejection_reason?: string; admin_notes?: string; service_type?: string }) => adminAction('update_youtube_service_request', { request_id, ...patch }),
