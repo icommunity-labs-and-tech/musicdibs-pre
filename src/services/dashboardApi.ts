@@ -304,6 +304,25 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
     );
   };
 
+  // FIX 2026-07-22 (reportado por andresguarinmusiclab@gmail.com: "Error subiendo
+  // archivo: new row violates row-level security policy" en su primer registro):
+  // el refresco de sesion de mas abajo solo protegia el INSERT posterior a la
+  // subida, pero el mismo problema (autoRefreshToken a mitad de swap -> auth.uid()
+  // NULL en Postgres) puede ocurrir tambien en la propia subida al storage, que es
+  // exactamente donde fallo en este caso. Se refresca la sesion tambien aqui, antes
+  // de empezar a subir.
+  {
+    const { data: { session: freshSessionPreUpload }, error: refreshErrPreUpload } = await supabase.auth.refreshSession();
+    if (refreshErrPreUpload || !freshSessionPreUpload) {
+      console.error('[registerWork] Pre-upload session refresh failed:', refreshErrPreUpload);
+      throw new Error(
+        i18n.t('wizard.rw.sessionExpired') ||
+          'Tu sesión ha expirado. Por favor, cierra sesión e inicia sesión de nuevo.'
+      );
+    }
+    console.log('[registerWork] Pre-upload session refreshed OK, uid:', freshSessionPreUpload.user?.id);
+  }
+
   const filePaths: string[] = [];
   for (const f of allFiles) {
     // Central helper: guarantees `${user.id}/...` prefix and consistent

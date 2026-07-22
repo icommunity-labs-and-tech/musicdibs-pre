@@ -159,6 +159,19 @@ export default function ManagerRegisterWork() {
         .join('');
 
       // Upload all files
+      // FIX 2026-07-22: refrescar la sesion antes de subir -- autoRefreshToken
+      // puede estar a mitad de swap y dejar auth.uid() como NULL en Postgres,
+      // provocando "new row violates row-level security policy" en el upload.
+      // Mismo fix aplicado en dashboardApi.ts (registerWork).
+      {
+        const { error: refreshErrPreUpload } = await supabase.auth.refreshSession();
+        if (refreshErrPreUpload) {
+          console.error('[ManagerRegisterWork] Pre-upload session refresh failed:', refreshErrPreUpload);
+          toast.error('Tu sesión ha expirado. Por favor, cierra sesión e inicia sesión de nuevo.');
+          setSubmitting(false);
+          return;
+        }
+      }
       const filePaths: string[] = [];
       for (const f of files) {
         // Central helper: guarantees `${user.id}/...` prefix and consistent
