@@ -2188,6 +2188,7 @@ export type Database = {
           media_file_type: string | null
           promo_message: string | null
           promo_style: string | null
+          scheduled_publish_date: string | null
           song_title: string
           status: string
           team_notes: string | null
@@ -2207,6 +2208,7 @@ export type Database = {
           media_file_type?: string | null
           promo_message?: string | null
           promo_style?: string | null
+          scheduled_publish_date?: string | null
           song_title: string
           status?: string
           team_notes?: string | null
@@ -2226,6 +2228,7 @@ export type Database = {
           media_file_type?: string | null
           promo_message?: string | null
           promo_style?: string | null
+          scheduled_publish_date?: string | null
           song_title?: string
           status?: string
           team_notes?: string | null
