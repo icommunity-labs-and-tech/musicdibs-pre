@@ -175,7 +175,7 @@ export const legalTranslations = {
       title: 'Termos e Condições',
       general_purchase_title: 'Condições gerais de compra',
       general_conditions_title: 'Condições Gerais',
-      general_conditions_text: 'Musicdibs é um produto da iCommunity Labs Tech S.L. (doravante "iCommunity Labs" ou "iCommunity"), empresa regida pela legislação espanhola, com sede social em Madrid, em C/Colmenares, nº3, Bajo-D, CP 28004, Madrid, com C.I.F. B88350897 e inscrita no Registro Comercial de Madrid no tomo 39.161, Folha 40, Seção 8, Ficha M-695696.',
+      general_conditions_text: 'Musicdibs é um produto da iCommunity Labs Tech S.L. (doravante "iCommunity Labs" ou "iCommunity"), empresa regida pela legislação espanhola, com sede social em Madrid, em C/Colmenares, nº3, Bajo-D, CP 28004, Madrid, com C.I.F. B88350897 e inscrita no Registro Comercial de Madrid no tomo 39.161, Folha 40, Seção 8, Ficha M-695696. Estas Condições regem-se pela legislação espanhola e pela normativa europeia aplicável em matéria de consumidores e serviços digitais. Os consumidores residentes na União Europeia podem recorrer à plataforma de Resolução de Litígios em Linha da Comissão Europeia disponível em https://ec.europa.eu/consumers/odr.',
       refund_title: 'Política de Reembolso e Desistência',
       refund_intro: 'Em cumprimento ao dever de informação em contratos à distância estabelecido no Real Decreto Legislativo 1/2007, de 16 de novembro, que aprova o texto refundido da Lei Geral de Defesa dos Consumidores e Usuários e outras leis complementares, em sua última revisão vigente desde 29 de março de 2014, informa-se ao consumidor as informações a seguir:',
       purchase_process_title: 'Processo de compra online',
