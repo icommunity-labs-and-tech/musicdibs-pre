@@ -1997,8 +1997,63 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           .from("profiles").select("subscription_plan").eq("user_id", profile.user_id).single();
         const previousPlanOnUpdate = prevUpdProfile?.subscription_plan || "Free";
         if (status === "active" && planName) {
-          await supabase.from("profiles").update({ subscription_plan: planName, subscription_tier: planTier }).eq("user_id", profile.user_id);
-          console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} (tier=${planTier}) for user ${profile.user_id}`);
+          // Diagnostico: este handler carecia de logPriceResolution -- es la
+          // TERCERA ruta que puede escribir subscription_plan/tier (ademas de
+          // checkout.session.completed y subscription_create), y la unica sin
+          // verificacion ni reintento. Confirmado 2026-07-23 (jmontoyataber@
+          // gmail.com): stripe_price_resolution_log solo tenia el registro de
+          // checkout_completed con resolucion CORRECTA (annual_20), sin ningun
+          // admin_alert de mismatch -- es decir, algo escribio "Monthly"/null
+          // DESPUES de esa verificacion exitosa, por una ruta no instrumentada.
+          // Este handler es la principal sospechosa al ser la unica sin log ni
+          // verificacion. Se anade ambos ahora para confirmar o descartar en el
+          // proximo caso.
+          await logPriceResolution(supabase, {
+            sourceEvent: "subscription_updated",
+            sessionOrInvoiceId: subscription.id,
+            customerId,
+            userId: profile.user_id,
+            resolvedPriceId: priceId ?? null,
+            resolvedPlanId: planTier,
+            resolvedPlanName: planName,
+            lineItemsRaw: { status, previousPlanOnUpdate, previousAttributes: prevAttrs, subscriptionItems: subscription.items?.data ?? null },
+          });
+
+          const { error: subUpdTierErr } = await supabase
+            .from("profiles")
+            .update({ subscription_plan: planName, subscription_tier: planTier, updated_at: new Date().toISOString() })
+            .eq("user_id", profile.user_id);
+          if (subUpdTierErr) {
+            console.error(`[WEBHOOK] subscription.updated: profile tier update FAILED for user ${profile.user_id}:`, subUpdTierErr.message);
+          }
+          const { data: verifySubUpd } = await supabase
+            .from("profiles")
+            .select("subscription_tier")
+            .eq("user_id", profile.user_id)
+            .maybeSingle();
+          if (verifySubUpd?.subscription_tier !== planTier) {
+            console.error(`[WEBHOOK] subscription.updated: tier verification MISMATCH for user ${profile.user_id} - expected ${planTier}, got ${verifySubUpd?.subscription_tier}. Retrying once.`);
+            const { error: subUpdRetryErr } = await supabase
+              .from("profiles")
+              .update({ subscription_plan: planName, subscription_tier: planTier, updated_at: new Date().toISOString() })
+              .eq("user_id", profile.user_id);
+            const { data: verifySubUpdAgain } = await supabase
+              .from("profiles")
+              .select("subscription_tier")
+              .eq("user_id", profile.user_id)
+              .maybeSingle();
+            if (subUpdRetryErr || verifySubUpdAgain?.subscription_tier !== planTier) {
+              await supabase.from("admin_alerts").insert({
+                source: "stripe-webhook:customer.subscription.updated",
+                severity: "error",
+                message: `Tier update failed for user ${profile.user_id} en subscription.updated (subscription ${subscription.id}, priceId ${priceId}). Primer error: ${subUpdTierErr?.message ?? "ninguno"}. Reintento error: ${subUpdRetryErr?.message ?? "ninguno"}. subscription_tier actual: ${verifySubUpdAgain?.subscription_tier ?? "desconocido"}. Revisar y corregir manualmente.`,
+              });
+            } else {
+              console.log(`[WEBHOOK] subscription.updated: tier retry succeeded for user ${profile.user_id} (${planTier})`);
+            }
+          } else {
+            console.log(`[WEBHOOK] subscription.updated → plan set to ${planName} (tier=${planTier}) for user ${profile.user_id}`);
+          }
 
           // ââ Distribution onboarding: transition to Annual (idempotent via idempotency_key) ââ
           const ANNUAL_TIERS_SU = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
