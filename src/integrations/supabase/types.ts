@@ -3188,6 +3188,45 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_price_resolution_log: {
+        Row: {
+          created_at: string
+          id: string
+          line_items_raw: Json | null
+          resolved_plan_id: string | null
+          resolved_plan_name: string | null
+          resolved_price_id: string | null
+          session_or_invoice_id: string | null
+          source_event: string
+          stripe_customer_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          line_items_raw?: Json | null
+          resolved_plan_id?: string | null
+          resolved_plan_name?: string | null
+          resolved_price_id?: string | null
+          session_or_invoice_id?: string | null
+          source_event: string
+          stripe_customer_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          line_items_raw?: Json | null
+          resolved_plan_id?: string | null
+          resolved_plan_name?: string | null
+          resolved_price_id?: string | null
+          session_or_invoice_id?: string | null
+          source_event?: string
+          stripe_customer_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           amount: number | null
