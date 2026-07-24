@@ -3762,6 +3762,29 @@ serve(async (req) => {
         } catch (e: any) {
           console.warn("[get_saas_metrics] prev welcome-credit failed:", e?.message);
         }
+
+        // Cumulative snapshots at end of previous window
+        try {
+          const cutoff = comparePrevEnd;
+          const activeSince = new Date(new Date(cutoff).getTime() - 30 * 24 * 3600 * 1000).toISOString();
+          const [tuRes, vuRes, auRes, ctRes, asRes] = await Promise.all([
+            admin.from("profiles").select("id", { count: "exact", head: true }).lt("created_at", cutoff),
+            admin.from("profiles").select("id", { count: "exact", head: true }).eq("kyc_status", "verified").lt("created_at", cutoff),
+            admin.from("profiles").select("id", { count: "exact", head: true }).gte("last_active_at", activeSince).lt("last_active_at", cutoff),
+            admin.from("orders").select("user_id", { count: "exact", head: false }).eq("order_status", "paid").lt("paid_at", cutoff),
+            admin.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "active").lt("created_at", cutoff),
+          ]);
+          prev.totalUsers = tuRes.count || 0;
+          prev.verifiedUsers = vuRes.count || 0;
+          prev.activeUsers30d = auRes.count || 0;
+          const custIds = new Set<string>();
+          (ctRes.data || []).forEach((r: any) => { if (r.user_id) custIds.add(r.user_id); });
+          prev.customersTotal = custIds.size;
+          prev.activeSubscriptions = asRes.count || 0;
+        } catch (snapErr: any) {
+          console.warn("[get_saas_metrics] cumulative prev snapshots failed:", snapErr?.message);
+        }
+
       } catch (prevErr: any) {
         console.warn("[get_saas_metrics] previous-period aggregation failed:", prevErr?.message);
       }
