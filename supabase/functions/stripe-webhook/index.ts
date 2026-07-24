@@ -1089,8 +1089,15 @@ serve(async (req) => {
               },
             });
             console.log(`[WEBHOOK] â Distribution welcome email enqueued for ${distEmail}`);
-          } catch (distErr) {
+          } catch (distErr: any) {
             console.error("[WEBHOOK] Error enqueuing distribution emails:", distErr);
+            try {
+              await supabase.from("admin_alerts").insert({
+                source: "stripe-webhook:checkout.session.completed",
+                severity: "warning",
+                message: `Fallo al encolar avisos de alta en distribucion para user ${userId} (plan ${planId}): ${distErr?.message ?? distErr}. Revisar y notificar manualmente si procede.`,
+              });
+            } catch { /* best-effort */ }
           }
         }
       }
@@ -1385,8 +1392,15 @@ serve(async (req) => {
                 },
               });
               console.log(`[WEBHOOK] â Distribution welcome email enqueued (upgrade) for ${distEmail}`);
-            } catch (distUpgradeErr) {
+            } catch (distUpgradeErr: any) {
               console.error("[WEBHOOK] Error enqueuing distribution upgrade emails:", distUpgradeErr);
+              try {
+                await supabase.from("admin_alerts").insert({
+                  source: "stripe-webhook:subscription_update",
+                  severity: "warning",
+                  message: `Fallo al encolar avisos de alta en distribucion (upgrade) para user ${profile.user_id} (plan ${resolvedPlanId}): ${distUpgradeErr?.message ?? distUpgradeErr}. Revisar y notificar manualmente si procede.`,
+                });
+              } catch { /* best-effort */ }
             }
           }
 
@@ -1781,8 +1795,15 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
                 },
               });
               console.log(`[WEBHOOK] â Distribution emails enqueued for ${distEmail} (subscription_create)`);
-            } catch (distCreateErr) {
+            } catch (distCreateErr: any) {
               console.error("[WEBHOOK] Error enqueuing distribution emails (subscription_create):", distCreateErr);
+              try {
+                await supabase.from("admin_alerts").insert({
+                  source: "stripe-webhook:subscription_create",
+                  severity: "warning",
+                  message: `Fallo al encolar avisos de alta en distribucion para user ${profile.user_id} (plan ${resolvedPlanId}): ${distCreateErr?.message ?? distCreateErr}. Revisar y notificar manualmente si procede.`,
+                });
+              } catch { /* best-effort */ }
             }
           }
         } else {
@@ -2094,8 +2115,15 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
                 },
               });
               console.log(`[WEBHOOK] â Distribution emails enqueued (subscription.updated) for ${distEmail} tier=${planTier}`);
-            } catch (distSuErr) {
+            } catch (distSuErr: any) {
               console.error("[WEBHOOK] Error enqueuing distribution emails (subscription.updated):", distSuErr);
+              try {
+                await supabase.from("admin_alerts").insert({
+                  source: "stripe-webhook:customer.subscription.updated",
+                  severity: "warning",
+                  message: `Fallo al encolar avisos de alta en distribucion para user ${profile.user_id} (tier ${planTier}): ${distSuErr?.message ?? distSuErr}. Revisar y notificar manualmente si procede.`,
+                });
+              } catch { /* best-effort */ }
             }
           }
         } else if (status === "past_due" || status === "unpaid") {
