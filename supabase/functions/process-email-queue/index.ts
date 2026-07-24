@@ -8,19 +8,20 @@ const DEFAULT_TRANSACTIONAL_TTL_MINUTES = 60
 
 interface SendPayload {
   from: string
-  to: string
+  to: string | string[]
   subject: string
   html: string
   text?: string
   cc?: string | string[]
   bcc?: string | string[]
   reply_to?: string | string[]
+  attachments?: Array<{ filename: string; content: string }>
 }
 
 async function sendViaResend(payload: SendPayload, resendApiKey: string): Promise<void> {
   const body: Record<string, unknown> = {
     from: payload.from,
-    to: [payload.to],
+    to: Array.isArray(payload.to) ? payload.to : [payload.to],
     subject: payload.subject,
     html: payload.html,
   }
@@ -28,6 +29,7 @@ async function sendViaResend(payload: SendPayload, resendApiKey: string): Promis
   if (payload.cc) body.cc = Array.isArray(payload.cc) ? payload.cc : [payload.cc]
   if (payload.bcc) body.bcc = Array.isArray(payload.bcc) ? payload.bcc : [payload.bcc]
   if (payload.reply_to) body.reply_to = Array.isArray(payload.reply_to) ? payload.reply_to : [payload.reply_to]
+  if (payload.attachments?.length) body.attachments = payload.attachments
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -93,7 +95,7 @@ async function moveToDlq(
   await supabase.from('email_send_log').insert({
     message_id: payload.message_id,
     template_name: (payload.label || queue) as string,
-    recipient_email: payload.to,
+    recipient_email: Array.isArray(payload.to) ? payload.to.join(', ') : payload.to,
     status: 'dlq',
     error_message: reason,
   })
@@ -283,6 +285,7 @@ Deno.serve(async (req) => {
             cc: payload.cc,
             bcc: payload.bcc,
             reply_to: payload.reply_to,
+            attachments: payload.attachments,
           },
           resendApiKey
         )
@@ -290,7 +293,7 @@ Deno.serve(async (req) => {
         await supabase.from('email_send_log').insert({
           message_id: payload.message_id,
           template_name: payload.label || queue,
-          recipient_email: payload.to,
+          recipient_email: Array.isArray(payload.to) ? payload.to.join(', ') : payload.to,
           status: 'sent',
         })
 
@@ -312,7 +315,7 @@ Deno.serve(async (req) => {
           await supabase.from('email_send_log').insert({
             message_id: payload.message_id,
             template_name: payload.label || queue,
-            recipient_email: payload.to,
+            recipient_email: Array.isArray(payload.to) ? payload.to.join(', ') : payload.to,
             status: 'rate_limited',
             error_message: errorMsg.slice(0, 1000),
           })
@@ -343,7 +346,7 @@ Deno.serve(async (req) => {
         await supabase.from('email_send_log').insert({
           message_id: payload.message_id,
           template_name: payload.label || queue,
-          recipient_email: payload.to,
+          recipient_email: Array.isArray(payload.to) ? payload.to.join(', ') : payload.to,
           status: 'failed',
           error_message: errorMsg.slice(0, 1000),
         })
