@@ -75,7 +75,10 @@ Deno.serve(async (req) => {
       });
 
       for (const sub of page.data) {
-        if (sub.status === "active") continue;
+        // FIX 2026-07-24: excluir tambien 'trialing' -- las suscripciones
+        // migradas (legacy) aparecen en Stripe como trialing hasta su
+        // renovacion real, y no deben tratarse como una baja/cancelacion.
+        if (sub.status === "active" || sub.status === "trialing") continue;
 
         const price = sub.items?.data?.[0]?.price as any;
         const planId = price?.metadata?.musicdibs_plan_id as string | undefined;
