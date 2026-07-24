@@ -3642,7 +3642,13 @@ serve(async (req) => {
         welcomeCreditConverted: 0,
         welcomeCreditRate: 0,
         newUsersThisMonth: newLastMonth,
+        totalUsers: 0,
+        verifiedUsers: 0,
+        activeUsers30d: 0,
+        customersTotal: 0,
+        activeSubscriptions: 0,
       };
+
       try {
         const classifyOrder = (o: any): "annual" | "monthly" | "single" | "topup" | null => {
           const type = String(o.product_type || "");
