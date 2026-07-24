@@ -4142,6 +4142,8 @@ serve(async (req) => {
         compareThisEnd,
         comparePrevStart,
         comparePrevEnd,
+        prev,
+
       };
 
       // Persist to cache (best-effort, non-blocking semantics not needed: we already have the result)
