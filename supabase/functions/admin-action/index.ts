@@ -2412,7 +2412,7 @@ serve(async (req) => {
 
 
       // ── Cache layer (5 min TTL per filter combination) ──
-      const cacheKey = `saas_metrics_cache_v14:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
+      const cacheKey = `saas_metrics_cache_v15:${periodType || "month"}:${weekStart || ""}:${month || ""}:${year || ""}`;
       const CACHE_TTL_MS = 5 * 60 * 1000;
       const STALE_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -3587,111 +3587,25 @@ serve(async (req) => {
           : 0;
 
 
-      // ── Welcome-credit conversion (period) ──
-      // Usuarios cuyo PRIMER consumo de crédito (es decir, gastaron el crédito
-      // de regalo de bienvenida) ocurrió en el periodo, y cuántos de ellos
-      // hicieron una compra de pago en el mismo periodo.
+      // ── Welcome-credit conversion (period) — via RPC ──
+      // Fixes month view returning 0 by delegating to a SQL function that
+      // computes everything in one atomic query (no PostgREST pagination edge cases).
       let welcomeCreditUsers = 0;
       let welcomeCreditConverted = 0;
       let welcomeCreditNetRevenue = 0;
       try {
         if (filterStart && filterEnd) {
-          // Paginate to bypass PostgREST's default 1000-row cap. For year-long
-          // periods the usage table can exceed tens of thousands of rows; a
-          // truncated read would under-count candidates (e.g. annual view
-          // showing 0% gift-credit conversion).
-          const firstUsageInPeriod = new Map<string, string>();
-          const PAGE = 1000;
-          let from = 0;
-          // Safety cap to avoid runaway loops if the table grows enormously.
-          for (let page = 0; page < 200; page++) {
-            const { data: pageRows, error: pageErr } = await admin
-              .from("credit_transactions")
-              .select("user_id, created_at")
-              .eq("type", "usage")
-              .gte("created_at", filterStart)
-              .lte("created_at", filterEnd)
-              .order("created_at", { ascending: true })
-              .range(from, from + PAGE - 1);
-            if (pageErr) break;
-            const rows = pageRows || [];
-            for (const u of rows) {
-              if (!u.user_id || !u.created_at) continue;
-              const prev = firstUsageInPeriod.get(u.user_id);
-              if (!prev || u.created_at < prev) {
-                firstUsageInPeriod.set(u.user_id, u.created_at);
-              }
-            }
-            if (rows.length < PAGE) break;
-            from += PAGE;
-          }
-          const candidates = [...firstUsageInPeriod.keys()];
-          if (candidates.length) {
-            // Restringir a usuarios que recibieron el bonus de bienvenida
-            // (1 crédito gratis al registrarse). Antes de junio 2026 esto no
-            // existía, así que el cohorte será 0 en periodos previos.
-            const welcomeBonusSet = new Set<string>();
-            const CHUNK = 500;
-            for (let i = 0; i < candidates.length; i += CHUNK) {
-              const slice = candidates.slice(i, i + CHUNK);
-              const { data: bonuses } = await admin
-                .from("credit_transactions")
-                .select("user_id")
-                .eq("type", "bonus")
-                .ilike("description", "Welcome%")
-                .in("user_id", slice)
-                .limit(100000);
-              (bonuses || []).forEach((b: any) => welcomeBonusSet.add(b.user_id));
-            }
-            // "Gastó el crédito de regalo en el periodo" = su PRIMER usage cae en el
-            // periodo. Equivale a: tiene usage en el periodo y NO tiene ningún usage
-            // anterior a filterStart. Paginamos para evitar el techo de PostgREST.
-            const priorUserSet = new Set<string>();
-            for (let i = 0; i < candidates.length; i += CHUNK) {
-              const slice = candidates.slice(i, i + CHUNK);
-              const { data: prior } = await admin
-                .from("credit_transactions")
-                .select("user_id")
-                .eq("type", "usage")
-                .lt("created_at", filterStart)
-                .in("user_id", slice)
-                .limit(100000);
-              (prior || []).forEach((p: any) => priorUserSet.add(p.user_id));
-            }
-            const welcomeUsers = candidates.filter(
-              (uid) => welcomeBonusSet.has(uid) && !priorUserSet.has(uid),
-            );
-            welcomeCreditUsers = welcomeUsers.length;
-
-
-            if (welcomeUsers.length) {
-              const buyers = new Set<string>();
-              for (let i = 0; i < welcomeUsers.length; i += CHUNK) {
-                const slice = welcomeUsers.slice(i, i + CHUNK);
-                const { data: theirOrders } = await admin
-                  .from("orders")
-                  .select(
-                    "user_id, amount_net, amount_gross, stripe_fee, dispute_fee, order_status, paid_at",
-                  )
-                  .eq("order_status", "paid")
-                  .in("user_id", slice)
-                  .gte("paid_at", filterStart)
-                  .lte("paid_at", filterEnd);
-                (theirOrders || []).forEach((o: any) => {
-                  // Sólo cuenta si la compra ocurrió DESPUÉS del primer uso del
-                  // crédito de regalo. Compras previas al uso del crédito no son
-                  // conversión "tras prueba".
-                  const firstUse = firstUsageInPeriod.get(o.user_id);
-                  if (!firstUse || !o.paid_at) return;
-                  if (o.paid_at < firstUse) return;
-                  buyers.add(o.user_id);
-                  welcomeCreditNetRevenue += netRev(o);
-                });
-              }
-              welcomeCreditConverted = buyers.size;
-              welcomeCreditNetRevenue =
-                Math.round(welcomeCreditNetRevenue * 100) / 100;
-            }
+          const { data: wcRows, error: wcErr } = await admin.rpc(
+            "get_welcome_credit_stats",
+            { _start: filterStart, _end: filterEnd },
+          );
+          if (wcErr) {
+            console.error("[get_saas_metrics] welcome-credit RPC error:", wcErr.message);
+          } else if (Array.isArray(wcRows) && wcRows.length > 0) {
+            const row: any = wcRows[0];
+            welcomeCreditUsers = Number(row.users_count) || 0;
+            welcomeCreditConverted = Number(row.converted_count) || 0;
+            welcomeCreditNetRevenue = Number(row.net_revenue) || 0;
           }
         }
       } catch (wcErr: any) {
@@ -3700,6 +3614,152 @@ serve(async (req) => {
           wcErr?.message,
         );
       }
+
+      // ── Previous-period equivalents (for KPI delta cards) ──
+      // Same-length window immediately preceding the current one, so on Jun 14
+      // we compare Jun 1–14 vs May 1–14.
+      const prev: Record<string, number> = {
+        customersNew: 0,
+        customersReturning: 0,
+        totalOrders: 0,
+        averageOrderValue: 0,
+        periodGross: 0,
+        periodIva: 0,
+        periodFees: 0,
+        periodNet: 0,
+        unitsSoldAnnual: 0,
+        unitsSoldMonthly: 0,
+        unitsSoldSingle: 0,
+        unitsSoldTopup: 0,
+        revenueAnnual: 0,
+        revenueMonthly: 0,
+        revenueSingle: 0,
+        revenueTopup: 0,
+        renewalsMonthly: 0,
+        renewalsAnnual: 0,
+        cancelledThisMonth: 0,
+        welcomeCreditUsers: 0,
+        welcomeCreditConverted: 0,
+        welcomeCreditRate: 0,
+        newUsersThisMonth: newLastMonth,
+      };
+      try {
+        const classifyOrder = (o: any): "annual" | "monthly" | "single" | "topup" | null => {
+          const type = String(o.product_type || "");
+          const code = String(o.product_code || "");
+          if (type === "annual" || code.startsWith("annual")) return "annual";
+          if (type === "monthly" || code === "monthly") return "monthly";
+          if (type === "single" || code === "individual") return "single";
+          if (type === "topup" || code.startsWith("topup")) return "topup";
+          const interval = o.billing_interval;
+          if (interval === "yearly") return "annual";
+          if (interval === "monthly") return "monthly";
+          const gross = parseFloat(o.amount_gross) || 0;
+          if (gross >= 90) return "topup";
+          if (gross >= 30) return "annual";
+          if (gross > 0 && gross < 7.5 && gross !== 7) return "monthly";
+          if (gross === 7) return "single";
+          if (gross >= 7.5 && gross < 15) return "monthly";
+          return null;
+        };
+        const { data: prevOrdersData } = await admin
+          .from("orders")
+          .select(
+            "id, user_id, paid_at, amount_gross, amount_net, stripe_fee, dispute_fee, order_status, product_type, product_code, is_renewal, billing_interval",
+          )
+          .eq("order_status", "paid")
+          .gte("paid_at", comparePrevStart)
+          .lt("paid_at", comparePrevEnd)
+          .limit(20000);
+        const prevOrders = prevOrdersData || [];
+        let pRev = 0;
+        let pOrders = 0;
+        const pByType: Record<string, { units: number; revenue: number }> = {};
+        prevOrders.forEach((o: any) => {
+          if (o.order_status === "refunded") return;
+          const gross = parseFloat(o.amount_gross) || 0;
+          const netVal = parseFloat(o.amount_net);
+          const netBase = !isNaN(netVal) && netVal > 0 ? netVal : gross;
+          const fee = parseFloat(o.stripe_fee) || 0;
+          const disputeFee = parseFloat(o.dispute_fee) || 0;
+          const net = Math.max(0, netBase - fee - disputeFee);
+          prev.periodGross += gross;
+          prev.periodIva += Math.max(0, gross - netBase);
+          prev.periodFees += fee + disputeFee;
+          const pt = classifyOrder(o);
+          if (pt) {
+            pByType[pt] = pByType[pt] || { units: 0, revenue: 0 };
+            pByType[pt].units++;
+            pByType[pt].revenue += net;
+            pOrders++;
+            if (o.is_renewal) {
+              if (pt === "annual") prev.renewalsAnnual++;
+              else if (pt === "monthly") prev.renewalsMonthly++;
+            }
+          }
+          pRev += net;
+        });
+        prev.periodGross = Math.round(prev.periodGross * 100) / 100;
+        prev.periodIva = Math.round(prev.periodIva * 100) / 100;
+        prev.periodFees = Math.round(prev.periodFees * 100) / 100;
+        prev.periodNet = Math.round((prev.periodGross - prev.periodIva - prev.periodFees) * 100) / 100;
+        prev.totalOrders = pOrders;
+        prev.averageOrderValue = pOrders > 0 ? Math.round((pRev / pOrders) * 100) / 100 : 0;
+        prev.unitsSoldAnnual = pByType.annual?.units || 0;
+        prev.unitsSoldMonthly = pByType.monthly?.units || 0;
+        prev.unitsSoldSingle = pByType.single?.units || 0;
+        prev.unitsSoldTopup = pByType.topup?.units || 0;
+        prev.revenueAnnual = Math.round((pByType.annual?.revenue || 0) * 100) / 100;
+        prev.revenueMonthly = Math.round((pByType.monthly?.revenue || 0) * 100) / 100;
+        prev.revenueSingle = Math.round((pByType.single?.revenue || 0) * 100) / 100;
+        prev.revenueTopup = Math.round((pByType.topup?.revenue || 0) * 100) / 100;
+
+        // New vs returning in previous window
+        const prevUserIds = [...new Set(prevOrders.map((o: any) => o.user_id).filter(Boolean))];
+        if (prevUserIds.length > 0) {
+          const { data: priorPrev } = await admin
+            .from("orders")
+            .select("user_id")
+            .lt("paid_at", comparePrevStart)
+            .eq("order_status", "paid")
+            .in("user_id", prevUserIds);
+          const priorSet = new Set((priorPrev || []).map((o: any) => o.user_id));
+          let cn = 0, cr = 0;
+          prevUserIds.forEach((uid) => (priorSet.has(uid) ? cr++ : cn++));
+          prev.customersNew = cn;
+          prev.customersReturning = cr;
+        }
+
+        // Cancellations in previous window
+        if (allCancelledSubs.length > 0) {
+          const psSec = Math.floor(new Date(comparePrevStart).getTime() / 1000);
+          const peSec = Math.floor(new Date(comparePrevEnd).getTime() / 1000);
+          prev.cancelledThisMonth = allCancelledSubs.filter(
+            (s: any) => s.canceled_at >= psSec && s.canceled_at < peSec,
+          ).length;
+        }
+
+        // Welcome-credit stats for previous window (same RPC)
+        try {
+          const { data: prevWc } = await admin.rpc("get_welcome_credit_stats", {
+            _start: comparePrevStart,
+            _end: comparePrevEnd,
+          });
+          if (Array.isArray(prevWc) && prevWc.length > 0) {
+            const r: any = prevWc[0];
+            prev.welcomeCreditUsers = Number(r.users_count) || 0;
+            prev.welcomeCreditConverted = Number(r.converted_count) || 0;
+            prev.welcomeCreditRate = prev.welcomeCreditUsers > 0
+              ? parseFloat(((prev.welcomeCreditConverted / prev.welcomeCreditUsers) * 100).toFixed(1))
+              : 0;
+          }
+        } catch (e: any) {
+          console.warn("[get_saas_metrics] prev welcome-credit failed:", e?.message);
+        }
+      } catch (prevErr: any) {
+        console.warn("[get_saas_metrics] previous-period aggregation failed:", prevErr?.message);
+      }
+
 
       // ── Marketing summary (mini) ──
       let marketingSummary: any = {
@@ -4082,6 +4142,8 @@ serve(async (req) => {
         compareThisEnd,
         comparePrevStart,
         comparePrevEnd,
+        prev,
+
       };
 
       // Persist to cache (best-effort, non-blocking semantics not needed: we already have the result)

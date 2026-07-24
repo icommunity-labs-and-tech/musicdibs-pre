@@ -4314,6 +4314,14 @@ export type Database = {
         }[]
       }
       get_user_library_tier: { Args: { p_user_id: string }; Returns: string }
+      get_welcome_credit_stats: {
+        Args: { _end: string; _start: string }
+        Returns: {
+          converted_count: number
+          net_revenue: number
+          users_count: number
+        }[]
+      }
       get_wp_password_hash: {
         Args: { user_email: string }
         Returns: {
