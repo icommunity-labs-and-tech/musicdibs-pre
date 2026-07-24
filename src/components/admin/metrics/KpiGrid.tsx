@@ -168,7 +168,10 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
           <ShoppingBag className="w-3.5 h-3.5" /> Clientes
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <KpiCard label="Clientes totales" value={m.customersTotal ?? m.activeSubscriptions ?? 0} icon={ShoppingBag} />
+          <KpiCard label="Clientes totales" value={m.customersTotal ?? m.activeSubscriptions ?? 0} icon={ShoppingBag}
+            change={computeChange(Number(m.customersTotal ?? m.activeSubscriptions ?? 0), Number(prev.customersTotal ?? 0))}
+          />
+
           <KpiCard label="Clientes nuevos" value={m.customersNew ?? 0} icon={UserPlus}
             sub="En el periodo"
             change={computeChange(Number(m.customersNew ?? 0), Number(prev.customersNew ?? 0))}
