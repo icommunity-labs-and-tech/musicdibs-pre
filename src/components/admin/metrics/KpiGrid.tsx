@@ -141,7 +141,9 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
           <Users className="w-3.5 h-3.5" /> Registrados
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KpiCard label="Registrados totales" value={m.totalUsers} icon={Users} />
+          <KpiCard label="Registrados totales" value={m.totalUsers} icon={Users}
+            change={computeChange(Number(m.totalUsers ?? 0), Number(prev.totalUsers ?? 0))}
+          />
           <TrendKpi
             label="Nuevos registros"
             value={m.newUsersThisMonth}
@@ -150,11 +152,14 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
           />
           <KpiCard label="Verificados KYC" value={m.verifiedUsers || 0} icon={ShieldCheck}
             sub={m.totalUsers > 0 ? `${((m.verifiedUsers || 0) / m.totalUsers * 100).toFixed(1)}% del total` : undefined}
+            change={computeChange(Number(m.verifiedUsers ?? 0), Number(prev.verifiedUsers ?? 0))}
           />
           <KpiCard label="Activos (30d)" value={m.activeUsers30d || 0} icon={Activity}
             sub={m.totalUsers > 0 ? `MAU: ${((m.activeUsers30d || 0) / m.totalUsers * 100).toFixed(1)}%` : undefined}
+            change={computeChange(Number(m.activeUsers30d ?? 0), Number(prev.activeUsers30d ?? 0))}
           />
         </div>
+
       </div>
 
       {/* ── Clientes ── */}
@@ -163,7 +168,10 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
           <ShoppingBag className="w-3.5 h-3.5" /> Clientes
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-          <KpiCard label="Clientes totales" value={m.customersTotal ?? m.activeSubscriptions ?? 0} icon={ShoppingBag} />
+          <KpiCard label="Clientes totales" value={m.customersTotal ?? m.activeSubscriptions ?? 0} icon={ShoppingBag}
+            change={computeChange(Number(m.customersTotal ?? m.activeSubscriptions ?? 0), Number(prev.customersTotal ?? 0))}
+          />
+
           <KpiCard label="Clientes nuevos" value={m.customersNew ?? 0} icon={UserPlus}
             sub="En el periodo"
             change={computeChange(Number(m.customersNew ?? 0), Number(prev.customersNew ?? 0))}
@@ -288,7 +296,10 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           <TrendKpi label="MRR" value={`€${(m.mrr || 0).toLocaleString()}`} icon={DollarSign} change={m.mrrChange || 0} />
-          <KpiCard label="Activas" value={m.activeSubscriptions || 0} icon={CheckCircle2} />
+          <KpiCard label="Activas" value={m.activeSubscriptions || 0} icon={CheckCircle2}
+            change={computeChange(Number(m.activeSubscriptions ?? 0), Number(prev.activeSubscriptions ?? 0))}
+          />
+
           <KpiCard label="Renov. mensuales" value={m.renewalsMonthly ?? 0} icon={Repeat} sub="En el periodo"
             change={computeChange(Number(m.renewalsMonthly ?? 0), Number(prev.renewalsMonthly ?? 0))}
           />
