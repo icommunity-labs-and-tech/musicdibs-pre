@@ -296,7 +296,10 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           <TrendKpi label="MRR" value={`€${(m.mrr || 0).toLocaleString()}`} icon={DollarSign} change={m.mrrChange || 0} />
-          <KpiCard label="Activas" value={m.activeSubscriptions || 0} icon={CheckCircle2} />
+          <KpiCard label="Activas" value={m.activeSubscriptions || 0} icon={CheckCircle2}
+            change={computeChange(Number(m.activeSubscriptions ?? 0), Number(prev.activeSubscriptions ?? 0))}
+          />
+
           <KpiCard label="Renov. mensuales" value={m.renewalsMonthly ?? 0} icon={Repeat} sub="En el periodo"
             change={computeChange(Number(m.renewalsMonthly ?? 0), Number(prev.renewalsMonthly ?? 0))}
           />
