@@ -119,7 +119,7 @@ serve(async (req) => {
 
         await supabase.from("profiles").update({
           subscription_plan: "Free",
-          subscription_tier: null,
+          subscription_tier: "free",
           available_credits: profile.permanent_credits ?? 0,
           updated_at: new Date().toISOString(),
         }).eq("user_id", profile.user_id);

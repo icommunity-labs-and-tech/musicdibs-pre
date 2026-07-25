@@ -241,6 +241,7 @@ serve(async (req) => {
       // 1. Plan a Free. available_credits = min(current, permanent).
       await supabase.from("profiles").update({
         subscription_plan: "Free",
+        subscription_tier: "free",
         available_credits: newAvailable,
         payment_grace_expires_at: null,
         updated_at: now,

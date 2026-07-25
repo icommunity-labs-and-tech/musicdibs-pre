@@ -106,7 +106,7 @@ serve(async (req) => {
       );
       if (customers.data.length === 0) {
         logStep("No Stripe customer found, setting Free plan");
-        await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", userId);
+        await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: "free" }).eq("user_id", userId);
         return new Response(JSON.stringify({ subscribed: false, plan: "Free", cancel_at_period_end: false, subscription_end: null }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -164,12 +164,12 @@ serve(async (req) => {
       if (staleSub) {
         logStep("Auto-expiring stale subscription", { subId: staleSub.id, plan: staleSub.plan });
         await supabaseClient.from("subscriptions").update({ status: "expired", updated_at: new Date().toISOString() }).eq("id", staleSub.id);
-        await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: null, updated_at: new Date().toISOString() }).eq("user_id", staleSub.user_id).neq("subscription_plan", "Free");
+        await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: "free", updated_at: new Date().toISOString() }).eq("user_id", staleSub.user_id).neq("subscription_plan", "Free");
         logStep(`Auto-expired stale sub for user ${staleSub.user_id} (was ${staleSub.plan})`);
       }
 
       logStep("No valid subscription found, setting Free plan");
-      await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: null }).eq("user_id", userId);
+      await supabaseClient.from("profiles").update({ subscription_plan: "Free", subscription_tier: "free" }).eq("user_id", userId);
       return new Response(
         JSON.stringify({ subscribed: false, plan: "Free", cancel_at_period_end: false, subscription_end: null }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -196,7 +196,7 @@ serve(async (req) => {
           });
           await supabaseClient
             .from("profiles")
-            .update({ subscription_plan: "Free", subscription_tier: null })
+            .update({ subscription_plan: "Free", subscription_tier: "free" })
             .eq("user_id", userId);
           return new Response(
             JSON.stringify({ subscribed: false, plan: "Free", cancel_at_period_end: false, subscription_end: null }),

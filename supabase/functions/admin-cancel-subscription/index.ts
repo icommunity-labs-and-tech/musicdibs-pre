@@ -61,6 +61,7 @@ serve(async (req) => {
     // 1. Plan a Free y créditos a 0
     await supabase.from("profiles").update({
       subscription_plan: "Free",
+      subscription_tier: "free",
       available_credits: 0,
       updated_at: new Date().toISOString(),
     }).eq("user_id", targetUserId);

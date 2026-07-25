@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
             .update({
               available_credits: newAvailable,
               subscription_plan: "Free",
-              subscription_tier: null,
+              subscription_tier: "free",
               updated_at: new Date().toISOString(),
             })
             .eq("user_id", sub.user_id);

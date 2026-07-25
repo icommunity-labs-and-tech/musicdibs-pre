@@ -2159,7 +2159,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           // Solo actualizar plan a Free — los créditos se resetean en subscription.deleted
           // cuando el periodo de facturación realmente termina (cancel_at_period_end=true)
           await supabase.from("profiles").update({
-            subscription_plan: "Free", subscription_tier: null,
+            subscription_plan: "Free", subscription_tier: "free",
             updated_at: new Date().toISOString(),
           }).eq("user_id", profile.user_id);
           console.log(`[WEBHOOK] subscription.updated ${status} → Free (credits preserved until subscription.deleted) for user ${profile.user_id}`);
@@ -2192,7 +2192,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         } else if (["cancelled", "expired"].includes(subStatus)) {
           // Solo actualizar plan — reset de créditos ÚNICAMENTE en subscription.deleted
           await supabase.from("profiles")
-            .update({ subscription_plan: "Free", subscription_tier: null, updated_at: new Date().toISOString() })
+            .update({ subscription_plan: "Free", subscription_tier: "free", updated_at: new Date().toISOString() })
             .eq("user_id", profile.user_id);
           console.log(`[WEBHOOK] subscription.updated ${subStatus} → Free (credits preserved until subscription.deleted) for user ${profile.user_id}`);
         }
@@ -2212,7 +2212,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         const oldPlan = cancelProfile?.subscription_plan;
         const deletedCreditsToReset = Math.max(0, (cancelProfile?.available_credits ?? 0) - (cancelProfile?.permanent_credits ?? 0));
         await supabase.from("profiles").update({
-          subscription_plan: "Free", subscription_tier: null,
+          subscription_plan: "Free", subscription_tier: "free",
           available_credits: cancelProfile?.permanent_credits ?? 0,
           updated_at: new Date().toISOString(),
         }).eq("user_id", profile.user_id);
@@ -2442,7 +2442,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
             // Downgrade a Free y quitar créditos
             await supabase.from("profiles").update({
               subscription_plan: "Free",
-              subscription_tier: null,
+              subscription_tier: "free",
               available_credits: 0,
               permanent_credits: 0,
               has_open_dispute: true,
