@@ -38,6 +38,22 @@ export const PRICE_CREDITS: Record<string, number> = {
   // vez que check-subscription se ejecutaba (cada carga de dashboard) y no
   // encontraba el priceId en estos mapas, cayendo al fallback "Monthly".
   "price_1Tp90nFULeu7PzK67hoGodWv": 20,    // annual_20
+  // FIX 2026-07-25 (segunda pasada): un lote ENTERO de price_ids
+  // (TMDVk/TMDVw/TMDW3) ya presente y correcto en stripe-webhook faltaba
+  // tambien por completo aqui -- mismo bug, mas cuentas potencialmente
+  // afectadas.
+  "price_1TMDVkFULeu7PzK6aNdFYW91": 1,     // individual
+  "price_1TMDVkFULeu7PzK6YxaKfBiJ": 10,    // topup_10
+  "price_1TMDVkFULeu7PzK62A2zwaDO": 25,    // topup_25
+  "price_1TMDVkFULeu7PzK6PcMnQkWZ": 50,    // topup_50
+  "price_1TMDVkFULeu7PzK6AJC3o4lZ": 100,   // topup_100
+  "price_1TMDVkFULeu7PzK6e9omPpoB": 200,   // topup_200
+  "price_1TMDVwFULeu7PzK6laW4n6wu": 100,   // annual_100
+  "price_1TMDVwFULeu7PzK6ZnMqrW1c": 200,   // annual_200
+  "price_1TMDVwFULeu7PzK6S22WkY3w": 300,   // annual_300
+  "price_1TMDVwFULeu7PzK6mSwmx29Z": 500,   // annual_500
+  "price_1TMDVwFULeu7PzK68TlUbof2": 1000,  // annual_1000
+  "price_1TMDW3FULeu7PzK6468wsXJt": 8,     // monthly
 };
 
 /** price_id → plan display name ("Annual" | "Monthly") */
@@ -56,6 +72,13 @@ export const PRICE_PLAN: Record<string, string> = {
   "price_1TMapTFULeu7PzK6cNJMf2oL": "Annual",
   "price_1TMapTFULeu7PzK6ziUW5fLn": "Annual",
   "price_1Tp90nFULeu7PzK67hoGodWv": "Annual", // annual_20 (ver FIX 2026-07-25 arriba)
+  "price_1TMDVkFULeu7PzK6aNdFYW91": "Individual",
+  "price_1TMDVwFULeu7PzK6laW4n6wu": "Annual",
+  "price_1TMDVwFULeu7PzK6ZnMqrW1c": "Annual",
+  "price_1TMDVwFULeu7PzK6S22WkY3w": "Annual",
+  "price_1TMDVwFULeu7PzK6mSwmx29Z": "Annual",
+  "price_1TMDVwFULeu7PzK68TlUbof2": "Annual",
+  "price_1TMDW3FULeu7PzK6468wsXJt": "Monthly",
 };
 
 /**
@@ -84,6 +107,18 @@ export const PRICE_TO_TIER: Record<string, string> = {
   "price_1TMapTFULeu7PzK6cNJMf2oL": "annual_500",   // was "annual_400" — fixed
   "price_1TMapTFULeu7PzK6ziUW5fLn": "annual_1000",  // was "annual_500" — fixed
   "price_1Tp90nFULeu7PzK67hoGodWv": "annual_20",     // ver FIX 2026-07-25 arriba
+  "price_1TMDVkFULeu7PzK6aNdFYW91": "individual",
+  "price_1TMDVkFULeu7PzK6YxaKfBiJ": "topup_10",
+  "price_1TMDVkFULeu7PzK62A2zwaDO": "topup_25",
+  "price_1TMDVkFULeu7PzK6PcMnQkWZ": "topup_50",
+  "price_1TMDVkFULeu7PzK6AJC3o4lZ": "topup_100",
+  "price_1TMDVkFULeu7PzK6e9omPpoB": "topup_200",
+  "price_1TMDVwFULeu7PzK6laW4n6wu": "annual_100",
+  "price_1TMDVwFULeu7PzK6ZnMqrW1c": "annual_200",
+  "price_1TMDVwFULeu7PzK6S22WkY3w": "annual_300",
+  "price_1TMDVwFULeu7PzK6mSwmx29Z": "annual_500",
+  "price_1TMDVwFULeu7PzK68TlUbof2": "annual_1000",
+  "price_1TMDW3FULeu7PzK6468wsXJt": "monthly",
 };
 
 /** tier → credits (canonical amounts) */
