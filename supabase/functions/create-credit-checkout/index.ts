@@ -539,6 +539,7 @@ serve(async (req) => {
         let resolvedCredits = actualCredits;
         let resolvedLabel = actualLabel;
         let resolvedPlanName = actualPlanName;
+        let resolvedTier = plan.planId;
         let creditsSource: "subscription_tier" | "stripe_price" = "stripe_price";
 
         // FIX CRÍTICO (caso addiusfalcon55/ladydaymgs 2026-07-03): este fallback a
@@ -557,6 +558,7 @@ serve(async (req) => {
           resolvedCredits = TIER_CREDITS[dbTier];
           resolvedLabel = TIER_LABELS[dbTier] ?? resolvedLabel;
           resolvedPlanName = dbTier.startsWith("annual") ? "Annual" : "Monthly";
+          resolvedTier = dbTier;
           creditsSource = "subscription_tier";
         }
 
@@ -580,13 +582,21 @@ serve(async (req) => {
 
         if (shouldSkipCreditReset) {
           // Update plan label only — preserve credits (will be set by webhook on real renewal).
+          // FIX 2026-07-25: incluir subscription_tier en el mismo UPDATE. El trigger
+          // trg_sync_plan_from_tier (BEFORE UPDATE) recalcula subscription_plan a
+          // partir de subscription_tier en cada escritura -- si aqui solo se
+          // actualizaba plan sin tocar tier, el trigger lo revertia de inmediato al
+          // plan derivado del tier ANTERIOR (todavia sin cambiar), mostrando el plan
+          // viejo en el dashboard hasta que el webhook de Stripe llegara mas tarde.
           await supabaseAdmin.from("profiles").update({
             subscription_plan: resolvedPlanName,
+            subscription_tier: resolvedTier,
             updated_at: new Date().toISOString(),
           }).eq("user_id", user.id);
         } else {
           await supabaseAdmin.from("profiles").update({
             subscription_plan: resolvedPlanName,
+            subscription_tier: resolvedTier,
             available_credits: resolvedCredits,
             updated_at: new Date().toISOString(),
           }).eq("user_id", user.id);

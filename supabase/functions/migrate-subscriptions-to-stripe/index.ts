@@ -187,10 +187,13 @@ serve(async (req) => {
           .eq("id", sub.id);
 
         // Also update profiles.subscription_plan
+        // FIX 2026-07-25: incluir subscription_tier (ya disponible en la variable
+        // 'tier') -- el trigger trg_sync_plan_from_tier revertia subscription_plan
+        // al valor derivado del tier antiguo si solo se actualizaba plan.
         const planName = sub.plan === "Monthly" ? "Monthly" : "Annual";
         await supabase
           .from("profiles")
-          .update({ subscription_plan: planName, updated_at: new Date().toISOString() })
+          .update({ subscription_plan: planName, subscription_tier: tier, updated_at: new Date().toISOString() })
           .eq("user_id", sub.user_id);
 
         results.push({ email, action: "created", stripe_sub: newSub.id, tier });

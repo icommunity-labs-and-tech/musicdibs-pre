@@ -142,9 +142,12 @@ serve(async (req) => {
 
       if (localSub) {
         logStep("Found valid local subscription", { plan: localSub.plan, current_period_end: localSub.current_period_end });
+        // FIX 2026-07-25: incluir subscription_tier (ya disponible en localSub) --
+        // el trigger trg_sync_plan_from_tier revertia subscription_plan al valor
+        // derivado del tier antiguo si solo se actualizaba plan.
         await supabaseClient
           .from("profiles")
-          .update({ subscription_plan: localSub.plan, updated_at: new Date().toISOString() })
+          .update({ subscription_plan: localSub.plan, subscription_tier: localSub.tier, updated_at: new Date().toISOString() })
           .eq("user_id", userId)
           .neq("subscription_plan", localSub.plan);
         return new Response(
