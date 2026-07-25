@@ -1546,6 +1546,30 @@ serve(async (req) => {
                 headers: { "Content-Type": "application/json" }
               });
             }
+
+            // FIX 2026-07-25 (caso doctrinamusic.org@gmail.com): a diferencia del
+            // guard #2 (por subscriptionId), este guard #2b nunca esperaba antes de
+            // decidir "no existe orden todavia" -- checkout.session.completed puede
+            // tardar hasta ~2s en insertar su propia orden (igual que en el guard #2),
+            // asi que sin este mismo reintento, el guard 2b encontraba "nada" por pura
+            // carrera de tiempos y dejaba pasar el credito duplicado con la clave
+            // atomica de fallback ("unknown"), que nunca coincide con la del checkout.
+            await new Promise(r => setTimeout(r, 1500));
+            const { data: existingRecentSignupOrder2 } = await supabase
+              .from("orders")
+              .select("id")
+              .eq("stripe_customer_id", customerId)
+              .eq("is_subscription", true)
+              .eq("is_renewal", false)
+              .not("stripe_checkout_session_id", "is", null)
+              .gte("created_at", recentWindow)
+              .maybeSingle();
+            if (existingRecentSignupOrder2) {
+              console.log(`[WEBHOOK] subscription_create: checkout order found after delay via guard #2b (customer ${customerId}) — skipping`);
+              return new Response(JSON.stringify({ received: true, duplicate: true }), {
+                headers: { "Content-Type": "application/json" }
+              });
+            }
           }
 
           // Resolve price from subscription (more reliable than invoice line items).
