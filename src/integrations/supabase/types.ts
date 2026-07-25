@@ -4408,6 +4408,7 @@ export type Database = {
         Args: { new_hash: string; target_user_id: string }
         Returns: undefined
       }
+      tier_to_plan: { Args: { p_tier: string }; Returns: string }
       upgrade_user_password: {
         Args: { p_new_password: string; p_user_id: string }
         Returns: undefined

@@ -32,6 +32,7 @@ const staticEntries: SitemapEntry[] = [
   { path: "/manager", changefreq: "monthly", priority: "0.8" },
   { path: "/partners", changefreq: "monthly", priority: "0.6" },
   { path: "/news", changefreq: "weekly", priority: "0.8" },
+  { path: "/en/news", changefreq: "weekly", priority: "0.8" },
   { path: "/faq", changefreq: "monthly", priority: "0.6" },
   { path: "/legal-validity", changefreq: "yearly", priority: "0.5" },
   { path: "/registro-obras-musicales", changefreq: "monthly", priority: "0.9" },
@@ -79,14 +80,24 @@ async function fetchBlogPosts(): Promise<SitemapEntry[]> {
       return [];
     }
     const rows = (await res.json()) as Array<{ slug: string; updated_at: string }>;
-    return rows
-      .filter((r) => r.slug)
-      .map((r) => ({
+    const entries: SitemapEntry[] = [];
+    for (const r of rows) {
+      if (!r.slug) continue;
+      const lastmod = r.updated_at?.split("T")[0];
+      entries.push({
         path: `/news/${r.slug}`,
-        lastmod: r.updated_at?.split("T")[0],
+        lastmod,
         changefreq: "monthly" as const,
         priority: "0.6",
-      }));
+      });
+      entries.push({
+        path: `/en/news/${r.slug}`,
+        lastmod,
+        changefreq: "monthly" as const,
+        priority: "0.5",
+      });
+    }
+    return entries;
   } catch (err) {
     console.warn(`[sitemap] blog_posts fetch error:`, err);
     return [];
