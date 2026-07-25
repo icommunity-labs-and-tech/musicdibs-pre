@@ -31,6 +31,13 @@ export const PRICE_CREDITS: Record<string, number> = {
   "price_1TMapTFULeu7PzK6D4GnB3Il": 300,   // annual_300
   "price_1TMapTFULeu7PzK6cNJMf2oL": 500,   // annual_500
   "price_1TMapTFULeu7PzK6ziUW5fLn": 1000,  // annual_1000
+  // FIX 2026-07-25: annual_20 (price_1Tp90n...) faltaba por completo en este
+  // archivo -- causa raiz confirmada de por que profiles.subscription_plan/
+  // tier se reseteaba repetidamente a "Monthly"/null para compradores de
+  // annual_20 (yaugika@gmail.com, jmontoyataber@gmail.com, y otros), cada
+  // vez que check-subscription se ejecutaba (cada carga de dashboard) y no
+  // encontraba el priceId en estos mapas, cayendo al fallback "Monthly".
+  "price_1Tp90nFULeu7PzK67hoGodWv": 20,    // annual_20
 };
 
 /** price_id → plan display name ("Annual" | "Monthly") */
@@ -48,6 +55,7 @@ export const PRICE_PLAN: Record<string, string> = {
   "price_1TMapTFULeu7PzK6D4GnB3Il": "Annual",
   "price_1TMapTFULeu7PzK6cNJMf2oL": "Annual",
   "price_1TMapTFULeu7PzK6ziUW5fLn": "Annual",
+  "price_1Tp90nFULeu7PzK67hoGodWv": "Annual", // annual_20 (ver FIX 2026-07-25 arriba)
 };
 
 /**
@@ -75,11 +83,13 @@ export const PRICE_TO_TIER: Record<string, string> = {
   "price_1TMapTFULeu7PzK6D4GnB3Il": "annual_300",
   "price_1TMapTFULeu7PzK6cNJMf2oL": "annual_500",   // was "annual_400" — fixed
   "price_1TMapTFULeu7PzK6ziUW5fLn": "annual_1000",  // was "annual_500" — fixed
+  "price_1Tp90nFULeu7PzK67hoGodWv": "annual_20",     // ver FIX 2026-07-25 arriba
 };
 
 /** tier → credits (canonical amounts) */
 export const TIER_CREDITS: Record<string, number> = {
   monthly:     8,
+  annual_20:   20,
   annual_100:  100,
   annual_200:  200,
   annual_300:  300,
@@ -90,6 +100,7 @@ export const TIER_CREDITS: Record<string, number> = {
 /** tier → Stripe price ID (legacy FULeu7PzK6 prices, used for subscription creation in renewals) */
 export const TIER_TO_PRICE_ID: Record<string, string> = {
   monthly:     "price_1T8n6lFULeu7PzK60TbO76hE",
+  annual_20:   "price_1Tp90nFULeu7PzK67hoGodWv",
   annual_100:  "price_1T8n6CFULeu7PzK6vs7NZyiJ",
   annual_200:  "price_1TMapTFULeu7PzK640B5uuEq",
   annual_300:  "price_1TMapTFULeu7PzK6D4GnB3Il",
