@@ -282,7 +282,7 @@ export function kycFailedEmail(data: { name: string; reason?: string; lang?: str
       ${infoRow(i.reason, safeReason)}
     </table>
     <p style="margin:16px 0 0;color:#d1d5db;font-size:14px;text-align:center;">${i.note}</p>
-    ${cta("https://musicdibs.com/dashboard/identity", i.retryCta)}`;
+    ${cta("https://musicdibs.com/dashboard/verify-identity", i.retryCta)}`;
 
   return { subject: i.subject, html: wrap("", i.title, body, lang), text: `${greeting} ${data.name}, ${i.greeting}`};
 }
@@ -309,7 +309,7 @@ export function kycRejectedEmail(data: { name: string; lang?: string }) {
       ${infoRow(i.action, i.actionValue)}
     </table>
     <p style="margin:16px 0 0;color:#d1d5db;font-size:14px;text-align:center;">${i.note}</p>
-    ${cta("https://musicdibs.com/dashboard/identity", i.verifyCta)}`;
+    ${cta("https://musicdibs.com/dashboard/verify-identity", i.verifyCta)}`;
 
   return { subject: i.subject, html: wrap("", i.title, body, lang), text: `${greeting} ${data.name}, ${i.greeting}`};
 }
@@ -655,14 +655,14 @@ export function kycReminderEmail(data: { name: string; reminderNumber?: number; 
   const body = `
     <p style="margin:0 0 20px;color:#d1d5db;font-size:15px;line-height:1.7;text-align:center;">${greeting} <strong style="color:#f3f4f6;">${safeName}</strong>, ${i.greeting}</p>
     <p style="margin:0 0 16px;color:#d1d5db;font-size:14px;line-height:1.7;">${i.body}</p>
-    ${cta("https://musicdibs.com/dashboard/identity", i.cta)}
+    ${cta("https://musicdibs.com/dashboard/verify-identity", i.cta)}
     <p style="margin:28px 0 12px;color:#d1d5db;font-size:14px;line-height:1.7;text-align:center;">${i.note}</p>
     <p style="margin:20px 0 0;color:#9ca3af;font-size:12px;text-align:center;">${i.closing}</p>`;
 
   return {
     subject: i.subject(n),
     html: wrap("", i.title, body, lang),
-    text: `${greeting} ${data.name}, ${i.greeting} ${i.body}\n\nhttps://musicdibs.com/dashboard/identity`,
+    text: `${greeting} ${data.name}, ${i.greeting} ${i.body}\n\nhttps://musicdibs.com/dashboard/verify-identity`,
   };
 }
 
