@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from '@/components/ui/collapsible';
@@ -106,8 +107,16 @@ export function ReferralsSection() {
   if (loading) {
     return (
       <Card className="border-border/40 lg:col-span-2">
-        <CardContent className="py-8 flex items-center justify-center text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin mr-2" /> {tr('dashboard.referrals.loading', 'Cargando referidos...')}
+        <CardHeader className="pb-3">
+          <Skeleton className="h-5 w-40" />
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </div>
+          <Skeleton className="h-32 w-full" />
         </CardContent>
       </Card>
     );

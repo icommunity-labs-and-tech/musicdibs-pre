@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
-import { ShieldAlert, Shield, Loader2, ArrowRight } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ShieldAlert, Shield, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
@@ -334,8 +335,14 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
   if (creditsLoading) {
     return (
       <Card className="border-border/40">
-        <CardContent className="p-10 flex flex-col items-center justify-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <CardContent className="p-6 space-y-4">
+          <Skeleton className="h-6 w-1/3" />
+          <Skeleton className="h-4 w-2/3" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+          <Skeleton className="h-10 w-32" />
         </CardContent>
       </Card>
     );
@@ -435,9 +442,14 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
   if (resumeLoading) {
     return (
       <Card className="border-border/40">
-        <CardContent className="p-10 flex flex-col items-center justify-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando borrador…</p>
+        <CardContent className="p-6 space-y-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-4 w-2/3" />
+          <div className="space-y-2">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </div>
         </CardContent>
       </Card>
     );

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -541,7 +542,11 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
             <DialogDescription>{t('dashboard.premium.importLyricsDesc')}</DialogDescription>
           </DialogHeader>
           {loadingLyrics ? (
-            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+            <div className="space-y-2 py-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
+            </div>
           ) : savedLyrics.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">
               {t('dashboard.premium.noSavedLyrics')}

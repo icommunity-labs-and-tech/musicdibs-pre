@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { History, ArrowUpCircle, ArrowDownCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -60,7 +61,16 @@ export function CreditHistory() {
   if (loading) {
     return (
       <Card className="border-border/40 shadow-sm">
-        <CardContent className="py-8 text-center text-sm text-muted-foreground">{t('dashboard.creditHistory.loading')}</CardContent>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <History className="h-4 w-4 text-primary" /> {t('dashboard.creditHistory.title')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 pb-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-10 w-full" />
+          ))}
+        </CardContent>
       </Card>
     );
   }
