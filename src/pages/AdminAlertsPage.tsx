@@ -36,7 +36,7 @@ const severityVariant: Record<Severity, string> = {
   info: "bg-info/15 text-info dark:text-info",
   warn: "bg-warning/15 text-warning dark:text-warning",
   error: "bg-red-500/15 text-red-700 dark:text-red-300",
-  critical: "bg-red-700 text-white",
+  critical: "bg-destructive text-destructive-foreground",
 };
 
 export default function AdminAlertsPage() {
