@@ -27,6 +27,19 @@ const es = {
       newUserDesc: 'Aún no tienes obras registradas. Sigue nuestro asistente paso a paso para lanzar tu primera canción al mundo.',
       newUserBtn: 'Mi primer lanzamiento musical',
     },
+    onboarding: {
+      title: 'Tus primeros pasos en Musicdibs',
+      subtitle: '{{completed}} de {{total}} completados. Sigue avanzando para sacar todo el partido.',
+      cta: 'Continuar con el siguiente paso',
+      dismiss: 'Descartar',
+      steps: {
+        kyc: 'Verifica tu identidad (KYC)',
+        artist: 'Crea tu perfil de artista',
+        work: 'Registra tu primera obra',
+        ai: 'Prueba el AI Music Studio',
+        promo: 'Lanza tu primera promoción',
+      },
+    },
     billing: {
       title: 'Facturación',
       currentPlan: 'Plan actual',
