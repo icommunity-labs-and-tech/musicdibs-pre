@@ -41,7 +41,7 @@ export const VirtualArtistsWelcomeModal = ({ open, onOpenChange, onCreateFirst, 
         <div className="p-6 sm:p-8 space-y-6">
           {/* Header */}
           <div className="text-center space-y-3">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-primary text-white mx-auto">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-primary text-primary-foreground mx-auto">
               <Sparkles className="h-7 w-7" />
             </div>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
