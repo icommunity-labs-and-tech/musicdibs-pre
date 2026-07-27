@@ -2024,11 +2024,37 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
         markAll: 'Mark all read',
         clear: 'Clear all',
         empty: 'No notifications',
+        filterAll: 'All',
+        filterUnread: 'Unread',
+        soundOn: 'Enable sound',
+        soundOff: 'Mute',
         time: {
           now: 'now',
           minutes: '{{count}}m ago',
           hours: '{{count}}h ago',
           days: '{{count}}d ago',
+        },
+        events: {
+          workRegistered: {
+            title: 'Registration completed',
+            message: '"{{title}}" was registered successfully.',
+          },
+          workFailed: {
+            title: 'Registration failed',
+            message: '"{{title}}" could not be registered. Please try again.',
+          },
+          creditsAdded: {
+            title: 'Credits added',
+            message: '{{count}} credits were added to your account.',
+          },
+          aiCompleted: {
+            title: 'AI generation ready',
+            message: 'Your AI creation is now available in your library.',
+          },
+          aiFailed: {
+            title: 'AI generation failed',
+            message: 'The generation could not be completed. Credits have been refunded if applicable.',
+          },
         },
       },
       noCredits: {
