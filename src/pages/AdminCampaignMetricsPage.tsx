@@ -419,7 +419,20 @@ export default function AdminCampaignMetricsPage() {
   }, {})).sort((a, b) => b.roi - a.roi || a.name.localeCompare(b.name));
   const roiChartHeight = Math.max(280, roiChartData.length * 36 + 64);
 
-  if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando campañas...</div>;
+  if (loading) return (
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-64" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-lg border p-4 space-y-2">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-7 w-20" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-64 w-full rounded-lg" />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -608,7 +621,14 @@ export default function AdminCampaignMetricsPage() {
             <SheetTitle>📈 {detailCampaign}</SheetTitle>
           </SheetHeader>
           {!detailData ? (
-            <div className="flex items-center justify-center py-12"><Loader2 className="h-5 w-5 animate-spin" /></div>
+            <div className="space-y-3 py-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-16 ml-auto" />
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
