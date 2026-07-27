@@ -137,7 +137,7 @@ const SwitchToMusicdibsPage = () => {
             <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
               Thinking of switching from DistroKid or CD Baby?
             </h1>
-            <p className="text-white/70 text-lg md:text-xl max-w-3xl mx-auto mb-10">
+            <p className="text-page-fg-muted text-lg md:text-xl max-w-3xl mx-auto mb-10">
               This isn't a "leave your distributor" pitch. It's a step-by-step guide for artists
               already distributing elsewhere who are considering adding — or moving to — Musicdibs.
               You keep your streams, your monthly listeners and your playlist placements.
@@ -154,26 +154,26 @@ const SwitchToMusicdibsPage = () => {
           </header>
 
           {/* Not all or nothing */}
-          <section className="mb-16 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+          <section className="mb-16 bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
             <h2 className="text-2xl font-bold text-white mb-4">Switching isn't all-or-nothing</h2>
-            <p className="text-white/70 leading-relaxed mb-4">
+            <p className="text-page-fg-muted leading-relaxed mb-4">
               The most common pattern among artists moving to Musicdibs isn't "burn down the old
               account and start over". It's more incremental:
             </p>
-            <ul className="space-y-2 text-white/70 leading-relaxed">
+            <ul className="space-y-2 text-page-fg-muted leading-relaxed">
               <li className="pl-6 relative">
                 <span className="absolute left-0 text-brand">•</span>
-                <strong className="text-white/90">Option A —</strong> keep your existing distributor, add Musicdibs
+                <strong className="text-page-fg">Option A —</strong> keep your existing distributor, add Musicdibs
                 for what it isn't doing: blockchain certification, AI creation tools, promotion.
               </li>
               <li className="pl-6 relative">
                 <span className="absolute left-0 text-brand">•</span>
-                <strong className="text-white/90">Option B —</strong> migrate one release first as a test. Confirm
+                <strong className="text-page-fg">Option B —</strong> migrate one release first as a test. Confirm
                 streams and placements carry over, then decide whether to move the rest.
               </li>
               <li className="pl-6 relative">
                 <span className="absolute left-0 text-brand">•</span>
-                <strong className="text-white/90">Option C —</strong> full migration. Same steps, applied to your
+                <strong className="text-page-fg">Option C —</strong> full migration. Same steps, applied to your
                 whole catalog.
               </li>
             </ul>
@@ -182,7 +182,7 @@ const SwitchToMusicdibsPage = () => {
           {/* Migration steps */}
           <section className="mb-20">
             <h2 className="text-3xl font-bold text-white mb-4">The ISRC migration, step by step</h2>
-            <p className="text-white/60 mb-10">
+            <p className="text-page-fg-subtle mb-10">
               The process isn't automatic, but it is straightforward. The key rule: don't generate
               new ISRCs and don't delete the original delivery before the new one is live.
             </p>
@@ -192,14 +192,14 @@ const SwitchToMusicdibsPage = () => {
                 return (
                   <div
                     key={i}
-                    className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 flex gap-5 items-start"
+                    className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 flex gap-5 items-start"
                   >
                     <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center shrink-0">
                       <Icon className="w-6 h-6 text-brand" />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
-                      <p className="text-white/70 leading-relaxed">{s.desc}</p>
+                      <p className="text-page-fg-muted leading-relaxed">{s.desc}</p>
                     </div>
                   </div>
                 );
@@ -210,7 +210,7 @@ const SwitchToMusicdibsPage = () => {
               <AlertTriangle className="w-6 h-6 text-warning shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-white font-semibold mb-1">One thing not to do</h3>
-                <p className="text-white/70 leading-relaxed">
+                <p className="text-page-fg-muted leading-relaxed">
                   Don't request takedown at your old distributor <em>before</em> Musicdibs' delivery
                   is accepted, and don't create a new ISRC. Both mistakes reset your stream history
                   on the affected track.
@@ -222,13 +222,13 @@ const SwitchToMusicdibsPage = () => {
           {/* What stays the same */}
           <section className="mb-20">
             <h2 className="text-3xl font-bold text-white mb-6">What stays the same after switching</h2>
-            <p className="text-white/70 mb-6 leading-relaxed">
+            <p className="text-page-fg-muted mb-6 leading-relaxed">
               Because streaming platforms identify a recording by its ISRC — not by which
               distributor delivered it — everything tied to the ISRC carries over:
             </p>
             <ul className="space-y-3">
               {WHAT_STAYS_THE_SAME.map((item, i) => (
-                <li key={i} className="flex gap-3 text-white/80 leading-relaxed">
+                <li key={i} className="flex gap-3 text-page-fg-muted leading-relaxed">
                   <Check className="w-5 h-5 text-success shrink-0 mt-1" />
                   <span>{item}</span>
                 </li>
@@ -241,9 +241,9 @@ const SwitchToMusicdibsPage = () => {
             <h2 className="text-3xl font-bold text-center mb-10 text-white">Frequently asked questions</h2>
             <div className="space-y-4">
               {FAQ.map((f, i) => (
-                <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+                <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-white mb-3">{f.q}</h3>
-                  <p className="text-white/70 leading-relaxed">{f.a}</p>
+                  <p className="text-page-fg-muted leading-relaxed">{f.a}</p>
                 </div>
               ))}
             </div>
@@ -252,7 +252,7 @@ const SwitchToMusicdibsPage = () => {
           {/* Final CTA */}
           <section className="text-center bg-gradient-to-r from-brand/10 to-primary/10 border border-brand/20 rounded-2xl p-12">
             <h2 className="text-3xl font-bold text-white mb-4">Start with one release</h2>
-            <p className="text-white/70 mb-8 max-w-xl mx-auto">
+            <p className="text-page-fg-muted mb-8 max-w-xl mx-auto">
               Create your account, migrate one track using its existing ISRC, and see the full
               workflow before you decide about the rest of your catalog.
             </p>

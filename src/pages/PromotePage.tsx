@@ -148,7 +148,7 @@ export default function PromotePage() {
               <Instagram className="h-2.5 w-2.5" /> TikTok + IG
             </Badge>
           </div>
-          <Button variant="outline" size="sm" className="w-full text-xs border-warning/30 group-hover:bg-warning group-hover:text-white transition-colors">
+          <Button variant="outline" size="sm" className="w-full text-xs border-warning/30 group-hover:bg-warning group-hover:text-page-fg transition-colors">
             {t('dashboard.promoSelector.premiumCta')} <Crown className="h-3 w-3 ml-1" />
           </Button>
         </CardContent>

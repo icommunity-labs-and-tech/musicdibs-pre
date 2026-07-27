@@ -20,7 +20,7 @@ export const SummerPromoPopup = () => {
       <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto border-none text-white overflow-hidden p-0" style={{ background: 'linear-gradient(160deg, #c084fc, #a855f7 40%, #d946ef)' }}>
         <button
           onClick={() => setIsOpen(false)}
-          className="absolute right-4 top-4 z-10 text-brand hover:text-white transition-colors"
+          className="absolute right-4 top-4 z-10 text-brand hover:text-page-fg transition-colors"
         >
           <X className="h-4 w-4" />
         </button>

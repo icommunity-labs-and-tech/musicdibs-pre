@@ -234,7 +234,7 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
             <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-brand bg-clip-text text-transparent">
               {c.h1}
             </h1>
-            <p className="text-white/70 text-lg md:text-xl max-w-2xl mx-auto mb-10">{c.subtitle}</p>
+            <p className="text-page-fg-muted text-lg md:text-xl max-w-2xl mx-auto mb-10">{c.subtitle}</p>
             <Link to="/registro-obras-musicales">
               <Button variant="hero" size="xl" className="font-semibold">
                 <span className="flex items-center gap-2">
@@ -248,7 +248,7 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
           <section className="mb-20">
             <h2 className="text-3xl font-bold mb-6 text-white">{c.introTitle}</h2>
             {c.intro.map((p, i) => (
-              <p key={i} className="text-white/80 leading-relaxed text-lg mb-4">{p}</p>
+              <p key={i} className="text-page-fg-muted leading-relaxed text-lg mb-4">{p}</p>
             ))}
           </section>
 
@@ -259,12 +259,12 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
               {c.rights.map((r, i) => {
                 const Icon = rightIcons[i];
                 return (
-                  <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+                  <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
                     <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-5">
                       <Icon className="w-6 h-6 text-primary" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-3">{r.title}</h3>
-                    <p className="text-white/70 leading-relaxed">{r.desc}</p>
+                    <p className="text-page-fg-muted leading-relaxed">{r.desc}</p>
                   </div>
                 );
               })}
@@ -276,11 +276,11 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
             <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.howTitle}</h2>
             <ol className="space-y-3 max-w-2xl mx-auto">
               {c.how.map((step, i) => (
-                <li key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 flex gap-4 items-start">
+                <li key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-xl p-5 flex gap-4 items-start">
                   <span className="w-8 h-8 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center shrink-0">
                     {i + 1}
                   </span>
-                  <span className="text-white/80 leading-relaxed pt-1">{step}</span>
+                  <span className="text-page-fg-muted leading-relaxed pt-1">{step}</span>
                 </li>
               ))}
             </ol>
@@ -289,13 +289,13 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
           {/* Options */}
           <section className="mb-20">
             <h2 className="text-3xl font-bold text-center mb-4 text-white">{c.optionsTitle}</h2>
-            <p className="text-white/70 text-center mb-10 max-w-2xl mx-auto">{c.optionsIntro}</p>
+            <p className="text-page-fg-muted text-center mb-10 max-w-2xl mx-auto">{c.optionsIntro}</p>
             <div className="grid md:grid-cols-3 gap-6">
               {c.options.map((opt, i) => (
-                <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+                <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-white mb-4">{opt.name}</h3>
                   <p className="text-success/90 text-sm mb-3"><strong>+ </strong>{opt.pros}</p>
-                  <p className="text-white/60 text-sm"><strong>− </strong>{opt.cons}</p>
+                  <p className="text-page-fg-subtle text-sm"><strong>− </strong>{opt.cons}</p>
                 </div>
               ))}
             </div>
@@ -309,21 +309,21 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
             <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.mythsTitle}</h2>
             <div className="space-y-4">
               {c.myths.map((m, i) => (
-                <details key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 group">
+                <details key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 group">
                   <summary className="font-bold text-white cursor-pointer flex items-center justify-between">
                     {m.q}
                     <ChevronDown className="w-5 h-5 text-primary group-open:rotate-180 transition-transform" />
                   </summary>
-                  <p className="text-white/70 mt-4 leading-relaxed">{m.a}</p>
+                  <p className="text-page-fg-muted mt-4 leading-relaxed">{m.a}</p>
                 </details>
               ))}
             </div>
           </section>
 
           {/* Closing */}
-          <section className="bg-gradient-to-r from-primary/20 to-brand/20 border border-white/10 rounded-2xl p-10 text-center">
+          <section className="bg-gradient-to-r from-primary/20 to-brand/20 border border-page-border rounded-2xl p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">{c.closingTitle}</h2>
-            <p className="text-white/70 mb-8 max-w-lg mx-auto">{c.closingDesc}</p>
+            <p className="text-page-fg-muted mb-8 max-w-lg mx-auto">{c.closingDesc}</p>
             <Link to="/registro-obras-musicales">
               <Button variant="hero" size="xl" className="font-semibold">
                 <span className="flex items-center gap-2">

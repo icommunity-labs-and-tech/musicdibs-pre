@@ -41,7 +41,7 @@ const TutorialSection = () => {
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             {t("tutorial.heading")}
           </h2>
-          <p className="text-xl text-white/90">
+          <p className="text-xl text-page-fg">
             {t("tutorial.subtitle")}
           </p>
         </div>
@@ -86,7 +86,7 @@ const TutorialSection = () => {
                   key={step.step}
                   className="relative group"
                 >
-                  <div className="h-full flex flex-col items-center text-center bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-brand/40">
+                  <div className="h-full flex flex-col items-center text-center bg-page-surface hover:bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-brand/40">
                     {/* Icon + number */}
                     <div className="relative mb-5">
                       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-brand to-red-500 flex items-center justify-center shadow-lg shadow-pink-500/30 group-hover:scale-110 transition-transform duration-300">
@@ -108,7 +108,7 @@ const TutorialSection = () => {
                     </h3>
 
                     {/* Description */}
-                    <p className="text-sm text-white/85 leading-relaxed">
+                    <p className="text-sm text-page-fg-muted leading-relaxed">
                       {step.desc}
                     </p>
 
@@ -118,7 +118,7 @@ const TutorialSection = () => {
                         href={step.link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-3 text-sm text-brand hover:text-white underline underline-offset-4 transition-colors"
+                        className="mt-3 text-sm text-brand hover:text-page-fg underline underline-offset-4 transition-colors"
                       >
                         {step.link.label}
                       </a>

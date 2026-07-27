@@ -109,14 +109,14 @@ const Contact = () => {
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               {t("contact.heading", "Contact Us")}
             </h1>
-            <p className="text-white/80 text-lg">
+            <p className="text-page-fg-muted text-lg">
               {t("contact.subheading", "Have a question? We'd love to hear from you.")}
             </p>
           </div>
 
           <form
             onSubmit={handleSubmit}
-            className="space-y-6 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8"
+            className="space-y-6 bg-page-surface backdrop-blur-lg border border-page-border-strong rounded-2xl p-8"
           >
             {/* Honeypot — hidden from real users, bots will fill it */}
             <div className="absolute opacity-0 -z-10 h-0 overflow-hidden" aria-hidden="true">
@@ -142,7 +142,7 @@ const Contact = () => {
                 id="name"
                 value={form.name}
                 onChange={(e) => handleChange("name", e.target.value)}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                className="bg-page-surface border-page-border-strong text-white placeholder:text-page-fg-subtle"
                 placeholder={t("contact.name_placeholder", "Your name")}
               />
               {errors.name && <p className="text-red-300 text-sm">{errors.name}</p>}
@@ -159,7 +159,7 @@ const Contact = () => {
                 type="email"
                 value={form.email}
                 onChange={(e) => handleChange("email", e.target.value)}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                className="bg-page-surface border-page-border-strong text-white placeholder:text-page-fg-subtle"
                 placeholder={t("contact.email_placeholder", "you@example.com")}
               />
               {errors.email && <p className="text-red-300 text-sm">{errors.email}</p>}
@@ -172,7 +172,7 @@ const Contact = () => {
                 {t("contact.reason", "Reason for inquiry")} *
               </Label>
               <Select value={form.reason} onValueChange={(val) => handleChange("reason", val)}>
-                <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                <SelectTrigger className="bg-page-surface border-page-border-strong text-white">
                   <SelectValue placeholder={t("contact.reason_placeholder", "Select a reason")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -196,7 +196,7 @@ const Contact = () => {
                 id="subject"
                 value={form.subject}
                 onChange={(e) => handleChange("subject", e.target.value)}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/40"
+                className="bg-page-surface border-page-border-strong text-white placeholder:text-page-fg-subtle"
                 placeholder={t("contact.subject_placeholder", "How can we help?")}
               />
               {errors.subject && <p className="text-red-300 text-sm">{errors.subject}</p>}
@@ -212,7 +212,7 @@ const Contact = () => {
                 id="message"
                 value={form.message}
                 onChange={(e) => handleChange("message", e.target.value)}
-                className="bg-white/10 border-white/20 text-white placeholder:text-white/40 min-h-[140px]"
+                className="bg-page-surface border-page-border-strong text-white placeholder:text-page-fg-subtle min-h-[140px]"
                 placeholder={t("contact.message_placeholder", "Tell us more...")}
               />
               {errors.message && <p className="text-red-300 text-sm">{errors.message}</p>}

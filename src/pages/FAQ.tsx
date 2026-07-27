@@ -43,7 +43,7 @@ const FAQ = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
             {t("faq.title")}
           </h1>
-          <p className="text-white/60 text-center mb-12 text-lg">
+          <p className="text-page-fg-subtle text-center mb-12 text-lg">
             {t("faq.subtitle")}
           </p>
 
@@ -52,12 +52,12 @@ const FAQ = () => {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="bg-white/5 border border-white/10 rounded-xl px-6 data-[state=open]:bg-white/10 transition-colors"
+                className="bg-page-surface border border-page-border rounded-xl px-6 data-[state=open]:bg-page-surface transition-colors"
               >
-                <AccordionTrigger className="text-left text-white/90 hover:text-white py-5 text-base font-medium hover:no-underline">
+                <AccordionTrigger className="text-left text-page-fg hover:text-page-fg py-5 text-base font-medium hover:no-underline">
                   {item.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-white/70 leading-relaxed pb-5 whitespace-pre-line">
+                <AccordionContent className="text-page-fg-muted leading-relaxed pb-5 whitespace-pre-line">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>

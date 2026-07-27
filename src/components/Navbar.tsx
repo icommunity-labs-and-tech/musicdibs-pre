@@ -50,10 +50,10 @@ export const Navbar = () => {
   const isLightBg = lightBgPages.some(p => location.pathname.startsWith(p));
 
   // Text color classes based on background
-  const navText = isLightBg ? 'text-foreground/80 hover:text-foreground' : 'text-white/80 hover:text-white';
-  const navTextStrong = isLightBg ? 'text-foreground hover:text-foreground' : 'text-white hover:text-white';
-  const navTextMuted = isLightBg ? 'text-foreground/70 hover:text-foreground' : 'text-white/70 hover:text-white';
-  const navIconColor = isLightBg ? 'text-foreground/70 hover:text-foreground hover:bg-foreground/10' : 'text-white/70 hover:text-white hover:bg-white/10';
+  const navText = isLightBg ? 'text-foreground/80 hover:text-foreground' : 'text-page-fg-muted hover:text-page-fg';
+  const navTextStrong = isLightBg ? 'text-foreground hover:text-foreground' : 'text-white hover:text-page-fg';
+  const navTextMuted = isLightBg ? 'text-foreground/70 hover:text-foreground' : 'text-page-fg-muted hover:text-page-fg';
+  const navIconColor = isLightBg ? 'text-foreground/70 hover:text-foreground hover:bg-foreground/10' : 'text-page-fg-muted hover:text-page-fg hover:bg-page-surface';
   const mobileToggleColor = isLightBg ? 'text-foreground' : 'text-white';
 
   const handleScroll = useCallback(() => {
@@ -164,7 +164,7 @@ export const Navbar = () => {
             
             <Link to="/news" className={`${navText} transition-colors`}>{t('nav.news')}</Link>
 
-            <div className={`w-px h-5 ${isLightBg ? 'bg-foreground/20' : 'bg-white/20'}`} />
+            <div className={`w-px h-5 ${isLightBg ? 'bg-foreground/20' : 'bg-page-surface-strong'}`} />
 
             <Link to="/contact" className={`${navText} transition-colors`}>{t('nav.contact')}</Link>
             <Link to="/partners" className={`${navText} transition-colors`}>{t('nav.partners', 'Hazte Partner')}</Link>
@@ -197,7 +197,7 @@ export const Navbar = () => {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className={`lg:hidden mx-6 mb-4 rounded-xl ${isLightBg ? 'bg-background/95 border-border' : 'bg-black/70 border-white/10'} backdrop-blur-lg border p-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200`}>
+        <div className={`lg:hidden mx-6 mb-4 rounded-xl ${isLightBg ? 'bg-background/95 border-border' : 'bg-black/70 border-page-border'} backdrop-blur-lg border p-6 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200`}>
           <button onClick={() => { scrollToSection('all-in-one-section'); setMobileOpen(false); }} className={`block w-full text-left ${navText} py-2 transition-colors`}>
             {t('nav.services')}
           </button>
@@ -211,13 +211,13 @@ export const Navbar = () => {
           
           <Link to="/news" onClick={() => setMobileOpen(false)} className={`block ${navText} py-2 transition-colors`}>{t('nav.news')}</Link>
 
-          <div className={`w-full h-px ${isLightBg ? 'bg-border' : 'bg-white/10'}`} />
+          <div className={`w-full h-px ${isLightBg ? 'bg-border' : 'bg-page-surface'}`} />
 
           <Link to="/contact" onClick={() => setMobileOpen(false)} className={`block ${navText} py-2 transition-colors`}>{t('nav.contact')}</Link>
           <Link to="/partners" onClick={() => setMobileOpen(false)} className={`block ${navText} py-2 transition-colors`}>{t('nav.partners', 'Hazte Partner')}</Link>
 
           {/* Access to services */}
-          <div className={`border-t ${isLightBg ? 'border-border' : 'border-white/10'} pt-3 mt-2 space-y-2`}>
+          <div className={`border-t ${isLightBg ? 'border-border' : 'border-page-border'} pt-3 mt-2 space-y-2`}>
             {user ? (
               <>
                 <Link to="/dashboard" onClick={() => setMobileOpen(false)} className={`block ${navTextStrong} py-2 transition-colors font-semibold`}>

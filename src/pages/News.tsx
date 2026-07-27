@@ -140,19 +140,19 @@ const News = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4 text-center bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
             {t("blog.title", "Blog & Novedades")}
           </h1>
-          <p className="text-white/60 text-center mb-12 text-lg">
+          <p className="text-page-fg-subtle text-center mb-12 text-lg">
             {t("blog.subtitle", "Tendencias, consejos y novedades para artistas independientes")}
           </p>
 
           {/* Search */}
           <div className="relative max-w-md mx-auto mb-8">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-page-fg-subtle" />
             <Input
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={t("blog.searchPlaceholder", "Buscar artículos...")}
-              className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30"
+              className="pl-10 bg-page-surface border-page-border text-white placeholder:text-page-fg-subtle"
             />
           </div>
 
@@ -164,7 +164,7 @@ const News = () => {
                 className={`px-4 py-1.5 rounded-full text-sm transition-colors ${
                   !selectedCategory
                     ? "bg-primary text-primary-foreground"
-                    : "bg-white/10 text-white/70 hover:bg-white/20"
+                    : "bg-page-surface text-page-fg-muted hover:bg-page-surface-strong"
                 }`}
               >
                 {t("blog.all", "Todas")}
@@ -176,7 +176,7 @@ const News = () => {
                   className={`px-4 py-1.5 rounded-full text-sm transition-colors ${
                     selectedCategory === cat
                       ? "bg-primary text-primary-foreground"
-                      : "bg-white/10 text-white/70 hover:bg-white/20"
+                      : "bg-page-surface text-page-fg-muted hover:bg-page-surface-strong"
                   }`}
                 >
                   {cat}
@@ -190,13 +190,13 @@ const News = () => {
               {[...Array(6)].map((_, i) => (
                 <div
                   key={i}
-                  className="bg-white/5 border border-white/10 rounded-xl overflow-hidden animate-pulse"
+                  className="bg-page-surface border border-page-border rounded-xl overflow-hidden animate-pulse"
                 >
-                  <div className="h-48 bg-white/10" />
+                  <div className="h-48 bg-page-surface" />
                   <div className="p-5 space-y-3">
-                    <div className="h-4 bg-white/10 rounded w-1/3" />
-                    <div className="h-6 bg-white/10 rounded w-full" />
-                    <div className="h-4 bg-white/10 rounded w-2/3" />
+                    <div className="h-4 bg-page-surface rounded w-1/3" />
+                    <div className="h-6 bg-page-surface rounded w-full" />
+                    <div className="h-4 bg-page-surface rounded w-2/3" />
                   </div>
                 </div>
               ))}
@@ -208,10 +208,10 @@ const News = () => {
                   <Link
                     key={post.id}
                     to={`/news/${post.slug}`}
-                    className="group bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 hover:border-white/20 transition-all duration-300 hover:-translate-y-1"
+                    className="group bg-page-surface border border-page-border rounded-xl overflow-hidden hover:bg-page-surface hover:border-page-border-strong transition-all duration-300 hover:-translate-y-1"
                   >
                     {post.image_url && (
-                      <div className="h-48 overflow-hidden bg-white/5">
+                      <div className="h-48 overflow-hidden bg-page-surface">
                         <img
                           src={post.image_url}
                           alt={post.title}
@@ -226,7 +226,7 @@ const News = () => {
                       </div>
                     )}
                     <div className="p-5">
-                      <div className="flex items-center gap-3 mb-3 text-xs text-white/50">
+                      <div className="flex items-center gap-3 mb-3 text-xs text-page-fg-subtle">
                         {post.category && (
                           <span className="bg-primary/20 text-primary px-2 py-0.5 rounded-full">
                             {post.category}
@@ -239,11 +239,11 @@ const News = () => {
                           </span>
                         )}
                       </div>
-                      <h2 className="text-lg font-semibold text-white/90 group-hover:text-white mb-2 line-clamp-2">
+                      <h2 className="text-lg font-semibold text-page-fg group-hover:text-page-fg mb-2 line-clamp-2">
                         {post.title}
                       </h2>
                       {post.excerpt && (
-                        <p className="text-white/50 text-sm line-clamp-3 mb-3">
+                        <p className="text-page-fg-subtle text-sm line-clamp-3 mb-3">
                           {post.excerpt}
                         </p>
                       )}
@@ -252,7 +252,7 @@ const News = () => {
                           {post.tags.slice(0, 3).map((tag) => (
                             <span
                               key={tag}
-                              className="text-[10px] text-white/40 bg-white/5 px-2 py-0.5 rounded"
+                              className="text-[10px] text-page-fg-subtle bg-page-surface px-2 py-0.5 rounded"
                             >
                               {tag}
                             </span>
@@ -270,7 +270,7 @@ const News = () => {
 
               {/* Pagination */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-10">
-                <div className="flex items-center gap-2 text-sm text-white/50">
+                <div className="flex items-center gap-2 text-sm text-page-fg-subtle">
                   <span>{t("blog.show", "Mostrar")}:</span>
                   {perPageOptions.map((opt) => (
                     <button
@@ -279,7 +279,7 @@ const News = () => {
                       className={`px-3 py-1 rounded-md transition-colors ${
                         perPage === opt.value
                           ? "bg-primary text-primary-foreground"
-                          : "bg-white/10 text-white/60 hover:bg-white/20"
+                          : "bg-page-surface text-page-fg-subtle hover:bg-page-surface-strong"
                       }`}
                     >
                       {opt.label}
@@ -292,7 +292,7 @@ const News = () => {
                     <button
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="p-2 rounded-md bg-white/10 text-white/60 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="p-2 rounded-md bg-page-surface text-page-fg-subtle hover:bg-page-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
@@ -301,14 +301,14 @@ const News = () => {
                       .map((page, idx, arr) => (
                         <span key={page} className="flex items-center gap-1">
                           {idx > 0 && arr[idx - 1] !== page - 1 && (
-                            <span className="text-white/30 px-1">…</span>
+                            <span className="text-page-fg-subtle px-1">…</span>
                           )}
                           <button
                             onClick={() => setCurrentPage(page)}
                             className={`w-8 h-8 rounded-md text-sm transition-colors ${
                               currentPage === page
                                 ? "bg-primary text-primary-foreground"
-                                : "bg-white/10 text-white/60 hover:bg-white/20"
+                                : "bg-page-surface text-page-fg-subtle hover:bg-page-surface-strong"
                             }`}
                           >
                             {page}
@@ -318,11 +318,11 @@ const News = () => {
                     <button
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="p-2 rounded-md bg-white/10 text-white/60 hover:bg-white/20 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                      className="p-2 rounded-md bg-page-surface text-page-fg-subtle hover:bg-page-surface-strong disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
-                    <span className="text-white/40 text-sm ml-2">
+                    <span className="text-page-fg-subtle text-sm ml-2">
                       {totalItems} {t("blog.articles", "artículos")}
                     </span>
                   </div>
@@ -330,7 +330,7 @@ const News = () => {
               </div>
             </>
           ) : (
-            <p className="text-center text-white/40 py-20">
+            <p className="text-center text-page-fg-subtle py-20">
               {t("blog.noPosts", "No hay artículos disponibles.")}
             </p>
           )}

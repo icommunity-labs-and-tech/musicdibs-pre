@@ -697,7 +697,7 @@ export default function RegistroMusicalPage() {
                             "repeating-linear-gradient(45deg, transparent 0 6px, oklch(1 0 0 / 0.15) 6px 12px)",
                         }}
                       />
-                      <p className="relative text-[10px] uppercase tracking-[0.2em] font-semibold text-white/90">
+                      <p className="relative text-[10px] uppercase tracking-[0.2em] font-semibold text-page-fg">
                         Gana el
                       </p>
                       <p className="relative font-display font-bold text-3xl sm:text-4xl text-white leading-none my-1">

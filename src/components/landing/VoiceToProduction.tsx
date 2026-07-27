@@ -64,7 +64,7 @@ export function VoiceToProduction() {
             <div className="relative mx-auto w-[280px] sm:w-[320px] lg:w-[340px]">
               {/* Badge above */}
               <div className="flex justify-center mb-5">
-                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-white border border-white/15 bg-gradient-to-r from-magenta/25 to-pink/25 backdrop-blur-md shadow-[0_0_20px_rgba(217,70,239,0.35)]">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-white border border-page-border bg-gradient-to-r from-magenta/25 to-pink/25 backdrop-blur-md shadow-[0_0_20px_rgba(217,70,239,0.35)]">
                   <Sparkles className="h-3.5 w-3.5 text-accent" />
                   IA Music Studio
                 </span>
@@ -79,7 +79,7 @@ export function VoiceToProduction() {
               <span className="neon-particle pointer-events-none absolute bottom-10 -left-5 h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(168,85,247,0.9)]" style={{ animationDelay: "2.4s" }} />
 
               {/* iPhone frame */}
-              <div className="phone-float relative mx-auto rounded-[2.6rem] bg-gradient-to-b from-zinc-900 to-black p-[10px] border border-white/10 shadow-[0_30px_80px_-20px_rgba(217,70,239,0.45),0_0_60px_-10px_rgba(168,85,247,0.4)]">
+              <div className="phone-float relative mx-auto rounded-[2.6rem] bg-gradient-to-b from-zinc-900 to-black p-[10px] border border-page-border shadow-[0_30px_80px_-20px_rgba(217,70,239,0.45),0_0_60px_-10px_rgba(168,85,247,0.4)]">
                 {/* Inner bezel */}
                 <div className="relative rounded-[2.1rem] overflow-hidden bg-black aspect-[9/19.5]">
                   {/* Notch */}
@@ -98,7 +98,7 @@ export function VoiceToProduction() {
                     type="button"
                     onClick={toggleSound}
                     aria-label={muted ? "Activar sonido" : "Silenciar"}
-                    className="absolute bottom-4 right-4 z-20 inline-flex items-center justify-center h-10 w-10 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-white/15 text-white transition"
+                    className="absolute bottom-4 right-4 z-20 inline-flex items-center justify-center h-10 w-10 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-page-border text-white transition"
                   >
                     {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                   </button>
@@ -106,7 +106,7 @@ export function VoiceToProduction() {
               </div>
 
               {/* Caption below */}
-              <p className="mt-5 text-center text-xs text-white/70">
+              <p className="mt-5 text-center text-xs text-page-fg-muted">
                 🔊 Activa el sonido y escucha la magia
               </p>
             </div>
@@ -114,14 +114,14 @@ export function VoiceToProduction() {
 
           {/* Text side */}
           <div className="order-1 lg:order-2">
-            <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs text-white/70 mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs text-page-fg-muted mb-6">
               <span className="h-2 w-2 rounded-full bg-magenta animate-pulse" />
               Voz a producción · IA
             </div>
             <h2 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight">
               Tu pones la voz. <span className="text-gradient-brand">La IA crea el hit.</span>
             </h2>
-            <p className="mt-6 text-lg text-white/70 leading-relaxed">
+            <p className="mt-6 text-lg text-page-fg-muted leading-relaxed">
               ¿Cantas? Sube tu voz a capela y nuestra IA construye toda la producción a tu alrededor: afinación profesional, instrumentación, arreglos y mezcla profesional en minutos. Tú pones la semilla, el AI Music Studio hace la magia.
             </p>
 
@@ -132,7 +132,7 @@ export function VoiceToProduction() {
                 </span>
                 <div>
                   <p className="font-medium">Sube tu voz</p>
-                  <p className="text-sm text-white/70">Una toma rápida desde el móvil es suficiente.</p>
+                  <p className="text-sm text-page-fg-muted">Una toma rápida desde el móvil es suficiente.</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -141,7 +141,7 @@ export function VoiceToProduction() {
                 </span>
                 <div>
                   <p className="font-medium">La IA produce</p>
-                  <p className="text-sm text-white/70">Genera instrumentación, arreglos y mezcla a medida.</p>
+                  <p className="text-sm text-page-fg-muted">Genera instrumentación, arreglos y mezcla a medida.</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -150,7 +150,7 @@ export function VoiceToProduction() {
                 </span>
                 <div>
                   <p className="font-medium">Listo para publicar</p>
-                  <p className="text-sm text-white/70">Exporta tu track terminado en minutos.</p>
+                  <p className="text-sm text-page-fg-muted">Exporta tu track terminado en minutos.</p>
                 </div>
               </li>
             </ul>

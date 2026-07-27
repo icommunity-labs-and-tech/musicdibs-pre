@@ -340,7 +340,7 @@ export const WhyChooseSection = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
               {t("why.heading")}
             </h2>
-            <p className="text-lg md:text-xl text-white/85 max-w-5xl mx-auto leading-relaxed whitespace-pre-line">
+            <p className="text-lg md:text-xl text-page-fg-muted max-w-5xl mx-auto leading-relaxed whitespace-pre-line">
               {t("why.subheading")}
             </p>
           </div>
@@ -355,11 +355,11 @@ export const WhyChooseSection = () => {
                 <Dialog key={index}>
                   <DialogTrigger asChild>
                     <div
-                      className="group relative rounded-2xl p-6 border transition-all duration-300 cursor-pointer h-full flex flex-col overflow-hidden bg-white/10 backdrop-blur-sm border-white/20 hover:bg-white/15 hover:scale-[1.03]"
+                      className="group relative rounded-2xl p-6 border transition-all duration-300 cursor-pointer h-full flex flex-col overflow-hidden bg-page-surface backdrop-blur-sm border-page-border-strong hover:bg-page-surface-strong hover:scale-[1.03]"
                     >
                       {/* Step indicator */}
                       <div className="relative z-10 mb-3 flex items-center justify-center">
-                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-page-fg-subtle">
                           Paso {index + 1}
                         </span>
                       </div>
@@ -377,7 +377,7 @@ export const WhyChooseSection = () => {
                       </h3>
 
                       {/* Description */}
-                      <p className="relative z-10 text-center leading-relaxed flex-1 text-white/70 text-sm">
+                      <p className="relative z-10 text-center leading-relaxed flex-1 text-page-fg-muted text-sm">
                         {feature.description}
                       </p>
                     </div>

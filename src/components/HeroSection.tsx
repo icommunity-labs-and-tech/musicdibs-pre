@@ -43,10 +43,10 @@ export const HeroSection = () => {
         className="absolute inset-0 opacity-20 will-change-transform"
         style={{ transform: `translateY(${bgOffset}px)` }}
       >
-        <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-white/10 blur-xl"></div>
+        <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-page-surface blur-xl"></div>
         <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-brand/20 blur-lg"></div>
         <div className="absolute bottom-32 left-1/4 w-40 h-40 rounded-full bg-primary/10 blur-xl"></div>
-        <div className="absolute bottom-20 right-1/3 w-28 h-28 rounded-full bg-white/10 blur-lg"></div>
+        <div className="absolute bottom-20 right-1/3 w-28 h-28 rounded-full bg-page-surface blur-lg"></div>
       </div>
 
       {/* Main content */}
