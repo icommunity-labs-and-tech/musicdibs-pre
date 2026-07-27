@@ -14,6 +14,7 @@ import { PastDueBanner } from '@/components/dashboard/PastDueBanner';
 import { DashboardTour } from '@/components/dashboard/DashboardTour';
 import { ReferralSourceModal } from '@/components/dashboard/ReferralSourceModal';
 import { DashboardThemeToggle } from '@/components/dashboard/DashboardThemeToggle';
+import { Breadcrumbs } from '@/components/dashboard/Breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Loader2, Plus } from 'lucide-react';
 import { useUsageTracking } from '@/hooks/useUsageTracking';
