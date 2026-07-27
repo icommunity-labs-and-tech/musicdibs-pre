@@ -136,11 +136,11 @@ const AllInOneMusicPlatformPage = () => {
         <div className="max-w-5xl mx-auto">
           {/* Hero */}
           <header className="text-center mb-20">
-            <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-full px-5 py-2 mb-6">
-              <Layers className="w-5 h-5 text-pink-400" />
-              <span className="text-pink-300 text-sm font-medium">All-in-One Music Platform</span>
+            <div className="inline-flex items-center gap-2 bg-brand/10 border border-brand/20 rounded-full px-5 py-2 mb-6">
+              <Layers className="w-5 h-5 text-brand" />
+              <span className="text-brand text-sm font-medium">All-in-One Music Platform</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
               Create. Protect. Distribute. Promote. All in one platform.
             </h1>
             <p className="text-white/70 text-lg md:text-xl max-w-3xl mx-auto mb-10">
@@ -169,13 +169,13 @@ const AllInOneMusicPlatformPage = () => {
                     key={i}
                     className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 flex flex-col"
                   >
-                    <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center mb-4">
-                      <Icon className="w-6 h-6 text-pink-400" />
+                    <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-brand" />
                     </div>
                     <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
                     <p className="text-white/70 leading-relaxed text-sm">{s.desc}</p>
                     {i < STEPS.length - 1 && (
-                      <ArrowRight className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-pink-400/60" />
+                      <ArrowRight className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand/60" />
                     )}
                   </div>
                 );
@@ -206,7 +206,7 @@ const AllInOneMusicPlatformPage = () => {
               {REASONS.map((r, i) => (
                 <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
                   <div className="flex items-start gap-3 mb-3">
-                    <Check className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
+                    <Check className="w-6 h-6 text-success shrink-0 mt-0.5" />
                     <h3 className="text-xl font-bold text-white">{r.title}</h3>
                   </div>
                   <p className="text-white/70 leading-relaxed pl-9">{r.desc}</p>
@@ -217,7 +217,7 @@ const AllInOneMusicPlatformPage = () => {
 
           {/* Social proof */}
           <section className="mb-20 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-10 text-center">
-            <Users className="w-10 h-10 text-pink-400 mx-auto mb-4" />
+            <Users className="w-10 h-10 text-brand mx-auto mb-4" />
             <p className="text-2xl md:text-3xl font-bold text-white mb-3">100,000+ artists</p>
             <p className="text-white/70 max-w-xl mx-auto">
               already release, protect and promote their music with Musicdibs — from bedroom producers to
@@ -234,9 +234,9 @@ const AllInOneMusicPlatformPage = () => {
             <div className="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
               <Link
                 to="/musicdibs-vs-distrokid"
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-pink-500/40 transition-colors group"
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-brand/40 transition-colors group"
               >
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-pink-300 transition-colors">
+                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-brand transition-colors">
                   Musicdibs vs DistroKid
                 </h3>
                 <p className="text-white/70 text-sm">Distribution only vs the full release workflow.</p>
@@ -245,7 +245,7 @@ const AllInOneMusicPlatformPage = () => {
           </section>
 
           {/* Final CTA */}
-          <section className="text-center bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-2xl p-12">
+          <section className="text-center bg-gradient-to-r from-brand/10 to-primary/10 border border-brand/20 rounded-2xl p-12">
             <h2 className="text-3xl font-bold text-white mb-4">One platform. Every step.</h2>
             <p className="text-white/70 mb-8 max-w-xl mx-auto">
               Start free — register your first work and see the full workflow in one account.

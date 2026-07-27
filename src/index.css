@@ -38,6 +38,19 @@ All colors MUST be HSL.
 
     --radius: 0.5rem;
 
+    /* Semantic brand tokens (Fase 1A) */
+    --brand: 330 81% 60%;
+    --brand-foreground: 0 0% 100%;
+    --brand-glow: 328 86% 70%;
+    --success: 152 76% 40%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 26 83% 14%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    --gradient-brand: linear-gradient(135deg, hsl(var(--brand)), hsl(var(--primary)));
+    --gradient-brand-soft: linear-gradient(135deg, hsl(var(--brand) / 0.1), hsl(var(--primary) / 0.1));
+
     /* Custom Musicdibs-inspired theme */
     --hero-gradient: linear-gradient(135deg, #8b5cf6 0%, #a855f7 25%, #c084fc 50%, #e879f9 75%, #f472b6 100%);
     --hero-overlay: linear-gradient(rgba(139, 92, 246, 0.9), rgba(168, 85, 247, 0.8));
@@ -114,6 +127,17 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Semantic brand tokens (Fase 1A) — dark variants */
+    --brand: 328 86% 66%;
+    --brand-foreground: 0 0% 100%;
+    --brand-glow: 325 90% 75%;
+    --success: 152 70% 50%;
+    --success-foreground: 152 60% 8%;
+    --warning: 43 96% 62%;
+    --warning-foreground: 26 83% 14%;
+    --info: 217 91% 65%;
+    --info-foreground: 0 0% 100%;
   }
 
   /* Light mode overrides for page-level theming */

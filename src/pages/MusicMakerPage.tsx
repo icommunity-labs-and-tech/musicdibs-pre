@@ -83,11 +83,11 @@ const MusicMakerPage = () => {
       <article className="pt-32 pb-20 px-6">
         <div className="max-w-5xl mx-auto">
           <header className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-purple-500/10 border border-purple-500/20 rounded-full px-5 py-2 mb-6">
-              <Sparkles className="w-5 h-5 text-purple-400" />
-              <span className="text-purple-300 text-sm font-medium">AI Music Maker</span>
+            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-5 py-2 mb-6">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <span className="text-primary text-sm font-medium">AI Music Maker</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-brand bg-clip-text text-transparent">
               The AI music maker built for real releases
             </h1>
             <p className="text-white/70 text-lg md:text-xl max-w-3xl mx-auto mb-10">
@@ -119,8 +119,8 @@ const MusicMakerPage = () => {
                 const Icon = f.icon;
                 return (
                   <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-                    <div className="w-11 h-11 rounded-lg bg-purple-500/20 flex items-center justify-center mb-4">
-                      <Icon className="w-5 h-5 text-purple-400" />
+                    <div className="w-11 h-11 rounded-lg bg-primary/20 flex items-center justify-center mb-4">
+                      <Icon className="w-5 h-5 text-primary" />
                     </div>
                     <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
                     <p className="text-white/70 text-sm leading-relaxed">{f.desc}</p>
@@ -150,7 +150,7 @@ const MusicMakerPage = () => {
                   <tr className="border-b border-white/10">
                     <th className="text-left px-5 py-4 text-white/60 font-bold text-xs uppercase tracking-wide">Aspect</th>
                     <th className="px-4 py-4 text-center text-white/70 font-bold">DAW + plugins</th>
-                    <th className="px-4 py-4 text-center bg-purple-500/10 border-x border-purple-500/30 text-white font-bold">Musicdibs</th>
+                    <th className="px-4 py-4 text-center bg-primary/10 border-x border-primary/30 text-white font-bold">Musicdibs</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -158,7 +158,7 @@ const MusicMakerPage = () => {
                     <tr key={i} className={`border-b border-white/5 last:border-b-0 ${i % 2 === 0 ? "bg-white/[0.02]" : ""}`}>
                       <td className="px-5 py-4 text-white/80 font-medium">{r.feature}</td>
                       <td className="px-4 py-4 text-center text-white/70">{r.tools}</td>
-                      <td className="px-4 py-4 text-center bg-purple-500/5 border-x border-purple-500/20 text-white/90">{r.mdb}</td>
+                      <td className="px-4 py-4 text-center bg-primary/5 border-x border-primary/20 text-white/90">{r.mdb}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -169,10 +169,10 @@ const MusicMakerPage = () => {
           <section className="mb-20 bg-white/5 border border-white/10 rounded-2xl p-8">
             <h2 className="text-2xl font-bold text-white mb-6 text-center">Why creators pick Musicdibs</h2>
             <ul className="space-y-3 max-w-2xl mx-auto">
-              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-emerald-400 shrink-0 mt-1" /> No commission on your streaming royalties.</li>
-              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-emerald-400 shrink-0 mt-1" /> Blockchain-timestamped proof of authorship for every track.</li>
-              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-emerald-400 shrink-0 mt-1" /> AI covers, videos and social creatives from the same account.</li>
-              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-emerald-400 shrink-0 mt-1" /> Multi-artist manager panel for labels and agencies.</li>
+              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> No commission on your streaming royalties.</li>
+              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> Blockchain-timestamped proof of authorship for every track.</li>
+              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> AI covers, videos and social creatives from the same account.</li>
+              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> Multi-artist manager panel for labels and agencies.</li>
             </ul>
           </section>
 
@@ -188,8 +188,8 @@ const MusicMakerPage = () => {
             </div>
           </section>
 
-          <section className="text-center bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-2xl p-12">
-            <Megaphone className="w-10 h-10 text-purple-400 mx-auto mb-4" />
+          <section className="text-center bg-gradient-to-r from-primary/10 to-brand/10 border border-primary/20 rounded-2xl p-12">
+            <Megaphone className="w-10 h-10 text-primary mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-white mb-4">Make a song. Release it today.</h2>
             <p className="text-white/70 mb-8 max-w-xl mx-auto">Free to start. No credit card. Distribute your first single tomorrow.</p>
             <Link to="/login">

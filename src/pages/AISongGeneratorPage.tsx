@@ -169,14 +169,14 @@ const AISongGeneratorPage = () => {
 
       {/* HERO */}
       <section className="relative overflow-hidden pt-32 pb-20 px-6">
-        <div className="absolute inset-0 bg-gradient-to-b from-pink-500/10 via-purple-500/5 to-transparent pointer-events-none" />
-        <div className="absolute top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-pink-500/20 blur-[120px] rounded-full pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-brand/10 via-primary/5 to-transparent pointer-events-none" />
+        <div className="absolute top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-brand/20 blur-[120px] rounded-full pointer-events-none" />
         <div className="relative max-w-6xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-5 py-2 mb-8 animate-fade-in">
-            <Sparkles className="w-4 h-4 text-pink-400" />
+            <Sparkles className="w-4 h-4 text-brand" />
             <span className="text-white/80 text-sm font-medium">Create. Protect. Distribute. Promote.</span>
           </div>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-br from-white via-pink-200 to-purple-300 bg-clip-text text-transparent leading-tight animate-fade-in">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-br from-white via-brand to-primary bg-clip-text text-transparent leading-tight animate-fade-in">
             AI Music Generator for Real Releases
           </h1>
           <p className="text-white/70 text-lg md:text-2xl max-w-3xl mx-auto mb-10 animate-fade-in">
@@ -204,8 +204,8 @@ const AISongGeneratorPage = () => {
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
           {TRUST.map((t, i) => (
             <div key={i} className="flex items-center gap-3 justify-center md:justify-start">
-              <div className="w-10 h-10 rounded-lg bg-pink-500/10 border border-pink-500/20 flex items-center justify-center shrink-0">
-                <t.icon className="w-5 h-5 text-pink-400" />
+              <div className="w-10 h-10 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center shrink-0">
+                <t.icon className="w-5 h-5 text-brand" />
               </div>
               <span className="text-white/80 text-sm md:text-base font-medium">{t.label}</span>
             </div>
@@ -226,13 +226,13 @@ const AISongGeneratorPage = () => {
             {FLOW.map((f, i) => (
               <div
                 key={i}
-                className="group relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-pink-500/40 transition-all hover-scale"
+                className="group relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-brand/40 transition-all hover-scale"
               >
-                <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-white text-sm font-bold">
+                <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-gradient-to-br from-brand to-primary flex items-center justify-center text-white text-sm font-bold">
                   {i + 1}
                 </div>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center mb-4">
-                  <f.icon className="w-6 h-6 text-pink-300" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand/20 to-primary/20 flex items-center justify-center mb-4">
+                  <f.icon className="w-6 h-6 text-brand" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">{f.title}</h3>
                 <p className="text-white/60 text-sm leading-relaxed">{f.desc}</p>
@@ -255,10 +255,10 @@ const AISongGeneratorPage = () => {
             {FEATURES.map((f, i) => (
               <div
                 key={i}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-pink-500/30 hover:bg-white/[0.07] transition-all"
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-brand/30 hover:bg-white/[0.07] transition-all"
               >
-                <div className="w-11 h-11 rounded-lg bg-pink-500/10 flex items-center justify-center mb-4">
-                  <f.icon className="w-5 h-5 text-pink-400" />
+                <div className="w-11 h-11 rounded-lg bg-brand/10 flex items-center justify-center mb-4">
+                  <f.icon className="w-5 h-5 text-brand" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
                 <p className="text-white/60 text-sm leading-relaxed">{f.desc}</p>
@@ -281,7 +281,7 @@ const AISongGeneratorPage = () => {
             <div className="grid grid-cols-3 px-6 py-4 border-b border-white/10 bg-white/5">
               <div className="text-white/60 text-sm font-medium">Feature</div>
               <div className="text-white/60 text-sm font-medium">Traditional</div>
-              <div className="text-pink-300 text-sm font-bold">Musicdibs</div>
+              <div className="text-brand text-sm font-bold">Musicdibs</div>
             </div>
             {COMPARE.map((row, i) => (
               <div
@@ -291,7 +291,7 @@ const AISongGeneratorPage = () => {
                 <div className="text-white font-medium text-sm md:text-base">{row.feature}</div>
                 <div className="text-white/50 text-sm md:text-base">{row.trad}</div>
                 <div className="text-white text-sm md:text-base flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-pink-400 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-brand shrink-0" />
                   {row.mdb}
                 </div>
               </div>
@@ -301,7 +301,7 @@ const AISongGeneratorPage = () => {
             {["Faster", "All-in-one", "AI-native", "Creator-first"].map((b) => (
               <span
                 key={b}
-                className="px-4 py-2 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-500/30 text-pink-200 text-sm font-medium"
+                className="px-4 py-2 rounded-full bg-gradient-to-r from-brand/20 to-primary/20 border border-brand/30 text-brand text-sm font-medium"
               >
                 {b}
               </span>
@@ -321,11 +321,11 @@ const AISongGeneratorPage = () => {
             {FAQ.map((f, i) => (
               <details
                 key={i}
-                className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 open:border-pink-500/30"
+                className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 open:border-brand/30"
               >
                 <summary className="flex items-center justify-between cursor-pointer text-white font-semibold text-lg">
                   {f.q}
-                  <ArrowRight className="w-5 h-5 text-pink-400 transition-transform group-open:rotate-90" />
+                  <ArrowRight className="w-5 h-5 text-brand transition-transform group-open:rotate-90" />
                 </summary>
                 <p className="mt-4 text-white/70 leading-relaxed">{f.a}</p>
               </details>
@@ -333,19 +333,19 @@ const AISongGeneratorPage = () => {
           </div>
           <div className="mt-12 text-center text-white/60 text-sm">
             Learn more about{" "}
-            <Link to="/copyright-a-song" className="text-pink-300 hover:text-pink-200 underline">
+            <Link to="/copyright-a-song" className="text-brand hover:text-brand underline">
               how to copyright a song
             </Link>
             ,{" "}
-            <Link to="/register-a-song" className="text-pink-300 hover:text-pink-200 underline">
+            <Link to="/register-a-song" className="text-brand hover:text-brand underline">
               registering a song
             </Link>
             ,{" "}
-            <Link to="/faq" className="text-pink-300 hover:text-pink-200 underline">
+            <Link to="/faq" className="text-brand hover:text-brand underline">
               the full FAQ
             </Link>{" "}
             or{" "}
-            <Link to="/" className="text-pink-300 hover:text-pink-200 underline">
+            <Link to="/" className="text-brand hover:text-brand underline">
               pricing &amp; plans
             </Link>
             .
@@ -355,9 +355,9 @@ const AISongGeneratorPage = () => {
 
       {/* FINAL CTA */}
       <section className="px-6 py-24">
-        <div className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden border border-pink-500/20 bg-gradient-to-br from-pink-500/10 via-purple-500/10 to-transparent p-12 md:p-20 text-center">
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-purple-500/10 blur-3xl pointer-events-none" />
-          <Rocket className="w-12 h-12 text-pink-400 mx-auto mb-6 relative" />
+        <div className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden border border-brand/20 bg-gradient-to-br from-brand/10 via-primary/10 to-transparent p-12 md:p-20 text-center">
+          <div className="absolute inset-0 bg-gradient-to-br from-brand/10 to-primary/10 blur-3xl pointer-events-none" />
+          <Rocket className="w-12 h-12 text-brand mx-auto mb-6 relative" />
           <h2 className="relative text-3xl md:text-5xl font-bold text-white mb-4">
             Launch your first AI-powered release today.
           </h2>

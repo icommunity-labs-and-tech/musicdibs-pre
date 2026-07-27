@@ -21,7 +21,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="relative bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 text-white overflow-hidden">
+    <footer className="relative bg-gradient-to-br from-primary via-primary to-brand text-white overflow-hidden">
       {/* Geometric pattern background */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute inset-0" style={{
@@ -35,10 +35,10 @@ const Footer = () => {
         }} />
         
         {/* Floating geometric shapes */}
-        <div className="absolute top-10 left-10 w-20 h-20 border border-pink-400/30 rounded-full animate-pulse" />
-        <div className="absolute top-20 right-20 w-16 h-16 bg-purple-500/20 rounded-lg rotate-45 animate-pulse" />
-        <div className="absolute bottom-20 left-20 w-12 h-12 border-2 border-pink-300/40 rotate-12 animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-24 h-24 border border-purple-400/30 rounded-full animate-pulse" />
+        <div className="absolute top-10 left-10 w-20 h-20 border border-brand/30 rounded-full animate-pulse" />
+        <div className="absolute top-20 right-20 w-16 h-16 bg-primary/20 rounded-lg rotate-45 animate-pulse" />
+        <div className="absolute bottom-20 left-20 w-12 h-12 border-2 border-brand/40 rotate-12 animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-24 h-24 border border-primary/30 rounded-full animate-pulse" />
       </div>
       
       <div className="relative z-10 container mx-auto px-6 py-12">

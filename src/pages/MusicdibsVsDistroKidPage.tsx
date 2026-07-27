@@ -48,8 +48,8 @@ const FAQ = [
 ];
 
 function Cell({ value }: { value: string | boolean }) {
-  if (value === true) return <Check className="w-5 h-5 text-emerald-400 mx-auto stroke-[3]" />;
-  if (value === false) return <X className="w-5 h-5 text-red-400 mx-auto stroke-[3]" />;
+  if (value === true) return <Check className="w-5 h-5 text-success mx-auto stroke-[3]" />;
+  if (value === false) return <X className="w-5 h-5 text-destructive mx-auto stroke-[3]" />;
   return <span className="text-white/90 text-sm font-medium">{value}</span>;
 }
 
@@ -112,11 +112,11 @@ const MusicdibsVsDistroKidPage = () => {
         <div className="max-w-5xl mx-auto">
           {/* Hero */}
           <header className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-full px-5 py-2 mb-6">
-              <Shield className="w-5 h-5 text-pink-400" />
-              <span className="text-pink-300 text-sm font-medium">Musicdibs vs DistroKid</span>
+            <div className="inline-flex items-center gap-2 bg-brand/10 border border-brand/20 rounded-full px-5 py-2 mb-6">
+              <Shield className="w-5 h-5 text-brand" />
+              <span className="text-brand text-sm font-medium">Musicdibs vs DistroKid</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
               DistroKid distributes your music. Musicdibs takes care of the whole thing.
             </h1>
             <p className="text-white/70 text-lg md:text-xl max-w-3xl mx-auto mb-10">
@@ -149,7 +149,7 @@ const MusicdibsVsDistroKidPage = () => {
                       Feature
                     </th>
                     <th className="px-4 py-5 text-center text-white/70 font-bold">DistroKid</th>
-                    <th className="px-4 py-5 text-center bg-pink-500/10 border-x border-pink-500/30 text-white font-bold">
+                    <th className="px-4 py-5 text-center bg-brand/10 border-x border-brand/30 text-white font-bold">
                       Musicdibs
                     </th>
                   </tr>
@@ -159,7 +159,7 @@ const MusicdibsVsDistroKidPage = () => {
                     <tr key={i} className={`border-b border-white/5 last:border-b-0 ${i % 2 === 0 ? "bg-white/[0.02]" : ""}`}>
                       <td className="px-5 py-4 text-white/80 font-medium">{row.feature}</td>
                       <td className="px-4 py-4 text-center"><Cell value={row.distrokid} /></td>
-                      <td className="px-4 py-4 text-center bg-pink-500/5 border-x border-pink-500/20">
+                      <td className="px-4 py-4 text-center bg-brand/5 border-x border-brand/20">
                         <Cell value={row.musicdibs} />
                       </td>
                     </tr>
@@ -190,21 +190,21 @@ const MusicdibsVsDistroKidPage = () => {
             </p>
             <ul className="space-y-3 mb-8">
               <li className="text-white/70 leading-relaxed pl-6 relative">
-                <span className="absolute left-0 text-pink-400">•</span>
+                <span className="absolute left-0 text-brand">•</span>
                 Something to create or finish the track (often an AI tool like Suno or Udio)
               </li>
               <li className="text-white/70 leading-relaxed pl-6 relative">
-                <span className="absolute left-0 text-pink-400">•</span>
+                <span className="absolute left-0 text-brand">•</span>
                 A distributor to get it onto streaming platforms
               </li>
               <li className="text-white/70 leading-relaxed pl-6 relative">
-                <span className="absolute left-0 text-pink-400">•</span>
+                <span className="absolute left-0 text-brand">•</span>
                 Nothing, usually, to actually prove they made it first — which becomes a problem the moment
                 someone else claims the work, samples it without permission, or a platform dispute affects the
                 catalog
               </li>
               <li className="text-white/70 leading-relaxed pl-6 relative">
-                <span className="absolute left-0 text-pink-400">•</span>
+                <span className="absolute left-0 text-brand">•</span>
                 A separate promotion tool or agency to get it heard
               </li>
             </ul>
@@ -234,8 +234,8 @@ const MusicdibsVsDistroKidPage = () => {
                 const Icon = s.icon;
                 return (
                   <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                    <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center mb-5">
-                      <Icon className="w-6 h-6 text-pink-400" />
+                    <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-5">
+                      <Icon className="w-6 h-6 text-brand" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-3">{s.title}</h3>
                     <p className="text-white/70 leading-relaxed">{s.desc}</p>
@@ -250,16 +250,16 @@ const MusicdibsVsDistroKidPage = () => {
             <h2 className="text-2xl font-bold text-white mb-6 text-center">Why artists trust Musicdibs</h2>
             <ul className="space-y-3 max-w-2xl mx-auto">
               <li className="text-white/80 leading-relaxed flex gap-3">
-                <Check className="w-5 h-5 text-emerald-400 shrink-0 mt-1" />
+                <Check className="w-5 h-5 text-success shrink-0 mt-1" />
                 Blockchain certification on public, decentralized chains (Ethereum, Polygon, Solana) —
                 independent of Musicdibs' own infrastructure.
               </li>
               <li className="text-white/80 leading-relaxed flex gap-3">
-                <Check className="w-5 h-5 text-emerald-400 shrink-0 mt-1" />
+                <Check className="w-5 h-5 text-success shrink-0 mt-1" />
                 Legally valid internationally, aligned with the Berne Convention and WIPO Copyright Treaty.
               </li>
               <li className="text-white/80 leading-relaxed flex gap-3">
-                <Check className="w-5 h-5 text-emerald-400 shrink-0 mt-1" />
+                <Check className="w-5 h-5 text-success shrink-0 mt-1" />
                 Thousands of artists already using the platform.
               </li>
             </ul>
@@ -279,7 +279,7 @@ const MusicdibsVsDistroKidPage = () => {
           </section>
 
           {/* Final CTA */}
-          <section className="text-center bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-2xl p-12">
+          <section className="text-center bg-gradient-to-r from-brand/10 to-primary/10 border border-brand/20 rounded-2xl p-12">
             <h2 className="text-3xl font-bold text-white mb-4">Start with a free registration</h2>
             <p className="text-white/70 mb-8 max-w-xl mx-auto">
               Protect your first work today and see the full Musicdibs workflow from creation to promotion.

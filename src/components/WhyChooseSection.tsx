@@ -7,25 +7,25 @@ import { Button } from "@/components/ui/button";
 
 const AIMusicStudioPopup = () => {
   const items = [
-    { icon: Music, title: "Crear canciones", desc: "Canciones completas, instrumentales o con voz.", color: "from-pink-500 to-fuchsia-500" },
-    { icon: Sliders, title: "Masterizar", desc: "Mejora el sonido y déjalo listo para plataformas.", color: "from-fuchsia-500 to-purple-500" },
-    { icon: PenLine, title: "Crear letras", desc: "Genera ideas, letras y estructuras en segundos.", color: "from-purple-500 to-violet-500" },
-    { icon: ImageIcon, title: "Diseñar portadas", desc: "Arte visual para singles, EPs y álbumes.", color: "from-violet-500 to-indigo-500" },
-    { icon: Smartphone, title: "Crear contenido", desc: "Posts, creatividades y piezas para redes.", color: "from-indigo-500 to-blue-500" },
-    { icon: Film, title: "Vídeos cortos", desc: "Clips promocionales para Reels, TikTok y Spotify Canvas.", color: "from-blue-500 to-cyan-500" },
+    { icon: Music, title: "Crear canciones", desc: "Canciones completas, instrumentales o con voz.", color: "from-brand to-accent" },
+    { icon: Sliders, title: "Masterizar", desc: "Mejora el sonido y déjalo listo para plataformas.", color: "from-accent to-primary" },
+    { icon: PenLine, title: "Crear letras", desc: "Genera ideas, letras y estructuras en segundos.", color: "from-primary to-accent" },
+    { icon: ImageIcon, title: "Diseñar portadas", desc: "Arte visual para singles, EPs y álbumes.", color: "from-accent to-primary" },
+    { icon: Smartphone, title: "Crear contenido", desc: "Posts, creatividades y piezas para redes.", color: "from-primary to-info" },
+    { icon: Film, title: "Vídeos cortos", desc: "Clips promocionales para Reels, TikTok y Spotify Canvas.", color: "from-info to-info" },
   ];
 
   return (
-    <div className="-m-6 p-6 sm:p-8 bg-gradient-to-br from-white via-pink-50/40 to-purple-50/60 rounded-lg">
+    <div className="-m-6 p-6 sm:p-8 bg-gradient-to-br from-white via-muted/40 to-muted/60 rounded-lg">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-6">
         <div className="relative mb-4">
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-purple-600 blur-xl opacity-40 rounded-full" />
-          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 via-fuchsia-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+          <div className="absolute inset-0 bg-gradient-to-br from-brand to-primary blur-xl opacity-40 rounded-full" />
+          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-brand via-accent to-primary flex items-center justify-center shadow-lg shadow-purple-500/30">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 via-fuchsia-600 to-purple-700 bg-clip-text text-transparent mb-2">
+        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent mb-2">
           AI Music Studio
         </h3>
         <p className="text-sm sm:text-base text-gray-600 max-w-md">
@@ -38,7 +38,7 @@ const AIMusicStudioPopup = () => {
         {items.map((item, i) => (
           <div
             key={i}
-            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-purple-100 hover:border-purple-300 hover:shadow-md hover:shadow-purple-200/40 transition-all duration-300"
+            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-primary hover:border-primary hover:shadow-md hover:shadow-purple-200/40 transition-all duration-300"
           >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform`}>
               <item.icon className="w-5 h-5 text-white" />
@@ -55,7 +55,7 @@ const AIMusicStudioPopup = () => {
           <Button
             asChild
             size="lg"
-            className="bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 hover:from-pink-600 hover:via-fuchsia-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/30 border-0"
+            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-white shadow-lg shadow-purple-500/30 border-0"
           >
             <a href="/#pricing-section">
               <Sparkles className="w-4 h-4 mr-2" />
@@ -70,23 +70,23 @@ const AIMusicStudioPopup = () => {
 
 const IPRegistryPopup = () => {
   const items = [
-    { icon: Fingerprint, title: "Huella digital única", desc: "Generamos un hash criptográfico del archivo para identificar tu obra de forma única.", color: "from-purple-500 to-violet-600" },
-    { icon: Link2, title: "Registro blockchain", desc: "La evidencia queda sellada con fecha y hora en una red blockchain, sin poder alterarse.", color: "from-violet-500 to-blue-600" },
-    { icon: FileCheck, title: "Certificado verificable", desc: "Recibes un comprobante digital con los datos de la obra, hash y enlace de verificación.", color: "from-blue-500 to-cyan-500" },
-    { icon: Scale, title: "Evidencia de autoría", desc: "El registro ayuda a demostrar la existencia e integridad de tu obra ante terceros.", color: "from-cyan-500 to-teal-500" },
+    { icon: Fingerprint, title: "Huella digital única", desc: "Generamos un hash criptográfico del archivo para identificar tu obra de forma única.", color: "from-primary to-accent" },
+    { icon: Link2, title: "Registro blockchain", desc: "La evidencia queda sellada con fecha y hora en una red blockchain, sin poder alterarse.", color: "from-accent to-info" },
+    { icon: FileCheck, title: "Certificado verificable", desc: "Recibes un comprobante digital con los datos de la obra, hash y enlace de verificación.", color: "from-info to-info" },
+    { icon: Scale, title: "Evidencia de autoría", desc: "El registro ayuda a demostrar la existencia e integridad de tu obra ante terceros.", color: "from-info to-info" },
   ];
 
   return (
-    <div className="-m-6 p-6 sm:p-8 bg-gradient-to-br from-white via-blue-50/40 to-purple-50/60 rounded-lg">
+    <div className="-m-6 p-6 sm:p-8 bg-gradient-to-br from-white via-muted/40 to-muted/60 rounded-lg">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-6">
         <div className="relative mb-4">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-blue-600 blur-xl opacity-40 rounded-full" />
-          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 via-violet-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary to-info blur-xl opacity-40 rounded-full" />
+          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-accent to-info flex items-center justify-center shadow-lg shadow-blue-500/30">
             <Shield className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 via-violet-600 to-blue-700 bg-clip-text text-transparent mb-2">
+        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary via-accent to-info bg-clip-text text-transparent mb-2">
           Registro de Propiedad Intelectual
         </h3>
         <p className="text-sm sm:text-base text-gray-600 max-w-md">
@@ -99,7 +99,7 @@ const IPRegistryPopup = () => {
         {items.map((item, i) => (
           <div
             key={i}
-            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-blue-100 hover:border-blue-300 hover:shadow-md hover:shadow-blue-200/40 transition-all duration-300"
+            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-info hover:border-info hover:shadow-md hover:shadow-blue-200/40 transition-all duration-300"
           >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform`}>
               <item.icon className="w-5 h-5 text-white" />
@@ -121,7 +121,7 @@ const IPRegistryPopup = () => {
             href="https://www.wipo.int/treaties/es/ip/berne/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-purple-600 underline hover:text-purple-700 font-medium"
+            className="text-primary underline hover:text-primary font-medium"
           >
             Convenio de Berna
           </a>
@@ -130,7 +130,7 @@ const IPRegistryPopup = () => {
             href="https://www.wipo.int/treaties/es/ip/wct/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-purple-600 underline hover:text-purple-700 font-medium"
+            className="text-primary underline hover:text-primary font-medium"
           >
             Tratado de la OMPI
           </a>{" "}
@@ -139,7 +139,7 @@ const IPRegistryPopup = () => {
             href="https://digital-strategy.ec.europa.eu/es/policies/copyright"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-purple-600 underline hover:text-purple-700 font-medium"
+            className="text-primary underline hover:text-primary font-medium"
           >
             Directiva sobre Derechos de Autor en la Era Digital
           </a>
@@ -156,7 +156,7 @@ const IPRegistryPopup = () => {
           <Button
             asChild
             size="lg"
-            className="bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 hover:from-pink-600 hover:via-fuchsia-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/30 border-0"
+            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-white shadow-lg shadow-purple-500/30 border-0"
           >
             <a href="/#pricing-section">
               <Shield className="w-4 h-4 mr-2" />
@@ -171,23 +171,23 @@ const IPRegistryPopup = () => {
 
 const GlobalDistributionPopup = () => {
   const items = [
-    { icon: Radio, title: "200+ plataformas", desc: "Publica tu música en Spotify, Apple Music, YouTube, Amazon Music, TikTok y muchas más.", color: "from-blue-500 to-cyan-500" },
-    { icon: Headphones, title: "Llega a nuevos oyentes", desc: "Haz que tus canciones estén disponibles para fans, playlists y audiencias de todo el mundo.", color: "from-cyan-500 to-teal-500" },
-    { icon: DollarSign, title: "Gana royalties", desc: "Monetiza tus reproducciones y conserva el control de tus lanzamientos.", color: "from-teal-500 to-emerald-500" },
-    { icon: Layers, title: "Desde Musicdibs", desc: "Crea, registra y distribuye tus canciones desde una misma plataforma, sin cambiar de herramienta.", color: "from-indigo-500 to-blue-600" },
+    { icon: Radio, title: "200+ plataformas", desc: "Publica tu música en Spotify, Apple Music, YouTube, Amazon Music, TikTok y muchas más.", color: "from-info to-info" },
+    { icon: Headphones, title: "Llega a nuevos oyentes", desc: "Haz que tus canciones estén disponibles para fans, playlists y audiencias de todo el mundo.", color: "from-info to-info" },
+    { icon: DollarSign, title: "Gana royalties", desc: "Monetiza tus reproducciones y conserva el control de tus lanzamientos.", color: "from-info to-success" },
+    { icon: Layers, title: "Desde Musicdibs", desc: "Crea, registra y distribuye tus canciones desde una misma plataforma, sin cambiar de herramienta.", color: "from-primary to-info" },
   ];
 
   return (
-    <div className="-m-6 p-6 sm:p-8 bg-gradient-to-br from-white via-blue-50/40 to-cyan-50/60 rounded-lg">
+    <div className="-m-6 p-6 sm:p-8 bg-gradient-to-br from-white via-muted/40 to-muted/60 rounded-lg">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-6">
         <div className="relative mb-4">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 blur-xl opacity-40 rounded-full" />
-          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+          <div className="absolute inset-0 bg-gradient-to-br from-info to-info blur-xl opacity-40 rounded-full" />
+          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-info via-info to-info flex items-center justify-center shadow-lg shadow-blue-500/30">
             <Globe className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 bg-clip-text text-transparent mb-2">
+        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-info via-info to-info bg-clip-text text-transparent mb-2">
           Distribución Global
         </h3>
         <p className="text-sm sm:text-base text-gray-600 max-w-md">
@@ -200,7 +200,7 @@ const GlobalDistributionPopup = () => {
         {items.map((item, i) => (
           <div
             key={i}
-            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-blue-100 hover:border-blue-300 hover:shadow-md hover:shadow-blue-200/40 transition-all duration-300"
+            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-info hover:border-info hover:shadow-md hover:shadow-blue-200/40 transition-all duration-300"
           >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform`}>
               <item.icon className="w-5 h-5 text-white" />
@@ -217,7 +217,7 @@ const GlobalDistributionPopup = () => {
           <Button
             asChild
             size="lg"
-            className="bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 hover:from-pink-600 hover:via-fuchsia-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/30 border-0"
+            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-white shadow-lg shadow-purple-500/30 border-0"
           >
             <a href="/#pricing-section">
               <Globe className="w-4 h-4 mr-2" />
@@ -232,23 +232,23 @@ const GlobalDistributionPopup = () => {
 
 const SocialPromoPopup = () => {
   const items = [
-    { icon: Users, title: "Comunidad +200k", desc: "Da visibilidad a tu música en nuestros canales oficiales de TikTok e Instagram.", color: "from-pink-500 to-rose-500" },
-    { icon: Star, title: "Promoción destacada", desc: "Publicamos tu canción o contenido promocional para ayudarte a ganar exposición.", color: "from-rose-500 to-orange-500" },
-    { icon: Palette, title: "Creatividad personalizada", desc: "Preparamos el formato visual más adecuado para cada red social y tipo de lanzamiento.", color: "from-orange-500 to-fuchsia-500" },
-    { icon: TrendingUp, title: "Más visibilidad", desc: "Llega a una audiencia interesada en música emergente, urbana e independiente.", color: "from-fuchsia-500 to-purple-500" },
+    { icon: Users, title: "Comunidad +200k", desc: "Da visibilidad a tu música en nuestros canales oficiales de TikTok e Instagram.", color: "from-brand to-destructive" },
+    { icon: Star, title: "Promoción destacada", desc: "Publicamos tu canción o contenido promocional para ayudarte a ganar exposición.", color: "from-destructive to-warning" },
+    { icon: Palette, title: "Creatividad personalizada", desc: "Preparamos el formato visual más adecuado para cada red social y tipo de lanzamiento.", color: "from-warning to-accent" },
+    { icon: TrendingUp, title: "Más visibilidad", desc: "Llega a una audiencia interesada en música emergente, urbana e independiente.", color: "from-accent to-primary" },
   ];
 
   return (
-    <div className="-m-6 p-6 sm:p-8 bg-gradient-to-br from-white via-pink-50/40 to-orange-50/60 rounded-lg">
+    <div className="-m-6 p-6 sm:p-8 bg-gradient-to-br from-white via-muted/40 to-muted/60 rounded-lg">
       {/* Header */}
       <div className="flex flex-col items-center text-center mb-6">
         <div className="relative mb-4">
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-500 to-orange-500 blur-xl opacity-40 rounded-full" />
-          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 via-rose-500 to-orange-500 flex items-center justify-center shadow-lg shadow-pink-500/30">
+          <div className="absolute inset-0 bg-gradient-to-br from-brand to-warning blur-xl opacity-40 rounded-full" />
+          <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-brand via-destructive to-warning flex items-center justify-center shadow-lg shadow-pink-500/30">
             <Megaphone className="w-8 h-8 text-white" />
           </div>
         </div>
-        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-pink-600 via-rose-600 to-orange-600 bg-clip-text text-transparent mb-2">
+        <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-brand via-destructive to-warning bg-clip-text text-transparent mb-2">
           Promoción en RRSS
         </h3>
         <p className="text-sm sm:text-base text-gray-600 max-w-md">
@@ -261,7 +261,7 @@ const SocialPromoPopup = () => {
         {items.map((item, i) => (
           <div
             key={i}
-            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-pink-100 hover:border-pink-300 hover:shadow-md hover:shadow-pink-200/40 transition-all duration-300"
+            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-brand hover:border-brand hover:shadow-md hover:shadow-pink-200/40 transition-all duration-300"
           >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform`}>
               <item.icon className="w-5 h-5 text-white" />
@@ -278,7 +278,7 @@ const SocialPromoPopup = () => {
           <Button
             asChild
             size="lg"
-            className="bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 hover:from-pink-600 hover:via-fuchsia-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/30 border-0"
+            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-white shadow-lg shadow-purple-500/30 border-0"
           >
             <a href="/#pricing-section">
               <Megaphone className="w-4 h-4 mr-2" />
@@ -301,7 +301,7 @@ export const WhyChooseSection = () => {
       icon: Sparkles,
       title: t("why.features.legal.title"), // "AI Music Studio"
       description: t("why.features.legal.desc"),
-      color: "from-pink-500 via-fuchsia-500 to-purple-600",
+      color: "from-brand via-accent to-primary",
       featured: true,
       popupContent: <AIMusicStudioPopup />,
     },
@@ -309,7 +309,7 @@ export const WhyChooseSection = () => {
       icon: Shield,
       title: t("why.features.instant.title"), // "Registro de PI"
       description: t("why.features.instant.desc"),
-      color: "from-purple-500 to-blue-600",
+      color: "from-primary to-info",
       featured: true,
       popupContent: <IPRegistryPopup />,
     },
@@ -317,7 +317,7 @@ export const WhyChooseSection = () => {
       icon: Globe,
       title: t("why.features.distribution.title"), // "Distribución Global"
       description: t("why.features.distribution.desc"),
-      color: "from-blue-500 to-cyan-500",
+      color: "from-info to-info",
       featured: true,
       popupContent: <GlobalDistributionPopup />,
     },
@@ -325,14 +325,14 @@ export const WhyChooseSection = () => {
       icon: Megaphone,
       title: t("why.features.promo.title"), // "Promoción en RRSS"
       description: t("why.features.promo.desc"),
-      color: "from-cyan-500 to-pink-500",
+      color: "from-info to-brand",
       featured: true,
       popupContent: <SocialPromoPopup />,
     },
   ];
 
   return (
-    <section id="all-in-one-section" className="py-20 bg-gradient-to-b from-purple-900 to-purple-800">
+    <section id="all-in-one-section" className="py-20 bg-gradient-to-b from-primary to-primary">
       <div className="max-w-6xl mx-auto px-6">
         {/* Section header */}
         <ScrollReveal>

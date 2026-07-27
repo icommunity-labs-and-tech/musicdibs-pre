@@ -64,8 +64,8 @@ const FAQ = [
 ];
 
 function Cell({ value }: { value: string | boolean }) {
-  if (value === true) return <Check className="w-5 h-5 text-emerald-400 mx-auto stroke-[3]" />;
-  if (value === false) return <X className="w-5 h-5 text-red-400 mx-auto stroke-[3]" />;
+  if (value === true) return <Check className="w-5 h-5 text-success mx-auto stroke-[3]" />;
+  if (value === false) return <X className="w-5 h-5 text-destructive mx-auto stroke-[3]" />;
   return <span className="text-white/90 text-sm font-medium">{value}</span>;
 }
 
@@ -125,11 +125,11 @@ const MusicdibsVsUdioPage = () => {
       <article className="pt-32 pb-20 px-6">
         <div className="max-w-5xl mx-auto">
           <header className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-full px-5 py-2 mb-6">
-              <Shield className="w-5 h-5 text-pink-400" />
-              <span className="text-pink-300 text-sm font-medium">Musicdibs vs Udio</span>
+            <div className="inline-flex items-center gap-2 bg-brand/10 border border-brand/20 rounded-full px-5 py-2 mb-6">
+              <Shield className="w-5 h-5 text-brand" />
+              <span className="text-brand text-sm font-medium">Musicdibs vs Udio</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
               Udio generates songs. Musicdibs releases them, protects them and gets them paid.
             </h1>
             <p className="text-white/70 text-lg md:text-xl max-w-3xl mx-auto mb-10">
@@ -165,7 +165,7 @@ const MusicdibsVsUdioPage = () => {
                       Feature
                     </th>
                     <th className="px-4 py-5 text-center text-white/70 font-bold">Udio</th>
-                    <th className="px-4 py-5 text-center bg-pink-500/10 border-x border-pink-500/30 text-white font-bold">
+                    <th className="px-4 py-5 text-center bg-brand/10 border-x border-brand/30 text-white font-bold">
                       Musicdibs
                     </th>
                   </tr>
@@ -175,19 +175,19 @@ const MusicdibsVsUdioPage = () => {
                     <tr
                       key={i}
                       className={`border-b border-white/5 last:border-b-0 ${
-                        row.highlight ? "bg-pink-500/10" : i % 2 === 0 ? "bg-white/[0.02]" : ""
+                        row.highlight ? "bg-brand/10" : i % 2 === 0 ? "bg-white/[0.02]" : ""
                       }`}
                     >
                       <td className="px-5 py-4 text-white/80 font-medium">
                         {row.feature}
                         {row.highlight && (
-                          <span className="ml-2 text-[10px] uppercase tracking-wide text-pink-300 font-bold">
+                          <span className="ml-2 text-[10px] uppercase tracking-wide text-brand font-bold">
                             Key difference
                           </span>
                         )}
                       </td>
                       <td className="px-4 py-4 text-center"><Cell value={row.udio} /></td>
-                      <td className="px-4 py-4 text-center bg-pink-500/5 border-x border-pink-500/20">
+                      <td className="px-4 py-4 text-center bg-brand/5 border-x border-brand/20">
                         <Cell value={row.musicdibs} />
                       </td>
                     </tr>
@@ -217,8 +217,8 @@ const MusicdibsVsUdioPage = () => {
                 const Icon = s.icon;
                 return (
                   <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                    <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center mb-5">
-                      <Icon className="w-6 h-6 text-pink-400" />
+                    <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-5">
+                      <Icon className="w-6 h-6 text-brand" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-3">{s.title}</h3>
                     <p className="text-white/70 leading-relaxed">{s.desc}</p>
@@ -255,7 +255,7 @@ const MusicdibsVsUdioPage = () => {
             </div>
           </section>
 
-          <section className="text-center bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-2xl p-12">
+          <section className="text-center bg-gradient-to-r from-brand/10 to-primary/10 border border-brand/20 rounded-2xl p-12">
             <h2 className="text-3xl font-bold text-white mb-4">Generate with AI. Release for real.</h2>
             <p className="text-white/70 mb-8 max-w-xl mx-auto">
               Sign up free and create, protect and distribute your first song today.
