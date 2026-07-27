@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { CancellationSurveyModal } from './CancellationSurveyModal';
+import { useCheckout } from '@/hooks/useCheckout';
 
 type StripePlan = {
   planId: string;
@@ -31,6 +32,7 @@ type PricingCatalogResponse = {
 export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { compact?: boolean; cancelAtPeriodEnd?: boolean }) {
   const { t } = useTranslation();
   const cs = 'dashboard.creditStore';
+  const { cancelRenewal: cancelRenewalApi } = useCheckout();
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
@@ -173,10 +175,7 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
   const handleConfirmCancel = async (reason: string) => {
     setLoading('cancel');
     try {
-      const { data } = await supabase.functions.invoke('create-credit-checkout', {
-        body: { action: 'cancel_renewal', cancellation_reason: reason },
-      });
-      toast.success(data?.message || t(`${cs}.renewalCancelled`));
+      await cancelRenewalApi(reason);
       setCancelAtPeriodEnd(true);
     } catch {
       setError(t(`${cs}.purchaseError`));
