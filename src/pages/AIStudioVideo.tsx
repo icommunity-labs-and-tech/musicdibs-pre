@@ -561,7 +561,7 @@ const AIStudioVideo = () => {
                     />
                     {uploadedImage ? (
                       <div className="relative rounded-lg overflow-hidden border">
-                        <img src={uploadedImage} alt="Preview" className="w-full max-h-48 object-cover" />
+                        <img src={uploadedImage} alt="Preview" loading="lazy" decoding="async" className="w-full max-h-48 object-cover" />
                         <div className="absolute bottom-0 left-0 right-0 bg-background/80 backdrop-blur-sm px-3 py-2 flex justify-between items-center">
                           <span className="text-xs truncate">{uploadedImageName}</span>
                           <Button variant="ghost" size="sm" onClick={() => { setUploadedImage(null); setUploadedImageName(""); }}>
