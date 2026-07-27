@@ -1,5 +1,6 @@
-// Notify MailerLite subscribers when a blog post is published.
-// Triggered by a Postgres trigger on public.blog_posts when `published` becomes true.
+// Notify blog subscribers when a post is published.
+// Recipient list is sourced from MailerLite groups (per language),
+// emails are sent via Resend (batch API) so we don't depend on MailerLite Premium.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,12 +8,14 @@ const corsHeaders = {
 };
 
 const MAILERLITE_BASE = "https://connect.mailerlite.com/api";
+const RESEND_BASE = "https://api.resend.com";
 const SITE_BASE = "https://www.musicdibs.com";
+const FROM = "Musicdibs <no-reply@musicdibs.com>";
 
 const GROUP_NAMES: Record<string, string> = {
   es: "TODOS Musicdibs ES",
   en: "TODOS Musicdibs EN",
-  pt: "TODOS Musicdibs PT",
+  pt: "Todos Musicdibs BR",
 };
 
 const SUBJECTS: Record<string, (t: string) => string> = {
@@ -21,38 +24,26 @@ const SUBJECTS: Record<string, (t: string) => string> = {
   pt: (t) => `Novo artigo no Musicdibs: ${t}`,
 };
 
-const CTA: Record<string, string> = {
-  es: "Leer artículo",
-  en: "Read article",
-  pt: "Ler artigo",
-};
-
+const CTA: Record<string, string> = { es: "Leer artículo", en: "Read article", pt: "Ler artigo" };
 const INTRO: Record<string, string> = {
   es: "Acabamos de publicar un nuevo artículo que creemos que te va a interesar:",
   en: "We just published a new article we think you'll enjoy:",
   pt: "Acabamos de publicar um novo artigo que achamos que você vai gostar:",
 };
-
 const FOOTER: Record<string, string> = {
   es: "Musicdibs — Registra, distribuye y promociona tu música.",
   en: "Musicdibs — Register, distribute and promote your music.",
   pt: "Musicdibs — Registre, distribua e promova sua música.",
 };
 
-function jsonResponse(body: Record<string, unknown>, status = 200) {
+function json(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 }
 
-function buildHtml(post: {
-  title: string;
-  excerpt: string | null;
-  image_url: string | null;
-  slug: string;
-  language: string;
-}) {
+function buildHtml(post: { title: string; excerpt: string | null; image_url: string | null; slug: string; language: string; }) {
   const lang = (post.language || "es").toLowerCase();
   const url = `${SITE_BASE}/news/${post.slug}`;
   const cta = CTA[lang] || CTA.es;
@@ -64,7 +55,6 @@ function buildHtml(post: {
   const excerpt = post.excerpt
     ? `<p style="font-size:16px;line-height:1.6;color:#334155;margin:0 0 24px;">${post.excerpt}</p>`
     : "";
-
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Arial,sans-serif;color:#0f172a;">
   <div style="max-width:640px;margin:0 auto;padding:32px 20px;background:#ffffff;">
@@ -91,19 +81,61 @@ async function ml<T>(path: string, apiKey: string, init?: RequestInit): Promise<
     },
   });
   const text = await res.text();
-  if (!res.ok) {
-    throw new Error(`MailerLite ${path} ${res.status}: ${text.slice(0, 400)}`);
-  }
+  if (!res.ok) throw new Error(`MailerLite ${path} ${res.status}: ${text.slice(0, 400)}`);
   return text ? JSON.parse(text) as T : ({} as T);
 }
 
 async function resolveGroupId(name: string, apiKey: string): Promise<string | null> {
   const data = await ml<{ data: Array<{ id: string; name: string }> }>(
-    `/groups?filter[name]=${encodeURIComponent(name)}&limit=50`,
-    apiKey,
+    `/groups?filter[name]=${encodeURIComponent(name)}&limit=50`, apiKey,
   );
   const match = data.data?.find((g) => g.name.trim().toLowerCase() === name.toLowerCase());
   return match?.id ?? null;
+}
+
+async function fetchGroupSubscribers(groupId: string, apiKey: string): Promise<string[]> {
+  const emails: string[] = [];
+  let cursor: string | null = null;
+  let page = 0;
+  while (page < 200) {
+    const qs = new URLSearchParams({
+      "filter[status]": "active",
+      limit: "1000",
+    });
+    if (cursor) qs.set("cursor", cursor);
+    const data = await ml<{ data: Array<{ email: string }>; meta?: { next_cursor?: string | null } }>(
+      `/subscribers?filter[group]=${groupId}&${qs.toString()}`,
+      apiKey,
+    );
+    for (const s of data.data || []) if (s.email) emails.push(s.email.toLowerCase());
+    cursor = data.meta?.next_cursor || null;
+    if (!cursor) break;
+    page++;
+  }
+  return Array.from(new Set(emails));
+}
+
+async function resendBatch(emails: string[], subject: string, html: string, resendKey: string): Promise<{ sent: number; failed: number; errors: string[] }> {
+  let sent = 0, failed = 0;
+  const errors: string[] = [];
+  // Resend batch endpoint accepts up to 100 messages per call.
+  for (let i = 0; i < emails.length; i += 100) {
+    const chunk = emails.slice(i, i + 100).map((to) => ({ from: FROM, to: [to], subject, html }));
+    const res = await fetch(`${RESEND_BASE}/emails/batch`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify(chunk),
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      failed += chunk.length;
+      errors.push(`batch ${i}: ${res.status} ${text.slice(0, 300)}`);
+    } else {
+      sent += chunk.length;
+    }
+    await new Promise((r) => setTimeout(r, 250));
+  }
+  return { sent, failed, errors };
 }
 
 Deno.serve(async (req) => {
@@ -115,10 +147,11 @@ Deno.serve(async (req) => {
     const cronSecret = Deno.env.get("CRON_SECRET");
     const triggerSecret = Deno.env.get("NOTIFY_BLOG_TRIGGER_SECRET");
     const mlKey = Deno.env.get("MAILERLITE_API_KEY");
+    const resendKey = Deno.env.get("RESEND_API_KEY");
 
-    if (!mlKey) return jsonResponse({ error: "MAILERLITE_API_KEY missing" }, 500);
+    if (!mlKey) return json({ error: "MAILERLITE_API_KEY missing" }, 500);
+    if (!resendKey) return json({ error: "RESEND_API_KEY missing" }, 500);
 
-    // Auth: allow service role, CRON_SECRET, matching x-cron-secret, or admin user JWT
     const authHeader = req.headers.get("Authorization") || "";
     const xCron = req.headers.get("x-cron-secret") || "";
     const bearer = authHeader.replace("Bearer ", "");
@@ -128,7 +161,6 @@ Deno.serve(async (req) => {
       (triggerSecret && (bearer === triggerSecret || xCron === triggerSecret));
 
     if (!authorized && bearer) {
-      // Fallback: verify caller is an authenticated admin
       try {
         const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
           headers: { apikey: serviceRoleKey, Authorization: `Bearer ${bearer}` },
@@ -147,66 +179,50 @@ Deno.serve(async (req) => {
       } catch (_) { /* ignore */ }
     }
 
-    if (!authorized) return jsonResponse({ error: "Unauthorized" }, 401);
+    if (!authorized) return json({ error: "Unauthorized" }, 401);
 
     const body = await req.json().catch(() => ({}));
     const postId: string | undefined = body.post_id || body.postId;
-    if (!postId) return jsonResponse({ error: "post_id required" }, 400);
+    const force: boolean = body.force === true;
+    if (!postId) return json({ error: "post_id required" }, 400);
 
-    // Fetch post via PostgREST with service role
     const postRes = await fetch(
       `${supabaseUrl}/rest/v1/blog_posts?id=eq.${postId}&select=id,title,excerpt,image_url,slug,language,published,subscribers_notified_at`,
-      {
-        headers: {
-          apikey: serviceRoleKey,
-          Authorization: `Bearer ${serviceRoleKey}`,
-        },
-      },
+      { headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` } },
     );
     const posts = await postRes.json();
     const post = Array.isArray(posts) ? posts[0] : null;
-    if (!post) return jsonResponse({ error: "post_not_found" }, 404);
-    if (!post.published) return jsonResponse({ skipped: "not_published" });
-    if (post.subscribers_notified_at) return jsonResponse({ skipped: "already_notified" });
+    if (!post) return json({ error: "post_not_found" }, 404);
+    if (!post.published) return json({ skipped: "not_published" });
+    if (post.subscribers_notified_at && !force) return json({ skipped: "already_notified" });
 
     const lang = (post.language || "es").toLowerCase();
     const groupName = GROUP_NAMES[lang];
-    if (!groupName) return jsonResponse({ skipped: `unsupported_language_${lang}` });
+    if (!groupName) return json({ skipped: `unsupported_language_${lang}` });
 
     const groupId = await resolveGroupId(groupName, mlKey);
-    if (!groupId) return jsonResponse({ error: `group_not_found: ${groupName}` }, 404);
+    if (!groupId) return json({ error: `group_not_found: ${groupName}` }, 404);
+
+    const emails = await fetchGroupSubscribers(groupId, mlKey);
+    if (emails.length === 0) return json({ skipped: "no_subscribers", group: groupName });
+
+    // Filter out suppressed emails (bounces/complaints/unsubscribes)
+    const suppRes = await fetch(
+      `${supabaseUrl}/rest/v1/suppressed_emails?select=email`,
+      { headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` } },
+    );
+    const suppressed = new Set<string>();
+    if (suppRes.ok) {
+      const rows = await suppRes.json();
+      if (Array.isArray(rows)) for (const r of rows) if (r?.email) suppressed.add(String(r.email).toLowerCase());
+    }
+    const finalEmails = emails.filter((e) => !suppressed.has(e));
 
     const subject = (SUBJECTS[lang] || SUBJECTS.es)(post.title);
     const html = buildHtml(post);
 
-    // 1) Create draft campaign
-    const created = await ml<{ data: { id: string } }>("/campaigns", mlKey, {
-      method: "POST",
-      body: JSON.stringify({
-        name: `Blog · ${post.title}`.slice(0, 120),
-        language_id: undefined,
-        type: "regular",
-        emails: [
-          {
-            subject,
-            from_name: "Musicdibs",
-            from: "no-reply@musicdibs.com",
-            content: html,
-          },
-        ],
-        groups: [groupId],
-      }),
-    });
-    const campaignId = created.data?.id;
-    if (!campaignId) throw new Error("campaign_id missing in MailerLite response");
+    const result = await resendBatch(finalEmails, subject, html, resendKey);
 
-    // 2) Schedule immediately
-    await ml(`/campaigns/${campaignId}/schedule`, mlKey, {
-      method: "POST",
-      body: JSON.stringify({ delivery: "instant" }),
-    });
-
-    // 3) Mark as notified
     await fetch(`${supabaseUrl}/rest/v1/blog_posts?id=eq.${postId}`, {
       method: "PATCH",
       headers: {
@@ -218,9 +234,16 @@ Deno.serve(async (req) => {
       body: JSON.stringify({ subscribers_notified_at: new Date().toISOString() }),
     });
 
-    return jsonResponse({ sent: true, campaign_id: campaignId, group: groupName });
+    return json({
+      sent: result.sent,
+      failed: result.failed,
+      total_recipients: finalEmails.length,
+      suppressed_skipped: emails.length - finalEmails.length,
+      group: groupName,
+      errors: result.errors.slice(0, 5),
+    });
   } catch (err) {
     console.error("notify-blog-subscribers error:", err);
-    return jsonResponse({ error: err instanceof Error ? err.message : String(err) }, 500);
+    return json({ error: err instanceof Error ? err.message : String(err) }, 500);
   }
 });
