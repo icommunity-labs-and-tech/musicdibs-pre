@@ -1,20 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAudioLibrary, type AudioLibraryItem } from "@/hooks/useAudioLibrary";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Music, Play, Pause, Loader2, Check } from "lucide-react";
 
-interface Generation {
-  id: string;
-  prompt: string;
-  genre: string | null;
-  mood: string | null;
-  audio_url: string;
-  duration: number;
-  created_at: string;
-}
+type Generation = AudioLibraryItem & { prompt: string };
 
 interface GenerationPickerProps {
   onSelect: (audioUrl: string, name: string) => void;
@@ -23,25 +15,11 @@ interface GenerationPickerProps {
 export const GenerationPicker = ({ onSelect }: GenerationPickerProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [generations, setGenerations] = useState<Generation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items, loading } = useAudioLibrary({ userId: user?.id, limit: 30 });
+  const generations: Generation[] = items.map((it) => ({ ...it, prompt: it.title }));
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("ai_generations")
-      .select("id, prompt, genre, mood, audio_url, duration, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .then(({ data }) => {
-        setGenerations(data || []);
-        setLoading(false);
-      });
-  }, [user]);
 
   useEffect(() => {
     return () => {
