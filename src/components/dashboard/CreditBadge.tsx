@@ -84,6 +84,8 @@ export function CreditBadge() {
     <HoverCard openDelay={200} closeDelay={100}>
       <HoverCardTrigger asChild>
         <button
+          type="button"
+          aria-label={t('dashboard.creditBadge.ariaLabel', { count: credits, defaultValue: `${credits} créditos disponibles` })}
           className={`relative flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
             credits < 3
               ? 'bg-destructive/15 text-destructive hover:bg-destructive/25 animate-pulse'
@@ -91,10 +93,10 @@ export function CreditBadge() {
           }`}
           title={t('dashboard.creditBadge.tooltip')}
         >
-          <Coins className="h-3.5 w-3.5" />
+          <Coins className="h-3.5 w-3.5" aria-hidden="true" />
           <span className="tabular-nums">{credits}</span>
           {credits < 3 && (
-            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5" aria-hidden="true">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-destructive/75" />
               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-destructive" />
             </span>
