@@ -1831,6 +1831,7 @@ const pt: typeof es = {
         ai: 'Experimente o AI Music Studio',
         promo: 'Lance sua primeira promoção',
       },
+    },
     billing: {
       title: 'Faturamento',
       currentPlan: 'Plano atual',
