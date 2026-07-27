@@ -46,8 +46,25 @@ export default function Dashboard() {
   }, [user]);
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-sm">
+        <div className="container flex h-14 items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Music className="h-5 w-5 text-primary" />
+            <span className="font-bold text-lg">Musicdibs</span>
+          </div>
+          <Skeleton className="h-8 w-24" />
+        </div>
+      </header>
+      <div className="container py-6 space-y-4">
+        <Skeleton className="h-24 w-full rounded-lg" />
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-32 w-full rounded-lg" />
+          <Skeleton className="h-32 w-full rounded-lg" />
+          <Skeleton className="h-32 w-full rounded-lg" />
+        </div>
+        <Skeleton className="h-64 w-full rounded-lg" />
+      </div>
     </div>
   );
 
