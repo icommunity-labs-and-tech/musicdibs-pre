@@ -9,7 +9,8 @@ import { CreditStore } from '@/components/dashboard/CreditStore';
 import { VerifyRegistration } from '@/components/dashboard/VerifyRegistration';
 import { RecentRegistrations } from '@/components/dashboard/RecentRegistrations';
 import { Card, CardContent } from '@/components/ui/card';
-import { Music, LogOut, Loader2, Upload } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Music, LogOut, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import type { DashboardSummary } from '@/types/dashboard';
 
