@@ -110,6 +110,7 @@ export default function DashboardLayout() {
         <DashboardTour />
         <ReferralSourceModal />
         <NotificationToaster />
+        <CommandPalette />
       </SidebarProvider>
     </NotificationsProvider>
   );
