@@ -1,5 +1,6 @@
-import { jsPDF } from 'jspdf'
-import QRCode from 'qrcode'
+// jsPDF y QRCode se cargan dinámicamente dentro del generador para no
+// contribuir al bundle de las rutas que sólo referencian el util.
+import type { jsPDF as JsPDFType } from 'jspdf'
 import logoMusicdibs from '@/assets/logo_musicdibs_black.jpg'
 
 // ── Palette ──────────────────────────────────────────────────
