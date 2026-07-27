@@ -923,6 +923,18 @@ const en: typeof es = {
       newUserDesc: "You don't have any registered works yet. Follow our step-by-step assistant to launch your first song to the world.",
       newUserBtn: 'My first music release',
     },
+    onboarding: {
+      title: 'Your first steps on Musicdibs',
+      subtitle: '{{completed}} of {{total}} completed. Keep going to get the most out of the platform.',
+      cta: 'Continue with the next step',
+      dismiss: 'Dismiss',
+      steps: {
+        kyc: 'Verify your identity (KYC)',
+        artist: 'Create your artist profile',
+        work: 'Register your first work',
+        ai: 'Try the AI Music Studio',
+        promo: 'Launch your first promotion',
+      },
     billing: {
       title: 'Billing',
       currentPlan: 'Current plan',
