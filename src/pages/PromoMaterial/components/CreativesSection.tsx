@@ -261,7 +261,7 @@ export const CreativesSection = () => {
       ) : generatedImage ? (
         <div className="space-y-3">
           <div className={`relative rounded-2xl overflow-hidden border border-border/40 shadow-lg ${ASPECT_CLASS[resultFormat]}`}>
-            <img src={generatedImage} alt={FORMAT_LABELS[resultFormat]} className="w-full h-full object-cover" />
+            <img src={generatedImage} alt={FORMAT_LABELS[resultFormat]} loading="lazy" decoding="async" className="w-full h-full object-cover" />
           </div>
 
           <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
