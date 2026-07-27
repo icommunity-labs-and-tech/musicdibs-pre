@@ -186,7 +186,9 @@ export function DashboardSidebar() {
     const isKycGuarded = !!item.kycGuarded;
 
     if (isDistribute) {
-      const isAnnual = subscriptionPlan === 'Annual' || (subscriptionTier?.startsWith('annual_') ?? false);
+      // Sólo tiers PLUS+ (annual_100 y superiores) tienen distribución. annual_20 (Anual Básico) NO.
+      const isAnnual = hasDistributionAccess(subscriptionTier) ||
+        (subscriptionPlan === 'Annual' && !subscriptionTier); // fallback si tier no está aún hidratado
       return (
         <SidebarMenuItem key={item.title}>
           <SidebarMenuButton asChild>
