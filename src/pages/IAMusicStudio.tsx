@@ -24,14 +24,40 @@ export default function IAMusicStudio() {
           content="Crea. Perfecciona. Domina con IA. El estudio musical definitivo."
         />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://musicdibs.com/ia-music-studio" />
+        <link rel="canonical" href="https://www.musicdibs.com/ia-music-studio" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
           rel="stylesheet"
         />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            name: "Musicdibs IA Music Studio",
+            serviceType: "Estudio musical con inteligencia artificial",
+            description:
+              "Estudio musical con IA para crear canciones desde cero, masterizar audio, generar material promocional visual y diseñar artistas virtuales en minutos.",
+            areaServed: "Worldwide",
+            url: "https://www.musicdibs.com/ia-music-studio",
+            provider: {
+              "@type": "Organization",
+              name: "Musicdibs",
+              url: "https://www.musicdibs.com",
+              logo: "https://www.musicdibs.com/logo.png",
+            },
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "EUR",
+              price: "0",
+              availability: "https://schema.org/InStock",
+              url: "https://www.musicdibs.com/ia-music-studio",
+            },
+          })}
+        </script>
       </Helmet>
+
 
       <div className="landing-ai-studio">
         <main className="relative min-h-screen overflow-hidden">
