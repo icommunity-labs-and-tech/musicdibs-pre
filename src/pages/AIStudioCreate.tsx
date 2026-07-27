@@ -1,6 +1,7 @@
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { CopyrightBlockedAlert } from "@/components/ai-studio/CopyrightBlockedAlert";
 import { SEO } from "@/components/SEO";
+import { useAiGenerationsRealtime } from "@/hooks/useAiGenerationsRealtime";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
