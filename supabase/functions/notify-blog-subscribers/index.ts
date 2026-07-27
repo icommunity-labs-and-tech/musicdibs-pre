@@ -113,17 +113,40 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const cronSecret = Deno.env.get("CRON_SECRET");
+    const triggerSecret = Deno.env.get("NOTIFY_BLOG_TRIGGER_SECRET");
     const mlKey = Deno.env.get("MAILERLITE_API_KEY");
 
     if (!mlKey) return jsonResponse({ error: "MAILERLITE_API_KEY missing" }, 500);
 
-    // Auth: allow service role, CRON_SECRET, or matching x-cron-secret
+    // Auth: allow service role, CRON_SECRET, matching x-cron-secret, or admin user JWT
     const authHeader = req.headers.get("Authorization") || "";
     const xCron = req.headers.get("x-cron-secret") || "";
     const bearer = authHeader.replace("Bearer ", "");
-    const authorized =
+    let authorized =
       bearer === serviceRoleKey ||
-      (cronSecret && (bearer === cronSecret || xCron === cronSecret));
+      (cronSecret && (bearer === cronSecret || xCron === cronSecret)) ||
+      (triggerSecret && (bearer === triggerSecret || xCron === triggerSecret));
+
+    if (!authorized && bearer) {
+      // Fallback: verify caller is an authenticated admin
+      try {
+        const userRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+          headers: { apikey: serviceRoleKey, Authorization: `Bearer ${bearer}` },
+        });
+        if (userRes.ok) {
+          const user = await userRes.json();
+          if (user?.id) {
+            const roleRes = await fetch(
+              `${supabaseUrl}/rest/v1/user_roles?user_id=eq.${user.id}&role=eq.admin&select=role`,
+              { headers: { apikey: serviceRoleKey, Authorization: `Bearer ${serviceRoleKey}` } },
+            );
+            const roles = await roleRes.json();
+            if (Array.isArray(roles) && roles.length > 0) authorized = true;
+          }
+        }
+      } catch (_) { /* ignore */ }
+    }
+
     if (!authorized) return jsonResponse({ error: "Unauthorized" }, 401);
 
     const body = await req.json().catch(() => ({}));
