@@ -18,76 +18,76 @@ const Terms = () => {
           </h1>
 
           <div className="article-content space-y-8">
-            <h2 className="text-2xl font-bold text-white">{t("terms.general_purchase_title")}</h2>
+            <h2 className="text-2xl font-bold text-page-fg">{t("terms.general_purchase_title")}</h2>
             <h3 className="text-xl font-semibold text-brand">{t("terms.general_conditions_title")}</h3>
-            <p className="text-white/80 leading-relaxed">
+            <p className="text-page-fg-muted leading-relaxed">
               {t("terms.general_conditions_text")}
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10">{t("terms.refund_title")}</h2>
-            <p className="text-white/80">{t("terms.refund_intro")}</p>
+            <h2 className="text-2xl font-bold text-page-fg mt-10">{t("terms.refund_title")}</h2>
+            <p className="text-page-fg-muted">{t("terms.refund_intro")}</p>
 
             <h3 className="text-xl font-semibold text-brand">{t("terms.purchase_process_title")}</h3>
-            <p className="text-white/80">{t("terms.purchase_process_text")}</p>
+            <p className="text-page-fg-muted">{t("terms.purchase_process_text")}</p>
 
             <h3 className="text-xl font-semibold text-brand">{t("terms.warranty_title")}</h3>
-            <p className="text-white/80">
+            <p className="text-page-fg-muted">
               {t("terms.warranty_text")}{' '}
               <a href="mailto:info@musicdibs.com" className="text-brand hover:text-brand underline">info@musicdibs.com</a>{' '}
               {t("terms.warranty_text_end")}
             </p>
 
             <h3 className="text-xl font-semibold text-brand">{t("terms.cancellation_title")}</h3>
-            <p className="text-white/80">
+            <p className="text-page-fg-muted">
               {t("terms.cancellation_text")}{' '}
               <a href="mailto:info@musicdibs.com" className="text-brand hover:text-brand underline">info@musicdibs.com</a>{' '}
               {t("terms.cancellation_text_end")}
             </p>
-            <p className="text-white/80">
+            <p className="text-page-fg-muted">
               <strong>{t("terms.cancellation_important")}</strong>
             </p>
 
             <h3 className="text-xl font-semibold text-brand">{t("terms.refunds_title")}</h3>
-            <p className="text-white/80">
+            <p className="text-page-fg-muted">
               {t("terms.refunds_text")} <strong>{t("terms.refunds_promo")}</strong> {t("terms.refunds_request")}{' '}
               <a href="mailto:info@musicdibs.com" className="text-brand hover:text-brand underline">info@musicdibs.com</a>{' '}
               {t("terms.refunds_request_end")}
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10">{t("terms.subscription_title")}</h2>
-            <p className="text-white/80">{t("terms.subscription_text")}</p>
-            <p className="text-white/80">
+            <h2 className="text-2xl font-bold text-page-fg mt-10">{t("terms.subscription_title")}</h2>
+            <p className="text-page-fg-muted">{t("terms.subscription_text")}</p>
+            <p className="text-page-fg-muted">
               <strong>{t("terms.subscription_important")}</strong>
             </p>
 
             <h3 className="text-xl font-semibold text-brand">{t("terms.abuse_title")}</h3>
-            <p className="text-white/80">{t("terms.abuse_text")}</p>
+            <p className="text-page-fg-muted">{t("terms.abuse_text")}</p>
 
             <h3 className="text-xl font-semibold text-brand">{t("terms.nfts_title")}</h3>
-            <p className="text-white/80">{t("terms.nfts_text")}</p>
+            <p className="text-page-fg-muted">{t("terms.nfts_text")}</p>
 
-            <h2 className="text-2xl font-bold text-white mt-10">{t("terms.icom_title")}</h2>
-            <p className="text-white/80">
+            <h2 className="text-2xl font-bold text-page-fg mt-10">{t("terms.icom_title")}</h2>
+            <p className="text-page-fg-muted">
               {t("terms.icom_text")}{' '}
               <a href="https://www.icommunity.io/icom/en/" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand underline">icommunity.io/icom</a>.
             </p>
-            <p className="text-white/80">{t("terms.icom_steps_intro")}</p>
-            <ol className="list-decimal pl-6 text-white/80 space-y-2">
+            <p className="text-page-fg-muted">{t("terms.icom_steps_intro")}</p>
+            <ol className="list-decimal pl-6 text-page-fg-muted space-y-2">
               <li>{t("terms.icom_step1")}</li>
               <li>{t("terms.icom_step2")}</li>
             </ol>
 
-            <h2 className="text-2xl font-bold text-white mt-10">{t("terms.offers_title")}</h2>
-            <p className="text-white/80">{t("terms.offers_text")}</p>
+            <h2 className="text-2xl font-bold text-page-fg mt-10">{t("terms.offers_title")}</h2>
+            <p className="text-page-fg-muted">{t("terms.offers_text")}</p>
 
             <h3 className="text-xl font-semibold text-brand mt-10">{t("terms.contact_title")}</h3>
-            <p className="text-white/80">
+            <p className="text-page-fg-muted">
               {t("terms.contact_text")}{' '}
               <a href="mailto:info@musicdibs.com" className="text-brand hover:text-brand underline">info@musicdibs.com</a>
             </p>
 
-            <div className="border-t border-white/20 pt-6 mt-10">
-              <p className="text-white/60 text-sm">{t("terms.copyright")}</p>
+            <div className="border-t border-page-border pt-6 mt-10">
+              <p className="text-page-fg-subtle text-sm">{t("terms.copyright")}</p>
             </div>
           </div>
         </div>

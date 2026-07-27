@@ -24,7 +24,15 @@ export default {
 				'deep': 'hsl(285 25% 7% / <alpha-value>)',
 								page: {
 					DEFAULT: 'hsl(var(--page-text))',
-					muted: 'hsl(var(--page-text-muted))'
+					muted: 'hsl(var(--page-text-muted))',
+					fg: 'hsl(var(--page-fg) / <alpha-value>)',
+					'fg-muted': 'hsl(var(--page-fg-muted))',
+					'fg-subtle': 'hsl(var(--page-fg-subtle))',
+					surface: 'hsl(var(--page-surface))',
+					'surface-strong': 'hsl(var(--page-surface-strong))',
+					border: 'hsl(var(--page-border))',
+					'border-strong': 'hsl(var(--page-border-strong))',
+					scrim: 'hsl(var(--page-scrim))'
 				},
 				compare: {
 					panel: 'hsl(var(--compare-panel))',
