@@ -56,7 +56,7 @@ const Partners = () => {
                   <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-5">
                     <Icon className="w-6 h-6 text-brand" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-3">{p(`types.${key}.title`)}</h3>
+                  <h3 className="text-xl font-bold text-primary-foreground mb-3">{p(`types.${key}.title`)}</h3>
                   <p className="text-page-fg-muted leading-relaxed">{p(`types.${key}.desc`)}</p>
                 </div>
               );
@@ -76,7 +76,7 @@ const Partners = () => {
                   <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-5">
                     <Icon className="w-7 h-7 text-primary" />
                   </div>
-                  <h3 className="text-lg font-bold text-white mb-3">{p(`benefits.${key}.title`)}</h3>
+                  <h3 className="text-lg font-bold text-primary-foreground mb-3">{p(`benefits.${key}.title`)}</h3>
                   <p className="text-page-fg-muted text-sm leading-relaxed">{p(`benefits.${key}.desc`)}</p>
                 </div>
               );

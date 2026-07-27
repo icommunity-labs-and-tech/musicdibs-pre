@@ -318,7 +318,7 @@ const PressPage = () => {
             <div className="rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 p-5 space-y-3">
               <div className="flex items-center gap-2">
                 <ExternalLink className="h-5 w-5 text-primary" />
-                <h3 className="font-semibold text-white">{t("dashboard.press.grooverTitle")}</h3>
+                <h3 className="font-semibold text-primary-foreground">{t("dashboard.press.grooverTitle")}</h3>
               </div>
               <p className="text-sm text-zinc-400">{t("dashboard.press.grooverDesc")}</p>
               <Button

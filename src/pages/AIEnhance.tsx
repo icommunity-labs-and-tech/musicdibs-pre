@@ -718,7 +718,7 @@ const AIEnhance = () => {
                               className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-accent via-accent to-warning"
                             />
                             {/* Badge MÁS POPULAR */}
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-warning via-accent to-accent px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(217,70,239,0.6)] ring-1 ring-white/20">
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-warning via-accent to-accent px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-primary-foreground shadow-[0_0_20px_rgba(217,70,239,0.6)] ring-1 ring-white/20">
                               {t('aiEnhance.recommendedBadge')}
                             </div>
                           </>
@@ -740,7 +740,7 @@ const AIEnhance = () => {
                             <>
                               <div className="flex items-start gap-3">
                                 <div className="relative shrink-0">
-                                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent via-accent to-warning flex items-center justify-center text-white shadow-lg shadow-fuchsia-500/50 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent via-accent to-warning flex items-center justify-center text-primary-foreground shadow-lg shadow-fuchsia-500/50 group-hover:scale-110 group-hover:rotate-3 transition-transform">
                                     <Mic2 className="w-7 h-7" />
                                   </div>
                                   <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-warning drop-shadow-[0_0_6px_rgba(252,211,77,0.9)] animate-pulse" />
@@ -776,7 +776,7 @@ const AIEnhance = () => {
                             <>
                               <div
                                 className={cn(
-                                  "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-white mb-3",
+                                  "w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center text-primary-foreground mb-3",
                                   mode.gradient
                                 )}
                               >

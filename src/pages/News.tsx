@@ -152,7 +152,7 @@ const News = () => {
               value={searchQuery}
               onChange={(e) => handleSearchChange(e.target.value)}
               placeholder={t("blog.searchPlaceholder", "Buscar artículos...")}
-              className="pl-10 bg-page-surface border-page-border text-white placeholder:text-page-fg-subtle"
+              className="pl-10 bg-page-surface border-page-border text-primary-foreground placeholder:text-page-fg-subtle"
             />
           </div>
 

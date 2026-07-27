@@ -94,16 +94,16 @@ const Verify = () => {
       {/* Hero */}
       <section className="pt-32 pb-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2 mb-8">
+          <div className="inline-flex items-center gap-2 bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/20 rounded-full px-5 py-2 mb-8">
             <ShieldCheck className="w-5 h-5 text-brand" />
-            <span className="text-white/90 text-sm font-medium">{t('verify.badge')}</span>
+            <span className="text-primary-foreground/90 text-sm font-medium">{t('verify.badge')}</span>
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary-foreground mb-6 leading-tight">
             {t('verify.title1')}<br />
             <span className="bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">{t('verify.title2')}</span>
           </h1>
-          <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto">
-            {t('verify.subtitle')} <strong className="text-white">Musicdibs</strong>{t('verify.subtitleEnd')}
+          <p className="text-lg md:text-xl text-primary-foreground/70 max-w-2xl mx-auto">
+            {t('verify.subtitle')} <strong className="text-primary-foreground">Musicdibs</strong>{t('verify.subtitleEnd')}
           </p>
         </div>
       </section>
@@ -111,13 +111,13 @@ const Verify = () => {
       {/* Verify Card */}
       <section className="px-6 pb-20">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 md:p-10 shadow-2xl">
+          <div className="bg-primary-foreground/5 backdrop-blur-xl border border-primary-foreground/10 rounded-2xl p-8 md:p-10 shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
               <FileSearch className="w-6 h-6 text-brand" />
-              <h2 className="text-xl font-semibold text-white">{t('verify.cardTitle')}</h2>
+              <h2 className="text-xl font-semibold text-primary-foreground">{t('verify.cardTitle')}</h2>
             </div>
 
-            <p className="text-white/60 mb-8 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: t('verify.cardDesc') }} />
+            <p className="text-primary-foreground/60 mb-8 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: t('verify.cardDesc') }} />
 
             {/* Drop zone */}
             <div
@@ -126,7 +126,7 @@ const Verify = () => {
                   ? "border-brand bg-brand/10"
                   : file
                   ? "border-success/50 bg-success/5"
-                  : "border-white/20 hover:border-white/40 bg-white/5"
+                  : "border-primary-foreground/20 hover:border-primary-foreground/40 bg-primary-foreground/5"
               }`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
               onDragLeave={() => setDragOver(false)}
@@ -142,21 +142,21 @@ const Verify = () => {
               {file ? (
                 <div className="flex items-center justify-center gap-3">
                   <CheckCircle2 className="w-6 h-6 text-success" />
-                  <span className="text-white/90 font-medium truncate max-w-xs">{file.name}</span>
+                  <span className="text-primary-foreground/90 font-medium truncate max-w-xs">{file.name}</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); }}
-                    className="text-white/40 hover:text-white/80 transition-colors ml-2"
+                    className="text-primary-foreground/40 hover:text-primary-foreground/80 transition-colors ml-2"
                   >
                     <XCircle className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
                 <>
-                  <Upload className="w-10 h-10 text-white/30 mx-auto mb-3" />
-                  <p className="text-white/60 text-sm">
+                  <Upload className="w-10 h-10 text-primary-foreground/30 mx-auto mb-3" />
+                  <p className="text-primary-foreground/60 text-sm">
                     <span className="text-brand font-medium">{t('verify.dropClick')}</span> {t('verify.dropDrag')}
                   </p>
-                  <p className="text-white/30 text-xs mt-1">{t('verify.dropHint')}</p>
+                  <p className="text-primary-foreground/30 text-xs mt-1">{t('verify.dropHint')}</p>
                 </>
               )}
             </div>
@@ -165,11 +165,11 @@ const Verify = () => {
             <Button
               onClick={handleVerify}
               disabled={!file || verifying}
-              className="w-full bg-gradient-to-r from-brand to-primary hover:from-brand hover:to-primary text-white font-semibold py-6 text-lg rounded-xl transition-all duration-200 disabled:opacity-40"
+              className="w-full bg-gradient-to-r from-brand to-primary hover:from-brand hover:to-primary text-primary-foreground font-semibold py-6 text-lg rounded-xl transition-all duration-200 disabled:opacity-40"
             >
               {verifying ? (
                 <span className="flex items-center gap-2">
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="w-5 h-5 border-2 border-primary-foreground/30 border-t-white rounded-full animate-spin" />
                   {t('verify.verifying')}
                 </span>
               ) : (
@@ -220,15 +220,15 @@ const Verify = () => {
       {/* How it works */}
       <section className="px-6 pb-24">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-12">{t('verify.howTitle')}</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground text-center mb-12">{t('verify.howTitle')}</h2>
           <div className="grid md:grid-cols-3 gap-8">
             {steps.map((item) => (
               <div key={item.step} className="text-center">
                 <div className="text-5xl font-black bg-gradient-to-b from-brand/60 to-transparent bg-clip-text text-transparent mb-4">
                   {item.step}
                 </div>
-                <h3 className="text-white font-semibold text-lg mb-2">{item.title}</h3>
-                <p className="text-white/50 text-sm leading-relaxed">{item.desc}</p>
+                <h3 className="text-primary-foreground font-semibold text-lg mb-2">{item.title}</h3>
+                <p className="text-primary-foreground/50 text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>

@@ -33,7 +33,7 @@ const Marketing = () => {
           {/* Service 1 — Covers & Videos */}
           <div className="relative group bg-page-surface border border-page-border rounded-2xl p-8 flex flex-col hover:border-brand/40 transition-colors duration-300">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-brand to-primary flex items-center justify-center mb-6">
-              <Palette className="w-7 h-7 text-white" />
+              <Palette className="w-7 h-7 text-primary-foreground" />
             </div>
             <h2 className="text-2xl font-bold mb-4">
               {t("marketing.covers_title", "Creación de portadas y vídeos")}
@@ -55,7 +55,7 @@ const Marketing = () => {
           {/* Service 2 — Social Media Promos */}
           <div className="relative group bg-page-surface border border-page-border rounded-2xl p-8 flex flex-col hover:border-brand/40 transition-colors duration-300">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-brand flex items-center justify-center mb-6">
-              <Megaphone className="w-7 h-7 text-white" />
+              <Megaphone className="w-7 h-7 text-primary-foreground" />
             </div>
             <h2 className="text-2xl font-bold mb-4">
               {t("marketing.promos_title", "Planes de promoción en RRSS")}

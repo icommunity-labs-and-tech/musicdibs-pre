@@ -246,7 +246,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
 
           {/* Why */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.whyTitle}</h2>
+            <h2 className="text-3xl font-bold text-center mb-12 text-primary-foreground">{c.whyTitle}</h2>
             <div className="grid md:grid-cols-2 gap-6">
               {c.why.map((w, i) => {
                 const Icon = whyIcons[i];
@@ -255,7 +255,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
                     <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-5">
                       <Icon className="w-6 h-6 text-brand" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-3">{w.title}</h3>
+                    <h3 className="text-xl font-bold text-primary-foreground mb-3">{w.title}</h3>
                     <p className="text-page-fg-muted leading-relaxed">{w.desc}</p>
                   </div>
                 );
@@ -265,13 +265,13 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
 
           {/* Steps */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.stepsTitle}</h2>
+            <h2 className="text-3xl font-bold text-center mb-12 text-primary-foreground">{c.stepsTitle}</h2>
             <ol className="space-y-4">
               {c.steps.map((s, i) => (
                 <li key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 flex gap-4">
                   <Clock className="w-6 h-6 text-primary shrink-0 mt-1" />
                   <div>
-                    <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
+                    <h3 className="text-lg font-bold text-primary-foreground mb-2">{s.title}</h3>
                     <p className="text-page-fg-muted">{s.desc}</p>
                   </div>
                 </li>
@@ -281,7 +281,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
 
           {/* Comparison */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-4 text-white">{c.vsTitle}</h2>
+            <h2 className="text-3xl font-bold text-center mb-4 text-primary-foreground">{c.vsTitle}</h2>
             <p className="text-page-fg-muted text-center mb-10 max-w-2xl mx-auto">{c.vsIntro}</p>
             <div className="overflow-x-auto rounded-2xl border border-page-border bg-page-surface backdrop-blur-sm">
               <table className="w-full text-sm">
@@ -295,7 +295,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
                 <tbody>
                   {c.vsRows.map((r, i) => (
                     <tr key={i} className="border-b border-page-border last:border-b-0">
-                      <td className="p-4 text-white font-semibold">{r.feature}</td>
+                      <td className="p-4 text-primary-foreground font-semibold">{r.feature}</td>
                       <td className="p-4 text-page-fg-muted">{r.trad}</td>
                       <td className="p-4 text-brand font-semibold">{r.mdb}</td>
                     </tr>
@@ -310,11 +310,11 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
 
           {/* FAQ */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.faqTitle}</h2>
+            <h2 className="text-3xl font-bold text-center mb-12 text-primary-foreground">{c.faqTitle}</h2>
             <div className="space-y-4">
               {c.faq.map((f, i) => (
                 <details key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 group">
-                  <summary className="font-bold text-white cursor-pointer flex items-center justify-between">
+                  <summary className="font-bold text-primary-foreground cursor-pointer flex items-center justify-between">
                     {f.q}
                     <CheckCircle2 className="w-5 h-5 text-brand group-open:rotate-45 transition-transform" />
                   </summary>
@@ -326,7 +326,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
 
           {/* Closing CTA */}
           <section className="bg-gradient-to-r from-brand/20 to-primary/20 border border-page-border rounded-2xl p-10 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">{c.closingTitle}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-primary-foreground">{c.closingTitle}</h2>
             <p className="text-page-fg-muted mb-8 max-w-lg mx-auto">{c.closingDesc}</p>
             <Link to="/login">
               <Button variant="hero" size="xl" className="font-semibold">

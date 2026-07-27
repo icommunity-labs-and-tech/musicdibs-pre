@@ -200,7 +200,7 @@ const AISongGeneratorPage = () => {
       </section>
 
       {/* TRUST */}
-      <section className="px-6 py-12 border-y border-page-border bg-white/[0.02]">
+      <section className="px-6 py-12 border-y border-page-border bg-primary-foreground/[0.02]">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
           {TRUST.map((t, i) => (
             <div key={i} className="flex items-center gap-3 justify-center md:justify-start">
@@ -217,7 +217,7 @@ const AISongGeneratorPage = () => {
       <section id="how-it-works" className="px-6 py-24">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">From idea to release in minutes</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-primary-foreground mb-4">From idea to release in minutes</h2>
             <p className="text-page-fg-subtle text-lg max-w-2xl mx-auto">
               One workflow. Four steps. Zero friction.
             </p>
@@ -228,13 +228,13 @@ const AISongGeneratorPage = () => {
                 key={i}
                 className="group relative bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 hover:border-brand/40 transition-all hover-scale"
               >
-                <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-gradient-to-br from-brand to-primary flex items-center justify-center text-white text-sm font-bold">
+                <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-gradient-to-br from-brand to-primary flex items-center justify-center text-primary-foreground text-sm font-bold">
                   {i + 1}
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand/20 to-primary/20 flex items-center justify-center mb-4">
                   <f.icon className="w-6 h-6 text-brand" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">{f.title}</h3>
+                <h3 className="text-xl font-bold text-primary-foreground mb-2">{f.title}</h3>
                 <p className="text-page-fg-subtle text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
@@ -243,10 +243,10 @@ const AISongGeneratorPage = () => {
       </section>
 
       {/* FEATURES */}
-      <section className="px-6 py-24 bg-white/[0.02]">
+      <section className="px-6 py-24 bg-primary-foreground/[0.02]">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Everything you need, AI-native</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-primary-foreground mb-4">Everything you need, AI-native</h2>
             <p className="text-page-fg-subtle text-lg max-w-2xl mx-auto">
               A complete music suite built around generative AI.
             </p>
@@ -255,12 +255,12 @@ const AISongGeneratorPage = () => {
             {FEATURES.map((f, i) => (
               <div
                 key={i}
-                className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 hover:border-brand/30 hover:bg-white/[0.07] transition-all"
+                className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 hover:border-brand/30 hover:bg-primary-foreground/[0.07] transition-all"
               >
                 <div className="w-11 h-11 rounded-lg bg-brand/10 flex items-center justify-center mb-4">
                   <f.icon className="w-5 h-5 text-brand" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
+                <h3 className="text-lg font-bold text-primary-foreground mb-2">{f.title}</h3>
                 <p className="text-page-fg-subtle text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
@@ -269,10 +269,10 @@ const AISongGeneratorPage = () => {
       </section>
 
       {/* COMPARISON */}
-      <section className="px-6 py-24 bg-white/[0.02]">
+      <section className="px-6 py-24 bg-primary-foreground/[0.02]">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-5xl font-bold text-primary-foreground mb-4">
               Musicdibs vs traditional workflows
             </h2>
             <p className="text-page-fg-subtle text-lg">Faster. All-in-one. AI-native. Creator-first.</p>
@@ -288,9 +288,9 @@ const AISongGeneratorPage = () => {
                 key={i}
                 className="grid grid-cols-3 px-6 py-4 border-b border-page-border last:border-0 items-center"
               >
-                <div className="text-white font-medium text-sm md:text-base">{row.feature}</div>
+                <div className="text-primary-foreground font-medium text-sm md:text-base">{row.feature}</div>
                 <div className="text-page-fg-subtle text-sm md:text-base">{row.trad}</div>
-                <div className="text-white text-sm md:text-base flex items-center gap-2">
+                <div className="text-primary-foreground text-sm md:text-base flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-brand shrink-0" />
                   {row.mdb}
                 </div>
@@ -314,7 +314,7 @@ const AISongGeneratorPage = () => {
       <section className="px-6 py-24">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Frequently asked questions</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-primary-foreground mb-4">Frequently asked questions</h2>
             <p className="text-page-fg-subtle text-lg">Everything you need to know about AI song generation.</p>
           </div>
           <div className="space-y-4">
@@ -323,7 +323,7 @@ const AISongGeneratorPage = () => {
                 key={i}
                 className="group bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 open:border-brand/30"
               >
-                <summary className="flex items-center justify-between cursor-pointer text-white font-semibold text-lg">
+                <summary className="flex items-center justify-between cursor-pointer text-primary-foreground font-semibold text-lg">
                   {f.q}
                   <ArrowRight className="w-5 h-5 text-brand transition-transform group-open:rotate-90" />
                 </summary>
@@ -358,7 +358,7 @@ const AISongGeneratorPage = () => {
         <div className="relative max-w-5xl mx-auto rounded-3xl overflow-hidden border border-brand/20 bg-gradient-to-br from-brand/10 via-primary/10 to-transparent p-12 md:p-20 text-center">
           <div className="absolute inset-0 bg-gradient-to-br from-brand/10 to-primary/10 blur-3xl pointer-events-none" />
           <Rocket className="w-12 h-12 text-brand mx-auto mb-6 relative" />
-          <h2 className="relative text-3xl md:text-5xl font-bold text-white mb-4">
+          <h2 className="relative text-3xl md:text-5xl font-bold text-primary-foreground mb-4">
             Launch your first AI-powered release today.
           </h2>
           <p className="relative text-page-fg-muted text-lg max-w-2xl mx-auto mb-8">

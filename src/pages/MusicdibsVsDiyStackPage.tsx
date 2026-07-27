@@ -144,7 +144,7 @@ const MusicdibsVsDiyStackPage = () => {
 
           {/* Stack breakdown */}
           <section className="mb-16">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">The typical DIY stack today</h2>
+            <h2 className="text-2xl font-bold text-primary-foreground mb-6 text-center">The typical DIY stack today</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {STACK_TOOLS.map((t) => (
                 <div
@@ -160,7 +160,7 @@ const MusicdibsVsDiyStackPage = () => {
 
           {/* Comparison table */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-3 text-white">Honest comparison</h2>
+            <h2 className="text-3xl font-bold text-center mb-3 text-primary-foreground">Honest comparison</h2>
             <p className="text-page-fg-subtle text-center mb-10 text-sm max-w-xl mx-auto">
               Comparison based on the most common independent-artist stack in 2026.
             </p>
@@ -172,7 +172,7 @@ const MusicdibsVsDiyStackPage = () => {
                       Feature
                     </th>
                     <th className="px-4 py-5 text-center text-page-fg-muted font-bold">DIY Stack</th>
-                    <th className="px-4 py-5 text-center bg-brand/10 border-x border-brand/30 text-white font-bold">
+                    <th className="px-4 py-5 text-center bg-brand/10 border-x border-brand/30 text-primary-foreground font-bold">
                       Musicdibs
                     </th>
                   </tr>
@@ -182,7 +182,7 @@ const MusicdibsVsDiyStackPage = () => {
                     <tr
                       key={i}
                       className={`border-b border-page-border last:border-b-0 ${
-                        row.highlight ? "bg-brand/10" : i % 2 === 0 ? "bg-white/[0.02]" : ""
+                        row.highlight ? "bg-brand/10" : i % 2 === 0 ? "bg-primary-foreground/[0.02]" : ""
                       }`}
                     >
                       <td className="px-5 py-4 text-page-fg-muted font-medium">
@@ -205,7 +205,7 @@ const MusicdibsVsDiyStackPage = () => {
           </section>
 
           <section className="mb-16 bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-white mb-4">To be fair to the DIY stack</h2>
+            <h2 className="text-2xl font-bold text-primary-foreground mb-4">To be fair to the DIY stack</h2>
             <p className="text-page-fg-muted leading-relaxed">
               Every tool in a typical DIY stack is genuinely good at what it does. Suno and Udio are great
               creators. DistroKid and CD Baby are reliable distributors. Groover and SubmitHub can put a track
@@ -216,7 +216,7 @@ const MusicdibsVsDiyStackPage = () => {
           </section>
 
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-4 text-white">The complete flow with Musicdibs</h2>
+            <h2 className="text-3xl font-bold text-center mb-4 text-primary-foreground">The complete flow with Musicdibs</h2>
             <p className="text-page-fg-subtle text-center mb-12 max-w-xl mx-auto">
               Four steps, one account, one workflow.
             </p>
@@ -228,7 +228,7 @@ const MusicdibsVsDiyStackPage = () => {
                     <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-5">
                       <Icon className="w-6 h-6 text-brand" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-3">{s.title}</h3>
+                    <h3 className="text-xl font-bold text-primary-foreground mb-3">{s.title}</h3>
                     <p className="text-page-fg-muted leading-relaxed">{s.desc}</p>
                   </div>
                 );
@@ -246,7 +246,7 @@ const MusicdibsVsDiyStackPage = () => {
           </section>
 
           <section className="mb-20 bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">Why artists trust Musicdibs</h2>
+            <h2 className="text-2xl font-bold text-primary-foreground mb-6 text-center">Why artists trust Musicdibs</h2>
             <ul className="space-y-3 max-w-2xl mx-auto">
               <li className="text-page-fg-muted leading-relaxed flex gap-3">
                 <Check className="w-5 h-5 text-success shrink-0 mt-1" />
@@ -264,11 +264,11 @@ const MusicdibsVsDiyStackPage = () => {
           </section>
 
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-10 text-white">Frequently asked questions</h2>
+            <h2 className="text-3xl font-bold text-center mb-10 text-primary-foreground">Frequently asked questions</h2>
             <div className="space-y-4">
               {FAQ.map((f, i) => (
                 <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-3">{f.q}</h3>
+                  <h3 className="text-lg font-bold text-primary-foreground mb-3">{f.q}</h3>
                   <p className="text-page-fg-muted leading-relaxed">{f.a}</p>
                 </div>
               ))}
@@ -276,7 +276,7 @@ const MusicdibsVsDiyStackPage = () => {
           </section>
 
           <section className="text-center bg-gradient-to-r from-brand/10 to-primary/10 border border-brand/20 rounded-2xl p-12">
-            <h2 className="text-3xl font-bold text-white mb-4">One account. Fewer bills. Real protection.</h2>
+            <h2 className="text-3xl font-bold text-primary-foreground mb-4">One account. Fewer bills. Real protection.</h2>
             <p className="text-page-fg-muted mb-8 max-w-xl mx-auto">
               Try the full workflow — free registration for your first work.
             </p>

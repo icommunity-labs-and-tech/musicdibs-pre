@@ -160,7 +160,7 @@ const AllInOneMusicPlatformPage = () => {
 
           {/* 4-step diagram */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-12 text-white">The four steps, one platform</h2>
+            <h2 className="text-3xl font-bold text-center mb-12 text-primary-foreground">The four steps, one platform</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
               {STEPS.map((s, i) => {
                 const Icon = s.icon;
@@ -172,7 +172,7 @@ const AllInOneMusicPlatformPage = () => {
                     <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-4">
                       <Icon className="w-6 h-6 text-brand" />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
+                    <h3 className="text-lg font-bold text-primary-foreground mb-2">{s.title}</h3>
                     <p className="text-page-fg-muted leading-relaxed text-sm">{s.desc}</p>
                     {i < STEPS.length - 1 && (
                       <ArrowRight className="hidden lg:block absolute -right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-brand/60" />
@@ -185,7 +185,7 @@ const AllInOneMusicPlatformPage = () => {
 
           {/* Why standalone tools aren't enough */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-white mb-6">Why standalone tools aren't enough</h2>
+            <h2 className="text-3xl font-bold text-primary-foreground mb-6">Why standalone tools aren't enough</h2>
             <p className="text-page-fg-muted mb-6 leading-relaxed">
               Most independent artists today are running a stack of 3-4 disconnected products to release a
               single song: something to create with, something to certify (usually nothing), something to
@@ -207,7 +207,7 @@ const AllInOneMusicPlatformPage = () => {
                 <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
                   <div className="flex items-start gap-3 mb-3">
                     <Check className="w-6 h-6 text-success shrink-0 mt-0.5" />
-                    <h3 className="text-xl font-bold text-white">{r.title}</h3>
+                    <h3 className="text-xl font-bold text-primary-foreground">{r.title}</h3>
                   </div>
                   <p className="text-page-fg-muted leading-relaxed pl-9">{r.desc}</p>
                 </div>
@@ -218,7 +218,7 @@ const AllInOneMusicPlatformPage = () => {
           {/* Social proof */}
           <section className="mb-20 bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-10 text-center">
             <Users className="w-10 h-10 text-brand mx-auto mb-4" />
-            <p className="text-2xl md:text-3xl font-bold text-white mb-3">100,000+ artists</p>
+            <p className="text-2xl md:text-3xl font-bold text-primary-foreground mb-3">100,000+ artists</p>
             <p className="text-page-fg-muted max-w-xl mx-auto">
               already release, protect and promote their music with Musicdibs — from bedroom producers to
               managed rosters.
@@ -227,7 +227,7 @@ const AllInOneMusicPlatformPage = () => {
 
           {/* Comparisons — only link the ones already published */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-4 text-white">Compare Musicdibs</h2>
+            <h2 className="text-3xl font-bold text-center mb-4 text-primary-foreground">Compare Musicdibs</h2>
             <p className="text-page-fg-subtle text-center mb-10 max-w-xl mx-auto">
               Honest side-by-side comparisons with the tools most artists already use.
             </p>
@@ -236,7 +236,7 @@ const AllInOneMusicPlatformPage = () => {
                 to="/musicdibs-vs-distrokid"
                 className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 hover:border-brand/40 transition-colors group"
               >
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-brand transition-colors">
+                <h3 className="text-lg font-bold text-primary-foreground mb-2 group-hover:text-brand transition-colors">
                   Musicdibs vs DistroKid
                 </h3>
                 <p className="text-page-fg-muted text-sm">Distribution only vs the full release workflow.</p>
@@ -246,7 +246,7 @@ const AllInOneMusicPlatformPage = () => {
 
           {/* Final CTA */}
           <section className="text-center bg-gradient-to-r from-brand/10 to-primary/10 border border-brand/20 rounded-2xl p-12">
-            <h2 className="text-3xl font-bold text-white mb-4">One platform. Every step.</h2>
+            <h2 className="text-3xl font-bold text-primary-foreground mb-4">One platform. Every step.</h2>
             <p className="text-page-fg-muted mb-8 max-w-xl mx-auto">
               Start free — register your first work and see the full workflow in one account.
             </p>
