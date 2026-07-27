@@ -53,6 +53,7 @@ import { cn } from "@/lib/utils";
 import type { IbsSignature } from "@/types/dashboard";
 import { CREATOR_ROLES, WORK_TYPES as WIZARD_WORK_TYPES, type Creator } from "@/components/dashboard/register/types";
 import { useTranslation } from "react-i18next";
+import { hasDistributionAccess } from "@/lib/planTiers";
 import { useCreatorRoleLabels, useWorkTypeLabels } from "@/components/dashboard/register/useWizardLabels";
 
 // Voice profiles loaded from DB
