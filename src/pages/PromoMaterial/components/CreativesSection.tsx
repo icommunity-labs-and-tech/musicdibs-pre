@@ -16,6 +16,7 @@ import { Loader2, Download, Sparkles, RefreshCw, ImageIcon } from 'lucide-react'
 import { PricingLink } from '@/components/dashboard/PricingPopup';
 import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 import { useProductTracking } from '@/hooks/useProductTracking';
+import { useImprovePrompt } from '@/hooks/useImprovePrompt';
 
 type Format = 'feed' | 'story' | 'youtube';
 
