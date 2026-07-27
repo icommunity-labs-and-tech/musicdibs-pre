@@ -901,7 +901,7 @@ const AdminBlog = () => {
               <div className="space-y-2">
                 {filteredPosts.map((post) => (
                   <div key={post.id} className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-lg px-4 py-3 hover:bg-foreground/[0.07] transition-colors">
-                    {post.image_url && <img src={post.image_url} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />}
+                    {post.image_url && <img src={post.image_url} alt="" loading="lazy" decoding="async" className="w-12 h-12 rounded object-cover flex-shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-medium text-foreground/90 truncate">{post.title}</h3>
