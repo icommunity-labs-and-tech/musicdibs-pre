@@ -97,7 +97,7 @@ function BranchStep({
 }) {
   return (
     <div className="flex flex-col items-center w-full">
-      <div className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-white w-full ${color}`}>
+      <div className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-primary-foreground w-full ${color}`}>
         <div className="flex items-center gap-2 min-w-0">
           {icon}
           <span className="text-sm font-medium truncate">{label}</span>
