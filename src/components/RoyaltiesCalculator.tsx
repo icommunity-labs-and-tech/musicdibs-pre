@@ -92,7 +92,7 @@ const StackSelector = ({
   t: (k: string) => string;
 }) => (
   <div>
-    <label className="block text-white font-medium mb-2">{label}</label>
+    <label className="block text-primary-foreground font-medium mb-2">{label}</label>
     <div className="flex flex-wrap gap-2">
       {options.map((opt) => {
         const selected = value === opt.id;
@@ -152,15 +152,15 @@ const StackCostTab = ({ lang, t }: { lang: string; t: (k: string) => string }) =
       <div className="grid md:grid-cols-3 gap-4 pt-4">
         <div className="rounded-xl p-5 text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
           <div className="text-xs mb-1" style={{ color: "#C4B5FD" }}>{t("calculator.stack.total_month")}</div>
-          <div className="text-2xl font-bold text-white">{formatCurrency(summary.monthly, lang)}</div>
+          <div className="text-2xl font-bold text-primary-foreground">{formatCurrency(summary.monthly, lang)}</div>
         </div>
         <div className="rounded-xl p-5 text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
           <div className="text-xs mb-1" style={{ color: "#C4B5FD" }}>{t("calculator.stack.total_year")}</div>
-          <div className="text-2xl font-bold text-white">{formatCurrency(summary.annual, lang)}</div>
+          <div className="text-2xl font-bold text-primary-foreground">{formatCurrency(summary.annual, lang)}</div>
         </div>
         <div className="rounded-xl p-5 text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
           <div className="text-xs mb-1" style={{ color: "#C4B5FD" }}>{t("calculator.stack.logins")}</div>
-          <div className="text-2xl font-bold text-white">{formatNumber(summary.logins, lang)}</div>
+          <div className="text-2xl font-bold text-primary-foreground">{formatNumber(summary.logins, lang)}</div>
         </div>
       </div>
 
@@ -168,23 +168,23 @@ const StackCostTab = ({ lang, t }: { lang: string; t: (k: string) => string }) =
       <div className="rounded-xl p-6" style={{ background: "rgba(168,85,247,0.1)", border: "1px solid rgba(168,85,247,0.25)" }}>
         <div className="flex items-center gap-2 mb-4">
           <Layers className="w-5 h-5" style={{ color: "#A855F7" }} />
-          <h4 className="text-white font-semibold">{t("calculator.stack.vs_musicdibs")}</h4>
+          <h4 className="text-primary-foreground font-semibold">{t("calculator.stack.vs_musicdibs")}</h4>
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.05)" }}>
             <div className="text-xs mb-1" style={{ color: "#C4B5FD" }}>{t("calculator.stack.monthly_plan")}</div>
-            <div className="text-xl font-bold text-white">{formatCurrency(MUSICDIBS_MONTHLY_EUR, lang)}<span className="text-sm font-normal opacity-70"> /mo</span></div>
+            <div className="text-xl font-bold text-primary-foreground">{formatCurrency(MUSICDIBS_MONTHLY_EUR, lang)}<span className="text-sm font-normal opacity-70"> /mo</span></div>
           </div>
           <div className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.05)" }}>
             <div className="text-xs mb-1" style={{ color: "#C4B5FD" }}>{t("calculator.stack.annual_plan")}</div>
-            <div className="text-xl font-bold text-white">{formatCurrency(MUSICDIBS_ANNUAL_MONTHLY_EQUIV, lang)}<span className="text-sm font-normal opacity-70"> /mo</span></div>
+            <div className="text-xl font-bold text-primary-foreground">{formatCurrency(MUSICDIBS_ANNUAL_MONTHLY_EQUIV, lang)}<span className="text-sm font-normal opacity-70"> /mo</span></div>
           </div>
         </div>
 
         {savingsAnnual > 0 && (
           <div className="mt-4 flex items-start gap-2">
             <Check className="w-5 h-5 mt-0.5" style={{ color: "#A855F7" }} />
-            <div className="text-white">
+            <div className="text-primary-foreground">
               <span className="font-semibold">{t("calculator.stack.savings")}: </span>
               <span className="text-xl font-bold" style={{ color: "#A855F7" }}>{formatCurrency(savingsAnnual, lang)}</span>
               <span className="opacity-70 text-sm"> / year</span>
@@ -258,7 +258,7 @@ export const RoyaltiesCalculator = () => {
               <Calculator className="w-4 h-4" />
               {t("calculator.badge")}
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
               {t("calculator.title")}
             </h2>
             <p className="text-lg max-w-2xl mx-auto" style={{ color: "#C4B5FD" }}>
@@ -279,11 +279,11 @@ export const RoyaltiesCalculator = () => {
             }}
           >
             <Tabs defaultValue="royalties" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/5">
-                <TabsTrigger value="royalties" className="data-[state=active]:bg-primary/40 data-[state=active]:text-white text-white/70">
+              <TabsList className="grid w-full grid-cols-2 mb-6 bg-primary-foreground/5">
+                <TabsTrigger value="royalties" className="data-[state=active]:bg-primary/40 data-[state=active]:text-primary-foreground text-primary-foreground/70">
                   {t("calculator.tabs.royalties")}
                 </TabsTrigger>
-                <TabsTrigger value="stack" className="data-[state=active]:bg-primary/40 data-[state=active]:text-white text-white/70">
+                <TabsTrigger value="stack" className="data-[state=active]:bg-primary/40 data-[state=active]:text-primary-foreground text-primary-foreground/70">
                   {t("calculator.tabs.stack")}
                 </TabsTrigger>
               </TabsList>
@@ -291,7 +291,7 @@ export const RoyaltiesCalculator = () => {
               <TabsContent value="royalties">
                 {/* Streams input */}
                 <div className="mb-10">
-                  <label className="flex items-center gap-2 font-semibold text-lg mb-4 text-white">
+                  <label className="flex items-center gap-2 font-semibold text-lg mb-4 text-primary-foreground">
                     <Music className="w-5 h-5" style={{ color: "#A855F7" }} />
                     {t("calculator.streams_label")}
                   </label>
@@ -351,7 +351,7 @@ export const RoyaltiesCalculator = () => {
                 <div className="space-y-3" ref={barsRef}>
                   <div className="flex items-center gap-2 mb-4">
                     <TrendingUp className="w-5 h-5" style={{ color: "#A855F7" }} />
-                    <h3 className="text-white font-semibold text-lg">
+                    <h3 className="text-primary-foreground font-semibold text-lg">
                       {t("calculator.results_title")}
                     </h3>
                   </div>
@@ -391,7 +391,7 @@ export const RoyaltiesCalculator = () => {
                             </span>
                             {r.highlight && (
                               <span
-                                className="text-xs px-2 py-0.5 rounded-full font-medium text-white"
+                                className="text-xs px-2 py-0.5 rounded-full font-medium text-primary-foreground"
                                 style={{ background: "#A855F7" }}
                               >
                                 {t("calculator.recommended")}
@@ -445,7 +445,7 @@ export const RoyaltiesCalculator = () => {
                   >
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <DollarSign className="w-5 h-5" style={{ color: "#A855F7" }} />
-                      <span className="text-white font-bold text-lg">
+                      <span className="text-primary-foreground font-bold text-lg">
                         {t("calculator.advantage_prefix")}{" "}
                         <span className="text-xl" style={{ color: "#A855F7" }}>{formatCurrency(animatedAdvantage, lang)}</span>{" "}
                         {t("calculator.advantage_suffix")}

@@ -52,7 +52,7 @@ export const HeroSection = () => {
       {/* Main content */}
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         {/* Main heading — rendered immediately (no ScrollReveal) to keep LCP fast */}
-        <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+        <h1 className="text-5xl md:text-7xl font-bold text-primary-foreground mb-6 leading-tight">
           {t("hero.title")}{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand to-primary">
             {t("hero.highlight")}
@@ -61,7 +61,7 @@ export const HeroSection = () => {
 
         {/* Subtitle */}
         <ScrollReveal delay={400}>
-          <p className="text-xl md:text-2xl text-white mb-8 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-primary-foreground mb-8 max-w-3xl mx-auto leading-relaxed">
             {t("hero.subtitle_prefix")} {t("hero.subtitle_strong")}{" "}
             <a
               href="/legal-validity"

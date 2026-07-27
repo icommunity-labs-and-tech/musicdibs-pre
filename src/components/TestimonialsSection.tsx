@@ -53,7 +53,7 @@ const TestimonialsSection = () => {
       <div className="container mx-auto px-4 relative z-10">
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
               {t("testimonials.heading")}
             </h2>
           </div>

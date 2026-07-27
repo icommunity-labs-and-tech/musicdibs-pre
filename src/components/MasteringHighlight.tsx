@@ -91,7 +91,7 @@ export const MasteringHighlight = () => {
                   <Headphones className="w-3.5 h-3.5 text-accent" />
                   Masterizado IA
                 </div>
-                <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight mb-3">
+                <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-foreground leading-tight mb-3">
                   Masteriza tu canción de forma{" "}
                   <span className="bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent">
                     profesional
@@ -118,7 +118,7 @@ export const MasteringHighlight = () => {
                 <Button
                   size="lg"
                   onClick={scrollToPricing}
-                  className="bg-gradient-to-r from-brand via-accent to-primary text-white border-0 shadow-[0_0_30px_rgba(217,70,239,0.45)] hover:shadow-[0_0_45px_rgba(217,70,239,0.7)] hover:scale-[1.03] transition-all"
+                  className="bg-gradient-to-r from-brand via-accent to-primary text-primary-foreground border-0 shadow-[0_0_30px_rgba(217,70,239,0.45)] hover:shadow-[0_0_45px_rgba(217,70,239,0.7)] hover:scale-[1.03] transition-all"
                 >
                   <Wand2 className="w-4 h-4" />
                   Masterizar mi canción

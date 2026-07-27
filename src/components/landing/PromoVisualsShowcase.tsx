@@ -71,12 +71,12 @@ const CoverCardItem = ({ card }: { card: CoverCard }) => (
       className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.06]"
     />
     <div className="absolute inset-0 bg-black/0 group-hover:bg-page-surface transition-colors duration-300" />
-    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-page-border text-white text-[11px] font-medium">
+    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-page-border text-primary-foreground text-[11px] font-medium">
       <ImageIcon className="w-3.5 h-3.5" />
       <span>Portada</span>
     </div>
     <div className="absolute inset-x-0 bottom-0 p-3.5 bg-gradient-to-t from-black/85 via-black/55 to-transparent">
-      <p className="text-white font-semibold text-sm sm:text-base tracking-tight drop-shadow leading-tight">{card.title}</p>
+      <p className="text-primary-foreground font-semibold text-sm sm:text-base tracking-tight drop-shadow leading-tight">{card.title}</p>
       <p className="text-page-fg-muted text-[11px] sm:text-xs mt-0.5 drop-shadow">
         {card.artist} · <span className="text-page-fg-subtle">{card.genre}</span>
       </p>
@@ -138,19 +138,19 @@ const PromoCardItem = ({ card }: { card: PromoCard }) => {
         />
       )}
       <div className="absolute inset-0 bg-black/0 group-hover:bg-page-surface transition-colors duration-300" />
-      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/55 backdrop-blur-md border border-page-border text-white text-[11px] font-medium">
+      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/55 backdrop-blur-md border border-page-border text-primary-foreground text-[11px] font-medium">
         <Icon className="w-3.5 h-3.5" />
         <span>{card.badge}</span>
       </div>
       {card.isVideo && !hasVideoSource && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-12 h-12 rounded-full bg-page-surface-strong backdrop-blur-md border border-page-border-strong flex items-center justify-center shadow-lg group-hover:bg-page-surface-strong group-hover:scale-110 transition-all duration-300">
-            <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
+            <Play className="w-5 h-5 text-primary-foreground ml-0.5" fill="white" />
           </div>
         </div>
       )}
       <div className="absolute inset-x-0 bottom-0 p-3.5 bg-gradient-to-t from-black/85 via-black/55 to-transparent">
-        <p className="text-white font-semibold text-sm sm:text-base tracking-tight drop-shadow leading-tight">{card.title}</p>
+        <p className="text-primary-foreground font-semibold text-sm sm:text-base tracking-tight drop-shadow leading-tight">{card.title}</p>
         <p className="text-page-fg-muted text-[11px] sm:text-xs mt-0.5 drop-shadow">{card.description}</p>
       </div>
     </div>
@@ -193,7 +193,7 @@ export const PromoVisualsShowcase = () => {
               <Megaphone className="w-3.5 h-3.5" />
               Material promocional con IA
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary-foreground mb-4 tracking-tight">
               Crea todo el material visual de{" "}
               <span className="bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent">
                 tu lanzamiento
@@ -242,7 +242,7 @@ export const PromoVisualsShowcase = () => {
             href="https://www.musicdibs.com/login"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl px-8 py-3.5 text-sm font-semibold text-white bg-gradient-to-r from-accent via-brand to-primary hover:from-accent hover:via-brand hover:to-primary shadow-lg shadow-fuchsia-500/30 transition-all"
+            className="inline-flex items-center gap-2 rounded-xl px-8 py-3.5 text-sm font-semibold text-primary-foreground bg-gradient-to-r from-accent via-brand to-primary hover:from-accent hover:via-brand hover:to-primary shadow-lg shadow-fuchsia-500/30 transition-all"
           >
             <Sparkles className="w-4 h-4" />
             Crear mi material promocional

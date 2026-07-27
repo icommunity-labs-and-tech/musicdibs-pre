@@ -64,7 +64,7 @@ export function VoiceToProduction() {
             <div className="relative mx-auto w-[280px] sm:w-[320px] lg:w-[340px]">
               {/* Badge above */}
               <div className="flex justify-center mb-5">
-                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-white border border-page-border bg-gradient-to-r from-magenta/25 to-pink/25 backdrop-blur-md shadow-[0_0_20px_rgba(217,70,239,0.35)]">
+                <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-primary-foreground border border-page-border bg-gradient-to-r from-magenta/25 to-pink/25 backdrop-blur-md shadow-[0_0_20px_rgba(217,70,239,0.35)]">
                   <Sparkles className="h-3.5 w-3.5 text-accent" />
                   IA Music Studio
                 </span>
@@ -98,7 +98,7 @@ export function VoiceToProduction() {
                     type="button"
                     onClick={toggleSound}
                     aria-label={muted ? "Activar sonido" : "Silenciar"}
-                    className="absolute bottom-4 right-4 z-20 inline-flex items-center justify-center h-10 w-10 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-page-border text-white transition"
+                    className="absolute bottom-4 right-4 z-20 inline-flex items-center justify-center h-10 w-10 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-page-border text-primary-foreground transition"
                   >
                     {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                   </button>
@@ -160,7 +160,7 @@ export function VoiceToProduction() {
                 href="https://www.musicdibs.com/login"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-magenta to-pink px-8 py-4 text-base font-semibold text-white shadow-lg shadow-magenta/30 hover:shadow-magenta/50 hover:scale-[1.02] transition-all"
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-magenta to-pink px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-magenta/30 hover:shadow-magenta/50 hover:scale-[1.02] transition-all"
               >
                 Crear mi canción
               </a>

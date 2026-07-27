@@ -24,7 +24,7 @@ export function ManagerBannerSection() {
           </Badge>
 
           <div className="space-y-3">
-            <h2 className="text-2xl md:text-3xl font-bold text-white">{t('managerBanner.title')}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-primary-foreground">{t('managerBanner.title')}</h2>
             <p className="text-gray-300 max-w-xl">{t('managerBanner.desc')}</p>
           </div>
 

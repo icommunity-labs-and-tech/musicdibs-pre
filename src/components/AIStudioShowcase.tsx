@@ -234,7 +234,7 @@ export const AIStudioShowcase = () => {
                 AI Music Studio
               </span>
             </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-white leading-[1.1] mb-5">
+            <h2 className="text-4xl md:text-6xl font-bold text-primary-foreground leading-[1.1] mb-5">
               Crea o mejora tu música con IA.{" "}
               <span className="bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent">
                 De la idea a Spotify
@@ -251,7 +251,7 @@ export const AIStudioShowcase = () => {
                 onClick={() => {
                   document.getElementById("pricing-section")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="bg-gradient-to-r from-brand via-accent to-primary text-white border-0 shadow-[0_0_40px_rgba(217,70,239,0.45)] hover:shadow-[0_0_55px_rgba(217,70,239,0.7)] hover:scale-105 transition-all"
+                className="bg-gradient-to-r from-brand via-accent to-primary text-primary-foreground border-0 shadow-[0_0_40px_rgba(217,70,239,0.45)] hover:shadow-[0_0_55px_rgba(217,70,239,0.7)] hover:scale-105 transition-all"
               >
                 <Sparkles className="w-4 h-4" />
                 Crear mi canción
@@ -266,7 +266,7 @@ export const AIStudioShowcase = () => {
             {DEMO_SONGS.map((song) => (
               <div
                 key={song.title}
-                className={`ai-card-glow group relative rounded-2xl bg-gradient-to-b from-primary/85 to-primary/75 backdrop-blur-md p-5 border border-page-border hover:border-white/25 transition-all duration-300 hover:-translate-y-1 shadow-xl ${song.glow} hover:shadow-2xl`}
+                className={`ai-card-glow group relative rounded-2xl bg-gradient-to-b from-primary/85 to-primary/75 backdrop-blur-md p-5 border border-page-border hover:border-primary-foreground/25 transition-all duration-300 hover:-translate-y-1 shadow-xl ${song.glow} hover:shadow-2xl`}
               >
                 {/* Tag */}
                 <div className="flex items-start justify-between mb-4">
@@ -284,7 +284,7 @@ export const AIStudioShowcase = () => {
                 {/* Footer: title + play */}
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="text-white font-semibold text-lg truncate">
+                    <h3 className="text-primary-foreground font-semibold text-lg truncate">
                       {song.title}
                     </h3>
                     <p className="text-page-fg-subtle text-xs mt-0.5 truncate">
@@ -296,7 +296,7 @@ export const AIStudioShowcase = () => {
                     onClick={() => handlePlay(song)}
                     aria-label={`${playingTitle === song.title ? "Pausar" : "Reproducir"} demo ${song.title}`}
                     disabled={!song.audioUrl}
-                    className={`shrink-0 w-11 h-11 rounded-full bg-gradient-to-br ${song.colors[0]} ${song.colors[1]} flex items-center justify-center text-white shadow-lg ${song.glow} hover:scale-110 active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100`}
+                    className={`shrink-0 w-11 h-11 rounded-full bg-gradient-to-br ${song.colors[0]} ${song.colors[1]} flex items-center justify-center text-primary-foreground shadow-lg ${song.glow} hover:scale-110 active:scale-95 transition-transform disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100`}
                   >
                     {playingTitle === song.title ? (
                       <Pause className="w-4 h-4 fill-current" />
@@ -313,7 +313,7 @@ export const AIStudioShowcase = () => {
         {/* Steps block */}
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto mb-12">
-            <h3 className="text-2xl md:text-3xl font-bold text-white leading-[1.1] mb-4">
+            <h3 className="text-2xl md:text-3xl font-bold text-primary-foreground leading-[1.1] mb-4">
               En menos de 10 minutos.{" "}
               <span className="bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent">
                 Tu canción al mundo.
@@ -374,7 +374,7 @@ export const AIStudioShowcase = () => {
                       >
                         <Icon className="w-6 h-6 lg:w-7 lg:h-7 text-accent drop-shadow-[0_0_6px_rgba(217,70,239,0.7)]" />
                         {/* Number chip */}
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[26px] h-[22px] px-1.5 rounded-full bg-gradient-to-br from-brand to-accent border border-page-border-strong flex items-center justify-center text-[10px] font-bold text-white shadow-md">
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[26px] h-[22px] px-1.5 rounded-full bg-gradient-to-br from-brand to-accent border border-page-border-strong flex items-center justify-center text-[10px] font-bold text-primary-foreground shadow-md">
                           {step.n}
                         </span>
                       </div>
@@ -382,7 +382,7 @@ export const AIStudioShowcase = () => {
 
                     {/* Content */}
                     <div className="flex-1 lg:flex lg:flex-col lg:items-center min-w-0">
-                      <h4 className="text-white font-semibold text-[15px] md:text-[17px] mb-1.5 leading-tight lg:max-w-[230px]">
+                      <h4 className="text-primary-foreground font-semibold text-[15px] md:text-[17px] mb-1.5 leading-tight lg:max-w-[230px]">
                         {step.title}
                       </h4>
                       <p className="text-page-fg-subtle text-sm leading-snug mb-2.5 lg:max-w-[240px]">

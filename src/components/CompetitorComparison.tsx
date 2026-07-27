@@ -239,23 +239,23 @@ export const CompetitorComparison = ({ lang, ctaHref = "/login" }: Props) => {
         </span>
         <h2
           id="competitor-comparison-heading"
-          className="text-3xl md:text-4xl font-bold text-white mb-4"
+          className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4"
         >
           {t.h2}
         </h2>
-        <p className="text-white/70 max-w-2xl mx-auto">{t.intro}</p>
+        <p className="text-primary-foreground/70 max-w-2xl mx-auto">{t.intro}</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         {t.cards.map((card, idx) => (
           <article
             key={idx}
-            className="group relative bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-brand/40 transition-colors"
+            className="group relative bg-primary-foreground/[0.04] backdrop-blur-sm border border-primary-foreground/10 rounded-2xl p-6 hover:border-brand/40 transition-colors"
           >
             <div className="flex items-start justify-between mb-5 gap-3">
               <div>
-                <h3 className="text-lg font-bold text-white leading-snug">{card.vs}</h3>
-                <p className="text-white/60 text-sm mt-1">{card.tagline}</p>
+                <h3 className="text-lg font-bold text-primary-foreground leading-snug">{card.vs}</h3>
+                <p className="text-primary-foreground/60 text-sm mt-1">{card.tagline}</p>
               </div>
               <span className="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-brand/20 to-primary/20 border border-brand/30 text-brand text-xs font-semibold">
                 <Zap className="w-3 h-3" />
@@ -268,7 +268,7 @@ export const CompetitorComparison = ({ lang, ctaHref = "/login" }: Props) => {
               <div className="text-brand font-bold uppercase text-[10px] tracking-wider text-right">
                 Musicdibs
               </div>
-              <div className="text-white/50 font-bold uppercase text-[10px] tracking-wider text-right min-w-[110px]">
+              <div className="text-primary-foreground/50 font-bold uppercase text-[10px] tracking-wider text-right min-w-[110px]">
                 {card.competitorName}
               </div>
 
@@ -276,19 +276,19 @@ export const CompetitorComparison = ({ lang, ctaHref = "/login" }: Props) => {
                 const Icon = row.icon;
                 return (
                   <div key={i} className="contents">
-                    <div className="flex items-center gap-2 text-white/80 py-2 border-t border-white/5">
+                    <div className="flex items-center gap-2 text-primary-foreground/80 py-2 border-t border-primary-foreground/5">
                       <Icon className="w-4 h-4 text-brand/80 shrink-0" />
                       <span>{row.label}</span>
                     </div>
-                    <div className="py-2 border-t border-white/5 text-right text-brand font-semibold">
+                    <div className="py-2 border-t border-primary-foreground/5 text-right text-brand font-semibold">
                       <span className="inline-flex items-center gap-1 justify-end">
                         <Check className="w-3.5 h-3.5 text-success" />
                         {row.musicdibs.value}
                       </span>
                     </div>
-                    <div className="py-2 border-t border-white/5 text-right text-white/60">
+                    <div className="py-2 border-t border-primary-foreground/5 text-right text-primary-foreground/60">
                       <span className="inline-flex items-center gap-1 justify-end">
-                        <X className="w-3.5 h-3.5 text-white/30" />
+                        <X className="w-3.5 h-3.5 text-primary-foreground/30" />
                         {row.competitor.value}
                       </span>
                     </div>
@@ -305,7 +305,7 @@ export const CompetitorComparison = ({ lang, ctaHref = "/login" }: Props) => {
         {[t.badges.faster, t.badges.instant, t.badges.global, t.badges.certified].map((b) => (
           <span
             key={b}
-            className="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-white/80 text-xs font-semibold uppercase tracking-wider"
+            className="px-4 py-2 rounded-full bg-primary-foreground/5 border border-primary-foreground/10 text-primary-foreground/80 text-xs font-semibold uppercase tracking-wider"
           >
             {b}
           </span>
@@ -313,9 +313,9 @@ export const CompetitorComparison = ({ lang, ctaHref = "/login" }: Props) => {
       </div>
 
       {/* CTA */}
-      <div className="mt-12 bg-gradient-to-r from-brand/15 to-primary/15 border border-white/10 rounded-2xl p-8 md:p-10 text-center">
-        <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">{t.ctaTitle}</h3>
-        <p className="text-white/70 mb-6 max-w-lg mx-auto">{t.ctaText}</p>
+      <div className="mt-12 bg-gradient-to-r from-brand/15 to-primary/15 border border-primary-foreground/10 rounded-2xl p-8 md:p-10 text-center">
+        <h3 className="text-2xl md:text-3xl font-bold text-primary-foreground mb-3">{t.ctaTitle}</h3>
+        <p className="text-primary-foreground/70 mb-6 max-w-lg mx-auto">{t.ctaText}</p>
         <Link to={ctaHref}>
           <Button variant="hero" size="xl" className="font-semibold">
             <span className="flex items-center gap-2">

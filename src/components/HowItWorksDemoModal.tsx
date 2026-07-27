@@ -88,7 +88,7 @@ export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalP
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-3xl p-0 overflow-hidden border-0 bg-gradient-to-br from-[#1a0b2e] via-[#2a0f47] to-[#3b0764] text-white"
+        className="max-w-3xl p-0 overflow-hidden border-0 bg-gradient-to-br from-[#1a0b2e] via-[#2a0f47] to-[#3b0764] text-primary-foreground"
         onInteractOutside={(e) => e.preventDefault()}
       >
         {/* Glow decor */}
@@ -101,7 +101,7 @@ export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalP
             <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand to-primary">
               {copy.title}
             </h2>
-            <p className="text-sm md:text-base text-white/70 mt-1">{copy.subtitle}</p>
+            <p className="text-sm md:text-base text-primary-foreground/70 mt-1">{copy.subtitle}</p>
           </div>
 
           {/* Stepper */}
@@ -116,14 +116,14 @@ export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalP
                       done
                         ? "bg-success text-success"
                         : active
-                        ? "bg-brand text-white ring-4 ring-brand/30"
-                        : "bg-white/10 text-white/60"
+                        ? "bg-brand text-primary-foreground ring-4 ring-brand/30"
+                        : "bg-primary-foreground/10 text-primary-foreground/60"
                     }`}
                   >
                     {done ? <Check className="w-4 h-4" strokeWidth={3} /> : i + 1}
                   </div>
                   {i < 2 && (
-                    <div className="w-10 md:w-16 h-1 rounded-full bg-white/10 overflow-hidden">
+                    <div className="w-10 md:w-16 h-1 rounded-full bg-primary-foreground/10 overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-brand to-primary transition-all duration-300"
                         style={{
@@ -155,17 +155,17 @@ export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalP
 
         {/* Footer controls */}
         {stepIndex < FINAL_INDEX && (
-          <div className="relative flex items-center justify-between px-6 py-3 border-t border-white/10 bg-black/20">
+          <div className="relative flex items-center justify-between px-6 py-3 border-t border-primary-foreground/10 bg-black/20">
             <button
               onClick={goToFinal}
-              className="text-xs md:text-sm text-white/70 hover:text-white inline-flex items-center gap-1 transition-colors"
+              className="text-xs md:text-sm text-primary-foreground/70 hover:text-primary-foreground inline-flex items-center gap-1 transition-colors"
             >
               <SkipForward className="w-4 h-4" />
               {copy.skip}
             </button>
             <button
               onClick={() => setStepIndex((s) => Math.min(FINAL_INDEX, s + 1))}
-              className="text-xs md:text-sm text-white/80 hover:text-white inline-flex items-center gap-1 transition-colors"
+              className="text-xs md:text-sm text-primary-foreground/80 hover:text-primary-foreground inline-flex items-center gap-1 transition-colors"
             >
               {copy.next}
               <ChevronRight className="w-4 h-4" />
@@ -212,11 +212,11 @@ const StepCreate = ({ copy }: { copy: any }) => {
         </div>
         <div>
           <h3 className="text-lg font-bold">{copy.title}</h3>
-          {copy.subtitle && (<p className="text-sm md:text-base text-white/70 mt-1">{copy.subtitle}</p>)}
+          {copy.subtitle && (<p className="text-sm md:text-base text-primary-foreground/70 mt-1">{copy.subtitle}</p>)}
         </div>
       </div>
 
-      <div className="bg-white text-slate-900 rounded-xl p-4 shadow-2xl">
+      <div className="bg-primary-foreground text-slate-900 rounded-xl p-4 shadow-2xl">
         <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
           {copy.fieldLabel}
         </div>
@@ -238,7 +238,7 @@ const StepCreate = ({ copy }: { copy: any }) => {
         </div>
 
         <button
-          className={`mt-4 w-full py-2.5 rounded-lg text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-all ${
+          className={`mt-4 w-full py-2.5 rounded-lg text-primary-foreground text-sm font-semibold inline-flex items-center justify-center gap-2 transition-all ${
             generating
               ? "bg-primary"
               : done
@@ -304,11 +304,11 @@ const StepRegister = ({ copy }: { copy: any }) => {
         </div>
         <div>
           <h3 className="text-lg font-bold">{copy.title}</h3>
-          <p className="text-xs text-white/60">{copy.text}</p>
+          <p className="text-xs text-primary-foreground/60">{copy.text}</p>
         </div>
       </div>
 
-      <div className="bg-white text-slate-900 rounded-xl p-4 shadow-2xl space-y-3">
+      <div className="bg-primary-foreground text-slate-900 rounded-xl p-4 shadow-2xl space-y-3">
         <div>
           <div className="text-xs font-semibold text-slate-500 uppercase mb-1">{copy.fTitle}</div>
           <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
@@ -374,11 +374,11 @@ const StepDistribute = ({ copy }: { copy: any }) => {
         </div>
         <div>
           <h3 className="text-lg font-bold">{copy.title}</h3>
-          <p className="text-xs text-white/60">{copy.text}</p>
+          <p className="text-xs text-primary-foreground/60">{copy.text}</p>
         </div>
       </div>
 
-      <div className="bg-white text-slate-900 rounded-xl p-4 shadow-2xl space-y-3">
+      <div className="bg-primary-foreground text-slate-900 rounded-xl p-4 shadow-2xl space-y-3">
         <div className="flex flex-wrap gap-2">
           {platforms.map((p, idx) => (
             <span
@@ -442,10 +442,10 @@ const StepFinal = ({
   return (
     <div className="animate-scale-in text-center py-6">
       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-brand to-primary mb-4 shadow-lg shadow-pink-500/30">
-        <Rocket className="w-8 h-8 text-white" />
+        <Rocket className="w-8 h-8 text-primary-foreground" />
       </div>
       <h3 className="text-2xl md:text-3xl font-bold mb-2">{copy.title}</h3>
-      <p className="text-white/70 max-w-md mx-auto mb-6">{copy.text}</p>
+      <p className="text-primary-foreground/70 max-w-md mx-auto mb-6">{copy.text}</p>
 
       <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
         <Button variant="hero" size="lg" className="font-semibold" onClick={onRegister}>
@@ -453,7 +453,7 @@ const StepFinal = ({
         </Button>
         <button
           onClick={onPlans}
-          className="text-sm text-white/70 hover:text-white underline-offset-4 hover:underline"
+          className="text-sm text-primary-foreground/70 hover:text-primary-foreground underline-offset-4 hover:underline"
         >
           {copy.ctaSecondary}
         </button>
