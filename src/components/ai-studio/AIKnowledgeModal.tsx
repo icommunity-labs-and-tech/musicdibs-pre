@@ -74,9 +74,9 @@ export const AIKnowledgeModal = ({ open, onOpenChange }: Props) => {
           {blocks.map(({ Icon, title, desc, warn }, i) => (
             <div
               key={i}
-              className={`flex gap-3 p-3 rounded-lg border ${warn ? "border-amber-500/40 bg-amber-500/5" : "border-border/40 bg-muted/30"}`}
+              className={`flex gap-3 p-3 rounded-lg border ${warn ? "border-warning/40 bg-warning/5" : "border-border/40 bg-muted/30"}`}
             >
-              <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${warn ? "text-amber-500" : "text-primary"}`} />
+              <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${warn ? "text-warning" : "text-primary"}`} />
               <div>
                 <p className="font-semibold text-sm mb-0.5">{title}</p>
                 <p className="text-sm text-muted-foreground">{desc}</p>

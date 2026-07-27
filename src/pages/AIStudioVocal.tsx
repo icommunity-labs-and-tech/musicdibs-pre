@@ -221,8 +221,8 @@ export default function AIStudioVocal() {
   const durationBadge = () => {
     if (cloneAudioDuration === null) return null;
     if (cloneAudioDuration < 30) return <span className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationTooShort')}</span>;
-    if (cloneAudioDuration < 60) return <span className="text-xs text-yellow-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationOk')}</span>;
-    return <span className="text-xs text-green-500 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {vc('durationOptimal')}</span>;
+    if (cloneAudioDuration < 60) return <span className="text-xs text-warning flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationOk')}</span>;
+    return <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {vc('durationOptimal')}</span>;
   };
 
   const handleGenerateLyrics = async () => {

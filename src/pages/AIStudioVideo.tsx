@@ -488,7 +488,7 @@ const AIStudioVideo = () => {
     switch (status) {
       case 'PENDING': return 'bg-muted text-muted-foreground';
       case 'RUNNING': return 'bg-primary/10 text-primary';
-      case 'SUCCEEDED': return 'bg-green-500/10 text-green-600';
+      case 'SUCCEEDED': return 'bg-success/10 text-success';
       case 'FAILED': return 'bg-destructive/10 text-destructive';
     }
   };

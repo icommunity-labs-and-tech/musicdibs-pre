@@ -41,7 +41,7 @@ const AIStudio = () => {
       available: true,
       costsCredits: true,
       featureKey: 'generate_audio' as const,
-      color: "from-purple-500 to-pink-500"
+      color: "from-primary to-brand"
     },
     {
       titleKey: "aiStudio.modules.enhance.title",
@@ -52,7 +52,7 @@ const AIStudio = () => {
       costsCredits: true,
       featured: true,
       featureKey: 'enhance_audio' as const,
-      color: "from-violet-500 to-purple-600"
+      color: "from-accent to-primary"
     },
     {
       titleKey: "aiStudio.modules.editModify.title",
@@ -62,7 +62,7 @@ const AIStudio = () => {
       available: true,
       costsCredits: true,
       featureKey: 'edit_audio' as const,
-      color: "from-fuchsia-500 to-purple-600"
+      color: "from-accent to-primary"
     },
   ];
 
@@ -75,7 +75,7 @@ const AIStudio = () => {
       available: true,
       costsCredits: true,
       featureKey: 'inspiration' as const,
-      color: "from-amber-500 to-orange-500"
+      color: "from-warning to-warning"
     },
     {
       titleKey: "aiStudio.modules.createCovers.title",
@@ -85,7 +85,7 @@ const AIStudio = () => {
       available: true,
       costsCredits: true,
       featureKey: 'generate_cover' as const,
-      color: "from-emerald-500 to-teal-500"
+      color: "from-success to-info"
     },
     {
       titleKey: "aiStudio.modules.virtualArtists.title",
@@ -95,7 +95,7 @@ const AIStudio = () => {
       available: true,
       costsCredits: false,
       featureKey: 'inspiration' as const,
-      color: "from-violet-500 to-purple-600",
+      color: "from-accent to-primary",
       inlineView: "virtual-artists" as ActiveView,
     },
   ];
@@ -122,8 +122,8 @@ const AIStudio = () => {
         {/* ── Featured: glow strip + shimmer overlay */}
         {isFeatured && (
           <>
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 via-transparent to-pink-500/5 pointer-events-none" />
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-violet-500 via-pink-400 to-fuchsia-500" />
+            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-brand/5 pointer-events-none" />
+            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-accent via-brand to-accent" />
           </>
         )}
         {/* ── Non-featured color strip */}
@@ -133,7 +133,7 @@ const AIStudio = () => {
 
         {/* ── Badges */}
         {isFeatured && (
-          <span className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+          <span className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-accent to-accent px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
             ⚡ TOP
           </span>
         )}
@@ -143,7 +143,7 @@ const AIStudio = () => {
           </Badge>
         )}
         {!isFeatured && module.available && module.costsCredits === false && (
-          <Badge className="absolute top-3 right-3 z-10 text-[10px] bg-emerald-500 hover:bg-emerald-600 text-white border-0">
+          <Badge className="absolute top-3 right-3 z-10 text-[10px] bg-success hover:bg-success text-white border-0">
             {t('aiStudio.free', 'Gratis')}
           </Badge>
         )}
@@ -168,7 +168,7 @@ const AIStudio = () => {
             <div className="mt-auto pt-2"><PricingLink /></div>
           ) : module.costsCredits === false ? (
             <div className="mt-auto pt-2">
-              <span className="inline-flex items-center rounded-full bg-emerald-500 px-4 py-1.5 text-xs font-bold text-white shadow-sm">{t('aiStudio.free', 'Gratis')}</span>
+              <span className="inline-flex items-center rounded-full bg-success px-4 py-1.5 text-xs font-bold text-white shadow-sm">{t('aiStudio.free', 'Gratis')}</span>
             </div>
           ) : null}
         </CardHeader>
@@ -191,7 +191,7 @@ const AIStudio = () => {
               {t('aiStudio.startBtn')}
             </Button>
           ) : (
-            <Button asChild className={`w-full ${isFeatured ? 'bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white border-0 shadow-[0_2px_10px_rgba(139,92,246,0.4)]' : ''}`} variant="default">
+            <Button asChild className={`w-full ${isFeatured ? 'bg-gradient-to-r from-accent to-accent hover:from-accent hover:to-accent text-white border-0 shadow-[0_2px_10px_rgba(139,92,246,0.4)]' : ''}`} variant="default">
               <Link to={module.href}>
                 <Zap className="w-4 h-4 mr-2" />
                 {t('aiStudio.startBtn')}
@@ -206,7 +206,7 @@ const AIStudio = () => {
       return (
         <div
           key={module.titleKey}
-          className="relative p-[2px] rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 shadow-[0_0_28px_rgba(139,92,246,0.4),0_0_8px_rgba(139,92,246,0.2)]"
+          className="relative p-[2px] rounded-xl bg-gradient-to-br from-accent via-accent to-brand shadow-[0_0_28px_rgba(139,92,246,0.4),0_0_8px_rgba(139,92,246,0.2)]"
         >
           {cardInner}
         </div>
@@ -285,7 +285,7 @@ const AIStudio = () => {
                 {t('aiStudio.pageSubtitle')}
               </p>
               <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/40 bg-amber-500/10 px-4 py-1.5 text-sm text-amber-700 dark:text-amber-300">
+                <div className="inline-flex items-center gap-2 rounded-full border border-warning/40 bg-warning/10 px-4 py-1.5 text-sm text-warning dark:text-warning">
                   <span aria-hidden>💡</span>
                   <span>{t('aiStudio.variationNotice')}</span>
                 </div>
@@ -329,11 +329,11 @@ const AIStudio = () => {
             </div>
 
             {/* Legal Notice */}
-            <Card className="border-amber-500/20 bg-amber-500/5">
+            <Card className="border-warning/20 bg-warning/5">
               <CardContent className="flex items-start gap-4 pt-6">
-                <AlertTriangle className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
+                <AlertTriangle className="w-6 h-6 text-warning shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-semibold text-amber-700 dark:text-amber-400 mb-2">
+                  <h3 className="font-semibold text-warning dark:text-warning mb-2">
                     {t('aiStudio.legalTitle')}
                   </h3>
                   <p className="text-sm text-muted-foreground">

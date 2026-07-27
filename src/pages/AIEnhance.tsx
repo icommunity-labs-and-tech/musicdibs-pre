@@ -88,7 +88,7 @@ const MODES = [
     labelKey: "aiEnhance.modeInstrumentalLabel",
     taglineKey: "aiEnhance.modeInstrumentalTagline",
     icon: <Mic2 className="w-6 h-6" />,
-    gradient: "from-violet-500 to-purple-600",
+    gradient: "from-accent to-primary",
     placeholderKey: "aiEnhance.modeInstrumentalPlaceholder",
     useCaseKeys: [
       "aiEnhance.modeInstrumentalUseCase1",
@@ -100,7 +100,7 @@ const MODES = [
     labelKey: "aiEnhance.modeCoverLabel",
     taglineKey: "aiEnhance.modeCoverTagline",
     icon: <Repeat2 className="w-5 h-5" />,
-    gradient: "from-pink-500 to-rose-500",
+    gradient: "from-brand to-rose-500",
     placeholderKey: "aiEnhance.modeCoverPlaceholder",
     useCaseKeys: [
       "aiEnhance.modeCoverUseCase1",
@@ -114,7 +114,7 @@ const MODES = [
     labelKey: "aiEnhance.modeExtendLabel",
     taglineKey: "aiEnhance.modeExtendTagline",
     icon: <Expand className="w-5 h-5" />,
-    gradient: "from-blue-500 to-cyan-500",
+    gradient: "from-info to-info",
     placeholderKey: "aiEnhance.modeExtendPlaceholder",
     useCaseKeys: [
       "aiEnhance.modeExtendUseCase1",
@@ -127,7 +127,7 @@ const MODES = [
     labelKey: "aiEnhance.modeAddVocalsLabel",
     taglineKey: "aiEnhance.modeAddVocalsTagline",
     icon: <Mic className="w-5 h-5" />,
-    gradient: "from-emerald-500 to-teal-500",
+    gradient: "from-success to-info",
     placeholderKey: "aiEnhance.modeAddVocalsPlaceholder",
     useCaseKeys: [
       "aiEnhance.modeAddVocalsUseCase1",
@@ -710,15 +710,15 @@ const AIEnhance = () => {
                             {/* Glow halo animado más intenso */}
                             <div
                               aria-hidden
-                              className="pointer-events-none absolute -inset-[5px] rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-500 opacity-80 blur-xl animate-pulse"
+                              className="pointer-events-none absolute -inset-[5px] rounded-2xl bg-gradient-to-br from-accent via-accent to-warning opacity-80 blur-xl animate-pulse"
                             />
                             {/* Borde gradiente nítido */}
                             <div
                               aria-hidden
-                              className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-500"
+                              className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-accent via-accent to-warning"
                             />
                             {/* Badge MÁS POPULAR */}
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-500 via-fuchsia-600 to-violet-600 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(217,70,239,0.6)] ring-1 ring-white/20">
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-warning via-accent to-accent px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-[0_0_20px_rgba(217,70,239,0.6)] ring-1 ring-white/20">
                               {t('aiEnhance.recommendedBadge')}
                             </div>
                           </>
@@ -730,7 +730,7 @@ const AIEnhance = () => {
                           className={cn(
                             "relative w-full h-full rounded-2xl border text-left transition-all duration-300 text-sm",
                             isFeatured
-                              ? "p-5 bg-gradient-to-br from-violet-50 via-card to-fuchsia-50 dark:from-violet-950/50 dark:via-card dark:to-fuchsia-950/40 border-transparent shadow-2xl shadow-fuchsia-500/30 hover:shadow-fuchsia-500/60 hover:-translate-y-1 hover:scale-[1.015]"
+                              ? "p-5 bg-gradient-to-br from-accent via-card to-accent dark:from-accent/50 dark:via-card dark:to-accent/40 border-transparent shadow-2xl shadow-fuchsia-500/30 hover:shadow-fuchsia-500/60 hover:-translate-y-1 hover:scale-[1.015]"
                               : isSelected
                                 ? "p-4 border-primary bg-primary/5 hover:border-primary/40"
                                 : "p-4 border-border bg-card hover:border-primary/40"
@@ -740,13 +740,13 @@ const AIEnhance = () => {
                             <>
                               <div className="flex items-start gap-3">
                                 <div className="relative shrink-0">
-                                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-fuchsia-500/50 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent via-accent to-warning flex items-center justify-center text-white shadow-lg shadow-fuchsia-500/50 group-hover:scale-110 group-hover:rotate-3 transition-transform">
                                     <Mic2 className="w-7 h-7" />
                                   </div>
-                                  <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-amber-300 drop-shadow-[0_0_6px_rgba(252,211,77,0.9)] animate-pulse" />
+                                  <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-warning drop-shadow-[0_0_6px_rgba(252,211,77,0.9)] animate-pulse" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="font-bold text-base sm:text-lg leading-tight bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 bg-clip-text text-transparent">
+                                  <p className="font-bold text-base sm:text-lg leading-tight bg-gradient-to-r from-accent via-accent to-warning bg-clip-text text-transparent">
                                     {t(mode.labelKey)}
                                   </p>
                                   <p className="text-xs sm:text-[13px] text-muted-foreground mt-1 leading-snug">
@@ -756,19 +756,19 @@ const AIEnhance = () => {
                               </div>
                               {/* Mini flujo visual */}
                               <div className="mt-3 flex items-center flex-wrap gap-1.5 text-[11px] font-medium">
-                                <span className="px-2 py-1 rounded-full bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-500/20">
+                                <span className="px-2 py-1 rounded-full bg-accent/10 text-accent dark:text-accent border border-accent/20">
                                   {t('aiEnhance.modeInstrumentalFlow1')}
                                 </span>
-                                <ArrowRight className="w-3 h-3 text-fuchsia-500/70 shrink-0" />
-                                <span className="px-2 py-1 rounded-full bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-300 border border-fuchsia-500/20">
+                                <ArrowRight className="w-3 h-3 text-accent/70 shrink-0" />
+                                <span className="px-2 py-1 rounded-full bg-accent/10 text-accent dark:text-accent border border-accent/20">
                                   {t('aiEnhance.modeInstrumentalFlow2')}
                                 </span>
-                                <ArrowRight className="w-3 h-3 text-orange-500/70 shrink-0" />
-                                <span className="px-2 py-1 rounded-full bg-orange-500/10 text-orange-700 dark:text-orange-300 border border-orange-500/20">
+                                <ArrowRight className="w-3 h-3 text-warning/70 shrink-0" />
+                                <span className="px-2 py-1 rounded-full bg-warning/10 text-warning dark:text-warning border border-warning/20">
                                   {t('aiEnhance.modeInstrumentalFlow3')}
                                 </span>
                               </div>
-                              <p className="mt-2.5 text-[11px] font-semibold text-fuchsia-600 dark:text-fuchsia-300/90">
+                              <p className="mt-2.5 text-[11px] font-semibold text-accent dark:text-accent/90">
                                 {t('aiEnhance.modeInstrumentalMicro')}
                               </p>
                             </>
@@ -831,7 +831,7 @@ const AIEnhance = () => {
             <div className={`flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm ${
               audioDuration && audioDuration > 90
                 ? "border-destructive/50 bg-destructive/10 text-destructive"
-                : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                : "border-warning/30 bg-warning/10 text-warning dark:text-warning"
             }`}>
               <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>
@@ -1180,9 +1180,9 @@ const AIEnhance = () => {
               <motion.div
                 initial={{ opacity: 0, scale: 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="rounded-xl border border-green-500/30 bg-green-500/5 p-5 space-y-4"
+                className="rounded-xl border border-success/30 bg-success/5 p-5 space-y-4"
               >
-                <div className="flex items-center gap-2 text-green-600 dark:text-green-400 font-semibold">
+                <div className="flex items-center gap-2 text-success dark:text-success font-semibold">
                   <CheckCircle2 className="w-5 h-5" /> {t('aiEnhance.readyTitle')}
                 </div>
                 <AudioPlayer src={generatedAudioUrl} label={t('aiEnhance.generatedLabel')} />
@@ -1253,7 +1253,7 @@ const AIEnhance = () => {
                     {enhancedGenerationId && mp4Jobs[enhancedGenerationId] === "loading" ? (
                       <><Loader2 className="w-4 h-4 animate-spin" /> Generando MP4…</>
                     ) : enhancedGenerationId && mp4Jobs[enhancedGenerationId] === "done" ? (
-                      <><Check className="w-4 h-4 text-green-500" /> MP4 listo</>
+                      <><Check className="w-4 h-4 text-success" /> MP4 listo</>
                     ) : (
                       <><Film className="w-4 h-4" /> {enhancedGenerationId ? "MP4" : "Preparando MP4…"}</>
                     )}
