@@ -1959,8 +1959,25 @@ const AIStudioCreate = () => {
 
             {activeTab === "lyrics" ? (
               lyricsLoading ? (
-                <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />{t('aiCreate.loading')}
+                <div className="space-y-3">
+                  {[0, 1, 2].map((i) => (
+                    <Card key={i} className="border-border/40">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-2/3" />
+                            <div className="flex items-center gap-2">
+                              <Skeleton className="h-4 w-12" />
+                              <Skeleton className="h-4 w-12" />
+                              <Skeleton className="h-3 w-16" />
+                            </div>
+                          </div>
+                          <Skeleton className="h-7 w-7 rounded" />
+                        </div>
+                        <Skeleton className="h-16 w-full" />
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               ) : lyricsHistory.length === 0 ? (
                 <Card className="border-dashed">
