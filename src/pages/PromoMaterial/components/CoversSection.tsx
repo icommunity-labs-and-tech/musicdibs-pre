@@ -100,22 +100,8 @@ export const CoversSection = () => {
   };
 
   const handleImproveDescription = async () => {
-    if (!description.trim()) return;
-    setIsImprovingDesc(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('improve-prompt', {
-        body: { prompt: description, mode: 'cover_design' },
-      });
-      if (error || data?.error) throw new Error(data?.error || error?.message);
-      if (data?.improved) {
-        setDescription(data.improved.slice(0, 1000));
-        toast.success(t('aiCovers.descImproved'));
-      }
-    } catch {
-      toast.error(t('aiShared.error'));
-    } finally {
-      setIsImprovingDesc(false);
-    }
+    const improved = await improve({ prompt: description, mode: 'cover_design' });
+    if (improved) setDescription(improved);
   };
 
   const handleGenerate = async () => {
