@@ -17,6 +17,7 @@ import { PricingLink } from '@/components/dashboard/PricingPopup';
 import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { parseAiError } from '@/lib/aiErrorHandler';
 import { useImprovePrompt } from '@/hooks/useImprovePrompt';
 import {
   Wand2, Loader2, Download, RefreshCw, ImageIcon, Sparkles, Coins,
