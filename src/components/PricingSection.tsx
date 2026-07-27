@@ -188,7 +188,7 @@ export const PricingSection = () => {
       >
         <Check className={`w-3 h-3 ${tone === 'accent' ? 'text-success' : 'text-slate-700'}`} strokeWidth={3} />
       </div>
-      <span className="text-sm leading-relaxed text-white/90">{text}</span>
+      <span className="text-sm leading-relaxed text-page-fg">{text}</span>
     </div>
   );
 
@@ -199,7 +199,7 @@ export const PricingSection = () => {
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
           {t("pricing.title")}
         </h2>
-        <p className="text-xl text-white/90 mb-14 max-w-4xl mx-auto">
+        <p className="text-xl text-page-fg mb-14 max-w-4xl mx-auto">
           {t("pricing.subtitle")}
         </p>
 
@@ -208,18 +208,18 @@ export const PricingSection = () => {
 
           {/* ─────────── COLUMNA IZQUIERDA — Mensual ─────────── */}
           <div className="order-1 md:order-1 flex">
-            <Card className="w-full border border-white/15 bg-gradient-to-b from-slate-700/90 to-slate-800/90 text-white shadow-lg flex flex-col">
+            <Card className="w-full border border-page-border bg-gradient-to-b from-slate-700/90 to-slate-800/90 text-white shadow-lg flex flex-col">
               <CardContent className="p-6 flex flex-col flex-1">
                 <div className="text-center mb-5">
-                  <h3 className="text-lg font-bold text-white/90 mb-1">
+                  <h3 className="text-lg font-bold text-page-fg mb-1">
                     {t("pricing.nameMonthly")}
                   </h3>
-                  <p className="text-xs text-white/65 mb-4">{t("pricing.briefMonthly")}</p>
+                  <p className="text-xs text-page-fg-subtle mb-4">{t("pricing.briefMonthly")}</p>
                   <div className="text-3xl font-bold mb-2">
                     {prices.monthly}
                     <span className="text-base font-normal">{t("pricing.priceMonthlySuffix")}</span>
                   </div>
-                  <div className="inline-block rounded-full bg-white/10 text-white/85 px-3 py-1 text-xs font-semibold">
+                  <div className="inline-block rounded-full bg-page-surface text-page-fg-muted px-3 py-1 text-xs font-semibold">
                     {t("pricing.creditsMonthly")}
                   </div>
                 </div>
@@ -227,7 +227,7 @@ export const PricingSection = () => {
                   {monthlyFeatures.map((f, i) => <div key={i}>{renderFeature(f)}</div>)}
                 </div>
                 <Button
-                  className="w-full font-semibold rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/30 py-3 text-sm"
+                  className="w-full font-semibold rounded-full bg-page-surface hover:bg-page-surface-strong text-white border border-page-border-strong py-3 text-sm"
                   disabled={loadingPlan !== null}
                   onClick={() => handleCheckout('monthly')}
                 >
@@ -260,14 +260,14 @@ export const PricingSection = () => {
                   <h3 className="text-2xl md:text-3xl font-bold mb-1">
                     {t('pricing.starter.name')}
                   </h3>
-                  <p className="text-white/90 text-sm mb-4">
+                  <p className="text-page-fg text-sm mb-4">
                     {t('pricing.starter.brief')}
                   </p>
                   <div className="text-5xl md:text-6xl font-bold mb-2">
                     {prices.starter}
                     <span className="text-xl font-normal">{t("pricing.priceAnnualSuffix")}</span>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-white/25 backdrop-blur-sm border border-white/40 text-white font-semibold px-4 py-1.5 text-sm">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-page-surface-strong backdrop-blur-sm border border-white/40 text-white font-semibold px-4 py-1.5 text-sm">
                     <Sparkles className="w-4 h-4" />
                     {t('pricing.starter.credits')}
                   </div>
@@ -278,7 +278,7 @@ export const PricingSection = () => {
                 </div>
 
                 {/* Upsell tenue hacia Plus+ */}
-                <p className="text-[11px] md:text-xs text-white/75 text-center mb-5 leading-relaxed">
+                <p className="text-[11px] md:text-xs text-page-fg-muted text-center mb-5 leading-relaxed">
                   {t('pricing.starter.upsell')} <ArrowRight className="inline w-3 h-3 -mt-0.5" />
                 </p>
 
@@ -300,21 +300,21 @@ export const PricingSection = () => {
 
           {/* ─────────── COLUMNA DERECHA — Plan Plus+ ─────────── */}
           <div className="order-3 md:order-3 flex">
-            <Card className="w-full border border-white/20 bg-gradient-to-br from-primary/80 via-brand/70 to-primary/80 text-white shadow-xl flex flex-col">
+            <Card className="w-full border border-page-border-strong bg-gradient-to-br from-primary/80 via-brand/70 to-primary/80 text-white shadow-xl flex flex-col">
               <CardContent className="p-6 flex flex-col flex-1">
                 <div className="text-center mb-4">
-                  <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 text-white font-semibold text-[11px] md:text-xs px-3 py-1 rounded-full mb-3">
+                  <div className="inline-flex items-center gap-1.5 bg-page-surface-strong backdrop-blur-sm border border-white/25 text-white font-semibold text-[11px] md:text-xs px-3 py-1 rounded-full mb-3">
                     {t("pricing.badgeAnnual")}
                   </div>
                   <h3 className="text-xl md:text-2xl font-bold mb-1">
                     {t("pricing.nameAnnual")}
                   </h3>
-                  <p className="text-white/85 text-xs md:text-sm mb-4">
+                  <p className="text-page-fg-muted text-xs md:text-sm mb-4">
                     {t("pricing.briefAnnual")}
                   </p>
 
                   <div className="mb-4 text-left">
-                    <p className="text-[11px] md:text-xs text-white/80 mb-1.5 text-center">
+                    <p className="text-[11px] md:text-xs text-page-fg-muted mb-1.5 text-center">
                       {t('pricing.annualSelectorHelp')}
                     </p>
                     <Select
@@ -323,7 +323,7 @@ export const PricingSection = () => {
                     >
                       <SelectTrigger
                         aria-label={t('pricing.annualSelectorAria', { defaultValue: 'Selecciona pack anual' })}
-                        className="w-full bg-white/15 border-white/30 text-white hover:bg-white/20 backdrop-blur-sm font-semibold h-11 text-sm"
+                        className="w-full bg-page-surface-strong border-page-border-strong text-white hover:bg-page-surface-strong backdrop-blur-sm font-semibold h-11 text-sm"
                       >
                         <SelectValue>{annualOptionLabel(selectedAnnual)}</SelectValue>
                       </SelectTrigger>
@@ -341,10 +341,10 @@ export const PricingSection = () => {
                     {prices.annual}
                     <span className="text-lg font-normal">{t("pricing.priceAnnualSuffix")}</span>
                   </div>
-                  <div className="inline-block rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white font-semibold px-3 py-1 text-xs">
+                  <div className="inline-block rounded-full bg-page-surface-strong backdrop-blur-sm border border-page-border-strong text-white font-semibold px-3 py-1 text-xs">
                     {t('pricing.creditsAnnualDynamic', { count: selectedAnnual.credits })}
                   </div>
-                  <p className="mt-1.5 text-[11px] text-white/75">
+                  <p className="mt-1.5 text-[11px] text-page-fg-muted">
                     {t('pricing.annualPerCredit', { price: prices.annualPerCredit })}
                   </p>
                 </div>
@@ -371,17 +371,17 @@ export const PricingSection = () => {
         </div>
 
         {/* Individual Registration Option */}
-        <div className="text-center max-w-xl mx-auto rounded-2xl px-6 py-6 bg-white/5 backdrop-blur-sm border border-white/10">
-          <h3 className="text-base md:text-lg font-semibold text-white/90 mb-1">
+        <div className="text-center max-w-xl mx-auto rounded-2xl px-6 py-6 bg-page-surface backdrop-blur-sm border border-page-border">
+          <h3 className="text-base md:text-lg font-semibold text-page-fg mb-1">
             {t("pricing.indivTitle")}
           </h3>
-          <p className="text-sm text-white/70 mb-4">
+          <p className="text-sm text-page-fg-muted mb-4">
             {t("pricing.indivSubtitle_dynamic", { price: prices.individual, defaultValue: t("pricing.indivSubtitle") })}
           </p>
           <Button
             variant="outline"
             size="sm"
-            className="bg-transparent border border-white/40 text-white/90 hover:bg-white/10 hover:text-white px-6 py-2 rounded-full font-medium text-sm"
+            className="bg-transparent border border-white/40 text-page-fg hover:bg-page-surface hover:text-page-fg px-6 py-2 rounded-full font-medium text-sm"
             disabled={loadingPlan !== null}
             onClick={() => handleCheckout('individual')}
           >
@@ -416,7 +416,7 @@ export const PricingSection = () => {
               <h4 className="text-white font-bold text-lg md:text-xl mb-1">
                 {t("pricing.prosTitle")}
               </h4>
-              <p className="text-white/75 text-sm md:text-[15px] leading-relaxed">
+              <p className="text-page-fg-muted text-sm md:text-[15px] leading-relaxed">
                 {t("pricing.prosSubtitle")}
               </p>
             </div>
@@ -435,7 +435,7 @@ export const PricingSection = () => {
             </Link>
           </div>
 
-          <p className="mt-6 text-center text-white/55 text-xs leading-relaxed max-w-3xl mx-auto">
+          <p className="mt-6 text-center text-page-fg-subtle text-xs leading-relaxed max-w-3xl mx-auto">
             {t("pricing.conditionsText")}
           </p>
         </div>

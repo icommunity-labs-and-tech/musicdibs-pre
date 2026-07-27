@@ -42,13 +42,13 @@ const Distribution = () => {
           <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-brand to-primary bg-clip-text text-transparent leading-tight">
             {t("distribution.title")}
           </h1>
-          <p className="text-xl md:text-2xl text-white/90 font-semibold mb-4 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-page-fg font-semibold mb-4 max-w-3xl mx-auto">
             {t("distribution.subtitle")}
           </p>
-          <p className="text-lg text-white/70 mb-6 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg text-page-fg-muted mb-6 max-w-3xl mx-auto leading-relaxed">
             {t("distribution.description")}
           </p>
-          <p className="text-base text-white/60 mb-10 max-w-3xl mx-auto">
+          <p className="text-base text-page-fg-subtle mb-10 max-w-3xl mx-auto">
             {t("distribution.description2")}
           </p>
         </div>
@@ -61,7 +61,7 @@ const Distribution = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 text-white">
             {t("distribution.video_title")}
           </h2>
-          <div className="aspect-video rounded-2xl overflow-hidden shadow-2xl shadow-purple-500/20 border border-white/10">
+          <div className="aspect-video rounded-2xl overflow-hidden shadow-2xl shadow-purple-500/20 border border-page-border">
             <LazyYouTube videoId="EMkjA0FUqmg" title={t("distribution.video_title")} />
           </div>
         </div>
@@ -75,16 +75,16 @@ const Distribution = () => {
               href="https://musicdibs.com/wp-content/uploads/2025/07/DSP-List-Musicdibs.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-brand/30 rounded-xl p-5 transition-all"
+              className="group flex items-center gap-4 bg-page-surface hover:bg-page-surface backdrop-blur-sm border border-page-border hover:border-brand/30 rounded-xl p-5 transition-all"
             >
               <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center shrink-0 group-hover:bg-brand/30 transition-colors">
                 <FileText className="w-5 h-5 text-brand" />
               </div>
               <div className="flex-1">
                 <span className="font-semibold text-white">{t("distribution.dsp_list")}</span>
-                <p className="text-sm text-white/50">{t("distribution.dsp_list_desc")}</p>
+                <p className="text-sm text-page-fg-subtle">{t("distribution.dsp_list_desc")}</p>
               </div>
-              <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-brand transition-colors" />
+              <ExternalLink className="w-4 h-4 text-page-fg-subtle group-hover:text-brand transition-colors" />
             </a>
 
             <a
@@ -98,41 +98,41 @@ const Distribution = () => {
               </div>
               <div className="flex-1">
                 <span className="font-semibold text-white">{t("distribution.buy_plus")}</span>
-                <p className="text-sm text-white/50">{t("distribution.buy_plus_desc")}</p>
+                <p className="text-sm text-page-fg-subtle">{t("distribution.buy_plus_desc")}</p>
               </div>
-              <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-brand transition-colors" />
+              <ChevronRight className="w-4 h-4 text-page-fg-subtle group-hover:text-brand transition-colors" />
             </a>
 
             <a
               href="https://dist.musicdibs.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-info/30 rounded-xl p-5 transition-all"
+              className="group flex items-center gap-4 bg-page-surface hover:bg-page-surface backdrop-blur-sm border border-page-border hover:border-info/30 rounded-xl p-5 transition-all"
             >
               <div className="w-12 h-12 rounded-full bg-info/20 flex items-center justify-center shrink-0 group-hover:bg-info/30 transition-colors">
                 <LogIn className="w-5 h-5 text-info" />
               </div>
               <div className="flex-1">
                 <span className="font-semibold text-white">{t("distribution.portal_access")}</span>
-                <p className="text-sm text-white/50">{t("distribution.portal_access_desc")}</p>
+                <p className="text-sm text-page-fg-subtle">{t("distribution.portal_access_desc")}</p>
               </div>
-              <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-info transition-colors" />
+              <ExternalLink className="w-4 h-4 text-page-fg-subtle group-hover:text-info transition-colors" />
             </a>
 
             <a
               href="https://musicdibs.com/wp-content/uploads/2026/02/%F0%9F%8E%A7-Distribution-Policy-%E2%80%93-Musicdibs-EN-1.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-primary/30 rounded-xl p-5 transition-all"
+              className="group flex items-center gap-4 bg-page-surface hover:bg-page-surface backdrop-blur-sm border border-page-border hover:border-primary/30 rounded-xl p-5 transition-all"
             >
               <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/30 transition-colors">
                 <FileText className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
                 <span className="font-semibold text-white">{t("distribution.conditions")}</span>
-                <p className="text-sm text-white/50">{t("distribution.conditions_desc")}</p>
+                <p className="text-sm text-page-fg-subtle">{t("distribution.conditions_desc")}</p>
               </div>
-              <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-primary transition-colors" />
+              <ExternalLink className="w-4 h-4 text-page-fg-subtle group-hover:text-primary transition-colors" />
             </a>
           </div>
         </div>
@@ -145,7 +145,7 @@ const Distribution = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             {t("distribution.cta_title", "¿Listo para distribuir tu música?")}
           </h2>
-          <p className="text-lg text-white/70 mb-8">
+          <p className="text-lg text-page-fg-muted mb-8">
             {t("distribution.cta_desc", "Elige el plan que mejor se adapte a ti y empieza a llegar a millones de oyentes en todo el mundo.")}
           </p>
           <Link to="/#pricing-section">
@@ -170,12 +170,12 @@ const Distribution = () => {
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="bg-white/5 border border-white/10 rounded-xl px-6 overflow-hidden"
+                className="bg-page-surface border border-page-border rounded-xl px-6 overflow-hidden"
               >
                 <AccordionTrigger className="text-left text-white hover:text-brand py-5 text-base font-medium [&[data-state=open]]:text-brand">
                   {item.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-white/70 leading-relaxed pb-5 whitespace-pre-line">
+                <AccordionContent className="text-page-fg-muted leading-relaxed pb-5 whitespace-pre-line">
                   {item.a}
                 </AccordionContent>
               </AccordionItem>

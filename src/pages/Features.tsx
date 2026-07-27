@@ -187,7 +187,7 @@ const Check = ({ ok }: { ok: boolean }) =>
   ok ? (
     <CheckCircle2 className="w-5 h-5 text-success mx-auto" />
   ) : (
-    <span className="block w-5 h-0.5 bg-white/20 mx-auto rounded" />
+    <span className="block w-5 h-0.5 bg-page-surface-strong mx-auto rounded" />
   );
 
 export default function Features() {
@@ -216,7 +216,7 @@ export default function Features() {
             <br />
             Distribute. Promote.
           </h1>
-          <p className="text-xl md:text-2xl text-white/80 mb-6 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-page-fg-muted mb-6 max-w-3xl mx-auto leading-relaxed">
             El único stack completo para músicos independientes en el mercado hispanohablante.
             Crea canciones con IA, registra tu propiedad intelectual, distribuye a todo el mundo
             y genera contenido visual — todo desde un solo lugar.
@@ -225,7 +225,7 @@ export default function Features() {
             <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white px-8">
               <Link to="/login">Empezar gratis</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 px-8">
+            <Button asChild size="lg" variant="outline" className="border-page-border-strong text-white hover:bg-page-surface px-8">
               <Link to="/distribution">Ver distribución</Link>
             </Button>
           </div>
@@ -253,8 +253,8 @@ export default function Features() {
                   <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
                     {pillar.title}
                   </h2>
-                  <p className="text-lg text-white/60 font-medium">{pillar.subtitle}</p>
-                  <p className="text-white/70 leading-relaxed">{pillar.description}</p>
+                  <p className="text-lg text-page-fg-subtle font-medium">{pillar.subtitle}</p>
+                  <p className="text-page-fg-muted leading-relaxed">{pillar.description}</p>
 
                   {/* Sub-links */}
                   <div className="flex flex-wrap gap-2 pt-2">
@@ -262,7 +262,7 @@ export default function Features() {
                       <Link
                         key={sr.href}
                         to={sr.href}
-                        className="text-sm text-white/50 hover:text-white/90 underline underline-offset-2 transition-colors"
+                        className="text-sm text-page-fg-subtle hover:text-page-fg underline underline-offset-2 transition-colors"
                       >
                         {sr.label}
                       </Link>
@@ -287,13 +287,13 @@ export default function Features() {
                     return (
                       <div
                         key={feat.label}
-                        className="bg-white/5 border border-white/10 rounded-2xl p-5 hover:bg-white/8 transition-colors"
+                        className="bg-page-surface border border-page-border rounded-2xl p-5 hover:bg-white/8 transition-colors"
                       >
                         <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${pillar.color} flex items-center justify-center mb-3`}>
                           <FIcon className="w-5 h-5 text-white" />
                         </div>
                         <p className="font-semibold text-white text-sm mb-1">{feat.label}</p>
-                        <p className="text-white/50 text-xs leading-relaxed">{feat.desc}</p>
+                        <p className="text-page-fg-subtle text-xs leading-relaxed">{feat.desc}</p>
                       </div>
                     );
                   })}
@@ -311,31 +311,31 @@ export default function Features() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
               Musicdibs vs la competencia
             </h2>
-            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+            <p className="text-page-fg-subtle text-lg max-w-2xl mx-auto">
               El único stack que cubre los cuatro pilares: crear, proteger, distribuir y promocionar.
             </p>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-white/10">
+          <div className="overflow-x-auto rounded-2xl border border-page-border">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left px-6 py-4 text-white/50 font-medium w-1/2">Funcionalidad</th>
+                <tr className="border-b border-page-border">
+                  <th className="text-left px-6 py-4 text-page-fg-subtle font-medium w-1/2">Funcionalidad</th>
                   <th className="px-4 py-4 text-center">
                     <span className="text-accent font-bold">Musicdibs</span>
                   </th>
-                  <th className="px-4 py-4 text-center text-white/40 font-medium">LANDR</th>
-                  <th className="px-4 py-4 text-center text-white/40 font-medium">DistroKid</th>
-                  <th className="px-4 py-4 text-center text-white/40 font-medium">Too Lost</th>
+                  <th className="px-4 py-4 text-center text-page-fg-subtle font-medium">LANDR</th>
+                  <th className="px-4 py-4 text-center text-page-fg-subtle font-medium">DistroKid</th>
+                  <th className="px-4 py-4 text-center text-page-fg-subtle font-medium">Too Lost</th>
                 </tr>
               </thead>
               <tbody>
                 {COMPARE_ROWS.map((row, i) => (
                   <tr
                     key={row.feature}
-                    className={`border-b border-white/5 ${i % 2 === 0 ? "bg-white/[0.02]" : ""}`}
+                    className={`border-b border-page-border ${i % 2 === 0 ? "bg-white/[0.02]" : ""}`}
                   >
-                    <td className="px-6 py-3.5 text-white/70">{row.feature}</td>
+                    <td className="px-6 py-3.5 text-page-fg-muted">{row.feature}</td>
                     <td className="px-4 py-3.5"><Check ok={row.md} /></td>
                     <td className="px-4 py-3.5"><Check ok={row.landr} /></td>
                     <td className="px-4 py-3.5"><Check ok={row.distrokid} /></td>
@@ -354,7 +354,7 @@ export default function Features() {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
             Todo lo que necesitas para vivir de tu música
           </h2>
-          <p className="text-white/60 text-lg mb-10">
+          <p className="text-page-fg-subtle text-lg mb-10">
             Más de 100.000 artistas ya usan Musicdibs. Empieza gratis y escala cuando quieras.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -364,11 +364,11 @@ export default function Features() {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 px-10">
+            <Button asChild size="lg" variant="outline" className="border-page-border-strong text-white hover:bg-page-surface px-10">
               <Link to="/faq">Ver preguntas frecuentes</Link>
             </Button>
           </div>
-          <p className="text-white/30 text-sm mt-6">
+          <p className="text-page-fg-subtle text-sm mt-6">
             Desde €6,90/mes · Sin permanencia · 3 créditos gratis al registrarte
           </p>
         </div>

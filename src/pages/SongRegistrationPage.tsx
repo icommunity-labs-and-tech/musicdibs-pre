@@ -227,7 +227,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
             <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
               {c.h1}
             </h1>
-            <p className="text-white/70 text-lg md:text-xl max-w-2xl mx-auto mb-10">
+            <p className="text-page-fg-muted text-lg md:text-xl max-w-2xl mx-auto mb-10">
               {c.subtitle}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
@@ -251,12 +251,12 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
               {c.why.map((w, i) => {
                 const Icon = whyIcons[i];
                 return (
-                  <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+                  <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
                     <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-5">
                       <Icon className="w-6 h-6 text-brand" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-3">{w.title}</h3>
-                    <p className="text-white/70 leading-relaxed">{w.desc}</p>
+                    <p className="text-page-fg-muted leading-relaxed">{w.desc}</p>
                   </div>
                 );
               })}
@@ -268,11 +268,11 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
             <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.stepsTitle}</h2>
             <ol className="space-y-4">
               {c.steps.map((s, i) => (
-                <li key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 flex gap-4">
+                <li key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 flex gap-4">
                   <Clock className="w-6 h-6 text-primary shrink-0 mt-1" />
                   <div>
                     <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
-                    <p className="text-white/70">{s.desc}</p>
+                    <p className="text-page-fg-muted">{s.desc}</p>
                   </div>
                 </li>
               ))}
@@ -282,21 +282,21 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
           {/* Comparison */}
           <section className="mb-20">
             <h2 className="text-3xl font-bold text-center mb-4 text-white">{c.vsTitle}</h2>
-            <p className="text-white/70 text-center mb-10 max-w-2xl mx-auto">{c.vsIntro}</p>
-            <div className="overflow-x-auto rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm">
+            <p className="text-page-fg-muted text-center mb-10 max-w-2xl mx-auto">{c.vsIntro}</p>
+            <div className="overflow-x-auto rounded-2xl border border-page-border bg-page-surface backdrop-blur-sm">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left p-4 text-white/60 font-bold uppercase text-xs">—</th>
-                    <th className="text-left p-4 text-white/60 font-bold uppercase text-xs">Tradicional</th>
+                  <tr className="border-b border-page-border">
+                    <th className="text-left p-4 text-page-fg-subtle font-bold uppercase text-xs">—</th>
+                    <th className="text-left p-4 text-page-fg-subtle font-bold uppercase text-xs">Tradicional</th>
                     <th className="text-left p-4 text-brand font-bold uppercase text-xs">Musicdibs</th>
                   </tr>
                 </thead>
                 <tbody>
                   {c.vsRows.map((r, i) => (
-                    <tr key={i} className="border-b border-white/5 last:border-b-0">
+                    <tr key={i} className="border-b border-page-border last:border-b-0">
                       <td className="p-4 text-white font-semibold">{r.feature}</td>
-                      <td className="p-4 text-white/70">{r.trad}</td>
+                      <td className="p-4 text-page-fg-muted">{r.trad}</td>
                       <td className="p-4 text-brand font-semibold">{r.mdb}</td>
                     </tr>
                   ))}
@@ -313,21 +313,21 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
             <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.faqTitle}</h2>
             <div className="space-y-4">
               {c.faq.map((f, i) => (
-                <details key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 group">
+                <details key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 group">
                   <summary className="font-bold text-white cursor-pointer flex items-center justify-between">
                     {f.q}
                     <CheckCircle2 className="w-5 h-5 text-brand group-open:rotate-45 transition-transform" />
                   </summary>
-                  <p className="text-white/70 mt-4 leading-relaxed">{f.a}</p>
+                  <p className="text-page-fg-muted mt-4 leading-relaxed">{f.a}</p>
                 </details>
               ))}
             </div>
           </section>
 
           {/* Closing CTA */}
-          <section className="bg-gradient-to-r from-brand/20 to-primary/20 border border-white/10 rounded-2xl p-10 text-center">
+          <section className="bg-gradient-to-r from-brand/20 to-primary/20 border border-page-border rounded-2xl p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">{c.closingTitle}</h2>
-            <p className="text-white/70 mb-8 max-w-lg mx-auto">{c.closingDesc}</p>
+            <p className="text-page-fg-muted mb-8 max-w-lg mx-auto">{c.closingDesc}</p>
             <Link to="/login">
               <Button variant="hero" size="xl" className="font-semibold">
                 <span className="flex items-center gap-2">

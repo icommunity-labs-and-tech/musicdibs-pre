@@ -171,14 +171,14 @@ const GeneradorCancionesIAPage = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-brand/10 via-primary/5 to-transparent pointer-events-none" />
         <div className="absolute top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-brand/20 blur-[120px] rounded-full pointer-events-none" />
         <div className="relative max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full px-5 py-2 mb-8 animate-fade-in">
+          <div className="inline-flex items-center gap-2 bg-page-surface backdrop-blur-sm border border-page-border rounded-full px-5 py-2 mb-8 animate-fade-in">
             <Sparkles className="w-4 h-4 text-brand" />
-            <span className="text-white/80 text-sm font-medium">Crea. Protege. Distribuye. Promociona.</span>
+            <span className="text-page-fg-muted text-sm font-medium">Crea. Protege. Distribuye. Promociona.</span>
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-br from-white via-brand to-primary bg-clip-text text-transparent leading-tight animate-fade-in">
             Generador de música con IA para lanzamientos reales
           </h1>
-          <p className="text-white/70 text-lg md:text-2xl max-w-3xl mx-auto mb-10 animate-fade-in">
+          <p className="text-page-fg-muted text-lg md:text-2xl max-w-3xl mx-auto mb-10 animate-fade-in">
             El generador de canciones con IA que además registra tu copyright y las distribuye — desde una sola cuenta.
           </p>
           <div className="flex flex-wrap justify-center gap-4 mb-16 animate-fade-in">
@@ -199,14 +199,14 @@ const GeneradorCancionesIAPage = () => {
       </section>
 
       {/* TRUST */}
-      <section className="px-6 py-12 border-y border-white/5 bg-white/[0.02]">
+      <section className="px-6 py-12 border-y border-page-border bg-white/[0.02]">
         <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6">
           {TRUST.map((t, i) => (
             <div key={i} className="flex items-center gap-3 justify-center md:justify-start">
               <div className="w-10 h-10 rounded-lg bg-brand/10 border border-brand/20 flex items-center justify-center shrink-0">
                 <t.icon className="w-5 h-5 text-brand" />
               </div>
-              <span className="text-white/80 text-sm md:text-base font-medium">{t.label}</span>
+              <span className="text-page-fg-muted text-sm md:text-base font-medium">{t.label}</span>
             </div>
           ))}
         </div>
@@ -217,7 +217,7 @@ const GeneradorCancionesIAPage = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">De la idea al lanzamiento en minutos</h2>
-            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+            <p className="text-page-fg-subtle text-lg max-w-2xl mx-auto">
               Un solo flujo. Cuatro pasos. Cero fricción.
             </p>
           </div>
@@ -225,7 +225,7 @@ const GeneradorCancionesIAPage = () => {
             {FLOW.map((f, i) => (
               <div
                 key={i}
-                className="group relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-brand/40 transition-all hover-scale"
+                className="group relative bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 hover:border-brand/40 transition-all hover-scale"
               >
                 <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-gradient-to-br from-brand to-primary flex items-center justify-center text-white text-sm font-bold">
                   {i + 1}
@@ -234,7 +234,7 @@ const GeneradorCancionesIAPage = () => {
                   <f.icon className="w-6 h-6 text-brand" />
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2">{f.title}</h3>
-                <p className="text-white/60 text-sm leading-relaxed">{f.desc}</p>
+                <p className="text-page-fg-subtle text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -246,7 +246,7 @@ const GeneradorCancionesIAPage = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Todo lo que necesitas, nativo en IA</h2>
-            <p className="text-white/60 text-lg max-w-2xl mx-auto">
+            <p className="text-page-fg-subtle text-lg max-w-2xl mx-auto">
               Una suite musical completa construida en torno a la IA generativa.
             </p>
           </div>
@@ -254,13 +254,13 @@ const GeneradorCancionesIAPage = () => {
             {FEATURES.map((f, i) => (
               <div
                 key={i}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-brand/30 hover:bg-white/[0.07] transition-all"
+                className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 hover:border-brand/30 hover:bg-white/[0.07] transition-all"
               >
                 <div className="w-11 h-11 rounded-lg bg-brand/10 flex items-center justify-center mb-4">
                   <f.icon className="w-5 h-5 text-brand" />
                 </div>
                 <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
-                <p className="text-white/60 text-sm leading-relaxed">{f.desc}</p>
+                <p className="text-page-fg-subtle text-sm leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -274,21 +274,21 @@ const GeneradorCancionesIAPage = () => {
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">
               Musicdibs vs flujos tradicionales
             </h2>
-            <p className="text-white/60 text-lg">Más rápido. Todo en uno. Nativo en IA. Pensado para creadores.</p>
+            <p className="text-page-fg-subtle text-lg">Más rápido. Todo en uno. Nativo en IA. Pensado para creadores.</p>
           </div>
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
-            <div className="grid grid-cols-3 px-6 py-4 border-b border-white/10 bg-white/5">
-              <div className="text-white/60 text-sm font-medium">Característica</div>
-              <div className="text-white/60 text-sm font-medium">Tradicional</div>
+          <div className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl overflow-hidden">
+            <div className="grid grid-cols-3 px-6 py-4 border-b border-page-border bg-page-surface">
+              <div className="text-page-fg-subtle text-sm font-medium">Característica</div>
+              <div className="text-page-fg-subtle text-sm font-medium">Tradicional</div>
               <div className="text-brand text-sm font-bold">Musicdibs</div>
             </div>
             {COMPARE.map((row, i) => (
               <div
                 key={i}
-                className="grid grid-cols-3 px-6 py-4 border-b border-white/5 last:border-0 items-center"
+                className="grid grid-cols-3 px-6 py-4 border-b border-page-border last:border-0 items-center"
               >
                 <div className="text-white font-medium text-sm md:text-base">{row.feature}</div>
-                <div className="text-white/50 text-sm md:text-base">{row.trad}</div>
+                <div className="text-page-fg-subtle text-sm md:text-base">{row.trad}</div>
                 <div className="text-white text-sm md:text-base flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-brand shrink-0" />
                   {row.mdb}
@@ -314,23 +314,23 @@ const GeneradorCancionesIAPage = () => {
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">Preguntas frecuentes</h2>
-            <p className="text-white/60 text-lg">Todo lo que necesitas saber sobre la generación de canciones con IA.</p>
+            <p className="text-page-fg-subtle text-lg">Todo lo que necesitas saber sobre la generación de canciones con IA.</p>
           </div>
           <div className="space-y-4">
             {FAQ.map((f, i) => (
               <details
                 key={i}
-                className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 open:border-brand/30"
+                className="group bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 open:border-brand/30"
               >
                 <summary className="flex items-center justify-between cursor-pointer text-white font-semibold text-lg">
                   {f.q}
                   <ArrowRight className="w-5 h-5 text-brand transition-transform group-open:rotate-90" />
                 </summary>
-                <p className="mt-4 text-white/70 leading-relaxed">{f.a}</p>
+                <p className="mt-4 text-page-fg-muted leading-relaxed">{f.a}</p>
               </details>
             ))}
           </div>
-          <div className="mt-12 text-center text-white/60 text-sm">
+          <div className="mt-12 text-center text-page-fg-subtle text-sm">
             Más sobre{" "}
             <Link to="/registro-obras-musicales" className="text-brand hover:text-brand underline">
               registro de obras musicales
@@ -360,7 +360,7 @@ const GeneradorCancionesIAPage = () => {
           <h2 className="relative text-3xl md:text-5xl font-bold text-white mb-4">
             Lanza hoy tu primer release potenciado por IA.
           </h2>
-          <p className="relative text-white/70 text-lg max-w-2xl mx-auto mb-8">
+          <p className="relative text-page-fg-muted text-lg max-w-2xl mx-auto mb-8">
             Únete a miles de creadores que crean, protegen y publican música con IA.
           </p>
           <div className="relative flex flex-wrap justify-center gap-4">

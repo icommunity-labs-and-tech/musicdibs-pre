@@ -228,9 +228,9 @@ export const AIStudioShowcase = () => {
         {/* Header */}
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto mb-14">
-            <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full border border-white/15 bg-white/10 backdrop-blur-sm mb-6 shadow-sm">
+            <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full border border-page-border bg-page-surface backdrop-blur-sm mb-6 shadow-sm">
               <Sparkles className="w-5 h-5 text-accent" />
-              <span className="text-base md:text-lg font-semibold text-white/90 tracking-wide">
+              <span className="text-base md:text-lg font-semibold text-page-fg tracking-wide">
                 AI Music Studio
               </span>
             </div>
@@ -241,7 +241,7 @@ export const AIStudioShowcase = () => {
               </span>{" "}
               en minutos 🎵
             </h2>
-            <p className="text-base md:text-lg text-white/75 leading-relaxed mb-8">
+            <p className="text-base md:text-lg text-page-fg-muted leading-relaxed mb-8">
               Genera canciones completas, regístralas y distribúyelas en 200+
               plataformas. Todo en un solo lugar.
             </p>
@@ -266,18 +266,18 @@ export const AIStudioShowcase = () => {
             {DEMO_SONGS.map((song) => (
               <div
                 key={song.title}
-                className={`ai-card-glow group relative rounded-2xl bg-gradient-to-b from-primary/85 to-primary/75 backdrop-blur-md p-5 border border-white/15 hover:border-white/25 transition-all duration-300 hover:-translate-y-1 shadow-xl ${song.glow} hover:shadow-2xl`}
+                className={`ai-card-glow group relative rounded-2xl bg-gradient-to-b from-primary/85 to-primary/75 backdrop-blur-md p-5 border border-page-border hover:border-white/25 transition-all duration-300 hover:-translate-y-1 shadow-xl ${song.glow} hover:shadow-2xl`}
               >
                 {/* Tag */}
                 <div className="flex items-start justify-between mb-4">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-white/10 text-white/90 border border-white/15">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wide uppercase bg-page-surface text-page-fg border border-page-border">
                     <Music className="w-3 h-3" />
                     {song.tag}
                   </span>
                 </div>
 
                 {/* Waveform */}
-                <div className="rounded-xl bg-black/35 border border-white/5 mb-5 py-3">
+                <div className="rounded-xl bg-black/35 border border-page-border mb-5 py-3">
                   <Waveform from={song.colors[0]} to={song.colors[1]} />
                 </div>
 
@@ -287,7 +287,7 @@ export const AIStudioShowcase = () => {
                     <h3 className="text-white font-semibold text-lg truncate">
                       {song.title}
                     </h3>
-                    <p className="text-white/60 text-xs mt-0.5 truncate">
+                    <p className="text-page-fg-subtle text-xs mt-0.5 truncate">
                       {song.subtitle}
                     </p>
                   </div>
@@ -319,7 +319,7 @@ export const AIStudioShowcase = () => {
                 Tu canción al mundo.
               </span>
             </h3>
-            <p className="text-base md:text-lg text-white/70 leading-relaxed">
+            <p className="text-base md:text-lg text-page-fg-muted leading-relaxed">
             </p>
           </div>
         </ScrollReveal>
@@ -369,12 +369,12 @@ export const AIStudioShowcase = () => {
                         aria-hidden
                       />
                       <div
-                        className="step-icon-wrap relative w-[60px] h-[60px] lg:w-[68px] lg:h-[68px] rounded-full flex items-center justify-center bg-gradient-to-br from-[#1a0d2e] via-[#241241] to-[#2c1850] border border-white/20 shadow-[0_0_24px_rgba(217,70,239,0.4)] transition-all duration-300"
+                        className="step-icon-wrap relative w-[60px] h-[60px] lg:w-[68px] lg:h-[68px] rounded-full flex items-center justify-center bg-gradient-to-br from-[#1a0d2e] via-[#241241] to-[#2c1850] border border-page-border-strong shadow-[0_0_24px_rgba(217,70,239,0.4)] transition-all duration-300"
                         style={step.pulse ? { animation: "stepPulse 2.6s ease-in-out infinite" } : undefined}
                       >
                         <Icon className="w-6 h-6 lg:w-7 lg:h-7 text-accent drop-shadow-[0_0_6px_rgba(217,70,239,0.7)]" />
                         {/* Number chip */}
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[26px] h-[22px] px-1.5 rounded-full bg-gradient-to-br from-brand to-accent border border-white/30 flex items-center justify-center text-[10px] font-bold text-white shadow-md">
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[26px] h-[22px] px-1.5 rounded-full bg-gradient-to-br from-brand to-accent border border-page-border-strong flex items-center justify-center text-[10px] font-bold text-white shadow-md">
                           {step.n}
                         </span>
                       </div>
@@ -385,7 +385,7 @@ export const AIStudioShowcase = () => {
                       <h4 className="text-white font-semibold text-[15px] md:text-[17px] mb-1.5 leading-tight lg:max-w-[230px]">
                         {step.title}
                       </h4>
-                      <p className="text-white/65 text-sm leading-snug mb-2.5 lg:max-w-[240px]">
+                      <p className="text-page-fg-subtle text-sm leading-snug mb-2.5 lg:max-w-[240px]">
                         {step.desc}
                       </p>
                       <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.2em] text-accent/90">

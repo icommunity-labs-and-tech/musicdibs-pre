@@ -19,7 +19,7 @@ export const BridgeStatement = () => {
 
       <div className="container mx-auto px-4 relative">
         <ScrollReveal>
-          <p className="text-center max-w-3xl mx-auto text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-white/90 leading-snug">
+          <p className="text-center max-w-3xl mx-auto text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-page-fg leading-snug">
             La plataforma{" "}
             <span className="bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent drop-shadow-[0_0_18px_rgba(232,121,249,0.35)]">
               #1

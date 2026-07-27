@@ -48,7 +48,7 @@ export const PromoBanner = () => {
 
   return (
     <section
-      className="relative w-full border-y border-white/20 animate-fade-in overflow-hidden"
+      className="relative w-full border-y border-page-border-strong animate-fade-in overflow-hidden"
       style={{
         background:
           "linear-gradient(90deg, #06b6d4 0%, #f59e0b 35%, #f97316 65%, #ec4899 100%)",
@@ -66,13 +66,13 @@ export const PromoBanner = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2.5 md:gap-3">
-            <span className="inline-flex items-center rounded-full bg-white/20 px-3 py-1.5 text-xs md:text-sm font-bold tracking-wider text-white border border-white/30 whitespace-nowrap">
+            <span className="inline-flex items-center rounded-full bg-page-surface-strong px-3 py-1.5 text-xs md:text-sm font-bold tracking-wider text-white border border-page-border-strong whitespace-nowrap">
               🏖️ {t("promoBanner.offer", { defaultValue: "-25% " })}
             </span>
 
             <button
               onClick={copyCode}
-              className="group inline-flex items-center gap-2 rounded-md border border-white/40 bg-white/15 px-3.5 py-2 backdrop-blur-sm transition hover:bg-white/25"
+              className="group inline-flex items-center gap-2 rounded-md border border-white/40 bg-page-surface-strong px-3.5 py-2 backdrop-blur-sm transition hover:bg-page-surface-strong"
               aria-label={t("promoBanner.copyAria", { defaultValue: "Copiar código" })}
             >
               <span className="font-mono text-sm md:text-base font-bold text-white tracking-wider">
@@ -81,7 +81,7 @@ export const PromoBanner = () => {
               {copied ? (
                 <Check className="h-4 w-4 text-success" />
               ) : (
-                <Copy className="h-4 w-4 text-white/90 group-hover:text-white" />
+                <Copy className="h-4 w-4 text-page-fg group-hover:text-page-fg" />
               )}
             </button>
 
@@ -94,8 +94,8 @@ export const PromoBanner = () => {
               ].map((u, i) => (
                 <span key={i} className="inline-flex items-baseline">
                   <span className="rounded bg-black/25 px-2 py-1">{pad(u.v)}</span>
-                  <span className="ml-0.5 text-[10px] text-white/80 uppercase">{u.l}</span>
-                  {i < 3 && <span className="mx-0.5 text-white/40">:</span>}
+                  <span className="ml-0.5 text-[10px] text-page-fg-muted uppercase">{u.l}</span>
+                  {i < 3 && <span className="mx-0.5 text-page-fg-subtle">:</span>}
                 </span>
               ))}
             </div>

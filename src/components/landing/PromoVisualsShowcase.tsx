@@ -63,22 +63,22 @@ const PROMO_CARDS: PromoCard[] = [
 const Reveal = ({ children }: { children: ReactNode }) => <div>{children}</div>;
 
 const CoverCardItem = ({ card }: { card: CoverCard }) => (
-  <div className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-xl shadow-fuchsia-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-fuchsia-500/40">
+  <div className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-page-border shadow-xl shadow-fuchsia-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-fuchsia-500/40">
     <img
       src={card.image}
       alt={`Portada ${card.title} de ${card.artist}`}
       loading="lazy"
       className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-[1.06]"
     />
-    <div className="absolute inset-0 bg-black/0 group-hover:bg-white/5 transition-colors duration-300" />
-    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-white text-[11px] font-medium">
+    <div className="absolute inset-0 bg-black/0 group-hover:bg-page-surface transition-colors duration-300" />
+    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-page-border text-white text-[11px] font-medium">
       <ImageIcon className="w-3.5 h-3.5" />
       <span>Portada</span>
     </div>
     <div className="absolute inset-x-0 bottom-0 p-3.5 bg-gradient-to-t from-black/85 via-black/55 to-transparent">
       <p className="text-white font-semibold text-sm sm:text-base tracking-tight drop-shadow leading-tight">{card.title}</p>
-      <p className="text-white/80 text-[11px] sm:text-xs mt-0.5 drop-shadow">
-        {card.artist} · <span className="text-white/60">{card.genre}</span>
+      <p className="text-page-fg-muted text-[11px] sm:text-xs mt-0.5 drop-shadow">
+        {card.artist} · <span className="text-page-fg-subtle">{card.genre}</span>
       </p>
     </div>
   </div>
@@ -113,7 +113,7 @@ const PromoCardItem = ({ card }: { card: PromoCard }) => {
   return (
     <div
       ref={containerRef}
-      className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-white/10 shadow-xl shadow-purple-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-purple-500/40"
+      className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-page-border shadow-xl shadow-purple-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-purple-500/40"
     >
       {hasVideoSource ? (
         shouldLoadVideo ? (
@@ -137,21 +137,21 @@ const PromoCardItem = ({ card }: { card: PromoCard }) => {
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
         />
       )}
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-white/5 transition-colors duration-300" />
-      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/55 backdrop-blur-md border border-white/10 text-white text-[11px] font-medium">
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-page-surface transition-colors duration-300" />
+      <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/55 backdrop-blur-md border border-page-border text-white text-[11px] font-medium">
         <Icon className="w-3.5 h-3.5" />
         <span>{card.badge}</span>
       </div>
       {card.isVideo && !hasVideoSource && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg group-hover:bg-white/25 group-hover:scale-110 transition-all duration-300">
+          <div className="w-12 h-12 rounded-full bg-page-surface-strong backdrop-blur-md border border-page-border-strong flex items-center justify-center shadow-lg group-hover:bg-page-surface-strong group-hover:scale-110 transition-all duration-300">
             <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
           </div>
         </div>
       )}
       <div className="absolute inset-x-0 bottom-0 p-3.5 bg-gradient-to-t from-black/85 via-black/55 to-transparent">
         <p className="text-white font-semibold text-sm sm:text-base tracking-tight drop-shadow leading-tight">{card.title}</p>
-        <p className="text-white/80 text-[11px] sm:text-xs mt-0.5 drop-shadow">{card.description}</p>
+        <p className="text-page-fg-muted text-[11px] sm:text-xs mt-0.5 drop-shadow">{card.description}</p>
       </div>
     </div>
   );
@@ -189,7 +189,7 @@ export const PromoVisualsShowcase = () => {
       <div className="container mx-auto px-4 relative">
         <Reveal>
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-14">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/15 bg-white/10 backdrop-blur-sm text-white/90 text-xs font-medium mb-5 shadow-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-page-border bg-page-surface backdrop-blur-sm text-page-fg text-xs font-medium mb-5 shadow-sm">
               <Megaphone className="w-3.5 h-3.5" />
               Material promocional con IA
             </div>
@@ -200,7 +200,7 @@ export const PromoVisualsShowcase = () => {
               </span>
               , en minutos.
             </h2>
-            <p className="text-base sm:text-lg text-white/70 leading-relaxed">
+            <p className="text-base sm:text-lg text-page-fg-muted leading-relaxed">
               Genera portadas, posts, flyers y vídeos cortos para promocionar tu música en redes. Todo desde Musicdibs.
             </p>
           </div>
@@ -210,7 +210,7 @@ export const PromoVisualsShowcase = () => {
       <div className="container mx-auto px-4 relative">
         <div className="flex items-center gap-2 mb-5 sm:mb-6">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/85 text-xs sm:text-[13px] font-medium tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-page-surface border border-page-border text-page-fg-muted text-xs sm:text-[13px] font-medium tracking-wide">
             <ImageIcon className="w-3.5 h-3.5 text-brand" />
             Portadas y piezas para tu lanzamiento
           </div>
@@ -247,7 +247,7 @@ export const PromoVisualsShowcase = () => {
             <Sparkles className="w-4 h-4" />
             Crear mi material promocional
           </a>
-          <p className="text-xs text-white/60">
+          <p className="text-xs text-page-fg-subtle">
             Portadas, posts, flyers y vídeos generados con IA en minutos.
           </p>
         </div>

@@ -68,7 +68,7 @@ export const LaunchPromoPopup = () => {
         <div className="relative px-6 py-7 sm:px-8 sm:py-8">
           {/* Badge */}
           <div className="flex justify-center mb-3">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/15 px-3 py-1 text-[10px] sm:text-[11px] font-bold tracking-[0.2em] uppercase backdrop-blur-sm">
+            <span className="inline-flex items-center gap-2 rounded-full border border-page-border-strong bg-page-surface-strong px-3 py-1 text-[10px] sm:text-[11px] font-bold tracking-[0.2em] uppercase backdrop-blur-sm">
               ☀️ Verano Musicdibs 🌴
             </span>
           </div>
@@ -77,18 +77,18 @@ export const LaunchPromoPopup = () => {
           <h2 className="text-center text-2xl sm:text-[28px] lg:text-3xl font-bold leading-tight mb-2 drop-shadow-md">
             Suena este verano con Musicdibs
           </h2>
-          <p className="text-center text-white/90 text-sm sm:text-[15px] mb-4">
+          <p className="text-center text-page-fg text-sm sm:text-[15px] mb-4">
             Crea, protege y distribuye tu música con IA.
           </p>
 
           {/* Benefits inline */}
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12px] sm:text-[13px] text-white/90 mb-5">
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[12px] sm:text-[13px] text-page-fg mb-5">
             <span>🎵 IA musical</span>
-            <span className="text-white/40">•</span>
+            <span className="text-page-fg-subtle">•</span>
             <span>🛡️ Protección legal</span>
-            <span className="text-white/40">•</span>
+            <span className="text-page-fg-subtle">•</span>
             <span>🌍 Distribución</span>
-            <span className="text-white/40">•</span>
+            <span className="text-page-fg-subtle">•</span>
             <span>🔥 Promoción</span>
           </div>
 
@@ -107,14 +107,14 @@ export const LaunchPromoPopup = () => {
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex flex-col items-start">
-                <span className="text-[10px] uppercase tracking-[0.2em] text-white/70">
+                <span className="text-[10px] uppercase tracking-[0.2em] text-page-fg-muted">
                   Tu código
                 </span>
                 <span className="font-mono text-xl sm:text-2xl font-extrabold tracking-[0.2em] text-white drop-shadow-[0_0_12px_rgba(251,191,36,0.7)]">
                   {PROMO_CODE}
                 </span>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-2 text-xs font-semibold text-white transition group-hover:bg-white/30">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-page-surface-strong px-3 py-2 text-xs font-semibold text-white transition group-hover:bg-page-surface-strong">
                 {copied ? (
                   <>
                     <Check className="h-3.5 w-3.5 text-success" />
@@ -132,7 +132,7 @@ export const LaunchPromoPopup = () => {
 
           {/* Compact countdown */}
           <div className="flex items-center justify-center gap-1.5 mb-5 font-mono tabular-nums text-white">
-            <span className="text-[10px] uppercase tracking-[0.18em] text-white/70 mr-1">
+            <span className="text-[10px] uppercase tracking-[0.18em] text-page-fg-muted mr-1">
               Termina en
             </span>
             {[
@@ -143,8 +143,8 @@ export const LaunchPromoPopup = () => {
             ].map((u, i, arr) => (
               <span key={i} className="flex items-baseline">
                 <span className="text-sm sm:text-base font-bold">{pad(u.v)}</span>
-                <span className="text-[10px] text-white/70 ml-0.5">{u.l}</span>
-                {i < arr.length - 1 && <span className="text-white/40 mx-1">:</span>}
+                <span className="text-[10px] text-page-fg-muted ml-0.5">{u.l}</span>
+                {i < arr.length - 1 && <span className="text-page-fg-subtle mx-1">:</span>}
               </span>
             ))}
           </div>
@@ -161,7 +161,7 @@ export const LaunchPromoPopup = () => {
           <div className="mt-3 text-center">
             <button
               onClick={() => setOpen(false)}
-              className="text-xs text-white/70 underline-offset-4 transition hover:text-white hover:underline"
+              className="text-xs text-page-fg-muted underline-offset-4 transition hover:text-page-fg hover:underline"
             >
               Seguir explorando
             </button>

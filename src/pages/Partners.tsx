@@ -31,7 +31,7 @@ const Partners = () => {
             <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
               {p('title')}
             </h1>
-            <p className="text-white/70 text-lg md:text-xl max-w-2xl mx-auto mb-10">
+            <p className="text-page-fg-muted text-lg md:text-xl max-w-2xl mx-auto mb-10">
               {p('subtitle')}
             </p>
             <Link to="/contact?reason=partner_proposal">
@@ -51,13 +51,13 @@ const Partners = () => {
               return (
                 <div
                   key={key}
-                  className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300"
+                  className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8 hover:bg-page-surface transition-all duration-300"
                 >
                   <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-5">
                     <Icon className="w-6 h-6 text-brand" />
                   </div>
                   <h3 className="text-xl font-bold text-white mb-3">{p(`types.${key}.title`)}</h3>
-                  <p className="text-white/70 leading-relaxed">{p(`types.${key}.desc`)}</p>
+                  <p className="text-page-fg-muted leading-relaxed">{p(`types.${key}.desc`)}</p>
                 </div>
               );
             })}
@@ -71,22 +71,22 @@ const Partners = () => {
               return (
                 <div
                   key={key}
-                  className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center"
+                  className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8 text-center"
                 >
                   <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-5">
                     <Icon className="w-7 h-7 text-primary" />
                   </div>
                   <h3 className="text-lg font-bold text-white mb-3">{p(`benefits.${key}.title`)}</h3>
-                  <p className="text-white/70 text-sm leading-relaxed">{p(`benefits.${key}.desc`)}</p>
+                  <p className="text-page-fg-muted text-sm leading-relaxed">{p(`benefits.${key}.desc`)}</p>
                 </div>
               );
             })}
           </div>
 
           {/* CTA */}
-          <div className="bg-gradient-to-r from-brand/20 to-primary/20 border border-white/10 rounded-2xl p-10 text-center">
+          <div className="bg-gradient-to-r from-brand/20 to-primary/20 border border-page-border rounded-2xl p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">{p('cta_title')}</h2>
-            <p className="text-white/70 mb-8 max-w-lg mx-auto">
+            <p className="text-page-fg-muted mb-8 max-w-lg mx-auto">
               {p('cta_desc')}
             </p>
             <Link to="/contact?reason=partner_proposal">

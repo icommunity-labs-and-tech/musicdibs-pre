@@ -129,8 +129,8 @@ export default function PromocionMusical() {
 
                   {/* Globo con anillos */}
                   <div className="relative mt-6 h-56 flex items-center justify-center" aria-hidden>
-                    <div className="absolute h-44 w-44 rounded-full border border-white/10" style={{ animation: "spin-slow 22s linear infinite" }} />
-                    <div className="absolute h-60 w-60 rounded-full border border-white/5" />
+                    <div className="absolute h-44 w-44 rounded-full border border-page-border" style={{ animation: "spin-slow 22s linear infinite" }} />
+                    <div className="absolute h-60 w-60 rounded-full border border-page-border" />
                     <div
                       className="relative h-32 w-32 rounded-full flex items-center justify-center"
                       style={{
@@ -138,7 +138,7 @@ export default function PromocionMusical() {
                         boxShadow: "0 0 60px -6px oklch(0.7 0.25 195 / 0.7), inset -10px -10px 30px oklch(0 0 0 / 0.5)",
                       }}
                     >
-                      <Globe2 className="h-12 w-12 text-white/90" />
+                      <Globe2 className="h-12 w-12 text-page-fg" />
                     </div>
 
                     {/* Logos plataformas flotantes */}
@@ -172,7 +172,7 @@ export default function PromocionMusical() {
                         animation: "spin-slow 16s linear infinite",
                       }}
                     >
-                      <div className="absolute inset-3 rounded-full border border-white/5" />
+                      <div className="absolute inset-3 rounded-full border border-page-border" />
                       <div
                         className="h-12 w-12 rounded-full flex items-center justify-center"
                         style={{ background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))" }}
@@ -244,10 +244,10 @@ export default function PromocionMusical() {
               </div>
 
               {/* Pillar rows */}
-              <div className="mt-16 sm:mt-20 space-y-px rounded-3xl overflow-hidden border border-white/10 bg-white/[0.02] backdrop-blur-sm">
+              <div className="mt-16 sm:mt-20 space-y-px rounded-3xl overflow-hidden border border-page-border bg-white/[0.02] backdrop-blur-sm">
                 {/* ── ROW 01 · Distribución ── */}
                 <article className="relative grid grid-cols-12 gap-0">
-                  <div className="col-span-12 lg:col-span-2 flex lg:flex-col items-center lg:items-start justify-between lg:justify-start gap-4 px-8 py-8 lg:py-12 border-b lg:border-b-0 lg:border-r border-white/5">
+                  <div className="col-span-12 lg:col-span-2 flex lg:flex-col items-center lg:items-start justify-between lg:justify-start gap-4 px-8 py-8 lg:py-12 border-b lg:border-b-0 lg:border-r border-page-border">
                     <span className="font-display font-black text-6xl lg:text-7xl leading-none tracking-tight"
                       style={{ background: "linear-gradient(135deg, oklch(0.85 0.22 195), oklch(0.55 0.2 230))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                       01
@@ -258,7 +258,7 @@ export default function PromocionMusical() {
                     </span>
                   </div>
 
-                  <div className="col-span-12 lg:col-span-6 px-8 py-10 lg:py-12 border-b lg:border-b-0 lg:border-r border-white/5">
+                  <div className="col-span-12 lg:col-span-6 px-8 py-10 lg:py-12 border-b lg:border-b-0 lg:border-r border-page-border">
                     <h3 className="font-display font-bold text-2xl sm:text-3xl leading-tight">
                       Lleva tu música a todo el mundo
                     </h3>
@@ -272,12 +272,12 @@ export default function PromocionMusical() {
                         <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>+220</div>
                         <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Plataformas</div>
                       </div>
-                      <div className="h-10 w-px bg-white/10 self-center" aria-hidden />
+                      <div className="h-10 w-px bg-page-surface self-center" aria-hidden />
                       <div>
                         <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>100%</div>
                         <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Regalías para ti</div>
                       </div>
-                      <div className="h-10 w-px bg-white/10 self-center" aria-hidden />
+                      <div className="h-10 w-px bg-page-surface self-center" aria-hidden />
                       <div>
                         <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>∞</div>
                         <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Lanzamientos</div>
@@ -304,7 +304,7 @@ export default function PromocionMusical() {
                           boxShadow: "0 0 50px -4px oklch(0.7 0.25 195 / 0.8), inset -8px -8px 22px oklch(0 0 0 / 0.55)",
                         }}
                       >
-                        <Globe2 className="h-9 w-9 text-white/95" />
+                        <Globe2 className="h-9 w-9 text-page-fg" />
                       </div>
                       <PlatformPill className="left-[8%] top-[14%]" label="Spotify" color="#1DB954" delay="0s" />
                       <PlatformPill className="right-[8%] top-[22%]" label="Apple Music" color="#fa57c1" delay="0.2s" />
@@ -316,7 +316,7 @@ export default function PromocionMusical() {
 
                 {/* ── ROW 02 · Promoción (flipped) ── */}
                 <article className="relative grid grid-cols-12 gap-0 bg-white/[0.015]">
-                  <div className="col-span-12 lg:col-span-4 lg:order-1 relative min-h-[260px] lg:min-h-[360px] overflow-hidden border-b lg:border-b-0 lg:border-r border-white/5"
+                  <div className="col-span-12 lg:col-span-4 lg:order-1 relative min-h-[260px] lg:min-h-[360px] overflow-hidden border-b lg:border-b-0 lg:border-r border-page-border"
                     style={{ background: "radial-gradient(ellipse at center, oklch(0.68 0.27 322 / 0.16), transparent 70%)" }}>
                     <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
                       <div
@@ -327,7 +327,7 @@ export default function PromocionMusical() {
                           animation: "spin-slow 14s linear infinite",
                         }}
                       >
-                        <div className="absolute inset-3 rounded-full border border-white/5" />
+                        <div className="absolute inset-3 rounded-full border border-page-border" />
                         <div className="h-9 w-9 rounded-full flex items-center justify-center"
                           style={{ background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))" }}>
                           <Music2 className="h-4 w-4 text-white" />
@@ -353,7 +353,7 @@ export default function PromocionMusical() {
                     </div>
                   </div>
 
-                  <div className="col-span-12 lg:col-span-6 lg:order-2 px-8 py-10 lg:py-12 border-b lg:border-b-0 lg:border-r border-white/5">
+                  <div className="col-span-12 lg:col-span-6 lg:order-2 px-8 py-10 lg:py-12 border-b lg:border-b-0 lg:border-r border-page-border">
                     <h3 className="font-display font-bold text-2xl sm:text-3xl leading-tight">
                       Conecta con audiencia real
                     </h3>
@@ -366,12 +366,12 @@ export default function PromocionMusical() {
                         <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>+500k</div>
                         <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Seguidores RRSS</div>
                       </div>
-                      <div className="h-10 w-px bg-white/10 self-center" aria-hidden />
+                      <div className="h-10 w-px bg-page-surface self-center" aria-hidden />
                       <div>
                         <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>100%</div>
                         <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Audiencia real</div>
                       </div>
-                      <div className="h-10 w-px bg-white/10 self-center" aria-hidden />
+                      <div className="h-10 w-px bg-page-surface self-center" aria-hidden />
                       <div>
                         <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>2</div>
                         <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Canales activos</div>
@@ -610,7 +610,7 @@ function PillarEditorial({
 
       {/* Visual hero zone */}
       {visual && (
-        <div className="relative h-56 sm:h-64 border-b border-white/10 overflow-hidden">
+        <div className="relative h-56 sm:h-64 border-b border-page-border overflow-hidden">
           {visual}
         </div>
       )}
@@ -651,7 +651,7 @@ function PillarEditorial({
       <p className="relative mt-3 text-foreground/70 leading-relaxed text-[15px]">{desc}</p>
 
       {/* Stats row */}
-      <div className="relative mt-8 grid grid-cols-2 gap-4 py-5 border-y border-white/10">
+      <div className="relative mt-8 grid grid-cols-2 gap-4 py-5 border-y border-page-border">
         <div>
           <div className="font-display font-bold text-3xl sm:text-4xl tracking-tight text-foreground">
             {stat}
@@ -866,7 +866,7 @@ function EcoCard({
   desc: string;
 }) {
   return (
-    <div className="glass rounded-2xl p-5 transition-all hover:border-white/20 hover:-translate-y-0.5">
+    <div className="glass rounded-2xl p-5 transition-all hover:border-page-border-strong hover:-translate-y-0.5">
       <div
         className="h-10 w-10 rounded-xl flex items-center justify-center text-white"
         style={{
@@ -1012,8 +1012,8 @@ function FeaturesCarousel() {
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="hidden sm:flex left-2 sm:-left-12 bg-background/60 backdrop-blur border-white/20" />
-        <CarouselNext className="hidden sm:flex right-2 sm:-right-12 bg-background/60 backdrop-blur border-white/20" />
+        <CarouselPrevious className="hidden sm:flex left-2 sm:-left-12 bg-background/60 backdrop-blur border-page-border-strong" />
+        <CarouselNext className="hidden sm:flex right-2 sm:-right-12 bg-background/60 backdrop-blur border-page-border-strong" />
       </Carousel>
 
       {/* Dots */}

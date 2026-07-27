@@ -27,7 +27,7 @@ export const DistributionSection = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
               {t("distro.heading")}
             </h2>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto">
+            <p className="text-xl text-page-fg max-w-2xl mx-auto">
               {t("distro.subheading")}
             </p>
           </div>
@@ -38,26 +38,26 @@ export const DistributionSection = () => {
           <StaggerGrid baseDelay={100} staggerDelay={150} scale>
             {/* Distribución Mundial */}
             <a href="#pricing-section" className="block">
-              <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer hover:scale-105">
+              <div className="bg-page-surface-strong backdrop-blur-sm rounded-2xl p-8 border border-page-border-strong hover:bg-page-surface-strong transition-all duration-300 cursor-pointer hover:scale-105">
                 <div className="flex items-center mb-6">
                   <div className="w-12 h-12 rounded-full bg-success flex items-center justify-center mr-4">
                     <Music className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold text-white">{t("distro.world.title")}</h3>
                 </div>
-                <p className="text-white/80 mb-6 text-lg">{t("distro.world.desc")}</p>
+                <p className="text-page-fg-muted mb-6 text-lg">{t("distro.world.desc")}</p>
                 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white/10 rounded-xl p-4 flex items-center justify-center h-20">
+                  <div className="bg-page-surface rounded-xl p-4 flex items-center justify-center h-20">
                     <img src="/lovable-uploads/af219155-433f-402d-a220-28088ee5c7ea.png" alt="Spotify" className="h-12 w-auto object-contain" width={90} height={46} loading="lazy" />
                   </div>
-                  <div className="bg-white/10 rounded-xl p-4 flex items-center justify-center h-16">
+                  <div className="bg-page-surface rounded-xl p-4 flex items-center justify-center h-16">
                     <img src="/lovable-uploads/3b78a760-1f1a-49bc-9d35-4d2df3b0abe5.png" alt="Apple Music" className="h-8 w-auto object-contain" width={104} height={30} loading="lazy" />
                   </div>
-                  <div className="bg-white/10 rounded-xl p-4 flex items-center justify-center h-16">
+                  <div className="bg-page-surface rounded-xl p-4 flex items-center justify-center h-16">
                     <img src="/lovable-uploads/130ddbf0-73ca-4e46-a7ad-a985a06ddfdf.png" alt="Amazon Music" className="h-8 w-auto object-contain" width={104} height={30} loading="lazy" />
                   </div>
-                  <div className="bg-white/10 rounded-xl p-4 flex items-center justify-center h-16">
+                  <div className="bg-page-surface rounded-xl p-4 flex items-center justify-center h-16">
                     <img src="/lovable-uploads/cacf57b3-f050-4740-89ea-541e5f512ed6.png" alt="Deezer" className="h-8 w-auto object-contain" width={104} height={30} loading="lazy" />
                   </div>
                 </div>
@@ -75,14 +75,14 @@ export const DistributionSection = () => {
 
             {/* Promoción en Redes Sociales */}
             <a href="#pricing-section" className="block">
-              <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer hover:scale-105">
+              <div className="bg-page-surface-strong backdrop-blur-sm rounded-2xl p-8 border border-page-border-strong hover:bg-page-surface-strong transition-all duration-300 cursor-pointer hover:scale-105">
                 <div className="flex items-center mb-6">
                   <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center mr-4">
                     <Users className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold text-white">{t("distro.social.title")}</h3>
                 </div>
-                <p className="text-white/80 mb-6 text-lg">{t("distro.social.desc")}</p>
+                <p className="text-page-fg-muted mb-6 text-lg">{t("distro.social.desc")}</p>
                 
                 <div className="flex justify-center space-x-6">
                   <a

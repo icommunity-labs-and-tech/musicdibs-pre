@@ -90,7 +90,7 @@ const CreadorDeMusicaPage = () => {
             <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-brand bg-clip-text text-transparent">
               El creador de música con IA pensado para publicar de verdad
             </h1>
-            <p className="text-white/70 text-lg md:text-xl max-w-3xl mx-auto mb-10">
+            <p className="text-page-fg-muted text-lg md:text-xl max-w-3xl mx-auto mb-10">
               Genera canciones completas con voces y letras, obtén un certificado de copyright en blockchain y
               publica en Spotify y +220 plataformas — desde una sola cuenta.
             </p>
@@ -104,7 +104,7 @@ const CreadorDeMusicaPage = () => {
                 <Button variant="outline" size="xl" className="font-semibold">Ver el generador de canciones</Button>
               </Link>
             </div>
-            <div className="flex flex-wrap justify-center gap-6 mt-10 text-white/60 text-sm">
+            <div className="flex flex-wrap justify-center gap-6 mt-10 text-page-fg-subtle text-sm">
               <span className="flex items-center gap-2"><Users className="w-4 h-4" /> +100.000 artistas</span>
               <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Copyright en blockchain</span>
               <span className="flex items-center gap-2"><Globe2 className="w-4 h-4" /> +220 plataformas</span>
@@ -118,12 +118,12 @@ const CreadorDeMusicaPage = () => {
               {FEATURES.map((f, i) => {
                 const Icon = f.icon;
                 return (
-                  <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+                  <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6">
                     <div className="w-11 h-11 rounded-lg bg-primary/20 flex items-center justify-center mb-4">
                       <Icon className="w-5 h-5 text-primary" />
                     </div>
                     <h3 className="text-lg font-bold text-white mb-2">{f.title}</h3>
-                    <p className="text-white/70 text-sm leading-relaxed">{f.desc}</p>
+                    <p className="text-page-fg-muted text-sm leading-relaxed">{f.desc}</p>
                   </div>
                 );
               })}
@@ -134,9 +134,9 @@ const CreadorDeMusicaPage = () => {
             <h2 className="text-3xl font-bold text-center mb-4 text-white">Quién usa el creador de música de Musicdibs</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
               {USE_CASES.map((u, i) => (
-                <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <div key={i} className="bg-page-surface border border-page-border rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-white mb-2">{u.title}</h3>
-                  <p className="text-white/70 text-sm leading-relaxed">{u.desc}</p>
+                  <p className="text-page-fg-muted text-sm leading-relaxed">{u.desc}</p>
                 </div>
               ))}
             </div>
@@ -144,21 +144,21 @@ const CreadorDeMusicaPage = () => {
 
           <section className="mb-20">
             <h2 className="text-3xl font-bold text-center mb-10 text-white">Herramientas tradicionales vs Musicdibs</h2>
-            <div className="overflow-x-auto rounded-2xl bg-white/5 border border-white/10">
+            <div className="overflow-x-auto rounded-2xl bg-page-surface border border-page-border">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left px-5 py-4 text-white/60 font-bold text-xs uppercase tracking-wide">Aspecto</th>
-                    <th className="px-4 py-4 text-center text-white/70 font-bold">DAW + plugins</th>
+                  <tr className="border-b border-page-border">
+                    <th className="text-left px-5 py-4 text-page-fg-subtle font-bold text-xs uppercase tracking-wide">Aspecto</th>
+                    <th className="px-4 py-4 text-center text-page-fg-muted font-bold">DAW + plugins</th>
                     <th className="px-4 py-4 text-center bg-primary/10 border-x border-primary/30 text-white font-bold">Musicdibs</th>
                   </tr>
                 </thead>
                 <tbody>
                   {COMPARE.map((r, i) => (
-                    <tr key={i} className={`border-b border-white/5 last:border-b-0 ${i % 2 === 0 ? "bg-white/[0.02]" : ""}`}>
-                      <td className="px-5 py-4 text-white/80 font-medium">{r.feature}</td>
-                      <td className="px-4 py-4 text-center text-white/70">{r.trad}</td>
-                      <td className="px-4 py-4 text-center bg-primary/5 border-x border-primary/20 text-white/90">{r.mdb}</td>
+                    <tr key={i} className={`border-b border-page-border last:border-b-0 ${i % 2 === 0 ? "bg-white/[0.02]" : ""}`}>
+                      <td className="px-5 py-4 text-page-fg-muted font-medium">{r.feature}</td>
+                      <td className="px-4 py-4 text-center text-page-fg-muted">{r.trad}</td>
+                      <td className="px-4 py-4 text-center bg-primary/5 border-x border-primary/20 text-page-fg">{r.mdb}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -166,13 +166,13 @@ const CreadorDeMusicaPage = () => {
             </div>
           </section>
 
-          <section className="mb-20 bg-white/5 border border-white/10 rounded-2xl p-8">
+          <section className="mb-20 bg-page-surface border border-page-border rounded-2xl p-8">
             <h2 className="text-2xl font-bold text-white mb-6 text-center">Por qué los artistas eligen Musicdibs</h2>
             <ul className="space-y-3 max-w-2xl mx-auto">
-              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> Sin comisión sobre tus royalties de streaming.</li>
-              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> Certificado blockchain con timestamp para cada canción.</li>
-              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> Portadas, vídeos y creatividades sociales con IA desde la misma cuenta.</li>
-              <li className="flex gap-3 text-white/80"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> Panel de manager multi-artista para sellos y agencias.</li>
+              <li className="flex gap-3 text-page-fg-muted"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> Sin comisión sobre tus royalties de streaming.</li>
+              <li className="flex gap-3 text-page-fg-muted"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> Certificado blockchain con timestamp para cada canción.</li>
+              <li className="flex gap-3 text-page-fg-muted"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> Portadas, vídeos y creatividades sociales con IA desde la misma cuenta.</li>
+              <li className="flex gap-3 text-page-fg-muted"><Check className="w-5 h-5 text-success shrink-0 mt-1" /> Panel de manager multi-artista para sellos y agencias.</li>
             </ul>
           </section>
 
@@ -180,9 +180,9 @@ const CreadorDeMusicaPage = () => {
             <h2 className="text-3xl font-bold text-center mb-10 text-white">Preguntas frecuentes</h2>
             <div className="space-y-4">
               {FAQ.map((f, i) => (
-                <div key={i} className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                <div key={i} className="bg-page-surface border border-page-border rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-white mb-3">{f.q}</h3>
-                  <p className="text-white/70 leading-relaxed">{f.a}</p>
+                  <p className="text-page-fg-muted leading-relaxed">{f.a}</p>
                 </div>
               ))}
             </div>
@@ -191,7 +191,7 @@ const CreadorDeMusicaPage = () => {
           <section className="text-center bg-gradient-to-r from-primary/10 to-brand/10 border border-primary/20 rounded-2xl p-12">
             <Megaphone className="w-10 h-10 text-primary mx-auto mb-4" />
             <h2 className="text-3xl font-bold text-white mb-4">Crea una canción. Publícala hoy.</h2>
-            <p className="text-white/70 mb-8 max-w-xl mx-auto">Empieza gratis. Sin tarjeta. Distribuye tu primer single mañana.</p>
+            <p className="text-page-fg-muted mb-8 max-w-xl mx-auto">Empieza gratis. Sin tarjeta. Distribuye tu primer single mañana.</p>
             <Link to="/login">
               <Button variant="hero" size="xl" className="font-semibold">
                 <span className="flex items-center gap-2">Probar el creador de música <ArrowRight className="w-5 h-5" /></span>

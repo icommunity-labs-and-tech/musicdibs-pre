@@ -114,7 +114,7 @@ const NewsArticle = () => {
         <div className="max-w-3xl mx-auto">
           <Link
             to="/news"
-            className="inline-flex items-center gap-2 text-white/50 hover:text-white text-sm mb-8 transition-colors"
+            className="inline-flex items-center gap-2 text-page-fg-subtle hover:text-page-fg text-sm mb-8 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             {t("blog.backToNews", "Volver a noticias")}
@@ -122,18 +122,18 @@ const NewsArticle = () => {
 
           {isLoading ? (
             <div className="animate-pulse space-y-4">
-              <div className="h-8 bg-white/10 rounded w-3/4" />
-              <div className="h-4 bg-white/10 rounded w-1/3" />
-              <div className="h-64 bg-white/10 rounded-xl" />
+              <div className="h-8 bg-page-surface rounded w-3/4" />
+              <div className="h-4 bg-page-surface rounded w-1/3" />
+              <div className="h-64 bg-page-surface rounded-xl" />
               <div className="space-y-2">
                 {[...Array(8)].map((_, i) => (
-                  <div key={i} className="h-4 bg-white/10 rounded" />
+                  <div key={i} className="h-4 bg-page-surface rounded" />
                 ))}
               </div>
             </div>
           ) : post ? (
             <article>
-              <div className="flex items-center gap-3 mb-4 text-sm text-white/50">
+              <div className="flex items-center gap-3 mb-4 text-sm text-page-fg-subtle">
                 {post.category && (
                   <span className="bg-primary/20 text-primary px-3 py-1 rounded-full text-xs">
                     {post.category}
@@ -166,19 +166,19 @@ const NewsArticle = () => {
                   dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
                 />
               ) : post.excerpt ? (
-                <p className="text-white/70 text-lg leading-relaxed">
+                <p className="text-page-fg-muted text-lg leading-relaxed">
                   {post.excerpt}
                 </p>
               ) : null}
 
               {post.tags && post.tags.length > 0 && (
-                <div className="mt-10 pt-6 border-t border-white/10">
+                <div className="mt-10 pt-6 border-t border-page-border">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Tag className="w-4 h-4 text-white/40" />
+                    <Tag className="w-4 h-4 text-page-fg-subtle" />
                     {post.tags.map((tag: string) => (
                       <span
                         key={tag}
-                        className="text-xs text-white/40 bg-white/5 px-3 py-1 rounded-full"
+                        className="text-xs text-page-fg-subtle bg-page-surface px-3 py-1 rounded-full"
                       >
                         {tag}
                       </span>
@@ -188,7 +188,7 @@ const NewsArticle = () => {
               )}
             </article>
           ) : (
-            <p className="text-center text-white/40 py-20">
+            <p className="text-center text-page-fg-subtle py-20">
               {t("blog.notFound", "Artículo no encontrado.")}
             </p>
           )}

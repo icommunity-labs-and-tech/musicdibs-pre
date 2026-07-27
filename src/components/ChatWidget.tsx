@@ -173,7 +173,7 @@ export const ChatWidget = () => {
                 {t("chat.title", "Soporte Musicdibs")}
               </span>
             </div>
-            <button onClick={() => setOpen(false)} className="hover:bg-white/20 rounded-full p-1 transition-colors">
+            <button onClick={() => setOpen(false)} className="hover:bg-page-surface-strong rounded-full p-1 transition-colors">
               <X className="w-4 h-4" />
             </button>
           </div>

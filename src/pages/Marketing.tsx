@@ -24,21 +24,21 @@ const Marketing = () => {
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
             {t("marketing.heading", "Servicios de Marketing")}
           </h1>
-          <p className="text-white/70 text-lg md:text-xl max-w-2xl mx-auto">
+          <p className="text-page-fg-muted text-lg md:text-xl max-w-2xl mx-auto">
             {t("marketing.subheading", "Impulsa tu música con servicios profesionales de diseño y promoción.")}
           </p>
         </div>
 
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Service 1 — Covers & Videos */}
-          <div className="relative group bg-white/5 border border-white/10 rounded-2xl p-8 flex flex-col hover:border-brand/40 transition-colors duration-300">
+          <div className="relative group bg-page-surface border border-page-border rounded-2xl p-8 flex flex-col hover:border-brand/40 transition-colors duration-300">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-brand to-primary flex items-center justify-center mb-6">
               <Palette className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-2xl font-bold mb-4">
               {t("marketing.covers_title", "Creación de portadas y vídeos")}
             </h2>
-            <p className="text-white/70 leading-relaxed mb-8 flex-1">
+            <p className="text-page-fg-muted leading-relaxed mb-8 flex-1">
               {t(
                 "marketing.covers_desc",
                 "Diseñamos portadas profesionales y vídeos promocionales para tus lanzamientos y distribución. Dale a tu música la imagen que merece con material visual de alta calidad, listo para todas las plataformas."
@@ -53,14 +53,14 @@ const Marketing = () => {
           </div>
 
           {/* Service 2 — Social Media Promos */}
-          <div className="relative group bg-white/5 border border-white/10 rounded-2xl p-8 flex flex-col hover:border-brand/40 transition-colors duration-300">
+          <div className="relative group bg-page-surface border border-page-border rounded-2xl p-8 flex flex-col hover:border-brand/40 transition-colors duration-300">
             <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-brand flex items-center justify-center mb-6">
               <Megaphone className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-2xl font-bold mb-4">
               {t("marketing.promos_title", "Planes de promoción en RRSS")}
             </h2>
-            <p className="text-white/70 leading-relaxed mb-8 flex-1">
+            <p className="text-page-fg-muted leading-relaxed mb-8 flex-1">
               {t(
                 "marketing.promos_desc",
                 "Llega a más de 300.000 seguidores con planes de promoción adicionales en nuestras redes sociales. Amplifica el alcance de tu música más allá de lo incluido en tu suscripción, con campañas diseñadas para maximizar tu visibilidad."
