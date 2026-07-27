@@ -982,8 +982,13 @@ export default function AdminCampaignMetricsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {loadingReferralProgram ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="rounded-lg border p-3 space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                ))}
               </div>
             ) : (
               <>
