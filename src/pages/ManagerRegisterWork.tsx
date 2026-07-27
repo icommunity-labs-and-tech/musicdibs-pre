@@ -114,19 +114,10 @@ export default function ManagerRegisterWork() {
   };
 
   const handleLinkAccount = async () => {
-    if (!linkResult?.user_id || !selectedArtist) return;
-    const { error } = await supabase
-      .from('managed_artists')
-      .update({ artist_user_id: linkResult.user_id } as any)
-      .eq('id', selectedArtist);
-    if (error) {
-      toast.error('Error vinculando cuenta: ' + error.message);
-      return;
-    }
-    toast.success('Cuenta vinculada correctamente');
-    setArtists((prev) =>
-      prev.map((a) => (a.id === selectedArtist ? { ...a, artist_user_id: linkResult.user_id } : a))
-    );
+    // SECURITY: la vinculación directa fue retirada — requiere consentimiento
+    // explícito del artista. Aquí solo mostramos un aviso; la obra se
+    // registrará bajo la cuenta del manager hasta que el artista acepte.
+    toast.info('La vinculación requiere consentimiento del artista. Pídele que acepte la solicitud desde su cuenta.');
     setLinkResult(null);
     setLinkEmail('');
   };
