@@ -143,8 +143,9 @@ export function StepFile({ data, onUpdate, onNext, onBack }: StepFileProps) {
                 size="icon"
                 className="h-7 w-7 text-muted-foreground hover:text-destructive"
                 onClick={() => removeFile(idx)}
+                aria-label={t('common.remove', { defaultValue: 'Eliminar' })}
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
           ))}
