@@ -82,6 +82,16 @@ export default function DashboardLayout() {
                 <h1 className="text-sm font-semibold text-muted-foreground">{tr('dashboard.sidebar.controlPanel', 'Panel de control')}</h1>
               </div>
               <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+                className="hidden md:inline-flex items-center gap-2 h-8 px-2 rounded-md border border-border/60 text-xs text-muted-foreground hover:bg-muted/60 transition-colors"
+                aria-label={tr('dashboard.commandPalette.open', 'Abrir paleta de comandos')}
+              >
+                <Search className="h-3.5 w-3.5" />
+                <span>{tr('dashboard.commandPalette.search', 'Buscar')}</span>
+                <kbd className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono">⌘K</kbd>
+              </button>
               <DashboardThemeToggle theme={theme} onToggle={toggleTheme} />
               <CreditBadge />
               <NotificationBell />
