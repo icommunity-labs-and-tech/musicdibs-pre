@@ -147,7 +147,7 @@ export const PricingSection = () => {
     variants: [
       { text: t("pricing.buyNow"), className: '' },
       { text: '🎶 Quiero distribuir mi música', className: '' },
-      { text: 'Comenzar ahora', className: 'bg-yellow-400 text-black hover:bg-yellow-300 border-0' },
+      { text: 'Comenzar ahora', className: 'bg-warning text-black hover:bg-warning border-0' },
     ],
   });
 
@@ -182,11 +182,11 @@ export const PricingSection = () => {
       <div
         className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0 ${
           tone === 'accent'
-            ? 'bg-green-400 ring-2 ring-green-300/40 shadow-[0_0_10px_rgba(74,222,128,0.45)]'
+            ? 'bg-success ring-2 ring-success/40 shadow-[0_0_10px_rgba(74,222,128,0.45)]'
             : 'bg-white/90'
         }`}
       >
-        <Check className={`w-3 h-3 ${tone === 'accent' ? 'text-green-900' : 'text-slate-700'}`} strokeWidth={3} />
+        <Check className={`w-3 h-3 ${tone === 'accent' ? 'text-success' : 'text-slate-700'}`} strokeWidth={3} />
       </div>
       <span className="text-sm leading-relaxed text-white/90">{text}</span>
     </div>
@@ -194,7 +194,7 @@ export const PricingSection = () => {
 
   return (
     <>
-    <section id="pricing-section" className="py-20 px-4 bg-gradient-to-b from-primary/60 via-primary to-purple-600">
+    <section id="pricing-section" className="py-20 px-4 bg-gradient-to-b from-primary/60 via-primary to-primary">
       <div className="max-w-7xl mx-auto text-center">
         <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
           {t("pricing.title")}
@@ -241,7 +241,7 @@ export const PricingSection = () => {
           {/* ─────────── COLUMNA CENTRAL — Anual Básico (destacada) ─────────── */}
           <div className="order-2 md:order-2 flex">
             <Card
-              className="w-full border-[3px] border-yellow-400 text-white flex flex-col relative md:-mt-4 md:mb-0"
+              className="w-full border-[3px] border-warning text-white flex flex-col relative md:-mt-4 md:mb-0"
               style={{
                 background: 'linear-gradient(160deg, #f59e0b 0%, #ec4899 55%, #a855f7 100%)',
                 boxShadow: '0 30px 80px -20px rgba(236,72,153,0.7), 0 0 0 4px rgba(250,204,21,0.15)',
@@ -249,7 +249,7 @@ export const PricingSection = () => {
             >
               {/* Badge superior grande */}
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                <div className="inline-flex items-center gap-1.5 bg-yellow-400 text-pink-800 font-extrabold text-xs md:text-sm px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
+                <div className="inline-flex items-center gap-1.5 bg-warning text-brand font-extrabold text-xs md:text-sm px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
                   <Star className="w-4 h-4 fill-pink-800" />
                   {t('pricing.starter.badge')}
                 </div>
@@ -283,7 +283,7 @@ export const PricingSection = () => {
                 </p>
 
                 <Button
-                  className="w-full font-bold rounded-full bg-white hover:bg-yellow-50 text-pink-600 py-4 text-base md:text-lg shadow-xl"
+                  className="w-full font-bold rounded-full bg-white hover:bg-muted text-brand py-4 text-base md:text-lg shadow-xl"
                   disabled={loadingPlan !== null}
                   onClick={() => {
                     trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
@@ -300,7 +300,7 @@ export const PricingSection = () => {
 
           {/* ─────────── COLUMNA DERECHA — Plan Plus+ ─────────── */}
           <div className="order-3 md:order-3 flex">
-            <Card className="w-full border border-white/20 bg-gradient-to-br from-purple-700/80 via-pink-600/70 to-purple-800/80 text-white shadow-xl flex flex-col">
+            <Card className="w-full border border-white/20 bg-gradient-to-br from-primary/80 via-brand/70 to-primary/80 text-white shadow-xl flex flex-col">
               <CardContent className="p-6 flex flex-col flex-1">
                 <div className="text-center mb-4">
                   <div className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-sm border border-white/25 text-white font-semibold text-[11px] md:text-xs px-3 py-1 rounded-full mb-3">
@@ -354,7 +354,7 @@ export const PricingSection = () => {
                 </div>
 
                 <Button
-                  className={`w-full font-semibold rounded-full bg-white/95 hover:bg-white text-purple-700 py-3.5 text-sm md:text-base shadow-lg ${ctaBuy.className}`}
+                  className={`w-full font-semibold rounded-full bg-white/95 hover:bg-white text-primary py-3.5 text-sm md:text-base shadow-lg ${ctaBuy.className}`}
                   disabled={loadingPlan !== null}
                   onClick={() => {
                     trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
@@ -410,7 +410,7 @@ export const PricingSection = () => {
                 border: "1px solid rgba(236,72,153,0.35)",
               }}
             >
-              <Briefcase className="w-6 h-6 text-pink-200" />
+              <Briefcase className="w-6 h-6 text-brand" />
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-white font-bold text-lg md:text-xl mb-1">

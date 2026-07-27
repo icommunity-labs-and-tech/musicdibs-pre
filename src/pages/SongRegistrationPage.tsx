@@ -220,11 +220,11 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
         <div className="max-w-4xl mx-auto">
           {/* Hero */}
           <header className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-full px-5 py-2 mb-6">
-              <Shield className="w-5 h-5 text-pink-400" />
-              <span className="text-pink-300 text-sm font-medium">{c.badge}</span>
+            <div className="inline-flex items-center gap-2 bg-brand/10 border border-brand/20 rounded-full px-5 py-2 mb-6">
+              <Shield className="w-5 h-5 text-brand" />
+              <span className="text-brand text-sm font-medium">{c.badge}</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
               {c.h1}
             </h1>
             <p className="text-white/70 text-lg md:text-xl max-w-2xl mx-auto mb-10">
@@ -252,8 +252,8 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
                 const Icon = whyIcons[i];
                 return (
                   <div key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-                    <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center mb-5">
-                      <Icon className="w-6 h-6 text-pink-400" />
+                    <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-5">
+                      <Icon className="w-6 h-6 text-brand" />
                     </div>
                     <h3 className="text-xl font-bold text-white mb-3">{w.title}</h3>
                     <p className="text-white/70 leading-relaxed">{w.desc}</p>
@@ -269,7 +269,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
             <ol className="space-y-4">
               {c.steps.map((s, i) => (
                 <li key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 flex gap-4">
-                  <Clock className="w-6 h-6 text-purple-400 shrink-0 mt-1" />
+                  <Clock className="w-6 h-6 text-primary shrink-0 mt-1" />
                   <div>
                     <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
                     <p className="text-white/70">{s.desc}</p>
@@ -289,7 +289,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
                   <tr className="border-b border-white/10">
                     <th className="text-left p-4 text-white/60 font-bold uppercase text-xs">—</th>
                     <th className="text-left p-4 text-white/60 font-bold uppercase text-xs">Tradicional</th>
-                    <th className="text-left p-4 text-pink-300 font-bold uppercase text-xs">Musicdibs</th>
+                    <th className="text-left p-4 text-brand font-bold uppercase text-xs">Musicdibs</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -297,7 +297,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
                     <tr key={i} className="border-b border-white/5 last:border-b-0">
                       <td className="p-4 text-white font-semibold">{r.feature}</td>
                       <td className="p-4 text-white/70">{r.trad}</td>
-                      <td className="p-4 text-pink-200 font-semibold">{r.mdb}</td>
+                      <td className="p-4 text-brand font-semibold">{r.mdb}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -316,7 +316,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
                 <details key={i} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 group">
                   <summary className="font-bold text-white cursor-pointer flex items-center justify-between">
                     {f.q}
-                    <CheckCircle2 className="w-5 h-5 text-pink-400 group-open:rotate-45 transition-transform" />
+                    <CheckCircle2 className="w-5 h-5 text-brand group-open:rotate-45 transition-transform" />
                   </summary>
                   <p className="text-white/70 mt-4 leading-relaxed">{f.a}</p>
                 </details>
@@ -325,7 +325,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
           </section>
 
           {/* Closing CTA */}
-          <section className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-white/10 rounded-2xl p-10 text-center">
+          <section className="bg-gradient-to-r from-brand/20 to-primary/20 border border-white/10 rounded-2xl p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">{c.closingTitle}</h2>
             <p className="text-white/70 mb-8 max-w-lg mx-auto">{c.closingDesc}</p>
             <Link to="/login">

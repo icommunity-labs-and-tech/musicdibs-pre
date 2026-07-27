@@ -67,9 +67,9 @@ const PILLARS = [
   {
     id: "create",
     icon: Mic2,
-    color: "from-violet-500 to-purple-600",
+    color: "from-accent to-primary",
     badge: "CREATE",
-    badgeColor: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+    badgeColor: "bg-accent/20 text-accent border-accent/30",
     title: "AI Music Studio",
     subtitle: "Crea canciones profesionales desde cero",
     description:
@@ -92,9 +92,9 @@ const PILLARS = [
   {
     id: "protect",
     icon: Shield,
-    color: "from-emerald-500 to-teal-600",
+    color: "from-success to-info",
     badge: "PROTECT",
-    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+    badgeColor: "bg-success/20 text-success border-success/30",
     title: "Registro Blockchain de IP",
     subtitle: "Prueba legal de autoría instantánea",
     description:
@@ -117,9 +117,9 @@ const PILLARS = [
   {
     id: "distribute",
     icon: Radio,
-    color: "from-pink-500 to-rose-600",
+    color: "from-brand to-destructive",
     badge: "DISTRIBUTE",
-    badgeColor: "bg-pink-500/20 text-pink-300 border-pink-500/30",
+    badgeColor: "bg-brand/20 text-brand border-brand/30",
     title: "Distribución Musical Global",
     subtitle: "220+ plataformas. Sin comisión de Musicdibs sobre tus royalties. Sin permanencia.",
     description:
@@ -141,9 +141,9 @@ const PILLARS = [
   {
     id: "promote",
     icon: Megaphone,
-    color: "from-amber-500 to-orange-600",
+    color: "from-warning to-warning",
     badge: "PROMOTE",
-    badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+    badgeColor: "bg-warning/20 text-warning border-warning/30",
     title: "Promoción con IA",
     subtitle: "Contenido visual y presencia en redes, automatizados",
     description:
@@ -185,7 +185,7 @@ const COMPARE_ROWS = [
 
 const Check = ({ ok }: { ok: boolean }) =>
   ok ? (
-    <CheckCircle2 className="w-5 h-5 text-emerald-400 mx-auto" />
+    <CheckCircle2 className="w-5 h-5 text-success mx-auto" />
   ) : (
     <span className="block w-5 h-0.5 bg-white/20 mx-auto rounded" />
   );
@@ -206,12 +206,12 @@ export default function Features() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent" />
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-primary/20 border border-primary/30 rounded-full px-5 py-2 mb-8">
-            <Sparkles className="w-4 h-4 text-violet-400" />
-            <span className="text-sm font-medium text-violet-300">
+            <Sparkles className="w-4 h-4 text-accent" />
+            <span className="text-sm font-medium text-accent">
               Stack completo para artistas independientes
             </span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-violet-200 to-pink-300 bg-clip-text text-transparent leading-tight">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-accent to-brand bg-clip-text text-transparent leading-tight">
             Create. Protect.
             <br />
             Distribute. Promote.
@@ -322,7 +322,7 @@ export default function Features() {
                 <tr className="border-b border-white/10">
                   <th className="text-left px-6 py-4 text-white/50 font-medium w-1/2">Funcionalidad</th>
                   <th className="px-4 py-4 text-center">
-                    <span className="text-violet-300 font-bold">Musicdibs</span>
+                    <span className="text-accent font-bold">Musicdibs</span>
                   </th>
                   <th className="px-4 py-4 text-center text-white/40 font-medium">LANDR</th>
                   <th className="px-4 py-4 text-center text-white/40 font-medium">DistroKid</th>
@@ -358,7 +358,7 @@ export default function Features() {
             Más de 100.000 artistas ya usan Musicdibs. Empieza gratis y escala cuando quieras.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-gradient-to-r from-violet-500 to-pink-500 hover:opacity-90 text-white border-0 px-10">
+            <Button asChild size="lg" className="bg-gradient-to-r from-accent to-brand hover:opacity-90 text-white border-0 px-10">
               <Link to="/login">
                 Crear cuenta gratis
                 <ArrowRight className="w-4 h-4 ml-2" />

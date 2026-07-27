@@ -36,10 +36,10 @@ const Distribution = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-transparent to-transparent" />
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-primary/20 border border-primary/30 rounded-full px-5 py-2 mb-8">
-            <Music className="w-4 h-4 text-pink-400" />
-            <span className="text-sm font-medium text-pink-300">{t("distribution.badge")}</span>
+            <Music className="w-4 h-4 text-brand" />
+            <span className="text-sm font-medium text-brand">{t("distribution.badge")}</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-pink-200 to-purple-300 bg-clip-text text-transparent leading-tight">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-white via-brand to-primary bg-clip-text text-transparent leading-tight">
             {t("distribution.title")}
           </h1>
           <p className="text-xl md:text-2xl text-white/90 font-semibold mb-4 max-w-3xl mx-auto">
@@ -75,64 +75,64 @@ const Distribution = () => {
               href="https://musicdibs.com/wp-content/uploads/2025/07/DSP-List-Musicdibs.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-pink-500/30 rounded-xl p-5 transition-all"
+              className="group flex items-center gap-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-brand/30 rounded-xl p-5 transition-all"
             >
-              <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center shrink-0 group-hover:bg-pink-500/30 transition-colors">
-                <FileText className="w-5 h-5 text-pink-400" />
+              <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center shrink-0 group-hover:bg-brand/30 transition-colors">
+                <FileText className="w-5 h-5 text-brand" />
               </div>
               <div className="flex-1">
                 <span className="font-semibold text-white">{t("distribution.dsp_list")}</span>
                 <p className="text-sm text-white/50">{t("distribution.dsp_list_desc")}</p>
               </div>
-              <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-pink-400 transition-colors" />
+              <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-brand transition-colors" />
             </a>
 
             <a
               href="https://musicdibs.com/register/?prod=5157"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 bg-gradient-to-r from-pink-500/20 to-purple-500/20 hover:from-pink-500/30 hover:to-purple-500/30 border border-pink-500/20 hover:border-pink-500/40 rounded-xl p-5 transition-all"
+              className="group flex items-center gap-4 bg-gradient-to-r from-brand/20 to-primary/20 hover:from-brand/30 hover:to-primary/30 border border-brand/20 hover:border-brand/40 rounded-xl p-5 transition-all"
             >
-              <div className="w-12 h-12 rounded-full bg-pink-500/30 flex items-center justify-center shrink-0 group-hover:bg-pink-500/40 transition-colors">
-                <Music className="w-5 h-5 text-pink-300" />
+              <div className="w-12 h-12 rounded-full bg-brand/30 flex items-center justify-center shrink-0 group-hover:bg-brand/40 transition-colors">
+                <Music className="w-5 h-5 text-brand" />
               </div>
               <div className="flex-1">
                 <span className="font-semibold text-white">{t("distribution.buy_plus")}</span>
                 <p className="text-sm text-white/50">{t("distribution.buy_plus_desc")}</p>
               </div>
-              <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-pink-400 transition-colors" />
+              <ChevronRight className="w-4 h-4 text-white/30 group-hover:text-brand transition-colors" />
             </a>
 
             <a
               href="https://dist.musicdibs.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-teal-500/30 rounded-xl p-5 transition-all"
+              className="group flex items-center gap-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-info/30 rounded-xl p-5 transition-all"
             >
-              <div className="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center shrink-0 group-hover:bg-teal-500/30 transition-colors">
-                <LogIn className="w-5 h-5 text-teal-400" />
+              <div className="w-12 h-12 rounded-full bg-info/20 flex items-center justify-center shrink-0 group-hover:bg-info/30 transition-colors">
+                <LogIn className="w-5 h-5 text-info" />
               </div>
               <div className="flex-1">
                 <span className="font-semibold text-white">{t("distribution.portal_access")}</span>
                 <p className="text-sm text-white/50">{t("distribution.portal_access_desc")}</p>
               </div>
-              <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-teal-400 transition-colors" />
+              <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-info transition-colors" />
             </a>
 
             <a
               href="https://musicdibs.com/wp-content/uploads/2026/02/%F0%9F%8E%A7-Distribution-Policy-%E2%80%93-Musicdibs-EN-1.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-purple-500/30 rounded-xl p-5 transition-all"
+              className="group flex items-center gap-4 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 hover:border-primary/30 rounded-xl p-5 transition-all"
             >
-              <div className="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0 group-hover:bg-purple-500/30 transition-colors">
-                <FileText className="w-5 h-5 text-purple-400" />
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/30 transition-colors">
+                <FileText className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
                 <span className="font-semibold text-white">{t("distribution.conditions")}</span>
                 <p className="text-sm text-white/50">{t("distribution.conditions_desc")}</p>
               </div>
-              <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-purple-400 transition-colors" />
+              <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-primary transition-colors" />
             </a>
           </div>
         </div>
@@ -140,7 +140,7 @@ const Distribution = () => {
 
       {/* CTA Section */}
       <section className="py-20 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-brand/10 via-primary/10 to-brand/10" />
         <div className="max-w-3xl mx-auto text-center relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             {t("distribution.cta_title", "¿Listo para distribuir tu música?")}
@@ -172,7 +172,7 @@ const Distribution = () => {
                 value={`item-${index}`}
                 className="bg-white/5 border border-white/10 rounded-xl px-6 overflow-hidden"
               >
-                <AccordionTrigger className="text-left text-white hover:text-pink-300 py-5 text-base font-medium [&[data-state=open]]:text-pink-400">
+                <AccordionTrigger className="text-left text-white hover:text-brand py-5 text-base font-medium [&[data-state=open]]:text-brand">
                   {item.q}
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 leading-relaxed pb-5 whitespace-pre-line">

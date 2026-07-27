@@ -130,11 +130,11 @@ const SwitchToMusicdibsPage = () => {
         <div className="max-w-4xl mx-auto">
           {/* Hero */}
           <header className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/20 rounded-full px-5 py-2 mb-6">
-              <RefreshCw className="w-5 h-5 text-pink-400" />
-              <span className="text-pink-300 text-sm font-medium">Switch to Musicdibs</span>
+            <div className="inline-flex items-center gap-2 bg-brand/10 border border-brand/20 rounded-full px-5 py-2 mb-6">
+              <RefreshCw className="w-5 h-5 text-brand" />
+              <span className="text-brand text-sm font-medium">Switch to Musicdibs</span>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
               Thinking of switching from DistroKid or CD Baby?
             </h1>
             <p className="text-white/70 text-lg md:text-xl max-w-3xl mx-auto mb-10">
@@ -162,17 +162,17 @@ const SwitchToMusicdibsPage = () => {
             </p>
             <ul className="space-y-2 text-white/70 leading-relaxed">
               <li className="pl-6 relative">
-                <span className="absolute left-0 text-pink-400">•</span>
+                <span className="absolute left-0 text-brand">•</span>
                 <strong className="text-white/90">Option A —</strong> keep your existing distributor, add Musicdibs
                 for what it isn't doing: blockchain certification, AI creation tools, promotion.
               </li>
               <li className="pl-6 relative">
-                <span className="absolute left-0 text-pink-400">•</span>
+                <span className="absolute left-0 text-brand">•</span>
                 <strong className="text-white/90">Option B —</strong> migrate one release first as a test. Confirm
                 streams and placements carry over, then decide whether to move the rest.
               </li>
               <li className="pl-6 relative">
-                <span className="absolute left-0 text-pink-400">•</span>
+                <span className="absolute left-0 text-brand">•</span>
                 <strong className="text-white/90">Option C —</strong> full migration. Same steps, applied to your
                 whole catalog.
               </li>
@@ -194,8 +194,8 @@ const SwitchToMusicdibsPage = () => {
                     key={i}
                     className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 flex gap-5 items-start"
                   >
-                    <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center shrink-0">
-                      <Icon className="w-6 h-6 text-pink-400" />
+                    <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center shrink-0">
+                      <Icon className="w-6 h-6 text-brand" />
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
@@ -206,8 +206,8 @@ const SwitchToMusicdibsPage = () => {
               })}
             </div>
 
-            <div className="mt-8 bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6 flex gap-4 items-start">
-              <AlertTriangle className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
+            <div className="mt-8 bg-warning/10 border border-warning/20 rounded-2xl p-6 flex gap-4 items-start">
+              <AlertTriangle className="w-6 h-6 text-warning shrink-0 mt-0.5" />
               <div>
                 <h3 className="text-white font-semibold mb-1">One thing not to do</h3>
                 <p className="text-white/70 leading-relaxed">
@@ -229,7 +229,7 @@ const SwitchToMusicdibsPage = () => {
             <ul className="space-y-3">
               {WHAT_STAYS_THE_SAME.map((item, i) => (
                 <li key={i} className="flex gap-3 text-white/80 leading-relaxed">
-                  <Check className="w-5 h-5 text-emerald-400 shrink-0 mt-1" />
+                  <Check className="w-5 h-5 text-success shrink-0 mt-1" />
                   <span>{item}</span>
                 </li>
               ))}
@@ -250,7 +250,7 @@ const SwitchToMusicdibsPage = () => {
           </section>
 
           {/* Final CTA */}
-          <section className="text-center bg-gradient-to-r from-pink-500/10 to-purple-500/10 border border-pink-500/20 rounded-2xl p-12">
+          <section className="text-center bg-gradient-to-r from-brand/10 to-primary/10 border border-brand/20 rounded-2xl p-12">
             <h2 className="text-3xl font-bold text-white mb-4">Start with one release</h2>
             <p className="text-white/70 mb-8 max-w-xl mx-auto">
               Create your account, migrate one track using its existing ISRC, and see the full
