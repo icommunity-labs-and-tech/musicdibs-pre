@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Megaphone, Loader2, CheckCircle2, AlertCircle, Music, Copy, ExternalLink,
   Image as ImageIcon, Instagram, Clock, Sparkles, RefreshCw, ChevronLeft, ChevronRight,
