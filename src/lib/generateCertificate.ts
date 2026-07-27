@@ -1,5 +1,6 @@
-import { jsPDF } from 'jspdf'
-import QRCode from 'qrcode'
+// jsPDF y QRCode se cargan dinámicamente dentro de generateCertificate()
+// para no incluirlos en el bundle principal de las rutas que sólo enlazan al util.
+import type { jsPDF as JsPDFType } from 'jspdf'
 import logoMusicdibs from '@/assets/logo_musicdibs_black.jpg'
 
 // ── Palette ──────────────────────────────────────────────────
