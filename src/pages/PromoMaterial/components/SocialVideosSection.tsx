@@ -18,6 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Download, Info, AlertCircle, Film, Clock, Instagram, Sparkles } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { NoCreditsAlert } from '@/components/dashboard/NoCreditsAlert';
+import { useImprovePrompt } from '@/hooks/useImprovePrompt';
 
 const VIDEO_COST = FEATURE_COSTS.social_video;
 
