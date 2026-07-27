@@ -192,7 +192,7 @@ export function DashboardSidebar() {
         (subscriptionPlan === 'Annual' && !subscriptionTier); // fallback si tier no está aún hidratado
       return (
         <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton asChild>
+          <SidebarMenuButton asChild tooltip={collapsed ? item.title : undefined}>
             <button
               onClick={() => isAnnual ? setShowDistributionModal(true) : undefined}
               disabled={!isAnnual}
