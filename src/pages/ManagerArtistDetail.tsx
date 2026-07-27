@@ -83,17 +83,12 @@ export default function ManagerArtistDetail() {
     setSearching(false);
   };
 
-  const handleLinkUser = async (userId: string) => {
-    setLinking(true);
-    const { error } = await supabase.from('managed_artists').update({
-      artist_user_id: userId,
-    } as any).eq('id', artistId!);
-    setLinking(false);
-    if (error) { toast.error('Error al vincular: ' + error.message); return; }
-    setArtist({ ...artist, artist_user_id: userId });
-    setSearchResult(null);
-    setLinkEmail('');
-    toast.success('Cuenta vinculada correctamente');
+  const handleLinkUser = async (_userId: string) => {
+    // SECURITY: la vinculación directa desde el manager fue retirada — ahora
+    // requiere consentimiento explícito del artista. El manager debe pedir al
+    // artista que acepte la invitación desde su propia cuenta antes de que
+    // sus obras queden accesibles.
+    toast.info('La vinculación requiere que el artista acepte la solicitud desde su cuenta. Pídele que inicie sesión y confirme.');
   };
 
   const handleUnlinkUser = async () => {
