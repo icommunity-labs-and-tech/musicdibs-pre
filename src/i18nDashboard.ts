@@ -935,6 +935,7 @@ const en: typeof es = {
         ai: 'Try the AI Music Studio',
         promo: 'Launch your first promotion',
       },
+    },
     billing: {
       title: 'Billing',
       currentPlan: 'Current plan',
