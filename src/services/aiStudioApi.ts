@@ -78,10 +78,14 @@ export async function generateCover(
   return { imageUrl: data.imageUrl };
 }
 
+export type AiActionResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; message: string; raw: unknown };
+
 /** Convenience: run an AI action, normalize errors via parseAiError. */
 export async function runAiAction<T>(
   fn: () => Promise<T>,
-): Promise<{ ok: true; data: T } | { ok: false; message: string; raw: unknown }> {
+): Promise<AiActionResult<T>> {
   try {
     return { ok: true, data: await fn() };
   } catch (err) {
