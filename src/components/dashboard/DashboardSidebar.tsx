@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Upload, Search, Megaphone, ShoppingBag, User,
   CreditCard, LifeBuoy, Music, LogOut, Mic, Sparkles, Shield,
   HelpCircle, Users, BarChart3, Settings2, Rocket, Briefcase,
-  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell, Youtube,
+  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell, Youtube, LineChart,
   type LucideIcon,
 } from 'lucide-react';
 import { DistributionInfoModal } from '@/components/DistributionInfoModal';
@@ -74,6 +74,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.promotion', 'PromociÃ³n RRSS'), url: '/dashboard/promotion', icon: Megaphone, hideForManager: true, tourId: 'promotion' },
     
     { title: tr('dashboard.sidebar.mediaLibrary', 'Biblioteca multimedia'), url: '/dashboard/media-library', icon: FolderOpen },
+    { title: tr('dashboard.sidebar.analytics', 'Analytics del artista'), url: '/dashboard/analytics', icon: LineChart, hideForManager: true },
   ];
 
   const accountItems: SidebarItem[] = [
