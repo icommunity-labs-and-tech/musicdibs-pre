@@ -1,9 +1,9 @@
+import { useState } from 'react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Bell, CheckCircle2, XCircle, Info, CheckCheck, Trash2 } from 'lucide-react';
+import { Bell, CheckCircle2, XCircle, Info, CheckCheck, Trash2, Volume2, VolumeX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const iconMap = {
@@ -18,9 +18,22 @@ const colorMap = {
   info: 'text-primary',
 };
 
+type Filter = 'all' | 'unread';
+
 export function NotificationBell() {
   const { t } = useTranslation();
   const { notifications, unreadCount, markAsRead, markAllAsRead, clearAll } = useNotifications();
+  const [filter, setFilter] = useState<Filter>('all');
+  const [soundOn, setSoundOn] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return localStorage.getItem('notif_sound') !== 'off';
+  });
+
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    try { localStorage.setItem('notif_sound', next ? 'on' : 'off'); } catch {}
+  };
 
   const timeAgo = (ts: string) => {
     const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
@@ -29,6 +42,8 @@ export function NotificationBell() {
     if (diff < 86400) return t('dashboard.notifications.time.hours', { count: Math.floor(diff / 3600) });
     return t('dashboard.notifications.time.days', { count: Math.floor(diff / 86400) });
   };
+
+  const filtered = filter === 'unread' ? notifications.filter(n => !n.read) : notifications;
 
   return (
     <Popover>
@@ -54,6 +69,20 @@ export function NotificationBell() {
         <div className="flex items-center justify-between border-b border-border/40 px-4 py-2.5">
           <span className="text-sm font-semibold">{t('dashboard.notifications.title')}</span>
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-muted-foreground"
+              onClick={toggleSound}
+              aria-label={t(soundOn ? 'dashboard.notifications.soundOff' : 'dashboard.notifications.soundOn', {
+                defaultValue: soundOn ? 'Silenciar' : 'Activar sonido',
+              })}
+              title={t(soundOn ? 'dashboard.notifications.soundOff' : 'dashboard.notifications.soundOn', {
+                defaultValue: soundOn ? 'Silenciar' : 'Activar sonido',
+              })}
+            >
+              {soundOn ? <Volume2 className="h-3.5 w-3.5" /> : <VolumeX className="h-3.5 w-3.5" />}
+            </Button>
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={markAllAsRead}>
                 <CheckCheck className="h-3 w-3" /> {t('dashboard.notifications.markAll')}
@@ -67,7 +96,22 @@ export function NotificationBell() {
           </div>
         </div>
 
-        {notifications.length === 0 ? (
+        <div className="flex items-center gap-1 border-b border-border/30 px-3 py-2">
+          <button
+            className={`text-xs px-2 py-1 rounded-md transition-colors ${filter === 'all' ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+            onClick={() => setFilter('all')}
+          >
+            {t('dashboard.notifications.filterAll', { defaultValue: 'Todas' })} ({notifications.length})
+          </button>
+          <button
+            className={`text-xs px-2 py-1 rounded-md transition-colors ${filter === 'unread' ? 'bg-primary/10 text-primary font-medium' : 'text-muted-foreground hover:text-foreground'}`}
+            onClick={() => setFilter('unread')}
+          >
+            {t('dashboard.notifications.filterUnread', { defaultValue: 'Sin leer' })} ({unreadCount})
+          </button>
+        </div>
+
+        {filtered.length === 0 ? (
           <div className="py-8 text-center text-sm text-muted-foreground">
             <Bell className="h-6 w-6 mx-auto mb-2 opacity-30" />
             {t('dashboard.notifications.empty')}
@@ -75,7 +119,7 @@ export function NotificationBell() {
         ) : (
           <ScrollArea className="max-h-80">
             <div className="divide-y divide-border/30">
-              {notifications.map(n => {
+              {filtered.map(n => {
                 const Icon = iconMap[n.type];
                 return (
                   <button
