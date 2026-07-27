@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from 'react-i18next';
 import { CancellationSurveyModal } from '@/components/dashboard/CancellationSurveyModal';
+import { useCheckout } from '@/hooks/useCheckout';
 
 interface Invoice {
   id: string;
@@ -48,13 +49,18 @@ export default function BillingPage() {
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
   const [plan, setPlan] = useState<string | null>(null);
   const [tier, setTier] = useState<string | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [stripeCustomerId, setStripeCustomerId] = useState<string | null>(null);
-  const [portalLoading, setPortalLoading] = useState(false);
+  const {
+    loading: checkoutLoading,
+    cancelRenewal,
+    openBillingPortal,
+  } = useCheckout();
+  const cancelling = checkoutLoading === 'cancel';
+  const portalLoading = checkoutLoading === 'portal';
 
   // Annual tier → credits (for display next to the plan label)
   const ANNUAL_TIER_CREDITS: Record<string, number> = {
@@ -184,50 +190,19 @@ export default function BillingPage() {
   };
 
   const handleConfirmCancel = async (reason: string) => {
-    setCancelling(true);
     try {
-      const { data, error } = await supabase.functions.invoke('create-credit-checkout', {
-        body: { action: 'cancel_renewal', cancellation_reason: reason },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success(data?.message || t('dashboard.billing.renewalCancelled', 'Renovación cancelada'));
+      await cancelRenewal(reason);
       setCancelAtPeriodEnd(true);
       await loadBillingState();
-    } catch (err: any) {
-      console.error('[cancel_renewal] error:', err);
-      toast.error(err?.message || t('dashboard.billing.cancelError', 'Error al cancelar'));
+    } catch (err) {
+      // useCheckout already surfaces the toast — rethrow so the modal
+      // knows the confirmation failed and can keep itself open.
       throw err;
-    } finally {
-      setCancelling(false);
     }
   };
 
   const handleOpenPortal = async () => {
-    setPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('stripe-portal', {
-        body: { return_url: window.location.href },
-      });
-      if (error) throw error;
-      const errCode = data?.error;
-      if (errCode === 'no_billing_account') {
-        toast.error('No tienes una cuenta de facturación activa');
-        return;
-      }
-      if (errCode === 'portal_not_configured') {
-        toast.error('El portal no está disponible. Contacta con info@musicdibs.com');
-        return;
-      }
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      } else {
-        toast.error('No se pudo abrir el portal de facturación');
-      }
-    } catch (err: any) {
-      console.error('[stripe-portal] error:', err);
-      toast.error(err?.message || 'Error al abrir el portal de facturación');
-    } finally {
+    await openBillingPortal();
       setPortalLoading(false);
     }
   };
