@@ -226,7 +226,7 @@ export function DashboardSidebar() {
 
     return (
       <SidebarMenuItem key={item.title}>
-        <SidebarMenuButton asChild isActive={isActive(item.url)} data-tour={item.tourId || undefined}>
+        <SidebarMenuButton asChild isActive={isActive(item.url)} data-tour={item.tourId || undefined} tooltip={collapsed ? item.title : undefined}>
           <NavLink
             to={item.url}
             end={item.url === '/dashboard'}
