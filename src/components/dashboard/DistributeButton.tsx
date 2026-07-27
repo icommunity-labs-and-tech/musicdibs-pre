@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Share2, CheckCircle2, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { hasDistributionAccess } from '@/lib/planTiers';
 import { useTranslation } from 'react-i18next';
 
 interface DistributeButtonProps {
@@ -26,13 +27,13 @@ export function DistributeButton({ workId, distributedAt, currentClicks = 0, var
     if (!user) return;
     supabase
       .from('profiles')
-      .select('subscription_plan, subscription_tier')
+      .select('subscription_tier')
       .eq('user_id', user.id)
       .single()
       .then(({ data }) => {
-        const plan = data?.subscription_plan;
         const tier = (data as { subscription_tier?: string | null } | null)?.subscription_tier;
-        setIsAnnual(plan === 'Annual' || (typeof tier === 'string' && tier.startsWith('annual_')));
+        // Sólo tiers PLUS+ (annual_100+) tienen distribución. annual_20 no.
+        setIsAnnual(hasDistributionAccess(tier));
       });
   }, [user]);
 

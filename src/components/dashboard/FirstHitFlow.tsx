@@ -53,6 +53,7 @@ import { cn } from "@/lib/utils";
 import type { IbsSignature } from "@/types/dashboard";
 import { CREATOR_ROLES, WORK_TYPES as WIZARD_WORK_TYPES, type Creator } from "@/components/dashboard/register/types";
 import { useTranslation } from "react-i18next";
+import { hasDistributionAccess } from "@/lib/planTiers";
 import { useCreatorRoleLabels, useWorkTypeLabels } from "@/components/dashboard/register/useWizardLabels";
 
 // Voice profiles loaded from DB
@@ -143,12 +144,14 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
     if (!user) return;
     supabase
       .from("profiles")
-      .select("kyc_status, subscription_plan")
+      .select("kyc_status, subscription_tier")
       .eq("user_id", user.id)
       .single()
       .then(({ data }) => {
         setKycStatus(data?.kyc_status || "unverified");
-        setIsAnnual(data?.subscription_plan === "Annual");
+        const tier = (data as { subscription_tier?: string | null } | null)?.subscription_tier;
+        // Sólo tiers PLUS+ (annual_100+) tienen distribución.
+        setIsAnnual(hasDistributionAccess(tier));
       });
   }, [user]);
 

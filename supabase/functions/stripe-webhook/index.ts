@@ -755,10 +755,11 @@ serve(async (req) => {
         }
 
 
-        // Fetch previous plan BEFORE updating (to detect first annual purchase + plan switch)
+        // Fetch previous plan/tier BEFORE updating (to detect first PLUS+ purchase + plan switch)
         const { data: prevProfile } = await supabase
-          .from("profiles").select("subscription_plan, available_credits, permanent_credits").eq("user_id", userId).single();
+          .from("profiles").select("subscription_plan, subscription_tier, available_credits, permanent_credits").eq("user_id", userId).single();
         const previousPlan = prevProfile?.subscription_plan || "Free";
+        const previousTier = (prevProfile as { subscription_tier?: string | null } | null)?.subscription_tier || null;
 
         // Topups and individual packs never expire: add to permanent_credits too
         const isPermaPurchase = planId.startsWith("topup_") || planId === "individual";
@@ -1048,8 +1049,12 @@ serve(async (req) => {
         }
 
         // ââ Notify team: first annual subscription (distribution onboarding) ââ
-        const ANNUAL_IDS = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
-        if (ANNUAL_IDS.includes(planId) && previousPlan !== "Annual") {
+        // PLUS+ tiers (annual_100+) tienen distribución. annual_20 (Anual Básico) NO.
+        // Disparamos si el usuario acaba de entrar en PLUS+ y antes NO estaba en PLUS+
+        // (esto incluye el caso upgrade annual_20 -> annual_100+).
+        const PLUS_TIERS = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000", "annual_legacy"];
+        const wasPlus = !!previousTier && PLUS_TIERS.includes(previousTier);
+        if (PLUS_TIERS.includes(planId) && !wasPlus) {
           try {
             const { data: { user: distUser } } = await supabase.auth.admin.getUserById(userId);
             const distEmail = distUser?.email || "desconocido";
@@ -1351,8 +1356,10 @@ serve(async (req) => {
           }
 
           // ââ Distribution onboarding: upgrade Monthly → Annual ââ
-          const ANNUAL_IDS_UP = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
-          if (resolvedPlanId && ANNUAL_IDS_UP.includes(resolvedPlanId) && previousPlanBeforeUpgrade !== "Annual") {
+          // PLUS+ tiers (annual_100+) tienen distribución. annual_20 (Anual Básico) NO.
+          const PLUS_TIERS_UP = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000", "annual_legacy"];
+          const wasPlusUp = !!previousTierBeforeUpgrade && PLUS_TIERS_UP.includes(previousTierBeforeUpgrade);
+          if (resolvedPlanId && PLUS_TIERS_UP.includes(resolvedPlanId) && !wasPlusUp) {
             try {
               const { data: { user: distUser } } = await supabase.auth.admin.getUserById(profile.user_id);
               const distEmail = distUser?.email || "desconocido";
@@ -2037,10 +2044,11 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         // subscription_create y checkout.session.completed - PRICE_PLAN queda sin uso.
         const planTier = priceId ? (PRICE_TO_PLAN_ID[priceId] || null) : null;
         const planName = planTier ? (PLAN_ID_TO_PLAN_NAME[planTier] || null) : null;
-        // Capture previous plan BEFORE updating so we can detect Monthly→Annual transitions
+        // Capture previous plan/tier BEFORE updating so we can detect transitions to PLUS+
         const { data: prevUpdProfile } = await supabase
-          .from("profiles").select("subscription_plan").eq("user_id", profile.user_id).single();
+          .from("profiles").select("subscription_plan, subscription_tier").eq("user_id", profile.user_id).single();
         const previousPlanOnUpdate = prevUpdProfile?.subscription_plan || "Free";
+        const previousTierOnUpdate = (prevUpdProfile as { subscription_tier?: string | null } | null)?.subscription_tier || null;
         if (status === "active" && planName) {
           // Diagnostico: este handler carecia de logPriceResolution -- es la
           // TERCERA ruta que puede escribir subscription_plan/tier (ademas de
@@ -2101,8 +2109,10 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           }
 
           // ââ Distribution onboarding: transition to Annual (idempotent via idempotency_key) ââ
-          const ANNUAL_TIERS_SU = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
-          if (planTier && ANNUAL_TIERS_SU.includes(planTier) && previousPlanOnUpdate !== "Annual") {
+          // Distribution onboarding: transición a PLUS+ (annual_100+). annual_20 NO cuenta como PLUS+.
+          const PLUS_TIERS_SU = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000", "annual_legacy"];
+          const wasPlusSU = !!previousTierOnUpdate && PLUS_TIERS_SU.includes(previousTierOnUpdate);
+          if (planTier && PLUS_TIERS_SU.includes(planTier) && !wasPlusSU) {
             try {
               const { data: { user: distUser } } = await supabase.auth.admin.getUserById(profile.user_id);
               const distEmail = distUser?.email || "desconocido";
