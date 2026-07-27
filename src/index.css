@@ -164,6 +164,16 @@ All colors MUST be HSL.
     --compare-row: 269 47% 26% / 0.55;
     --compare-highlight: 292 47% 28% / 0.52;
     --compare-border: 266 45% 35% / 0.72;
+
+    /* Fase 1B — Semantic page tokens (light) */
+    --page-fg: 260 20% 16%;
+    --page-fg-muted: 260 10% 38%;
+    --page-fg-subtle: 260 8% 52%;
+    --page-surface: 260 30% 96%;
+    --page-surface-strong: 260 25% 92%;
+    --page-border: 260 20% 85%;
+    --page-border-strong: 260 20% 72%;
+    --page-scrim: 0 0% 100% / 0.92;
   }
 }
 
