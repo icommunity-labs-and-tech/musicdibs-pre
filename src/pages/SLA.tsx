@@ -13,7 +13,7 @@ const SLA = () => {
 
       <div className="pt-32 pb-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-12 text-center bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold mb-12 text-center bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
             {t('sla.title')}
           </h1>
 
@@ -34,7 +34,7 @@ const SLA = () => {
             {/* Purpose */}
             <h2 className="text-2xl font-bold text-white mt-10">{t('sla.purpose_title')}</h2>
 
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.covered_services_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.covered_services_title')}</h3>
             <p className="text-white/80">{t('sla.covered_services_intro')}</p>
             <ul className="list-disc pl-6 text-white/80 space-y-2">
               <li>{t('sla.service_1')}</li>
@@ -45,7 +45,7 @@ const SLA = () => {
             </ul>
 
             {/* SLA Categories */}
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.categories_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.categories_title')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-white/20 text-sm">
                 <thead>
@@ -80,7 +80,7 @@ const SLA = () => {
             </div>
 
             {/* Definitions */}
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.definitions_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.definitions_title')}</h3>
             <ul className="list-disc pl-6 text-white/80 space-y-3">
               <li><strong className="text-white">{t('sla.def_specialists')}:</strong> {t('sla.def_specialists_desc')}</li>
               <li><strong className="text-white">{t('sla.def_success')}:</strong> {t('sla.def_success_desc')}</li>
@@ -93,7 +93,7 @@ const SLA = () => {
             {/* Availability */}
             <h2 className="text-2xl font-bold text-white mt-10">{t('sla.availability_title')}</h2>
 
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.time_availability_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.time_availability_title')}</h3>
             <p className="text-white/80">{t('sla.time_availability_desc')}</p>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-white/20 text-sm">
@@ -127,11 +127,11 @@ const SLA = () => {
             <p className="text-white/80">{t('sla.availability_definition')}</p>
 
             {/* Maintenance */}
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.maintenance_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.maintenance_title')}</h3>
             <p className="text-white/80">{t('sla.maintenance_desc')}</p>
 
             {/* Limitation */}
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.limitation_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.limitation_title')}</h3>
             <p className="text-white/80">{t('sla.limitation_intro')}</p>
             <ul className="list-disc pl-6 text-white/80 space-y-2">
               <li>{t('sla.limitation_1')}</li>
@@ -145,7 +145,7 @@ const SLA = () => {
             <h2 className="text-2xl font-bold text-white mt-10">{t('sla.support_title')}</h2>
             <p className="text-white/80">{t('sla.support_intro')}</p>
 
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.priorities_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.priorities_title')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-white/20 text-sm">
                 <thead>
@@ -172,7 +172,7 @@ const SLA = () => {
             </div>
 
             {/* Response times */}
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.response_times_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.response_times_title')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-white/20 text-sm">
                 <thead>
@@ -208,7 +208,7 @@ const SLA = () => {
             <p className="text-white/60 text-sm">{t('sla.response_times_note')}</p>
 
             {/* Support services */}
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.support_services_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.support_services_title')}</h3>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse border border-white/20 text-sm">
                 <thead>
@@ -243,14 +243,14 @@ const SLA = () => {
             </div>
 
             {/* Contact channels */}
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.contact_channels_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.contact_channels_title')}</h3>
             <ul className="list-disc pl-6 text-white/80 space-y-2">
               <li>{t('sla.contact_channel_web')}</li>
-              <li>{t('sla.contact_channel_email')}: <a href="mailto:info@musicdibs.com" className="text-pink-400 hover:text-pink-300 underline">info@musicdibs.com</a></li>
+              <li>{t('sla.contact_channel_email')}: <a href="mailto:info@musicdibs.com" className="text-brand hover:text-brand underline">info@musicdibs.com</a></li>
             </ul>
 
             {/* Scheduled outages */}
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.outages_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.outages_title')}</h3>
             <p className="text-white/80">{t('sla.outages_intro')}</p>
             <ul className="list-disc pl-6 text-white/80 space-y-2">
               <li>{t('sla.outage_1')}</li>
@@ -267,7 +267,7 @@ const SLA = () => {
             </ul>
 
             {/* Incident info */}
-            <h3 className="text-xl font-semibold text-pink-300">{t('sla.incident_title')}</h3>
+            <h3 className="text-xl font-semibold text-brand">{t('sla.incident_title')}</h3>
             <p className="text-white/80">{t('sla.incident_intro')}</p>
             <p className="text-white/80">{t('sla.incident_note')}</p>
             <ul className="list-disc pl-6 text-white/80 space-y-2">

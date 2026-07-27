@@ -13,7 +13,7 @@ const Cookies = () => {
 
       <div className="pt-32 pb-20 px-6">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-12 text-center bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl font-bold mb-12 text-center bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
             {t("cookies.title")}
           </h1>
 
@@ -26,7 +26,7 @@ const Cookies = () => {
             <h2 className="text-2xl font-bold text-white mt-10">{t("cookies.types_title")}</h2>
             <p className="text-white/80">
               {t("cookies.types_text")}{' '}
-              <a href="https://www.aepd.es/sites/default/files/2020-07/guia-cookies.pdf" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 underline">{t("cookies.types_link")}</a>.
+              <a href="https://www.aepd.es/sites/default/files/2020-07/guia-cookies.pdf" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand underline">{t("cookies.types_link")}</a>.
             </p>
 
             <h2 className="text-2xl font-bold text-white mt-10">{t("cookies.used_title")}</h2>
