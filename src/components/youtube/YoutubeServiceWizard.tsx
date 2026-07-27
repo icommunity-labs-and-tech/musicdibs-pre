@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCheckout } from '@/hooks/useCheckout';
 import type { ServiceType, WizardStep } from '@/types/youtube-services';
 import { SERVICE_CONFIG } from '@/types/youtube-services';
 
