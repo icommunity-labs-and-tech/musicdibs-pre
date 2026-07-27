@@ -109,7 +109,7 @@ export function RecentRegistrations() {
                           <Button
                             size="sm"
                             variant="default"
-                            className="h-7 text-xs gap-1 bg-warning hover:bg-warning text-white"
+                            className="h-7 text-xs gap-1 bg-warning hover:bg-warning text-warning-foreground"
                             onClick={() => navigate(`/dashboard/register?resume=${reg.id}`)}
                           >
                             Continuar registro <ArrowRight className="h-3 w-3" />
