@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
 import { Loader2, RefreshCw, Pencil, FileSignature, CheckCircle2, AlertCircle, CreditCard, Clock } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ARTIST_TIERS = [3, 6, 10, 15, 25, 50] as const;
 
@@ -297,7 +298,17 @@ export default function AdminManagersPage() {
             </CardHeader>
             <CardContent>
               {loadingLeads ? (
-                <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+                <div className="space-y-2 py-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-3 w-40" />
+                      <Skeleton className="h-4 w-12" />
+                      <Skeleton className="h-5 w-16 rounded-full ml-auto" />
+                      <Skeleton className="h-8 w-24 rounded" />
+                    </div>
+                  ))}
+                </div>
               ) : filteredLeads.length === 0 ? (
                 <p className="text-center text-sm text-muted-foreground py-8">Sin leads</p>
               ) : (
@@ -350,7 +361,16 @@ export default function AdminManagersPage() {
             </CardHeader>
             <CardContent>
               {loadingAccounts ? (
-                <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin" /></div>
+                <div className="space-y-2 py-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <Skeleton className="h-4 w-40" />
+                      <Skeleton className="h-3 w-32" />
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-5 w-20 rounded-full ml-auto" />
+                    </div>
+                  ))}
+                </div>
               ) : accounts.length === 0 ? (
                 <p className="text-center text-sm text-muted-foreground py-8">Sin managers activos</p>
               ) : (

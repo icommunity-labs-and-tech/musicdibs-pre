@@ -11,6 +11,7 @@ import { adminApi } from '@/services/adminApi';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Loader2, Plus, RefreshCw, Gift, TrendingUp, Pencil } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { emitCouponVisibilityChange } from '@/hooks/useCouponRedemption';
 
 interface Coupon {
@@ -412,7 +413,20 @@ export default function AdminCreditCouponsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
+            <div className="space-y-2 py-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-4 w-16" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-5 w-16 rounded-full ml-auto" />
+                  <Skeleton className="h-7 w-7 rounded" />
+                </div>
+              ))}
+            </div>
           ) : coupons.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">No hay cupones todavía.</p>
           ) : (
@@ -466,7 +480,17 @@ export default function AdminCreditCouponsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
+            <div className="space-y-2 py-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-12" />
+                  <Skeleton className="h-4 w-16 ml-auto" />
+                </div>
+              ))}
+            </div>
           ) : conversions.length === 0 ? (
             <p className="text-sm text-muted-foreground py-6 text-center">Sin datos.</p>
           ) : (

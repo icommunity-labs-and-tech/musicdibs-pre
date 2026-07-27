@@ -13,6 +13,7 @@ import {
   AlertTriangle, CheckCircle2, Clock, RotateCcw, XCircle, ChevronDown,
   ChevronUp, Loader2, Calendar, ChevronLeft, ChevronRight, Megaphone,
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import KpiGrid from '@/components/admin/metrics/KpiGrid';
 import MetricsCharts from '@/components/admin/metrics/MetricsCharts';
@@ -425,8 +426,14 @@ export default function AdminMetricsPage() {
         {queueExpanded && (
           <CardContent>
             {ibsLoading ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando...
+              <div className="space-y-2 py-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <Skeleton className="h-4 w-24 ml-auto" />
+                  </div>
+                ))}
               </div>
             ) : !ibsQueue || ibsQueue.items?.length === 0 ? (
               <div className="flex items-center justify-center gap-2 py-8 text-success">
