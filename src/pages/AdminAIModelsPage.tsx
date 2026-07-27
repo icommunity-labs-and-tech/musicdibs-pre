@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2, Save, Plus, Trash2, FlaskConical, CheckCircle2, RefreshCw } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AIGenerationLogsTable } from "@/components/admin/AIGenerationLogsTable";
 
 interface Setting {
@@ -183,8 +184,20 @@ export default function AdminAIModelsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <Skeleton className="h-7 w-56" />
+        <Skeleton className="h-4 w-full max-w-2xl" />
+        <div className="space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-md border p-4 flex items-center gap-4">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-4 w-28" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-6 w-10 rounded-full ml-auto" />
+              <Skeleton className="h-8 w-16 rounded" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

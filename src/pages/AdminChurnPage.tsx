@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2, UserX, TrendingDown, AlertTriangle } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import {
@@ -100,8 +101,18 @@ export default function AdminChurnPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="space-y-2 py-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="h-3 w-40" />
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-3 w-32" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-3 w-12" />
+                  <Skeleton className="h-5 w-20 rounded-full ml-auto" />
+                  <Skeleton className="h-7 w-28 rounded" />
+                </div>
+              ))}
             </div>
           ) : surveys.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">No hay solicitudes de baja registradas</p>

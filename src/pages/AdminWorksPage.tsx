@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { adminApi } from '@/services/adminApi';
 import { toast } from 'sonner';
 import { Music, Search, ChevronLeft, ChevronRight, ExternalLink, Download, Eye, Loader2, MoreHorizontal, Trash2, RotateCcw, ArrowUp, ArrowDown, ArrowUpDown, X, FileText } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { generateCertificate } from '@/lib/generateCertificate';
 import { buildCertificateData } from '@/lib/certificateData';
 
@@ -344,7 +345,20 @@ export default function AdminWorksPage() {
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Cargando...</TableCell></TableRow>
+              Array.from({ length: 6 }).map((_, i) => (
+                <TableRow key={`sk-${i}`}>
+                  <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                  <TableCell><Skeleton className="h-3 w-40" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-16 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
+                  <TableCell><Skeleton className="h-3 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-3 w-12" /></TableCell>
+                  <TableCell><Skeleton className="h-7 w-14 rounded" /></TableCell>
+                  <TableCell><Skeleton className="h-7 w-7 rounded" /></TableCell>
+                </TableRow>
+              ))
             ) : works.length === 0 ? (
               <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Sin resultados</TableCell></TableRow>
             ) : works.map(w => (

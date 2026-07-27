@@ -15,6 +15,7 @@ import {
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { toast } from 'sonner';
 import { Save, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Trash2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const PAGE_SIZE = 10;
 
@@ -170,8 +171,22 @@ export default function AdminFeatureCostsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <Skeleton className="h-7 w-64" />
+        <Skeleton className="h-4 w-full max-w-xl" />
+        <div className="rounded-md border">
+          <div className="p-4 space-y-3">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-4 w-20 ml-auto" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

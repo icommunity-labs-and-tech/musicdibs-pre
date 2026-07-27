@@ -17,6 +17,7 @@ import {
   Users, ShoppingBag, BarChart3, Eye, Calendar, Loader2, ArrowUpDown,
   Gift, AlertTriangle, Coins,
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/HistoricalDataNotice';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -418,7 +419,20 @@ export default function AdminCampaignMetricsPage() {
   }, {})).sort((a, b) => b.roi - a.roi || a.name.localeCompare(b.name));
   const roiChartHeight = Math.max(280, roiChartData.length * 36 + 64);
 
-  if (loading) return <div className="flex items-center justify-center py-20 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando campañas...</div>;
+  if (loading) return (
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-64" />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="rounded-lg border p-4 space-y-2">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-7 w-20" />
+          </div>
+        ))}
+      </div>
+      <Skeleton className="h-64 w-full rounded-lg" />
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -607,7 +621,14 @@ export default function AdminCampaignMetricsPage() {
             <SheetTitle>📈 {detailCampaign}</SheetTitle>
           </SheetHeader>
           {!detailData ? (
-            <div className="flex items-center justify-center py-12"><Loader2 className="h-5 w-5 animate-spin" /></div>
+            <div className="space-y-3 py-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-16 ml-auto" />
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="space-y-4 mt-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -799,9 +820,16 @@ export default function AdminCampaignMetricsPage() {
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {loadingCoupons || loadingHistoric ? (
-                  <div className="flex items-center justify-center py-8 text-muted-foreground">
-
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
+                  <div className="space-y-2 py-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16 ml-auto" />
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                    ))}
                   </div>
                 ) : unifiedRows.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8 text-sm">Sin datos de influencers</div>
@@ -904,8 +932,14 @@ export default function AdminCampaignMetricsPage() {
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {loadingReferral ? (
-                  <div className="flex items-center justify-center py-8 text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
+                  <div className="space-y-2 py-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-20 ml-auto" />
+                        <Skeleton className="h-5 w-24 rounded-full" />
+                      </div>
+                    ))}
                   </div>
                 ) : channelRows.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8 text-sm">Sin registros por canales propios</div>
@@ -948,8 +982,13 @@ export default function AdminCampaignMetricsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {loadingReferralProgram ? (
-              <div className="flex items-center justify-center py-8 text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="rounded-lg border p-3 space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-6 w-16" />
+                  </div>
+                ))}
               </div>
             ) : (
               <>
