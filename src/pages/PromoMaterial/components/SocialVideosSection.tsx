@@ -42,7 +42,11 @@ export const SocialVideosSection = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [generating, setGenerating] = useState(false);
-  const [isImprovingDesc, setIsImprovingDesc] = useState(false);
+  const { improve, isImproving: isImprovingDesc } = useImprovePrompt({
+    maxLength: 2000,
+    successMessage: tr('promptImproved'),
+    errorMessage: tr('improveError'),
+  });
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [progressStatus, setProgressStatus] = useState<'queued' | 'processing' | null>(null);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
