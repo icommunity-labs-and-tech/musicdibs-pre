@@ -217,17 +217,14 @@ const ArtistProfilesPage = () => {
         ? `Reescribe y mejora estas notas de estilo de un artista musical, dándoles un enfoque diferente pero manteniendo la esencia. Notas actuales: "${formNotes}". Contexto del artista: ${context}. Genera 3-4 frases nuevas con perspectiva fresca. Responde solo con las notas, sin encabezados.`
         : `Genera unas notas de estilo breves (3-4 frases) para un perfil de artista musical con estas características: ${context}. ${formNotes ? `Notas existentes para expandir: ${formNotes}` : ''} Describe temática habitual, referencias musicales, idioma, atmósfera y elementos distintivos. Responde solo con las notas, sin encabezados.`;
 
-      const { data, error } = await supabase.functions.invoke('improve-prompt', {
-        body: {
-          prompt: basePrompt,
-          genre: formGenre,
-          mood: formMood,
-          mode: 'song',
-        },
+      const { improved } = await improvePrompt({
+        prompt: basePrompt,
+        genre: formGenre,
+        mood: formMood,
+        mode: 'song',
       });
-      if (error) throw error;
-      if (data?.improved) {
-        setFormNotes(data.improved);
+      if (improved) {
+        setFormNotes(improved);
         toast({ title: "✨ Notas generadas" });
       }
     } catch (e: any) {
