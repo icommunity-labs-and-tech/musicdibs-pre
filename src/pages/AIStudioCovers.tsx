@@ -106,23 +106,21 @@ const AIStudioCovers = () => {
       artistPhotoBase64 = await fileToBase64(artistPhoto)
     }
 
-    const result = await runAiAction(() =>
-      generateCover({
+    try {
+      const { imageUrl } = await generateCover({
         artistName,
         trackTitle,
         description,
         styleVisual: styleVisual || undefined,
         artistPhotoBase64,
-      }),
-    )
-
-    if (result.ok) {
-      setImageUrl(result.data.imageUrl)
+      })
+      setImageUrl(imageUrl)
       toast.success(t('aiCovers.coverGenerated'))
       track('cover_generated', { feature: 'cover' })
-    } else {
-      setGenError(result.message)
-      toast.error(result.message)
+    } catch (err) {
+      const { userMessage } = (await import('@/lib/aiErrorHandler')).parseAiError(err)
+      setGenError(userMessage)
+      toast.error(userMessage)
     }
 
     setIsGenerating(false)
