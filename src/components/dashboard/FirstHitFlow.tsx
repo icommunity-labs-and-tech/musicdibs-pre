@@ -929,9 +929,9 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                     className="h-10 w-10 rounded-full bg-accent flex items-center justify-center shrink-0 hover:bg-accent transition-colors"
                   >
                     {playing ? (
-                      <Pause className="h-4 w-4 text-white" />
+                      <Pause className="h-4 w-4 text-primary-foreground" />
                     ) : (
-                      <Play className="h-4 w-4 text-white ml-0.5" />
+                      <Play className="h-4 w-4 text-primary-foreground ml-0.5" />
                     )}
                   </button>
                   <div className="flex-1 min-w-0">
