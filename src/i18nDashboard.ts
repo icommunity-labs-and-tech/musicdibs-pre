@@ -1818,6 +1818,18 @@ const pt: typeof es = {
       newUserDesc: 'Você ainda não tem obras registradas. Siga nosso assistente passo a passo para lançar sua primeira música ao mundo.',
       newUserBtn: 'Meu primeiro lançamento musical',
     },
+    onboarding: {
+      title: 'Seus primeiros passos no Musicdibs',
+      subtitle: '{{completed}} de {{total}} concluídos. Continue avançando para aproveitar ao máximo.',
+      cta: 'Continuar com o próximo passo',
+      dismiss: 'Dispensar',
+      steps: {
+        kyc: 'Verifique sua identidade (KYC)',
+        artist: 'Crie seu perfil de artista',
+        work: 'Registre sua primeira obra',
+        ai: 'Experimente o AI Music Studio',
+        promo: 'Lance sua primeira promoção',
+      },
     billing: {
       title: 'Faturamento',
       currentPlan: 'Plano atual',
