@@ -93,6 +93,9 @@ export default function DashboardHome() {
           </CardContent>
         </Card>
       )}
+
+      <OnboardingChecklist />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Col 1: AI Studio + Registrar + Distribuir — más ancho */}
         <div className="space-y-4 md:col-span-2">
