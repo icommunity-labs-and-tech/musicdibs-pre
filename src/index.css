@@ -66,6 +66,16 @@ All colors MUST be HSL.
     --page-card-bg: 0 0% 100% / 0.05;
     --page-card-border: 0 0% 100% / 0.1;
     --page-nav-scrolled: 0 0% 0% / 0.8;
+
+    /* Fase 1B — Semantic page tokens (mode-aware, no .page-bg wrapper needed) */
+    --page-fg: 0 0% 100%;
+    --page-fg-muted: 0 0% 100% / 0.78;
+    --page-fg-subtle: 0 0% 100% / 0.55;
+    --page-surface: 0 0% 100% / 0.08;
+    --page-surface-strong: 0 0% 100% / 0.16;
+    --page-border: 0 0% 100% / 0.14;
+    --page-border-strong: 0 0% 100% / 0.28;
+    --page-scrim: 0 0% 0% / 0.7;
     --hero-contrast-blue: 221 83% 53%;
     --hero-contrast-blue-hover: 224 76% 48%;
     --hero-contrast-blue-foreground: 0 0% 100%;
