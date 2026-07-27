@@ -1651,6 +1651,16 @@ const resources = {
         placeholder: 'Escreva sua pergunta...',
         contactHuman: 'Falar com suporte',
         error: 'Ocorreu um erro. Tente novamente.',
+        clear: 'Limpar conversa',
+        minimize: 'Minimizar',
+        close: 'Fechar',
+        suggestionsLabel: 'Perguntas frequentes',
+        suggestions: {
+          register: 'Como registro uma obra?',
+          credits: 'Como funcionam os créditos?',
+          distribution: 'Como distribuo minha música?',
+          plans: 'Qual plano é ideal para mim?',
+        },
       },
       aiStudio: {
         },
