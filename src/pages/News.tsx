@@ -15,6 +15,7 @@ type BlogPost = {
   title: string;
   slug: string;
   excerpt: string | null;
+  content: string | null;
   image_url: string | null;
   category: string | null;
   tags: string[] | null;
