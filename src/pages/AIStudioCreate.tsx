@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -1958,8 +1959,25 @@ const AIStudioCreate = () => {
 
             {activeTab === "lyrics" ? (
               lyricsLoading ? (
-                <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />{t('aiCreate.loading')}
+                <div className="space-y-3">
+                  {[0, 1, 2].map((i) => (
+                    <Card key={i} className="border-border/40">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-2/3" />
+                            <div className="flex items-center gap-2">
+                              <Skeleton className="h-4 w-12" />
+                              <Skeleton className="h-4 w-12" />
+                              <Skeleton className="h-3 w-16" />
+                            </div>
+                          </div>
+                          <Skeleton className="h-7 w-7 rounded" />
+                        </div>
+                        <Skeleton className="h-16 w-full" />
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               ) : lyricsHistory.length === 0 ? (
                 <Card className="border-dashed">
@@ -2109,12 +2127,27 @@ const AIStudioCreate = () => {
                 )}
 
                 {isLoading ? (
-                  <Card className="border-dashed">
-                    <CardContent className="flex flex-col items-center justify-center py-16">
-                      <Loader2 className="w-12 h-12 text-muted-foreground mb-4 animate-spin" />
-                      <p className="text-muted-foreground text-center">{t('aiCreate.loadingHistory')}</p>
-                    </CardContent>
-                  </Card>
+                  <div className="space-y-4">
+                    {[0, 1, 2].map((i) => (
+                      <Card key={i} className="overflow-hidden">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-4">
+                            <Skeleton className="w-16 h-16 rounded-lg shrink-0" />
+                            <div className="flex-1 space-y-2">
+                              <Skeleton className="h-4 w-3/4" />
+                              <div className="flex items-center gap-2">
+                                <Skeleton className="h-4 w-14" />
+                                <Skeleton className="h-4 w-14" />
+                                <Skeleton className="h-3 w-20" />
+                              </div>
+                              <Skeleton className="h-8 w-full" />
+                            </div>
+                            <Skeleton className="h-8 w-8 rounded" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                 ) : results.length === 0 ? (
                   <Card className="border-dashed">
                     <CardContent className="flex flex-col items-center justify-center py-16">
