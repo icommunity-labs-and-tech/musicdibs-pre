@@ -1962,11 +1962,37 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
         markAll: 'Leer todo',
         clear: 'Borrar todas',
         empty: 'Sin notificaciones',
+        filterAll: 'Todas',
+        filterUnread: 'Sin leer',
+        soundOn: 'Activar sonido',
+        soundOff: 'Silenciar',
         time: {
           now: 'ahora',
           minutes: 'hace {{count}}m',
           hours: 'hace {{count}}h',
           days: 'hace {{count}}d',
+        },
+        events: {
+          workRegistered: {
+            title: 'Registro completado',
+            message: '"{{title}}" se ha registrado correctamente.',
+          },
+          workFailed: {
+            title: 'Registro fallido',
+            message: '"{{title}}" no se pudo registrar. Inténtalo de nuevo.',
+          },
+          creditsAdded: {
+            title: 'Créditos añadidos',
+            message: 'Se han añadido {{count}} créditos a tu cuenta.',
+          },
+          aiCompleted: {
+            title: 'Generación IA lista',
+            message: 'Tu creación con IA ya está disponible en la biblioteca.',
+          },
+          aiFailed: {
+            title: 'Generación IA fallida',
+            message: 'La generación no se pudo completar. Los créditos han sido reembolsados si procede.',
+          },
         },
       },
       noCredits: {
