@@ -722,7 +722,7 @@ export default function MediaLibraryPage() {
                         {/* Preview thumbnail */}
                         {asset.type === "cover" && asset.url ? (
                           <div className="h-14 w-14 rounded-md overflow-hidden bg-muted shrink-0">
-                            <img src={asset.url} alt={asset.title} className="h-full w-full object-cover" />
+                            <img src={asset.url} alt={asset.title} loading="lazy" decoding="async" className="h-full w-full object-cover" />
                           </div>
                         ) : (
                           <div className="h-14 w-14 rounded-md bg-muted/50 flex items-center justify-center shrink-0">

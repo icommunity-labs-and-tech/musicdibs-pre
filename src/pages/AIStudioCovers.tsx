@@ -339,7 +339,7 @@ const AIStudioCovers = () => {
             ) : imageUrl ? (
               <div className="space-y-3">
                 <div className="relative rounded-2xl overflow-hidden border border-border/40 shadow-lg aspect-square">
-                  <img src={imageUrl} alt={`Portada: ${trackTitle}`} className="w-full h-full object-cover" />
+                  <img src={imageUrl} alt={`Portada: ${trackTitle}`} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </div>
 
                 {/* Metadata */}

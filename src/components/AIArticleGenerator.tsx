@@ -436,7 +436,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
               </Button>
             </div>
             {form.image_url && (
-              <img src={form.image_url} alt="Preview" className="w-full h-32 object-cover rounded-lg mt-2" />
+              <img src={form.image_url} alt="Preview" loading="lazy" decoding="async" className="w-full h-32 object-cover rounded-lg mt-2" />
             )}
           </div>
         </div>
