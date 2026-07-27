@@ -64,14 +64,40 @@ export default function RegistroMusicalPage() {
           name="description"
           content="Registra la propiedad intelectual de tus canciones, distribúyelas en +220 plataformas globales y haz crecer tu audiencia con Musicdibs."
         />
-        <link rel="canonical" href="https://musicdibs.com/registro-musical" />
+        <link rel="canonical" href="https://www.musicdibs.com/registro-musical" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap"
           rel="stylesheet"
         />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            name: "Registro Musical y Distribución con Musicdibs",
+            serviceType: "Registro de propiedad intelectual musical y distribución digital",
+            description:
+              "Registra la propiedad intelectual de tus canciones en blockchain y distribúyelas en más de 220 plataformas globales como Spotify, Apple Music, TikTok, Amazon Music y YouTube Music, sin comisiones sobre tus royalties de streaming.",
+            areaServed: "Worldwide",
+            url: "https://www.musicdibs.com/registro-musical",
+            provider: {
+              "@type": "Organization",
+              name: "Musicdibs",
+              url: "https://www.musicdibs.com",
+              logo: "https://www.musicdibs.com/logo.png",
+            },
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "EUR",
+              price: "0",
+              availability: "https://schema.org/InStock",
+              url: "https://www.musicdibs.com/registro-musical",
+            },
+          })}
+        </script>
       </Helmet>
+
 
       <div className="landing-ai-studio">
         <main className="relative min-h-screen overflow-hidden">
