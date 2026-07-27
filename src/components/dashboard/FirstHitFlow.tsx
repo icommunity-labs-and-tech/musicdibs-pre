@@ -90,7 +90,7 @@ function StepHeader({
         ) : (
           <span
             className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-              isActive ? "bg-gradient-to-r from-accent to-info text-white" : "bg-muted text-muted-foreground"
+              isActive ? "bg-gradient-to-r from-accent to-info text-primary-foreground" : "bg-muted text-muted-foreground"
             }`}
           >
             {number}
