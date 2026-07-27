@@ -131,18 +131,18 @@ export function DeleteAccountModal({ open, onOpenChange }: Props) {
           <>
             <DialogHeader className="space-y-2 pb-4">
               <DialogTitle className="text-xl flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                <AlertTriangle className="h-5 w-5 text-warning" />
                 Información importante
               </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-3 text-sm">
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <Shield className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                <Shield className="h-4 w-4 text-success mt-0.5 shrink-0" />
                 <p>Tus obras registradas en blockchain permanecerán válidas indefinidamente — el registro es inmutable.</p>
               </div>
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <Database className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                <Database className="h-4 w-4 text-info mt-0.5 shrink-0" />
                 <p>Tus datos de compra se conservarán por obligación legal (normativa fiscal EU, mínimo 5 años) pero serán anonimizados.</p>
               </div>
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
@@ -150,7 +150,7 @@ export function DeleteAccountModal({ open, onOpenChange }: Props) {
                 <p>Tus generaciones de IA, letras, portadas y assets de promoción se eliminarán permanentemente.</p>
               </div>
               <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
-                <CreditCard className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                <CreditCard className="h-4 w-4 text-warning mt-0.5 shrink-0" />
                 <p>Si tienes suscripción activa, se cancelará al final del período de facturación actual.</p>
               </div>
             </div>

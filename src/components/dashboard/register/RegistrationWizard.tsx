@@ -345,13 +345,13 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
     return (
       <Card className="border-border/40">
         <CardContent className="p-6 space-y-4">
-          <div className="flex items-center gap-2 text-amber-600">
+          <div className="flex items-center gap-2 text-warning">
             <ShieldAlert className="h-5 w-5" />
             <span className="font-medium text-sm">{t('wizard.rw.kycRequired')}</span>
           </div>
           <p className="text-sm text-muted-foreground">{t('wizard.rw.kycWait')}</p>
           <div className="flex items-center gap-3 flex-wrap">
-            <Badge variant="outline" className="text-amber-600 border-amber-300">
+            <Badge variant="outline" className="text-warning border-warning">
               {t('wizard.rw.kycStatus', { status: summary?.kycStatus === 'pending' ? t('wizard.rw.kycPending') : t('wizard.rw.kycNotVerified') })}
             </Badge>
             <Button
@@ -373,7 +373,7 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
     return (
       <Card className="border-border/40">
         <CardContent className="p-6 space-y-4">
-          <div className="flex items-center gap-2 text-amber-600">
+          <div className="flex items-center gap-2 text-warning">
             <ShieldAlert className="h-5 w-5" />
             <span className="font-medium text-sm">{t('wizard.rw.freeRegisterLimitTitle')}</span>
           </div>

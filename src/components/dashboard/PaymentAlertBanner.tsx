@@ -71,7 +71,7 @@ export function PaymentAlertBanner() {
           className={`flex items-start gap-3 rounded-lg border px-4 py-3 text-sm ${
             alert.type === 'payment_failed'
               ? 'border-destructive/40 bg-destructive/5 text-destructive'
-              : 'border-amber-500/40 bg-amber-500/5 text-amber-700 dark:text-amber-400'
+              : 'border-warning/40 bg-warning/5 text-warning dark:text-warning'
           }`}
         >
           {alert.type === 'payment_failed' ? (

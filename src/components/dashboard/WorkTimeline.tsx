@@ -117,7 +117,7 @@ export function WorkTimeline({ workStatus, createdAt, certifiedAt, ibsEvidenceId
   return (
     <div className="mt-4 pt-4 border-t border-border/40">
       {isProcessing && (
-        <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 mb-4 text-sm text-amber-700">
+        <div className="flex items-center gap-2 rounded-lg bg-warning/10 px-3 py-2 mb-4 text-sm text-warning">
           <Loader2 className="h-4 w-4 animate-spin shrink-0" />
           <span>
             {t('dashboard.timeline.certifyingBanner')}
@@ -142,14 +142,14 @@ export function WorkTimeline({ workStatus, createdAt, certifiedAt, ibsEvidenceId
             <div key={step.id} className="flex gap-3 pb-4 last:pb-0">
               <div className="flex flex-col items-center">
                 <div className="flex h-7 w-7 items-center justify-center rounded-full shrink-0">
-                  {state.status === 'done' && <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
-                  {state.status === 'active' && <Loader2 className="h-5 w-5 text-amber-500 animate-spin" />}
+                  {state.status === 'done' && <CheckCircle2 className="h-5 w-5 text-success" />}
+                  {state.status === 'active' && <Loader2 className="h-5 w-5 text-warning animate-spin" />}
                   {state.status === 'pending' && <Circle className="h-5 w-5 text-muted-foreground" />}
                   {state.status === 'failed' && <XCircle className="h-5 w-5 text-destructive" />}
                 </div>
                 {!isLast && (
                   <div className={`w-px flex-1 min-h-[16px] ${
-                    state.status === 'done' ? 'bg-emerald-500/40' : 'bg-border/60'
+                    state.status === 'done' ? 'bg-success/40' : 'bg-border/60'
                   }`} />
                 )}
               </div>
@@ -158,7 +158,7 @@ export function WorkTimeline({ workStatus, createdAt, certifiedAt, ibsEvidenceId
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`text-sm font-medium ${
                     state.status === 'done' ? 'text-foreground' :
-                    state.status === 'active' ? 'text-amber-600' :
+                    state.status === 'active' ? 'text-warning' :
                     state.status === 'failed' ? 'text-destructive' :
                     'text-muted-foreground'
                   }`}>

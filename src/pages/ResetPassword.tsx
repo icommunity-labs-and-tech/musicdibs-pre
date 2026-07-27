@@ -118,7 +118,7 @@ export default function ResetPassword() {
               {password.length > 0 && (() => {
                 const passed = pwRules.filter(r => r.test(password)).length;
                 const pct = (passed / pwRules.length) * 100;
-                const strengthColor = pct <= 25 ? 'bg-destructive' : pct <= 50 ? 'bg-orange-500' : pct <= 75 ? 'bg-yellow-500' : 'bg-green-500';
+                const strengthColor = pct <= 25 ? 'bg-destructive' : pct <= 50 ? 'bg-warning' : pct <= 75 ? 'bg-warning' : 'bg-success';
                 return (
                   <div className="space-y-1.5 mt-1.5">
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -128,7 +128,7 @@ export default function ResetPassword() {
                       {pwRules.map(r => {
                         const pass = r.test(password);
                         return (
-                          <li key={r.key} className={`flex items-center gap-1.5 text-xs ${pass ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          <li key={r.key} className={`flex items-center gap-1.5 text-xs ${pass ? 'text-success' : 'text-muted-foreground'}`}>
                             {pass ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                             {r.label}
                           </li>
@@ -149,7 +149,7 @@ export default function ResetPassword() {
               </div>
             )}
             {success && (
-              <div className="flex items-center gap-2 text-sm text-green-600">
+              <div className="flex items-center gap-2 text-sm text-success">
                 <CheckCircle2 className="h-4 w-4" /> {success}
               </div>
             )}

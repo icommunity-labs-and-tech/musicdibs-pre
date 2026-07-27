@@ -326,8 +326,8 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
     return (
       <Card className="border-border/40 shadow-sm">
         <CardContent className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-          <div className="h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-            <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+          <div className="h-16 w-16 rounded-full bg-success/10 flex items-center justify-center">
+            <CheckCircle2 className="h-8 w-8 text-success" />
           </div>
           <h3 className="text-lg font-semibold">{t('dashboard.premium.successTitle')}</h3>
           <p className="text-sm text-muted-foreground max-w-md">
@@ -350,7 +350,7 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-semibold tracking-tight flex items-center gap-2">
-              <Crown className="h-4 w-4 text-amber-500" />
+              <Crown className="h-4 w-4 text-warning" />
               {t('dashboard.premium.formTitle')}
             </CardTitle>
             <Button variant="ghost" size="sm" onClick={onBack} className="h-7 text-xs">
@@ -364,25 +364,25 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
 
         <CardContent className="space-y-5">
           {/* Info banner */}
-          <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
+          <div className="rounded-lg border border-warning/20 bg-warning/5 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-warning dark:text-warning">
               <Crown className="h-4 w-4" /> {t('dashboard.premium.whatIncluded')}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <Video className="h-3.5 w-3.5 text-amber-500/70" />
+                <Video className="h-3.5 w-3.5 text-warning/70" />
                 {t('dashboard.premium.includesVideo')}
               </div>
               <div className="flex items-center gap-2">
-                <Instagram className="h-3.5 w-3.5 text-amber-500/70" />
+                <Instagram className="h-3.5 w-3.5 text-warning/70" />
                 {t('dashboard.premium.includesChannels')}
               </div>
               <div className="flex items-center gap-2">
-                <Users className="h-3.5 w-3.5 text-amber-500/70" />
+                <Users className="h-3.5 w-3.5 text-warning/70" />
                 {t('dashboard.premium.includesAudience')}
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5 text-amber-500/70" />
+                <Clock className="h-3.5 w-3.5 text-warning/70" />
                 {t('dashboard.premium.includesManual')}
               </div>
             </div>
@@ -598,7 +598,7 @@ function PromoProgressIndicator({ step }: { step: PromoStepName }) {
           return (
             <li key={s.key} className="flex items-center gap-2 text-xs">
               {isDone ? (
-                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-success shrink-0" />
               ) : isActive ? (
                 <Loader2 className="h-3.5 w-3.5 text-primary animate-spin shrink-0" />
               ) : (

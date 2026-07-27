@@ -86,11 +86,11 @@ function StepHeader({
       {/* Número / check */}
       <div className="shrink-0">
         {isDone && !isActive ? (
-          <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+          <CheckCircle2 className="h-7 w-7 text-success" />
         ) : (
           <span
             className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-              isActive ? "bg-gradient-to-r from-violet-600 to-blue-600 text-white" : "bg-muted text-muted-foreground"
+              isActive ? "bg-gradient-to-r from-accent to-info text-white" : "bg-muted text-muted-foreground"
             }`}
           >
             {number}
@@ -116,7 +116,7 @@ function StepHeader({
 
       {/* Indicador */}
       {isDone && !isActive && (
-        <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">
+        <Badge variant="outline" className="text-success border-success/30">
           {t("dashboard.firstHit.done")}
         </Badge>
       )}
@@ -663,10 +663,10 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
           {/* Icono celebración */}
           <div className="flex justify-center">
             <div className="relative">
-              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/20 to-pink-500/20 ring-2 ring-violet-500/30">
-                <Rocket className="h-10 w-10 text-violet-400" />
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-accent/20 to-brand/20 ring-2 ring-accent/30">
+                <Rocket className="h-10 w-10 text-accent" />
               </div>
-              <div className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-background">
+              <div className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-success ring-2 ring-background">
                 <CheckCircle2 className="h-4 w-4 text-white" />
               </div>
             </div>
@@ -687,7 +687,7 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
           {/* Siguiente nivel */}
           <div className="rounded-xl border border-border/40 bg-muted/30 p-5 text-left space-y-3">
             <div className="flex items-center gap-2 text-sm font-semibold">
-              <Share2 className="h-4 w-4 text-violet-400" />
+              <Share2 className="h-4 w-4 text-accent" />
               <p>{t("dashboard.firstHit.nextLevel")}</p>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -743,13 +743,13 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
       <div className="max-w-2xl w-full space-y-6">
         {/* Hero */}
         <div className="text-center space-y-4">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-semibold text-violet-400 ring-1 ring-violet-500/20">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent ring-1 ring-accent/20">
             <Sparkles className="h-3 w-3" />
             {t("dashboard.firstHit.forIndependentArtists")}
           </span>
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight leading-tight">
             {t("dashboard.firstHit.heroTitle1")}
-            <span className="bg-gradient-to-r from-violet-400 to-pink-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-accent to-brand bg-clip-text text-transparent">
               {t("dashboard.firstHit.heroTitleHighlight")}
             </span>{" "}
             {t("dashboard.firstHit.heroTitle2")}
@@ -757,7 +757,7 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
           <p className="text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
             {t("dashboard.firstHit.heroSubtitle")}
           </p>
-          <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-500 ring-1 ring-emerald-500/30">
+          <div className="inline-flex items-center gap-2 rounded-full bg-success/10 px-3 py-1.5 text-xs font-semibold text-success ring-1 ring-success/30">
             🎁 {t("dashboard.firstHit.welcomeCreditBadge")}
           </div>
 
@@ -767,16 +767,16 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
         <div
           className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
             activeStep === 1
-              ? "border-violet-500/40 shadow-lg shadow-violet-500/5"
+              ? "border-accent/40 shadow-lg shadow-violet-500/5"
               : doneSteps.has(1)
-                ? "border-emerald-500/30"
+                ? "border-success/30"
                 : "border-border/40"
           }`}
         >
           <StepHeader
             number={1}
             icon={Sparkles}
-            iconColor="text-violet-400"
+            iconColor="text-accent"
             label={t("dashboard.firstHit.step1Label")}
             sublabel={t("dashboard.firstHit.step1Sublabel")}
             isActive={activeStep === 1}
@@ -922,11 +922,11 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
 
               {/* Preview */}
               {audioUrl && (
-                <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-4 flex items-center gap-3">
+                <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 flex items-center gap-3">
                   <button
                     type="button"
                     onClick={togglePlay}
-                    className="h-10 w-10 rounded-full bg-violet-500 flex items-center justify-center shrink-0 hover:bg-violet-600 transition-colors"
+                    className="h-10 w-10 rounded-full bg-accent flex items-center justify-center shrink-0 hover:bg-accent transition-colors"
                   >
                     {playing ? (
                       <Pause className="h-4 w-4 text-white" />
@@ -952,14 +952,14 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                   >
                     <Download className="h-4 w-4 text-muted-foreground" />
                   </button>
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                  <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
                 </div>
               )}
 
               {/* Botones */}
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
                 <Button
-                  className="flex-1 gap-2 bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-700 hover:to-blue-700"
+                  className="flex-1 gap-2 bg-gradient-to-r from-accent to-info hover:from-accent hover:to-info"
                   onClick={handleGenerate}
                   disabled={
                     generating || !prompt.trim() || prompt.trim().length < 10 || (genMode === "song" && !selectedVoice)
@@ -1003,16 +1003,16 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
         <div
           className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
             activeStep === 2
-              ? "border-blue-500/40 shadow-lg shadow-blue-500/5"
+              ? "border-info/40 shadow-lg shadow-blue-500/5"
               : doneSteps.has(2)
-                ? "border-emerald-500/30"
+                ? "border-success/30"
                 : "border-border/40"
           }`}
         >
           <StepHeader
             number={2}
             icon={Shield}
-            iconColor="text-blue-400"
+            iconColor="text-info"
             label={t("dashboard.firstHit.step2Label")}
             sublabel={t("dashboard.firstHit.step2Sublabel")}
             isActive={activeStep === 2}
@@ -1024,7 +1024,7 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
             <div className="px-5 pb-6 border-t border-border/40 pt-4">
               {/* Advertencia si no viene del paso 1 con audio */}
               {!audioUrl && !regFile && (
-                <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 flex gap-2 text-xs text-amber-700 dark:text-amber-400">
+                <div className="mb-4 rounded-xl border border-warning/30 bg-warning/10 p-3 flex gap-2 text-xs text-warning dark:text-warning">
                   <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                   <span>
                     <strong>{t("dashboard.firstHit.noProtection")}</strong> {t("dashboard.firstHit.noProtectionDesc")}
@@ -1034,8 +1034,8 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
 
               {regDone ? (
                 <div className="flex flex-col items-center gap-3 py-6 text-center">
-                  <div className="h-14 w-14 rounded-full bg-emerald-500/15 flex items-center justify-center">
-                    <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+                  <div className="h-14 w-14 rounded-full bg-success/15 flex items-center justify-center">
+                    <CheckCircle2 className="h-7 w-7 text-success" />
                   </div>
                   <p className="font-semibold">{t("dashboard.firstHit.registeredBlockchain")}</p>
                   <p className="text-sm text-muted-foreground">{t("dashboard.firstHit.goingToStep3")}</p>
@@ -1067,8 +1067,8 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                         </SelectContent>
                       </Select>
                     ) : (
-                      <div className="space-y-2 p-3 rounded-xl border border-dashed border-amber-400/50 bg-amber-50/50 dark:bg-amber-900/10">
-                        <p className="text-xs text-amber-700 dark:text-amber-400">
+                      <div className="space-y-2 p-3 rounded-xl border border-dashed border-warning/50 bg-warning/50 dark:bg-warning/10">
+                        <p className="text-xs text-warning dark:text-warning">
                           {t("dashboard.firstHit.needIdentity")}
                         </p>
                         <div className="flex gap-2">
@@ -1269,7 +1269,7 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                         <p
                           className={cn(
                             "text-sm font-medium",
-                            totalPct === 100 ? "text-emerald-600" : "text-amber-600",
+                            totalPct === 100 ? "text-success" : "text-warning",
                           )}
                         >
                           {t("dashboard.firstHit.totalRights", { n: totalPct })}
@@ -1286,8 +1286,8 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                   <div className="space-y-1.5">
                     <Label className="text-xs">{t("dashboard.firstHit.workFile")}</Label>
                     {audioUrl && !regFile ? (
-                      <div className="flex items-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
-                        <Music2 className="h-4 w-4 text-violet-400" />
+                      <div className="flex items-center gap-2 rounded-xl border border-accent/30 bg-accent/5 p-3">
+                        <Music2 className="h-4 w-4 text-accent" />
                         <span className="text-xs flex-1 truncate">{t("dashboard.firstHit.aiAudioReady")}</span>
                         <button
                           type="button"
@@ -1402,16 +1402,16 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
         <div
           className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
             activeStep === 3
-              ? "border-pink-500/40 shadow-lg shadow-pink-500/5"
+              ? "border-brand/40 shadow-lg shadow-pink-500/5"
               : doneSteps.has(3)
-                ? "border-emerald-500/30"
+                ? "border-success/30"
                 : "border-border/40"
           }`}
         >
           <StepHeader
             number={3}
             icon={Megaphone}
-            iconColor="text-pink-400"
+            iconColor="text-brand"
             label={t("dashboard.firstHit.step3Label")}
             sublabel={t("dashboard.firstHit.step3Sublabel")}
             isActive={activeStep === 3}
@@ -1422,17 +1422,17 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
           {activeStep === 3 && (
             <div className="px-5 pb-6 border-t border-border/40 pt-4 space-y-5">
               {/* Info banner Promo Premium */}
-              <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 space-y-2">
-                <div className="flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
+              <div className="rounded-lg border border-warning/20 bg-warning/5 p-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm font-medium text-warning dark:text-warning">
                   <Crown className="h-4 w-4" /> {t("dashboard.premium.whatIncluded")}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
                   <div className="flex items-center gap-2">
-                    <Video className="h-3.5 w-3.5 text-amber-500/70" />
+                    <Video className="h-3.5 w-3.5 text-warning/70" />
                     {t("dashboard.premium.includesVideo")}
                   </div>
                   <div className="flex items-center gap-2">
-                    <Users className="h-3.5 w-3.5 text-amber-500/70" />
+                    <Users className="h-3.5 w-3.5 text-warning/70" />
                     {t("dashboard.premium.includesAudience")}
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -1440,7 +1440,7 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                       href="https://www.tiktok.com/@musicdibs_"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-semibold hover:bg-amber-500/25 hover:border-amber-500/60 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning/15 border border-warning/40 text-warning dark:text-warning font-semibold hover:bg-warning/25 hover:border-warning/60 transition-colors"
                     >
                       <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor">
                         <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.75a8.18 8.18 0 004.77 1.52V6.84a4.84 4.84 0 01-1-.15z" />
@@ -1451,14 +1451,14 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                       href="https://www.instagram.com/musicdibs/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-semibold hover:bg-amber-500/25 hover:border-amber-500/60 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning/15 border border-warning/40 text-warning dark:text-warning font-semibold hover:bg-warning/25 hover:border-warning/60 transition-colors"
                     >
                       <Instagram className="h-3.5 w-3.5" />
                       @musicdibs
                     </a>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Clock className="h-3.5 w-3.5 text-amber-500/70" />
+                    <Clock className="h-3.5 w-3.5 text-warning/70" />
                     {t("dashboard.premium.includesManual")}
                   </div>
                 </div>

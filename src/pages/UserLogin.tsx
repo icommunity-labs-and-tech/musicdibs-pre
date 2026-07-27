@@ -196,7 +196,7 @@ export default function UserLogin() {
         </CardHeader>
         <CardContent>
           {new URLSearchParams(window.location.search).get('payment_success') === 'true' && (
-            <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm text-center">
+            <div className="mb-4 p-3 rounded-lg bg-success/10 border border-success/30 text-success text-sm text-center">
               ✅ Tu pago fue procesado. Inicia sesión con el email y contraseña que acabas de crear.
             </div>
           )}
@@ -218,7 +218,7 @@ export default function UserLogin() {
                     <Input id="magic-email" type="email" required placeholder="tu@email.com" value={magicEmail} onChange={(e) => setMagicEmail(e.target.value)} />
                   </div>
                   {error && <div className="flex items-center gap-2 text-sm text-destructive"><AlertCircle className="h-4 w-4" /> {error}</div>}
-                  {success && <div className="flex items-center gap-2 text-sm text-green-600"><CheckCircle2 className="h-4 w-4" /> {success}</div>}
+                  {success && <div className="flex items-center gap-2 text-sm text-success"><CheckCircle2 className="h-4 w-4" /> {success}</div>}
                   <Button className="w-full gap-2" disabled={loading || !magicEmail} onClick={handleMagicLink}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Wand2 className="h-4 w-4" /> {t('userLogin.sendMagicLink')}</>}
                   </Button>
@@ -235,7 +235,7 @@ export default function UserLogin() {
                     <Input id="forgot-email" type="email" required placeholder="tu@email.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} />
                   </div>
                   {error && <div className="flex items-center gap-2 text-sm text-destructive"><AlertCircle className="h-4 w-4" /> {error}</div>}
-                  {success && <div className="flex items-center gap-2 text-sm text-green-600"><CheckCircle2 className="h-4 w-4" /> {success}</div>}
+                  {success && <div className="flex items-center gap-2 text-sm text-success"><CheckCircle2 className="h-4 w-4" /> {success}</div>}
                   <Button className="w-full" disabled={loading} onClick={async () => {
                     if (!forgotEmail) return;
                     setError(''); setSuccess(''); setLoading(true);
@@ -299,7 +299,7 @@ export default function UserLogin() {
                   {regPassword.length > 0 && (() => {
                     const passed = pwRules.filter(r => r.test(regPassword)).length;
                     const pct = (passed / pwRules.length) * 100;
-                    const strengthColor = pct <= 25 ? 'bg-destructive' : pct <= 50 ? 'bg-orange-500' : pct <= 75 ? 'bg-yellow-500' : 'bg-green-500';
+                    const strengthColor = pct <= 25 ? 'bg-destructive' : pct <= 50 ? 'bg-warning' : pct <= 75 ? 'bg-warning' : 'bg-success';
                     const strengthLabel = { es: ['Muy débil', 'Débil', 'Aceptable', 'Fuerte'], en: ['Very weak', 'Weak', 'Fair', 'Strong'], 'pt-BR': ['Muito fraca', 'Fraca', 'Razoável', 'Forte'] };
                     const idx = Math.min(passed, pwRules.length) - 1;
                     return (
@@ -316,7 +316,7 @@ export default function UserLogin() {
                           {pwRules.map(r => {
                             const pass = r.test(regPassword);
                             return (
-                              <li key={r.key} className={`flex items-center gap-1.5 text-xs ${pass ? 'text-green-600' : 'text-muted-foreground'}`}>
+                              <li key={r.key} className={`flex items-center gap-1.5 text-xs ${pass ? 'text-success' : 'text-muted-foreground'}`}>
                                 {pass ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
                                 {r.label[lang] || r.label.es}
                               </li>
@@ -328,7 +328,7 @@ export default function UserLogin() {
                   })()}
                 </div>
                 {error && <div className="flex items-center gap-2 text-sm text-destructive"><AlertCircle className="h-4 w-4" /> {error}</div>}
-                {success && <div className="flex items-center gap-2 text-sm text-green-600"><CheckCircle2 className="h-4 w-4" /> {success}</div>}
+                {success && <div className="flex items-center gap-2 text-sm text-success"><CheckCircle2 className="h-4 w-4" /> {success}</div>}
                 <Button type="submit" className="w-full" disabled={loading || !allPwValid}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('userLogin.createAccount')}
                 </Button>

@@ -197,7 +197,7 @@ const SocialProofPopup = () => {
         </button>
 
         <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand to-primary flex items-center justify-center flex-shrink-0 mt-0.5">
             <ActionIcon className="w-4 h-4 text-white" />
           </div>
           <div className="flex-1 min-w-0">

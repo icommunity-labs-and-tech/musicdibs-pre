@@ -92,13 +92,13 @@ export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalP
         onInteractOutside={(e) => e.preventDefault()}
       >
         {/* Glow decor */}
-        <div className="pointer-events-none absolute -top-20 -left-20 w-72 h-72 rounded-full bg-pink-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -right-16 w-80 h-80 rounded-full bg-purple-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -top-20 -left-20 w-72 h-72 rounded-full bg-brand/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-16 w-80 h-80 rounded-full bg-primary/20 blur-3xl" />
 
         {/* Header */}
         <div className="relative px-6 pt-6 pb-4">
           <div className="text-center">
-            <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-300 to-purple-200">
+            <h2 className="text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-brand to-primary">
               {copy.title}
             </h2>
             <p className="text-sm md:text-base text-white/70 mt-1">{copy.subtitle}</p>
@@ -114,9 +114,9 @@ export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalP
                   <div
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
                       done
-                        ? "bg-green-400 text-green-950"
+                        ? "bg-success text-success"
                         : active
-                        ? "bg-pink-500 text-white ring-4 ring-pink-500/30"
+                        ? "bg-brand text-white ring-4 ring-brand/30"
                         : "bg-white/10 text-white/60"
                     }`}
                   >
@@ -125,7 +125,7 @@ export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalP
                   {i < 2 && (
                     <div className="w-10 md:w-16 h-1 rounded-full bg-white/10 overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-pink-400 to-purple-400 transition-all duration-300"
+                        className="h-full bg-gradient-to-r from-brand to-primary transition-all duration-300"
                         style={{
                           width:
                             stepIndex > i || stepIndex === FINAL_INDEX
@@ -207,7 +207,7 @@ const StepCreate = ({ copy }: { copy: any }) => {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-9 h-9 rounded-lg bg-pink-500/20 text-pink-300 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-lg bg-brand/20 text-brand flex items-center justify-center">
           <Music2 className="w-5 h-5" />
         </div>
         <div>
@@ -226,7 +226,7 @@ const StepCreate = ({ copy }: { copy: any }) => {
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <span className="px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 text-xs font-medium inline-flex items-center gap-1">
+          <span className="px-2.5 py-1 rounded-full bg-primary text-primary text-xs font-medium inline-flex items-center gap-1">
             <Mic2 className="w-3 h-3" /> {copy.voicePop}
           </span>
           <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-xs">
@@ -240,10 +240,10 @@ const StepCreate = ({ copy }: { copy: any }) => {
         <button
           className={`mt-4 w-full py-2.5 rounded-lg text-white text-sm font-semibold inline-flex items-center justify-center gap-2 transition-all ${
             generating
-              ? "bg-purple-500"
+              ? "bg-primary"
               : done
-              ? "bg-green-500"
-              : "bg-gradient-to-r from-pink-500 to-purple-600"
+              ? "bg-success"
+              : "bg-gradient-to-r from-brand to-primary"
           }`}
         >
           {generating ? (
@@ -299,7 +299,7 @@ const StepRegister = ({ copy }: { copy: any }) => {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-9 h-9 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-lg bg-primary/20 text-primary flex items-center justify-center">
           <ShieldCheck className="w-5 h-5" />
         </div>
         <div>
@@ -330,7 +330,7 @@ const StepRegister = ({ copy }: { copy: any }) => {
           </div>
         </div>
 
-        <div className="rounded-lg bg-slate-900 text-green-300 font-mono text-xs p-3 flex items-center gap-2 overflow-hidden">
+        <div className="rounded-lg bg-slate-900 text-success font-mono text-xs p-3 flex items-center gap-2 overflow-hidden">
           <Hash className="w-4 h-4 flex-shrink-0" />
           <span className="truncate">
             {hashing ? `${copy.hashing} ${hash}` : `sha256: ${hash}…`}
@@ -340,13 +340,13 @@ const StepRegister = ({ copy }: { copy: any }) => {
         <div
           className={`rounded-lg p-3 flex items-center gap-2 text-sm font-semibold transition-all ${
             certified
-              ? "bg-green-50 text-green-700 border border-green-200"
+              ? "bg-success text-success border border-success"
               : "bg-slate-50 text-slate-500 border border-slate-200"
           }`}
         >
-          <Link2 className={`w-4 h-4 ${certified ? "text-green-600" : "text-slate-400"}`} />
+          <Link2 className={`w-4 h-4 ${certified ? "text-success" : "text-slate-400"}`} />
           {certified ? copy.certified : copy.certifying}
-          {certified && <Check className="w-4 h-4 ml-auto text-green-600" strokeWidth={3} />}
+          {certified && <Check className="w-4 h-4 ml-auto text-success" strokeWidth={3} />}
         </div>
 
         <p className="text-[11px] text-slate-500 italic">{copy.disclaimer}</p>
@@ -369,7 +369,7 @@ const StepDistribute = ({ copy }: { copy: any }) => {
   return (
     <div className="animate-fade-in">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-9 h-9 rounded-lg bg-pink-500/20 text-pink-300 flex items-center justify-center">
+        <div className="w-9 h-9 rounded-lg bg-brand/20 text-brand flex items-center justify-center">
           <Rocket className="w-5 h-5" />
         </div>
         <div>
@@ -392,15 +392,15 @@ const StepDistribute = ({ copy }: { copy: any }) => {
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-lg bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100 p-3 flex items-center gap-2">
-            <Globe2 className="w-5 h-5 text-purple-600" />
+          <div className="rounded-lg bg-gradient-to-br from-primary to-brand border border-primary p-3 flex items-center gap-2">
+            <Globe2 className="w-5 h-5 text-primary" />
             <div>
               <div className="text-sm font-bold text-slate-900">+220</div>
               <div className="text-[11px] text-slate-600">{copy.platformsLabel}</div>
             </div>
           </div>
-          <div className="rounded-lg bg-gradient-to-br from-pink-50 to-amber-50 border border-pink-100 p-3 flex items-center gap-2">
-            <Users className="w-5 h-5 text-pink-600" />
+          <div className="rounded-lg bg-gradient-to-br from-brand to-warning border border-brand p-3 flex items-center gap-2">
+            <Users className="w-5 h-5 text-brand" />
             <div>
               <div className="text-sm font-bold text-slate-900">+200k</div>
               <div className="text-[11px] text-slate-600">{copy.communityLabel}</div>
@@ -416,13 +416,13 @@ const StepDistribute = ({ copy }: { copy: any }) => {
         <div
           className={`rounded-lg p-3 flex items-center gap-2 text-sm font-semibold transition-all ${
             ready
-              ? "bg-green-50 text-green-700 border border-green-200"
+              ? "bg-success text-success border border-success"
               : "bg-slate-50 text-slate-500 border border-slate-200"
           }`}
         >
-          <Rocket className={`w-4 h-4 ${ready ? "text-green-600" : "text-slate-400"}`} />
+          <Rocket className={`w-4 h-4 ${ready ? "text-success" : "text-slate-400"}`} />
           {ready ? copy.ready : copy.preparing}
-          {ready && <Check className="w-4 h-4 ml-auto text-green-600" strokeWidth={3} />}
+          {ready && <Check className="w-4 h-4 ml-auto text-success" strokeWidth={3} />}
         </div>
       </div>
     </div>
@@ -441,7 +441,7 @@ const StepFinal = ({
 }) => {
   return (
     <div className="animate-scale-in text-center py-6">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 mb-4 shadow-lg shadow-pink-500/30">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-brand to-primary mb-4 shadow-lg shadow-pink-500/30">
         <Rocket className="w-8 h-8 text-white" />
       </div>
       <h3 className="text-2xl md:text-3xl font-bold mb-2">{copy.title}</h3>

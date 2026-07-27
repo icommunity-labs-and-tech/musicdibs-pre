@@ -23,7 +23,7 @@ export function WizardStepper({ steps, currentStep }: WizardStepperProps) {
                 className={cn(
                   'flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold transition-all duration-300',
                   done && 'bg-primary text-primary-foreground',
-                  active && 'bg-gradient-to-r from-purple-500 to-pink-500 text-white ring-2 ring-purple-500/30 ring-offset-2 ring-offset-background',
+                  active && 'bg-gradient-to-r from-primary to-brand text-white ring-2 ring-primary/30 ring-offset-2 ring-offset-background',
                   !done && !active && 'bg-muted text-muted-foreground'
                 )}
               >

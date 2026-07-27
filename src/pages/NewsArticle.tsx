@@ -148,7 +148,7 @@ const NewsArticle = () => {
                 {post.author && <span>· {post.author}</span>}
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+              <h1 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
                 {post.title}
               </h1>
 

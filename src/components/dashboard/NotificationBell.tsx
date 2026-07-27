@@ -13,7 +13,7 @@ const iconMap = {
 };
 
 const colorMap = {
-  success: 'text-emerald-500',
+  success: 'text-success',
   error: 'text-destructive',
   info: 'text-primary',
 };

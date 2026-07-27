@@ -128,7 +128,7 @@ export function StepCreators({ data, onUpdate, onNext, onBack }: StepCreatorsPro
           <Plus className="h-3.5 w-3.5 mr-1" /> {t('wizard.creators.addCreator')}
         </Button>
         {usesPercentages && (
-          <p className={cn('text-sm font-medium', totalPct === 100 ? 'text-emerald-600' : 'text-amber-600')}>
+          <p className={cn('text-sm font-medium', totalPct === 100 ? 'text-success' : 'text-warning')}>
             {t('wizard.creators.totalRights', { pct: totalPct })}
           </p>
         )}

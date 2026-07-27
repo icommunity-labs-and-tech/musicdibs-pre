@@ -18,7 +18,7 @@ const DEMO_SONGS: DemoSong[] = [
     title: "Midnight Drive",
     tag: "Lo-Fi",
     subtitle: "Lo-fi hip hop · nostálgico y soñador",
-    colors: ["from-purple-500", "to-fuchsia-500"],
+    colors: ["from-primary", "to-accent"],
     glow: "shadow-purple-500/30",
     audioUrl: "/audio/midnight-drive.mpeg",
   },
@@ -26,7 +26,7 @@ const DEMO_SONGS: DemoSong[] = [
     title: "Fuego Latino",
     tag: "Reggaeton",
     subtitle: "Reggaeton urbano · energético & bailable",
-    colors: ["from-orange-400", "to-pink-500"],
+    colors: ["from-warning", "to-brand"],
     glow: "shadow-pink-500/30",
     audioUrl: "/audio/fuego-latino.mpeg",
   },
@@ -34,7 +34,7 @@ const DEMO_SONGS: DemoSong[] = [
     title: "Turn It Up",
     tag: "EDM",
     subtitle: "Dance electrónico · oscuro e hipnótico",
-    colors: ["from-cyan-400", "to-blue-500"],
+    colors: ["from-info", "to-info"],
     glow: "shadow-cyan-500/30",
     audioUrl: "/audio/turn-it-up.mpeg",
   },
@@ -42,7 +42,7 @@ const DEMO_SONGS: DemoSong[] = [
     title: "Alma Libre",
     tag: "Indie Folk",
     subtitle: "Indie folk · acústico y emotivo",
-    colors: ["from-amber-300", "to-rose-400"],
+    colors: ["from-warning", "to-rose-400"],
     glow: "shadow-amber-400/30",
     audioUrl: "/audio/alma-libre.mp3",
   },
@@ -50,7 +50,7 @@ const DEMO_SONGS: DemoSong[] = [
     title: "No Sleep Tonight",
     tag: "R&B",
     subtitle: "R&B pop · suave y sensual",
-    colors: ["from-fuchsia-500", "to-violet-600"],
+    colors: ["from-accent", "to-accent"],
     glow: "shadow-fuchsia-500/30",
     audioUrl: "/audio/no-sleep-tonight.mp3",
   },
@@ -58,7 +58,7 @@ const DEMO_SONGS: DemoSong[] = [
     title: "Trap God",
     tag: "Hip Hop",
     subtitle: "Hip hop trap · duro y cinematográfico",
-    colors: ["from-blue-500", "to-purple-700"],
+    colors: ["from-info", "to-primary"],
     glow: "shadow-blue-500/30",
     audioUrl: "/audio/trap-god.mp3",
   },
@@ -220,23 +220,23 @@ export const AIStudioShowcase = () => {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/12 via-white/4 to-transparent" />
 
       {/* Decorative ambient glow orbs (richer, premium violet palette) */}
-      <div className="pointer-events-none absolute -top-32 -left-32 w-[32rem] h-[32rem] rounded-full bg-fuchsia-600/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -right-32 w-[32rem] h-[32rem] rounded-full bg-violet-600/25 blur-3xl" />
-      <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[44rem] h-[44rem] rounded-full bg-purple-500/15 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 -left-32 w-[32rem] h-[32rem] rounded-full bg-accent/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -right-32 w-[32rem] h-[32rem] rounded-full bg-accent/25 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[44rem] h-[44rem] rounded-full bg-primary/15 blur-3xl" />
 
       <div className="relative max-w-7xl mx-auto px-6">
         {/* Header */}
         <ScrollReveal>
           <div className="text-center max-w-3xl mx-auto mb-14">
             <div className="inline-flex items-center gap-2.5 px-6 py-2.5 rounded-full border border-white/15 bg-white/10 backdrop-blur-sm mb-6 shadow-sm">
-              <Sparkles className="w-5 h-5 text-fuchsia-300" />
+              <Sparkles className="w-5 h-5 text-accent" />
               <span className="text-base md:text-lg font-semibold text-white/90 tracking-wide">
                 AI Music Studio
               </span>
             </div>
             <h2 className="text-4xl md:text-6xl font-bold text-white leading-[1.1] mb-5">
               Crea o mejora tu música con IA.{" "}
-              <span className="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent">
                 De la idea a Spotify
               </span>{" "}
               en minutos 🎵
@@ -251,7 +251,7 @@ export const AIStudioShowcase = () => {
                 onClick={() => {
                   document.getElementById("pricing-section")?.scrollIntoView({ behavior: "smooth" });
                 }}
-                className="bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 text-white border-0 shadow-[0_0_40px_rgba(217,70,239,0.45)] hover:shadow-[0_0_55px_rgba(217,70,239,0.7)] hover:scale-105 transition-all"
+                className="bg-gradient-to-r from-brand via-accent to-primary text-white border-0 shadow-[0_0_40px_rgba(217,70,239,0.45)] hover:shadow-[0_0_55px_rgba(217,70,239,0.7)] hover:scale-105 transition-all"
               >
                 <Sparkles className="w-4 h-4" />
                 Crear mi canción
@@ -266,7 +266,7 @@ export const AIStudioShowcase = () => {
             {DEMO_SONGS.map((song) => (
               <div
                 key={song.title}
-                className={`ai-card-glow group relative rounded-2xl bg-gradient-to-b from-purple-950/85 to-purple-900/75 backdrop-blur-md p-5 border border-white/15 hover:border-white/25 transition-all duration-300 hover:-translate-y-1 shadow-xl ${song.glow} hover:shadow-2xl`}
+                className={`ai-card-glow group relative rounded-2xl bg-gradient-to-b from-primary/85 to-primary/75 backdrop-blur-md p-5 border border-white/15 hover:border-white/25 transition-all duration-300 hover:-translate-y-1 shadow-xl ${song.glow} hover:shadow-2xl`}
               >
                 {/* Tag */}
                 <div className="flex items-start justify-between mb-4">
@@ -315,7 +315,7 @@ export const AIStudioShowcase = () => {
           <div className="text-center max-w-3xl mx-auto mb-12">
             <h3 className="text-2xl md:text-3xl font-bold text-white leading-[1.1] mb-4">
               En menos de 10 minutos.{" "}
-              <span className="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent">
                 Tu canción al mundo.
               </span>
             </h3>
@@ -372,9 +372,9 @@ export const AIStudioShowcase = () => {
                         className="step-icon-wrap relative w-[60px] h-[60px] lg:w-[68px] lg:h-[68px] rounded-full flex items-center justify-center bg-gradient-to-br from-[#1a0d2e] via-[#241241] to-[#2c1850] border border-white/20 shadow-[0_0_24px_rgba(217,70,239,0.4)] transition-all duration-300"
                         style={step.pulse ? { animation: "stepPulse 2.6s ease-in-out infinite" } : undefined}
                       >
-                        <Icon className="w-6 h-6 lg:w-7 lg:h-7 text-fuchsia-200 drop-shadow-[0_0_6px_rgba(217,70,239,0.7)]" />
+                        <Icon className="w-6 h-6 lg:w-7 lg:h-7 text-accent drop-shadow-[0_0_6px_rgba(217,70,239,0.7)]" />
                         {/* Number chip */}
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[26px] h-[22px] px-1.5 rounded-full bg-gradient-to-br from-pink-500 to-fuchsia-600 border border-white/30 flex items-center justify-center text-[10px] font-bold text-white shadow-md">
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[26px] h-[22px] px-1.5 rounded-full bg-gradient-to-br from-brand to-accent border border-white/30 flex items-center justify-center text-[10px] font-bold text-white shadow-md">
                           {step.n}
                         </span>
                       </div>
@@ -388,8 +388,8 @@ export const AIStudioShowcase = () => {
                       <p className="text-white/65 text-sm leading-snug mb-2.5 lg:max-w-[240px]">
                         {step.desc}
                       </p>
-                      <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.2em] text-fuchsia-300/90">
-                        <span className="w-1 h-1 rounded-full bg-fuchsia-400 shadow-[0_0_6px_rgba(217,70,239,0.9)]" />
+                      <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.2em] text-accent/90">
+                        <span className="w-1 h-1 rounded-full bg-accent shadow-[0_0_6px_rgba(217,70,239,0.9)]" />
                         {step.time}
                       </span>
                     </div>

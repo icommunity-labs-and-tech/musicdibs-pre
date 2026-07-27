@@ -108,10 +108,10 @@ export function PromoteWorks() {
   const [selectedTone, setSelectedTone] = useState<string>('urban');
   const userLang = LANG_MAP[i18n.resolvedLanguage || 'es'] || 'español';
   const statusMap: Record<string, { label: string; color: string; icon: typeof Loader2 }> = {
-    generating: { label: t('dashboard.promote.generating'), color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: Loader2 },
-    assets_ready: { label: t('dashboard.promote.assetsReady'), color: 'bg-blue-500/10 text-blue-600 border-blue-500/20', icon: ImageIcon },
-    email_sent: { label: t('dashboard.promote.emailSent'), color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: CheckCircle2 },
-    completed: { label: t('dashboard.promote.completed'), color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: CheckCircle2 },
+    generating: { label: t('dashboard.promote.generating'), color: 'bg-warning/10 text-warning border-warning/20', icon: Loader2 },
+    assets_ready: { label: t('dashboard.promote.assetsReady'), color: 'bg-info/10 text-info border-info/20', icon: ImageIcon },
+    email_sent: { label: t('dashboard.promote.emailSent'), color: 'bg-success/10 text-success border-success/20', icon: CheckCircle2 },
+    completed: { label: t('dashboard.promote.completed'), color: 'bg-success/10 text-success border-success/20', icon: CheckCircle2 },
     failed: { label: t('dashboard.promote.error'), color: 'bg-destructive/10 text-destructive border-destructive/20', icon: AlertCircle },
   };
 

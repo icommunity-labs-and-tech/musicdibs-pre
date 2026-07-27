@@ -28,8 +28,8 @@ export function DraftsModal({ open, drafts, onContinue, onStartNew }: DraftsModa
               className="flex items-center justify-between gap-3 rounded-lg border border-border/40 p-3 hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-500/10">
-                  <FileText className="h-4 w-4 text-orange-600" />
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-warning/10">
+                  <FileText className="h-4 w-4 text-warning" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-medium truncate">{d.title || 'Sin título'}</p>

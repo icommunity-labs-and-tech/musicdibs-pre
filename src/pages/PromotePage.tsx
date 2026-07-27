@@ -30,11 +30,11 @@ interface PremiumPromo {
 }
 
 const getStatusMap = (t: (key: string, fallback: string) => string): Record<string, { label: string; color: string }> => ({
-  submitted: { label: t('dashboard.premium.statusPending', 'Pendiente de revisión'), color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
-  under_review: { label: t('dashboard.premium.statusUnderReview', 'En revisión'), color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' },
-  approved: { label: t('dashboard.premium.statusApproved', 'Aprobada'), color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-  scheduled: { label: t('dashboard.premium.statusScheduled', 'Programada'), color: 'bg-violet-500/10 text-violet-600 border-violet-500/20' },
-  published: { label: t('dashboard.premium.statusPublished', 'Publicada'), color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+  submitted: { label: t('dashboard.premium.statusPending', 'Pendiente de revisión'), color: 'bg-warning/10 text-warning border-warning/20' },
+  under_review: { label: t('dashboard.premium.statusUnderReview', 'En revisión'), color: 'bg-info/10 text-info border-info/20' },
+  approved: { label: t('dashboard.premium.statusApproved', 'Aprobada'), color: 'bg-success/10 text-success border-success/20' },
+  scheduled: { label: t('dashboard.premium.statusScheduled', 'Programada'), color: 'bg-accent/10 text-accent border-accent/20' },
+  published: { label: t('dashboard.premium.statusPublished', 'Publicada'), color: 'bg-success/10 text-success border-success/20' },
   rejected: { label: t('dashboard.premium.statusRejected', 'Rechazada'), color: 'bg-red-500/10 text-red-600 border-red-500/20' },
 });
 
@@ -118,19 +118,19 @@ export default function PromotePage() {
 
       {/* Premium promo card */}
       <Card
-        className="border-amber-500/30 shadow-sm hover:shadow-md transition-shadow cursor-pointer group relative overflow-hidden"
+        className="border-warning/30 shadow-sm hover:shadow-md transition-shadow cursor-pointer group relative overflow-hidden"
         onClick={() => setShowForm(true)}
       >
-        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-amber-500/10 to-transparent" />
+        <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-warning/10 to-transparent" />
         <CardContent className="p-5 space-y-3 relative">
           <div className="flex items-center justify-between">
-            <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-              <Crown className="h-5 w-5 text-amber-500" />
+            <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center">
+              <Crown className="h-5 w-5 text-warning" />
             </div>
             <PricingLink />
           </div>
           <div>
-            <h3 className="text-sm font-semibold group-hover:text-amber-600 transition-colors">
+            <h3 className="text-sm font-semibold group-hover:text-warning transition-colors">
               {t('dashboard.promoSelector.premiumTitle')}
             </h3>
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
@@ -138,17 +138,17 @@ export default function PromotePage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 border-amber-500/20">
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 border-warning/20">
               <Video className="h-2.5 w-2.5" /> {t('dashboard.promoSelector.customVideo')}
             </Badge>
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 border-amber-500/20">
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 border-warning/20">
               <Users className="h-2.5 w-2.5" /> 200K+
             </Badge>
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 border-amber-500/20">
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 gap-0.5 border-warning/20">
               <Instagram className="h-2.5 w-2.5" /> TikTok + IG
             </Badge>
           </div>
-          <Button variant="outline" size="sm" className="w-full text-xs border-amber-500/30 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+          <Button variant="outline" size="sm" className="w-full text-xs border-warning/30 group-hover:bg-warning group-hover:text-white transition-colors">
             {t('dashboard.promoSelector.premiumCta')} <Crown className="h-3 w-3 ml-1" />
           </Button>
         </CardContent>
@@ -193,14 +193,14 @@ export default function PromotePage() {
                 <Card key={p.id} className="border-border/30">
                   <CardContent className="p-4 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <Crown className="h-4 w-4 text-amber-500 shrink-0" />
+                      <Crown className="h-4 w-4 text-warning shrink-0" />
                       <div className="min-w-0">
                         <p className="text-sm font-medium truncate">{p.artist_name} — {p.song_title}</p>
                         <p className="text-[11px] text-muted-foreground">
                           {new Date(p.created_at).toLocaleDateString()}
                         </p>
                         {p.scheduled_publish_date && (
-                          <p className="text-[11px] text-violet-600 font-medium mt-0.5">
+                          <p className="text-[11px] text-accent font-medium mt-0.5">
                             {t('dashboard.premium.scheduledFor', 'Publicación estimada')}: {new Date(p.scheduled_publish_date + 'T00:00:00').toLocaleDateString()}
                           </p>
                         )}

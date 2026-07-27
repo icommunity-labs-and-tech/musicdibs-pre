@@ -15,7 +15,7 @@ const AnimatedStat = ({ end, suffix, label }: { end: number; suffix: string; lab
 
   return (
     <div className="text-center" ref={ref}>
-      <div className="text-2xl md:text-3xl font-bold text-yellow-300 mb-1 drop-shadow-lg tabular-nums">
+      <div className="text-2xl md:text-3xl font-bold text-warning mb-1 drop-shadow-lg tabular-nums">
         {count.toLocaleString()}{suffix}
       </div>
       <div className="text-white/95 text-base drop-shadow-md">{label}</div>
@@ -31,7 +31,7 @@ const ArtistsBanner = () => {
     variants: [
       { text: t("artists.join_now"), className: '' },
       { text: t('artistsAB.joinFreeToday'), className: '' },
-      { text: t('artistsAB.startCareer'), className: 'bg-yellow-400 text-black hover:bg-yellow-300' },
+      { text: t('artistsAB.startCareer'), className: 'bg-warning text-black hover:bg-warning' },
     ],
   });
 
@@ -44,7 +44,7 @@ const ArtistsBanner = () => {
   });
 
   return (
-    <section className="relative bg-gradient-to-r from-pink-500 via-pink-600 to-pink-700 py-12 overflow-hidden">
+    <section className="relative bg-gradient-to-r from-brand via-brand to-brand py-12 overflow-hidden">
       {/* Artists background image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -54,7 +54,7 @@ const ArtistsBanner = () => {
       />
       
       {/* Dark overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-pink-600/80 via-pink-700/80 to-purple-700/80" />
+      <div className="absolute inset-0 bg-gradient-to-r from-brand/80 via-brand/80 to-primary/80" />
 
       {/* Background pattern overlay */}
       <div className="absolute inset-0 opacity-10">
@@ -77,7 +77,7 @@ const ArtistsBanner = () => {
         <h2 className="text-3xl md:text-5xl font-bold text-white mb-3 leading-tight drop-shadow-lg">
           {t("artists.heading1")}
           <br />
-          <span className="text-yellow-300">{t("artists.heading2")}</span>
+          <span className="text-warning">{t("artists.heading2")}</span>
         </h2>
         
         <p className="text-lg md:text-xl text-white/95 mb-6 font-medium drop-shadow-md">
@@ -88,7 +88,7 @@ const ArtistsBanner = () => {
           <Button 
             variant="outline" 
             size="lg"
-            className={`border-2 border-white text-pink-600 hover:bg-white hover:text-pink-600 font-bold px-6 py-2 text-base rounded-full ${ctaTestimonials.className}`}
+            className={`border-2 border-white text-brand hover:bg-white hover:text-brand font-bold px-6 py-2 text-base rounded-full ${ctaTestimonials.className}`}
             onClick={() => {
               trackABClick('artists_cta_testimonials', ctaTestimonials.variantIndex, ctaTestimonials.text);
               const testimonialsSection = document.querySelector('section:nth-of-type(5)');

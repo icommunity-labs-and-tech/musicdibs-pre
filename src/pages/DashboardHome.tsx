@@ -101,7 +101,7 @@ export default function DashboardHome() {
             onClick={() => navigate('/ai-studio')}
           >
             <CardContent className="p-6 flex flex-col items-center text-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-brand">
                 <Sparkles className="h-6 w-6 text-white" />
               </div>
               <div className="space-y-1">
@@ -144,15 +144,15 @@ export default function DashboardHome() {
             </div>
             <Card data-tour="distribute" className={`border-border/40 shadow-sm transition-all h-full ${summary?.subscriptionPlan === 'Annual' ? 'cursor-pointer hover:shadow-lg hover:border-primary/50' : 'opacity-70'}`} onClick={() => summary?.subscriptionPlan === 'Annual' ? setShowDistributionModal(true) : undefined}>
               <CardContent className="p-6 flex flex-col items-center text-center gap-4 h-full justify-between">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
-                  <Share2 className="h-6 w-6 text-blue-500" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-info/10">
+                  <Share2 className="h-6 w-6 text-info" />
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-base font-semibold">{t('dashboard.home.distributeWork')}</h3>
                   <p className="text-sm text-muted-foreground">
                     {t('dashboard.home.distributeWorkDesc')}
                   </p>
-                  <p className="text-sm font-semibold text-green-500 flex items-center justify-center gap-1.5">
+                  <p className="text-sm font-semibold text-success flex items-center justify-center gap-1.5">
                     <CircleDollarSign className="h-4 w-4" />
                     {t('dashboard.home.distributeRoyalties', 'Musicdibs no cobra ninguna comisión sobre tus royalties de streaming.')}
                   </p>

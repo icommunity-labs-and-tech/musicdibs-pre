@@ -100,7 +100,7 @@ export function DistributeButton({ workId, distributedAt, currentClicks = 0, var
         <Tooltip>
           <TooltipTrigger asChild>
             <div
-              className="inline-flex items-center justify-center text-xs h-7 w-full gap-1 rounded-md border border-emerald-500/30 text-emerald-600 bg-emerald-500/5 px-3 cursor-default"
+              className="inline-flex items-center justify-center text-xs h-7 w-full gap-1 rounded-md border border-success/30 text-success bg-success/5 px-3 cursor-default"
             >
               <CheckCircle2 className="h-3 w-3" />
               {t('dashboard.distribute.distributed')}

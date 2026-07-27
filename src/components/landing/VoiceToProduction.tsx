@@ -65,18 +65,18 @@ export function VoiceToProduction() {
               {/* Badge above */}
               <div className="flex justify-center mb-5">
                 <span className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-white border border-white/15 bg-gradient-to-r from-magenta/25 to-pink/25 backdrop-blur-md shadow-[0_0_20px_rgba(217,70,239,0.35)]">
-                  <Sparkles className="h-3.5 w-3.5 text-fuchsia-300" />
+                  <Sparkles className="h-3.5 w-3.5 text-accent" />
                   IA Music Studio
                 </span>
               </div>
 
               {/* Neon glow halo */}
-              <div className="absolute -inset-8 bg-gradient-to-br from-fuchsia-500/30 via-pink-500/20 to-purple-600/25 blur-3xl rounded-[3rem] pointer-events-none" />
+              <div className="absolute -inset-8 bg-gradient-to-br from-accent/30 via-brand/20 to-primary/25 blur-3xl rounded-[3rem] pointer-events-none" />
 
               {/* Subtle neon particles */}
-              <span className="neon-particle pointer-events-none absolute -top-2 -left-3 h-2 w-2 rounded-full bg-fuchsia-400 shadow-[0_0_12px_rgba(217,70,239,0.9)]" />
-              <span className="neon-particle pointer-events-none absolute top-1/3 -right-4 h-1.5 w-1.5 rounded-full bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.9)]" style={{ animationDelay: "1.2s" }} />
-              <span className="neon-particle pointer-events-none absolute bottom-10 -left-5 h-1.5 w-1.5 rounded-full bg-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.9)]" style={{ animationDelay: "2.4s" }} />
+              <span className="neon-particle pointer-events-none absolute -top-2 -left-3 h-2 w-2 rounded-full bg-accent shadow-[0_0_12px_rgba(217,70,239,0.9)]" />
+              <span className="neon-particle pointer-events-none absolute top-1/3 -right-4 h-1.5 w-1.5 rounded-full bg-brand shadow-[0_0_10px_rgba(244,114,182,0.9)]" style={{ animationDelay: "1.2s" }} />
+              <span className="neon-particle pointer-events-none absolute bottom-10 -left-5 h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_10px_rgba(168,85,247,0.9)]" style={{ animationDelay: "2.4s" }} />
 
               {/* iPhone frame */}
               <div className="phone-float relative mx-auto rounded-[2.6rem] bg-gradient-to-b from-zinc-900 to-black p-[10px] border border-white/10 shadow-[0_30px_80px_-20px_rgba(217,70,239,0.45),0_0_60px_-10px_rgba(168,85,247,0.4)]">

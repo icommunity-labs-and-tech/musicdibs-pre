@@ -34,7 +34,7 @@ export const HeroSection = () => {
       </video>
 
       {/* Background with gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/50 via-purple-700/50 to-pink-600/50">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/50 via-primary/50 to-brand/50">
         <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
@@ -44,8 +44,8 @@ export const HeroSection = () => {
         style={{ transform: `translateY(${bgOffset}px)` }}
       >
         <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-white/10 blur-xl"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-pink-300/20 blur-lg"></div>
-        <div className="absolute bottom-32 left-1/4 w-40 h-40 rounded-full bg-purple-300/10 blur-xl"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-brand/20 blur-lg"></div>
+        <div className="absolute bottom-32 left-1/4 w-40 h-40 rounded-full bg-primary/10 blur-xl"></div>
         <div className="absolute bottom-20 right-1/3 w-28 h-28 rounded-full bg-white/10 blur-lg"></div>
       </div>
 
@@ -54,7 +54,7 @@ export const HeroSection = () => {
         {/* Main heading — rendered immediately (no ScrollReveal) to keep LCP fast */}
         <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
           {t("hero.title")}{" "}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 to-purple-300">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand to-primary">
             {t("hero.highlight")}
           </span>
         </h1>
@@ -65,7 +65,7 @@ export const HeroSection = () => {
             {t("hero.subtitle_prefix")} {t("hero.subtitle_strong")}{" "}
             <a
               href="/legal-validity"
-              className="text-pink-300 hover:text-pink-200 underline transition-colors text-xs md:text-sm"
+              className="text-brand hover:text-brand underline transition-colors text-xs md:text-sm"
             >
               {t("hero.legal_more")}
             </a>

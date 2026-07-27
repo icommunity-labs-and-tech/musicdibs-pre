@@ -234,7 +234,7 @@ export const CompetitorComparison = ({ lang, ctaHref = "/login" }: Props) => {
   return (
     <section className="mb-20" aria-labelledby="competitor-comparison-heading">
       <div className="text-center mb-12">
-        <span className="inline-block text-xs uppercase tracking-widest font-bold text-pink-300 mb-3">
+        <span className="inline-block text-xs uppercase tracking-widest font-bold text-brand mb-3">
           {t.eyebrow}
         </span>
         <h2
@@ -250,14 +250,14 @@ export const CompetitorComparison = ({ lang, ctaHref = "/login" }: Props) => {
         {t.cards.map((card, idx) => (
           <article
             key={idx}
-            className="group relative bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-pink-400/40 transition-colors"
+            className="group relative bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:border-brand/40 transition-colors"
           >
             <div className="flex items-start justify-between mb-5 gap-3">
               <div>
                 <h3 className="text-lg font-bold text-white leading-snug">{card.vs}</h3>
                 <p className="text-white/60 text-sm mt-1">{card.tagline}</p>
               </div>
-              <span className="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-pink-500/20 to-purple-500/20 border border-pink-400/30 text-pink-200 text-xs font-semibold">
+              <span className="shrink-0 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-brand/20 to-primary/20 border border-brand/30 text-brand text-xs font-semibold">
                 <Zap className="w-3 h-3" />
                 {card.badge}
               </span>
@@ -265,7 +265,7 @@ export const CompetitorComparison = ({ lang, ctaHref = "/login" }: Props) => {
 
             <div className="grid grid-cols-[1fr_auto_auto] gap-x-4 gap-y-3 text-sm items-center">
               <div />
-              <div className="text-pink-300 font-bold uppercase text-[10px] tracking-wider text-right">
+              <div className="text-brand font-bold uppercase text-[10px] tracking-wider text-right">
                 Musicdibs
               </div>
               <div className="text-white/50 font-bold uppercase text-[10px] tracking-wider text-right min-w-[110px]">
@@ -277,12 +277,12 @@ export const CompetitorComparison = ({ lang, ctaHref = "/login" }: Props) => {
                 return (
                   <div key={i} className="contents">
                     <div className="flex items-center gap-2 text-white/80 py-2 border-t border-white/5">
-                      <Icon className="w-4 h-4 text-pink-400/80 shrink-0" />
+                      <Icon className="w-4 h-4 text-brand/80 shrink-0" />
                       <span>{row.label}</span>
                     </div>
-                    <div className="py-2 border-t border-white/5 text-right text-pink-200 font-semibold">
+                    <div className="py-2 border-t border-white/5 text-right text-brand font-semibold">
                       <span className="inline-flex items-center gap-1 justify-end">
-                        <Check className="w-3.5 h-3.5 text-green-400" />
+                        <Check className="w-3.5 h-3.5 text-success" />
                         {row.musicdibs.value}
                       </span>
                     </div>
@@ -313,7 +313,7 @@ export const CompetitorComparison = ({ lang, ctaHref = "/login" }: Props) => {
       </div>
 
       {/* CTA */}
-      <div className="mt-12 bg-gradient-to-r from-pink-500/15 to-purple-500/15 border border-white/10 rounded-2xl p-8 md:p-10 text-center">
+      <div className="mt-12 bg-gradient-to-r from-brand/15 to-primary/15 border border-white/10 rounded-2xl p-8 md:p-10 text-center">
         <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">{t.ctaTitle}</h3>
         <p className="text-white/70 mb-6 max-w-lg mx-auto">{t.ctaText}</p>
         <Link to={ctaHref}>

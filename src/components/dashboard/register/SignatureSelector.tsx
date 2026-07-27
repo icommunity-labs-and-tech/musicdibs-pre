@@ -135,8 +135,8 @@ export function SignatureSelector({ value, onChange }: SignatureSelectorProps) {
   }
 
   return (
-    <div className="space-y-2 p-3 rounded-lg border border-dashed border-amber-400/50 bg-amber-50/50 dark:bg-amber-900/10">
-      <p className="text-xs text-amber-700 dark:text-amber-400">{t('wizard.signature.needCreate')}</p>
+    <div className="space-y-2 p-3 rounded-lg border border-dashed border-warning/50 bg-warning/50 dark:bg-warning/10">
+      <p className="text-xs text-warning dark:text-warning">{t('wizard.signature.needCreate')}</p>
       <div className="flex gap-2">
         <Input placeholder={t('wizard.signature.namePlaceholder')} value={newName} onChange={(e) => setNewName(e.target.value)} className="h-8 text-xs flex-1" />
         <Button type="button" size="sm" className="h-8 text-xs" disabled={creating || !newName.trim()} onClick={handleCreate}>
@@ -153,7 +153,7 @@ export function SignatureSelector({ value, onChange }: SignatureSelectorProps) {
           <p className="text-xs text-muted-foreground">{t('wizard.signature.pendingTitle')}</p>
           {pending.map((s: IbsSignature) => (
             <div key={s.id} className="flex items-center gap-2">
-              <Badge variant="outline" className="text-amber-600 text-xs">{t('wizard.signature.pendingBadge', { name: s.signature_name })}</Badge>
+              <Badge variant="outline" className="text-warning text-xs">{t('wizard.signature.pendingBadge', { name: s.signature_name })}</Badge>
               {s.kyc_url && (
                 <a href={s.kyc_url} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline">{t('wizard.signature.verify')}</a>
               )}

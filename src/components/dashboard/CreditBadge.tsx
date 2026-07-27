@@ -120,7 +120,7 @@ export function CreditBadge() {
                   <span className="truncate max-w-[160px] text-foreground/80">
                     {tx.description || tx.type}
                   </span>
-                  <span className={`tabular-nums font-medium ${tx.amount < 0 ? 'text-destructive' : 'text-green-600'}`}>
+                  <span className={`tabular-nums font-medium ${tx.amount < 0 ? 'text-destructive' : 'text-success'}`}>
                     {tx.amount > 0 ? '+' : ''}{tx.amount} · {formatDate(tx.created_at)}
                   </span>
                 </li>

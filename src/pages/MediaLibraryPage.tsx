@@ -599,10 +599,10 @@ export default function MediaLibraryPage() {
 
   const typeBadgeColor = (type: MediaAsset["type"]) => {
     switch (type) {
-      case "song": return "bg-violet-500/15 text-violet-400 border-violet-500/30";
-      case "video": return "bg-blue-500/15 text-blue-400 border-blue-500/30";
-      case "cover": return "bg-pink-500/15 text-pink-400 border-pink-500/30";
-      case "vocal": return "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+      case "song": return "bg-accent/15 text-accent border-accent/30";
+      case "video": return "bg-info/15 text-info border-info/30";
+      case "cover": return "bg-brand/15 text-brand border-brand/30";
+      case "vocal": return "bg-success/15 text-success border-success/30";
     }
   };
 
@@ -859,7 +859,7 @@ export default function MediaLibraryPage() {
                                   {wavJobs[asset.id] === "loading"
                                     ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                     : wavJobs[asset.id] === "done"
-                                      ? <Check className="h-3.5 w-3.5 text-green-500" />
+                                      ? <Check className="h-3.5 w-3.5 text-success" />
                                       : <FileAudio className="h-3.5 w-3.5" />}
                                 </Button>
                               </TooltipTrigger>
@@ -884,7 +884,7 @@ export default function MediaLibraryPage() {
                                   {midiJobs[asset.id] === "loading"
                                     ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                     : midiJobs[asset.id] === "done"
-                                      ? <Check className="h-3.5 w-3.5 text-green-500" />
+                                      ? <Check className="h-3.5 w-3.5 text-success" />
                                       : <FileMusic className="h-3.5 w-3.5" />}
                                 </Button>
                               </TooltipTrigger>
@@ -917,7 +917,7 @@ export default function MediaLibraryPage() {
                                   {mp4Jobs[asset.id] === "loading"
                                     ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                     : mp4Jobs[asset.id] === "done"
-                                      ? <Check className="h-3.5 w-3.5 text-green-500" />
+                                      ? <Check className="h-3.5 w-3.5 text-success" />
                                       : <Film className="h-3.5 w-3.5" />}
                                 </Button>
                               </TooltipTrigger>

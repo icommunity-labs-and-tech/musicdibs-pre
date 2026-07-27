@@ -7,10 +7,10 @@ import { SERVICE_CONFIG } from '@/types/youtube-services';
 
 const STATUS_LABELS: Record<string, { label: string; color: string; help: string }> = {
   draft:           { label: 'Borrador',       color: 'text-muted-foreground bg-muted',                              help: 'Solicitud iniciada pero aún sin enviar.' },
-  pending_payment: { label: 'Pago pendiente', color: 'text-yellow-600 dark:text-yellow-400 bg-yellow-400/10',       help: 'Aún no has completado el pago. Puedes pagar o cancelar para liberar el servicio.' },
-  submitted:       { label: 'En proceso',     color: 'text-blue-600 dark:text-blue-400 bg-blue-400/10',             help: 'Pago recibido. Tu solicitud entrará en revisión por nuestro equipo.' },
-  in_review:       { label: 'En revisión',    color: 'text-purple-600 dark:text-purple-400 bg-purple-400/10',       help: 'Nuestro equipo está validando tu información.' },
-  approved:        { label: 'Aprobada',       color: 'text-green-600 dark:text-green-400 bg-green-400/10',          help: 'Solicitud aprobada y activa.' },
+  pending_payment: { label: 'Pago pendiente', color: 'text-warning dark:text-warning bg-warning/10',       help: 'Aún no has completado el pago. Puedes pagar o cancelar para liberar el servicio.' },
+  submitted:       { label: 'En proceso',     color: 'text-info dark:text-info bg-info/10',             help: 'Pago recibido. Tu solicitud entrará en revisión por nuestro equipo.' },
+  in_review:       { label: 'En revisión',    color: 'text-primary dark:text-primary bg-primary/10',       help: 'Nuestro equipo está validando tu información.' },
+  approved:        { label: 'Aprobada',       color: 'text-success dark:text-success bg-success/10',          help: 'Solicitud aprobada y activa.' },
   rejected:        { label: 'Rechazada',      color: 'text-red-600 dark:text-red-400 bg-red-400/10',                help: 'Solicitud rechazada. Consulta las notas del revisor.' },
   cancelled:       { label: 'Cancelada',      color: 'text-muted-foreground bg-muted line-through',                 help: 'Cancelaste esta solicitud antes de pagar. Puedes crear una nueva cuando quieras.' },
 };
@@ -44,7 +44,7 @@ function ServiceCard({ serviceType, onRequest, requests }: { serviceType: Servic
       </ul>
       <div className="flex items-center justify-between mt-2 pt-4 border-t border-border">
         <div><span className="text-2xl font-bold text-foreground">50 €</span><span className="text-xs text-muted-foreground ml-1">/ solicitud</span></div>
-        {approved ? <span className="text-sm text-green-600 dark:text-green-400 font-medium">✓ Activo</span> :
+        {approved ? <span className="text-sm text-success dark:text-success font-medium">✓ Activo</span> :
          active ? <span className="text-sm text-primary font-medium">Solicitud en proceso</span> :
          <button onClick={() => onRequest(serviceType)} className="px-5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-xl transition-colors">Solicitar →</button>}
       </div>

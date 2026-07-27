@@ -9,7 +9,7 @@ export const DistributionSection = () => {
   return (
     <section 
       id="services-section"
-      className="py-20 bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 relative overflow-hidden"
+      className="py-20 bg-gradient-to-br from-primary via-primary to-brand relative overflow-hidden"
       style={{
         backgroundImage: `url(/lovable-uploads/8b326f67-4441-49bb-b3f4-d2f9a297c964.webp)`,
         backgroundSize: 'cover',
@@ -18,7 +18,7 @@ export const DistributionSection = () => {
       }}
     >
       {/* Background overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-600/90 via-purple-700/90 to-pink-600/90"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/90 to-brand/90"></div>
       
       <div className="max-w-6xl mx-auto px-6 relative z-10">
         {/* Section header */}
@@ -40,7 +40,7 @@ export const DistributionSection = () => {
             <a href="#pricing-section" className="block">
               <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer hover:scale-105">
                 <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center mr-4">
+                  <div className="w-12 h-12 rounded-full bg-success flex items-center justify-center mr-4">
                     <Music className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold text-white">{t("distro.world.title")}</h3>
@@ -77,7 +77,7 @@ export const DistributionSection = () => {
             <a href="#pricing-section" className="block">
               <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 cursor-pointer hover:scale-105">
                 <div className="flex items-center mb-6">
-                  <div className="w-12 h-12 rounded-full bg-pink-500 flex items-center justify-center mr-4">
+                  <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center mr-4">
                     <Users className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold text-white">{t("distro.social.title")}</h3>

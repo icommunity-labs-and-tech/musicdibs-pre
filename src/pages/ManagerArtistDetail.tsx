@@ -164,7 +164,7 @@ export default function ManagerArtistDetail() {
           {artist.artist_user_id ? (
             <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30">
               <div className="flex items-center gap-3">
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <CheckCircle2 className="h-5 w-5 text-success" />
                 <div>
                   <p className="text-sm font-medium">Cuenta vinculada</p>
                   <p className="text-xs text-muted-foreground font-mono">{artist.artist_user_id}</p>

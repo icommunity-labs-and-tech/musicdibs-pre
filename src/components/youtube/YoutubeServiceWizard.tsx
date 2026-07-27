@@ -7,7 +7,7 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
   const pct = Math.round((current / (total - 1)) * 100);
   return (
     <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-      <div className="h-full bg-gradient-to-r from-purple-500 to-purple-400 transition-all duration-500 rounded-full" style={{ width: pct + '%' }} />
+      <div className="h-full bg-gradient-to-r from-primary to-primary transition-all duration-500 rounded-full" style={{ width: pct + '%' }} />
     </div>
   );
 }
@@ -15,7 +15,7 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
 function ChecklistItem({ text }: { text: string }) {
   return (
     <li className="flex items-start gap-2 text-sm text-white/70">
-      <span className="mt-0.5 text-purple-400 flex-shrink-0">&#10003;</span>
+      <span className="mt-0.5 text-primary flex-shrink-0">&#10003;</span>
       <span>{text}</span>
     </li>
   );
@@ -27,11 +27,11 @@ function InfoStep({ step, onNext }: { step: WizardStep; onNext: () => void }) {
       {step.subtitle && <p className="text-white/70 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: step.subtitle }} />}
       {step.checklist && (
         <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-          <p className="text-xs font-semibold text-purple-400 uppercase tracking-wide mb-3">Requisitos</p>
+          <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-3">Requisitos</p>
           <ul className="space-y-2">{step.checklist.map((item, i) => <ChecklistItem key={i} text={item} />)}</ul>
         </div>
       )}
-      <button onClick={onNext} className="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white font-semibold rounded-xl transition-colors">Empezar →</button>
+      <button onClick={onNext} className="w-full py-3 bg-primary hover:bg-primary text-white font-semibold rounded-xl transition-colors">Empezar →</button>
     </div>
   );
 }
@@ -42,9 +42,9 @@ function TextStep({ step, value, onChange, onNext, inputRef }: { step: WizardSte
       {step.subtitle && <p className="text-white/60 text-sm" dangerouslySetInnerHTML={{ __html: step.subtitle }} />}
       <input ref={inputRef} type={step.type === 'email' ? 'email' : step.type === 'url' ? 'url' : 'text'} value={value} onChange={e => onChange(e.target.value)}
         onKeyDown={e => { if (e.key === 'Enter') onNext(); }} placeholder={step.placeholder}
-        className="w-full bg-transparent border-b-2 border-white/20 focus:border-purple-400 outline-none text-white text-xl py-2 placeholder:text-white/20 transition-colors" autoFocus />
+        className="w-full bg-transparent border-b-2 border-white/20 focus:border-primary outline-none text-white text-xl py-2 placeholder:text-white/20 transition-colors" autoFocus />
       {step.hint && <p className="text-xs text-white/40 italic">{step.hint}</p>}
-      <button onClick={onNext} disabled={!!(step.required && !value.trim())} className="self-start flex items-center gap-2 py-2 px-5 bg-purple-600 hover:bg-purple-500 disabled:opacity-30 text-white font-semibold rounded-xl transition-colors text-sm">OK <span className="text-white/60">&#8629;</span></button>
+      <button onClick={onNext} disabled={!!(step.required && !value.trim())} className="self-start flex items-center gap-2 py-2 px-5 bg-primary hover:bg-primary disabled:opacity-30 text-white font-semibold rounded-xl transition-colors text-sm">OK <span className="text-white/60">&#8629;</span></button>
     </div>
   );
 }
@@ -54,9 +54,9 @@ function TextareaStep({ step, value, onChange, onNext }: { step: WizardStep; val
     <div className="flex flex-col gap-4">
       {step.subtitle && <p className="text-white/60 text-sm" dangerouslySetInnerHTML={{ __html: step.subtitle }} />}
       <textarea value={value} onChange={e => onChange(e.target.value)} placeholder={step.placeholder} rows={5}
-        className="w-full bg-white/5 border border-white/10 focus:border-purple-400 outline-none text-white text-sm rounded-xl p-3 placeholder:text-white/20 resize-none" autoFocus />
+        className="w-full bg-white/5 border border-white/10 focus:border-primary outline-none text-white text-sm rounded-xl p-3 placeholder:text-white/20 resize-none" autoFocus />
       {step.hint && <p className="text-xs text-white/40 italic">{step.hint}</p>}
-      <button onClick={onNext} disabled={!!(step.required && !value.trim())} className="self-start py-2 px-5 bg-purple-600 hover:bg-purple-500 disabled:opacity-30 text-white font-semibold rounded-xl text-sm">OK</button>
+      <button onClick={onNext} disabled={!!(step.required && !value.trim())} className="self-start py-2 px-5 bg-primary hover:bg-primary disabled:opacity-30 text-white font-semibold rounded-xl text-sm">OK</button>
     </div>
   );
 }
@@ -89,7 +89,7 @@ function PolicyModal({ onClose }: { onClose: () => void }) {
           <p className="text-xs text-white/40 italic">Resumen orientativo. Para el texto completo y vinculante, consulta las politicas oficiales de Content ID de YouTube y los terminos de servicio de tu distribuidor.</p>
         </div>
         <div className="px-6 py-3 border-t border-white/10">
-          <button onClick={onClose} className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-xl">Cerrar</button>
+          <button onClick={onClose} className="w-full py-2 bg-primary hover:bg-primary text-white text-sm font-semibold rounded-xl">Cerrar</button>
         </div>
       </div>
     </div>
@@ -102,18 +102,18 @@ function CheckboxStep({ step, value, onChange, onNext }: { step: WizardStep; val
     <div className="flex flex-col gap-5">
       {step.subtitle && <p className="text-white/60 text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: step.subtitle }} />}
       {step.showPolicyLink && (
-        <button type="button" onClick={() => setShowPolicy(true)} className="self-start text-sm text-purple-400 hover:text-purple-300 underline underline-offset-2">
+        <button type="button" onClick={() => setShowPolicy(true)} className="self-start text-sm text-primary hover:text-primary underline underline-offset-2">
           Ver politicas de Content ID y Prevencion de Fraudes
         </button>
       )}
       {step.checklist && <div className="bg-white/5 border border-white/10 rounded-xl p-4"><ul className="space-y-2">{step.checklist.map((item, i) => <ChecklistItem key={i} text={item} />)}</ul></div>}
       <label className="flex items-start gap-3 cursor-pointer">
-        <div onClick={() => onChange(!value)} className={"mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors " + (value ? 'bg-purple-600 border-purple-600' : 'border-white/30')}>
+        <div onClick={() => onChange(!value)} className={"mt-0.5 flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors " + (value ? 'bg-primary border-primary' : 'border-white/30')}>
           {value && <span className="text-white text-xs">&#10003;</span>}
         </div>
         <span className="text-sm text-white/80 leading-relaxed">{step.hint}</span>
       </label>
-      <button onClick={onNext} disabled={!!(step.required && !value)} className="self-start py-2 px-5 bg-purple-600 hover:bg-purple-500 disabled:opacity-30 text-white font-semibold rounded-xl text-sm">Confirmar y continuar</button>
+      <button onClick={onNext} disabled={!!(step.required && !value)} className="self-start py-2 px-5 bg-primary hover:bg-primary disabled:opacity-30 text-white font-semibold rounded-xl text-sm">Confirmar y continuar</button>
       {showPolicy && <PolicyModal onClose={() => setShowPolicy(false)} />}
     </div>
   );
@@ -124,16 +124,16 @@ function RadioStep({ step, value, onChange, onNext }: { step: WizardStep; value:
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         {step.options?.map((opt, i) => (
-          <label key={opt.value} className={"flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors " + (value === opt.value ? 'border-purple-500 bg-purple-500/10 text-white' : 'border-white/10 hover:border-white/30 text-white/70')} onClick={() => onChange(opt.value)}>
-            <div className={"w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center " + (value === opt.value ? 'border-purple-400' : 'border-white/30')}>
-              {value === opt.value && <div className="w-2 h-2 rounded-full bg-purple-400" />}
+          <label key={opt.value} className={"flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-colors " + (value === opt.value ? 'border-primary bg-primary/10 text-white' : 'border-white/10 hover:border-white/30 text-white/70')} onClick={() => onChange(opt.value)}>
+            <div className={"w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center " + (value === opt.value ? 'border-primary' : 'border-white/30')}>
+              {value === opt.value && <div className="w-2 h-2 rounded-full bg-primary" />}
             </div>
-            <span className="text-sm font-mono text-purple-400/60 mr-1">{String.fromCharCode(65 + i)}</span>
+            <span className="text-sm font-mono text-primary/60 mr-1">{String.fromCharCode(65 + i)}</span>
             <span className="text-sm">{opt.label}</span>
           </label>
         ))}
       </div>
-      <button onClick={onNext} disabled={!!(step.required && !value)} className="self-start py-2 px-5 bg-purple-600 hover:bg-purple-500 disabled:opacity-30 text-white font-semibold rounded-xl text-sm">OK</button>
+      <button onClick={onNext} disabled={!!(step.required && !value)} className="self-start py-2 px-5 bg-primary hover:bg-primary disabled:opacity-30 text-white font-semibold rounded-xl text-sm">OK</button>
     </div>
   );
 }
@@ -145,12 +145,12 @@ function GroupStep({ step, values, onChange, onNext }: { step: WizardStep; value
       {step.subtitle && <p className="text-white/60 text-sm" dangerouslySetInnerHTML={{ __html: step.subtitle }} />}
       {step.fields?.map(field => (
         <div key={field.key} className="flex flex-col gap-1.5">
-          <label className="text-xs font-semibold text-white/50 uppercase tracking-wide">{field.label}{field.required && <span className="text-purple-400 ml-1">*</span>}</label>
+          <label className="text-xs font-semibold text-white/50 uppercase tracking-wide">{field.label}{field.required && <span className="text-primary ml-1">*</span>}</label>
           <input type={field.type} value={values[field.key] || ''} onChange={e => onChange(field.key, e.target.value)} placeholder={field.placeholder}
-            className="w-full bg-transparent border-b border-white/20 focus:border-purple-400 outline-none text-white text-base py-1.5 placeholder:text-white/20 transition-colors" />
+            className="w-full bg-transparent border-b border-white/20 focus:border-primary outline-none text-white text-base py-1.5 placeholder:text-white/20 transition-colors" />
         </div>
       ))}
-      <button onClick={onNext} disabled={!allFilled} className="self-start py-2 px-5 bg-purple-600 hover:bg-purple-500 disabled:opacity-30 text-white font-semibold rounded-xl text-sm">OK</button>
+      <button onClick={onNext} disabled={!allFilled} className="self-start py-2 px-5 bg-primary hover:bg-primary disabled:opacity-30 text-white font-semibold rounded-xl text-sm">OK</button>
     </div>
   );
 }
@@ -173,12 +173,12 @@ function FileStep({ step, value, onChange, onNext, uploading }: { step: WizardSt
   return (
     <div className="flex flex-col gap-4">
       {step.subtitle && <p className="text-white/60 text-sm" dangerouslySetInnerHTML={{ __html: step.subtitle }} />}
-      <div onClick={() => !uploading && fileRef.current?.click()} className="border-2 border-dashed border-white/20 hover:border-purple-400 rounded-xl p-6 text-center cursor-pointer transition-colors">
-        {value ? <p className="text-purple-400 text-sm font-medium">Archivo subido &#10003;</p> : <p className="text-white/60 text-sm">Haz clic para subir el documento ({step.accept})</p>}
+      <div onClick={() => !uploading && fileRef.current?.click()} className="border-2 border-dashed border-white/20 hover:border-primary rounded-xl p-6 text-center cursor-pointer transition-colors">
+        {value ? <p className="text-primary text-sm font-medium">Archivo subido &#10003;</p> : <p className="text-white/60 text-sm">Haz clic para subir el documento ({step.accept})</p>}
       </div>
       <input ref={fileRef} type="file" accept={step.accept} className="hidden" onChange={handleFile} />
       {step.hint && <p className="text-xs text-white/40 italic">{step.hint}</p>}
-      <button onClick={onNext} disabled={!!(step.required && !value) || uploading} className="self-start py-2 px-5 bg-purple-600 hover:bg-purple-500 disabled:opacity-30 text-white font-semibold rounded-xl text-sm">OK</button>
+      <button onClick={onNext} disabled={!!(step.required && !value) || uploading} className="self-start py-2 px-5 bg-primary hover:bg-primary disabled:opacity-30 text-white font-semibold rounded-xl text-sm">OK</button>
     </div>
   );
 }
@@ -192,9 +192,9 @@ function PaymentStep({ serviceType, onPay, paying, vevoAddon }: { serviceType: S
       <div className="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
         <div className="flex justify-between"><span className="text-sm text-white/60">Servicio</span><span className="text-sm text-white font-medium">{config.name}</span></div>
         {vevoAddon && <div className="flex justify-between"><span className="text-sm text-white/60">Fusion canal VEVO</span><span className="text-sm text-white font-medium">+5 EUR</span></div>}
-        <div className="flex justify-between border-t border-white/10 pt-2 mt-2"><span className="text-sm font-semibold text-white">Total</span><span className="text-lg font-bold text-purple-400">{total} EUR</span></div>
+        <div className="flex justify-between border-t border-white/10 pt-2 mt-2"><span className="text-sm font-semibold text-white">Total</span><span className="text-lg font-bold text-primary">{total} EUR</span></div>
       </div>
-      <button onClick={onPay} disabled={paying} className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2">
+      <button onClick={onPay} disabled={paying} className="w-full py-3.5 bg-gradient-to-r from-primary to-primary hover:from-primary hover:to-primary disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center gap-2">
         {paying ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Procesando...</> : <>💳 Pagar {total} € y enviar solicitud</>}
       </button>
       <p className="text-xs text-white/30 text-center">Pago seguro via Stripe. Recibiras un recibo por email.</p>

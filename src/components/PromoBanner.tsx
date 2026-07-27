@@ -55,7 +55,7 @@ export const PromoBanner = () => {
       }}
     >
       {/* Sun glow */}
-      <div className="pointer-events-none absolute inset-y-0 left-1/4 w-1/2 bg-yellow-300/30 blur-3xl" />
+      <div className="pointer-events-none absolute inset-y-0 left-1/4 w-1/2 bg-warning/30 blur-3xl" />
 
       <div className="container relative mx-auto px-4 py-3 md:py-4">
         <div className="flex flex-col items-center gap-3 text-center lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:text-left">
@@ -79,7 +79,7 @@ export const PromoBanner = () => {
                 {PROMO_CODE}
               </span>
               {copied ? (
-                <Check className="h-4 w-4 text-emerald-200" />
+                <Check className="h-4 w-4 text-success" />
               ) : (
                 <Copy className="h-4 w-4 text-white/90 group-hover:text-white" />
               )}
@@ -102,7 +102,7 @@ export const PromoBanner = () => {
 
             <button
               onClick={scrollToPricing}
-              className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-orange-500 to-pink-500 px-5 py-2.5 text-sm md:text-base font-bold text-white shadow-md transition hover:scale-105 hover:shadow-orange-400/60 hover:shadow-xl whitespace-nowrap"
+              className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-warning to-brand px-5 py-2.5 text-sm md:text-base font-bold text-white shadow-md transition hover:scale-105 hover:shadow-orange-400/60 hover:shadow-xl whitespace-nowrap"
             >
               🍹 {t("promoBanner.cta", { defaultValue: "Aprovechar oferta" })}
             </button>

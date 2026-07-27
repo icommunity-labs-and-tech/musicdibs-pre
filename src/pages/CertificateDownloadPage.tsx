@@ -101,7 +101,7 @@ export default function CertificateDownloadPage() {
         )}
         {state === 'done' && (
           <>
-            <CheckCircle2 className="h-10 w-10 mx-auto text-emerald-500" />
+            <CheckCircle2 className="h-10 w-10 mx-auto text-success" />
             <h1 className="text-lg font-semibold">{t('dashboard.certificate.downloadSuccess')}</h1>
             <p className="text-sm text-muted-foreground">{workTitle}</p>
             <Button onClick={() => navigate('/dashboard/register')} className="mt-2">

@@ -77,8 +77,8 @@ export default function BillingPage() {
   const lang = i18n.resolvedLanguage || 'es';
 
   const STATUS_MAP: Record<string, { label: string; className: string }> = {
-    paid: { label: t('dashboard.billing.statusPaid'), className: 'bg-green-500/10 text-green-600 border-green-500/20' },
-    open: { label: t('dashboard.billing.statusOpen'), className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+    paid: { label: t('dashboard.billing.statusPaid'), className: 'bg-success/10 text-success border-success/20' },
+    open: { label: t('dashboard.billing.statusOpen'), className: 'bg-warning/10 text-warning border-warning/20' },
     draft: { label: t('dashboard.billing.statusDraft'), className: 'bg-muted text-muted-foreground border-border' },
     void: { label: t('dashboard.billing.statusVoid'), className: 'bg-muted text-muted-foreground border-border' },
     uncollectible: { label: t('dashboard.billing.statusUncollectible'), className: 'bg-destructive/10 text-destructive border-destructive/20' },
@@ -282,7 +282,7 @@ export default function BillingPage() {
                         <TableCell className="font-medium text-xs">
                           <div className="flex items-center gap-1.5">
                             {inv.payment_type === 'one_time' ? (
-                              <Coins className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                              <Coins className="h-3.5 w-3.5 text-warning shrink-0" />
                             ) : (
                               <RefreshCw className="h-3.5 w-3.5 text-primary shrink-0" />
                             )}
@@ -384,7 +384,7 @@ export default function BillingPage() {
             </div>
             <Badge
               className={cancelAtPeriodEnd
-                ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                ? 'bg-warning/10 text-warning border-warning/20'
                 : plan === 'Free'
                   ? 'bg-muted text-muted-foreground border-border'
                   : 'bg-primary/10 text-primary border-primary/20'}

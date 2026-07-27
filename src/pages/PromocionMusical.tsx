@@ -294,9 +294,9 @@ export default function PromocionMusical() {
                   <div className="col-span-12 lg:col-span-4 relative min-h-[260px] lg:min-h-[360px] overflow-hidden"
                     style={{ background: "radial-gradient(ellipse at center, oklch(0.7 0.25 195 / 0.14), transparent 70%)" }}>
                     <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
-                      <div className="absolute h-44 w-44 rounded-full border border-cyan-300/15" style={{ animation: "spin-slow 28s linear infinite" }} />
-                      <div className="absolute h-60 w-60 rounded-full border border-cyan-300/10" style={{ animation: "spin-slow 40s linear infinite reverse" }} />
-                      <div className="absolute h-72 w-72 rounded-full border border-cyan-300/5" />
+                      <div className="absolute h-44 w-44 rounded-full border border-info/15" style={{ animation: "spin-slow 28s linear infinite" }} />
+                      <div className="absolute h-60 w-60 rounded-full border border-info/10" style={{ animation: "spin-slow 40s linear infinite reverse" }} />
+                      <div className="absolute h-72 w-72 rounded-full border border-info/5" />
                       <div
                         className="relative h-20 w-20 rounded-full flex items-center justify-center"
                         style={{
