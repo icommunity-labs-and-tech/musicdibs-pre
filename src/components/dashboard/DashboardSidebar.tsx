@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { useKycGuard } from '@/hooks/useKycGuard';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { hasDistributionAccess } from '@/lib/planTiers';
 
 type GroupId = 'manager' | 'principal' | 'cuenta' | 'admin';
 type SidebarItem = {
