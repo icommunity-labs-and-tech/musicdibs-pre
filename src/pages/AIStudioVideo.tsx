@@ -698,8 +698,10 @@ const AIStudioVideo = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 {isLoadingTracks ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  <div className="space-y-2 py-1">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-9 w-full rounded-md" />
+                    ))}
                   </div>
                 ) : audioTracks.length === 0 ? (
                   <p className="text-xs text-muted-foreground py-2">
