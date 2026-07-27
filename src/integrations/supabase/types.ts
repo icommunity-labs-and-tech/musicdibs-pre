@@ -719,6 +719,7 @@ export type Database = {
           published_at: string | null
           scheduled: boolean | null
           slug: string
+          subscribers_notified_at: string | null
           tags: string[] | null
           title: string
           updated_at: string | null
@@ -737,6 +738,7 @@ export type Database = {
           published_at?: string | null
           scheduled?: boolean | null
           slug: string
+          subscribers_notified_at?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string | null
@@ -755,6 +757,7 @@ export type Database = {
           published_at?: string | null
           scheduled?: boolean | null
           slug?: string
+          subscribers_notified_at?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string | null
