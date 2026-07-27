@@ -2044,10 +2044,11 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         // subscription_create y checkout.session.completed - PRICE_PLAN queda sin uso.
         const planTier = priceId ? (PRICE_TO_PLAN_ID[priceId] || null) : null;
         const planName = planTier ? (PLAN_ID_TO_PLAN_NAME[planTier] || null) : null;
-        // Capture previous plan BEFORE updating so we can detect Monthly→Annual transitions
+        // Capture previous plan/tier BEFORE updating so we can detect transitions to PLUS+
         const { data: prevUpdProfile } = await supabase
-          .from("profiles").select("subscription_plan").eq("user_id", profile.user_id).single();
+          .from("profiles").select("subscription_plan, subscription_tier").eq("user_id", profile.user_id).single();
         const previousPlanOnUpdate = prevUpdProfile?.subscription_plan || "Free";
+        const previousTierOnUpdate = (prevUpdProfile as { subscription_tier?: string | null } | null)?.subscription_tier || null;
         if (status === "active" && planName) {
           // Diagnostico: este handler carecia de logPriceResolution -- es la
           // TERCERA ruta que puede escribir subscription_plan/tier (ademas de
