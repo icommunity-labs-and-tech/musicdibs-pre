@@ -4,6 +4,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Share2, CheckCircle2, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { hasDistributionAccess } from '@/lib/planTiers';
 import { useTranslation } from 'react-i18next';
 
 interface DistributeButtonProps {
