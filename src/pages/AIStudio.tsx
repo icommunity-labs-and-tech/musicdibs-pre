@@ -4,6 +4,7 @@ import { useProductTracking } from "@/hooks/useProductTracking";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Wand2, Sparkles, Music, AlertTriangle, ArrowLeft, Zap, Edit3, Lightbulb, Coins, Image, Users, Mic2 } from "lucide-react";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { Navbar } from "@/components/Navbar";
