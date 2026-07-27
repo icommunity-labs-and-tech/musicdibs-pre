@@ -667,7 +667,7 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                 <Rocket className="h-10 w-10 text-accent" />
               </div>
               <div className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-success ring-2 ring-background">
-                <CheckCircle2 className="h-4 w-4 text-white" />
+                <CheckCircle2 className="h-4 w-4 text-primary-foreground" />
               </div>
             </div>
           </div>
