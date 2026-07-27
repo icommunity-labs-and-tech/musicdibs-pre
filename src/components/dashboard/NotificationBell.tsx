@@ -33,10 +33,18 @@ export function NotificationBell() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-8 w-8">
-          <Bell className="h-4 w-4" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative h-8 w-8"
+          aria-label={t('dashboard.notifications.title')}
+        >
+          <Bell className="h-4 w-4" aria-hidden="true" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+            <span
+              className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground"
+              aria-label={t('dashboard.notifications.unreadCount', { count: unreadCount, defaultValue: `${unreadCount} sin leer` })}
+            >
               {unreadCount}
             </span>
           )}
