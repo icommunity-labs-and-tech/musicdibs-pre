@@ -221,7 +221,7 @@ export default function PromotionPage() {
                       <Crown className="h-5 w-5 text-brand dark:text-brand" />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold group-hover:text-brand dark:group-hover:text-brand transition-colors">
+                      <h3 className="text-base font-bold text-foreground">
                         {t('dashboard.promoSelector.premiumTitle')}
                       </h3>
                       <PricingLink />
@@ -229,7 +229,7 @@ export default function PromotionPage() {
                   </div>
                   {/* Hero reach number */}
                   <div className="text-right shrink-0">
-                    <p className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-brand to-brand dark:from-brand dark:to-brand bg-clip-text text-transparent leading-none">
+                    <p className="text-4xl sm:text-5xl font-extrabold text-foreground leading-none">
                       +200K
                     </p>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1">
@@ -252,7 +252,8 @@ export default function PromotionPage() {
                     href="https://www.tiktok.com/@musicdibs_"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-brand/15 border border-brand/40 text-brand dark:text-brand font-semibold hover:bg-brand/25 hover:border-brand/60 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-brand/15 border border-brand/40 text-foreground font-semibold hover:bg-brand/25 hover:border-brand/60 transition-colors"
+
                   >
                     <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.75a8.18 8.18 0 004.77 1.52V6.84a4.84 4.84 0 01-1-.15z" /></svg>
                     @musicdibs_
@@ -261,7 +262,7 @@ export default function PromotionPage() {
                     href="https://www.instagram.com/musicdibs/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-brand/15 border border-brand/40 text-brand dark:text-brand font-semibold hover:bg-brand/25 hover:border-brand/60 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-brand/15 border border-brand/40 text-foreground font-semibold hover:bg-brand/25 hover:border-brand/60 transition-colors"
                   >
                     <Instagram className="h-3 w-3" />
                     @musicdibs
@@ -285,7 +286,7 @@ export default function PromotionPage() {
                 </p>
 
                 {/* Scarcity */}
-                <p className="text-xs text-center text-brand dark:text-brand flex items-center justify-center gap-1.5">
+                <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
                   <AlertTriangle className="h-3 w-3 shrink-0" />
                   {t('dashboard.promoSelector.scarcity', 'Solo unas pocas promociones disponibles cada semana')}
                 </p>
