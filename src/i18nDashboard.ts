@@ -27,6 +27,19 @@ const es = {
       newUserDesc: 'Aún no tienes obras registradas. Sigue nuestro asistente paso a paso para lanzar tu primera canción al mundo.',
       newUserBtn: 'Mi primer lanzamiento musical',
     },
+    onboarding: {
+      title: 'Tus primeros pasos en Musicdibs',
+      subtitle: '{{completed}} de {{total}} completados. Sigue avanzando para sacar todo el partido.',
+      cta: 'Continuar con el siguiente paso',
+      dismiss: 'Descartar',
+      steps: {
+        kyc: 'Verifica tu identidad (KYC)',
+        artist: 'Crea tu perfil de artista',
+        work: 'Registra tu primera obra',
+        ai: 'Prueba el AI Music Studio',
+        promo: 'Lanza tu primera promoción',
+      },
+    },
     billing: {
       title: 'Facturación',
       currentPlan: 'Plan actual',
@@ -910,6 +923,19 @@ const en: typeof es = {
       newUserDesc: "You don't have any registered works yet. Follow our step-by-step assistant to launch your first song to the world.",
       newUserBtn: 'My first music release',
     },
+    onboarding: {
+      title: 'Your first steps on Musicdibs',
+      subtitle: '{{completed}} of {{total}} completed. Keep going to get the most out of the platform.',
+      cta: 'Continue with the next step',
+      dismiss: 'Dismiss',
+      steps: {
+        kyc: 'Verify your identity (KYC)',
+        artist: 'Create your artist profile',
+        work: 'Register your first work',
+        ai: 'Try the AI Music Studio',
+        promo: 'Launch your first promotion',
+      },
+    },
     billing: {
       title: 'Billing',
       currentPlan: 'Current plan',
@@ -1792,6 +1818,19 @@ const pt: typeof es = {
       newUserTitle: 'Bem-vindo ao Musicdibs!',
       newUserDesc: 'Você ainda não tem obras registradas. Siga nosso assistente passo a passo para lançar sua primeira música ao mundo.',
       newUserBtn: 'Meu primeiro lançamento musical',
+    },
+    onboarding: {
+      title: 'Seus primeiros passos no Musicdibs',
+      subtitle: '{{completed}} de {{total}} concluídos. Continue avançando para aproveitar ao máximo.',
+      cta: 'Continuar com o próximo passo',
+      dismiss: 'Dispensar',
+      steps: {
+        kyc: 'Verifique sua identidade (KYC)',
+        artist: 'Crie seu perfil de artista',
+        work: 'Registre sua primeira obra',
+        ai: 'Experimente o AI Music Studio',
+        promo: 'Lance sua primeira promoção',
+      },
     },
     billing: {
       title: 'Faturamento',
