@@ -1356,8 +1356,10 @@ serve(async (req) => {
           }
 
           // ââ Distribution onboarding: upgrade Monthly → Annual ââ
-          const ANNUAL_IDS_UP = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
-          if (resolvedPlanId && ANNUAL_IDS_UP.includes(resolvedPlanId) && previousPlanBeforeUpgrade !== "Annual") {
+          // PLUS+ tiers (annual_100+) tienen distribución. annual_20 (Anual Básico) NO.
+          const PLUS_TIERS_UP = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000", "annual_legacy"];
+          const wasPlusUp = !!previousTierBeforeUpgrade && PLUS_TIERS_UP.includes(previousTierBeforeUpgrade);
+          if (resolvedPlanId && PLUS_TIERS_UP.includes(resolvedPlanId) && !wasPlusUp) {
             try {
               const { data: { user: distUser } } = await supabase.auth.admin.getUserById(profile.user_id);
               const distEmail = distUser?.email || "desconocido";
