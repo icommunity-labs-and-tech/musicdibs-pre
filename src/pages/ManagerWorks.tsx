@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Download, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { CertificateButton } from '@/components/dashboard/CertificateButton';
@@ -86,7 +87,33 @@ export default function ManagerWorks() {
     URL.revokeObjectURL(url);
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
+  if (loading) return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-10 w-36" />
+      </div>
+      <div className="flex items-center gap-2 flex-wrap">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-8 w-24" />
+        ))}
+      </div>
+      <Card>
+        <CardContent className="pt-6 space-y-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-8 w-28" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   return (
     <div className="space-y-6">

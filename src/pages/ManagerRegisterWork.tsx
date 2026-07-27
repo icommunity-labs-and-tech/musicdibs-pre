@@ -15,6 +15,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { AlertTriangle, Upload, Search, Link2, X, FileUp, Plus } from 'lucide-react';
 import { SignatureSelector } from '@/components/dashboard/register/SignatureSelector';
+import { Skeleton } from '@/components/ui/skeleton';
 import { buildWorksFilePath, assertWorksPathBelongsToUser } from '@/lib/worksStoragePath';
 
 const WORK_TYPES = [
@@ -223,7 +224,23 @@ export default function ManagerRegisterWork() {
     }
   };
 
-  if (kycLoading || loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
+  if (kycLoading || loading) return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <Skeleton className="h-8 w-96 max-w-full" />
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ))}
+          <Skeleton className="h-32 w-full" />
+          <Skeleton className="h-10 w-40" />
+        </CardContent>
+      </Card>
+    </div>
+  );
   if (!isVerified) return <Navigate to="/dashboard/verify-identity" replace />;
 
   return (

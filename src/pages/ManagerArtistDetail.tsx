@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Pencil, Save, Upload, Search, Link2, Unlink, CheckCircle2, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -102,7 +103,47 @@ export default function ManagerArtistDetail() {
     toast.success('Cuenta desvinculada');
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" /></div>;
+  if (loading) return (
+    <div className="space-y-6">
+      <Skeleton className="h-9 w-24" />
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-9 w-24" />
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="space-y-2">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><Skeleton className="h-5 w-56" /></CardHeader>
+        <CardContent><Skeleton className="h-20 w-full" /></CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <Skeleton className="h-6 w-40" />
+          <Skeleton className="h-9 w-44" />
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-4 w-40" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
   if (!artist) return <p className="text-center py-8 text-muted-foreground">Artista no encontrado.</p>;
 
   return (
