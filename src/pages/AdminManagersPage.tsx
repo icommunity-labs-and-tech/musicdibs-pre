@@ -430,7 +430,7 @@ export default function AdminManagersPage() {
                                 {a.status === 'pending_acceptance' && (
                                   <Button
                                     size="sm"
-                                    className="bg-warning hover:bg-warning text-white"
+                                    className="bg-warning hover:bg-warning text-warning-foreground"
                                     onClick={() => setActivateTarget(a)}
                                   >
                                     <CreditCard className="w-3 h-3 mr-1" /> Confirmar aceptación y cobrar
@@ -559,7 +559,7 @@ export default function AdminManagersPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setActivateTarget(null)} disabled={activating}>Cancelar</Button>
             <Button
-              className="bg-warning hover:bg-warning text-white"
+              className="bg-warning hover:bg-warning text-warning-foreground"
               onClick={activateContract}
               disabled={activating}
             >

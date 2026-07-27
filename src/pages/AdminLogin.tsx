@@ -81,30 +81,30 @@ const AdminLogin = () => {
       <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
       <div className="w-full max-w-md">
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+        <div className="bg-foreground/5 border border-foreground/10 rounded-2xl p-8">
           <div className="text-center mb-8">
             <div className="w-14 h-14 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <Lock className="w-7 h-7 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-white">Admin Panel</h1>
-            <p className="text-white/50 text-sm mt-1">Musicdibs CMS</p>
+            <h1 className="text-2xl font-bold text-foreground">Admin Panel</h1>
+            <p className="text-foreground/50 text-sm mt-1">Musicdibs CMS</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="email" className="text-white/70">Email</Label>
+              <Label htmlFor="email" className="text-foreground/70">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="bg-white/5 border-white/10 text-white"
+                className="bg-foreground/5 border-foreground/10 text-foreground"
                 placeholder="admin@musicdibs.com"
               />
             </div>
             <div>
-              <Label htmlFor="password" className="text-white/70">Contraseña</Label>
+              <Label htmlFor="password" className="text-foreground/70">Contraseña</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -112,7 +112,7 @@ const AdminLogin = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="bg-white/5 border-white/10 text-white pr-10"
+                  className="bg-foreground/5 border-foreground/10 text-foreground pr-10"
                   placeholder="••••••••"
                 />
                 <button
@@ -131,7 +131,7 @@ const AdminLogin = () => {
               type="button"
               onClick={handleResetPassword}
               disabled={resetting}
-              className="w-full text-center text-sm text-white/60 hover:text-white transition mt-2 disabled:opacity-50"
+              className="w-full text-center text-sm text-foreground/60 hover:text-foreground transition mt-2 disabled:opacity-50"
             >
               {resetting ? "Enviando…" : "¿Has olvidado tu contraseña?"}
             </button>

@@ -57,7 +57,7 @@ const ToolbarButton = forwardRef<HTMLButtonElement, {
   <Button
     ref={ref} type="button" variant="ghost" size="sm"
     onClick={onClick} disabled={disabled} title={title}
-    className={`h-8 w-8 p-0 ${active ? 'bg-primary/20 text-primary' : 'text-white/70 hover:text-white'}`}
+    className={`h-8 w-8 p-0 ${active ? 'bg-primary/20 text-primary' : 'text-foreground/70 hover:text-foreground'}`}
   >
     {children}
   </Button>
@@ -111,10 +111,10 @@ function Toolbar({ editor }: { editor: Editor }) {
   const currentColor = editor.getAttributes('textStyle').color || '#ffffff';
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 border-b border-white/10 bg-white/5 p-1.5 rounded-t-md sticky top-0 z-10">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-foreground/10 bg-foreground/5 p-1.5 rounded-t-md sticky top-0 z-10">
       <ToolbarButton title="Deshacer" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}><Undo className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Rehacer" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()}><Redo className="w-4 h-4" /></ToolbarButton>
-      <div className="w-px h-5 bg-white/10 mx-1" />
+      <div className="w-px h-5 bg-foreground/10 mx-1" />
 
       {/* Font family */}
       <select
@@ -125,7 +125,7 @@ function Toolbar({ editor }: { editor: Editor }) {
           else editor.chain().focus().unsetFontFamily().run();
         }}
         title="Tipo de letra"
-        className="h-8 rounded bg-white/10 border border-white/10 text-white/80 text-xs px-1.5 max-w-[120px]"
+        className="h-8 rounded bg-foreground/10 border border-foreground/10 text-foreground/80 text-xs px-1.5 max-w-[120px]"
       >
         {FONT_FAMILIES.map((f) => <option key={f.label} value={f.value} className="bg-neutral-900">{f.label}</option>)}
       </select>
@@ -139,7 +139,7 @@ function Toolbar({ editor }: { editor: Editor }) {
           else (editor.chain().focus() as any).unsetFontSize().run();
         }}
         title="Tamaño"
-        className="h-8 rounded bg-white/10 border border-white/10 text-white/80 text-xs px-1.5"
+        className="h-8 rounded bg-foreground/10 border border-foreground/10 text-foreground/80 text-xs px-1.5"
       >
         <option value="" className="bg-neutral-900">Tamaño</option>
         {FONT_SIZES.map((s) => <option key={s} value={s} className="bg-neutral-900">{s}</option>)}
@@ -151,16 +151,16 @@ function Toolbar({ editor }: { editor: Editor }) {
         value={currentColor}
         onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
         title="Color de texto"
-        className="h-8 w-8 rounded cursor-pointer bg-transparent border border-white/10"
+        className="h-8 w-8 rounded cursor-pointer bg-transparent border border-foreground/10"
       />
 
-      <div className="w-px h-5 bg-white/10 mx-1" />
+      <div className="w-px h-5 bg-foreground/10 mx-1" />
       <ToolbarButton title="Párrafo" onClick={() => editor.chain().focus().setParagraph().run()} active={editor.isActive('paragraph')}><Pilcrow className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="H1" onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })}><Heading1 className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="H2" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })}><Heading2 className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="H3" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })}><Heading3 className="w-4 h-4" /></ToolbarButton>
 
-      <div className="w-px h-5 bg-white/10 mx-1" />
+      <div className="w-px h-5 bg-foreground/10 mx-1" />
       <ToolbarButton title="Negrita" onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')}><Bold className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Cursiva" onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')}><Italic className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Subrayado" onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive('underline')}><UnderlineIcon className="w-4 h-4" /></ToolbarButton>
@@ -168,19 +168,19 @@ function Toolbar({ editor }: { editor: Editor }) {
       <ToolbarButton title="Código" onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')}><Code className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Quitar formato" onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}><RemoveFormatting className="w-4 h-4" /></ToolbarButton>
 
-      <div className="w-px h-5 bg-white/10 mx-1" />
+      <div className="w-px h-5 bg-foreground/10 mx-1" />
       <ToolbarButton title="Alinear izquierda" onClick={() => editor.chain().focus().setTextAlign('left').run()} active={editor.isActive({ textAlign: 'left' })}><AlignLeft className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Centrar" onClick={() => editor.chain().focus().setTextAlign('center').run()} active={editor.isActive({ textAlign: 'center' })}><AlignCenter className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Alinear derecha" onClick={() => editor.chain().focus().setTextAlign('right').run()} active={editor.isActive({ textAlign: 'right' })}><AlignRight className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Justificar" onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={editor.isActive({ textAlign: 'justify' })}><AlignJustify className="w-4 h-4" /></ToolbarButton>
 
-      <div className="w-px h-5 bg-white/10 mx-1" />
+      <div className="w-px h-5 bg-foreground/10 mx-1" />
       <ToolbarButton title="Lista" onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')}><List className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Lista ordenada" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')}><ListOrdered className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Cita" onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')}><Quote className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Separador" onClick={() => editor.chain().focus().setHorizontalRule().run()}><Minus className="w-4 h-4" /></ToolbarButton>
 
-      <div className="w-px h-5 bg-white/10 mx-1" />
+      <div className="w-px h-5 bg-foreground/10 mx-1" />
       <ToolbarButton title="Insertar enlace" onClick={addLink} active={editor.isActive('link')}><LinkIcon className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Subir imagen" onClick={() => fileInputRef.current?.click()}><ImageIcon className="w-4 h-4" /></ToolbarButton>
       <input
@@ -215,11 +215,11 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
       attributes: {
         class:
           'prose prose-invert max-w-none min-h-[400px] px-4 py-3 focus:outline-none ' +
-          'prose-headings:text-white prose-h1:text-3xl prose-h1:font-bold prose-h1:mt-6 prose-h1:mb-3 ' +
+          'prose-headings:text-foreground prose-h1:text-3xl prose-h1:font-bold prose-h1:mt-6 prose-h1:mb-3 ' +
           'prose-h2:text-2xl prose-h2:font-semibold prose-h2:mt-5 prose-h2:mb-2 ' +
           'prose-h3:text-xl prose-h3:font-semibold prose-h3:mt-4 prose-h3:mb-2 ' +
-          'prose-p:text-white/90 prose-a:text-primary prose-strong:text-white ' +
-          'prose-blockquote:text-white/70 prose-code:text-primary prose-li:text-white/90',
+          'prose-p:text-foreground/90 prose-a:text-primary prose-strong:text-foreground ' +
+          'prose-blockquote:text-foreground/70 prose-code:text-primary prose-li:text-foreground/90',
       },
     },
   });
@@ -236,7 +236,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: Props) 
   if (!editor) return null;
 
   return (
-    <div className="border border-white/10 rounded-md bg-white/5 overflow-hidden">
+    <div className="border border-foreground/10 rounded-md bg-foreground/5 overflow-hidden">
       <Toolbar editor={editor} />
       <EditorContent editor={editor} />
     </div>
