@@ -66,7 +66,7 @@ export const CoversSection = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
-  const [isImprovingDesc, setIsImprovingDesc] = useState(false);
+  const { improve, isImproving: isImprovingDesc } = useImprovePrompt({ maxLength: 1000, successMessage: t('aiCovers.descImproved') });
 
   const [resolution, setResolution] = useState<'1024' | '4096'>('1024');
   const [coverMode, setCoverMode] = useState<CoverMode>('none');
