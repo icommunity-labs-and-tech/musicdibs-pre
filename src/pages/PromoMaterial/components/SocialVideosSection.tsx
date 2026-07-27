@@ -89,22 +89,8 @@ export const SocialVideosSection = () => {
   };
 
   const handleImproveDescription = async () => {
-    if (!description.trim()) return;
-    setIsImprovingDesc(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('improve-prompt', {
-        body: { prompt: description, mode: 'video_prompt' },
-      });
-      if (error || data?.error) throw new Error(data?.error || error?.message);
-      if (data?.improved) {
-        setDescription(data.improved.slice(0, 2000));
-        toast({ title: tr('promptImproved'), description: tr('promptImprovedDesc') });
-      }
-    } catch {
-      toast({ title: tr('error'), description: tr('improveError'), variant: 'destructive' });
-    } finally {
-      setIsImprovingDesc(false);
-    }
+    const improved = await improve({ prompt: description, mode: 'video_prompt' });
+    if (improved) setDescription(improved);
   };
 
   const handleGenerate = async () => {
