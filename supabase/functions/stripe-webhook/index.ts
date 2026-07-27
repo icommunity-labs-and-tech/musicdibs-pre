@@ -2109,8 +2109,10 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           }
 
           // ââ Distribution onboarding: transition to Annual (idempotent via idempotency_key) ââ
-          const ANNUAL_TIERS_SU = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
-          if (planTier && ANNUAL_TIERS_SU.includes(planTier) && previousPlanOnUpdate !== "Annual") {
+          // Distribution onboarding: transición a PLUS+ (annual_100+). annual_20 NO cuenta como PLUS+.
+          const PLUS_TIERS_SU = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000", "annual_legacy"];
+          const wasPlusSU = !!previousTierOnUpdate && PLUS_TIERS_SU.includes(previousTierOnUpdate);
+          if (planTier && PLUS_TIERS_SU.includes(planTier) && !wasPlusSU) {
             try {
               const { data: { user: distUser } } = await supabase.auth.admin.getUserById(profile.user_id);
               const distEmail = distUser?.email || "desconocido";
