@@ -17,6 +17,7 @@ import {
   Users, ShoppingBag, BarChart3, Eye, Calendar, Loader2, ArrowUpDown,
   Gift, AlertTriangle, Coins,
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/HistoricalDataNotice';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
