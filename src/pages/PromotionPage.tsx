@@ -200,7 +200,7 @@ export default function PromotionPage() {
 
             {/* Premium promo card — enhanced */}
             <Card
-              className="border-warning/30 bg-gradient-to-br from-warning/50 to-warning/30 dark:from-warning/20 dark:to-warning/10 shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
+              className="border-brand/30 bg-gradient-to-br from-brand/50 to-brand/30 dark:from-brand/20 dark:to-brand/10 shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
             >
               {/* Decorative background pattern */}
               <div className="absolute inset-0 opacity-[0.04] pointer-events-none">
@@ -211,17 +211,17 @@ export default function PromotionPage() {
                 <div className="absolute top-2 left-[30%]"><svg viewBox="0 0 24 24" className="h-9 w-9" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.75a8.18 8.18 0 004.77 1.52V6.84a4.84 4.84 0 01-1-.15z" /></svg></div>
               </div>
 
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-warning/10 to-transparent" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-brand/10 to-transparent" />
 
               <CardContent className="p-6 sm:p-8 space-y-5 relative">
                 {/* Top row: icon + hero number */}
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 rounded-xl bg-warning/10 flex items-center justify-center">
-                      <Crown className="h-5 w-5 text-warning dark:text-warning" />
+                    <div className="h-11 w-11 rounded-xl bg-brand/10 flex items-center justify-center">
+                      <Crown className="h-5 w-5 text-brand dark:text-brand" />
                     </div>
                     <div>
-                      <h3 className="text-base font-bold group-hover:text-warning dark:group-hover:text-warning transition-colors">
+                      <h3 className="text-base font-bold group-hover:text-brand dark:group-hover:text-brand transition-colors">
                         {t('dashboard.promoSelector.premiumTitle')}
                       </h3>
                       <PricingLink />
@@ -229,7 +229,7 @@ export default function PromotionPage() {
                   </div>
                   {/* Hero reach number */}
                   <div className="text-right shrink-0">
-                    <p className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-warning to-warning dark:from-warning dark:to-warning bg-clip-text text-transparent leading-none">
+                    <p className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-brand to-brand dark:from-brand dark:to-brand bg-clip-text text-transparent leading-none">
                       +200K
                     </p>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-1">
@@ -252,7 +252,7 @@ export default function PromotionPage() {
                     href="https://www.tiktok.com/@musicdibs_"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-warning/15 border border-warning/40 text-warning dark:text-warning font-semibold hover:bg-warning/25 hover:border-warning/60 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-brand/15 border border-brand/40 text-brand dark:text-brand font-semibold hover:bg-brand/25 hover:border-brand/60 transition-colors"
                   >
                     <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.75a8.18 8.18 0 004.77 1.52V6.84a4.84 4.84 0 01-1-.15z" /></svg>
                     @musicdibs_
@@ -261,7 +261,7 @@ export default function PromotionPage() {
                     href="https://www.instagram.com/musicdibs/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-warning/15 border border-warning/40 text-warning dark:text-warning font-semibold hover:bg-warning/25 hover:border-warning/60 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-brand/15 border border-brand/40 text-brand dark:text-brand font-semibold hover:bg-brand/25 hover:border-brand/60 transition-colors"
                   >
                     <Instagram className="h-3 w-3" />
                     @musicdibs
@@ -270,22 +270,22 @@ export default function PromotionPage() {
 
                 {/* Feature badges */}
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="text-[11px] px-2.5 py-0.5 gap-1 border-warning/20 rounded-full">
+                  <Badge variant="outline" className="text-[11px] px-2.5 py-0.5 gap-1 border-brand/20 rounded-full">
                     <Video className="h-3 w-3" /> {t('dashboard.promoSelector.customVideo')}
                   </Badge>
-                  <Badge variant="outline" className="text-[11px] px-2.5 py-0.5 gap-1 border-warning/20 rounded-full">
-                    <Crown className="h-3 w-3 text-warning dark:text-warning" /> Premium
+                  <Badge variant="outline" className="text-[11px] px-2.5 py-0.5 gap-1 border-brand/20 rounded-full">
+                    <Crown className="h-3 w-3 text-brand dark:text-brand" /> Premium
                   </Badge>
                 </div>
 
                 {/* Video promo note */}
                 <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Video className="h-3.5 w-3.5 text-warning/60 dark:text-warning/60 shrink-0" />
+                  <Video className="h-3.5 w-3.5 text-brand/60 dark:text-brand/60 shrink-0" />
                   {t('dashboard.promoSelector.includesVideoNote', '🎥 Incluye vídeo promocional personalizado')}
                 </p>
 
                 {/* Scarcity */}
-                <p className="text-xs text-center text-warning dark:text-warning flex items-center justify-center gap-1.5">
+                <p className="text-xs text-center text-brand dark:text-brand flex items-center justify-center gap-1.5">
                   <AlertTriangle className="h-3 w-3 shrink-0" />
                   {t('dashboard.promoSelector.scarcity', 'Solo unas pocas promociones disponibles cada semana')}
                 </p>
@@ -294,7 +294,7 @@ export default function PromotionPage() {
                 <Button
                   size="lg"
                   onClick={() => setShowForm(true)}
-                  className="w-full text-sm font-semibold h-12 gap-2 group-hover:shadow-lg transition-all bg-gradient-to-r from-warning to-warning hover:from-warning hover:to-warning text-white border-0"
+                  className="w-full text-sm font-semibold h-12 gap-2 group-hover:shadow-lg transition-all bg-gradient-to-r from-brand to-brand hover:from-brand hover:to-brand text-white border-0"
                 >
                   <Rocket className="h-4 w-4" />
                   {t('dashboard.promoSelector.premiumCtaNew', 'Impulsar mi canción ahora 🚀')}
