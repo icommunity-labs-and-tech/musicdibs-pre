@@ -119,7 +119,7 @@ const AIStudioCovers = () => {
       toast.success(t('aiCovers.coverGenerated'))
       track('cover_generated', { feature: 'cover' })
     } catch (err) {
-      const { userMessage } = (await import('@/lib/aiErrorHandler')).parseAiError(err)
+      const { userMessage } = parseAiError(err)
       setGenError(userMessage)
       toast.error(userMessage)
     }
