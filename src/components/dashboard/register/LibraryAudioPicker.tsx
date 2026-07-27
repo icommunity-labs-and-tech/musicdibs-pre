@@ -27,38 +27,22 @@ interface LibraryAudioPickerProps {
 export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudioPickerProps) {
   const { user } = useAuth();
   const { t } = useTranslation();
-  const [assets, setAssets] = useState<AudioAsset[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { items, loading } = useAudioLibrary({ userId: user?.id, enabled: open });
   const [search, setSearch] = useState('');
   const [playingId, setPlayingId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    if (!open || !user) return;
-    setLoading(true);
-    supabase
-      .from('ai_generations')
-      .select('id, prompt, audio_url, genre, mood, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        if (data) {
-          setAssets(
-            data
-              .filter((s) => s.audio_url)
-              .map((s) => ({
-                id: s.id,
-                title: s.prompt?.substring(0, 80) || t('wizard.library.untitled'),
-                url: s.audio_url,
-                createdAt: s.created_at,
-                genre: s.genre || undefined,
-                mood: s.mood || undefined,
-              }))
-          );
-        }
-        setLoading(false);
-      });
-  }, [open, user]);
+  const assets: AudioAsset[] = useMemo(
+    () => items.map((it) => ({
+      id: it.id,
+      title: it.title || t('wizard.library.untitled'),
+      url: it.audio_url,
+      createdAt: it.created_at,
+      genre: it.genre || undefined,
+      mood: it.mood || undefined,
+    })),
+    [items, t],
+  );
 
   const filtered = assets.filter((a) =>
     a.title.toLowerCase().includes(search.toLowerCase())
