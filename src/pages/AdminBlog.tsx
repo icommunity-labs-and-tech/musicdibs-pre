@@ -547,32 +547,32 @@ const AdminBlog = () => {
 
   return (
     <div className="min-h-screen page-bg">
-      <header className="border-b border-white/10 px-6 py-4">
+      <header className="border-b border-foreground/10 px-6 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Newspaper className="w-6 h-6 text-primary" />
             <h1 className="text-xl font-bold">Blog CMS</h1>
-            <span className="text-xs text-white/40 bg-white/5 px-2 py-0.5 rounded">{posts?.length || 0} posts</span>
+            <span className="text-xs text-foreground/40 bg-foreground/5 px-2 py-0.5 rounded">{posts?.length || 0} posts</span>
           </div>
           <div className="flex items-center gap-2 flex-wrap justify-end">
-            <Button variant="outline" size="sm" onClick={() => setPlannerOpen(true)} className="gap-1 text-black border-white/20">
+            <Button variant="outline" size="sm" onClick={() => setPlannerOpen(true)} className="gap-1 text-black border-foreground/20">
               <Sparkles className="w-4 h-4" /> 🤖 Generar plan de contenido
             </Button>
             <Button
               variant="outline" size="sm"
               onClick={regenerateWordPressCovers}
               disabled={regeneratingCovers}
-              className="gap-1 text-black border-white/20"
+              className="gap-1 text-black border-foreground/20"
             >
               {regeneratingCovers ? <Loader2 className="w-4 h-4 animate-spin" /> : "🔄"} Regenerar portadas sin imagen
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/admin/ab-tests")} className="gap-1 text-black border-white/20">
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/ab-tests")} className="gap-1 text-black border-foreground/20">
               <BarChart3 className="w-4 h-4" /> A/B Tests
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate("/news")} className="gap-1 text-black border-white/20">
+            <Button variant="outline" size="sm" onClick={() => navigate("/news")} className="gap-1 text-black border-foreground/20">
               <Eye className="w-4 h-4" /> Ver blog
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1 text-white/50">
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-1 text-foreground/50">
               <LogOut className="w-4 h-4" /> Salir
             </Button>
           </div>
@@ -581,19 +581,19 @@ const AdminBlog = () => {
 
       {(regeneratingCovers || coverResults) && (
         <div className="max-w-6xl mx-auto px-6 pt-4">
-          <div className="rounded-lg border border-white/10 bg-white/5 p-4 space-y-2">
+          <div className="rounded-lg border border-foreground/10 bg-foreground/5 p-4 space-y-2">
             {regeneratingCovers ? (
               <>
-                <p className="text-sm text-white/80">
+                <p className="text-sm text-foreground/80">
                   Regenerando portada {Math.min(coverProgress.done + 1, coverProgress.total)} de {coverProgress.total}
-                  {coverProgress.current && <> — <span className="text-white/60">{coverProgress.current}</span></>}
+                  {coverProgress.current && <> — <span className="text-foreground/60">{coverProgress.current}</span></>}
                 </p>
                 <Progress value={(coverProgress.done / Math.max(coverProgress.total, 1)) * 100} />
               </>
             ) : coverResults && (
               <div className="flex items-start justify-between gap-4">
                 <div className="text-sm">
-                  <p className="text-white/90">
+                  <p className="text-foreground/90">
                     ✅ Regeneradas: <span className="text-success font-semibold">{coverResults.ok}</span> ·
                     {" "}❌ Fallidas: <span className="text-red-400 font-semibold">{coverResults.fail}</span>
                   </p>
@@ -603,7 +603,7 @@ const AdminBlog = () => {
                     </ul>
                   )}
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setCoverResults(null)} className="text-white/50">Cerrar</Button>
+                <Button variant="ghost" size="sm" onClick={() => setCoverResults(null)} className="text-foreground/50">Cerrar</Button>
               </div>
             )}
           </div>
@@ -618,7 +618,7 @@ const AdminBlog = () => {
                 <h2 className="text-xl font-semibold text-foreground">Planificación de contenido IA</h2>
                 <p className="text-sm text-muted-foreground">Configura, revisa y genera borradores planificados.</p>
               </div>
-              <Button variant="outline" onClick={() => setPlannerOpen(false)} className="text-black border-white/20">Cerrar</Button>
+              <Button variant="outline" onClick={() => setPlannerOpen(false)} className="text-black border-foreground/20">Cerrar</Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 rounded-lg border border-border bg-muted/30 p-4">
@@ -718,31 +718,31 @@ const AdminBlog = () => {
       <div className="max-w-6xl mx-auto px-6 py-8">
         {showForm ? (
           <div className="max-w-3xl mx-auto">
-            <button onClick={closeForm} className="flex items-center gap-2 text-white/50 hover:text-white text-sm mb-6">
+            <button onClick={closeForm} className="flex items-center gap-2 text-foreground/50 hover:text-foreground text-sm mb-6">
               <ArrowLeft className="w-4 h-4" /> Volver a la lista
             </button>
 
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6 space-y-5">
+            <div className="bg-foreground/5 border border-foreground/10 rounded-xl p-6 space-y-5">
               <h2 className="text-lg font-semibold">{editing ? "Editar artículo" : "Nuevo artículo"}</h2>
               <AIArticleGenerator form={form} setForm={setForm} slugify={slugify} isEditing={!!editing} currentPostId={editing} />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-white/70">Título *</Label>
-                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: editing ? form.slug : slugify(e.target.value) })} className="bg-white/5 border-white/10 text-white" />
+                  <Label className="text-foreground/70">Título *</Label>
+                  <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value, slug: editing ? form.slug : slugify(e.target.value) })} className="bg-foreground/5 border-foreground/10 text-foreground" />
                 </div>
                 <div>
-                  <Label className="text-white/70">Slug</Label>
-                  <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="bg-white/5 border-white/10 text-white" />
+                  <Label className="text-foreground/70">Slug</Label>
+                  <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="bg-foreground/5 border-foreground/10 text-foreground" />
                 </div>
               </div>
 
               <div>
-                <Label className="text-white/70">Extracto</Label>
-                <Textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} rows={3} className="bg-white/5 border-white/10 text-white" />
+                <Label className="text-foreground/70">Extracto</Label>
+                <Textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} rows={3} className="bg-foreground/5 border-foreground/10 text-foreground" />
               </div>
               <div>
-                <Label className="text-white/70">Contenido</Label>
+                <Label className="text-foreground/70">Contenido</Label>
                 <RichTextEditor
                   value={form.content}
                   onChange={(html) => setForm({ ...form, content: html })}
@@ -752,43 +752,43 @@ const AdminBlog = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-white/70">URL de imagen (thumbnail)</Label>
-                  <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="bg-white/5 border-white/10 text-white" placeholder="https://..." />
+                  <Label className="text-foreground/70">URL de imagen (thumbnail)</Label>
+                  <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} className="bg-foreground/5 border-foreground/10 text-foreground" placeholder="https://..." />
                   {form.image_url && (
                     <img
                       src={form.image_url}
                       alt="preview"
-                      className="mt-2 max-h-32 rounded border border-white/10 object-cover"
+                      className="mt-2 max-h-32 rounded border border-foreground/10 object-cover"
                       onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                     />
                   )}
                 </div>
                 <div>
-                  <Label className="text-white/70">Categoría</Label>
-                  <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="bg-white/5 border-white/10 text-white" />
+                  <Label className="text-foreground/70">Categoría</Label>
+                  <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="bg-foreground/5 border-foreground/10 text-foreground" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-white/70">Tags (separados por coma)</Label>
-                  <Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} className="bg-white/5 border-white/10 text-white" placeholder="Musicdibs, Blockchain" />
+                  <Label className="text-foreground/70">Tags (separados por coma)</Label>
+                  <Input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} className="bg-foreground/5 border-foreground/10 text-foreground" placeholder="Musicdibs, Blockchain" />
                 </div>
                 <div>
-                  <Label className="text-white/70">Autor</Label>
-                  <Input value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} className="bg-white/5 border-white/10 text-white" />
+                  <Label className="text-foreground/70">Autor</Label>
+                  <Input value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} className="bg-foreground/5 border-foreground/10 text-foreground" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-white/70">Fecha de publicación</Label>
-                  <Input type="date" value={form.published_at} onChange={(e) => setForm({ ...form, published_at: e.target.value })} className="bg-white/5 border-white/10 text-white" />
+                  <Label className="text-foreground/70">Fecha de publicación</Label>
+                  <Input type="date" value={form.published_at} onChange={(e) => setForm({ ...form, published_at: e.target.value })} className="bg-foreground/5 border-foreground/10 text-foreground" />
                 </div>
                 <div className="flex flex-col gap-2 pt-6">
                   <div className="flex items-center gap-3">
                     <Switch checked={form.published} onCheckedChange={(v) => setForm({ ...form, published: v })} />
-                    <Label className="text-white/70">{form.published ? "Publicado" : form.published_at ? "⏰ Planificado" : "Borrador"}</Label>
+                    <Label className="text-foreground/70">{form.published ? "Publicado" : form.published_at ? "⏰ Planificado" : "Borrador"}</Label>
                   </div>
                 </div>
               </div>
@@ -845,12 +845,12 @@ const AdminBlog = () => {
               {activeView === "articles" && (
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                    <Input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar por título, categoría o tags..." className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                    <Input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Buscar por título, categoría o tags..." className="pl-10 bg-foreground/5 border-foreground/10 text-foreground placeholder:text-foreground/30" />
                   </div>
                   <div className="flex gap-2 overflow-x-auto">
                     {([{ key: "all", label: "Todos" }, { key: "published", label: "Publicados" }, { key: "scheduled", label: "⏰ Programados" }, { key: "draft", label: "Borradores" }] as const).map((f) => (
-                      <button key={f.key} onClick={() => setFilter(f.key)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${filter === f.key ? "bg-primary text-primary-foreground" : "bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70"}`}>
+                      <button key={f.key} onClick={() => setFilter(f.key)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${filter === f.key ? "bg-primary text-primary-foreground" : "bg-foreground/5 text-foreground/50 hover:bg-foreground/10 hover:text-foreground/70"}`}>
                         {f.label}{f.key === "all" ? ` (${posts?.length || 0})` : ` (${posts?.filter((p) => getPostStatus(p) === f.key).length || 0})`}
                       </button>
                     ))}
@@ -860,12 +860,12 @@ const AdminBlog = () => {
             </div>
 
             {isLoading ? (
-              <div className="text-center py-20 text-white/40">Cargando...</div>
+              <div className="text-center py-20 text-foreground/40">Cargando...</div>
             ) : activeView === "planning" ? (
               plannedPosts && plannedPosts.length > 0 ? (
-                <div className="overflow-x-auto border border-white/10 rounded-lg bg-white/5">
+                <div className="overflow-x-auto border border-foreground/10 rounded-lg bg-foreground/5">
                   <table className="w-full text-sm">
-                    <thead className="text-white/50 border-b border-white/10">
+                    <thead className="text-foreground/50 border-b border-foreground/10">
                       <tr>
                         <th className="p-3 text-left">Título</th>
                         <th className="p-3 text-left">Idioma</th>
@@ -877,18 +877,18 @@ const AdminBlog = () => {
                     </thead>
                     <tbody>
                       {plannedPosts.map((post) => (
-                        <tr key={post.id} className="border-b border-white/10 last:border-0">
-                          <td className="p-3 text-white/90 min-w-72">{post.title}</td>
-                          <td className="p-3 text-white/60 uppercase">{post.language || "es"}</td>
-                          <td className="p-3 text-white/60">{post.category}</td>
-                          <td className="p-3 text-white/60">{post.published_at ? new Date(post.published_at).toLocaleDateString("es-ES") : "Sin fecha"}</td>
+                        <tr key={post.id} className="border-b border-foreground/10 last:border-0">
+                          <td className="p-3 text-foreground/90 min-w-72">{post.title}</td>
+                          <td className="p-3 text-foreground/60 uppercase">{post.language || "es"}</td>
+                          <td className="p-3 text-foreground/60">{post.category}</td>
+                          <td className="p-3 text-foreground/60">{post.published_at ? new Date(post.published_at).toLocaleDateString("es-ES") : "Sin fecha"}</td>
                           <td className="p-3"><span className="text-xs rounded bg-primary/20 text-primary px-2 py-1">{post.published_at ? "planificado" : "borrador"}</span></td>
                           <td className="p-3">
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="icon" onClick={() => { setPreviewFromForm(false); setPreviewPost(post); }} className="h-8 w-8 text-white/50 hover:text-white" title="Vista previa"><Eye className="w-4 h-4" /></Button>
-                              <Button variant="ghost" size="icon" onClick={() => startEdit(post)} className="h-8 w-8 text-white/50 hover:text-white"><Pencil className="w-4 h-4" /></Button>
-                              <Button variant="ghost" size="sm" onClick={() => publishNowMutation.mutate(post.id)} className="text-white/50 hover:text-white">Publicar ahora</Button>
-                              <Button variant="ghost" size="icon" onClick={() => confirm("¿Eliminar este artículo?") && deleteMutation.mutate(post.id)} className="h-8 w-8 text-white/50 hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => { setPreviewFromForm(false); setPreviewPost(post); }} className="h-8 w-8 text-foreground/50 hover:text-foreground" title="Vista previa"><Eye className="w-4 h-4" /></Button>
+                              <Button variant="ghost" size="icon" onClick={() => startEdit(post)} className="h-8 w-8 text-foreground/50 hover:text-foreground"><Pencil className="w-4 h-4" /></Button>
+                              <Button variant="ghost" size="sm" onClick={() => publishNowMutation.mutate(post.id)} className="text-foreground/50 hover:text-foreground">Publicar ahora</Button>
+                              <Button variant="ghost" size="icon" onClick={() => confirm("¿Eliminar este artículo?") && deleteMutation.mutate(post.id)} className="h-8 w-8 text-foreground/50 hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
                             </div>
                           </td>
                         </tr>
@@ -896,33 +896,33 @@ const AdminBlog = () => {
                     </tbody>
                   </table>
                 </div>
-              ) : <div className="text-center py-20 text-white/40">No hay artículos planificados.</div>
+              ) : <div className="text-center py-20 text-foreground/40">No hay artículos planificados.</div>
             ) : filteredPosts && filteredPosts.length > 0 ? (
               <div className="space-y-2">
                 {filteredPosts.map((post) => (
-                  <div key={post.id} className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-lg px-4 py-3 hover:bg-white/[0.07] transition-colors">
+                  <div key={post.id} className="flex items-center gap-4 bg-foreground/5 border border-foreground/10 rounded-lg px-4 py-3 hover:bg-foreground/[0.07] transition-colors">
                     {post.image_url && <img src={post.image_url} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-medium text-white/90 truncate">{post.title}</h3>
-                        {post.published ? <Eye className="w-3.5 h-3.5 text-success flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />}
+                        <h3 className="text-sm font-medium text-foreground/90 truncate">{post.title}</h3>
+                        {post.published ? <Eye className="w-3.5 h-3.5 text-success flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 text-foreground/30 flex-shrink-0" />}
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-white/40">
+                      <div className="flex items-center gap-2 text-xs text-foreground/40">
                         <span>{post.category}</span><span>·</span><span className="uppercase">{post.language || "es"}</span>
                         {post.published_at && <><span>·</span><span>{new Date(post.published_at).toLocaleDateString("es-ES")}</span></>}
                       </div>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
-                      <Button variant="ghost" size="icon" onClick={() => { setPreviewFromForm(false); setPreviewPost(post); }} className="h-8 w-8 text-white/50 hover:text-white" title="Vista previa"><Eye className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => startEdit(post)} className="h-8 w-8 text-white/50 hover:text-white"><Pencil className="w-4 h-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => confirm("¿Eliminar este artículo?") && deleteMutation.mutate(post.id)} className="h-8 w-8 text-white/50 hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setPreviewFromForm(false); setPreviewPost(post); }} className="h-8 w-8 text-foreground/50 hover:text-foreground" title="Vista previa"><Eye className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => startEdit(post)} className="h-8 w-8 text-foreground/50 hover:text-foreground"><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => confirm("¿Eliminar este artículo?") && deleteMutation.mutate(post.id)} className="h-8 w-8 text-foreground/50 hover:text-red-400"><Trash2 className="w-4 h-4" /></Button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-20">
-                <p className="text-white/40 mb-4">No hay artículos aún.</p>
+                <p className="text-foreground/40 mb-4">No hay artículos aún.</p>
                 <Button onClick={startCreate} className="gap-2"><Plus className="w-4 h-4" /> Crear el primero</Button>
               </div>
             )}
