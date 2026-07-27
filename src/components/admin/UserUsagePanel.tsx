@@ -59,8 +59,8 @@ export default function UserUsagePanel({ userId }: UserUsagePanelProps) {
 
   const statusBadge = (status: string) => {
     const map: Record<string, { className: string; icon: any }> = {
-      certified: { className: 'bg-green-500/20 text-green-400', icon: ShieldCheck },
-      pending: { className: 'bg-yellow-500/20 text-yellow-400', icon: Clock },
+      certified: { className: 'bg-success/20 text-success', icon: ShieldCheck },
+      pending: { className: 'bg-warning/20 text-warning', icon: Clock },
       failed: { className: 'bg-destructive/20 text-destructive', icon: AlertTriangle },
     };
     const cfg = map[status] || map.pending;

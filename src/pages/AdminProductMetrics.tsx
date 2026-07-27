@@ -382,8 +382,8 @@ export default function AdminProductMetrics() {
   const median = sortedRevs[Math.floor(sortedRevs.length * 0.5)] || 0;
 
   const revColor = (v: number) => {
-    if (v > p75) return "bg-green-600/20 text-green-300 font-semibold";
-    if (v > median && median > 0) return "bg-green-600/10 text-green-400";
+    if (v > p75) return "bg-success/20 text-success font-semibold";
+    if (v > median && median > 0) return "bg-success/10 text-success";
     return "text-muted-foreground";
   };
 

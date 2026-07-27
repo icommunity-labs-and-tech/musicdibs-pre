@@ -197,7 +197,7 @@ const AdminABTests = () => {
                         <TableCell className="text-right font-semibold">{v.ctr.toFixed(1)}%</TableCell>
                         <TableCell className="text-right">
                           {v.ctr === bestCtr && v.impressions > 0 ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-green-400 bg-green-400/10 px-2 py-1 rounded-full">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-success bg-success/10 px-2 py-1 rounded-full">
                               <TrendingUp className="w-3 h-3" /> Líder
                             </span>
                           ) : (

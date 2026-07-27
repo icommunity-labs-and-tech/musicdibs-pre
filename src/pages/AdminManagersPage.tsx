@@ -378,7 +378,7 @@ export default function AdminManagersPage() {
                         const highlight = full
                           ? 'bg-destructive/10'
                           : expiring
-                            ? 'bg-orange-500/10'
+                            ? 'bg-warning/10'
                             : '';
                         return (
                           <TableRow key={a.contract_id} className={highlight}>
@@ -394,15 +394,15 @@ export default function AdminManagersPage() {
                             <TableCell className="text-xs">{a.contract_start?.slice(0, 10)}</TableCell>
                             <TableCell className="text-xs">
                               {a.contract_end?.slice(0, 10)}
-                              {expiring && <div className="text-orange-600 text-[10px]">en {days}d</div>}
+                              {expiring && <div className="text-warning text-[10px]">en {days}d</div>}
                             </TableCell>
                             <TableCell>
                               {a.status === 'pending_acceptance' ? (
-                                <Badge variant="outline" className="gap-1 text-amber-600 border-amber-500/40">
+                                <Badge variant="outline" className="gap-1 text-warning border-warning/40">
                                   <Clock className="w-3 h-3" /> Pendiente aceptación
                                 </Badge>
                               ) : a.status === 'active' ? (
-                                <Badge className="bg-green-600 hover:bg-green-600">activo</Badge>
+                                <Badge className="bg-success hover:bg-success">activo</Badge>
                               ) : (
                                 <Badge variant="secondary">{a.status}</Badge>
                               )}
@@ -413,7 +413,7 @@ export default function AdminManagersPage() {
                                   <Clock className="w-3 h-3" /> Sin cobrar
                                 </Badge>
                               ) : a.stripe_addon_item_id ? (
-                                <Badge variant="default" className="gap-1 bg-green-600 hover:bg-green-600">
+                                <Badge variant="default" className="gap-1 bg-success hover:bg-success">
                                   <CheckCircle2 className="w-3 h-3" /> Add-on
                                 </Badge>
                               ) : (
@@ -430,7 +430,7 @@ export default function AdminManagersPage() {
                                 {a.status === 'pending_acceptance' && (
                                   <Button
                                     size="sm"
-                                    className="bg-amber-600 hover:bg-amber-700 text-white"
+                                    className="bg-warning hover:bg-warning text-white"
                                     onClick={() => setActivateTarget(a)}
                                   >
                                     <CreditCard className="w-3 h-3 mr-1" /> Confirmar aceptación y cobrar
@@ -559,7 +559,7 @@ export default function AdminManagersPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setActivateTarget(null)} disabled={activating}>Cancelar</Button>
             <Button
-              className="bg-amber-600 hover:bg-amber-700 text-white"
+              className="bg-warning hover:bg-warning text-white"
               onClick={activateContract}
               disabled={activating}
             >

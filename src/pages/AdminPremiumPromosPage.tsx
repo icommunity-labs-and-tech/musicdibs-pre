@@ -23,11 +23,11 @@ import {
 } from '@/components/ui/tooltip';
 
 const STATUS_OPTIONS = [
-  { value: 'submitted', label: 'Pendiente', badge: 'bg-yellow-500/20 text-yellow-400' },
-  { value: 'under_review', label: 'En revisión', badge: 'bg-blue-500/20 text-blue-400' },
-  { value: 'approved', label: 'Aprobada', badge: 'bg-emerald-500/20 text-emerald-400' },
-  { value: 'scheduled', label: 'Programada', badge: 'bg-purple-500/20 text-purple-400' },
-  { value: 'published', label: 'Publicada', badge: 'bg-green-500/20 text-green-400' },
+  { value: 'submitted', label: 'Pendiente', badge: 'bg-warning/20 text-warning' },
+  { value: 'under_review', label: 'En revisión', badge: 'bg-info/20 text-info' },
+  { value: 'approved', label: 'Aprobada', badge: 'bg-success/20 text-success' },
+  { value: 'scheduled', label: 'Programada', badge: 'bg-primary/20 text-primary' },
+  { value: 'published', label: 'Publicada', badge: 'bg-success/20 text-success' },
   { value: 'rejected', label: 'Rechazada', badge: 'bg-destructive/20 text-destructive' },
 ];
 
@@ -171,7 +171,7 @@ export default function AdminPremiumPromosPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Crown className="h-6 w-6 text-amber-400" />
+        <Crown className="h-6 w-6 text-warning" />
         <h1 className="text-2xl font-bold">Promos Premium</h1>
       </div>
 
@@ -270,7 +270,7 @@ export default function AdminPremiumPromosPage() {
       <Dialog open={!!selected} onOpenChange={open => !open && setSelected(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Crown className="h-5 w-5 text-amber-400" /> Detalle Promo Premium</DialogTitle>
+            <DialogTitle className="flex items-center gap-2"><Crown className="h-5 w-5 text-warning" /> Detalle Promo Premium</DialogTitle>
           </DialogHeader>
           {selected && (
             <div className="space-y-3 text-sm">

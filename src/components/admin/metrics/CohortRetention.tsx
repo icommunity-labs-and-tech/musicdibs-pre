@@ -24,7 +24,7 @@ export default function CohortRetention({ cohortData }: CohortRetentionProps) {
 
   const retentionColor = (val: number | null, threshold: number) => {
     if (val === null) return '';
-    return val >= threshold ? 'text-green-600 font-medium' : '';
+    return val >= threshold ? 'text-success font-medium' : '';
   };
 
   return (
@@ -49,7 +49,7 @@ export default function CohortRetention({ cohortData }: CohortRetentionProps) {
             {cohortData.map((cohort: any, index: number) => (
               <TableRow key={index}>
                 <TableCell className="font-medium">{cohort.month}</TableCell>
-                <TableCell className="text-green-600 font-medium">{cohort.m0}%</TableCell>
+                <TableCell className="text-success font-medium">{cohort.m0}%</TableCell>
                 <TableCell>
                   {cohort.m1 !== null ? (
                     <span className={retentionColor(cohort.m1, 80)}>{cohort.m1}%</span>

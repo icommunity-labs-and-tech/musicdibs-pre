@@ -44,7 +44,7 @@ const BlogPreviewDialog = ({ open, onOpenChange, post }: Props) => {
         <article className="pt-2 text-slate-800">
           <div className="flex items-center gap-3 mb-4 text-sm text-slate-500 flex-wrap">
             {post.category && (
-              <span className="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs">
+              <span className="bg-primary text-primary px-3 py-1 rounded-full text-xs">
                 {post.category}
               </span>
             )}
@@ -57,7 +57,7 @@ const BlogPreviewDialog = ({ open, onOpenChange, post }: Props) => {
             {post.author && <span>· {post.author}</span>}
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
             {post.title || "Sin título"}
           </h1>
 
@@ -71,7 +71,7 @@ const BlogPreviewDialog = ({ open, onOpenChange, post }: Props) => {
           )}
 
           {post.excerpt && (
-            <p className="text-lg text-slate-600 italic mb-6 border-l-2 border-purple-300 pl-4">
+            <p className="text-lg text-slate-600 italic mb-6 border-l-2 border-primary pl-4">
               {post.excerpt}
             </p>
           )}

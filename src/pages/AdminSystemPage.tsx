@@ -347,7 +347,7 @@ export default function AdminSystemPage() {
       <div className="flex items-center gap-3">
         <Settings2 className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Sistema</h1>
-        <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">
+        <Badge className="bg-brand/20 text-brand border-brand/30">
           Admin
         </Badge>
       </div>

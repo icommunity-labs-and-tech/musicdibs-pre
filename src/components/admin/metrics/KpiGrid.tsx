@@ -28,7 +28,7 @@ function DeltaChip({ change, invertColor }: { change: number | null; invertColor
   const isPositive = invertColor ? change <= 0 : change >= 0;
   const Icon = change === 0 ? Minus : change > 0 ? TrendingUp : TrendingDown;
   return (
-    <div className={`text-xs flex items-center gap-1 mt-1 ${change === 0 ? 'text-muted-foreground' : isPositive ? 'text-green-600' : 'text-red-600'}`}>
+    <div className={`text-xs flex items-center gap-1 mt-1 ${change === 0 ? 'text-muted-foreground' : isPositive ? 'text-success' : 'text-red-600'}`}>
       <Icon className="w-3 h-3" />
       {change > 0 ? '+' : ''}{change}% vs anterior
     </div>
@@ -79,7 +79,7 @@ function TrendKpi({ label, value, icon: Icon, change, suffix, invertColor }: {
       </CardHeader>
       <CardContent>
         <span className="text-2xl font-bold">{value}</span>
-        <div className={`text-xs flex items-center gap-1 mt-1 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+        <div className={`text-xs flex items-center gap-1 mt-1 ${isPositive ? 'text-success' : 'text-red-600'}`}>
           {isPositive
             ? <TrendingUp className="w-3 h-3" />
             : <TrendingDown className="w-3 h-3" />
@@ -228,7 +228,7 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <AlertTriangle className="w-3 h-3 text-amber-500 cursor-help" />
+                        <AlertTriangle className="w-3 h-3 text-warning cursor-help" />
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className="text-xs">Datos pendientes de sincronización con Stripe</p>
@@ -242,7 +242,7 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
               <span className="text-2xl font-bold">
                 €{periodFees.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <div className={`text-xs mt-1 ${feesPending ? 'text-amber-500' : 'text-muted-foreground'}`}>
+              <div className={`text-xs mt-1 ${feesPending ? 'text-warning' : 'text-muted-foreground'}`}>
                 {feesPending ? 'Pendiente sincronización' : 'Descontado del neto'}
               </div>
               <DeltaChip
@@ -251,18 +251,18 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
               />
             </CardContent>
           </Card>
-          <Card className="border-green-500/40 bg-green-500/5">
+          <Card className="border-success/40 bg-success/5">
             <CardHeader className="pb-2">
-              <CardDescription className="text-xs flex items-center gap-1 text-green-700 dark:text-green-400">
+              <CardDescription className="text-xs flex items-center gap-1 text-success dark:text-success">
                 <CheckCircle2 className="w-3 h-3" />
                 Neto
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <span className="text-2xl font-bold text-green-700 dark:text-green-400">
+              <span className="text-2xl font-bold text-success dark:text-success">
                 €{periodNet.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <div className="text-xs mt-1 text-green-700/70 dark:text-green-400/70">
+              <div className="text-xs mt-1 text-success/70 dark:text-success/70">
                 Bruto − IVA − Stripe fees
               </div>
               <DeltaChip change={computeChange(periodNet, Number(prev.periodNet ?? 0))} />
@@ -308,7 +308,7 @@ export default function KpiGrid({ metrics }: KpiGridProps) {
           />
           <TrendKpi label="Churn Rate" value={`${m.churnRate || 0}%`} icon={BarChart3} change={m.churnChange || 0} invertColor />
           <KpiCard label="Cancelaciones" value={m.cancelledThisMonth || 0} icon={XCircle}
-            subColor={m.cancelledThisMonth > 0 ? 'text-destructive' : 'text-green-600'}
+            subColor={m.cancelledThisMonth > 0 ? 'text-destructive' : 'text-success'}
             sub={m.cancelledThisMonth > 0 ? 'En el periodo' : 'Sin cancelaciones'}
             change={computeChange(Number(m.cancelledThisMonth ?? 0), Number(prev.cancelledThisMonth ?? 0))}
             invertColor

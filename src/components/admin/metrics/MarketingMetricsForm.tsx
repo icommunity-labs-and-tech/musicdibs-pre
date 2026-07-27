@@ -93,7 +93,7 @@ export default function MarketingMetricsForm({ hasManualMetrics }: { hasManualMe
             <PencilLine className="h-5 w-5 text-primary" />
             <CardTitle className="text-base">Métricas Manuales de Negocio</CardTitle>
             {hasManualMetrics ? (
-              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Datos reales activos</Badge>
+              <Badge className="bg-success/20 text-success border-success/30 text-xs">Datos reales activos</Badge>
             ) : (
               <Badge variant="outline" className="text-xs">Usando estimaciones</Badge>
             )}

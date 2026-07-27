@@ -161,8 +161,8 @@ export default function AdminApiCostsPage() {
   const worstFeature = featureMarginList.sort((a, b) => a.marginPct - b.marginPct)[0];
 
   const marginBadge = (pct: number) => {
-    if (pct >= 80) return <Badge className="bg-green-600 text-white">{fmtPct(pct)}</Badge>;
-    if (pct >= 50) return <Badge className="bg-yellow-500 text-black">{fmtPct(pct)}</Badge>;
+    if (pct >= 80) return <Badge className="bg-success text-white">{fmtPct(pct)}</Badge>;
+    if (pct >= 50) return <Badge className="bg-warning text-black">{fmtPct(pct)}</Badge>;
     return <Badge variant="destructive">{fmtPct(pct)}</Badge>;
   };
 
@@ -248,7 +248,7 @@ export default function AdminApiCostsPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 text-muted-foreground text-xs mb-1"><TrendingUp className="h-3 w-3" /> Más rentable</div>
             <p className="text-sm font-bold truncate">{bestFeature ? configMap[bestFeature.key]?.feature_label || bestFeature.key : '—'}</p>
-            {bestFeature && <p className="text-xs text-green-600">{fmtPct(bestFeature.marginPct)}</p>}
+            {bestFeature && <p className="text-xs text-success">{fmtPct(bestFeature.marginPct)}</p>}
           </CardContent>
         </Card>
         <Card>

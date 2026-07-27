@@ -14,19 +14,19 @@ type SortKey = 'email' | 'display_name' | 'created_at';
 type SortDir = 'asc' | 'desc';
 
 const typeBadge: Record<string, string> = {
-  purchase: 'bg-green-500/20 text-green-400',
+  purchase: 'bg-success/20 text-success',
   usage: 'bg-destructive/20 text-destructive',
-  admin_grant: 'bg-blue-500/20 text-blue-400',
-  admin_deduct: 'bg-blue-500/20 text-blue-400',
-  admin_adjustment: 'bg-blue-500/20 text-blue-400',
-  refund: 'bg-yellow-500/20 text-yellow-400',
+  admin_grant: 'bg-info/20 text-info',
+  admin_deduct: 'bg-info/20 text-info',
+  admin_adjustment: 'bg-info/20 text-info',
+  refund: 'bg-warning/20 text-warning',
   renewal: 'bg-muted text-muted-foreground',
-  subscription: 'bg-cyan-500/20 text-cyan-400',
-  subscription_issue: 'bg-orange-500/20 text-orange-400',
+  subscription: 'bg-info/20 text-info',
+  subscription_issue: 'bg-warning/20 text-warning',
   payment_failed: 'bg-red-500/20 text-red-400',
-  promote_premium: 'bg-fuchsia-500/20 text-fuchsia-400',
+  promote_premium: 'bg-accent/20 text-accent',
   migration: 'bg-slate-500/20 text-slate-400',
-  onboarding: 'bg-purple-500/20 text-purple-400',
+  onboarding: 'bg-primary/20 text-primary',
 };
 
 const TYPE_OPTIONS: { value: string; label: string }[] = [
@@ -184,7 +184,7 @@ export default function AdminCreditsPage() {
       <div className="flex items-center gap-3">
         <CreditCard className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Créditos</h1>
-        <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">Admin</Badge>
+        <Badge className="bg-brand/20 text-brand border-brand/30">Admin</Badge>
       </div>
 
       {/* Quick adjust card */}
@@ -228,7 +228,7 @@ export default function AdminCreditsPage() {
               <p className="text-sm"><strong>{foundUser.display_name || foundUser.email}</strong> — Saldo actual: <span className="font-mono text-primary">{foundUser.available_credits}</span> créditos</p>
               
               {isAmountValid && foundUser.available_credits + parsedAmount < 0 && (
-                <div className="p-2 rounded bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs">
+                <div className="p-2 rounded bg-warning/10 border border-warning/30 text-warning text-xs">
                   ⚠️ El resultado sería negativo. El saldo se ajustará a 0.
                 </div>
               )}
@@ -309,7 +309,7 @@ export default function AdminCreditsPage() {
               <TableRow key={t.id}>
                 <TableCell className="text-sm">{t.email || <span className="text-muted-foreground italic">sin email</span>}</TableCell>
                 <TableCell className="text-sm text-muted-foreground">{t.display_name && t.display_name.toLowerCase() !== (t.email || '').toLowerCase() ? t.display_name : '—'}</TableCell>
-                <TableCell className={`font-mono font-medium ${t.amount > 0 ? 'text-green-400' : 'text-destructive'}`}>{t.amount > 0 ? '+' : ''}{t.amount}</TableCell>
+                <TableCell className={`font-mono font-medium ${t.amount > 0 ? 'text-success' : 'text-destructive'}`}>{t.amount > 0 ? '+' : ''}{t.amount}</TableCell>
                 <TableCell><Badge className={typeBadge[t.type] || 'bg-muted text-muted-foreground'}>{t.type}</Badge></TableCell>
                 <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{t.description}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(t.created_at).toLocaleString()}</TableCell>

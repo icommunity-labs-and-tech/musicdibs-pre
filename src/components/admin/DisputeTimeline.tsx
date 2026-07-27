@@ -32,18 +32,18 @@ const EVENT_LABELS: Record<string, string> = {
 
 function OrderStatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    paid: 'bg-green-500/20 text-green-400',
-    completed: 'bg-green-500/20 text-green-400',
+    paid: 'bg-success/20 text-success',
+    completed: 'bg-success/20 text-success',
     failed: 'bg-destructive/20 text-destructive',
-    refunded: 'bg-yellow-500/20 text-yellow-400',
+    refunded: 'bg-warning/20 text-warning',
   };
   return <Badge className={map[status] || 'bg-muted text-muted-foreground'}>{status}</Badge>;
 }
 
 function CertBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    certified: 'bg-green-500/20 text-green-400',
-    pending: 'bg-yellow-500/20 text-yellow-400',
+    certified: 'bg-success/20 text-success',
+    pending: 'bg-warning/20 text-warning',
     failed: 'bg-destructive/20 text-destructive',
   };
   return <Badge className={map[status] || 'bg-muted text-muted-foreground'}>{status}</Badge>;

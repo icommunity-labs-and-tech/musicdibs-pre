@@ -29,8 +29,8 @@ export default function UserDetailSheet({ user, open, onOpenChange }: UserDetail
   if (!user) return null;
 
   const kycMap: Record<string, string> = {
-    verified: 'bg-green-500/20 text-green-400',
-    pending: 'bg-yellow-500/20 text-yellow-400',
+    verified: 'bg-success/20 text-success',
+    pending: 'bg-warning/20 text-warning',
     unverified: 'bg-muted text-muted-foreground',
     rejected: 'bg-destructive/20 text-destructive',
   };
@@ -53,9 +53,9 @@ export default function UserDetailSheet({ user, open, onOpenChange }: UserDetail
             {user.role === 'admin' && <Badge className="bg-primary/20 text-primary border-primary/30">Admin</Badge>}
             {user.is_blocked
               ? <Badge className="bg-destructive/20 text-destructive">Bloqueado</Badge>
-              : <Badge className="bg-green-500/20 text-green-400">Activo</Badge>}
+              : <Badge className="bg-success/20 text-success">Activo</Badge>}
             {user.has_open_dispute && (
-              <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/40 font-bold flex items-center gap-1">
+              <Badge className="bg-warning/20 text-warning border-warning/40 font-bold flex items-center gap-1">
                 <AlertTriangle className="h-3 w-3" /> DISPUTA ABIERTA
               </Badge>
             )}
@@ -98,7 +98,7 @@ export default function UserDetailSheet({ user, open, onOpenChange }: UserDetail
                 <span className="font-mono text-sm font-semibold text-primary">{total} total</span>
                 <div className="flex flex-wrap gap-1 justify-end">
                   <Badge variant="secondary" className="text-xs">{plan} plan · caducan al renovar</Badge>
-                  <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-xs">{perm} permanente · no caduca</Badge>
+                  <Badge className="bg-warning/20 text-warning border-warning/30 text-xs">{perm} permanente · no caduca</Badge>
                 </div>
               </div>
             );
@@ -154,8 +154,8 @@ export default function UserDetailSheet({ user, open, onOpenChange }: UserDetail
         {(user.has_open_dispute || user.dispute_lost_at) && (
           <>
             <Separator className="my-4" />
-            <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-4 space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-orange-400 flex items-center gap-1.5 mb-3">
+            <div className="rounded-lg border border-warning/30 bg-warning/5 p-4 space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-warning flex items-center gap-1.5 mb-3">
                 <AlertTriangle className="h-4 w-4" /> Información de disputa
               </h3>
               {user.dispute_stripe_id && (
@@ -170,7 +170,7 @@ export default function UserDetailSheet({ user, open, onOpenChange }: UserDetail
                 <DetailRow icon={Calendar} label="Disputa perdida" value={new Date(user.dispute_lost_at).toLocaleString('es-ES')} />
               )}
               {user.has_open_dispute && !user.dispute_lost_at && (
-                <p className="text-xs text-orange-400/80 mt-2">
+                <p className="text-xs text-warning/80 mt-2">
                   ⚠️ El usuario está bloqueado y su acceso suspendido mientras la disputa esté activa.
                 </p>
               )}

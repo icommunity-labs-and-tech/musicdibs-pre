@@ -31,14 +31,14 @@ export default function UnitEconomics({ metrics }: UnitEconomicsProps) {
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Gross Margin</p>
               <p className="text-xl font-bold">{m.grossMargin}%</p>
-              <p className={`text-xs ${m.grossMargin >= 80 ? 'text-green-600' : 'text-orange-600'}`}>
+              <p className={`text-xs ${m.grossMargin >= 80 ? 'text-success' : 'text-warning'}`}>
                 {m.grossMargin >= 80 ? '✓ SaaS target' : '○ Below target'}
               </p>
             </div>
             <div className="text-center">
               <p className="text-xs text-muted-foreground">Payback Period</p>
               <p className="text-xl font-bold">{m.paybackPeriod}m</p>
-              <p className={`text-xs ${m.paybackPeriod <= 12 ? 'text-green-600' : 'text-orange-600'}`}>
+              <p className={`text-xs ${m.paybackPeriod <= 12 ? 'text-success' : 'text-warning'}`}>
                 {m.paybackPeriod <= 12 ? '✓ Excellent' : '○ OK'}
               </p>
             </div>
@@ -80,8 +80,8 @@ export default function UnitEconomics({ metrics }: UnitEconomicsProps) {
               <div className="text-right">
                 <span className="text-xl font-bold">{m.runway} meses</span>
                 <p className={`text-xs ${
-                  m.runway >= 18 ? 'text-green-600' :
-                  m.runway >= 12 ? 'text-orange-600' :
+                  m.runway >= 18 ? 'text-success' :
+                  m.runway >= 12 ? 'text-warning' :
                   'text-red-600'
                 }`}>
                   {m.runway >= 18 ? '✓ Comfortable' :

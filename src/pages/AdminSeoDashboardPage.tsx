@@ -85,7 +85,7 @@ function DeltaBadge({ delta }: { delta: number }) {
   return (
     <span
       className={`inline-flex items-center gap-1 text-xs font-medium ${
-        up ? "text-green-600" : "text-red-600"
+        up ? "text-success" : "text-red-600"
       }`}
     >
       <Icon className="h-3 w-3" />
@@ -269,7 +269,7 @@ export default function AdminSeoDashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                <AlertTriangle className="h-5 w-5 text-warning" />
                 Alertas de movimiento (|Δ| ≥ 3 posiciones)
               </CardTitle>
             </CardHeader>
