@@ -15,6 +15,7 @@ type BlogPost = {
   title: string;
   slug: string;
   excerpt: string | null;
+  content: string | null;
   image_url: string | null;
   category: string | null;
   tags: string[] | null;
@@ -50,7 +51,7 @@ const News = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("blog_posts")
-        .select("id, title, slug, excerpt, image_url, category, tags, author, published_at, language")
+        .select("id, title, slug, excerpt, content, image_url, category, tags, author, published_at, language")
         .eq("published", true)
         .eq("language", blogLang)
         .order("published_at", { ascending: false });
@@ -66,10 +67,15 @@ const News = () => {
   const filtered = useMemo(() => posts?.filter((p) => {
     const matchesCategory = !selectedCategory || p.category === selectedCategory;
     const query = searchQuery.toLowerCase().trim();
-    const matchesSearch = !query ||
-      p.title.toLowerCase().includes(query) ||
-      (p.excerpt?.toLowerCase().includes(query)) ||
-      (p.tags?.some(tag => tag.toLowerCase().includes(query)));
+    if (!query) return matchesCategory;
+    const contentText = p.content ? p.content.replace(/<[^>]*>/g, " ") : "";
+    const matchesSearch =
+      p.title?.toLowerCase().includes(query) ||
+      p.excerpt?.toLowerCase().includes(query) ||
+      p.category?.toLowerCase().includes(query) ||
+      p.author?.toLowerCase().includes(query) ||
+      contentText.toLowerCase().includes(query) ||
+      p.tags?.some((tag) => tag.toLowerCase().includes(query));
     return matchesCategory && matchesSearch;
   }), [posts, selectedCategory, searchQuery]);
 
