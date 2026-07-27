@@ -451,8 +451,8 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
                   <span className="text-[10px] text-muted-foreground shrink-0">
                     {(audioFile.size / (1024 * 1024)).toFixed(1)} MB
                   </span>
-                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setAudioFile(null)}>
-                    <X className="h-3 w-3" />
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setAudioFile(null)} aria-label={t('common.remove', { defaultValue: 'Eliminar' })}>
+                    <X className="h-3 w-3" aria-hidden="true" />
                   </Button>
                 </div>
               ) : (
@@ -477,8 +477,8 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
                   <span className="text-[10px] text-muted-foreground shrink-0">
                     {(mediaFile.size / (1024 * 1024)).toFixed(1)} MB
                   </span>
-                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setMediaFile(null)}>
-                    <X className="h-3 w-3" />
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={() => setMediaFile(null)} aria-label={t('common.remove', { defaultValue: 'Eliminar' })}>
+                    <X className="h-3 w-3" aria-hidden="true" />
                   </Button>
                 </div>
               ) : (

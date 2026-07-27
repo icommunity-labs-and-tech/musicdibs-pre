@@ -169,8 +169,9 @@ export function RecentRegistrations() {
                     className="h-8 w-8"
                     disabled={page === 0}
                     onClick={() => setPage(p => p - 1)}
+                    aria-label={t('common.pagination.previous', { defaultValue: 'Página anterior' })}
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                   </Button>
                   {Array.from({ length: totalPages }, (_, i) => (
                     <Button
@@ -179,6 +180,8 @@ export function RecentRegistrations() {
                       size="icon"
                       className="h-8 w-8 text-xs"
                       onClick={() => setPage(i)}
+                      aria-label={t('common.pagination.goToPage', { page: i + 1, defaultValue: `Ir a la página ${i + 1}` })}
+                      aria-current={i === page ? 'page' : undefined}
                     >
                       {i + 1}
                     </Button>
@@ -189,8 +192,9 @@ export function RecentRegistrations() {
                     className="h-8 w-8"
                     disabled={page === totalPages - 1}
                     onClick={() => setPage(p => p + 1)}
+                    aria-label={t('common.pagination.next', { defaultValue: 'Página siguiente' })}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
               </div>

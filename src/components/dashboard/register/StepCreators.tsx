@@ -70,7 +70,7 @@ export function StepCreators({ data, onUpdate, onNext, onBack }: StepCreatorsPro
               <div className="flex items-center justify-between">
                 <p className="text-sm font-medium text-muted-foreground">{t('wizard.creators.creatorN', { n: idx + 1 })}</p>
                 {creators.length > 1 && (
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => remove(c.id)}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => remove(c.id)} aria-label={t('common.remove', { defaultValue: 'Eliminar' })}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 )}
