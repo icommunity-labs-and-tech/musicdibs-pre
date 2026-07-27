@@ -25,6 +25,15 @@ import { useDashboardTheme } from '@/hooks/useDashboardTheme';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
 
+function readSidebarCookie(): boolean {
+  if (typeof document === 'undefined') return true;
+  const match = document.cookie.match(/(?:^|;\s*)sidebar:state=([^;]+)/);
+  if (!match) return true;
+  return match[1] !== 'false';
+}
+
+
+
 
 export default function DashboardLayout() {
   const { user, loading } = useAuth();
@@ -71,7 +80,9 @@ export default function DashboardLayout() {
   return (
     <NotificationsProvider>
       <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={readSidebarCookie()}>
+
+
 
         <div className="min-h-screen flex w-full">
           <DashboardSidebar />
