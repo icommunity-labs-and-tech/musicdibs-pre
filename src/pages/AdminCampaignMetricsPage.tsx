@@ -820,9 +820,16 @@ export default function AdminCampaignMetricsPage() {
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {loadingCoupons || loadingHistoric ? (
-                  <div className="flex items-center justify-center py-8 text-muted-foreground">
-
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
+                  <div className="space-y-2 py-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-16 ml-auto" />
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-16" />
+                      </div>
+                    ))}
                   </div>
                 ) : unifiedRows.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8 text-sm">Sin datos de influencers</div>
@@ -925,8 +932,14 @@ export default function AdminCampaignMetricsPage() {
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 {loadingReferral ? (
-                  <div className="flex items-center justify-center py-8 text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" /> Cargando...
+                  <div className="space-y-2 py-2">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-20 ml-auto" />
+                        <Skeleton className="h-5 w-24 rounded-full" />
+                      </div>
+                    ))}
                   </div>
                 ) : channelRows.length === 0 ? (
                   <div className="text-center text-muted-foreground py-8 text-sm">Sin registros por canales propios</div>
