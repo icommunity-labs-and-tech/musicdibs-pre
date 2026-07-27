@@ -111,7 +111,20 @@ const AdminSeoDashboardPage = lazyWithRetry(() => import("./pages/AdminSeoDashbo
 const AdminManagersPage = lazyWithRetry(() => import("./pages/AdminManagersPage"));
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Evita refetch al recuperar el foco (los dashboards ya se refrescan
+      // por acciones explícitas o Realtime).
+      refetchOnWindowFocus: false,
+      // Considera los datos frescos durante 1 min para reducir hits repetidos
+      // en navegación rápida entre rutas.
+      staleTime: 60_000,
+      // Reintenta una sola vez ante errores transitorios.
+      retry: 1,
+    },
+  },
+});
 
 // Capture UTM attribution on first load
 import { captureAttribution } from "@/lib/attribution";

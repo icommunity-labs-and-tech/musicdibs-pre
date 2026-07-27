@@ -1,5 +1,6 @@
-import { jsPDF } from 'jspdf'
-import QRCode from 'qrcode'
+// jsPDF y QRCode se cargan dinámicamente dentro del generador para no
+// contribuir al bundle de las rutas que sólo referencian el util.
+import type { jsPDF as JsPDFType } from 'jspdf'
 import logoMusicdibs from '@/assets/logo_musicdibs_black.jpg'
 
 // ── Palette ──────────────────────────────────────────────────
@@ -201,7 +202,11 @@ function makeWatermark(W: number, H: number): string {
 
 export async function generatePurchaseCertificate(data: PurchaseEvidenceData, locale?: string): Promise<void> {
   const L = getLabels(locale)
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const [{ jsPDF }, QRCode] = await Promise.all([
+    import('jspdf'),
+    import('qrcode').then(m => m.default ?? m),
+  ])
+  const doc: JsPDFType = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const W = 210, H = 297
   const ML = 25, MR = 25
   const contentW = W - ML - MR
