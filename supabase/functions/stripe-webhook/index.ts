@@ -755,10 +755,11 @@ serve(async (req) => {
         }
 
 
-        // Fetch previous plan BEFORE updating (to detect first annual purchase + plan switch)
+        // Fetch previous plan/tier BEFORE updating (to detect first PLUS+ purchase + plan switch)
         const { data: prevProfile } = await supabase
-          .from("profiles").select("subscription_plan, available_credits, permanent_credits").eq("user_id", userId).single();
+          .from("profiles").select("subscription_plan, subscription_tier, available_credits, permanent_credits").eq("user_id", userId).single();
         const previousPlan = prevProfile?.subscription_plan || "Free";
+        const previousTier = (prevProfile as { subscription_tier?: string | null } | null)?.subscription_tier || null;
 
         // Topups and individual packs never expire: add to permanent_credits too
         const isPermaPurchase = planId.startsWith("topup_") || planId === "individual";
