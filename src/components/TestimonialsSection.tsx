@@ -47,7 +47,7 @@ const TestimonialsSection = () => {
   ];
 
   return (
-    <section className="py-20 relative overflow-hidden bg-gradient-to-b from-purple-600/80 via-purple-700/70 to-primary/60">
+    <section className="py-20 relative overflow-hidden bg-gradient-to-b from-primary/80 via-primary/70 to-primary/60">
       
       
       <div className="container mx-auto px-4 relative z-10">

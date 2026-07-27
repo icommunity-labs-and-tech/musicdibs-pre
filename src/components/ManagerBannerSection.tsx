@@ -16,9 +16,9 @@ export function ManagerBannerSection() {
 
   return (
     <section className="py-16 px-4 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-black/60 to-purple-800/30 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-black/60 to-primary/30 pointer-events-none" />
       <div className="max-w-5xl mx-auto relative">
-        <div className="rounded-2xl border border-purple-500/30 bg-black/70 backdrop-blur-lg p-8 md:p-12 space-y-6 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.3)]">
+        <div className="rounded-2xl border border-primary/30 bg-black/70 backdrop-blur-lg p-8 md:p-12 space-y-6 shadow-[0_0_40px_-10px_hsl(var(--primary)/0.3)]">
           <Badge variant="secondary" className="text-xs px-3 py-1 bg-primary/20 text-primary border-primary/30">
             {t('managerBanner.badge')}
           </Badge>

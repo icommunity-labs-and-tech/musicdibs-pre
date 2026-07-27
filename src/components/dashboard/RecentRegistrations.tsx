@@ -42,9 +42,9 @@ export function RecentRegistrations() {
   const totalPages = Math.ceil(data.length / PAGE_SIZE);
   const pageData = data.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const statusConfig: Record<string, { label: string; className: string }> = {
-    draft: { label: 'En borrador', className: 'bg-orange-500/10 text-orange-600 border-orange-500/20' },
-    processing: { label: t('dashboard.recentReg.processing'), className: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
-    registered: { label: t('dashboard.recentReg.registered'), className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+    draft: { label: 'En borrador', className: 'bg-warning/10 text-warning border-warning/20' },
+    processing: { label: t('dashboard.recentReg.processing'), className: 'bg-warning/10 text-warning border-warning/20' },
+    registered: { label: t('dashboard.recentReg.registered'), className: 'bg-success/10 text-success border-success/20' },
     failed: { label: t('dashboard.recentReg.failed'), className: 'bg-destructive/10 text-destructive border-destructive/20' },
   };
 
@@ -109,7 +109,7 @@ export function RecentRegistrations() {
                           <Button
                             size="sm"
                             variant="default"
-                            className="h-7 text-xs gap-1 bg-orange-500 hover:bg-orange-600 text-white"
+                            className="h-7 text-xs gap-1 bg-warning hover:bg-warning text-white"
                             onClick={() => navigate(`/dashboard/register?resume=${reg.id}`)}
                           >
                             Continuar registro <ArrowRight className="h-3 w-3" />

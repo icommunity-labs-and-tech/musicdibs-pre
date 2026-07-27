@@ -205,7 +205,7 @@ export function ReferralsSection() {
                     </TableCell>
                     <TableCell>
                       {r.status === 'active' ? (
-                        <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 border" variant="outline">
+                        <Badge className="bg-success/10 text-success border-success/20 border" variant="outline">
                           {tr('dashboard.referrals.active', 'Activo')}
                         </Badge>
                       ) : (
@@ -286,9 +286,9 @@ function StatCard({
   tone?: 'default' | 'success' | 'warning';
 }) {
   const toneClass = tone === 'success'
-    ? 'text-emerald-600'
+    ? 'text-success'
     : tone === 'warning'
-      ? 'text-amber-600'
+      ? 'text-warning'
       : 'text-foreground';
   return (
     <div className="rounded-lg border border-border/40 bg-card/50 p-4 flex items-center gap-3">

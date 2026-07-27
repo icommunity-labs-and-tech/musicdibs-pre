@@ -74,8 +74,8 @@ export function AccountSummary({ onSummaryLoaded, subscriptionEnd, cancelAtPerio
 
   const stats = [
     { icon: FileText, value: data.registeredWorks, label: t('dashboard.account.registeredWorks'), color: 'text-primary' },
-    { icon: Clock, value: data.pendingRegistrations, label: t('dashboard.account.pendingRegistrations'), color: 'text-amber-500' },
-    { icon: Coins, value: data.availableCredits, label: t('dashboard.account.availableCredits'), color: 'text-emerald-500' },
+    { icon: Clock, value: data.pendingRegistrations, label: t('dashboard.account.pendingRegistrations'), color: 'text-warning' },
+    { icon: Coins, value: data.availableCredits, label: t('dashboard.account.availableCredits'), color: 'text-success' },
   ];
 
   return (
@@ -116,7 +116,7 @@ export function AccountSummary({ onSummaryLoaded, subscriptionEnd, cancelAtPerio
                 </span>
               </div>
               {expiringSoon && !cancelAtPeriodEnd && (
-                <div className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400 text-center">
+                <div className="mt-2 rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning dark:text-warning text-center">
                   {t('dashboard.account.renewalWarning')}
                 </div>
               )}

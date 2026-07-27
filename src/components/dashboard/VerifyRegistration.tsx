@@ -90,8 +90,8 @@ export function VerifyRegistration() {
 
         {result && (
           result.found ? (
-            <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-emerald-600 font-medium text-sm">
+            <div className="rounded-lg bg-success/10 border border-success/20 p-4 space-y-2">
+              <div className="flex items-center gap-2 text-success font-medium text-sm">
                 <CheckCircle2 className="h-4 w-4" /> {t('dashboard.verify.found')}
               </div>
               <p className="text-xs text-muted-foreground">

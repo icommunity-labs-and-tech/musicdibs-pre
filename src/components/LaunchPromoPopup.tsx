@@ -61,9 +61,9 @@ export const LaunchPromoPopup = () => {
         }}
       >
         {/* Sun + sea glow blobs */}
-        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-yellow-300/40 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-pink-400/40 blur-3xl" />
-        <div className="pointer-events-none absolute top-1/2 left-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-300/20 blur-2xl" />
+        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-warning/40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-brand/40 blur-3xl" />
+        <div className="pointer-events-none absolute top-1/2 left-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-warning/20 blur-2xl" />
 
         <div className="relative px-6 py-7 sm:px-8 sm:py-8">
           {/* Badge */}
@@ -102,7 +102,7 @@ export const LaunchPromoPopup = () => {
           {/* Premium coupon block */}
           <button
             onClick={copyCode}
-            className="group relative w-full mb-4 overflow-hidden rounded-xl border-2 border-dashed border-white/50 bg-gradient-to-r from-yellow-300/20 via-orange-400/20 to-pink-500/20 px-4 py-3.5 backdrop-blur-sm transition hover:border-white/80 hover:from-yellow-300/30 hover:to-pink-500/30"
+            className="group relative w-full mb-4 overflow-hidden rounded-xl border-2 border-dashed border-white/50 bg-gradient-to-r from-warning/20 via-warning/20 to-brand/20 px-4 py-3.5 backdrop-blur-sm transition hover:border-white/80 hover:from-warning/30 hover:to-brand/30"
             aria-label="Copiar código promocional"
           >
             <div className="flex items-center justify-between gap-3">
@@ -117,7 +117,7 @@ export const LaunchPromoPopup = () => {
               <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/20 px-3 py-2 text-xs font-semibold text-white transition group-hover:bg-white/30">
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-emerald-200" />
+                    <Check className="h-3.5 w-3.5 text-success" />
                     Copiado
                   </>
                 ) : (
@@ -152,7 +152,7 @@ export const LaunchPromoPopup = () => {
           {/* CTA principal */}
           <button
             onClick={goToPricing}
-            className="w-full inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 via-pink-500 to-fuchsia-600 px-6 py-4 text-base sm:text-lg font-bold shadow-lg shadow-orange-500/40 transition hover:scale-[1.02] hover:shadow-pink-500/60 hover:shadow-2xl"
+            className="w-full inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-warning via-brand to-accent px-6 py-4 text-base sm:text-lg font-bold shadow-lg shadow-orange-500/40 transition hover:scale-[1.02] hover:shadow-pink-500/60 hover:shadow-2xl"
           >
             🍹 Aprovechar oferta
           </button>

@@ -53,7 +53,7 @@ export function NotificationToaster() {
       const Icon = iconMap[n.type];
       toast(n.title, {
         description: n.message,
-        icon: <Icon className={`h-4 w-4 ${n.type === 'success' ? 'text-emerald-500' : n.type === 'error' ? 'text-destructive' : 'text-primary'}`} />,
+        icon: <Icon className={`h-4 w-4 ${n.type === 'success' ? 'text-success' : n.type === 'error' ? 'text-destructive' : 'text-primary'}`} />,
         duration: 5000,
       });
     }

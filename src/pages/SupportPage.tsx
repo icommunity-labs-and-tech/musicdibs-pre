@@ -34,7 +34,7 @@ export default function SupportPage() {
         <CardContent>
           {sent ? (
             <div className="flex flex-col items-center gap-3 py-8 text-center">
-              <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+              <CheckCircle2 className="h-10 w-10 text-success" />
               <p className="font-medium">{t('dashboard.support.messageSent')}</p>
               <p className="text-sm text-muted-foreground">{t('dashboard.support.messageSentDesc')}</p>
               <Button variant="outline" size="sm" onClick={() => setSent(false)}>{t('dashboard.support.sendAnother')}</Button>

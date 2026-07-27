@@ -258,15 +258,15 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
   const langLabels: Record<string, string> = { en: "Inglés", pt: "Portugués", es: "Español" };
 
   return (
-    <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-xl overflow-hidden">
+    <div className="bg-gradient-to-br from-primary/10 to-info/10 border border-primary/20 rounded-xl overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-400" />
+          <Sparkles className="w-5 h-5 text-primary" />
           <span className="font-semibold text-white/90">Generador IA</span>
-          <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">Beta</span>
+          <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Beta</span>
         </div>
         {isOpen ? <ChevronUp className="w-4 h-4 text-white/50" /> : <ChevronDown className="w-4 h-4 text-white/50" />}
       </button>
@@ -326,7 +326,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
           <Button
             onClick={generateArticle}
             disabled={step !== "idle" || !referenceText.trim()}
-            className="w-full gap-2 bg-purple-600 hover:bg-purple-700 text-white"
+            className="w-full gap-2 bg-primary hover:bg-primary text-white"
           >
             {step === "generating" ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -351,7 +351,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
                       size="sm"
                       onClick={() => regenerateSection(section)}
                       disabled={regeneratingSection !== null || step !== "idle"}
-                      className="gap-1.5 border-white/10 text-foreground hover:text-foreground hover:border-purple-400/50 text-xs"
+                      className="gap-1.5 border-white/10 text-foreground hover:text-foreground hover:border-primary/50 text-xs"
                     >
                       {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Icon className="w-3 h-3" />}
                       <RefreshCw className="w-3 h-3" />
@@ -380,7 +380,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
                 size="sm"
                 onClick={translateArticle}
                 disabled={step !== "idle" || !currentPostId}
-                className="gap-2 border-white/20 text-foreground hover:text-foreground hover:border-blue-400/50"
+                className="gap-2 border-white/20 text-foreground hover:text-foreground hover:border-info/50"
               >
                 {step === "translating" ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -398,7 +398,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
                       key={r.language}
                       className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${
                         r.success
-                          ? "bg-green-500/20 text-green-300"
+                          ? "bg-success/20 text-success"
                           : "bg-red-500/20 text-red-300"
                       }`}
                     >

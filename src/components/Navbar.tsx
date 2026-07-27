@@ -131,7 +131,7 @@ export const Navbar = () => {
     >
       {/* Reading progress bar */}
       <div
-        className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-pink-500 via-purple-500 to-primary transition-none"
+        className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-brand via-primary to-primary transition-none"
         style={{ width: `${scrollProgress * 100}%` }}
       />
 

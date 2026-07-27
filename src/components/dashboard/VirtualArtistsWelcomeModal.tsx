@@ -14,10 +14,10 @@ export const VirtualArtistsWelcomeModal = ({ open, onOpenChange, onCreateFirst, 
   const { t } = useTranslation();
 
   const flowSteps = [
-    { icon: Mic, label: t('virtualArtists.welcome.flowCreate', 'Crea tu artista'), gradient: 'from-pink-500 to-purple-500' },
-    { icon: Music, label: t('virtualArtists.welcome.flowGenerate', 'Genera canciones con IA'), gradient: 'from-purple-500 to-blue-500' },
-    { icon: Lock, label: t('virtualArtists.welcome.flowRegister', 'Registra tu obra'), gradient: 'from-blue-500 to-cyan-500' },
-    { icon: Globe, label: t('virtualArtists.welcome.flowDistribute', 'Distribuye y gana dinero'), gradient: 'from-cyan-500 to-emerald-500' },
+    { icon: Mic, label: t('virtualArtists.welcome.flowCreate', 'Crea tu artista'), gradient: 'from-brand to-primary' },
+    { icon: Music, label: t('virtualArtists.welcome.flowGenerate', 'Genera canciones con IA'), gradient: 'from-primary to-info' },
+    { icon: Lock, label: t('virtualArtists.welcome.flowRegister', 'Registra tu obra'), gradient: 'from-info to-info' },
+    { icon: Globe, label: t('virtualArtists.welcome.flowDistribute', 'Distribuye y gana dinero'), gradient: 'from-info to-success' },
   ];
 
   const bullets = [
@@ -41,7 +41,7 @@ export const VirtualArtistsWelcomeModal = ({ open, onOpenChange, onCreateFirst, 
         <div className="p-6 sm:p-8 space-y-6">
           {/* Header */}
           <div className="text-center space-y-3">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 text-white mx-auto">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-brand to-primary text-white mx-auto">
               <Sparkles className="h-7 w-7" />
             </div>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight">

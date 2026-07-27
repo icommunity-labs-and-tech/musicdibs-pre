@@ -33,7 +33,7 @@ const TutorialSection = () => {
   return (
     <section
       id="tutorial-section"
-      className="py-20 relative overflow-hidden bg-gradient-to-b from-purple-600 via-purple-700 to-purple-800"
+      className="py-20 relative overflow-hidden bg-gradient-to-b from-primary via-primary to-primary"
     >
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
@@ -63,8 +63,8 @@ const TutorialSection = () => {
                     </div>
                   </CarouselItem>
                 </CarouselContent>
-                <CarouselPrevious className="left-4 bg-white/90 hover:bg-white text-purple-600 border-purple-200 shadow-lg" />
-                <CarouselNext className="right-4 bg-white/90 hover:bg-white text-purple-600 border-purple-200 shadow-lg" />
+                <CarouselPrevious className="left-4 bg-white/90 hover:bg-white text-primary border-primary shadow-lg" />
+                <CarouselNext className="right-4 bg-white/90 hover:bg-white text-primary border-primary shadow-lg" />
               </Carousel>
             </CardContent>
           </Card>
@@ -86,19 +86,19 @@ const TutorialSection = () => {
                   key={step.step}
                   className="relative group"
                 >
-                  <div className="h-full flex flex-col items-center text-center bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-pink-300/40">
+                  <div className="h-full flex flex-col items-center text-center bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-brand/40">
                     {/* Icon + number */}
                     <div className="relative mb-5">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-pink-500 to-red-500 flex items-center justify-center shadow-lg shadow-pink-500/30 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-brand to-red-500 flex items-center justify-center shadow-lg shadow-pink-500/30 group-hover:scale-110 transition-transform duration-300">
                         <Icon className="w-9 h-9 text-white" strokeWidth={2} />
                       </div>
-                      <span className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white text-purple-700 text-sm font-bold flex items-center justify-center shadow-md ring-2 ring-purple-700">
+                      <span className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white text-primary text-sm font-bold flex items-center justify-center shadow-md ring-2 ring-primary">
                         {step.step}
                       </span>
                     </div>
 
                     {/* Step label */}
-                    <span className="text-xs font-semibold uppercase tracking-widest text-pink-200 mb-2">
+                    <span className="text-xs font-semibold uppercase tracking-widest text-brand mb-2">
                       {t("tutorial.steps.step")} {step.step}
                     </span>
 
@@ -118,7 +118,7 @@ const TutorialSection = () => {
                         href={step.link.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-3 text-sm text-pink-200 hover:text-white underline underline-offset-4 transition-colors"
+                        className="mt-3 text-sm text-brand hover:text-white underline underline-offset-4 transition-colors"
                       >
                         {step.link.label}
                       </a>
@@ -136,7 +136,7 @@ const TutorialSection = () => {
             {t("tutorial.ctaTitle")}
           </h3>
           <Button
-            className="bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-600 hover:to-red-600 text-white font-bold py-4 px-12 rounded-full text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
+            className="bg-gradient-to-r from-brand to-red-500 hover:from-brand hover:to-red-600 text-white font-bold py-4 px-12 rounded-full text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
             onClick={() => {
               document.getElementById("pricing-section")?.scrollIntoView({ behavior: "smooth" });
             }}

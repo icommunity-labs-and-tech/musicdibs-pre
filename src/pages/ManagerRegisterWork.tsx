@@ -245,24 +245,24 @@ export default function ManagerRegisterWork() {
 
           {selectedArtistData && (
             <>
-              <Alert className="border-amber-500/50 bg-amber-500/10">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <Alert className="border-warning/50 bg-warning/10">
+                <AlertTriangle className="h-4 w-4 text-warning" />
                 <AlertDescription className="text-muted-foreground">
                   Estás registrando esta obra en nombre de <strong>{selectedArtistData.artist_name}</strong> como su representante autorizado.
                 </AlertDescription>
               </Alert>
               {selectedArtistData.artist_user_id ? (
-                <Alert className="border-green-500/50 bg-green-500/10">
+                <Alert className="border-success/50 bg-success/10">
                   <AlertDescription className="text-muted-foreground flex items-center gap-2">
-                    <span className="inline-block h-2 w-2 rounded-full bg-green-500" />
+                    <span className="inline-block h-2 w-2 rounded-full bg-success" />
                     Cuenta vinculada — la obra se registrará en la cuenta del artista.
                   </AlertDescription>
                 </Alert>
               ) : (
                 <div className="space-y-3">
-                  <Alert className="border-blue-500/50 bg-blue-500/10">
+                  <Alert className="border-info/50 bg-info/10">
                     <AlertDescription className="text-muted-foreground flex items-center gap-2">
-                      <span className="inline-block h-2 w-2 rounded-full bg-blue-500" />
+                      <span className="inline-block h-2 w-2 rounded-full bg-info" />
                       Sin cuenta vinculada — la obra se registrará bajo tu cuenta de manager.
                     </AlertDescription>
                   </Alert>

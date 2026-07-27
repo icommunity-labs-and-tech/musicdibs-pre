@@ -210,9 +210,9 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
   return (
     <div className="space-y-6">
       {paymentStatus === 'success' && (
-        <Card className="border-emerald-500/30 bg-emerald-500/5">
+        <Card className="border-success/30 bg-success/5">
           <CardContent className="flex items-center gap-3 py-4">
-            <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+            <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
             <div>
               <p className="text-sm font-medium">{t(`${cs}.paymentSuccessFull`)}</p>
               <p className="text-xs text-muted-foreground">{t(`${cs}.creditsAdding`)}</p>

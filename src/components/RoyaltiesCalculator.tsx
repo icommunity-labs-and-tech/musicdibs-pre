@@ -241,11 +241,11 @@ export const RoyaltiesCalculator = () => {
   }, []);
 
   return (
-    <section className="py-20 relative overflow-hidden bg-gradient-to-b from-purple-900 to-purple-800">
+    <section className="py-20 relative overflow-hidden bg-gradient-to-b from-primary to-primary">
       {/* Subtle background decoration */}
       <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-purple-500 blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full bg-pink-500 blur-3xl" />
+        <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-primary blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full bg-brand blur-3xl" />
       </div>
 
       <div className="max-w-5xl mx-auto px-6 relative z-10">
@@ -280,10 +280,10 @@ export const RoyaltiesCalculator = () => {
           >
             <Tabs defaultValue="royalties" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6 bg-white/5">
-                <TabsTrigger value="royalties" className="data-[state=active]:bg-purple-500/40 data-[state=active]:text-white text-white/70">
+                <TabsTrigger value="royalties" className="data-[state=active]:bg-primary/40 data-[state=active]:text-white text-white/70">
                   {t("calculator.tabs.royalties")}
                 </TabsTrigger>
-                <TabsTrigger value="stack" className="data-[state=active]:bg-purple-500/40 data-[state=active]:text-white text-white/70">
+                <TabsTrigger value="stack" className="data-[state=active]:bg-primary/40 data-[state=active]:text-white text-white/70">
                   {t("calculator.tabs.stack")}
                 </TabsTrigger>
               </TabsList>

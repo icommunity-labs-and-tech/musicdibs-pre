@@ -21,7 +21,7 @@ const Marketing = () => {
 
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-5xl mx-auto text-center mb-16">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">
             {t("marketing.heading", "Servicios de Marketing")}
           </h1>
           <p className="text-white/70 text-lg md:text-xl max-w-2xl mx-auto">
@@ -31,8 +31,8 @@ const Marketing = () => {
 
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Service 1 — Covers & Videos */}
-          <div className="relative group bg-white/5 border border-white/10 rounded-2xl p-8 flex flex-col hover:border-pink-500/40 transition-colors duration-300">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center mb-6">
+          <div className="relative group bg-white/5 border border-white/10 rounded-2xl p-8 flex flex-col hover:border-brand/40 transition-colors duration-300">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-brand to-primary flex items-center justify-center mb-6">
               <Palette className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-2xl font-bold mb-4">
@@ -53,8 +53,8 @@ const Marketing = () => {
           </div>
 
           {/* Service 2 — Social Media Promos */}
-          <div className="relative group bg-white/5 border border-white/10 rounded-2xl p-8 flex flex-col hover:border-pink-500/40 transition-colors duration-300">
-            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center mb-6">
+          <div className="relative group bg-white/5 border border-white/10 rounded-2xl p-8 flex flex-col hover:border-brand/40 transition-colors duration-300">
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary to-brand flex items-center justify-center mb-6">
               <Megaphone className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-2xl font-bold mb-4">

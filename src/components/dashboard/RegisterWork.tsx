@@ -239,20 +239,20 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
           <NoCreditsAlert message={t('dashboard.registerWork.noCreditsMsg')} />
         ) : kycBlocked ? (
           <div className="space-y-3 py-2">
-            <div className="flex items-center gap-2 text-amber-600">
+            <div className="flex items-center gap-2 text-warning">
               <ShieldAlert className="h-5 w-5" />
               <span className="font-medium text-sm">{t('dashboard.registerWork.kycRequired')}</span>
             </div>
             <p className="text-sm text-muted-foreground">
               {t('dashboard.registerWork.kycWait')}
             </p>
-            <Badge variant="outline" className="text-amber-600 border-amber-300">
+            <Badge variant="outline" className="text-warning border-warning">
               {t('dashboard.registerWork.statusLabel')}: {summary?.kycStatus === 'pending' ? t('dashboard.registerWork.statusPending') : t('dashboard.registerWork.statusUnverified')}
             </Badge>
           </div>
         ) : freeRegisterLimitReached ? (
           <div className="space-y-3 py-2">
-            <div className="flex items-center gap-2 text-amber-600">
+            <div className="flex items-center gap-2 text-warning">
               <ShieldAlert className="h-5 w-5" />
               <span className="font-medium text-sm">{t('dashboard.registerWork.freeRegisterLimitTitle')}</span>
             </div>
@@ -274,9 +274,9 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
             {result?.registrationId && (
               <p className="text-xs text-muted-foreground">ID: {result.registrationId}</p>
             )}
-            <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1">
-              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-              <span className="text-xs text-emerald-700 font-medium">{t('dashboard.registerWork.creditRefunded')}</span>
+            <div className="flex items-center gap-1.5 rounded-full bg-success/10 px-3 py-1">
+              <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+              <span className="text-xs text-success font-medium">{t('dashboard.registerWork.creditRefunded')}</span>
             </div>
             <Button variant="outline" size="sm" className="w-full" onClick={resetForm}>
               {t('dashboard.registerWork.tryAgain')}
@@ -316,8 +316,8 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
                   </SelectContent>
                 </Select>
               ) : (
-                <div className="space-y-2 p-2 rounded-md border border-dashed border-amber-400/50 bg-amber-50/50 dark:bg-amber-900/10">
-                  <p className="text-xs text-amber-700 dark:text-amber-400">
+                <div className="space-y-2 p-2 rounded-md border border-dashed border-warning/50 bg-warning/50 dark:bg-warning/10">
+                  <p className="text-xs text-warning dark:text-warning">
                     {t('dashboard.registerWork.needSignature')}
                   </p>
                   <div className="flex gap-2">
@@ -348,7 +348,7 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
                         .filter((s: IbsSignature) => s.status === 'pending')
                         .map((s: IbsSignature) => (
                           <div key={s.id} className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-amber-600 text-xs">
+                            <Badge variant="outline" className="text-warning text-xs">
                               {s.signature_name} — {t('dashboard.registerWork.pending')}
                             </Badge>
                             {s.kyc_url && (
@@ -464,10 +464,10 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
             </Button>
 
             {showDistributeBanner && lastRegisteredWorkId && (
-              <Card className="mt-4 border-emerald-500/30 bg-emerald-500/5">
+              <Card className="mt-4 border-success/30 bg-success/5">
                 <CardContent className="p-4 flex items-start gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-                    <Radio className="h-4 w-4 text-emerald-600" />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-success/10">
+                    <Radio className="h-4 w-4 text-success" />
                   </div>
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <p className="text-sm font-semibold">{t('dashboard.registerWork.workRegistered')}</p>

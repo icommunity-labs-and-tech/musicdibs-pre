@@ -177,8 +177,8 @@ export default function ProfilePage() {
   };
 
   const kycMap: Record<string, { label: string; icon: typeof CheckCircle2; badgeClass: string }> = {
-    verified: { label: t('dashboard.profile.kycVerified'), icon: CheckCircle2, badgeClass: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-    pending: { label: t('dashboard.profile.kycPending'), icon: Loader2, badgeClass: 'bg-amber-500/10 text-amber-600 border-amber-500/20' },
+    verified: { label: t('dashboard.profile.kycVerified'), icon: CheckCircle2, badgeClass: 'bg-success/10 text-success border-success/20' },
+    pending: { label: t('dashboard.profile.kycPending'), icon: Loader2, badgeClass: 'bg-warning/10 text-warning border-warning/20' },
     unverified: { label: t('dashboard.profile.kycUnverified'), icon: AlertCircle, badgeClass: 'bg-destructive/10 text-destructive border-destructive/20' },
   };
 
@@ -217,7 +217,7 @@ export default function ProfilePage() {
               placeholder="tu@email.com"
             />
             {editing && email.trim().toLowerCase() !== (user?.email || '').toLowerCase() && (
-              <p className="text-[10px] text-amber-600">{t('dashboard.profile.emailConfirmNote')}</p>
+              <p className="text-[10px] text-warning">{t('dashboard.profile.emailConfirmNote')}</p>
             )}
           </div>
 
@@ -269,7 +269,7 @@ export default function ProfilePage() {
           )}
 
           {saveMsg && (
-            <div className={`flex items-center gap-2 text-xs ${saveMsg.type === 'success' ? 'text-emerald-600' : 'text-destructive'}`}>
+            <div className={`flex items-center gap-2 text-xs ${saveMsg.type === 'success' ? 'text-success' : 'text-destructive'}`}>
               {saveMsg.type === 'success' ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
               {saveMsg.text}
             </div>
@@ -453,7 +453,7 @@ export default function ProfilePage() {
           )}
 
           {pwMsg && (
-            <div className={`flex items-center gap-2 text-xs ${pwMsg.type === 'success' ? 'text-emerald-600' : 'text-destructive'}`}>
+            <div className={`flex items-center gap-2 text-xs ${pwMsg.type === 'success' ? 'text-success' : 'text-destructive'}`}>
               {pwMsg.type === 'success' ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
               {pwMsg.text}
             </div>

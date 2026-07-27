@@ -227,15 +227,15 @@ export function DashboardSidebar() {
           <NavLink
             to={item.url}
             end={item.url === '/dashboard'}
-            className={`hover:bg-muted/50 ${isHighlight ? 'text-violet-500 font-bold' : ''}`}
+            className={`hover:bg-muted/50 ${isHighlight ? 'text-accent font-bold' : ''}`}
             activeClassName={activeClass}
           >
-            <item.icon className={`mr-2 h-4 w-4 ${isHighlight ? 'text-violet-500' : ''}`} />
+            <item.icon className={`mr-2 h-4 w-4 ${isHighlight ? 'text-accent' : ''}`} />
             {!collapsed && (
               <span className="flex items-center gap-2 flex-1">
                 {item.title}
                 {isHighlight && !isActive(item.url) && (
-                  <span className="ml-auto rounded-full bg-violet-500/15 px-1.5 py-0.5 text-[10px] font-bold text-violet-500 leading-none">
+                  <span className="ml-auto rounded-full bg-accent/15 px-1.5 py-0.5 text-[10px] font-bold text-accent leading-none">
                     {tr('dashboard.sidebar.new', 'NUEVO')}
                   </span>
                 )}
@@ -288,7 +288,7 @@ export function DashboardSidebar() {
 
         {renderCollapsibleGroup('cuenta', tr('dashboard.sidebar.account', 'Cuenta'), accountItems)}
 
-        {isAdmin && renderCollapsibleGroup('admin', tr('dashboard.sidebar.admin', 'AdministraciÃ³n'), adminItems, 'bg-pink-500/10 text-pink-400 font-medium')}
+        {isAdmin && renderCollapsibleGroup('admin', tr('dashboard.sidebar.admin', 'AdministraciÃ³n'), adminItems, 'bg-brand/10 text-brand font-medium')}
       </SidebarContent>
 
       <SidebarFooter className="p-3">

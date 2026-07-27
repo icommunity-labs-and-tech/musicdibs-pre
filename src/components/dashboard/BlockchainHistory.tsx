@@ -59,12 +59,12 @@ export function BlockchainHistory() {
     processing: {
       label: t('dashboard.blockchainHistory.statusProcessing'),
       icon: Loader2,
-      className: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+      className: 'bg-warning/10 text-warning border-warning/20',
     },
     registered: {
       label: t('dashboard.blockchainHistory.statusRegistered'),
       icon: CheckCircle2,
-      className: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+      className: 'bg-success/10 text-success border-success/20',
     },
     failed: {
       label: t('dashboard.blockchainHistory.statusFailed'),
@@ -260,8 +260,8 @@ export function BlockchainHistory() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Card className="border-border/40">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
-              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-success/10">
+              <CheckCircle2 className="h-5 w-5 text-success" />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.certified}</p>
@@ -271,8 +271,8 @@ export function BlockchainHistory() {
         </Card>
         <Card className="border-border/40">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500/10">
-              <Clock className="h-5 w-5 text-amber-600" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-warning/10">
+              <Clock className="h-5 w-5 text-warning" />
             </div>
             <div>
               <p className="text-2xl font-bold">{stats.processing}</p>
@@ -395,7 +395,7 @@ export function BlockchainHistory() {
                                   title={t('dashboard.blockchainHistory.copyHashTitle')}
                                 >
                                   {copiedId === work.id ? (
-                                    <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                    <Check className="h-3.5 w-3.5 text-success" />
                                   ) : (
                                     <Copy className="h-3.5 w-3.5" />
                                   )}

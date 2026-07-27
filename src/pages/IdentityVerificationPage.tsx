@@ -264,11 +264,11 @@ export default function IdentityVerificationPage() {
         </h2>
         <Card className="border-border/40">
           <CardContent className="p-8 flex flex-col items-center text-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
-              <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
+              <CheckCircle2 className="h-8 w-8 text-success" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-emerald-600">{tk('verifiedTitle')}</h3>
+              <h3 className="text-lg font-semibold text-success">{tk('verifiedTitle')}</h3>
               <p className="text-sm text-muted-foreground">{tk('verifiedDesc')}</p>
             </div>
             <Button onClick={() => navigate('/dashboard/register')}>
@@ -294,11 +294,11 @@ export default function IdentityVerificationPage() {
         </div>
         <Card className="border-border/40">
           <CardContent className="p-8 flex flex-col items-center text-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10">
-              <Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-warning/10">
+              <Loader2 className="h-8 w-8 text-warning animate-spin" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-amber-600">{tk('pendingTitle')}</h3>
+              <h3 className="text-lg font-semibold text-warning">{tk('pendingTitle')}</h3>
               <p className="text-sm text-muted-foreground">{tk('pendingDesc')}</p>
             </div>
           </CardContent>
@@ -328,8 +328,8 @@ export default function IdentityVerificationPage() {
             </div>
 
             {isInReview && (
-              <div className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
-                <Badge variant="outline" className="gap-1.5 bg-amber-500/10 text-amber-600 border-amber-500/20">
+              <div className="flex items-center justify-between rounded-lg border border-warning/20 bg-warning/5 p-3">
+                <Badge variant="outline" className="gap-1.5 bg-warning/10 text-warning border-warning/20">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   {tk('pendingBadge')}
                 </Badge>
@@ -366,7 +366,7 @@ export default function IdentityVerificationPage() {
               </div>
             ) : (
               <div className="rounded-lg border border-border/40 bg-muted/20 p-8 text-center space-y-4">
-                <AlertCircle className="h-10 w-10 mx-auto text-amber-400" />
+                <AlertCircle className="h-10 w-10 mx-auto text-warning" />
                 <div>
                   <p className="font-medium">{tk('iframeFallbackTitle')}</p>
                   <p className="text-sm text-muted-foreground mt-1">{tk('iframeFallbackDesc')}</p>
@@ -404,9 +404,9 @@ export default function IdentityVerificationPage() {
         <CardContent className="p-4 flex items-start gap-3">
           {pendingSig ? (
             <>
-              <Clock className="h-5 w-5 text-amber-500 mt-0.5 shrink-0" />
+              <Clock className="h-5 w-5 text-warning mt-0.5 shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-semibold text-amber-600">{tk('notCompletedTitle')}</p>
+                <p className="text-sm font-semibold text-warning">{tk('notCompletedTitle')}</p>
                 <p className="text-xs text-muted-foreground">{tk('notCompletedDesc')}</p>
               </div>
             </>

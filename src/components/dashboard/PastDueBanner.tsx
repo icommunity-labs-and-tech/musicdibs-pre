@@ -81,7 +81,7 @@ export function PastDueBanner() {
   };
 
   return (
-    <div className="sticky top-12 z-40 border-b border-destructive/40 bg-gradient-to-r from-destructive to-orange-600 text-destructive-foreground shadow-md">
+    <div className="sticky top-12 z-40 border-b border-destructive/40 bg-gradient-to-r from-destructive to-warning text-destructive-foreground shadow-md">
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 text-sm">
         <div className="flex items-start gap-2 flex-1">
           <AlertTriangle className="h-5 w-5 mt-0.5 shrink-0" />

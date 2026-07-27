@@ -95,12 +95,12 @@ const Verify = () => {
       <section className="pt-32 pb-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-5 py-2 mb-8">
-            <ShieldCheck className="w-5 h-5 text-pink-300" />
+            <ShieldCheck className="w-5 h-5 text-brand" />
             <span className="text-white/90 text-sm font-medium">{t('verify.badge')}</span>
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
             {t('verify.title1')}<br />
-            <span className="bg-gradient-to-r from-pink-400 to-purple-300 bg-clip-text text-transparent">{t('verify.title2')}</span>
+            <span className="bg-gradient-to-r from-brand to-primary bg-clip-text text-transparent">{t('verify.title2')}</span>
           </h1>
           <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto">
             {t('verify.subtitle')} <strong className="text-white">Musicdibs</strong>{t('verify.subtitleEnd')}
@@ -113,7 +113,7 @@ const Verify = () => {
         <div className="max-w-2xl mx-auto">
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 md:p-10 shadow-2xl">
             <div className="flex items-center gap-3 mb-6">
-              <FileSearch className="w-6 h-6 text-pink-400" />
+              <FileSearch className="w-6 h-6 text-brand" />
               <h2 className="text-xl font-semibold text-white">{t('verify.cardTitle')}</h2>
             </div>
 
@@ -123,9 +123,9 @@ const Verify = () => {
             <div
               className={`relative border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all duration-200 mb-6 ${
                 dragOver
-                  ? "border-pink-400 bg-pink-400/10"
+                  ? "border-brand bg-brand/10"
                   : file
-                  ? "border-green-400/50 bg-green-400/5"
+                  ? "border-success/50 bg-success/5"
                   : "border-white/20 hover:border-white/40 bg-white/5"
               }`}
               onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -141,7 +141,7 @@ const Verify = () => {
               />
               {file ? (
                 <div className="flex items-center justify-center gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-green-400" />
+                  <CheckCircle2 className="w-6 h-6 text-success" />
                   <span className="text-white/90 font-medium truncate max-w-xs">{file.name}</span>
                   <button
                     onClick={(e) => { e.stopPropagation(); setFile(null); setResult(null); }}
@@ -154,7 +154,7 @@ const Verify = () => {
                 <>
                   <Upload className="w-10 h-10 text-white/30 mx-auto mb-3" />
                   <p className="text-white/60 text-sm">
-                    <span className="text-pink-400 font-medium">{t('verify.dropClick')}</span> {t('verify.dropDrag')}
+                    <span className="text-brand font-medium">{t('verify.dropClick')}</span> {t('verify.dropDrag')}
                   </p>
                   <p className="text-white/30 text-xs mt-1">{t('verify.dropHint')}</p>
                 </>
@@ -165,7 +165,7 @@ const Verify = () => {
             <Button
               onClick={handleVerify}
               disabled={!file || verifying}
-              className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white font-semibold py-6 text-lg rounded-xl transition-all duration-200 disabled:opacity-40"
+              className="w-full bg-gradient-to-r from-brand to-primary hover:from-brand hover:to-primary text-white font-semibold py-6 text-lg rounded-xl transition-all duration-200 disabled:opacity-40"
             >
               {verifying ? (
                 <span className="flex items-center gap-2">
@@ -179,11 +179,11 @@ const Verify = () => {
 
             {/* Result */}
             {result && result.found && (
-              <div className="mt-6 p-5 bg-green-500/10 border border-green-400/30 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2">
-                <CheckCircle2 className="w-6 h-6 text-green-400 mt-0.5 shrink-0" />
+              <div className="mt-6 p-5 bg-success/10 border border-success/30 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2">
+                <CheckCircle2 className="w-6 h-6 text-success mt-0.5 shrink-0" />
                 <div className="space-y-2">
-                  <p className="text-green-300 font-semibold">{t('verify.foundTitle')}</p>
-                  <p className="text-green-200/70 text-sm">
+                  <p className="text-success font-semibold">{t('verify.foundTitle')}</p>
+                  <p className="text-success/70 text-sm">
                     {t('verify.foundDesc', {
                       title: result.title,
                       date: new Date(result.registeredAt!).toLocaleDateString(locale),
@@ -193,7 +193,7 @@ const Verify = () => {
                     <button
                       onClick={handleDownloadCertificate}
                       disabled={generating}
-                      className="inline-flex items-center gap-1.5 text-sm text-pink-400 hover:text-pink-300 transition-colors disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 text-sm text-brand hover:text-brand transition-colors disabled:opacity-50"
                     >
                       {generating
                         ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('dashboard.certificate.generating')}</>
@@ -205,11 +205,11 @@ const Verify = () => {
               </div>
             )}
             {result && !result.found && (
-              <div className="mt-6 p-5 bg-amber-500/10 border border-amber-400/30 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2">
-                <AlertCircle className="w-6 h-6 text-amber-400 mt-0.5 shrink-0" />
+              <div className="mt-6 p-5 bg-warning/10 border border-warning/30 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-bottom-2">
+                <AlertCircle className="w-6 h-6 text-warning mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-amber-300 font-semibold">{t('verify.notFoundTitle')}</p>
-                  <p className="text-amber-200/70 text-sm mt-1">{t('verify.notFoundDesc')}</p>
+                  <p className="text-warning font-semibold">{t('verify.notFoundTitle')}</p>
+                  <p className="text-warning/70 text-sm mt-1">{t('verify.notFoundDesc')}</p>
                 </div>
               </div>
             )}
@@ -224,7 +224,7 @@ const Verify = () => {
           <div className="grid md:grid-cols-3 gap-8">
             {steps.map((item) => (
               <div key={item.step} className="text-center">
-                <div className="text-5xl font-black bg-gradient-to-b from-pink-400/60 to-transparent bg-clip-text text-transparent mb-4">
+                <div className="text-5xl font-black bg-gradient-to-b from-brand/60 to-transparent bg-clip-text text-transparent mb-4">
                   {item.step}
                 </div>
                 <h3 className="text-white font-semibold text-lg mb-2">{item.title}</h3>

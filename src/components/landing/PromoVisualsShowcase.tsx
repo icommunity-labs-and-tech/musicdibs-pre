@@ -127,7 +127,7 @@ const PromoCardItem = ({ card }: { card: PromoCard }) => {
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
           />
         ) : (
-          <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-purple-900/60 to-fuchsia-900/60" aria-hidden="true" />
+          <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/60 to-accent/60" aria-hidden="true" />
         )
       ) : (
         <img
@@ -182,9 +182,9 @@ export const PromoVisualsShowcase = () => {
       }}
     >
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-white/6 to-transparent" />
-      <div className="pointer-events-none absolute -top-32 -left-32 w-[32rem] h-[32rem] rounded-full bg-fuchsia-600/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 -right-32 w-[32rem] h-[32rem] rounded-full bg-violet-600/25 blur-3xl" />
-      <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[44rem] h-[44rem] rounded-full bg-purple-500/15 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 -left-32 w-[32rem] h-[32rem] rounded-full bg-accent/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-40 -right-32 w-[32rem] h-[32rem] rounded-full bg-accent/25 blur-3xl" />
+      <div className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/2 w-[44rem] h-[44rem] rounded-full bg-primary/15 blur-3xl" />
 
       <div className="container mx-auto px-4 relative">
         <Reveal>
@@ -195,7 +195,7 @@ export const PromoVisualsShowcase = () => {
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
               Crea todo el material visual de{" "}
-              <span className="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent">
                 tu lanzamiento
               </span>
               , en minutos.
@@ -211,7 +211,7 @@ export const PromoVisualsShowcase = () => {
         <div className="flex items-center gap-2 mb-5 sm:mb-6">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/85 text-xs sm:text-[13px] font-medium tracking-wide">
-            <ImageIcon className="w-3.5 h-3.5 text-pink-300" />
+            <ImageIcon className="w-3.5 h-3.5 text-brand" />
             Portadas y piezas para tu lanzamiento
           </div>
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
@@ -242,7 +242,7 @@ export const PromoVisualsShowcase = () => {
             href="https://www.musicdibs.com/login"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl px-8 py-3.5 text-sm font-semibold text-white bg-gradient-to-r from-fuchsia-500 via-pink-500 to-purple-600 hover:from-fuchsia-600 hover:via-pink-600 hover:to-purple-700 shadow-lg shadow-fuchsia-500/30 transition-all"
+            className="inline-flex items-center gap-2 rounded-xl px-8 py-3.5 text-sm font-semibold text-white bg-gradient-to-r from-accent via-brand to-primary hover:from-accent hover:via-brand hover:to-primary shadow-lg shadow-fuchsia-500/30 transition-all"
           >
             <Sparkles className="w-4 h-4" />
             Crear mi material promocional

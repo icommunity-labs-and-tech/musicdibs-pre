@@ -10,7 +10,7 @@ export default function LibraryAccessBanner() {
 
   if (tier === 'warning') {
     return (
-      <Card className="border-amber-500/50 bg-amber-500/5">
+      <Card className="border-warning/50 bg-warning/5">
         <CardContent className="p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex-1">
@@ -37,7 +37,7 @@ export default function LibraryAccessBanner() {
 
   if (tier === 'restricted') {
     return (
-      <Card className="border-orange-500/50 bg-orange-500/5">
+      <Card className="border-warning/50 bg-warning/5">
         <CardContent className="p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex-1">

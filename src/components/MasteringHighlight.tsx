@@ -19,7 +19,7 @@ const BeforeAfterWave = () => {
             key={i}
             className={`flex-1 rounded-full ${
               isAfter
-                ? "bg-gradient-to-t from-fuchsia-400 to-pink-300 shadow-[0_0_8px_rgba(244,114,182,0.6)]"
+                ? "bg-gradient-to-t from-accent to-brand shadow-[0_0_8px_rgba(244,114,182,0.6)]"
                 : "bg-white/20"
             }`}
             style={{ height: `${h}%` }}
@@ -57,8 +57,8 @@ export const MasteringHighlight = () => {
       }}
     >
       {/* Ambient glows */}
-      <div className="pointer-events-none absolute -top-24 left-1/4 w-[26rem] h-[26rem] rounded-full bg-fuchsia-600/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 right-1/4 w-[26rem] h-[26rem] rounded-full bg-violet-600/20 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 left-1/4 w-[26rem] h-[26rem] rounded-full bg-accent/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 right-1/4 w-[26rem] h-[26rem] rounded-full bg-accent/20 blur-3xl" />
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
         <ScrollReveal>
@@ -88,12 +88,12 @@ export const MasteringHighlight = () => {
               {/* Left: copy */}
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/15 bg-white/10 text-white/90 text-[11px] font-semibold tracking-wide uppercase mb-4">
-                  <Headphones className="w-3.5 h-3.5 text-fuchsia-300" />
+                  <Headphones className="w-3.5 h-3.5 text-accent" />
                   Masterizado IA
                 </div>
                 <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight mb-3">
                   Masteriza tu canción de forma{" "}
-                  <span className="bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-300 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent">
                     profesional
                   </span>
                 </h3>
@@ -109,7 +109,7 @@ export const MasteringHighlight = () => {
                       key={b.label}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 border border-white/10 text-white/90 text-xs font-medium"
                     >
-                      <b.icon className="w-3.5 h-3.5 text-fuchsia-300" />
+                      <b.icon className="w-3.5 h-3.5 text-accent" />
                       {b.label}
                     </li>
                   ))}
@@ -118,7 +118,7 @@ export const MasteringHighlight = () => {
                 <Button
                   size="lg"
                   onClick={scrollToPricing}
-                  className="bg-gradient-to-r from-pink-500 via-fuchsia-500 to-purple-600 text-white border-0 shadow-[0_0_30px_rgba(217,70,239,0.45)] hover:shadow-[0_0_45px_rgba(217,70,239,0.7)] hover:scale-[1.03] transition-all"
+                  className="bg-gradient-to-r from-brand via-accent to-primary text-white border-0 shadow-[0_0_30px_rgba(217,70,239,0.45)] hover:shadow-[0_0_45px_rgba(217,70,239,0.7)] hover:scale-[1.03] transition-all"
                 >
                   <Wand2 className="w-4 h-4" />
                   Masterizar mi canción
@@ -130,7 +130,7 @@ export const MasteringHighlight = () => {
                 <div className="rounded-2xl bg-black/40 border border-white/10 p-4 shadow-inner">
                   <div className="flex items-center justify-between text-[10px] font-semibold tracking-[0.18em] uppercase mb-3">
                     <span className="text-white/50">Antes</span>
-                    <span className="text-fuchsia-300">Después</span>
+                    <span className="text-accent">Después</span>
                   </div>
                   <BeforeAfterWave />
                   <div className="mt-3 flex items-center justify-between text-[11px] text-white/60">
