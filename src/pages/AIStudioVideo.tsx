@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -698,8 +699,10 @@ const AIStudioVideo = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 {isLoadingTracks ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  <div className="space-y-2 py-1">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-9 w-full rounded-md" />
+                    ))}
                   </div>
                 ) : audioTracks.length === 0 ? (
                   <p className="text-xs text-muted-foreground py-2">
@@ -1005,8 +1008,10 @@ const AIStudioVideo = () => {
 
                                 <div className="flex-1 overflow-y-auto space-y-2 pr-1">
                                   {isLoadingTracks ? (
-                                    <div className="flex items-center justify-center py-8">
-                                      <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                                    <div className="space-y-2 py-2">
+                                      {[1, 2, 3, 4].map((i) => (
+                                        <Skeleton key={i} className="h-16 w-full rounded-md" />
+                                      ))}
                                     </div>
                                   ) : audioTracks.length === 0 ? (
                                     <div className="text-center py-8 text-sm text-muted-foreground">
