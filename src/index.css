@@ -127,6 +127,17 @@ All colors MUST be HSL.
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Semantic brand tokens (Fase 1A) — dark variants */
+    --brand: 328 86% 66%;
+    --brand-foreground: 0 0% 100%;
+    --brand-glow: 325 90% 75%;
+    --success: 152 70% 50%;
+    --success-foreground: 152 60% 8%;
+    --warning: 43 96% 62%;
+    --warning-foreground: 26 83% 14%;
+    --info: 217 91% 65%;
+    --info-foreground: 0 0% 100%;
   }
 
   /* Light mode overrides for page-level theming */
