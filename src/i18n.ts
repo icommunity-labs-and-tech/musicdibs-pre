@@ -1217,6 +1217,16 @@ const resources = {
           placeholder: 'Type your question...',
           contactHuman: 'Contact support',
           error: 'An error occurred. Please try again.',
+          clear: 'Clear conversation',
+          minimize: 'Minimize',
+          close: 'Close',
+          suggestionsLabel: 'Frequently asked',
+          suggestions: {
+            register: 'How do I register a work?',
+            credits: 'How do credits work?',
+            distribution: 'How do I distribute my music?',
+            plans: 'Which plan is right for me?',
+          },
         },
       aiStudio: {
         },
