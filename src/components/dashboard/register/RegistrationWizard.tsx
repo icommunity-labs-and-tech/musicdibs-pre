@@ -442,9 +442,14 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
   if (resumeLoading) {
     return (
       <Card className="border-border/40">
-        <CardContent className="p-10 flex flex-col items-center justify-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Cargando borrador…</p>
+        <CardContent className="p-6 space-y-4">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-4 w-2/3" />
+          <div className="space-y-2">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </div>
         </CardContent>
       </Card>
     );
