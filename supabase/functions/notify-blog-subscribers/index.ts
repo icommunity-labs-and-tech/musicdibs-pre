@@ -113,6 +113,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const cronSecret = Deno.env.get("CRON_SECRET");
+    const triggerSecret = Deno.env.get("NOTIFY_BLOG_TRIGGER_SECRET");
     const mlKey = Deno.env.get("MAILERLITE_API_KEY");
 
     if (!mlKey) return jsonResponse({ error: "MAILERLITE_API_KEY missing" }, 500);
