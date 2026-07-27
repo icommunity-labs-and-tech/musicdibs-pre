@@ -18,6 +18,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Download, Info, AlertCircle, Film, Clock, Instagram, Sparkles } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { NoCreditsAlert } from '@/components/dashboard/NoCreditsAlert';
+import { useImprovePrompt } from '@/hooks/useImprovePrompt';
 
 const VIDEO_COST = FEATURE_COSTS.social_video;
 
@@ -42,7 +43,11 @@ export const SocialVideosSection = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const [generating, setGenerating] = useState(false);
-  const [isImprovingDesc, setIsImprovingDesc] = useState(false);
+  const { improve, isImproving: isImprovingDesc } = useImprovePrompt({
+    maxLength: 2000,
+    successMessage: tr('promptImproved'),
+    errorMessage: tr('improveError'),
+  });
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [progressStatus, setProgressStatus] = useState<'queued' | 'processing' | null>(null);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
@@ -84,22 +89,8 @@ export const SocialVideosSection = () => {
   };
 
   const handleImproveDescription = async () => {
-    if (!description.trim()) return;
-    setIsImprovingDesc(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('improve-prompt', {
-        body: { prompt: description, mode: 'video_prompt' },
-      });
-      if (error || data?.error) throw new Error(data?.error || error?.message);
-      if (data?.improved) {
-        setDescription(data.improved.slice(0, 2000));
-        toast({ title: tr('promptImproved'), description: tr('promptImprovedDesc') });
-      }
-    } catch {
-      toast({ title: tr('error'), description: tr('improveError'), variant: 'destructive' });
-    } finally {
-      setIsImprovingDesc(false);
-    }
+    const improved = await improve({ prompt: description, mode: 'video_prompt' });
+    if (improved) setDescription(improved);
   };
 
   const handleGenerate = async () => {

@@ -18,6 +18,7 @@ import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { parseAiError } from '@/lib/aiErrorHandler';
+import { useImprovePrompt } from '@/hooks/useImprovePrompt';
 import {
   Wand2, Loader2, Download, RefreshCw, ImageIcon, Sparkles, Coins,
 } from 'lucide-react';
@@ -66,7 +67,7 @@ export const CoversSection = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [genError, setGenError] = useState<string | null>(null);
-  const [isImprovingDesc, setIsImprovingDesc] = useState(false);
+  const { improve, isImproving: isImprovingDesc } = useImprovePrompt({ maxLength: 1000, successMessage: t('aiCovers.descImproved') });
 
   const [resolution, setResolution] = useState<'1024' | '4096'>('1024');
   const [coverMode, setCoverMode] = useState<CoverMode>('none');
@@ -100,22 +101,8 @@ export const CoversSection = () => {
   };
 
   const handleImproveDescription = async () => {
-    if (!description.trim()) return;
-    setIsImprovingDesc(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('improve-prompt', {
-        body: { prompt: description, mode: 'cover_design' },
-      });
-      if (error || data?.error) throw new Error(data?.error || error?.message);
-      if (data?.improved) {
-        setDescription(data.improved.slice(0, 1000));
-        toast.success(t('aiCovers.descImproved'));
-      }
-    } catch {
-      toast.error(t('aiShared.error'));
-    } finally {
-      setIsImprovingDesc(false);
-    }
+    const improved = await improve({ prompt: description, mode: 'cover_design' });
+    if (improved) setDescription(improved);
   };
 
   const handleGenerate = async () => {

@@ -16,6 +16,7 @@ import { Loader2, Download, Sparkles, RefreshCw, ImageIcon } from 'lucide-react'
 import { PricingLink } from '@/components/dashboard/PricingPopup';
 import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 import { useProductTracking } from '@/hooks/useProductTracking';
+import { useImprovePrompt } from '@/hooks/useImprovePrompt';
 
 type Format = 'feed' | 'story' | 'youtube';
 
@@ -59,7 +60,11 @@ export const CreativesSection = () => {
   const [basePhotoPreview, setBasePhotoPreview] = useState<string | null>(null);
 
   const [generating, setGenerating] = useState(false);
-  const [improving, setImproving] = useState(false);
+  const { improve, isImproving: improving } = useImprovePrompt({
+    maxLength: 1000,
+    successMessage: ts('improvedToast'),
+    errorMessage: ts('errorImprove'),
+  });
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [resultFormat, setResultFormat] = useState<Format>('feed');
 
@@ -68,22 +73,9 @@ export const CreativesSection = () => {
       toast.error(ts('needDescription'));
       return;
     }
-    setImproving(true);
-    try {
-      const mode = platform === 'youtube' ? 'youtube_thumbnail' : 'instagram_creative';
-      const { data, error } = await supabase.functions.invoke('improve-prompt', {
-        body: { prompt: description, mode },
-      });
-      if (error || data?.error) throw new Error(data?.error || error?.message);
-      if (data?.improved) {
-        setDescription(data.improved.slice(0, 1000));
-        toast.success(ts('improvedToast'));
-      }
-    } catch (err: any) {
-      toast.error(err.message || ts('errorImprove'));
-    } finally {
-      setImproving(false);
-    }
+    const mode = platform === 'youtube' ? 'youtube_thumbnail' : 'instagram_creative';
+    const improved = await improve({ prompt: description, mode });
+    if (improved) setDescription(improved);
   };
 
   const currentFormat: Format = platform === 'youtube' ? 'youtube' : instagramFormat;
