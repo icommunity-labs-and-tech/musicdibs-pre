@@ -71,7 +71,9 @@ export default function DashboardLayout() {
   return (
     <NotificationsProvider>
       <Helmet><meta name="robots" content="noindex, nofollow" /></Helmet>
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={readSidebarCookie()}>
+
+
 
         <div className="min-h-screen flex w-full">
           <DashboardSidebar />
