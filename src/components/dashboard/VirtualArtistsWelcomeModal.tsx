@@ -58,7 +58,7 @@ export const VirtualArtistsWelcomeModal = ({ open, onOpenChange, onCreateFirst, 
               {flowSteps.map((step, i) => (
                 <div key={i} className="contents">
                   <div className="flex flex-row sm:flex-col items-center gap-2 text-center">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${step.gradient} flex items-center justify-center text-white shrink-0`}>
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${step.gradient} flex items-center justify-center text-primary-foreground shrink-0`}>
                       <step.icon className="h-5 w-5" />
                     </div>
                     <span className="text-xs font-medium leading-tight">{step.label}</span>
