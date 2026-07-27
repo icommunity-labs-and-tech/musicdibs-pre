@@ -336,7 +336,7 @@ export default function AdminYoutubeServicesPage() {
                   )}
                   {selected.status === 'in_review' && (
                     <>
-                      <Button onClick={() => updateStatus(selected, 'approved')} className="bg-success hover:bg-success text-white">Aprobar</Button>
+                      <Button onClick={() => updateStatus(selected, 'approved')} className="bg-success hover:bg-success text-success-foreground">Aprobar</Button>
                       <Button variant="destructive" onClick={() => { setRejectTarget(selected); setRejectionReason(''); }}>Rechazar</Button>
                     </>
                   )}
