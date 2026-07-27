@@ -120,7 +120,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
               <div className="flex items-center gap-2">
                 <CardTitle className="text-base">📈 Revenue</CardTitle>
                 {m._dataSource === "stripe_real" && (
-                  <Badge variant="outline" className="text-[10px] border-green-500/50 text-green-500">Stripe Live</Badge>
+                  <Badge variant="outline" className="text-[10px] border-success/50 text-success">Stripe Live</Badge>
                 )}
                 {(() => {
                   const totalFee = revenueTimeSeries.reduce((s: number, p: RevenuePoint) => s + (Number(p.fee) || 0), 0);
@@ -130,7 +130,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
                       <TooltipProvider>
                         <UITooltip>
                           <TooltipTrigger asChild>
-                            <AlertTriangle className="w-3.5 h-3.5 text-amber-500 cursor-help" />
+                            <AlertTriangle className="w-3.5 h-3.5 text-warning cursor-help" />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="text-xs">Comisiones Stripe pendientes de sincronización</p>
@@ -268,9 +268,9 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <RevenueBar label="Anual" value={m.revenueAnnual ?? 0} percent={periodRevenue > 0 ? Math.round(((m.revenueAnnual ?? 0) / periodRevenue) * 100) : 0} gradient="from-violet-500 to-purple-600" />
-            <RevenueBar label="Mensual" value={m.revenueMonthly ?? 0} percent={periodRevenue > 0 ? Math.round(((m.revenueMonthly ?? 0) / periodRevenue) * 100) : 0} gradient="from-blue-500 to-cyan-600" />
-            <RevenueBar label="Singles / Topups" value={(m.revenueSingle ?? 0) + (m.revenueTopup ?? 0)} percent={periodRevenue > 0 ? Math.round((((m.revenueSingle ?? 0) + (m.revenueTopup ?? 0)) / periodRevenue) * 100) : 0} gradient="from-emerald-500 to-teal-600" sub="Compras únicas" />
+            <RevenueBar label="Anual" value={m.revenueAnnual ?? 0} percent={periodRevenue > 0 ? Math.round(((m.revenueAnnual ?? 0) / periodRevenue) * 100) : 0} gradient="from-accent to-primary" />
+            <RevenueBar label="Mensual" value={m.revenueMonthly ?? 0} percent={periodRevenue > 0 ? Math.round(((m.revenueMonthly ?? 0) / periodRevenue) * 100) : 0} gradient="from-info to-info" />
+            <RevenueBar label="Singles / Topups" value={(m.revenueSingle ?? 0) + (m.revenueTopup ?? 0)} percent={periodRevenue > 0 ? Math.round((((m.revenueSingle ?? 0) + (m.revenueTopup ?? 0)) / periodRevenue) * 100) : 0} gradient="from-success to-info" sub="Compras únicas" />
           </div>
 
           <Separator className="my-4" />
@@ -292,7 +292,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
               </div>
               <div>
                 <span className="text-muted-foreground">Canceladas en periodo</span>
-                <p className={`text-lg font-bold mt-0.5 ${(m.cancelledThisMonth || 0) > 0 ? 'text-destructive' : 'text-green-600'}`}>
+                <p className={`text-lg font-bold mt-0.5 ${(m.cancelledThisMonth || 0) > 0 ? 'text-destructive' : 'text-success'}`}>
                   {m.cancelledThisMonth || 0}
                 </p>
               </div>

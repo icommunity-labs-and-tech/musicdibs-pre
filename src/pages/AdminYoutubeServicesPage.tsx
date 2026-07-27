@@ -38,10 +38,10 @@ type YtRequest = {
 
 const STATUS_LABEL: Record<string, { label: string; badge: string }> = {
   draft:           { label: 'Borrador',       badge: 'bg-muted text-muted-foreground' },
-  pending_payment: { label: 'Pago pendiente', badge: 'bg-yellow-500/20 text-yellow-400' },
-  submitted:       { label: 'Enviado',        badge: 'bg-blue-500/20 text-blue-400' },
-  in_review:       { label: 'En revisión',    badge: 'bg-orange-500/20 text-orange-400' },
-  approved:        { label: 'Aprobado',       badge: 'bg-emerald-500/20 text-emerald-400' },
+  pending_payment: { label: 'Pago pendiente', badge: 'bg-warning/20 text-warning' },
+  submitted:       { label: 'Enviado',        badge: 'bg-info/20 text-info' },
+  in_review:       { label: 'En revisión',    badge: 'bg-warning/20 text-warning' },
+  approved:        { label: 'Aprobado',       badge: 'bg-success/20 text-success' },
   rejected:        { label: 'Rechazado',      badge: 'bg-destructive/20 text-destructive' },
   cancelled:       { label: 'Cancelado',      badge: 'bg-muted text-muted-foreground line-through' },
 };
@@ -53,8 +53,8 @@ const statusBadge = (s: string) => {
 
 const serviceBadge = (t: string) =>
   t === 'oac'
-    ? <Badge className="bg-purple-500/20 text-purple-400">OAC</Badge>
-    : <Badge className="bg-blue-500/20 text-blue-400">Content ID</Badge>;
+    ? <Badge className="bg-primary/20 text-primary">OAC</Badge>
+    : <Badge className="bg-info/20 text-info">Content ID</Badge>;
 
 const FIELD_LABELS: Record<string, string> = {
   artist_name: 'Nombre artístico',
@@ -77,7 +77,7 @@ const isUrlKey = (k: string) => k.includes('url') || k.includes('channel_url');
 function FormDataView({ data }: { data: Record<string, any> | null }) {
   if (!data || Object.keys(data).length === 0) {
     return (
-      <div className="flex gap-2 items-start rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm text-yellow-200">
+      <div className="flex gap-2 items-start rounded-md border border-warning/30 bg-warning/10 p-3 text-sm text-warning">
         <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
         <span>Formulario no completado — contactar al usuario para recopilar datos</span>
       </div>
@@ -336,7 +336,7 @@ export default function AdminYoutubeServicesPage() {
                   )}
                   {selected.status === 'in_review' && (
                     <>
-                      <Button onClick={() => updateStatus(selected, 'approved')} className="bg-emerald-600 hover:bg-emerald-700 text-white">Aprobar</Button>
+                      <Button onClick={() => updateStatus(selected, 'approved')} className="bg-success hover:bg-success text-white">Aprobar</Button>
                       <Button variant="destructive" onClick={() => { setRejectTarget(selected); setRejectionReason(''); }}>Rechazar</Button>
                     </>
                   )}

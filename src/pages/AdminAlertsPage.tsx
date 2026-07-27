@@ -33,8 +33,8 @@ interface AdminAlert {
 }
 
 const severityVariant: Record<Severity, string> = {
-  info: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
-  warn: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+  info: "bg-info/15 text-info dark:text-info",
+  warn: "bg-warning/15 text-warning dark:text-warning",
   error: "bg-red-500/15 text-red-700 dark:text-red-300",
   critical: "bg-red-700 text-white",
 };
@@ -303,11 +303,11 @@ export default function AdminAlertsPage() {
                 </CardContent></Card>
                 <Card><CardContent className="p-4">
                   <div className="text-xs uppercase text-muted-foreground">Se renovarían</div>
-                  <div className="text-2xl font-bold text-green-600">{dryRunData.would_renew ?? 0}</div>
+                  <div className="text-2xl font-bold text-success">{dryRunData.would_renew ?? 0}</div>
                 </CardContent></Card>
                 <Card><CardContent className="p-4">
                   <div className="text-xs uppercase text-muted-foreground">Se omitirían</div>
-                  <div className="text-2xl font-bold text-amber-600">{dryRunData.would_skip ?? 0}</div>
+                  <div className="text-2xl font-bold text-warning">{dryRunData.would_skip ?? 0}</div>
                 </CardContent></Card>
               </div>
 
@@ -335,8 +335,8 @@ export default function AdminAlertsPage() {
                         <TableCell className="font-bold">{r.credits_would_reset_to}</TableCell>
                         <TableCell>
                           <Badge className={r.action === "would_renew"
-                            ? "bg-green-500/15 text-green-700 dark:text-green-300"
-                            : "bg-amber-500/15 text-amber-700 dark:text-amber-300"}>
+                            ? "bg-success/15 text-success dark:text-success"
+                            : "bg-warning/15 text-warning dark:text-warning"}>
                             {r.action}
                           </Badge>
                         </TableCell>

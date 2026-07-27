@@ -71,7 +71,7 @@ export default function AdminUserModals({ creditModal, setCreditModal, deleteMod
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">Saldo actual: <span className="font-mono font-medium text-primary">{creditModal.currentCredits}</span> créditos</p>
             {creditAmount && !isNaN(parseInt(creditAmount)) && (creditModal.currentCredits + parseInt(creditAmount)) < 0 && (
-              <div className="p-2 rounded bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-xs">
+              <div className="p-2 rounded bg-warning/10 border border-warning/30 text-warning text-xs">
                 ⚠️ El resultado sería negativo. El saldo se ajustará a 0.
               </div>
             )}

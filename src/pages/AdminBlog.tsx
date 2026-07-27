@@ -594,7 +594,7 @@ const AdminBlog = () => {
               <div className="flex items-start justify-between gap-4">
                 <div className="text-sm">
                   <p className="text-white/90">
-                    ✅ Regeneradas: <span className="text-green-400 font-semibold">{coverResults.ok}</span> ·
+                    ✅ Regeneradas: <span className="text-success font-semibold">{coverResults.ok}</span> ·
                     {" "}❌ Fallidas: <span className="text-red-400 font-semibold">{coverResults.fail}</span>
                   </p>
                   {coverResults.errors.length > 0 && (
@@ -821,7 +821,7 @@ const AdminBlog = () => {
                   </Button>
                 )}
                 <Button variant="ghost" onClick={closeForm}>Cancelar</Button>
-                {isDirty && <span className="text-xs text-amber-400 self-center">● Cambios sin guardar</span>}
+                {isDirty && <span className="text-xs text-warning self-center">● Cambios sin guardar</span>}
               </div>
             </div>
           </div>
@@ -905,7 +905,7 @@ const AdminBlog = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h3 className="text-sm font-medium text-white/90 truncate">{post.title}</h3>
-                        {post.published ? <Eye className="w-3.5 h-3.5 text-green-400 flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />}
+                        {post.published ? <Eye className="w-3.5 h-3.5 text-success flex-shrink-0" /> : <EyeOff className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-white/40">
                         <span>{post.category}</span><span>·</span><span className="uppercase">{post.language || "es"}</span>

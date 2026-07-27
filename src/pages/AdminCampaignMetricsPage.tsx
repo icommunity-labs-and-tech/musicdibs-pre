@@ -427,7 +427,7 @@ export default function AdminCampaignMetricsPage() {
         <div className="flex items-center gap-3">
           <Megaphone className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">Campañas</h1>
-          <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">Marketing</Badge>
+          <Badge className="bg-brand/20 text-brand border-brand/30">Marketing</Badge>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
           <Select value={periodType} onValueChange={(v) => setPeriodType(v as PeriodType)}>
@@ -826,7 +826,7 @@ export default function AdminCampaignMetricsPage() {
                             <div className="flex items-center gap-2">
                               {row.label}
                               {row.coupon_code && (
-                                <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 text-[10px]">
+                                <Badge className="bg-primary/20 text-primary border-primary/30 text-[10px]">
                                   cupón
                                 </Badge>
                               )}
@@ -925,7 +925,7 @@ export default function AdminCampaignMetricsPage() {
                           <TableCell className="text-right">{row.count}</TableCell>
                           <TableCell>
                             {row.coupon ? (
-                              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">
+                              <Badge className="bg-info/20 text-info border-info/30 text-[10px]">
                                 {row.coupon.coupon_code}
                               </Badge>
                             ) : <span className="text-muted-foreground">—</span>}
@@ -1003,7 +1003,7 @@ export default function AdminCampaignMetricsPage() {
                               <TableCell className="font-medium">{r.display_name}</TableCell>
                               <TableCell>
                                 {r.code ? (
-                                  <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 text-[10px]">{r.code}</Badge>
+                                  <Badge className="bg-info/20 text-info border-info/30 text-[10px]">{r.code}</Badge>
                                 ) : <span className="text-muted-foreground">—</span>}
                               </TableCell>
                               <TableCell className="text-xs text-muted-foreground">{r.subscription_tier || '—'}</TableCell>
@@ -1014,9 +1014,9 @@ export default function AdminCampaignMetricsPage() {
                                 {isAllRevoked ? (
                                   <Badge variant="destructive" className="text-[10px]">todo revocado</Badge>
                                 ) : isMixed ? (
-                                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">parcial</Badge>
+                                  <Badge className="bg-warning/20 text-warning border-warning/30 text-[10px]">parcial</Badge>
                                 ) : (
-                                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-[10px]">activo</Badge>
+                                  <Badge className="bg-success/20 text-success border-success/30 text-[10px]">activo</Badge>
                                 )}
                               </TableCell>
                             </TableRow>

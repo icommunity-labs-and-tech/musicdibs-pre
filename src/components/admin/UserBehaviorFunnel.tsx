@@ -282,7 +282,7 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
           value={data.newSubs}
           base={data.newUsers}
           widthPct={w(data.newSubs)}
-          color="bg-violet-600"
+          color="bg-accent"
         />
         <TopStep
           icon={<ShieldCheck className="w-4 h-4 shrink-0" />}
@@ -290,7 +290,7 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
           value={data.newKyc}
           base={data.newUsers}
           widthPct={w(data.newKyc)}
-          color="bg-blue-600"
+          color="bg-info"
           isLast
         />
 
@@ -316,21 +316,21 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
               label="Entradas al AI Studio"
               value={data.aiStudioEntries}
               base={data.newUsers}
-              color="bg-amber-500"
+              color="bg-warning"
             />
             <BranchStep
               icon={<Sparkles className="w-3.5 h-3.5 shrink-0 opacity-75" />}
               label="Uso de features de IA"
               value={data.aiFeatureUses}
               base={data.aiStudioEntries}
-              color="bg-orange-500"
+              color="bg-warning"
             />
             <BranchStep
               icon={<Music className="w-4 h-4 shrink-0" />}
               label="Registro de obras"
               value={data.worksAfterAi}
               base={data.aiStudioEntries}
-              color="bg-green-600"
+              color="bg-success"
               isLast
             />
           </div>
@@ -345,7 +345,7 @@ export function UserBehaviorFunnel({ range }: UserBehaviorFunnelProps) {
               label="Registro de obras (sin IA)"
               value={data.worksAfterAi}
               base={data.newUsers}
-              color="bg-emerald-600"
+              color="bg-success"
               isLast
             />
           </div>

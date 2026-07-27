@@ -195,12 +195,12 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
 
   if (alerts.length === 0) {
     return (
-      <Alert className="border-green-500/30 bg-green-500/5">
-        <CheckCircle2 className="h-4 w-4 text-green-500" />
-        <AlertTitle className="text-green-600">
+      <Alert className="border-success/30 bg-success/5">
+        <CheckCircle2 className="h-4 w-4 text-success" />
+        <AlertTitle className="text-success">
           Salud financiera OK{periodLabel ? ` — ${periodLabel}` : ''}
         </AlertTitle>
-        <AlertDescription className="text-green-600/80">
+        <AlertDescription className="text-success/80">
           {isCurrentPeriod
             ? 'No se detectan alertas críticas. Todos los indicadores están en rango saludable.'
             : 'No se detectan alertas sobre los indicadores calculados para el periodo seleccionado (ingresos vs periodo anterior proporcional, concentración de plan top y margen bruto si hay COGS manual).'}
@@ -215,7 +215,7 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2 mb-1 flex-wrap">
-        <AlertTriangle className="h-5 w-5 text-orange-500" />
+        <AlertTriangle className="h-5 w-5 text-warning" />
         <h3 className="text-base font-semibold">
           Alertas Financieras{periodLabel ? ` — ${periodLabel}` : ''}
         </h3>
@@ -225,16 +225,16 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
           </span>
         )}
         {warnings.length > 0 && (
-          <span className="text-xs bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded-full font-medium">
+          <span className="text-xs bg-warning/20 text-warning px-2 py-0.5 rounded-full font-medium">
             {warnings.length} aviso{warnings.length > 1 ? 's' : ''}
           </span>
         )}
       </div>
 
       {!isCurrentPeriod && (
-        <Alert className="border-blue-500/30 bg-blue-500/5">
-          <Info className="h-4 w-4 text-blue-500" />
-          <AlertDescription className="text-blue-600/90 text-xs">
+        <Alert className="border-info/30 bg-info/5">
+          <Info className="h-4 w-4 text-info" />
+          <AlertDescription className="text-info/90 text-xs">
             Estás viendo un periodo pasado. Solo se evalúan las alertas
             calculables sobre el periodo seleccionado: ingresos netos vs periodo
             anterior proporcional, concentración del plan top, y margen bruto
@@ -255,10 +255,10 @@ export default function FinancialAlerts({ metrics, isCurrentPeriod = true, perio
       ))}
 
       {warnings.map((alert, i) => (
-        <Alert key={`w-${i}`} className="border-orange-500/50 bg-orange-500/5">
-          <alert.icon className="h-4 w-4 text-orange-500" />
-          <AlertTitle className="text-orange-600">{alert.title}</AlertTitle>
-          <AlertDescription className="text-orange-500/80">{alert.description}</AlertDescription>
+        <Alert key={`w-${i}`} className="border-warning/50 bg-warning/5">
+          <alert.icon className="h-4 w-4 text-warning" />
+          <AlertTitle className="text-warning">{alert.title}</AlertTitle>
+          <AlertDescription className="text-warning/80">{alert.description}</AlertDescription>
         </Alert>
       ))}
     </div>

@@ -19,15 +19,15 @@ interface CreditAuditRow {
 }
 
 const EVENT_CONFIG: Record<string, { label: string; icon: React.ReactNode; badgeClass: string }> = {
-  purchase:                  { label: 'Compra',               icon: <CreditCard className="h-3 w-3" />,    badgeClass: 'bg-green-500/20 text-green-400' },
-  renewal:                   { label: 'Renovación',           icon: <RotateCcw className="h-3 w-3" />,     badgeClass: 'bg-blue-500/20 text-blue-400' },
-  usage:                     { label: 'Uso',                  icon: <Zap className="h-3 w-3" />,           badgeClass: 'bg-purple-500/20 text-purple-400' },
-  refund:                    { label: 'Reembolso',            icon: <RotateCcw className="h-3 w-3" />,     badgeClass: 'bg-yellow-500/20 text-yellow-400' },
+  purchase:                  { label: 'Compra',               icon: <CreditCard className="h-3 w-3" />,    badgeClass: 'bg-success/20 text-success' },
+  renewal:                   { label: 'Renovación',           icon: <RotateCcw className="h-3 w-3" />,     badgeClass: 'bg-info/20 text-info' },
+  usage:                     { label: 'Uso',                  icon: <Zap className="h-3 w-3" />,           badgeClass: 'bg-primary/20 text-primary' },
+  refund:                    { label: 'Reembolso',            icon: <RotateCcw className="h-3 w-3" />,     badgeClass: 'bg-warning/20 text-warning' },
   payment_failed:            { label: 'Pago fallido',         icon: <ShieldAlert className="h-3 w-3" />,   badgeClass: 'bg-red-500/20 text-red-400' },
-  subscription_issue:        { label: 'Problema suscripción', icon: <ShieldAlert className="h-3 w-3" />,   badgeClass: 'bg-orange-500/20 text-orange-400' },
-  validation_approved:       { label: 'Validación OK',        icon: <ShieldCheck className="h-3 w-3" />,   badgeClass: 'bg-green-500/10 text-green-500/70' },
+  subscription_issue:        { label: 'Problema suscripción', icon: <ShieldAlert className="h-3 w-3" />,   badgeClass: 'bg-warning/20 text-warning' },
+  validation_approved:       { label: 'Validación OK',        icon: <ShieldCheck className="h-3 w-3" />,   badgeClass: 'bg-success/10 text-success/70' },
   validation_rejected_insufficient: { label: 'Saldo insuficiente', icon: <ShieldAlert className="h-3 w-3" />, badgeClass: 'bg-red-500/20 text-red-400' },
-  validation_error:          { label: 'Error validación',     icon: <ShieldAlert className="h-3 w-3" />,   badgeClass: 'bg-orange-500/20 text-orange-400' },
+  validation_error:          { label: 'Error validación',     icon: <ShieldAlert className="h-3 w-3" />,   badgeClass: 'bg-warning/20 text-warning' },
 };
 
 function EventBadge({ type }: { type: string }) {
@@ -81,7 +81,7 @@ function DeltaBadge({ delta }: { delta: number }) {
   if (delta === 0) return <span className="text-xs text-muted-foreground">—</span>;
   const positive = delta > 0;
   return (
-    <span className={`text-xs font-semibold tabular-nums ${positive ? 'text-green-400' : 'text-red-400'}`}>
+    <span className={`text-xs font-semibold tabular-nums ${positive ? 'text-success' : 'text-red-400'}`}>
       {positive ? '+' : ''}{delta} cr
     </span>
   );
@@ -189,11 +189,11 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
       <div className="grid grid-cols-3 gap-2 mb-3">
         <div className="rounded-lg bg-muted/40 px-3 py-2 text-center">
           <p className="text-[10px] text-muted-foreground mb-0.5">Comprados</p>
-          <p className="text-sm font-bold text-green-400">+{totalPurchased}</p>
+          <p className="text-sm font-bold text-success">+{totalPurchased}</p>
         </div>
         <div className="rounded-lg bg-muted/40 px-3 py-2 text-center">
           <p className="text-[10px] text-muted-foreground mb-0.5">Usados</p>
-          <p className="text-sm font-bold text-purple-400">-{totalUsed}</p>
+          <p className="text-sm font-bold text-primary">-{totalUsed}</p>
         </div>
         <div className="rounded-lg bg-muted/40 px-3 py-2 text-center">
           <p className="text-[10px] text-muted-foreground mb-0.5">Rechazos</p>
@@ -209,7 +209,7 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
           <p className="text-[10px] text-muted-foreground mb-1.5 uppercase tracking-wider">Desglose de usos</p>
           <div className="flex flex-wrap gap-1.5">
             {usageEntries.map(([cat, total]) => (
-              <span key={cat} className="text-[10px] px-2 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+              <span key={cat} className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                 {cat}: <span className="font-semibold tabular-nums">-{total}</span>
               </span>
             ))}
@@ -256,7 +256,7 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
                 <div className="flex items-center gap-2 flex-wrap">
                   <EventBadge type={row.event_type} />
                   {consumptionRows.includes(row) && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-300 border border-purple-500/20">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                       {row.event_type === 'promote_premium' ? 'Promo Premium'
                         : row.event_type === 'admin_deduct' || row.event_type === 'admin_adjust' ? 'Ajuste admin'
                         : row.event_type === 'admin_adjustment' || row.event_type === 'adjustment' ? 'Ajuste'
@@ -270,7 +270,7 @@ export default function UserCreditAuditPanel({ userId, userEmail }: { userId: st
                     <span className="text-[10px] text-muted-foreground font-mono">{row.feature_key}</span>
                   )}
                   {row.coupon_code && (
-                    <span className="text-[10px] text-yellow-400/80 font-mono">🎟 {row.coupon_code}</span>
+                    <span className="text-[10px] text-warning/80 font-mono">🎟 {row.coupon_code}</span>
                   )}
                 </div>
                 {row.description && (

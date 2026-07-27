@@ -241,7 +241,7 @@ export default function AdminWorksPage() {
   const getProcessingDelay = (createdAt: string) => {
     const mins = (Date.now() - new Date(createdAt).getTime()) / 60000;
     if (mins >= 60) return { label: 'Posible fallo', color: 'text-red-400' };
-    if (mins >= 15) return { label: 'Retrasada', color: 'text-amber-400' };
+    if (mins >= 15) return { label: 'Retrasada', color: 'text-warning' };
     return { label: 'Certificando...', color: 'text-muted-foreground' };
   };
 
@@ -250,7 +250,7 @@ export default function AdminWorksPage() {
       const delay = createdAt ? getProcessingDelay(createdAt) : null;
       return (
         <div className="flex flex-col gap-0.5">
-          <Badge className="bg-yellow-500/20 text-yellow-400 animate-pulse">
+          <Badge className="bg-warning/20 text-warning animate-pulse">
             <Loader2 className="h-3 w-3 mr-1 animate-spin" />
             processing
           </Badge>
@@ -259,7 +259,7 @@ export default function AdminWorksPage() {
       );
     }
     const map: Record<string, string> = {
-      registered: 'bg-green-500/20 text-green-400',
+      registered: 'bg-success/20 text-success',
       failed: 'bg-destructive/20 text-destructive',
     };
     return <Badge className={map[status] || 'bg-muted text-muted-foreground'}>{status}</Badge>;
@@ -270,7 +270,7 @@ export default function AdminWorksPage() {
       <div className="flex items-center gap-3">
         <Music className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Obras</h1>
-        <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">Admin</Badge>
+        <Badge className="bg-brand/20 text-brand border-brand/30">Admin</Badge>
       </div>
 
       <div className="flex gap-2 flex-wrap">

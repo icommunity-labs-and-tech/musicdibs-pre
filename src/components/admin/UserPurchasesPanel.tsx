@@ -41,8 +41,8 @@ export default function UserPurchasesPanel({ userId, userEmail }: UserPurchasesP
 
   const certBadge = (status: string) => {
     const map: Record<string, { className: string; icon: any }> = {
-      certified: { className: 'bg-green-500/20 text-green-400', icon: ShieldCheck },
-      pending: { className: 'bg-yellow-500/20 text-yellow-400', icon: Clock },
+      certified: { className: 'bg-success/20 text-success', icon: ShieldCheck },
+      pending: { className: 'bg-warning/20 text-warning', icon: Clock },
       failed: { className: 'bg-destructive/20 text-destructive', icon: AlertTriangle },
     };
     const cfg = map[status] || map.pending;
@@ -164,7 +164,7 @@ export default function UserPurchasesPanel({ userId, userEmail }: UserPurchasesP
                 <TableCell className="text-xs font-mono">{Number(ev.amount).toFixed(2)} {ev.currency?.toUpperCase()}</TableCell>
                 <TableCell>{
                   ev.payment_status === 'succeeded'
-                    ? <Badge className="bg-green-500/20 text-green-400 text-xs">Pagado</Badge>
+                    ? <Badge className="bg-success/20 text-success text-xs">Pagado</Badge>
                     : <Badge className="bg-destructive/20 text-destructive text-xs">{ev.payment_status}</Badge>
                 }</TableCell>
                 <TableCell>{certBadge(ev.certification_status)}</TableCell>

@@ -252,12 +252,12 @@ export default function AdminUsersPage() {
   const getEffectiveKyc = (u: any): { key: string; label: string; cls: string } => {
     const sigStatus = u.latest_signature?.status as string | undefined;
     const profStatus = u.kyc_status as string | undefined;
-    if (profStatus === 'verified') return { key: 'verified', label: 'Verificado', cls: 'bg-green-500/20 text-green-400' };
+    if (profStatus === 'verified') return { key: 'verified', label: 'Verificado', cls: 'bg-success/20 text-success' };
     if (profStatus === 'rejected') return { key: 'rejected', label: 'Rechazado', cls: 'bg-destructive/20 text-destructive' };
     if (profStatus === 'failed') return { key: 'failed', label: 'Fallido', cls: 'bg-destructive/20 text-destructive' };
-    if (profStatus === 'pending' || sigStatus === 'pending') return { key: 'pending', label: 'Pendiente iBS', cls: 'bg-yellow-500/20 text-yellow-400' };
-    if (sigStatus === 'created') return { key: 'created', label: 'En proceso', cls: 'bg-orange-500/20 text-orange-400' };
-    if (sigStatus === 'initiated') return { key: 'initiated', label: 'Iniciado', cls: 'bg-blue-500/20 text-blue-400' };
+    if (profStatus === 'pending' || sigStatus === 'pending') return { key: 'pending', label: 'Pendiente iBS', cls: 'bg-warning/20 text-warning' };
+    if (sigStatus === 'created') return { key: 'created', label: 'En proceso', cls: 'bg-warning/20 text-warning' };
+    if (sigStatus === 'initiated') return { key: 'initiated', label: 'Iniciado', cls: 'bg-info/20 text-info' };
     return { key: 'unverified', label: 'Sin verificar', cls: 'bg-muted text-muted-foreground' };
   };
 
@@ -414,7 +414,7 @@ export default function AdminUsersPage() {
       <div className="flex items-center gap-3 flex-wrap">
         <Users className="h-6 w-6 text-primary" />
         <h1 className="text-2xl font-bold">Usuarios</h1>
-        <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">Admin</Badge>
+        <Badge className="bg-brand/20 text-brand border-brand/30">Admin</Badge>
         {!loading && <span className="text-sm text-muted-foreground ml-2">{total.toLocaleString()} usuarios</span>}
       </div>
 
@@ -447,7 +447,7 @@ export default function AdminUsersPage() {
         }}>
           <Download className="h-4 w-4 mr-1" /> {activeFiltersCount > 0 ? 'Exportar filtrados' : 'Exportar todo'}
         </Button>
-        <Button variant="outline" size="sm" onClick={openBulkPastDueModal} className="border-yellow-500/40 text-yellow-500 hover:bg-yellow-500/10 hover:text-yellow-400">
+        <Button variant="outline" size="sm" onClick={openBulkPastDueModal} className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning">
           ⚠️ Notificar past_due
         </Button>
       </div>
@@ -571,7 +571,7 @@ export default function AdminUsersPage() {
                     Créditos <SortIcon k="available_credits" />
                   </button>
                   <span className="text-muted-foreground">·</span>
-                  <button type="button" onClick={() => toggleSort('permanent_credits')} className="flex items-center gap-1 text-xs text-amber-500 hover:text-amber-400" title="Ordenar por créditos permanentes">
+                  <button type="button" onClick={() => toggleSort('permanent_credits')} className="flex items-center gap-1 text-xs text-warning hover:text-warning" title="Ordenar por créditos permanentes">
                     perm <SortIcon k="permanent_credits" />
                   </button>
                 </div>
@@ -618,7 +618,7 @@ export default function AdminUsersPage() {
                     <div className="flex items-center gap-1.5">
                       <p className="font-medium text-sm">{u.display_name || u.email?.split('@')[0] || '—'}</p>
                       {(u as any).has_open_dispute && (
-                        <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/40 text-[10px] px-1.5 py-0 font-bold animate-pulse" title={`Disputa abierta: ${(u as any).dispute_stripe_id || ''}`}>
+                        <Badge className="bg-warning/20 text-warning border-warning/40 text-[10px] px-1.5 py-0 font-bold animate-pulse" title={`Disputa abierta: ${(u as any).dispute_stripe_id || ''}`}>
                           ⚠️ DISPUTA
                         </Badge>
                       )}
@@ -638,11 +638,11 @@ export default function AdminUsersPage() {
                     })()}</Badge>
                     {u.payment_grace_expires_at && (
                       new Date(u.payment_grace_expires_at) > new Date()
-                        ? <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">⚠️ Gracia hasta {new Date(u.payment_grace_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</Badge>
+                        ? <Badge className="bg-warning/20 text-warning border-warning/30 text-xs">⚠️ Gracia hasta {new Date(u.payment_grace_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</Badge>
                         : <Badge className="bg-destructive/20 text-destructive text-xs">🔴 Gracia expirada</Badge>
                     )}
                     {u.payment_issue_notified_at && !u.payment_grace_expires_at && (
-                      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">⚠️ Pago pendiente</Badge>
+                      <Badge className="bg-warning/20 text-warning border-warning/30 text-xs">⚠️ Pago pendiente</Badge>
                     )}
                   </div>
                 </TableCell>
@@ -657,7 +657,7 @@ export default function AdminUsersPage() {
                         <span className="font-semibold">{total} total</span>
                         <div className="flex flex-wrap gap-1">
                           <Badge variant="secondary" className="text-xs" title="Caducan al renovar">{plan} plan</Badge>
-                          <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-xs" title="No caducan">{perm} permanente</Badge>
+                          <Badge className="bg-warning/20 text-warning border-warning/30 text-xs" title="No caducan">{perm} permanente</Badge>
                         </div>
                       </div>
                     );
@@ -667,8 +667,8 @@ export default function AdminUsersPage() {
                   <div className="flex gap-1 flex-wrap">
                     {(u.roles || ['user']).map((r: string) => (
                       <Badge key={r} className={
-                        r === 'admin' ? 'bg-pink-500/20 text-pink-400 border-pink-500/30' :
-                          r === 'manager' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                        r === 'admin' ? 'bg-brand/20 text-brand border-brand/30' :
+                          r === 'manager' ? 'bg-info/20 text-info border-info/30' :
                             'bg-muted text-muted-foreground'
                       }>{r}</Badge>
                     ))}
@@ -697,9 +697,9 @@ export default function AdminUsersPage() {
                   <div className="flex flex-col gap-1">
                     {u.is_blocked
                       ? <Badge className="bg-destructive/20 text-destructive">Bloqueado</Badge>
-                      : <Badge className="bg-green-500/20 text-green-400">Activo</Badge>}
+                      : <Badge className="bg-success/20 text-success">Activo</Badge>}
                     {(u as any).has_open_dispute && !(u as any).dispute_lost_at && (
-                      <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/40 text-[10px]">⚠️ Disputa</Badge>
+                      <Badge className="bg-warning/20 text-warning border-warning/40 text-[10px]">⚠️ Disputa</Badge>
                     )}
                     {(u as any).dispute_lost_at && (
                       <Badge className="bg-red-700/30 text-red-400 border-red-600/40 text-[10px]">❌ Perdida</Badge>
@@ -950,7 +950,7 @@ export default function AdminUsersPage() {
             </Button>
           </div>
           {tempPwResult.emailSent && (
-            <div className="mb-2 flex items-center gap-2 rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-400">
+            <div className="mb-2 flex items-center gap-2 rounded-md border border-success/30 bg-success/10 px-3 py-2 text-sm text-success dark:text-success">
               <Check className="h-4 w-4" />
               <span>Correo enviado a {tempPwResult.email}</span>
             </div>

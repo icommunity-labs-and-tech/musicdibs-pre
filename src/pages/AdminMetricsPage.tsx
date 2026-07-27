@@ -250,7 +250,7 @@ export default function AdminMetricsPage() {
         <div className="flex items-center gap-3">
           <BarChart3 className="h-6 w-6 text-primary" />
           <h1 className="text-2xl font-bold">SaaS Analytics</h1>
-          <Badge className="bg-pink-500/20 text-pink-400 border-pink-500/30">Admin</Badge>
+          <Badge className="bg-brand/20 text-brand border-brand/30">Admin</Badge>
           <span className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
             {refreshing && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />}
             {periodLabel}
@@ -391,13 +391,13 @@ export default function AdminMetricsPage() {
       </Card>
 
       {/* Blockchain Monitoring */}
-      <Card className={`border-border/40 ${hasQueueProblems ? 'border-red-500/40 bg-red-500/5' : 'border-green-500/30 bg-green-500/5'}`}>
+      <Card className={`border-border/40 ${hasQueueProblems ? 'border-red-500/40 bg-red-500/5' : 'border-success/30 bg-success/5'}`}>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {hasQueueProblems
                 ? <AlertTriangle className="h-5 w-5 text-red-400" />
-                : <CheckCircle2 className="h-5 w-5 text-green-400" />
+                : <CheckCircle2 className="h-5 w-5 text-success" />
               }
               <CardTitle className="text-base">Monitoring · Cola Blockchain iBS</CardTitle>
             </div>
@@ -407,10 +407,10 @@ export default function AdminMetricsPage() {
                   <span className={`flex items-center gap-1 ${ibsQueue.exhausted_count > 0 ? 'text-red-400' : 'text-muted-foreground'}`}>
                     <XCircle className="h-3.5 w-3.5" /> {ibsQueue.exhausted_count} agotados
                   </span>
-                  <span className={`flex items-center gap-1 ${ibsQueue.stale_count > 0 ? 'text-amber-400' : 'text-muted-foreground'}`}>
+                  <span className={`flex items-center gap-1 ${ibsQueue.stale_count > 0 ? 'text-warning' : 'text-muted-foreground'}`}>
                     <Clock className="h-3.5 w-3.5" /> {ibsQueue.stale_count} bloqueados
                   </span>
-                  <span className="flex items-center gap-1 text-green-400">
+                  <span className="flex items-center gap-1 text-success">
                     <CheckCircle2 className="h-3.5 w-3.5" /> {ibsQueue.resolved_24h} resueltos (24h)
                   </span>
                 </div>
@@ -429,7 +429,7 @@ export default function AdminMetricsPage() {
                 <Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando...
               </div>
             ) : !ibsQueue || ibsQueue.items?.length === 0 ? (
-              <div className="flex items-center justify-center gap-2 py-8 text-green-400">
+              <div className="flex items-center justify-center gap-2 py-8 text-success">
                 <CheckCircle2 className="h-5 w-5" /> Sin registros problemáticos.
               </div>
             ) : (
@@ -455,7 +455,7 @@ export default function AdminMetricsPage() {
                         <TableRow key={item.id}>
                           <TableCell className="font-medium max-w-[200px] truncate">{item.work_title}</TableCell>
                           <TableCell>
-                            <Badge variant="outline" className={item.status === 'exhausted' ? 'border-red-500/50 text-red-400' : 'border-amber-500/50 text-amber-400'}>
+                            <Badge variant="outline" className={item.status === 'exhausted' ? 'border-red-500/50 text-red-400' : 'border-warning/50 text-warning'}>
                               {item.status === 'exhausted'
                                 ? <><XCircle className="h-3 w-3 mr-1" /> Agotado</>
                                 : <><Clock className="h-3 w-3 mr-1" /> Bloqueado</>
