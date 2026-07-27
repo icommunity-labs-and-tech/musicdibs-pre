@@ -1049,8 +1049,12 @@ serve(async (req) => {
         }
 
         // ââ Notify team: first annual subscription (distribution onboarding) ââ
-        const ANNUAL_IDS = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000"];
-        if (ANNUAL_IDS.includes(planId) && previousPlan !== "Annual") {
+        // PLUS+ tiers (annual_100+) tienen distribución. annual_20 (Anual Básico) NO.
+        // Disparamos si el usuario acaba de entrar en PLUS+ y antes NO estaba en PLUS+
+        // (esto incluye el caso upgrade annual_20 -> annual_100+).
+        const PLUS_TIERS = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000", "annual_legacy"];
+        const wasPlus = !!previousTier && PLUS_TIERS.includes(previousTier);
+        if (PLUS_TIERS.includes(planId) && !wasPlus) {
           try {
             const { data: { user: distUser } } = await supabase.auth.admin.getUserById(userId);
             const distEmail = distUser?.email || "desconocido";
