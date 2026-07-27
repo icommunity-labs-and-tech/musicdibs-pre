@@ -67,23 +67,18 @@ const AIStudioCovers = () => {
   const [artistPhoto, setArtistPhoto] = useState<File | null>(null)
   const [artistPhotoPreview, setArtistPhotoPreview] = useState<string | null>(null)
 
-  // Improve description with AI
-  const [isImproving, setIsImproving] = useState(false)
+  // Improve description with AI (shared hook)
+  const { improve: improveDesc, isImproving } = useImprovePrompt({
+    maxLength: 1000,
+    successMessage: "Descripción mejorada",
+  })
   const handleImproveDesc = async () => {
-    if (!description.trim()) return
-    setIsImproving(true)
-    try {
-      const { data, error } = await supabase.functions.invoke("improve-prompt", {
-        body: { prompt: description, genre: styleVisual || "", mode: "cover" },
-      })
-      if (error || !data?.improved) throw new Error(error?.message || "No response")
-      setDescription(data.improved.slice(0, 1000))
-      toast.success("Descripción mejorada")
-    } catch {
-      toast.error(t("aiShared.error"))
-    } finally {
-      setIsImproving(false)
-    }
+    const improved = await improveDesc({
+      prompt: description,
+      mode: "cover",
+      genre: styleVisual || "",
+    })
+    if (improved) setDescription(improved)
   }
 
   const canGenerate = artistName.trim() && trackTitle.trim() && hasEnough(FEATURE_COSTS.generate_cover)
@@ -106,32 +101,28 @@ const AIStudioCovers = () => {
     setGenError(null)
     setImageUrl(null)
 
-    try {
-      let artistPhotoBase64: string | null = null
-      if (coverMode === "artist" && artistPhoto) {
-        artistPhotoBase64 = await fileToBase64(artistPhoto)
-      }
+    let artistPhotoBase64: string | null = null
+    if (coverMode === "artist" && artistPhoto) {
+      artistPhotoBase64 = await fileToBase64(artistPhoto)
+    }
 
-      const { data, error } = await supabase.functions.invoke("generate-cover", {
-        body: {
-          artistName,
-          trackTitle,
-          description,
-          styleVisual: styleVisual || undefined,
-          artistPhotoBase64,
-        },
-      })
+    const result = await runAiAction(() =>
+      generateCover({
+        artistName,
+        trackTitle,
+        description,
+        styleVisual: styleVisual || undefined,
+        artistPhotoBase64,
+      }),
+    )
 
-      if (data?.fallback) throw new Error(data.message || "Servicio no disponible temporalmente.")
-      if (error || data?.error) throw new Error(data?.error || error?.message)
-
-      setImageUrl(data.imageUrl)
+    if (result.ok) {
+      setImageUrl(result.data.imageUrl)
       toast.success(t('aiCovers.coverGenerated'))
       track('cover_generated', { feature: 'cover' })
-    } catch (err: any) {
-      const { userMessage } = parseAiError(err)
-      setGenError(userMessage)
-      toast.error(userMessage)
+    } else {
+      setGenError(result.message)
+      toast.error(result.message)
     }
 
     setIsGenerating(false)
