@@ -124,7 +124,8 @@ Deno.serve(async (req) => {
     const bearer = authHeader.replace("Bearer ", "");
     let authorized =
       bearer === serviceRoleKey ||
-      (cronSecret && (bearer === cronSecret || xCron === cronSecret));
+      (cronSecret && (bearer === cronSecret || xCron === cronSecret)) ||
+      (triggerSecret && (bearer === triggerSecret || xCron === triggerSecret));
 
     if (!authorized && bearer) {
       // Fallback: verify caller is an authenticated admin
