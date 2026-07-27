@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Pencil, Save, Upload, Search, Link2, Unlink, CheckCircle2, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
