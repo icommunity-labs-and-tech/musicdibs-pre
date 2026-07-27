@@ -1,13 +1,11 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ShieldAlert, Shield, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '@/hooks/useAuth';
 import { WizardStepper } from './WizardStepper';
 import { StepEntry } from './StepEntry';
 import { StepFile } from './StepFile';
@@ -18,15 +16,13 @@ import { StepSummary } from './StepSummary';
 import { StepSuccess } from './StepSuccess';
 import { StepParentWork } from './StepParentWork';
 import { SignatureSelector } from './SignatureSelector';
-import { NoCreditsAlert } from '@/components/dashboard/NoCreditsAlert';
 import { DraftsModal } from './DraftsModal';
 import { useCredits } from '@/hooks/useCredits';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
-import { registerWork, fetchUserDrafts, loadDraftFile, type DraftWork } from '@/services/dashboardApi';
-import { supabase } from '@/integrations/supabase/client';
 import type { DashboardSummary } from '@/types/dashboard';
-import { initialWizardData, type WizardData } from './types';
-import { useProductTracking } from '@/hooks/useProductTracking';
+import { useWizardState } from './hooks/useWizardState';
+import { useResumeDraft } from './hooks/useResumeDraft';
+import { useRegisterSubmit } from './hooks/useRegisterSubmit';
 
 interface RegistrationWizardProps {
   summary: DashboardSummary | null;
@@ -36,7 +32,6 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { track } = useProductTracking();
   const prefill = (location.state as { prefill?: { title?: string; type?: string; description?: string; audioUrl?: string } })?.prefill;
 
   const STEPS_NEW = [
@@ -56,275 +51,63 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
     { label: t('wizard.steps.success') },
   ];
 
-  const [data, setData] = useState<WizardData>(() => {
-    const init = { ...initialWizardData };
-    if (prefill) {
-      if (prefill.title) init.title = prefill.title;
-      if (prefill.type) init.workType = prefill.type;
-      if (prefill.description) init.description = prefill.description;
-      if (prefill.audioUrl) init.aiAudioUrl = prefill.audioUrl;
-    }
-    return init;
-  });
+  const {
+    data,
+    setData,
+    step,
+    setStep,
+    resultId,
+    resultHash,
+    setResultId,
+    setResultHash,
+    update,
+    reset,
+  } = useWizardState(prefill);
 
-  const [step, setStep] = useState(-1);
-  const [loading, setLoading] = useState(false);
-  const [resultId, setResultId] = useState('');
-  const [resultHash, setResultHash] = useState('');
+  const isVersion = data.flow === 'version';
+  const steps = isVersion ? STEPS_VERSION : STEPS_NEW;
 
   const [searchParams, setSearchParams] = useSearchParams();
   const resumeId = searchParams.get('resume');
-  const [resumeWorkId, setResumeWorkId] = useState<string | null>(null);
-  const [resumeLoading, setResumeLoading] = useState(false);
-  const [drafts, setDrafts] = useState<DraftWork[]>([]);
-  const [draftsModalOpen, setDraftsModalOpen] = useState(false);
-  const [draftsChecked, setDraftsChecked] = useState(false);
 
-  // Load draft when ?resume=ID is present
-  useEffect(() => {
-    if (!resumeId || resumeWorkId === resumeId) return;
-    let cancelled = false;
-    (async () => {
-      setResumeLoading(true);
-      try {
-        const { data: work, error } = await supabase
-          .from('works')
-          .select('id, title, type, description, author, file_path, status')
-          .eq('id', resumeId)
-          .maybeSingle();
-        if (cancelled) return;
-        if (error || !work) {
-          toast.error('No se pudo cargar el borrador');
-          setResumeLoading(false);
-          return;
-        }
-        if (work.status !== 'draft') {
-          toast.error('Esta obra ya no está en borrador');
-          setResumeLoading(false);
-          return;
-        }
-        const file = work.file_path ? await loadDraftFile(work.file_path) : null;
-        if (cancelled) return;
-        const authors = (work.author || '').split(',').map((s) => s.trim()).filter(Boolean);
-        setData({
-          ...initialWizardData,
-          flow: 'new',
-          file: file,
-          files: file ? [file] : [],
-          title: work.title || '',
-          workType: work.type || 'audio',
-          description: work.description || '',
-          creators: authors.length > 0
-            ? authors.map((name) => ({ id: crypto.randomUUID(), name, email: '', roles: ['autor'], percentage: null }))
-            : [{ id: crypto.randomUUID(), name: '', email: '', roles: [], percentage: null }],
-        });
-        setResumeWorkId(work.id);
-        // Jump straight to signature + summary step (penultimate)
-        setStep(STEPS_NEW.length - 2);
-        setDraftsChecked(true);
-      } catch (err) {
-        console.error('[RegistrationWizard] resume error', err);
-        toast.error('Error cargando el borrador');
-      } finally {
-        if (!cancelled) setResumeLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resumeId]);
+  const {
+    resumeWorkId,
+    setResumeWorkId,
+    resumeLoading,
+    drafts,
+    draftsModalOpen,
+    setDraftsModalOpen,
+  } = useResumeDraft({
+    resumeId,
+    penultimateStep: STEPS_NEW.length - 2,
+    setData,
+    setStep,
+  });
 
-  // Check for existing drafts on first mount when not resuming
+  const { submit, loading } = useRegisterSubmit({
+    data,
+    resumeWorkId,
+    onSuccess: (id, hash) => {
+      setResultId(id);
+      setResultHash(hash);
+    },
+  });
+
+  // Jump to success step once submit resolves with a registrationId.
   useEffect(() => {
-    if (resumeId || draftsChecked) return;
-    let cancelled = false;
-    (async () => {
-      const list = await fetchUserDrafts(5);
-      if (cancelled) return;
-      setDrafts(list);
-      if (list.length > 0) setDraftsModalOpen(true);
-      setDraftsChecked(true);
-    })();
-    return () => { cancelled = true; };
+    if (resultId && step !== steps.length - 1) {
+      setStep(steps.length - 1);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resumeId, draftsChecked]);
+  }, [resultId]);
 
   const { hasEnough, isLoading: creditsLoading } = useCredits();
   const noCredits = !creditsLoading && !hasEnough(FEATURE_COSTS.register_work);
   const kycBlocked = summary && summary.kycStatus !== 'verified';
   const freeRegisterLimitReached = !kycBlocked && summary?.freeRegisterLimitReached === true;
 
-  const update = useCallback((patch: Partial<WizardData>) => {
-    setData((prev) => ({ ...prev, ...patch }));
-  }, []);
-
-  const isVersion = data.flow === 'version';
-  const steps = isVersion ? STEPS_VERSION : STEPS_NEW;
-
-  const convertAudioUrlToFile = async (url: string): Promise<File | null> => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 45_000);
-    try {
-      console.log('[RegistrationWizard] Fetching audio from URL:', url);
-      const res = await fetch(url, { signal: controller.signal });
-      if (!res.ok) {
-        console.error('[RegistrationWizard] Audio fetch failed:', res.status, res.statusText);
-        return null;
-      }
-      const blob = await res.blob();
-      console.log('[RegistrationWizard] Audio downloaded, size:', blob.size);
-      return new File([blob], `ai-generation-${Date.now()}.mp3`, { type: 'audio/mpeg' });
-    } catch (err) {
-      console.error('[RegistrationWizard] Audio fetch error:', err);
-      return null;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  };
-
-  const handleSubmit = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      const { data: recentProcessing } = await supabase
-        .from('works')
-        .select('id, title, status')
-        .eq('user_id', user.id)
-        .in('status', ['processing', 'draft'])
-        .gte('created_at', fiveMinutesAgo)
-        .limit(1)
-        .maybeSingle();
-
-      if (recentProcessing) {
-        toast.warning(
-          t('wizard.rw.throttle', { title: recentProcessing.title }) ||
-          `Tienes un registro en curso ("${recentProcessing.title}"). Espera a que finalice antes de registrar otra obra.`
-        );
-        return;
-      }
-    }
-
-    let uploadFile = data.file;
-    let uploadFiles = data.files.length > 0 ? [...data.files] : [];
-    if (!uploadFile && data.aiAudioUrl) {
-      setLoading(true);
-      uploadFile = await convertAudioUrlToFile(data.aiAudioUrl);
-      if (!uploadFile) {
-        toast.error(t('wizard.rw.errorAudio'));
-        setLoading(false);
-        return;
-      }
-      uploadFiles = [uploadFile];
-    }
-    if (!uploadFile && uploadFiles.length === 0) {
-      console.warn('[RegistrationWizard] handleSubmit aborted: no file selected');
-      toast.error(t('wizard.rw.errorAudio'));
-      setLoading(false);
-      return;
-    }
-    if (!data.signatureId) {
-      console.warn('[RegistrationWizard] handleSubmit aborted: missing signatureId', { data });
-      toast.error(t('dashboard.registerWork.kycRequired', 'Necesitas una firma KYC válida para registrar la obra.'));
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const effectiveTitle = isVersion
-        ? (data.versionTitle || `${data.parentWorkTitle} (${data.versionType})`)
-        : data.title;
-
-      const effectiveType = isVersion
-        ? (data.versionType === 'master' || data.versionType === 'remix' ? 'audio' : 'audio')
-        : (data.workType || 'audio');
-
-      const res = await registerWork({
-        title: effectiveTitle,
-        type: effectiveType as any,
-        author: data.creators.map((c) => c.name).join(', '),
-        description: data.description,
-        file: uploadFiles[0] || uploadFile!,
-        files: uploadFiles.length > 0 ? uploadFiles : undefined,
-        ownershipDeclaration: true,
-        signatureId: data.signatureId,
-        resumeWorkId: resumeWorkId || undefined,
-        // FIX 2026-07-20: StepCreators.tsx recoge nombre/email/roles/% por
-        // autor, pero antes solo se enviaba el nombre unido en texto plano
-        // (campo `author`) -- el array estructurado nunca llegaba a
-        // registerWork(), asi que works.creators quedaba siempre null. Sin
-        // esto, ni el certificado (generateCertificate.ts) ni el payload
-        // enviado a iBS (register-work-ibs) podian mostrar coautores,
-        // roles ni % de propiedad.
-        creators: data.creators,
-      });
-
-      if (res.ibsError || res.status === 'failed') {
-        if (res.code === 'FREE_REGISTER_LIMIT') {
-          toast.error(
-            <div className="space-y-3 min-w-[260px]">
-              <p className="text-sm font-medium">{res.ibsError}</p>
-              <Button
-                size="sm"
-                className="w-full gap-1.5"
-                onClick={() => navigate('/dashboard/credits')}
-              >
-                {t('wizard.rw.freeRegisterLimitCta')}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Button>
-            </div>,
-            { duration: 20_000 }
-          );
-        } else {
-          toast.error(res.ibsError || t('wizard.rw.errorRegister'));
-        }
-        setLoading(false);
-        return;
-      }
-
-      window.dispatchEvent(new CustomEvent('musicdibs:work-registered'));
-      setResultId(res.registrationId);
-      setResultHash(res.blockchainHash || '');
-      setStep(steps.length - 1);
-
-      // Track work registration
-      track('work_registered', { feature: 'register', metadata: { work_id: res.registrationId } });
-
-      // Check if there was a recent generation in this session
-      const lastGen = sessionStorage.getItem('md_last_generation');
-      if (lastGen) {
-        const elapsed = Date.now() - parseInt(lastGen, 10);
-        if (elapsed < 24 * 60 * 60 * 1000) {
-          track('work_registered_after_generation', { feature: 'register', metadata: { work_id: res.registrationId } });
-        }
-      }
-
-      if (res.registrationId) {
-        const pollInterval = setInterval(async () => {
-          const { data: work } = await supabase
-            .from('works')
-            .select('status, blockchain_hash')
-            .eq('id', res.registrationId)
-            .single();
-          if (work?.status === 'registered') {
-            if (work.blockchain_hash) setResultHash(work.blockchain_hash);
-            clearInterval(pollInterval);
-          } else if (work?.status === 'failed') {
-            clearInterval(pollInterval);
-          }
-        }, 5000);
-        setTimeout(() => clearInterval(pollInterval), 300_000);
-      }
-    } catch (err: any) {
-      toast.error(err?.message || t('wizard.rw.errorGeneric'));
-    }
-    setLoading(false);
-  };
-
   const resetWizard = () => {
-    setData({ ...initialWizardData });
-    setStep(-1);
-    setResultId('');
-    setResultHash('');
+    reset();
     setResumeWorkId(null);
     if (searchParams.get('resume')) {
       searchParams.delete('resume');
@@ -418,7 +201,7 @@ export function RegistrationWizard({ summary }: RegistrationWizardProps) {
       return (
         <div className="space-y-6">
           <SignatureSelector value={data.signatureId} onChange={(id) => update({ signatureId: id })} />
-          <StepSummary data={data} loading={loading} onSubmit={handleSubmit} onBack={() => setStep(step - 1)} />
+          <StepSummary data={data} loading={loading} onSubmit={submit} onBack={() => setStep(step - 1)} />
         </div>
       );
     }
