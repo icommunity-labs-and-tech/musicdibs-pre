@@ -51,7 +51,7 @@ export const LanguageSelector = () => {
                 setIsOpen(false);
                 try { localStorage.setItem('lang', language.code); } catch {}
               }}
-              className="flex items-center gap-3 w-full px-4 py-2 text-white hover:bg-page-surface transition-colors first:rounded-t-lg last:rounded-b-lg"
+              className="flex items-center gap-3 w-full px-4 py-2 text-primary-foreground hover:bg-page-surface transition-colors first:rounded-t-lg last:rounded-b-lg"
             >
               <span className="text-lg" aria-hidden>{language.flag}</span>
               <span className="text-sm">{language.name}</span>

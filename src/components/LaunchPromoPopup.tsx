@@ -54,7 +54,7 @@ export const LaunchPromoPopup = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
-        className="max-w-[92vw] sm:max-w-[560px] lg:max-w-[600px] border-none p-0 overflow-hidden text-white"
+        className="max-w-[92vw] sm:max-w-[560px] lg:max-w-[600px] border-none p-0 overflow-hidden text-primary-foreground"
         style={{
           background:
             "linear-gradient(135deg, #0891b2 0%, #06b6d4 25%, #fbbf24 60%, #f97316 85%, #ec4899 100%)",
@@ -102,7 +102,7 @@ export const LaunchPromoPopup = () => {
           {/* Premium coupon block */}
           <button
             onClick={copyCode}
-            className="group relative w-full mb-4 overflow-hidden rounded-xl border-2 border-dashed border-white/50 bg-gradient-to-r from-warning/20 via-warning/20 to-brand/20 px-4 py-3.5 backdrop-blur-sm transition hover:border-white/80 hover:from-warning/30 hover:to-brand/30"
+            className="group relative w-full mb-4 overflow-hidden rounded-xl border-2 border-dashed border-primary-foreground/50 bg-gradient-to-r from-warning/20 via-warning/20 to-brand/20 px-4 py-3.5 backdrop-blur-sm transition hover:border-primary-foreground/80 hover:from-warning/30 hover:to-brand/30"
             aria-label="Copiar código promocional"
           >
             <div className="flex items-center justify-between gap-3">
@@ -110,11 +110,11 @@ export const LaunchPromoPopup = () => {
                 <span className="text-[10px] uppercase tracking-[0.2em] text-page-fg-muted">
                   Tu código
                 </span>
-                <span className="font-mono text-xl sm:text-2xl font-extrabold tracking-[0.2em] text-white drop-shadow-[0_0_12px_rgba(251,191,36,0.7)]">
+                <span className="font-mono text-xl sm:text-2xl font-extrabold tracking-[0.2em] text-primary-foreground drop-shadow-[0_0_12px_rgba(251,191,36,0.7)]">
                   {PROMO_CODE}
                 </span>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-lg bg-page-surface-strong px-3 py-2 text-xs font-semibold text-white transition group-hover:bg-page-surface-strong">
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-page-surface-strong px-3 py-2 text-xs font-semibold text-primary-foreground transition group-hover:bg-page-surface-strong">
                 {copied ? (
                   <>
                     <Check className="h-3.5 w-3.5 text-success" />
@@ -131,7 +131,7 @@ export const LaunchPromoPopup = () => {
           </button>
 
           {/* Compact countdown */}
-          <div className="flex items-center justify-center gap-1.5 mb-5 font-mono tabular-nums text-white">
+          <div className="flex items-center justify-center gap-1.5 mb-5 font-mono tabular-nums text-primary-foreground">
             <span className="text-[10px] uppercase tracking-[0.18em] text-page-fg-muted mr-1">
               Termina en
             </span>

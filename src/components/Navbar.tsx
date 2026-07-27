@@ -51,10 +51,10 @@ export const Navbar = () => {
 
   // Text color classes based on background
   const navText = isLightBg ? 'text-foreground/80 hover:text-foreground' : 'text-page-fg-muted hover:text-page-fg';
-  const navTextStrong = isLightBg ? 'text-foreground hover:text-foreground' : 'text-white hover:text-page-fg';
+  const navTextStrong = isLightBg ? 'text-foreground hover:text-foreground' : 'text-primary-foreground hover:text-page-fg';
   const navTextMuted = isLightBg ? 'text-foreground/70 hover:text-foreground' : 'text-page-fg-muted hover:text-page-fg';
   const navIconColor = isLightBg ? 'text-foreground/70 hover:text-foreground hover:bg-foreground/10' : 'text-page-fg-muted hover:text-page-fg hover:bg-page-surface';
-  const mobileToggleColor = isLightBg ? 'text-foreground' : 'text-white';
+  const mobileToggleColor = isLightBg ? 'text-foreground' : 'text-primary-foreground';
 
   const handleScroll = useCallback(() => {
     if (ticking.current) return;

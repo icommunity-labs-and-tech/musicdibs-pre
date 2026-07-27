@@ -8,7 +8,7 @@ export function Footer() {
           <img src={logoDark} alt="Musicdibs" className="h-10 w-auto" />
         </a>
 
-        <p className="text-xs text-white text-center">
+        <p className="text-xs text-primary-foreground text-center">
           © {new Date().getFullYear()} Musicdibs · IA Music Studio. Todos los derechos reservados.
         </p>
       </div>
