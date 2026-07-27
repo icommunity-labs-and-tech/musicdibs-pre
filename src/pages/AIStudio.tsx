@@ -344,7 +344,16 @@ const AIStudio = () => {
             </Card>
           </>
         ) : activeView === "virtual-artists" ? (
-          <Suspense fallback={null}>
+          <Suspense fallback={
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-64" />
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Skeleton key={i} className="h-48 w-full rounded-lg" />
+                ))}
+              </div>
+            </div>
+          }>
             <ArtistProfilesPage />
           </Suspense>
         ) : null}
