@@ -60,22 +60,22 @@ export const PromoBanner = () => {
       <div className="container relative mx-auto px-4 py-3 md:py-4">
         <div className="flex flex-col items-center gap-3 text-center lg:flex-row lg:items-center lg:justify-center lg:gap-8 lg:text-left">
           <div className="lg:flex-shrink-0 lg:pl-8 xl:pl-16">
-            <span className="text-base md:text-lg lg:text-xl font-bold text-white leading-tight drop-shadow-md">
+            <span className="text-base md:text-lg lg:text-xl font-bold text-primary-foreground leading-tight drop-shadow-md">
               ☀️ {t("promoBanner.title", { defaultValue: "Verano Musicdibs" })} 🌴
             </span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2.5 md:gap-3">
-            <span className="inline-flex items-center rounded-full bg-page-surface-strong px-3 py-1.5 text-xs md:text-sm font-bold tracking-wider text-white border border-page-border-strong whitespace-nowrap">
+            <span className="inline-flex items-center rounded-full bg-page-surface-strong px-3 py-1.5 text-xs md:text-sm font-bold tracking-wider text-primary-foreground border border-page-border-strong whitespace-nowrap">
               🏖️ {t("promoBanner.offer", { defaultValue: "-25% " })}
             </span>
 
             <button
               onClick={copyCode}
-              className="group inline-flex items-center gap-2 rounded-md border border-white/40 bg-page-surface-strong px-3.5 py-2 backdrop-blur-sm transition hover:bg-page-surface-strong"
+              className="group inline-flex items-center gap-2 rounded-md border border-primary-foreground/40 bg-page-surface-strong px-3.5 py-2 backdrop-blur-sm transition hover:bg-page-surface-strong"
               aria-label={t("promoBanner.copyAria", { defaultValue: "Copiar código" })}
             >
-              <span className="font-mono text-sm md:text-base font-bold text-white tracking-wider">
+              <span className="font-mono text-sm md:text-base font-bold text-primary-foreground tracking-wider">
                 {PROMO_CODE}
               </span>
               {copied ? (
@@ -85,7 +85,7 @@ export const PromoBanner = () => {
               )}
             </button>
 
-            <div className="flex items-center gap-1 font-mono text-sm md:text-base font-bold text-white tabular-nums">
+            <div className="flex items-center gap-1 font-mono text-sm md:text-base font-bold text-primary-foreground tabular-nums">
               {[
                 { v: days, l: "D" },
                 { v: hours, l: "H" },
@@ -102,7 +102,7 @@ export const PromoBanner = () => {
 
             <button
               onClick={scrollToPricing}
-              className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-warning to-brand px-5 py-2.5 text-sm md:text-base font-bold text-white shadow-md transition hover:scale-105 hover:shadow-orange-400/60 hover:shadow-xl whitespace-nowrap"
+              className="inline-flex items-center justify-center rounded-md bg-gradient-to-r from-warning to-brand px-5 py-2.5 text-sm md:text-base font-bold text-primary-foreground shadow-md transition hover:scale-105 hover:shadow-orange-400/60 hover:shadow-xl whitespace-nowrap"
             >
               🍹 {t("promoBanner.cta", { defaultValue: "Aprovechar oferta" })}
             </button>

@@ -43,7 +43,7 @@ export function Navbar({
             href={ctaHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 rounded-full px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-white shadow-[var(--shadow-magenta)] transition-transform hover:scale-105 whitespace-nowrap"
+            className="inline-flex items-center gap-2 rounded-full px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-primary-foreground shadow-[var(--shadow-magenta)] transition-transform hover:scale-105 whitespace-nowrap"
             style={{
               background:
                 "linear-gradient(135deg, #8B5CF6 0%, oklch(0.68 0.27 322) 100%)",

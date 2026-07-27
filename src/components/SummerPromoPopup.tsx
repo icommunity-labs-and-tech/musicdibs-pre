@@ -17,7 +17,7 @@ export const SummerPromoPopup = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto border-none text-white overflow-hidden p-0" style={{ background: 'linear-gradient(160deg, #c084fc, #a855f7 40%, #d946ef)' }}>
+      <DialogContent className="max-w-md w-[95vw] sm:w-full mx-auto border-none text-primary-foreground overflow-hidden p-0" style={{ background: 'linear-gradient(160deg, #c084fc, #a855f7 40%, #d946ef)' }}>
         <button
           onClick={() => setIsOpen(false)}
           className="absolute right-4 top-4 z-10 text-brand hover:text-page-fg transition-colors"
@@ -39,23 +39,23 @@ export const SummerPromoPopup = () => {
             {/* Valentine's badge */}
             <div className="inline-flex items-center gap-2 mb-6">
               <span className="text-2xl">💖</span>
-              <span className="text-xs font-bold tracking-[0.3em] uppercase text-white">{t("summerPromo.title")}</span>
+              <span className="text-xs font-bold tracking-[0.3em] uppercase text-primary-foreground">{t("summerPromo.title")}</span>
               <span className="text-2xl">💖</span>
             </div>
             
             {/* Discount */}
             <div className="mb-6">
-              <div className="text-6xl sm:text-7xl font-bold tracking-tight mb-2 text-white drop-shadow-lg">
+              <div className="text-6xl sm:text-7xl font-bold tracking-tight mb-2 text-primary-foreground drop-shadow-lg">
                 {t("summerPromo.discount")}
               </div>
-              <div className="text-sm font-bold text-white tracking-wide">
+              <div className="text-sm font-bold text-primary-foreground tracking-wide">
                 {t("summerPromo.onAllSubs")}
               </div>
             </div>
             
             {/* Coupon code */}
             <div className="mb-6">
-              <div className="text-xs text-white font-bold mb-2 tracking-wider uppercase">
+              <div className="text-xs text-primary-foreground font-bold mb-2 tracking-wider uppercase">
                 {t("summerPromo.discountCode")}
               </div>
               <div className="inline-block px-6 py-3 font-mono text-lg tracking-widest rounded font-semibold text-accent" style={{ background: 'linear-gradient(135deg, #fde68a, #f59e0b)' }}>
@@ -64,7 +64,7 @@ export const SummerPromoPopup = () => {
             </div>
             
             {/* Instructions */}
-            <p className="text-sm text-white font-bold">
+            <p className="text-sm text-primary-foreground font-bold">
               {t("summerPromo.enterCoupon")}
             </p>
           </div>
