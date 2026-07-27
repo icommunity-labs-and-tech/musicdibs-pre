@@ -512,7 +512,7 @@ const AIStudioVideo = () => {
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-3">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-red-500 flex items-center justify-center shrink-0">
-              <Video className="w-6 h-6 text-white" />
+              <Video className="w-6 h-6 text-primary-foreground" />
             </div>
             <div>
               <h1 className="text-3xl font-bold">{t('aiVideo.title')}</h1>

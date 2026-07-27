@@ -58,7 +58,7 @@ const Distribution = () => {
       <section className="py-16 px-6 relative">
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920')] bg-cover bg-center opacity-10" />
         <div className="max-w-4xl mx-auto relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 text-white">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-10 text-primary-foreground">
             {t("distribution.video_title")}
           </h2>
           <div className="aspect-video rounded-2xl overflow-hidden shadow-2xl shadow-purple-500/20 border border-page-border">
@@ -81,7 +81,7 @@ const Distribution = () => {
                 <FileText className="w-5 h-5 text-brand" />
               </div>
               <div className="flex-1">
-                <span className="font-semibold text-white">{t("distribution.dsp_list")}</span>
+                <span className="font-semibold text-primary-foreground">{t("distribution.dsp_list")}</span>
                 <p className="text-sm text-page-fg-subtle">{t("distribution.dsp_list_desc")}</p>
               </div>
               <ExternalLink className="w-4 h-4 text-page-fg-subtle group-hover:text-brand transition-colors" />
@@ -97,7 +97,7 @@ const Distribution = () => {
                 <Music className="w-5 h-5 text-brand" />
               </div>
               <div className="flex-1">
-                <span className="font-semibold text-white">{t("distribution.buy_plus")}</span>
+                <span className="font-semibold text-primary-foreground">{t("distribution.buy_plus")}</span>
                 <p className="text-sm text-page-fg-subtle">{t("distribution.buy_plus_desc")}</p>
               </div>
               <ChevronRight className="w-4 h-4 text-page-fg-subtle group-hover:text-brand transition-colors" />
@@ -113,7 +113,7 @@ const Distribution = () => {
                 <LogIn className="w-5 h-5 text-info" />
               </div>
               <div className="flex-1">
-                <span className="font-semibold text-white">{t("distribution.portal_access")}</span>
+                <span className="font-semibold text-primary-foreground">{t("distribution.portal_access")}</span>
                 <p className="text-sm text-page-fg-subtle">{t("distribution.portal_access_desc")}</p>
               </div>
               <ExternalLink className="w-4 h-4 text-page-fg-subtle group-hover:text-info transition-colors" />
@@ -129,7 +129,7 @@ const Distribution = () => {
                 <FileText className="w-5 h-5 text-primary" />
               </div>
               <div className="flex-1">
-                <span className="font-semibold text-white">{t("distribution.conditions")}</span>
+                <span className="font-semibold text-primary-foreground">{t("distribution.conditions")}</span>
                 <p className="text-sm text-page-fg-subtle">{t("distribution.conditions_desc")}</p>
               </div>
               <ExternalLink className="w-4 h-4 text-page-fg-subtle group-hover:text-primary transition-colors" />
@@ -142,7 +142,7 @@ const Distribution = () => {
       <section className="py-20 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-brand/10 via-primary/10 to-brand/10" />
         <div className="max-w-3xl mx-auto text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
             {t("distribution.cta_title", "¿Listo para distribuir tu música?")}
           </h2>
           <p className="text-lg text-page-fg-muted mb-8">
@@ -160,9 +160,9 @@ const Distribution = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 px-6 bg-white/[0.02]">
+      <section className="py-16 px-6 bg-primary-foreground/[0.02]">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-white">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-primary-foreground">
             {t("distribution.faq.title")}
           </h2>
           <Accordion type="single" collapsible className="space-y-3">
@@ -172,7 +172,7 @@ const Distribution = () => {
                 value={`item-${index}`}
                 className="bg-page-surface border border-page-border rounded-xl px-6 overflow-hidden"
               >
-                <AccordionTrigger className="text-left text-white hover:text-brand py-5 text-base font-medium [&[data-state=open]]:text-brand">
+                <AccordionTrigger className="text-left text-primary-foreground hover:text-brand py-5 text-base font-medium [&[data-state=open]]:text-brand">
                   {item.q}
                 </AccordionTrigger>
                 <AccordionContent className="text-page-fg-muted leading-relaxed pb-5 whitespace-pre-line">

@@ -261,14 +261,14 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
     <div className="bg-gradient-to-br from-primary/10 to-info/10 border border-primary/20 rounded-xl overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-4 hover:bg-white/5 transition-colors"
+        className="w-full flex items-center justify-between p-4 hover:bg-primary-foreground/5 transition-colors"
       >
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          <span className="font-semibold text-white/90">Generador IA</span>
+          <span className="font-semibold text-primary-foreground/90">Generador IA</span>
           <span className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded-full">Beta</span>
         </div>
-        {isOpen ? <ChevronUp className="w-4 h-4 text-white/50" /> : <ChevronDown className="w-4 h-4 text-white/50" />}
+        {isOpen ? <ChevronUp className="w-4 h-4 text-primary-foreground/50" /> : <ChevronDown className="w-4 h-4 text-primary-foreground/50" />}
       </button>
 
       {isOpen && (
@@ -276,7 +276,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
           {/* Progress bar */}
           {step !== "idle" && step !== "done" && (
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-white/70">
+              <div className="flex items-center gap-2 text-sm text-primary-foreground/70">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 {step === "extracting" && "Extrayendo contenido de la URL..."}
                 {step === "generating" && "Generando artículo con IA..."}
@@ -289,20 +289,20 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
 
           {/* URL extraction */}
           <div className="space-y-2">
-            <Label className="text-white/70 text-sm">URL de referencia (opcional)</Label>
+            <Label className="text-primary-foreground/70 text-sm">URL de referencia (opcional)</Label>
             <div className="flex gap-2">
               <Input
                 value={referenceUrl}
                 onChange={(e) => setReferenceUrl(e.target.value)}
                 placeholder="https://ejemplo.com/articulo"
-                className="bg-white/5 border-white/10 text-white flex-1"
+                className="bg-primary-foreground/5 border-primary-foreground/10 text-primary-foreground flex-1"
               />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={extractUrl}
                 disabled={step !== "idle" || !referenceUrl.trim()}
-                className="gap-1 border-white/20 text-black shrink-0"
+                className="gap-1 border-primary-foreground/20 text-black shrink-0"
               >
                 {step === "extracting" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link className="w-4 h-4" />}
                 Extraer
@@ -312,13 +312,13 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
 
           {/* Reference text */}
           <div className="space-y-2">
-            <Label className="text-white/70 text-sm">Texto de referencia</Label>
+            <Label className="text-primary-foreground/70 text-sm">Texto de referencia</Label>
             <Textarea
               value={referenceText}
               onChange={(e) => setReferenceText(e.target.value)}
               rows={5}
               placeholder="Pega aquí el texto de referencia para generar el artículo, o extrae contenido de una URL arriba..."
-              className="bg-white/5 border-white/10 text-white text-sm"
+              className="bg-primary-foreground/5 border-primary-foreground/10 text-primary-foreground text-sm"
             />
           </div>
 
@@ -326,7 +326,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
           <Button
             onClick={generateArticle}
             disabled={step !== "idle" || !referenceText.trim()}
-            className="w-full gap-2 bg-primary hover:bg-primary text-white"
+            className="w-full gap-2 bg-primary hover:bg-primary text-primary-foreground"
           >
             {step === "generating" ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -339,7 +339,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
           {/* Regenerate individual sections */}
           {(form.title || form.content) && (
             <div className="space-y-2">
-              <Label className="text-white/50 text-xs uppercase tracking-wider">Regenerar sección</Label>
+              <Label className="text-primary-foreground/50 text-xs uppercase tracking-wider">Regenerar sección</Label>
               <div className="flex gap-2 flex-wrap">
                 {(Object.keys(sectionLabels) as Array<"title" | "excerpt" | "content">).map((section) => {
                   const { icon: Icon, label } = sectionLabels[section];
@@ -351,7 +351,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
                       size="sm"
                       onClick={() => regenerateSection(section)}
                       disabled={regeneratingSection !== null || step !== "idle"}
-                      className="gap-1.5 border-white/10 text-foreground hover:text-foreground hover:border-primary/50 text-xs"
+                      className="gap-1.5 border-primary-foreground/10 text-foreground hover:text-foreground hover:border-primary/50 text-xs"
                     >
                       {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Icon className="w-3 h-3" />}
                       <RefreshCw className="w-3 h-3" />
@@ -365,12 +365,12 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
 
           {/* Translate to other languages */}
           {(form.title || form.content) && (
-            <div className="border-t border-white/10 pt-4 space-y-2">
-              <Label className="text-white/70 text-sm flex items-center gap-2">
+            <div className="border-t border-primary-foreground/10 pt-4 space-y-2">
+              <Label className="text-primary-foreground/70 text-sm flex items-center gap-2">
                 <Languages className="w-4 h-4" />
                 Traducir a otros idiomas
               </Label>
-              <p className="text-xs text-white/40">
+              <p className="text-xs text-primary-foreground/40">
                 {currentPostId
                   ? "Traduce automáticamente este artículo a inglés y portugués y guárdalo como versiones adicionales."
                   : "Guarda el artículo primero para poder traducirlo."}
@@ -380,7 +380,7 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
                 size="sm"
                 onClick={translateArticle}
                 disabled={step !== "idle" || !currentPostId}
-                className="gap-2 border-white/20 text-foreground hover:text-foreground hover:border-info/50"
+                className="gap-2 border-primary-foreground/20 text-foreground hover:text-foreground hover:border-info/50"
               >
                 {step === "translating" ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -412,8 +412,8 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
           )}
 
           {/* Image generation */}
-          <div className="border-t border-white/10 pt-4 space-y-2">
-            <Label className="text-white/70 text-sm flex items-center gap-2">
+          <div className="border-t border-primary-foreground/10 pt-4 space-y-2">
+            <Label className="text-primary-foreground/70 text-sm flex items-center gap-2">
               <Image className="w-4 h-4" />
               Generar imagen del artículo
             </Label>
@@ -422,14 +422,14 @@ const AIArticleGenerator = ({ form, setForm, slugify, isEditing, currentPostId }
                 value={imageStyle}
                 onChange={(e) => setImageStyle(e.target.value)}
                 placeholder="Estilo: moderno, abstracto, fotográfico..."
-                className="bg-white/5 border-white/10 text-white flex-1 text-sm"
+                className="bg-primary-foreground/5 border-primary-foreground/10 text-primary-foreground flex-1 text-sm"
               />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={generateImage}
                 disabled={generatingImage || !form.title}
-                className="gap-1 border-white/20 text-black shrink-0"
+                className="gap-1 border-primary-foreground/20 text-black shrink-0"
               >
                 {generatingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Image className="w-4 h-4" />}
                 Generar

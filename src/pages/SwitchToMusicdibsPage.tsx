@@ -155,7 +155,7 @@ const SwitchToMusicdibsPage = () => {
 
           {/* Not all or nothing */}
           <section className="mb-16 bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Switching isn't all-or-nothing</h2>
+            <h2 className="text-2xl font-bold text-primary-foreground mb-4">Switching isn't all-or-nothing</h2>
             <p className="text-page-fg-muted leading-relaxed mb-4">
               The most common pattern among artists moving to Musicdibs isn't "burn down the old
               account and start over". It's more incremental:
@@ -181,7 +181,7 @@ const SwitchToMusicdibsPage = () => {
 
           {/* Migration steps */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-white mb-4">The ISRC migration, step by step</h2>
+            <h2 className="text-3xl font-bold text-primary-foreground mb-4">The ISRC migration, step by step</h2>
             <p className="text-page-fg-subtle mb-10">
               The process isn't automatic, but it is straightforward. The key rule: don't generate
               new ISRCs and don't delete the original delivery before the new one is live.
@@ -198,7 +198,7 @@ const SwitchToMusicdibsPage = () => {
                       <Icon className="w-6 h-6 text-brand" />
                     </div>
                     <div>
-                      <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
+                      <h3 className="text-lg font-bold text-primary-foreground mb-2">{s.title}</h3>
                       <p className="text-page-fg-muted leading-relaxed">{s.desc}</p>
                     </div>
                   </div>
@@ -209,7 +209,7 @@ const SwitchToMusicdibsPage = () => {
             <div className="mt-8 bg-warning/10 border border-warning/20 rounded-2xl p-6 flex gap-4 items-start">
               <AlertTriangle className="w-6 h-6 text-warning shrink-0 mt-0.5" />
               <div>
-                <h3 className="text-white font-semibold mb-1">One thing not to do</h3>
+                <h3 className="text-primary-foreground font-semibold mb-1">One thing not to do</h3>
                 <p className="text-page-fg-muted leading-relaxed">
                   Don't request takedown at your old distributor <em>before</em> Musicdibs' delivery
                   is accepted, and don't create a new ISRC. Both mistakes reset your stream history
@@ -221,7 +221,7 @@ const SwitchToMusicdibsPage = () => {
 
           {/* What stays the same */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-white mb-6">What stays the same after switching</h2>
+            <h2 className="text-3xl font-bold text-primary-foreground mb-6">What stays the same after switching</h2>
             <p className="text-page-fg-muted mb-6 leading-relaxed">
               Because streaming platforms identify a recording by its ISRC — not by which
               distributor delivered it — everything tied to the ISRC carries over:
@@ -238,11 +238,11 @@ const SwitchToMusicdibsPage = () => {
 
           {/* FAQ */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-10 text-white">Frequently asked questions</h2>
+            <h2 className="text-3xl font-bold text-center mb-10 text-primary-foreground">Frequently asked questions</h2>
             <div className="space-y-4">
               {FAQ.map((f, i) => (
                 <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-3">{f.q}</h3>
+                  <h3 className="text-lg font-bold text-primary-foreground mb-3">{f.q}</h3>
                   <p className="text-page-fg-muted leading-relaxed">{f.a}</p>
                 </div>
               ))}
@@ -251,7 +251,7 @@ const SwitchToMusicdibsPage = () => {
 
           {/* Final CTA */}
           <section className="text-center bg-gradient-to-r from-brand/10 to-primary/10 border border-brand/20 rounded-2xl p-12">
-            <h2 className="text-3xl font-bold text-white mb-4">Start with one release</h2>
+            <h2 className="text-3xl font-bold text-primary-foreground mb-4">Start with one release</h2>
             <p className="text-page-fg-muted mb-8 max-w-xl mx-auto">
               Create your account, migrate one track using its existing ISRC, and see the full
               workflow before you decide about the rest of your catalog.

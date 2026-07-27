@@ -135,7 +135,7 @@ const MusicdibsVsLandrPage = () => {
           </header>
 
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-3 text-white">Honest comparison</h2>
+            <h2 className="text-3xl font-bold text-center mb-3 text-primary-foreground">Honest comparison</h2>
             <p className="text-page-fg-subtle text-center mb-10 text-sm max-w-xl mx-auto">
               LANDR data based on publicly available product information as of 2026.
             </p>
@@ -147,7 +147,7 @@ const MusicdibsVsLandrPage = () => {
                       Feature
                     </th>
                     <th className="px-4 py-5 text-center text-page-fg-muted font-bold">LANDR</th>
-                    <th className="px-4 py-5 text-center bg-brand/10 border-x border-brand/30 text-white font-bold">
+                    <th className="px-4 py-5 text-center bg-brand/10 border-x border-brand/30 text-primary-foreground font-bold">
                       Musicdibs
                     </th>
                   </tr>
@@ -157,7 +157,7 @@ const MusicdibsVsLandrPage = () => {
                     <tr
                       key={i}
                       className={`border-b border-page-border last:border-b-0 ${
-                        row.highlight ? "bg-brand/10" : i % 2 === 0 ? "bg-white/[0.02]" : ""
+                        row.highlight ? "bg-brand/10" : i % 2 === 0 ? "bg-primary-foreground/[0.02]" : ""
                       }`}
                     >
                       <td className="px-5 py-4 text-page-fg-muted font-medium">
@@ -180,7 +180,7 @@ const MusicdibsVsLandrPage = () => {
           </section>
 
           <section className="mb-16 bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-white mb-4">To be fair to LANDR</h2>
+            <h2 className="text-2xl font-bold text-primary-foreground mb-4">To be fair to LANDR</h2>
             <p className="text-page-fg-muted leading-relaxed">
               LANDR's AI mastering is one of the more mature products in the space, its sample library is
               genuinely useful, and its distribution works. Nothing in this comparison is a knock on those.
@@ -190,7 +190,7 @@ const MusicdibsVsLandrPage = () => {
           </section>
 
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-4 text-white">The complete flow with Musicdibs</h2>
+            <h2 className="text-3xl font-bold text-center mb-4 text-primary-foreground">The complete flow with Musicdibs</h2>
             <p className="text-page-fg-subtle text-center mb-12 max-w-xl mx-auto">
               Four steps, one account, one workflow.
             </p>
@@ -202,7 +202,7 @@ const MusicdibsVsLandrPage = () => {
                     <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-5">
                       <Icon className="w-6 h-6 text-brand" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-3">{s.title}</h3>
+                    <h3 className="text-xl font-bold text-primary-foreground mb-3">{s.title}</h3>
                     <p className="text-page-fg-muted leading-relaxed">{s.desc}</p>
                   </div>
                 );
@@ -220,7 +220,7 @@ const MusicdibsVsLandrPage = () => {
           </section>
 
           <section className="mb-20 bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">Why artists trust Musicdibs</h2>
+            <h2 className="text-2xl font-bold text-primary-foreground mb-6 text-center">Why artists trust Musicdibs</h2>
             <ul className="space-y-3 max-w-2xl mx-auto">
               <li className="text-page-fg-muted leading-relaxed flex gap-3">
                 <Check className="w-5 h-5 text-success shrink-0 mt-1" />
@@ -238,11 +238,11 @@ const MusicdibsVsLandrPage = () => {
           </section>
 
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-10 text-white">Frequently asked questions</h2>
+            <h2 className="text-3xl font-bold text-center mb-10 text-primary-foreground">Frequently asked questions</h2>
             <div className="space-y-4">
               {FAQ.map((f, i) => (
                 <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-3">{f.q}</h3>
+                  <h3 className="text-lg font-bold text-primary-foreground mb-3">{f.q}</h3>
                   <p className="text-page-fg-muted leading-relaxed">{f.a}</p>
                 </div>
               ))}
@@ -250,7 +250,7 @@ const MusicdibsVsLandrPage = () => {
           </section>
 
           <section className="text-center bg-gradient-to-r from-brand/10 to-primary/10 border border-brand/20 rounded-2xl p-12">
-            <h2 className="text-3xl font-bold text-white mb-4">Master it. Prove it. Release it.</h2>
+            <h2 className="text-3xl font-bold text-primary-foreground mb-4">Master it. Prove it. Release it.</h2>
             <p className="text-page-fg-muted mb-8 max-w-xl mx-auto">
               Register your first master today and see the full Musicdibs workflow.
             </p>

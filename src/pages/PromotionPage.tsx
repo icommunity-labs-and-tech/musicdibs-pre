@@ -295,7 +295,7 @@ export default function PromotionPage() {
                 <Button
                   size="lg"
                   onClick={() => setShowForm(true)}
-                  className="w-full text-sm font-semibold h-12 gap-2 group-hover:shadow-lg transition-all bg-gradient-to-r from-brand to-brand hover:from-brand hover:to-brand text-white border-0"
+                  className="w-full text-sm font-semibold h-12 gap-2 group-hover:shadow-lg transition-all bg-gradient-to-r from-brand to-brand hover:from-brand hover:to-brand text-primary-foreground border-0"
                 >
                   <Rocket className="h-4 w-4" />
                   {t('dashboard.promoSelector.premiumCtaNew', 'Impulsar mi canción ahora 🚀')}
@@ -431,7 +431,7 @@ export default function PromotionPage() {
                   <Separator />
                   <p className="text-sm text-muted-foreground text-center">{t('dashboard.press.whatNow')}</p>
                   <div className="rounded-xl bg-gradient-to-br from-zinc-900 to-zinc-800 border border-zinc-700 p-5 space-y-3">
-                    <div className="flex items-center gap-2"><ExternalLink className="h-5 w-5 text-primary" /><h3 className="font-semibold text-white">{t('dashboard.press.grooverTitle')}</h3></div>
+                    <div className="flex items-center gap-2"><ExternalLink className="h-5 w-5 text-primary" /><h3 className="font-semibold text-primary-foreground">{t('dashboard.press.grooverTitle')}</h3></div>
                     <p className="text-sm text-zinc-400">{t('dashboard.press.grooverDesc')}</p>
                     <Button className="gap-2" onClick={() => { window.open(`https://groover.co/en/?ref=musicdibs&artist=${encodeURIComponent(selectedWork?.author || '')}&track=${encodeURIComponent(selectedWork?.title || '')}`, '_blank'); }}>
                       {t('dashboard.press.grooverBtn')}

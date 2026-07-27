@@ -137,7 +137,7 @@ const MusicdibsVsDistroKidPage = () => {
 
           {/* Comparison table */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-3 text-white">Honest comparison</h2>
+            <h2 className="text-3xl font-bold text-center mb-3 text-primary-foreground">Honest comparison</h2>
             <p className="text-page-fg-subtle text-center mb-10 text-sm max-w-xl mx-auto">
               DistroKid data based on publicly available pricing as of 2026.
             </p>
@@ -149,14 +149,14 @@ const MusicdibsVsDistroKidPage = () => {
                       Feature
                     </th>
                     <th className="px-4 py-5 text-center text-page-fg-muted font-bold">DistroKid</th>
-                    <th className="px-4 py-5 text-center bg-brand/10 border-x border-brand/30 text-white font-bold">
+                    <th className="px-4 py-5 text-center bg-brand/10 border-x border-brand/30 text-primary-foreground font-bold">
                       Musicdibs
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {TABLE_ROWS.map((row, i) => (
-                    <tr key={i} className={`border-b border-page-border last:border-b-0 ${i % 2 === 0 ? "bg-white/[0.02]" : ""}`}>
+                    <tr key={i} className={`border-b border-page-border last:border-b-0 ${i % 2 === 0 ? "bg-primary-foreground/[0.02]" : ""}`}>
                       <td className="px-5 py-4 text-page-fg-muted font-medium">{row.feature}</td>
                       <td className="px-4 py-4 text-center"><Cell value={row.distrokid} /></td>
                       <td className="px-4 py-4 text-center bg-brand/5 border-x border-brand/20">
@@ -171,7 +171,7 @@ const MusicdibsVsDistroKidPage = () => {
 
           {/* Fair to DistroKid */}
           <section className="mb-16 bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-white mb-4">To be fair to DistroKid</h2>
+            <h2 className="text-2xl font-bold text-primary-foreground mb-4">To be fair to DistroKid</h2>
             <p className="text-page-fg-muted leading-relaxed">
               DistroKid built one of the fastest, most reliable distribution pipelines in the industry, and for
               artists who only need distribution, it does that job well. This page isn't about which distributor
@@ -182,7 +182,7 @@ const MusicdibsVsDistroKidPage = () => {
 
           {/* What's missing */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-white mb-6">
+            <h2 className="text-3xl font-bold text-primary-foreground mb-6">
               What's missing when distribution is the only tool in your workflow
             </h2>
             <p className="text-page-fg-muted mb-4 leading-relaxed">
@@ -225,7 +225,7 @@ const MusicdibsVsDistroKidPage = () => {
 
           {/* Complete flow */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-4 text-white">The complete flow with Musicdibs</h2>
+            <h2 className="text-3xl font-bold text-center mb-4 text-primary-foreground">The complete flow with Musicdibs</h2>
             <p className="text-page-fg-subtle text-center mb-12 max-w-xl mx-auto">
               All four steps live in one account, one dashboard, one subscription.
             </p>
@@ -237,7 +237,7 @@ const MusicdibsVsDistroKidPage = () => {
                     <div className="w-12 h-12 rounded-full bg-brand/20 flex items-center justify-center mb-5">
                       <Icon className="w-6 h-6 text-brand" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-3">{s.title}</h3>
+                    <h3 className="text-xl font-bold text-primary-foreground mb-3">{s.title}</h3>
                     <p className="text-page-fg-muted leading-relaxed">{s.desc}</p>
                   </div>
                 );
@@ -247,7 +247,7 @@ const MusicdibsVsDistroKidPage = () => {
 
           {/* Trust */}
           <section className="mb-20 bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">Why artists trust Musicdibs</h2>
+            <h2 className="text-2xl font-bold text-primary-foreground mb-6 text-center">Why artists trust Musicdibs</h2>
             <ul className="space-y-3 max-w-2xl mx-auto">
               <li className="text-page-fg-muted leading-relaxed flex gap-3">
                 <Check className="w-5 h-5 text-success shrink-0 mt-1" />
@@ -267,11 +267,11 @@ const MusicdibsVsDistroKidPage = () => {
 
           {/* FAQ */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-10 text-white">Frequently asked questions</h2>
+            <h2 className="text-3xl font-bold text-center mb-10 text-primary-foreground">Frequently asked questions</h2>
             <div className="space-y-4">
               {FAQ.map((f, i) => (
                 <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-3">{f.q}</h3>
+                  <h3 className="text-lg font-bold text-primary-foreground mb-3">{f.q}</h3>
                   <p className="text-page-fg-muted leading-relaxed">{f.a}</p>
                 </div>
               ))}
@@ -280,7 +280,7 @@ const MusicdibsVsDistroKidPage = () => {
 
           {/* Final CTA */}
           <section className="text-center bg-gradient-to-r from-brand/10 to-primary/10 border border-brand/20 rounded-2xl p-12">
-            <h2 className="text-3xl font-bold text-white mb-4">Start with a free registration</h2>
+            <h2 className="text-3xl font-bold text-primary-foreground mb-4">Start with a free registration</h2>
             <p className="text-page-fg-muted mb-8 max-w-xl mx-auto">
               Protect your first work today and see the full Musicdibs workflow from creation to promotion.
             </p>

@@ -222,10 +222,10 @@ export default function Features() {
             y genera contenido visual — todo desde un solo lugar.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-white px-8">
+            <Button asChild size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-8">
               <Link to="/login">Empezar gratis</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-page-border-strong text-white hover:bg-page-surface px-8">
+            <Button asChild size="lg" variant="outline" className="border-page-border-strong text-primary-foreground hover:bg-page-surface px-8">
               <Link to="/distribution">Ver distribución</Link>
             </Button>
           </div>
@@ -250,7 +250,7 @@ export default function Features() {
                     <Icon className="w-3.5 h-3.5" />
                     {pillar.badge}
                   </div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+                  <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground leading-tight">
                     {pillar.title}
                   </h2>
                   <p className="text-lg text-page-fg-subtle font-medium">{pillar.subtitle}</p>
@@ -271,7 +271,7 @@ export default function Features() {
 
                   <Button
                     asChild
-                    className={`mt-2 bg-gradient-to-r ${pillar.color} hover:opacity-90 text-white border-0`}
+                    className={`mt-2 bg-gradient-to-r ${pillar.color} hover:opacity-90 text-primary-foreground border-0`}
                   >
                     <Link to={pillar.href}>
                       {pillar.cta}
@@ -290,9 +290,9 @@ export default function Features() {
                         className="bg-page-surface border border-page-border rounded-2xl p-5 hover:bg-page-surface transition-colors"
                       >
                         <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${pillar.color} flex items-center justify-center mb-3`}>
-                          <FIcon className="w-5 h-5 text-white" />
+                          <FIcon className="w-5 h-5 text-primary-foreground" />
                         </div>
-                        <p className="font-semibold text-white text-sm mb-1">{feat.label}</p>
+                        <p className="font-semibold text-primary-foreground text-sm mb-1">{feat.label}</p>
                         <p className="text-page-fg-subtle text-xs leading-relaxed">{feat.desc}</p>
                       </div>
                     );
@@ -308,7 +308,7 @@ export default function Features() {
       <section className="py-24 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4">
               Musicdibs vs la competencia
             </h2>
             <p className="text-page-fg-subtle text-lg max-w-2xl mx-auto">
@@ -333,7 +333,7 @@ export default function Features() {
                 {COMPARE_ROWS.map((row, i) => (
                   <tr
                     key={row.feature}
-                    className={`border-b border-page-border ${i % 2 === 0 ? "bg-white/[0.02]" : ""}`}
+                    className={`border-b border-page-border ${i % 2 === 0 ? "bg-primary-foreground/[0.02]" : ""}`}
                   >
                     <td className="px-6 py-3.5 text-page-fg-muted">{row.feature}</td>
                     <td className="px-4 py-3.5"><Check ok={row.md} /></td>
@@ -351,20 +351,20 @@ export default function Features() {
       {/* ── CTA FINAL ── */}
       <section className="py-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+          <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-6">
             Todo lo que necesitas para vivir de tu música
           </h2>
           <p className="text-page-fg-subtle text-lg mb-10">
             Más de 100.000 artistas ya usan Musicdibs. Empieza gratis y escala cuando quieras.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-gradient-to-r from-accent to-brand hover:opacity-90 text-white border-0 px-10">
+            <Button asChild size="lg" className="bg-gradient-to-r from-accent to-brand hover:opacity-90 text-primary-foreground border-0 px-10">
               <Link to="/login">
                 Crear cuenta gratis
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-page-border-strong text-white hover:bg-page-surface px-10">
+            <Button asChild size="lg" variant="outline" className="border-page-border-strong text-primary-foreground hover:bg-page-surface px-10">
               <Link to="/faq">Ver preguntas frecuentes</Link>
             </Button>
           </div>

@@ -246,7 +246,7 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
 
           {/* Intro */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold mb-6 text-white">{c.introTitle}</h2>
+            <h2 className="text-3xl font-bold mb-6 text-primary-foreground">{c.introTitle}</h2>
             {c.intro.map((p, i) => (
               <p key={i} className="text-page-fg-muted leading-relaxed text-lg mb-4">{p}</p>
             ))}
@@ -254,7 +254,7 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
 
           {/* Rights */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.rightsTitle}</h2>
+            <h2 className="text-3xl font-bold text-center mb-12 text-primary-foreground">{c.rightsTitle}</h2>
             <div className="grid md:grid-cols-2 gap-6">
               {c.rights.map((r, i) => {
                 const Icon = rightIcons[i];
@@ -263,7 +263,7 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
                     <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mb-5">
                       <Icon className="w-6 h-6 text-primary" />
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-3">{r.title}</h3>
+                    <h3 className="text-xl font-bold text-primary-foreground mb-3">{r.title}</h3>
                     <p className="text-page-fg-muted leading-relaxed">{r.desc}</p>
                   </div>
                 );
@@ -273,7 +273,7 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
 
           {/* How */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.howTitle}</h2>
+            <h2 className="text-3xl font-bold text-center mb-12 text-primary-foreground">{c.howTitle}</h2>
             <ol className="space-y-3 max-w-2xl mx-auto">
               {c.how.map((step, i) => (
                 <li key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-xl p-5 flex gap-4 items-start">
@@ -288,12 +288,12 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
 
           {/* Options */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-4 text-white">{c.optionsTitle}</h2>
+            <h2 className="text-3xl font-bold text-center mb-4 text-primary-foreground">{c.optionsTitle}</h2>
             <p className="text-page-fg-muted text-center mb-10 max-w-2xl mx-auto">{c.optionsIntro}</p>
             <div className="grid md:grid-cols-3 gap-6">
               {c.options.map((opt, i) => (
                 <div key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-white mb-4">{opt.name}</h3>
+                  <h3 className="text-lg font-bold text-primary-foreground mb-4">{opt.name}</h3>
                   <p className="text-success/90 text-sm mb-3"><strong>+ </strong>{opt.pros}</p>
                   <p className="text-page-fg-subtle text-sm"><strong>− </strong>{opt.cons}</p>
                 </div>
@@ -306,11 +306,11 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
 
           {/* Myths */}
           <section className="mb-20">
-            <h2 className="text-3xl font-bold text-center mb-12 text-white">{c.mythsTitle}</h2>
+            <h2 className="text-3xl font-bold text-center mb-12 text-primary-foreground">{c.mythsTitle}</h2>
             <div className="space-y-4">
               {c.myths.map((m, i) => (
                 <details key={i} className="bg-page-surface backdrop-blur-sm border border-page-border rounded-2xl p-6 group">
-                  <summary className="font-bold text-white cursor-pointer flex items-center justify-between">
+                  <summary className="font-bold text-primary-foreground cursor-pointer flex items-center justify-between">
                     {m.q}
                     <ChevronDown className="w-5 h-5 text-primary group-open:rotate-180 transition-transform" />
                   </summary>
@@ -322,7 +322,7 @@ const MusicCopyrightPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSeoD
 
           {/* Closing */}
           <section className="bg-gradient-to-r from-primary/20 to-brand/20 border border-page-border rounded-2xl p-10 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-white">{c.closingTitle}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-primary-foreground">{c.closingTitle}</h2>
             <p className="text-page-fg-muted mb-8 max-w-lg mx-auto">{c.closingDesc}</p>
             <Link to="/registro-obras-musicales">
               <Button variant="hero" size="xl" className="font-semibold">

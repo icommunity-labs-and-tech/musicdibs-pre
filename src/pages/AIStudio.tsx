@@ -133,7 +133,7 @@ const AIStudio = () => {
 
         {/* ── Badges */}
         {isFeatured && (
-          <span className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-accent to-accent px-2.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+          <span className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-accent to-accent px-2.5 py-0.5 text-[10px] font-bold text-primary-foreground shadow-sm">
             ⚡ TOP
           </span>
         )}
@@ -143,7 +143,7 @@ const AIStudio = () => {
           </Badge>
         )}
         {!isFeatured && module.available && module.costsCredits === false && (
-          <Badge className="absolute top-3 right-3 z-10 text-[10px] bg-success hover:bg-success text-white border-0">
+          <Badge className="absolute top-3 right-3 z-10 text-[10px] bg-success hover:bg-success text-primary-foreground border-0">
             {t('aiStudio.free', 'Gratis')}
           </Badge>
         )}
@@ -155,7 +155,7 @@ const AIStudio = () => {
 
         <CardHeader className={extraClass ? "flex-1" : undefined}>
           <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${module.color} flex items-center justify-center mb-4 ${isFeatured ? 'shadow-[0_4px_14px_rgba(139,92,246,0.45)]' : ''}`}>
-            <module.icon className="w-6 h-6 text-white" />
+            <module.icon className="w-6 h-6 text-primary-foreground" />
           </div>
           <CardTitle className="flex items-center gap-2 mb-2">
             {t(module.titleKey)}
@@ -168,7 +168,7 @@ const AIStudio = () => {
             <div className="mt-auto pt-2"><PricingLink /></div>
           ) : module.costsCredits === false ? (
             <div className="mt-auto pt-2">
-              <span className="inline-flex items-center rounded-full bg-success px-4 py-1.5 text-xs font-bold text-white shadow-sm">{t('aiStudio.free', 'Gratis')}</span>
+              <span className="inline-flex items-center rounded-full bg-success px-4 py-1.5 text-xs font-bold text-primary-foreground shadow-sm">{t('aiStudio.free', 'Gratis')}</span>
             </div>
           ) : null}
         </CardHeader>
@@ -191,7 +191,7 @@ const AIStudio = () => {
               {t('aiStudio.startBtn')}
             </Button>
           ) : (
-            <Button asChild className={`w-full ${isFeatured ? 'bg-gradient-to-r from-accent to-accent hover:from-accent hover:to-accent text-white border-0 shadow-[0_2px_10px_rgba(139,92,246,0.4)]' : ''}`} variant="default">
+            <Button asChild className={`w-full ${isFeatured ? 'bg-gradient-to-r from-accent to-accent hover:from-accent hover:to-accent text-primary-foreground border-0 shadow-[0_2px_10px_rgba(139,92,246,0.4)]' : ''}`} variant="default">
               <Link to={module.href}>
                 <Zap className="w-4 h-4 mr-2" />
                 {t('aiStudio.startBtn')}

@@ -106,7 +106,7 @@ const Contact = () => {
       <section className="pt-32 pb-20 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-10">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
               {t("contact.heading", "Contact Us")}
             </h1>
             <p className="text-page-fg-muted text-lg">
@@ -134,7 +134,7 @@ const Contact = () => {
 
             {/* Name */}
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-white flex items-center gap-2">
+              <Label htmlFor="name" className="text-primary-foreground flex items-center gap-2">
                 <User className="w-4 h-4" />
                 {t("contact.name", "Name")} *
               </Label>
@@ -142,7 +142,7 @@ const Contact = () => {
                 id="name"
                 value={form.name}
                 onChange={(e) => handleChange("name", e.target.value)}
-                className="bg-page-surface border-page-border-strong text-white placeholder:text-page-fg-subtle"
+                className="bg-page-surface border-page-border-strong text-primary-foreground placeholder:text-page-fg-subtle"
                 placeholder={t("contact.name_placeholder", "Your name")}
               />
               {errors.name && <p className="text-red-300 text-sm">{errors.name}</p>}
@@ -150,7 +150,7 @@ const Contact = () => {
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-white flex items-center gap-2">
+              <Label htmlFor="email" className="text-primary-foreground flex items-center gap-2">
                 <Mail className="w-4 h-4" />
                 {t("contact.email", "Email")} *
               </Label>
@@ -159,7 +159,7 @@ const Contact = () => {
                 type="email"
                 value={form.email}
                 onChange={(e) => handleChange("email", e.target.value)}
-                className="bg-page-surface border-page-border-strong text-white placeholder:text-page-fg-subtle"
+                className="bg-page-surface border-page-border-strong text-primary-foreground placeholder:text-page-fg-subtle"
                 placeholder={t("contact.email_placeholder", "you@example.com")}
               />
               {errors.email && <p className="text-red-300 text-sm">{errors.email}</p>}
@@ -167,12 +167,12 @@ const Contact = () => {
 
             {/* Reason */}
             <div className="space-y-2">
-              <Label className="text-white flex items-center gap-2">
+              <Label className="text-primary-foreground flex items-center gap-2">
                 <HelpCircle className="w-4 h-4" />
                 {t("contact.reason", "Reason for inquiry")} *
               </Label>
               <Select value={form.reason} onValueChange={(val) => handleChange("reason", val)}>
-                <SelectTrigger className="bg-page-surface border-page-border-strong text-white">
+                <SelectTrigger className="bg-page-surface border-page-border-strong text-primary-foreground">
                   <SelectValue placeholder={t("contact.reason_placeholder", "Select a reason")} />
                 </SelectTrigger>
                 <SelectContent>
@@ -188,7 +188,7 @@ const Contact = () => {
 
             {/* Subject */}
             <div className="space-y-2">
-              <Label htmlFor="subject" className="text-white flex items-center gap-2">
+              <Label htmlFor="subject" className="text-primary-foreground flex items-center gap-2">
                 <MessageSquare className="w-4 h-4" />
                 {t("contact.subject", "Subject")} *
               </Label>
@@ -196,7 +196,7 @@ const Contact = () => {
                 id="subject"
                 value={form.subject}
                 onChange={(e) => handleChange("subject", e.target.value)}
-                className="bg-page-surface border-page-border-strong text-white placeholder:text-page-fg-subtle"
+                className="bg-page-surface border-page-border-strong text-primary-foreground placeholder:text-page-fg-subtle"
                 placeholder={t("contact.subject_placeholder", "How can we help?")}
               />
               {errors.subject && <p className="text-red-300 text-sm">{errors.subject}</p>}
@@ -204,7 +204,7 @@ const Contact = () => {
 
             {/* Message */}
             <div className="space-y-2">
-              <Label htmlFor="message" className="text-white flex items-center gap-2">
+              <Label htmlFor="message" className="text-primary-foreground flex items-center gap-2">
                 <MessageSquare className="w-4 h-4" />
                 {t("contact.message", "Message")} *
               </Label>
@@ -212,7 +212,7 @@ const Contact = () => {
                 id="message"
                 value={form.message}
                 onChange={(e) => handleChange("message", e.target.value)}
-                className="bg-page-surface border-page-border-strong text-white placeholder:text-page-fg-subtle min-h-[140px]"
+                className="bg-page-surface border-page-border-strong text-primary-foreground placeholder:text-page-fg-subtle min-h-[140px]"
                 placeholder={t("contact.message_placeholder", "Tell us more...")}
               />
               {errors.message && <p className="text-red-300 text-sm">{errors.message}</p>}

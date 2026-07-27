@@ -227,7 +227,7 @@ export default function RegistroMusicalPage() {
                             boxShadow: "0 10px 25px -5px #8B5CF6",
                           }}
                         >
-                          <Music2 className="h-6 w-6 text-white relative z-10" />
+                          <Music2 className="h-6 w-6 text-primary-foreground relative z-10" />
                           <div
                             className="absolute inset-0 opacity-40"
                             style={{
@@ -344,7 +344,7 @@ export default function RegistroMusicalPage() {
                             }}
                           >
                             {done && (
-                              <CheckCircle2 className="h-3 w-3 text-white" />
+                              <CheckCircle2 className="h-3 w-3 text-primary-foreground" />
                             )}
                           </div>
 
@@ -700,10 +700,10 @@ export default function RegistroMusicalPage() {
                       <p className="relative text-[10px] uppercase tracking-[0.2em] font-semibold text-page-fg">
                         Gana el
                       </p>
-                      <p className="relative font-display font-bold text-3xl sm:text-4xl text-white leading-none my-1">
+                      <p className="relative font-display font-bold text-3xl sm:text-4xl text-primary-foreground leading-none my-1">
                         100%
                       </p>
-                      <p className="relative text-xs sm:text-sm font-bold uppercase tracking-wider text-white">
+                      <p className="relative text-xs sm:text-sm font-bold uppercase tracking-wider text-primary-foreground">
                         Royalties
                       </p>
                     </div>
@@ -814,7 +814,7 @@ export default function RegistroMusicalPage() {
                               "linear-gradient(135deg, #F58529, #DD2A7B, #8134AF)",
                           }}
                         >
-                          <Heart className="h-3.5 w-3.5 text-white" />
+                          <Heart className="h-3.5 w-3.5 text-primary-foreground" />
                         </span>
                         <a
                           href="https://www.instagram.com/musicdibs/"
@@ -931,7 +931,7 @@ export default function RegistroMusicalPage() {
                         <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.88 2.88 0 112.88-2.88V9.39a6.37 6.37 0 003.63 1.15V7.53a4.83 4.83 0 003.59-1.84z"/>
                       </svg>
                     </span>
-                    <span className="text-sm font-bold text-white leading-snug">
+                    <span className="text-sm font-bold text-primary-foreground leading-snug">
                       Comparte tus canciones con +200k de seguidores
                     </span>
                   </div>

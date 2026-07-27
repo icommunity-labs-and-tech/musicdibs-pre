@@ -177,7 +177,7 @@ export default function PromocionMusical() {
                         className="h-12 w-12 rounded-full flex items-center justify-center"
                         style={{ background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))" }}
                       >
-                        <Music2 className="h-5 w-5 text-white" />
+                        <Music2 className="h-5 w-5 text-primary-foreground" />
                       </div>
                     </div>
 
@@ -244,7 +244,7 @@ export default function PromocionMusical() {
               </div>
 
               {/* Pillar rows */}
-              <div className="mt-16 sm:mt-20 space-y-px rounded-3xl overflow-hidden border border-page-border bg-white/[0.02] backdrop-blur-sm">
+              <div className="mt-16 sm:mt-20 space-y-px rounded-3xl overflow-hidden border border-page-border bg-primary-foreground/[0.02] backdrop-blur-sm">
                 {/* ── ROW 01 · Distribución ── */}
                 <article className="relative grid grid-cols-12 gap-0">
                   <div className="col-span-12 lg:col-span-2 flex lg:flex-col items-center lg:items-start justify-between lg:justify-start gap-4 px-8 py-8 lg:py-12 border-b lg:border-b-0 lg:border-r border-page-border">
@@ -315,7 +315,7 @@ export default function PromocionMusical() {
                 </article>
 
                 {/* ── ROW 02 · Promoción (flipped) ── */}
-                <article className="relative grid grid-cols-12 gap-0 bg-white/[0.015]">
+                <article className="relative grid grid-cols-12 gap-0 bg-primary-foreground/[0.015]">
                   <div className="col-span-12 lg:col-span-4 lg:order-1 relative min-h-[260px] lg:min-h-[360px] overflow-hidden border-b lg:border-b-0 lg:border-r border-page-border"
                     style={{ background: "radial-gradient(ellipse at center, oklch(0.68 0.27 322 / 0.16), transparent 70%)" }}>
                     <div className="absolute inset-0 flex items-center justify-center" aria-hidden>
@@ -330,7 +330,7 @@ export default function PromocionMusical() {
                         <div className="absolute inset-3 rounded-full border border-page-border" />
                         <div className="h-9 w-9 rounded-full flex items-center justify-center"
                           style={{ background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))" }}>
-                          <Music2 className="h-4 w-4 text-white" />
+                          <Music2 className="h-4 w-4 text-primary-foreground" />
                         </div>
                       </div>
                       <EngagePill className="left-[8%] top-[14%]" icon={<Heart className="h-3.5 w-3.5" fill="currentColor" />} label="142,4k" tone="rose" delay="0s" />
@@ -542,7 +542,7 @@ function Pillar({
     >
       <div className="flex items-start gap-4">
         <div
-          className="h-14 w-14 rounded-2xl flex items-center justify-center text-white shrink-0"
+          className="h-14 w-14 rounded-2xl flex items-center justify-center text-primary-foreground shrink-0"
           style={{ background: grad, boxShadow: glow }}
         >
           {icon}
@@ -628,7 +628,7 @@ function PillarEditorial({
           {number}
         </span>
         <div
-          className="h-12 w-12 rounded-2xl flex items-center justify-center text-white"
+          className="h-12 w-12 rounded-2xl flex items-center justify-center text-primary-foreground"
           style={{
             background: "oklch(0.98 0.01 295 / 0.06)",
             border: "1px solid oklch(0.98 0.01 295 / 0.12)",
@@ -760,7 +760,7 @@ function Step({
         {index}
       </span>
       <div
-        className="h-12 w-12 rounded-2xl flex items-center justify-center text-white"
+        className="h-12 w-12 rounded-2xl flex items-center justify-center text-primary-foreground"
         style={{
           background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
           boxShadow: "0 0 24px -6px oklch(0.68 0.27 322 / 0.6)",
@@ -816,7 +816,7 @@ function FeatureHighlight({
 
       <div className="relative flex items-start gap-4">
         <div
-          className="h-14 w-14 rounded-2xl flex items-center justify-center text-white shrink-0"
+          className="h-14 w-14 rounded-2xl flex items-center justify-center text-primary-foreground shrink-0"
           style={{ background: grad, boxShadow: glow }}
         >
           {icon}
@@ -838,11 +838,11 @@ function FeatureHighlight({
         {features.map((f, i) => (
           <li
             key={i}
-            className="flex items-center gap-2.5 rounded-xl bg-white/[0.03] px-3 py-2.5 text-sm text-foreground/90 transition-colors hover:bg-white/[0.06]"
+            className="flex items-center gap-2.5 rounded-xl bg-primary-foreground/[0.03] px-3 py-2.5 text-sm text-foreground/90 transition-colors hover:bg-primary-foreground/[0.06]"
             style={{ border: `1px solid ${ringColor}` }}
           >
             <span
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-primary-foreground"
               style={{ background: grad }}
             >
               {f.icon}
@@ -868,7 +868,7 @@ function EcoCard({
   return (
     <div className="glass rounded-2xl p-5 transition-all hover:border-page-border-strong hover:-translate-y-0.5">
       <div
-        className="h-10 w-10 rounded-xl flex items-center justify-center text-white"
+        className="h-10 w-10 rounded-xl flex items-center justify-center text-primary-foreground"
         style={{
           background: "linear-gradient(135deg, oklch(0.68 0.27 322), oklch(0.55 0.28 285))",
         }}
@@ -1074,7 +1074,7 @@ function FeatureSlideCard({ slide }: { slide: FeatureSlide }) {
       />
       <div className="relative grid md:grid-cols-[auto,1fr] gap-5 sm:gap-7 items-center">
         <div
-          className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl flex items-center justify-center text-white shrink-0"
+          className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl flex items-center justify-center text-primary-foreground shrink-0"
           style={{ background: grad, boxShadow: glow }}
         >
           {slide.icon}
