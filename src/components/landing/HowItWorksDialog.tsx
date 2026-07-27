@@ -223,7 +223,7 @@ export function HowItWorksDialog({
                     <span
                       className={`h-8 w-8 grid place-items-center rounded-full border transition-all ${
                         active
-                          ? "bg-gradient-to-br from-magenta to-pink border-transparent text-white scale-110"
+                          ? "bg-gradient-to-br from-magenta to-pink border-transparent text-primary-foreground scale-110"
                           : done
                           ? "bg-magenta/20 border-magenta/40 text-magenta"
                           : "bg-background/60 border-border text-muted-foreground"

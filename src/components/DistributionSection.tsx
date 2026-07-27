@@ -24,7 +24,7 @@ export const DistributionSection = () => {
         {/* Section header */}
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
               {t("distro.heading")}
             </h2>
             <p className="text-xl text-page-fg max-w-2xl mx-auto">
@@ -41,9 +41,9 @@ export const DistributionSection = () => {
               <div className="bg-page-surface-strong backdrop-blur-sm rounded-2xl p-8 border border-page-border-strong hover:bg-page-surface-strong transition-all duration-300 cursor-pointer hover:scale-105">
                 <div className="flex items-center mb-6">
                   <div className="w-12 h-12 rounded-full bg-success flex items-center justify-center mr-4">
-                    <Music className="w-6 h-6 text-white" />
+                    <Music className="w-6 h-6 text-primary-foreground" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">{t("distro.world.title")}</h3>
+                  <h3 className="text-2xl font-bold text-primary-foreground">{t("distro.world.title")}</h3>
                 </div>
                 <p className="text-page-fg-muted mb-6 text-lg">{t("distro.world.desc")}</p>
                 
@@ -78,9 +78,9 @@ export const DistributionSection = () => {
               <div className="bg-page-surface-strong backdrop-blur-sm rounded-2xl p-8 border border-page-border-strong hover:bg-page-surface-strong transition-all duration-300 cursor-pointer hover:scale-105">
                 <div className="flex items-center mb-6">
                   <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center mr-4">
-                    <Users className="w-6 h-6 text-white" />
+                    <Users className="w-6 h-6 text-primary-foreground" />
                   </div>
-                  <h3 className="text-2xl font-bold text-white">{t("distro.social.title")}</h3>
+                  <h3 className="text-2xl font-bold text-primary-foreground">{t("distro.social.title")}</h3>
                 </div>
                 <p className="text-page-fg-muted mb-6 text-lg">{t("distro.social.desc")}</p>
                 

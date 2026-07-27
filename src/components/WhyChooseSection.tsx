@@ -22,7 +22,7 @@ const AIMusicStudioPopup = () => {
         <div className="relative mb-4">
           <div className="absolute inset-0 bg-gradient-to-br from-brand to-primary blur-xl opacity-40 rounded-full" />
           <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-brand via-accent to-primary flex items-center justify-center shadow-lg shadow-purple-500/30">
-            <Sparkles className="w-8 h-8 text-white" />
+            <Sparkles className="w-8 h-8 text-primary-foreground" />
           </div>
         </div>
         <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent mb-2">
@@ -38,10 +38,10 @@ const AIMusicStudioPopup = () => {
         {items.map((item, i) => (
           <div
             key={i}
-            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-primary hover:border-primary hover:shadow-md hover:shadow-purple-200/40 transition-all duration-300"
+            className="group relative rounded-xl p-4 bg-primary-foreground/80 backdrop-blur-sm border border-primary hover:border-primary hover:shadow-md hover:shadow-purple-200/40 transition-all duration-300"
           >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform`}>
-              <item.icon className="w-5 h-5 text-white" />
+              <item.icon className="w-5 h-5 text-primary-foreground" />
             </div>
             <h4 className="font-semibold text-gray-900 text-sm mb-1">{item.title}</h4>
             <p className="text-xs text-gray-600 leading-snug">{item.desc}</p>
@@ -55,7 +55,7 @@ const AIMusicStudioPopup = () => {
           <Button
             asChild
             size="lg"
-            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-white shadow-lg shadow-purple-500/30 border-0"
+            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-primary-foreground shadow-lg shadow-purple-500/30 border-0"
           >
             <a href="/#pricing-section">
               <Sparkles className="w-4 h-4 mr-2" />
@@ -83,7 +83,7 @@ const IPRegistryPopup = () => {
         <div className="relative mb-4">
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-info blur-xl opacity-40 rounded-full" />
           <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-accent to-info flex items-center justify-center shadow-lg shadow-blue-500/30">
-            <Shield className="w-8 h-8 text-white" />
+            <Shield className="w-8 h-8 text-primary-foreground" />
           </div>
         </div>
         <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary via-accent to-info bg-clip-text text-transparent mb-2">
@@ -99,10 +99,10 @@ const IPRegistryPopup = () => {
         {items.map((item, i) => (
           <div
             key={i}
-            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-info hover:border-info hover:shadow-md hover:shadow-blue-200/40 transition-all duration-300"
+            className="group relative rounded-xl p-4 bg-primary-foreground/80 backdrop-blur-sm border border-info hover:border-info hover:shadow-md hover:shadow-blue-200/40 transition-all duration-300"
           >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform`}>
-              <item.icon className="w-5 h-5 text-white" />
+              <item.icon className="w-5 h-5 text-primary-foreground" />
             </div>
             <h4 className="font-semibold text-gray-900 text-sm mb-1">{item.title}</h4>
             <p className="text-xs text-gray-600 leading-snug">{item.desc}</p>
@@ -156,7 +156,7 @@ const IPRegistryPopup = () => {
           <Button
             asChild
             size="lg"
-            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-white shadow-lg shadow-purple-500/30 border-0"
+            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-primary-foreground shadow-lg shadow-purple-500/30 border-0"
           >
             <a href="/#pricing-section">
               <Shield className="w-4 h-4 mr-2" />
@@ -184,7 +184,7 @@ const GlobalDistributionPopup = () => {
         <div className="relative mb-4">
           <div className="absolute inset-0 bg-gradient-to-br from-info to-info blur-xl opacity-40 rounded-full" />
           <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-info via-info to-info flex items-center justify-center shadow-lg shadow-blue-500/30">
-            <Globe className="w-8 h-8 text-white" />
+            <Globe className="w-8 h-8 text-primary-foreground" />
           </div>
         </div>
         <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-info via-info to-info bg-clip-text text-transparent mb-2">
@@ -200,10 +200,10 @@ const GlobalDistributionPopup = () => {
         {items.map((item, i) => (
           <div
             key={i}
-            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-info hover:border-info hover:shadow-md hover:shadow-blue-200/40 transition-all duration-300"
+            className="group relative rounded-xl p-4 bg-primary-foreground/80 backdrop-blur-sm border border-info hover:border-info hover:shadow-md hover:shadow-blue-200/40 transition-all duration-300"
           >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform`}>
-              <item.icon className="w-5 h-5 text-white" />
+              <item.icon className="w-5 h-5 text-primary-foreground" />
             </div>
             <h4 className="font-semibold text-gray-900 text-sm mb-1">{item.title}</h4>
             <p className="text-xs text-gray-600 leading-snug">{item.desc}</p>
@@ -217,7 +217,7 @@ const GlobalDistributionPopup = () => {
           <Button
             asChild
             size="lg"
-            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-white shadow-lg shadow-purple-500/30 border-0"
+            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-primary-foreground shadow-lg shadow-purple-500/30 border-0"
           >
             <a href="/#pricing-section">
               <Globe className="w-4 h-4 mr-2" />
@@ -245,7 +245,7 @@ const SocialPromoPopup = () => {
         <div className="relative mb-4">
           <div className="absolute inset-0 bg-gradient-to-br from-brand to-warning blur-xl opacity-40 rounded-full" />
           <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-brand via-destructive to-warning flex items-center justify-center shadow-lg shadow-pink-500/30">
-            <Megaphone className="w-8 h-8 text-white" />
+            <Megaphone className="w-8 h-8 text-primary-foreground" />
           </div>
         </div>
         <h3 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-brand via-destructive to-warning bg-clip-text text-transparent mb-2">
@@ -261,10 +261,10 @@ const SocialPromoPopup = () => {
         {items.map((item, i) => (
           <div
             key={i}
-            className="group relative rounded-xl p-4 bg-white/80 backdrop-blur-sm border border-brand hover:border-brand hover:shadow-md hover:shadow-pink-200/40 transition-all duration-300"
+            className="group relative rounded-xl p-4 bg-primary-foreground/80 backdrop-blur-sm border border-brand hover:border-brand hover:shadow-md hover:shadow-pink-200/40 transition-all duration-300"
           >
             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 shadow-sm group-hover:scale-110 transition-transform`}>
-              <item.icon className="w-5 h-5 text-white" />
+              <item.icon className="w-5 h-5 text-primary-foreground" />
             </div>
             <h4 className="font-semibold text-gray-900 text-sm mb-1">{item.title}</h4>
             <p className="text-xs text-gray-600 leading-snug">{item.desc}</p>
@@ -278,7 +278,7 @@ const SocialPromoPopup = () => {
           <Button
             asChild
             size="lg"
-            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-white shadow-lg shadow-purple-500/30 border-0"
+            className="bg-gradient-to-r from-brand via-accent to-primary hover:from-brand hover:via-accent hover:to-primary text-primary-foreground shadow-lg shadow-purple-500/30 border-0"
           >
             <a href="/#pricing-section">
               <Megaphone className="w-4 h-4 mr-2" />
@@ -337,7 +337,7 @@ export const WhyChooseSection = () => {
         {/* Section header */}
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
               {t("why.heading")}
             </h2>
             <p className="text-lg md:text-xl text-page-fg-muted max-w-5xl mx-auto leading-relaxed whitespace-pre-line">
@@ -368,11 +368,11 @@ export const WhyChooseSection = () => {
                       <div
                         className={`relative z-10 mx-auto mb-4 flex items-center justify-center rounded-2xl bg-gradient-to-br ${feature.color} w-16 h-16`}
                       >
-                        <feature.icon className="text-white w-8 h-8" />
+                        <feature.icon className="text-primary-foreground w-8 h-8" />
                       </div>
 
                       {/* Title */}
-                      <h3 className="relative z-10 font-bold text-white mb-3 text-center text-xl">
+                      <h3 className="relative z-10 font-bold text-primary-foreground mb-3 text-center text-xl">
                         {feature.title}
                       </h3>
 

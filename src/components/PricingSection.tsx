@@ -183,7 +183,7 @@ export const PricingSection = () => {
         className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0 ${
           tone === 'accent'
             ? 'bg-success ring-2 ring-success/40 shadow-[0_0_10px_rgba(74,222,128,0.45)]'
-            : 'bg-white/90'
+            : 'bg-primary-foreground/90'
         }`}
       >
         <Check className={`w-3 h-3 ${tone === 'accent' ? 'text-success' : 'text-slate-700'}`} strokeWidth={3} />
@@ -196,7 +196,7 @@ export const PricingSection = () => {
     <>
     <section id="pricing-section" className="py-20 px-4 bg-gradient-to-b from-primary/60 via-primary to-primary">
       <div className="max-w-7xl mx-auto text-center">
-        <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+        <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
           {t("pricing.title")}
         </h2>
         <p className="text-xl text-page-fg mb-14 max-w-4xl mx-auto">
@@ -208,7 +208,7 @@ export const PricingSection = () => {
 
           {/* ─────────── COLUMNA IZQUIERDA — Mensual ─────────── */}
           <div className="order-1 md:order-1 flex">
-            <Card className="w-full border border-page-border bg-gradient-to-b from-slate-700/90 to-slate-800/90 text-white shadow-lg flex flex-col">
+            <Card className="w-full border border-page-border bg-gradient-to-b from-slate-700/90 to-slate-800/90 text-primary-foreground shadow-lg flex flex-col">
               <CardContent className="p-6 flex flex-col flex-1">
                 <div className="text-center mb-5">
                   <h3 className="text-lg font-bold text-page-fg mb-1">
@@ -227,7 +227,7 @@ export const PricingSection = () => {
                   {monthlyFeatures.map((f, i) => <div key={i}>{renderFeature(f)}</div>)}
                 </div>
                 <Button
-                  className="w-full font-semibold rounded-full bg-page-surface hover:bg-page-surface-strong text-white border border-page-border-strong py-3 text-sm"
+                  className="w-full font-semibold rounded-full bg-page-surface hover:bg-page-surface-strong text-primary-foreground border border-page-border-strong py-3 text-sm"
                   disabled={loadingPlan !== null}
                   onClick={() => handleCheckout('monthly')}
                 >
@@ -241,7 +241,7 @@ export const PricingSection = () => {
           {/* ─────────── COLUMNA CENTRAL — Anual Básico (destacada) ─────────── */}
           <div className="order-2 md:order-2 flex">
             <Card
-              className="w-full border-[3px] border-warning text-white flex flex-col relative md:-mt-4 md:mb-0"
+              className="w-full border-[3px] border-warning text-primary-foreground flex flex-col relative md:-mt-4 md:mb-0"
               style={{
                 background: 'linear-gradient(160deg, #f59e0b 0%, #ec4899 55%, #a855f7 100%)',
                 boxShadow: '0 30px 80px -20px rgba(236,72,153,0.7), 0 0 0 4px rgba(250,204,21,0.15)',
@@ -267,7 +267,7 @@ export const PricingSection = () => {
                     {prices.starter}
                     <span className="text-xl font-normal">{t("pricing.priceAnnualSuffix")}</span>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-page-surface-strong backdrop-blur-sm border border-white/40 text-white font-semibold px-4 py-1.5 text-sm">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-page-surface-strong backdrop-blur-sm border border-primary-foreground/40 text-primary-foreground font-semibold px-4 py-1.5 text-sm">
                     <Sparkles className="w-4 h-4" />
                     {t('pricing.starter.credits')}
                   </div>
@@ -283,7 +283,7 @@ export const PricingSection = () => {
                 </p>
 
                 <Button
-                  className="w-full font-bold rounded-full bg-white hover:bg-muted text-brand py-4 text-base md:text-lg shadow-xl"
+                  className="w-full font-bold rounded-full bg-primary-foreground hover:bg-muted text-brand py-4 text-base md:text-lg shadow-xl"
                   disabled={loadingPlan !== null}
                   onClick={() => {
                     trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
@@ -300,10 +300,10 @@ export const PricingSection = () => {
 
           {/* ─────────── COLUMNA DERECHA — Plan Plus+ ─────────── */}
           <div className="order-3 md:order-3 flex">
-            <Card className="w-full border border-page-border-strong bg-gradient-to-br from-primary/80 via-brand/70 to-primary/80 text-white shadow-xl flex flex-col">
+            <Card className="w-full border border-page-border-strong bg-gradient-to-br from-primary/80 via-brand/70 to-primary/80 text-primary-foreground shadow-xl flex flex-col">
               <CardContent className="p-6 flex flex-col flex-1">
                 <div className="text-center mb-4">
-                  <div className="inline-flex items-center gap-1.5 bg-page-surface-strong backdrop-blur-sm border border-white/25 text-white font-semibold text-[11px] md:text-xs px-3 py-1 rounded-full mb-3">
+                  <div className="inline-flex items-center gap-1.5 bg-page-surface-strong backdrop-blur-sm border border-primary-foreground/25 text-primary-foreground font-semibold text-[11px] md:text-xs px-3 py-1 rounded-full mb-3">
                     {t("pricing.badgeAnnual")}
                   </div>
                   <h3 className="text-xl md:text-2xl font-bold mb-1">
@@ -323,7 +323,7 @@ export const PricingSection = () => {
                     >
                       <SelectTrigger
                         aria-label={t('pricing.annualSelectorAria', { defaultValue: 'Selecciona pack anual' })}
-                        className="w-full bg-page-surface-strong border-page-border-strong text-white hover:bg-page-surface-strong backdrop-blur-sm font-semibold h-11 text-sm"
+                        className="w-full bg-page-surface-strong border-page-border-strong text-primary-foreground hover:bg-page-surface-strong backdrop-blur-sm font-semibold h-11 text-sm"
                       >
                         <SelectValue>{annualOptionLabel(selectedAnnual)}</SelectValue>
                       </SelectTrigger>
@@ -341,7 +341,7 @@ export const PricingSection = () => {
                     {prices.annual}
                     <span className="text-lg font-normal">{t("pricing.priceAnnualSuffix")}</span>
                   </div>
-                  <div className="inline-block rounded-full bg-page-surface-strong backdrop-blur-sm border border-page-border-strong text-white font-semibold px-3 py-1 text-xs">
+                  <div className="inline-block rounded-full bg-page-surface-strong backdrop-blur-sm border border-page-border-strong text-primary-foreground font-semibold px-3 py-1 text-xs">
                     {t('pricing.creditsAnnualDynamic', { count: selectedAnnual.credits })}
                   </div>
                   <p className="mt-1.5 text-[11px] text-page-fg-muted">
@@ -354,7 +354,7 @@ export const PricingSection = () => {
                 </div>
 
                 <Button
-                  className={`w-full font-semibold rounded-full bg-white/95 hover:bg-white text-primary py-3.5 text-sm md:text-base shadow-lg ${ctaBuy.className}`}
+                  className={`w-full font-semibold rounded-full bg-primary-foreground/95 hover:bg-primary-foreground text-primary py-3.5 text-sm md:text-base shadow-lg ${ctaBuy.className}`}
                   disabled={loadingPlan !== null}
                   onClick={() => {
                     trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
@@ -381,7 +381,7 @@ export const PricingSection = () => {
           <Button
             variant="outline"
             size="sm"
-            className="bg-transparent border border-white/40 text-page-fg hover:bg-page-surface hover:text-page-fg px-6 py-2 rounded-full font-medium text-sm"
+            className="bg-transparent border border-primary-foreground/40 text-page-fg hover:bg-page-surface hover:text-page-fg px-6 py-2 rounded-full font-medium text-sm"
             disabled={loadingPlan !== null}
             onClick={() => handleCheckout('individual')}
           >
@@ -413,7 +413,7 @@ export const PricingSection = () => {
               <Briefcase className="w-6 h-6 text-brand" />
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="text-white font-bold text-lg md:text-xl mb-1">
+              <h4 className="text-primary-foreground font-bold text-lg md:text-xl mb-1">
                 {t("pricing.prosTitle")}
               </h4>
               <p className="text-page-fg-muted text-sm md:text-[15px] leading-relaxed">
@@ -422,7 +422,7 @@ export const PricingSection = () => {
             </div>
             <Link to="/contact" className="shrink-0">
               <Button
-                className="rounded-full px-6 py-3 font-semibold text-white whitespace-nowrap"
+                className="rounded-full px-6 py-3 font-semibold text-primary-foreground whitespace-nowrap"
                 style={{
                   background:
                     "linear-gradient(90deg, #ec4899, #a855f7)",

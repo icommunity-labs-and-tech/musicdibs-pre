@@ -18,7 +18,7 @@ const AnimatedStat = ({ end, suffix, label }: { end: number; suffix: string; lab
       <div className="text-2xl md:text-3xl font-bold text-warning mb-1 drop-shadow-lg tabular-nums">
         {count.toLocaleString()}{suffix}
       </div>
-      <div className="text-white/95 text-base drop-shadow-md">{label}</div>
+      <div className="text-primary-foreground/95 text-base drop-shadow-md">{label}</div>
     </div>
   );
 };
@@ -68,19 +68,19 @@ const ArtistsBanner = () => {
       </div>
 
       {/* Floating elements */}
-      <div className="absolute top-6 left-6 w-12 h-12 border-2 border-white/20 rounded-full animate-pulse" />
-      <div className="absolute top-8 right-8 w-8 h-8 bg-white/10 rounded-lg rotate-45 animate-pulse" />
-      <div className="absolute bottom-6 left-12 w-6 h-6 border border-white/30 rotate-12 animate-pulse" />
-      <div className="absolute bottom-8 right-6 w-16 h-16 border border-white/20 rounded-full animate-pulse" />
+      <div className="absolute top-6 left-6 w-12 h-12 border-2 border-primary-foreground/20 rounded-full animate-pulse" />
+      <div className="absolute top-8 right-8 w-8 h-8 bg-primary-foreground/10 rounded-lg rotate-45 animate-pulse" />
+      <div className="absolute bottom-6 left-12 w-6 h-6 border border-primary-foreground/30 rotate-12 animate-pulse" />
+      <div className="absolute bottom-8 right-6 w-16 h-16 border border-primary-foreground/20 rounded-full animate-pulse" />
 
       <div className="relative z-10 container mx-auto px-6 text-center">
-        <h2 className="text-3xl md:text-5xl font-bold text-white mb-3 leading-tight drop-shadow-lg">
+        <h2 className="text-3xl md:text-5xl font-bold text-primary-foreground mb-3 leading-tight drop-shadow-lg">
           {t("artists.heading1")}
           <br />
           <span className="text-warning">{t("artists.heading2")}</span>
         </h2>
         
-        <p className="text-lg md:text-xl text-white/95 mb-6 font-medium drop-shadow-md">
+        <p className="text-lg md:text-xl text-primary-foreground/95 mb-6 font-medium drop-shadow-md">
           {t("artists.subtext")}
         </p>
 
@@ -88,7 +88,7 @@ const ArtistsBanner = () => {
           <Button 
             variant="outline" 
             size="lg"
-            className={`border-2 border-white text-brand hover:bg-white hover:text-brand font-bold px-6 py-2 text-base rounded-full ${ctaTestimonials.className}`}
+            className={`border-2 border-primary-foreground text-brand hover:bg-primary-foreground hover:text-brand font-bold px-6 py-2 text-base rounded-full ${ctaTestimonials.className}`}
             onClick={() => {
               trackABClick('artists_cta_testimonials', ctaTestimonials.variantIndex, ctaTestimonials.text);
               const testimonialsSection = document.querySelector('section:nth-of-type(5)');

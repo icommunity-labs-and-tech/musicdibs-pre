@@ -38,7 +38,7 @@ const TutorialSection = () => {
       <div className="container mx-auto px-4 relative z-10">
         {/* Header */}
         <div className="text-center mb-14 max-w-3xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
             {t("tutorial.heading")}
           </h2>
           <p className="text-xl text-page-fg">
@@ -63,8 +63,8 @@ const TutorialSection = () => {
                     </div>
                   </CarouselItem>
                 </CarouselContent>
-                <CarouselPrevious className="left-4 bg-white/90 hover:bg-white text-primary border-primary shadow-lg" />
-                <CarouselNext className="right-4 bg-white/90 hover:bg-white text-primary border-primary shadow-lg" />
+                <CarouselPrevious className="left-4 bg-primary-foreground/90 hover:bg-primary-foreground text-primary border-primary shadow-lg" />
+                <CarouselNext className="right-4 bg-primary-foreground/90 hover:bg-primary-foreground text-primary border-primary shadow-lg" />
               </Carousel>
             </CardContent>
           </Card>
@@ -90,9 +90,9 @@ const TutorialSection = () => {
                     {/* Icon + number */}
                     <div className="relative mb-5">
                       <div className="w-20 h-20 rounded-full bg-gradient-to-br from-brand to-red-500 flex items-center justify-center shadow-lg shadow-pink-500/30 group-hover:scale-110 transition-transform duration-300">
-                        <Icon className="w-9 h-9 text-white" strokeWidth={2} />
+                        <Icon className="w-9 h-9 text-primary-foreground" strokeWidth={2} />
                       </div>
-                      <span className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-white text-primary text-sm font-bold flex items-center justify-center shadow-md ring-2 ring-primary">
+                      <span className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-primary-foreground text-primary text-sm font-bold flex items-center justify-center shadow-md ring-2 ring-primary">
                         {step.step}
                       </span>
                     </div>
@@ -103,7 +103,7 @@ const TutorialSection = () => {
                     </span>
 
                     {/* Title */}
-                    <h3 className="text-lg lg:text-xl font-bold text-white mb-3 leading-tight">
+                    <h3 className="text-lg lg:text-xl font-bold text-primary-foreground mb-3 leading-tight">
                       {step.title}
                     </h3>
 
@@ -132,11 +132,11 @@ const TutorialSection = () => {
 
         {/* CTA */}
         <div className="text-center mt-20">
-          <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-8 max-w-3xl mx-auto leading-tight">
+          <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-8 max-w-3xl mx-auto leading-tight">
             {t("tutorial.ctaTitle")}
           </h3>
           <Button
-            className="bg-gradient-to-r from-brand to-red-500 hover:from-brand hover:to-red-600 text-white font-bold py-4 px-12 rounded-full text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
+            className="bg-gradient-to-r from-brand to-red-500 hover:from-brand hover:to-red-600 text-primary-foreground font-bold py-4 px-12 rounded-full text-lg shadow-lg transform hover:scale-105 transition-all duration-200"
             onClick={() => {
               document.getElementById("pricing-section")?.scrollIntoView({ behavior: "smooth" });
             }}

@@ -40,7 +40,7 @@ export const LazyYouTube = ({ videoId, title, className = '' }: LazyYouTubeProps
           {/* Play button overlay */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="w-16 h-16 md:w-20 md:h-20 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:bg-red-700 group-hover:scale-110 transition-all duration-200">
-              <svg viewBox="0 0 24 24" className="w-8 h-8 md:w-10 md:h-10 text-white ml-1" fill="currentColor">
+              <svg viewBox="0 0 24 24" className="w-8 h-8 md:w-10 md:h-10 text-primary-foreground ml-1" fill="currentColor">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </div>
