@@ -18,39 +18,39 @@ const Cookies = () => {
           </h1>
 
           <div className="article-content space-y-8">
-            <p className="text-white/80 leading-relaxed">{t("cookies.intro")}</p>
+            <p className="text-page-fg-muted leading-relaxed">{t("cookies.intro")}</p>
 
-            <h2 className="text-2xl font-bold text-white">{t("cookies.what_title")}</h2>
-            <p className="text-white/80">{t("cookies.what_text")}</p>
+            <h2 className="text-2xl font-bold text-page-fg">{t("cookies.what_title")}</h2>
+            <p className="text-page-fg-muted">{t("cookies.what_text")}</p>
 
-            <h2 className="text-2xl font-bold text-white mt-10">{t("cookies.types_title")}</h2>
-            <p className="text-white/80">
+            <h2 className="text-2xl font-bold text-page-fg mt-10">{t("cookies.types_title")}</h2>
+            <p className="text-page-fg-muted">
               {t("cookies.types_text")}{' '}
               <a href="https://www.aepd.es/sites/default/files/2020-07/guia-cookies.pdf" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand underline">{t("cookies.types_link")}</a>.
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10">{t("cookies.used_title")}</h2>
-            <p className="text-white/80">{t("cookies.used_intro")}</p>
-            <p className="text-white/80">
+            <h2 className="text-2xl font-bold text-page-fg mt-10">{t("cookies.used_title")}</h2>
+            <p className="text-page-fg-muted">{t("cookies.used_intro")}</p>
+            <p className="text-page-fg-muted">
               <strong>{t("cookies.technical_title")}</strong> {t("cookies.technical_text")}
             </p>
-            <p className="text-white/80">
+            <p className="text-page-fg-muted">
               <strong>{t("cookies.personalization_title")}</strong> {t("cookies.personalization_text")}
             </p>
 
-            <h2 className="text-2xl font-bold text-white mt-10">{t("cookies.acceptance_title")}</h2>
-            <p className="text-white/80">{t("cookies.acceptance_text")}</p>
+            <h2 className="text-2xl font-bold text-page-fg mt-10">{t("cookies.acceptance_title")}</h2>
+            <p className="text-page-fg-muted">{t("cookies.acceptance_text")}</p>
 
-            <h2 className="text-2xl font-bold text-white mt-10">{t("cookies.modify_title")}</h2>
-            <p className="text-white/80">{t("cookies.modify_text")}</p>
+            <h2 className="text-2xl font-bold text-page-fg mt-10">{t("cookies.modify_title")}</h2>
+            <p className="text-page-fg-muted">{t("cookies.modify_text")}</p>
 
-            <h2 className="text-2xl font-bold text-white mt-10">{t("cookies.updates_title")}</h2>
-            <p className="text-white/80">{t("cookies.updates_text")}</p>
+            <h2 className="text-2xl font-bold text-page-fg mt-10">{t("cookies.updates_title")}</h2>
+            <p className="text-page-fg-muted">{t("cookies.updates_text")}</p>
 
-            <p className="text-white/80 mt-6">{t("cookies.date")}</p>
+            <p className="text-page-fg-muted mt-6">{t("cookies.date")}</p>
 
-            <div className="border-t border-white/20 pt-6 mt-10">
-              <p className="text-white/60 text-sm">{t("cookies.copyright")}</p>
+            <div className="border-t border-page-border pt-6 mt-10">
+              <p className="text-page-fg-subtle text-sm">{t("cookies.copyright")}</p>
             </div>
           </div>
         </div>
