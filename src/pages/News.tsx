@@ -67,10 +67,15 @@ const News = () => {
   const filtered = useMemo(() => posts?.filter((p) => {
     const matchesCategory = !selectedCategory || p.category === selectedCategory;
     const query = searchQuery.toLowerCase().trim();
-    const matchesSearch = !query ||
-      p.title.toLowerCase().includes(query) ||
-      (p.excerpt?.toLowerCase().includes(query)) ||
-      (p.tags?.some(tag => tag.toLowerCase().includes(query)));
+    if (!query) return matchesCategory;
+    const contentText = p.content ? p.content.replace(/<[^>]*>/g, " ") : "";
+    const matchesSearch =
+      p.title?.toLowerCase().includes(query) ||
+      p.excerpt?.toLowerCase().includes(query) ||
+      p.category?.toLowerCase().includes(query) ||
+      p.author?.toLowerCase().includes(query) ||
+      contentText.toLowerCase().includes(query) ||
+      p.tags?.some((tag) => tag.toLowerCase().includes(query));
     return matchesCategory && matchesSearch;
   }), [posts, selectedCategory, searchQuery]);
 
