@@ -1206,7 +1206,7 @@ const AIStudioCreate = () => {
                           {mp4Jobs[lastResult.id] === "loading" ? (
                             <><Loader2 className="h-4 w-4 animate-spin" /> Generando MP4…</>
                           ) : mp4Jobs[lastResult.id] === "done" ? (
-                            <><Check className="h-4 w-4 text-green-500" /> MP4 listo</>
+                            <><Check className="h-4 w-4 text-success" /> MP4 listo</>
                           ) : (
                             <><Film className="h-4 w-4" /> MP4</>
                           )}
@@ -1331,7 +1331,7 @@ const AIStudioCreate = () => {
                                 Si eliges <strong>Respetar letra</strong>, la IA intentará cantar la letra de forma más fiel. Si eliges <strong>Más creativo</strong>, tendrá más libertad musical, pero puede modificar partes de la letra.
                               </p>
                               {generationPriority === 'lyrics_fidelity' && prompt.trim().length > 250 && (
-                                <p className="text-xs text-amber-600 dark:text-amber-400">
+                                <p className="text-xs text-warning dark:text-warning">
                                   ⚠️ Para respetar mejor la letra, usa una descripción más corta y directa.
                                 </p>
                               )}
@@ -1863,7 +1863,7 @@ const AIStudioCreate = () => {
                         </CardTitle>
                         <div className="flex items-center gap-1.5">
                           <Button variant="outline" size="sm" onClick={copyLyrics} className="h-8 text-xs gap-1.5">
-                            {copiedLyrics ? <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />{t('aiCreate.copied')}</> : <><Copy className="h-3.5 w-3.5" />{t('aiCreate.copy')}</>}
+                            {copiedLyrics ? <><CheckCircle2 className="h-3.5 w-3.5 text-success" />{t('aiCreate.copied')}</> : <><Copy className="h-3.5 w-3.5" />{t('aiCreate.copy')}</>}
                           </Button>
                           <Button variant="default" size="sm" onClick={sendLyricsToMusic} className="h-8 text-xs gap-1.5">
                             <Music className="h-3.5 w-3.5" />
@@ -1986,7 +1986,7 @@ const AIStudioCreate = () => {
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => copyLyricsFromHistory(item.id, item.lyrics)} title="Copiar letra">
-                              {copiedId === item.id ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                              {copiedId === item.id ? <CheckCircle2 className="h-3.5 w-3.5 text-success" /> : <Copy className="h-3.5 w-3.5" />}
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => downloadLyrics(item.lyrics, item.theme || item.description || "letra")} title="Descargar .txt">
                               <Download className="h-3.5 w-3.5" />
@@ -2246,7 +2246,7 @@ const AIStudioCreate = () => {
                                       {mp4Jobs[result.id] === "loading" ? (
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                       ) : mp4Jobs[result.id] === "done" ? (
-                                        <Check className="w-4 h-4 text-green-500" />
+                                        <Check className="w-4 h-4 text-success" />
                                       ) : (
                                         <Film className="w-4 h-4" />
                                       )}
