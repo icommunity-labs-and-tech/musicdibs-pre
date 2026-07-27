@@ -379,7 +379,7 @@ export default function AdminPremiumPromosPage() {
                 {filesTarget.media_file_path ? (
                   <div className="space-y-2">
                     {filesTarget.media_file_type === 'image' && mediaPreviewUrl && (
-                      <img src={mediaPreviewUrl} alt="Preview" className="w-full max-h-48 object-contain rounded-md border border-border/40" />
+                      <img src={mediaPreviewUrl} alt="Preview" loading="lazy" decoding="async" className="w-full max-h-48 object-contain rounded-md border border-border/40" />
                     )}
                     <div className="flex items-center justify-between rounded-md border border-border/40 p-3">
                       <span className="text-sm truncate flex-1">{extractFileName(filesTarget.media_file_path)}</span>
