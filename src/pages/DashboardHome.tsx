@@ -7,6 +7,7 @@ import { CreditStore } from '@/components/dashboard/CreditStore';
 import { PaymentAlertBanner } from '@/components/dashboard/PaymentAlertBanner';
 import { PaypalLegacyBanner } from '@/components/dashboard/PaypalLegacyBanner';
 import { RecentRegistrations } from '@/components/dashboard/RecentRegistrations';
+import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist';
 import { Card, CardContent } from '@/components/ui/card';
 
 import { Badge } from '@/components/ui/badge';
