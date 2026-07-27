@@ -107,7 +107,7 @@ export const MasteringHighlight = () => {
                   {BENEFITS.map((b) => (
                     <li
                       key={b.label}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 border border-page-border text-page-fg text-xs font-medium"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-page-surface border border-page-border text-page-fg text-xs font-medium"
                     >
                       <b.icon className="w-3.5 h-3.5 text-accent" />
                       {b.label}

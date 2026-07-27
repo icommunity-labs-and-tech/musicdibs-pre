@@ -287,7 +287,7 @@ export default function Features() {
                     return (
                       <div
                         key={feat.label}
-                        className="bg-page-surface border border-page-border rounded-2xl p-5 hover:bg-white/8 transition-colors"
+                        className="bg-page-surface border border-page-border rounded-2xl p-5 hover:bg-page-surface transition-colors"
                       >
                         <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${pillar.color} flex items-center justify-center mb-3`}>
                           <FIcon className="w-5 h-5 text-white" />
