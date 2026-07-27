@@ -90,7 +90,7 @@ export function PastDueBanner() {
         <button
           onClick={handleOpenPortal}
           disabled={opening}
-          className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white/15 hover:bg-white/25 transition-colors px-4 py-2 text-sm font-semibold whitespace-nowrap disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-1.5 rounded-md bg-destructive-foreground/15 hover:bg-destructive-foreground/25 transition-colors px-4 py-2 text-sm font-semibold whitespace-nowrap disabled:opacity-60"
         >
           {opening ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
           {buttonLabel}

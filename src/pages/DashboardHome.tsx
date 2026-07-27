@@ -102,7 +102,7 @@ export default function DashboardHome() {
           >
             <CardContent className="p-6 flex flex-col items-center text-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-brand">
-                <Sparkles className="h-6 w-6 text-white" />
+                <Sparkles className="h-6 w-6 text-primary-foreground" />
               </div>
               <div className="space-y-1">
                 <h3 className="text-base font-semibold">{t('dashboard.home.aiStudioTitle')}</h3>

@@ -90,7 +90,7 @@ function StepHeader({
         ) : (
           <span
             className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-              isActive ? "bg-gradient-to-r from-accent to-info text-white" : "bg-muted text-muted-foreground"
+              isActive ? "bg-gradient-to-r from-accent to-info text-primary-foreground" : "bg-muted text-muted-foreground"
             }`}
           >
             {number}
@@ -667,7 +667,7 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                 <Rocket className="h-10 w-10 text-accent" />
               </div>
               <div className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-success ring-2 ring-background">
-                <CheckCircle2 className="h-4 w-4 text-white" />
+                <CheckCircle2 className="h-4 w-4 text-primary-foreground" />
               </div>
             </div>
           </div>
@@ -929,9 +929,9 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                     className="h-10 w-10 rounded-full bg-accent flex items-center justify-center shrink-0 hover:bg-accent transition-colors"
                   >
                     {playing ? (
-                      <Pause className="h-4 w-4 text-white" />
+                      <Pause className="h-4 w-4 text-primary-foreground" />
                     ) : (
-                      <Play className="h-4 w-4 text-white ml-0.5" />
+                      <Play className="h-4 w-4 text-primary-foreground ml-0.5" />
                     )}
                   </button>
                   <div className="flex-1 min-w-0">
