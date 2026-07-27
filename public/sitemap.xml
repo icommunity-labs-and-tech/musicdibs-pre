@@ -365,18 +365,6 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://www.musicdibs.com/news/melhor-alternativa-ao-suno-ia</loc>
-    <lastmod>2026-07-19</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.musicdibs.com/en/news/melhor-alternativa-ao-suno-ia</loc>
-    <lastmod>2026-07-19</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
     <loc>https://www.musicdibs.com/news/mejor-alternativa-a-suno-ia</loc>
     <lastmod>2026-07-19</lastmod>
     <changefreq>monthly</changefreq>
@@ -396,6 +384,18 @@
   </url>
   <url>
     <loc>https://www.musicdibs.com/en/news/best-suno-ai-alternative</loc>
+    <lastmod>2026-07-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://www.musicdibs.com/news/melhor-alternativa-ao-suno-ia</loc>
+    <lastmod>2026-07-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.musicdibs.com/en/news/melhor-alternativa-ao-suno-ia</loc>
     <lastmod>2026-07-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
