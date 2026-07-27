@@ -203,8 +203,6 @@ export default function BillingPage() {
 
   const handleOpenPortal = async () => {
     await openBillingPortal();
-      setPortalLoading(false);
-    }
   };
 
   const planLabel = plan ? (PLAN_LABELS[plan] || plan) : '...';
