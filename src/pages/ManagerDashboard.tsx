@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Users, FileText, Share2, CalendarCheck, Eye, Upload, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, subMonths, startOfMonth } from 'date-fns';
