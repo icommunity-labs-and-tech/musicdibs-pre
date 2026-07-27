@@ -211,7 +211,7 @@ export function DashboardSidebar() {
     if (isKycGuarded) {
       return (
         <SidebarMenuItem key={item.title}>
-          <SidebarMenuButton asChild isActive={isActive(item.url)} data-tour={item.tourId || undefined}>
+          <SidebarMenuButton asChild isActive={isActive(item.url)} data-tour={item.tourId || undefined} tooltip={collapsed ? item.title : undefined}>
             <button
               onClick={() => guardRegister(item.url)}
               className="flex items-center w-full rounded-md px-2 py-1.5 text-sm hover:bg-muted/50"
