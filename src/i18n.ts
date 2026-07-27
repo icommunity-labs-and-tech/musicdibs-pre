@@ -1962,11 +1962,37 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
         markAll: 'Leer todo',
         clear: 'Borrar todas',
         empty: 'Sin notificaciones',
+        filterAll: 'Todas',
+        filterUnread: 'Sin leer',
+        soundOn: 'Activar sonido',
+        soundOff: 'Silenciar',
         time: {
           now: 'ahora',
           minutes: 'hace {{count}}m',
           hours: 'hace {{count}}h',
           days: 'hace {{count}}d',
+        },
+        events: {
+          workRegistered: {
+            title: 'Registro completado',
+            message: '"{{title}}" se ha registrado correctamente.',
+          },
+          workFailed: {
+            title: 'Registro fallido',
+            message: '"{{title}}" no se pudo registrar. Inténtalo de nuevo.',
+          },
+          creditsAdded: {
+            title: 'Créditos añadidos',
+            message: 'Se han añadido {{count}} créditos a tu cuenta.',
+          },
+          aiCompleted: {
+            title: 'Generación IA lista',
+            message: 'Tu creación con IA ya está disponible en la biblioteca.',
+          },
+          aiFailed: {
+            title: 'Generación IA fallida',
+            message: 'La generación no se pudo completar. Los créditos han sido reembolsados si procede.',
+          },
         },
       },
       noCredits: {
@@ -1998,11 +2024,37 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
         markAll: 'Mark all read',
         clear: 'Clear all',
         empty: 'No notifications',
+        filterAll: 'All',
+        filterUnread: 'Unread',
+        soundOn: 'Enable sound',
+        soundOff: 'Mute',
         time: {
           now: 'now',
           minutes: '{{count}}m ago',
           hours: '{{count}}h ago',
           days: '{{count}}d ago',
+        },
+        events: {
+          workRegistered: {
+            title: 'Registration completed',
+            message: '"{{title}}" was registered successfully.',
+          },
+          workFailed: {
+            title: 'Registration failed',
+            message: '"{{title}}" could not be registered. Please try again.',
+          },
+          creditsAdded: {
+            title: 'Credits added',
+            message: '{{count}} credits were added to your account.',
+          },
+          aiCompleted: {
+            title: 'AI generation ready',
+            message: 'Your AI creation is now available in your library.',
+          },
+          aiFailed: {
+            title: 'AI generation failed',
+            message: 'The generation could not be completed. Credits have been refunded if applicable.',
+          },
         },
       },
       noCredits: {
@@ -2034,11 +2086,37 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
         markAll: 'Ler tudo',
         clear: 'Limpar todas',
         empty: 'Sem notificações',
+        filterAll: 'Todas',
+        filterUnread: 'Não lidas',
+        soundOn: 'Ativar som',
+        soundOff: 'Silenciar',
         time: {
           now: 'agora',
           minutes: 'há {{count}}m',
           hours: 'há {{count}}h',
           days: 'há {{count}}d',
+        },
+        events: {
+          workRegistered: {
+            title: 'Registro concluído',
+            message: '"{{title}}" foi registrado com sucesso.',
+          },
+          workFailed: {
+            title: 'Registro falhou',
+            message: '"{{title}}" não pôde ser registrado. Tente novamente.',
+          },
+          creditsAdded: {
+            title: 'Créditos adicionados',
+            message: '{{count}} créditos foram adicionados à sua conta.',
+          },
+          aiCompleted: {
+            title: 'Geração de IA pronta',
+            message: 'Sua criação de IA já está disponível na biblioteca.',
+          },
+          aiFailed: {
+            title: 'Geração de IA falhou',
+            message: 'A geração não pôde ser concluída. Os créditos foram reembolsados, se aplicável.',
+          },
         },
       },
       noCredits: {
