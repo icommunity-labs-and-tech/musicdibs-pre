@@ -255,7 +255,6 @@ const App = () => (
                 <Route path="artist-profiles" element={<ArtistProfilesPage />} />
                 <Route path="media-library" element={<MediaLibraryPage />} />
                 <Route path="press" element={<PressPage />} />
-                <Route path="press" element={<PressPage />} />
                 
                 <Route path="admin/users" element={<Suspense fallback={null}><AdminGuard><AdminUsersPage /></AdminGuard></Suspense>} />
                 <Route path="admin/credits" element={<Suspense fallback={null}><AdminGuard><AdminCreditsPage /></AdminGuard></Suspense>} />
