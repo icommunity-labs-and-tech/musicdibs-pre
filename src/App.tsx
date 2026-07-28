@@ -45,7 +45,6 @@ const PaymentSuccess = lazyWithRetry(() => import("./pages/PaymentSuccess"));
 const DashboardLayout = lazyWithRetry(() => import("./pages/DashboardLayout"));
 const DashboardHome = lazyWithRetry(() => import("./pages/DashboardHome"));
 const RegisterPage = lazyWithRetry(() => import("./pages/RegisterPage"));
-const RegisterPage = lazyWithRetry(() => import("./pages/RegisterPage"));
 const VerifyPage = lazyWithRetry(() => import("./pages/VerifyPage"));
 const PromotionPage = lazyWithRetry(() => import("./pages/PromotionPage"));
 const CreditsPage = lazyWithRetry(() => import("./pages/CreditsPage"));
