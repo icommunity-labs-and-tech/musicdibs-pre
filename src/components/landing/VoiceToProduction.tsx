@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX, Sparkles, Mic, Wand2 } from "lucide-react";
-import aiStudioDemoAsset from "@/assets/landing/promo/ai-studio-demo.webm.asset.json";
 import aiStudioDemoMp4 from "@/assets/landing/promo/ai-studio-demo.mp4";
 
-const demoVideoWebm = aiStudioDemoAsset.url;
 const demoVideoMp4 = aiStudioDemoMp4;
 
 export function VoiceToProduction() {
@@ -112,7 +110,6 @@ export function VoiceToProduction() {
                       controls={false}
                     >
                       <source src={demoVideoMp4} type="video/mp4" />
-                      <source src={demoVideoWebm} type="video/webm" />
                     </video>
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-background to-accent/30" aria-hidden="true" />
