@@ -29,7 +29,6 @@ export const HeroSection = () => {
         className="absolute inset-0 w-full h-full object-cover will-change-transform"
         style={{ transform: `translateY(${offset * 0.5}px) scale(1.1)` }}
       >
-        <source src="/hero-video-new.mp4" type="video/mp4" />
         <source src="/hero-video.mp4" type="video/mp4" />
       </video>
 
