@@ -87,11 +87,15 @@ export function VoiceToProduction() {
                   <video
                     ref={videoRef}
                     src={demoVideo}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    poster="/placeholder.svg"
+                    preload="auto"
+                    className="absolute inset-0 w-full h-full object-cover bg-black"
                     autoPlay
                     loop
                     muted
                     playsInline
+                    controls={false}
+                    onError={(e) => console.warn('[VoiceToProduction] video error', e)}
                   />
                   {/* Sound toggle (subtle, no classic controls) */}
                   <button
