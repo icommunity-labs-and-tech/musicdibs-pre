@@ -20,7 +20,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Lo-fi hip hop · nostálgico y soñador",
     colors: ["from-primary", "to-accent"],
     glow: "shadow-purple-500/30",
-    audioUrl: "/audio/midnight-drive.mp3",
+    audioUrl: "/audio/midnight-drive.mp3?v=20260728",
   },
   {
     title: "Fuego Latino",
@@ -28,7 +28,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Reggaeton urbano · energético & bailable",
     colors: ["from-warning", "to-brand"],
     glow: "shadow-pink-500/30",
-    audioUrl: "/audio/fuego-latino.mp3",
+    audioUrl: "/audio/fuego-latino.mp3?v=20260728",
   },
   {
     title: "Turn It Up",
@@ -36,7 +36,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Dance electrónico · oscuro e hipnótico",
     colors: ["from-info", "to-info"],
     glow: "shadow-cyan-500/30",
-    audioUrl: "/audio/turn-it-up.mp3",
+    audioUrl: "/audio/turn-it-up.mp3?v=20260728",
   },
   {
     title: "Alma Libre",
@@ -44,7 +44,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Indie folk · acústico y emotivo",
     colors: ["from-warning", "to-rose-400"],
     glow: "shadow-amber-400/30",
-    audioUrl: "/audio/alma-libre.mp3",
+    audioUrl: "/audio/alma-libre.mp3?v=20260728",
   },
   {
     title: "No Sleep Tonight",
@@ -52,7 +52,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "R&B pop · suave y sensual",
     colors: ["from-accent", "to-accent"],
     glow: "shadow-fuchsia-500/30",
-    audioUrl: "/audio/no-sleep-tonight.mp3",
+    audioUrl: "/audio/no-sleep-tonight.mp3?v=20260728",
   },
   {
     title: "Trap God",
@@ -60,7 +60,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Hip hop trap · duro y cinematográfico",
     colors: ["from-info", "to-primary"],
     glow: "shadow-blue-500/30",
-    audioUrl: "/audio/trap-god.mp3",
+    audioUrl: "/audio/trap-god.mp3?v=20260728",
   },
 ];
 
@@ -148,18 +148,22 @@ export const AIStudioShowcase = () => {
 
   const handlePlay = (song: DemoSong) => {
     if (!song.audioUrl) return;
+    const audio = audioRef.current;
+    if (!audio) return;
+
     if (playingTitle === song.title) {
-      audioRef.current?.pause();
+      audio.pause();
       setPlayingTitle(null);
       return;
     }
-    audioRef.current?.pause();
-    const audio = new Audio(song.audioUrl);
-    audio.preload = "metadata";
-    audio.onended = () => setPlayingTitle(null);
-    audio.play().catch(() => setPlayingTitle(null));
-    audioRef.current = audio;
-    setPlayingTitle(song.title);
+
+    audio.pause();
+    audio.src = song.audioUrl;
+    audio.preload = "auto";
+    audio.load();
+    audio.play()
+      .then(() => setPlayingTitle(song.title))
+      .catch(() => setPlayingTitle(null));
   };
 
   return (
@@ -218,6 +222,14 @@ export const AIStudioShowcase = () => {
       `}</style>
 
       {/* Soft top fade to blend with the previous (light) section. Bottom intentionally left open to flow into the bridge + promo visuals block. */}
+      <audio
+        ref={audioRef}
+        preload="none"
+        className="hidden"
+        onEnded={() => setPlayingTitle(null)}
+        onError={() => setPlayingTitle(null)}
+      />
+
       <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-white/12 via-white/4 to-transparent" />
 
       {/* Decorative ambient glow orbs (richer, premium violet palette) */}

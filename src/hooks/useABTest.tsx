@@ -4,8 +4,6 @@ type GtagWindow = Window & {
   gtag?: (command: 'event', eventName: string, parameters: Record<string, string | number>) => void;
 };
 
-const getSupabaseClient = () => import('@/integrations/supabase/client').then((module) => module.supabase);
-
 export interface ABVariant {
   text: string;
   variant?: string;
@@ -28,27 +26,22 @@ const getSessionId = (): string => {
 };
 
 const persistEvent = (testId: string, variantIndex: number, variantText: string, eventType: 'impression' | 'click') => {
-  const sendEvent = () => {
-    getSupabaseClient().then((supabase) => supabase.from('ab_test_events').insert({
+  try {
+    const storageKey = 'ab_test_events_buffer';
+    const stored = window.localStorage.getItem(storageKey);
+    const events = stored ? JSON.parse(stored) as Array<Record<string, string | number>> : [];
+    events.push({
       test_id: testId,
       variant_index: variantIndex,
       variant_text: variantText,
       event_type: eventType,
       session_id: getSessionId(),
-    })).then(); // fire-and-forget
-  };
-
-  if (eventType === 'impression' && typeof window.requestIdleCallback === 'function') {
-    window.requestIdleCallback(sendEvent, { timeout: 5000 });
-    return;
+      created_at: Date.now(),
+    });
+    window.localStorage.setItem(storageKey, JSON.stringify(events.slice(-100)));
+  } catch {
+    // Public landing telemetry must never affect rendering or media playback.
   }
-
-  if (eventType === 'impression') {
-    window.setTimeout(sendEvent, 2500);
-    return;
-  }
-
-  sendEvent();
 };
 
 export const useABTest = (test: ABTest): ABVariant & { variantIndex: number } => {
