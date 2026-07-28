@@ -44,7 +44,6 @@ const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
 const PaymentSuccess = lazyWithRetry(() => import("./pages/PaymentSuccess"));
 const DashboardLayout = lazyWithRetry(() => import("./pages/DashboardLayout"));
 const DashboardHome = lazyWithRetry(() => import("./pages/DashboardHome"));
-const ArtistAnalyticsPage = lazyWithRetry(() => import("./pages/ArtistAnalyticsPage"));
 const RegisterPage = lazyWithRetry(() => import("./pages/RegisterPage"));
 const VerifyPage = lazyWithRetry(() => import("./pages/VerifyPage"));
 const PromotionPage = lazyWithRetry(() => import("./pages/PromotionPage"));
@@ -255,7 +254,6 @@ const App = () => (
                 <Route path="verify-identity" element={<IdentityVerificationPage />} />
                 <Route path="artist-profiles" element={<ArtistProfilesPage />} />
                 <Route path="media-library" element={<MediaLibraryPage />} />
-                <Route path="analytics" element={<Suspense fallback={null}><AdminGuard><ArtistAnalyticsPage /></AdminGuard></Suspense>} />
                 <Route path="press" element={<PressPage />} />
                 
                 <Route path="admin/users" element={<Suspense fallback={null}><AdminGuard><AdminUsersPage /></AdminGuard></Suspense>} />
