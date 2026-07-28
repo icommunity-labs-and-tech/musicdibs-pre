@@ -53,7 +53,7 @@ export function CommandPalette() {
       { id: 'register', label: tr('dashboard.sidebar.registerWork', 'Registrar obra'), icon: Upload, url: '/dashboard/register', group: 'principal', visible: !isManager },
       { id: 'promotion', label: tr('dashboard.sidebar.promotion', 'Promoción RRSS'), icon: Megaphone, url: '/dashboard/promotion', group: 'principal', visible: !isManager },
       { id: 'media', label: tr('dashboard.sidebar.mediaLibrary', 'Biblioteca multimedia'), icon: FolderOpen, url: '/dashboard/media-library', group: 'principal' },
-      { id: 'analytics', label: tr('dashboard.sidebar.analytics', 'Analytics del artista'), icon: LineChart, url: '/dashboard/analytics', group: 'principal', visible: !isManager },
+      { id: 'analytics', label: tr('dashboard.sidebar.analytics', 'Analytics del artista'), icon: LineChart, url: '/dashboard/analytics', group: 'principal', visible: !isManager && isAdmin },
       { id: 'profile', label: tr('dashboard.sidebar.profile', 'Perfil'), icon: User, url: '/dashboard/profile', group: 'cuenta' },
       { id: 'billing', label: tr('dashboard.sidebar.billing', 'Facturación'), icon: CreditCard, url: '/dashboard/billing', group: 'cuenta' },
       { id: 'credits', label: tr('dashboard.sidebar.credits', 'Créditos'), icon: Music, url: '/dashboard/credits', group: 'cuenta' },
