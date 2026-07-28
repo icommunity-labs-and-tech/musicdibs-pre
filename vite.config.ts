@@ -34,21 +34,6 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (/[\\/]node_modules[\\/](react|react-dom|react-router-dom|scheduler)[\\/]/.test(id)) return 'vendor-react';
-          if (id.includes('@tanstack/react-query')) return 'vendor-query';
-          if (/[\\/]node_modules[\\/](i18next|react-i18next|i18next-browser-languagedetector)[\\/]/.test(id)) return 'vendor-i18n';
-          if (id.includes('framer-motion')) return 'vendor-motion';
-          if (id.includes('@supabase/supabase-js')) return 'vendor-supabase';
-          if (/[\\/]node_modules[\\/](react-hook-form|@hookform|zod)[\\/]/.test(id)) return 'vendor-form';
-          if (id.includes('@radix-ui')) return 'vendor-radix';
-          if (id.includes('lucide-react')) return 'vendor-icons';
-          if (id.includes('date-fns')) return 'vendor-date';
-        },
-      },
-    },
   },
+
 }));
