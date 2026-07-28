@@ -93,7 +93,6 @@ export function LibraryAudioPicker({ open, onOpenChange, onSelect }: LibraryAudi
 
         <div className="flex items-start gap-2 rounded-md border border-warning/40 bg-warning/15 dark:bg-warning/10 px-3 py-2 text-xs text-foreground/90">
           <AlertTriangle className="h-4 w-4 shrink-0 text-warning mt-0.5" />
-          <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
           <span>{t('wizard.library.sizeWarning')}</span>
         </div>
 
