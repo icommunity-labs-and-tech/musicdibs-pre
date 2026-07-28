@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX, Sparkles, Mic, Wand2 } from "lucide-react";
+import aiStudioDemoMobileWebm from "@/assets/landing/promo/ai-studio-demo-mobile.webm";
 import aiStudioDemoMobileMp4 from "@/assets/landing/promo/ai-studio-demo-mobile.mp4";
 import aiStudioDemoPosterJpg from "@/assets/landing/promo/ai-studio-demo-poster.jpg";
 import aiStudioDemoMp4 from "@/assets/landing/promo/ai-studio-demo.mp4";
 
+const demoVideoMobileWebm = aiStudioDemoMobileWebm;
 const demoVideoMobileMp4 = aiStudioDemoMobileMp4;
 const demoVideoMp4 = aiStudioDemoMp4;
 const demoVideoPoster = aiStudioDemoPosterJpg;
@@ -113,6 +115,7 @@ export function VoiceToProduction() {
                       playsInline
                       controls={false}
                     >
+                      <source src={demoVideoMobileWebm} type="video/webm" />
                       <source src={demoVideoMobileMp4} type="video/mp4" />
                       <source src={demoVideoMp4} type="video/mp4" />
                     </video>
