@@ -32,11 +32,11 @@ export function VoiceToProduction() {
         if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
           setShouldLoadVideo(true);
           const v = videoRef.current;
-          v.play().catch(() => {});
+          v?.play().catch(() => {});
           return;
         }
         const v = videoRef.current;
-        if (!userOverrideRef.current) v.pause();
+        if (!userOverrideRef.current) v?.pause();
       },
       { threshold: [0, 0.5, 1] }
     );
