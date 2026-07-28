@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX, Sparkles, Mic, Wand2 } from "lucide-react";
-import aiStudioDemoMobileAsset from "@/assets/landing/promo/ai-studio-demo-mobile.mp4.asset.json";
-import aiStudioDemoPosterAsset from "@/assets/landing/promo/ai-studio-demo-poster.jpg.asset.json";
+import aiStudioDemoMobileMp4 from "@/assets/landing/promo/ai-studio-demo-mobile.mp4";
+import aiStudioDemoPosterJpg from "@/assets/landing/promo/ai-studio-demo-poster.jpg";
 import aiStudioDemoMp4 from "@/assets/landing/promo/ai-studio-demo.mp4";
 
-const demoVideoCdnMp4 = aiStudioDemoMobileAsset.url;
+const demoVideoMobileMp4 = aiStudioDemoMobileMp4;
 const demoVideoMp4 = aiStudioDemoMp4;
-const demoVideoPoster = aiStudioDemoPosterAsset.url;
+const demoVideoPoster = aiStudioDemoPosterJpg;
 
 export function VoiceToProduction() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -113,7 +113,7 @@ export function VoiceToProduction() {
                       playsInline
                       controls={false}
                     >
-                      <source src={demoVideoCdnMp4} type="video/mp4" />
+                      <source src={demoVideoMobileMp4} type="video/mp4" />
                       <source src={demoVideoMp4} type="video/mp4" />
                     </video>
                   ) : (
