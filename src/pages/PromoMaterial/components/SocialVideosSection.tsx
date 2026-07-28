@@ -292,9 +292,9 @@ export const SocialVideosSection = () => {
         </div>
 
         {/* Warning */}
-        <Alert className="border-warning/20 bg-warning dark:bg-warning/5">
-          <AlertCircle className="h-4 w-4 text-warning dark:text-warning" />
-          <AlertTitle className="text-warning dark:text-warning">⚡ {tr('timeWarning')}</AlertTitle>
+        <Alert className="border-warning/40 bg-warning/15 dark:bg-warning/10">
+          <AlertCircle className="h-4 w-4 text-warning" />
+          <AlertTitle className="text-foreground">⚡ {tr('timeWarning')}</AlertTitle>
           <AlertDescription className="text-sm">{tr('timeWarningDesc')}</AlertDescription>
         </Alert>
 
