@@ -74,7 +74,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.promotion', 'PromociÃ³n RRSS'), url: '/dashboard/promotion', icon: Megaphone, hideForManager: true, tourId: 'promotion' },
     
     { title: tr('dashboard.sidebar.mediaLibrary', 'Biblioteca multimedia'), url: '/dashboard/media-library', icon: FolderOpen },
-    { title: tr('dashboard.sidebar.analytics', 'Analytics del artista'), url: '/dashboard/analytics', icon: LineChart, hideForManager: true },
+    ...(isAdmin ? [{ title: tr('dashboard.sidebar.analytics', 'Analytics del artista'), url: '/dashboard/analytics', icon: LineChart, hideForManager: true } as SidebarItem] : []),
   ];
 
   const accountItems: SidebarItem[] = [
