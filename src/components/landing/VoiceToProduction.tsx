@@ -4,30 +4,38 @@ import aiStudioDemoAsset from "@/assets/landing/promo/ai-studio-demo.webm.asset.
 import aiStudioDemoMp4 from "@/assets/landing/promo/ai-studio-demo.mp4";
 
 const demoVideoWebm = aiStudioDemoAsset.url;
+const demoVideoMp4 = aiStudioDemoMp4;
 
 export function VoiceToProduction() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [muted, setMuted] = useState(true);
+  const [shouldLoadVideo, setShouldLoadVideo] = useState(false);
   const userOverrideRef = useRef(false);
 
   useEffect(() => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || !shouldLoadVideo) return;
     v.muted = muted;
     v.play().catch(() => {});
-  }, [muted]);
+  }, [muted, shouldLoadVideo]);
 
   useEffect(() => {
     const el = containerRef.current;
-    const v = videoRef.current;
-    if (!el || !v) return;
+    if (!el || typeof window === "undefined" || !("IntersectionObserver" in window)) {
+      setShouldLoadVideo(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          setShouldLoadVideo(true);
+          const v = videoRef.current;
           v.play().catch(() => {});
           return;
         }
+        const v = videoRef.current;
         if (!userOverrideRef.current) v.pause();
       },
       { threshold: [0, 0.5, 1] }
@@ -91,21 +99,24 @@ export function VoiceToProduction() {
                 <div className="relative rounded-[2.1rem] overflow-hidden bg-black aspect-[9/19.5]">
                   {/* Notch */}
                   <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 h-6 w-24 rounded-full bg-black" />
-                  <video
-                    ref={videoRef}
-                    poster="/placeholder.svg"
-                    preload="metadata"
-                    className="absolute inset-0 w-full h-full object-cover bg-black"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    controls={false}
-                    onError={(e) => console.warn('[VoiceToProduction] video error', e)}
-                  >
-                    <source src={demoVideoWebm} type="video/webm" />
-                    <source src={aiStudioDemoMp4} type="video/mp4" />
-                  </video>
+                  {shouldLoadVideo ? (
+                    <video
+                      ref={videoRef}
+                      poster="/placeholder.svg"
+                      preload="metadata"
+                      className="absolute inset-0 w-full h-full object-cover bg-black"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      controls={false}
+                    >
+                      <source src={demoVideoMp4} type="video/mp4" />
+                      <source src={demoVideoWebm} type="video/webm" />
+                    </video>
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-background to-accent/30" aria-hidden="true" />
+                  )}
                   {/* Sound toggle (subtle, no classic controls) */}
                   <button
                     type="button"
