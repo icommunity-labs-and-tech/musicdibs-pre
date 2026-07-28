@@ -650,7 +650,7 @@ const resources = {
           apiProfitability: 'Rentabilidad APIs',
           productMetrics: 'Métricas producto',
           userChurn: 'Bajas usuarios',
-          analytics: 'Analytics del artista',
+          
          },
         registerWork: {
           title: 'Registrar obra',
@@ -1273,7 +1273,7 @@ const resources = {
           apiProfitability: 'API profitability',
           productMetrics: 'Product metrics',
           userChurn: 'User churn',
-          analytics: 'Artist analytics',
+          
          },
         registerWork: {
           title: 'Register work',
@@ -1707,7 +1707,7 @@ const resources = {
           apiProfitability: 'Rentabilidade das APIs',
           productMetrics: 'Métricas de produto',
           userChurn: 'Cancelamentos de usuários',
-          analytics: 'Analytics do artista',
+          
          },
         registerWork: {
           title: 'Registrar obra',
