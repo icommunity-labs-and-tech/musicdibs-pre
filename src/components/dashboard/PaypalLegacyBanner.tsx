@@ -28,18 +28,18 @@ export function PaypalLegacyBanner() {
   if (!show) return null;
 
   return (
-    <div className="bg-warning border border-warning rounded-lg p-4 flex items-start gap-3 mb-4">
+    <div className="bg-warning/15 border border-warning/50 rounded-lg p-4 flex items-start gap-3 mb-4">
       <span className="text-warning text-xl" aria-hidden>⚠️</span>
       <div className="flex-1">
-        <p className="font-semibold text-warning">
+        <p className="font-semibold text-foreground">
           {t('dashboard.paypalBanner.title')}
         </p>
-        <p className="text-sm text-warning mt-1">
+        <p className="text-sm text-foreground/80 mt-1">
           {t('dashboard.paypalBanner.body')}
         </p>
         <a
           href="https://musicdibs.com/#pricing-section"
-          className="inline-block mt-2 text-sm font-medium text-warning underline hover:text-warning"
+          className="inline-block mt-2 text-sm font-medium text-primary underline hover:text-primary/80"
         >
           {t('dashboard.paypalBanner.cta')}
         </a>
