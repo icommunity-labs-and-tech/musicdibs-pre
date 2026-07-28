@@ -12,15 +12,24 @@ import brillaSinMiedo from "@/assets/landing/covers/brilla-sin-miedo.webp";
 import flyerUrban from "@/assets/landing/promo/flyer-urban.webp";
 import flyerMidnightPulse from "@/assets/landing/promo/flyer-midnight-pulse.webp";
 import postPop from "@/assets/landing/promo/post-pop-release.webp";
-import videoclipNocheDeFuego from "@/assets/landing/promo/videoclip-noche-de-fuego.mp4";
-import videoclipUltimaLuz from "@/assets/landing/promo/videoclip-ultima-luz.mp4";
-import reelNeonPulse from "@/assets/landing/promo/reel-neon-pulse.mp4";
-import videoclipBeforeForgettingYou from "@/assets/landing/promo/videoclip-before-forgetting-you.mp4";
-import reelTheBrokenLines from "@/assets/landing/promo/reel-the-broken-lines.mp4";
-import videoclipGoldenRoad from "@/assets/landing/promo/videoclip-golden-road.mp4";
-import tiktokLateNightFrequency from "@/assets/landing/promo/tiktok-late-night-frequency.mp4";
-import spotifyLoopBeforeForgettingYou from "@/assets/landing/promo/spotify-loop-before-forgetting-you.mp4";
-import spotifyLoopVioletFrequency from "@/assets/landing/promo/spotify-loop-violet-frequency.mp4";
+import videoclipNocheDeFuegoAsset from "@/assets/promo/videoclip-noche-de-fuego.webm.asset.json";
+import videoclipUltimaLuzAsset from "@/assets/promo/videoclip-ultima-luz.webm.asset.json";
+import reelNeonPulseAsset from "@/assets/promo/reel-neon-pulse.webm.asset.json";
+import videoclipBeforeForgettingYouAsset from "@/assets/promo/videoclip-before-forgetting-you.webm.asset.json";
+import reelTheBrokenLinesAsset from "@/assets/promo/reel-the-broken-lines.webm.asset.json";
+import videoclipGoldenRoadAsset from "@/assets/promo/videoclip-golden-road.webm.asset.json";
+import tiktokLateNightFrequencyAsset from "@/assets/promo/tiktok-late-night-frequency.webm.asset.json";
+import spotifyLoopBeforeForgettingYouAsset from "@/assets/promo/spotify-loop-before-forgetting-you.webm.asset.json";
+import spotifyLoopVioletFrequencyAsset from "@/assets/promo/spotify-loop-violet-frequency.webm.asset.json";
+import videoclipNocheDeFuegoMp4 from "@/assets/landing/promo/videoclip-noche-de-fuego.mp4";
+import videoclipUltimaLuzMp4 from "@/assets/landing/promo/videoclip-ultima-luz.mp4";
+import reelNeonPulseMp4 from "@/assets/landing/promo/reel-neon-pulse.mp4";
+import videoclipBeforeForgettingYouMp4 from "@/assets/landing/promo/videoclip-before-forgetting-you.mp4";
+import reelTheBrokenLinesMp4 from "@/assets/landing/promo/reel-the-broken-lines.mp4";
+import videoclipGoldenRoadMp4 from "@/assets/landing/promo/videoclip-golden-road.mp4";
+import tiktokLateNightFrequencyMp4 from "@/assets/landing/promo/tiktok-late-night-frequency.mp4";
+import spotifyLoopBeforeForgettingYouMp4 from "@/assets/landing/promo/spotify-loop-before-forgetting-you.mp4";
+import spotifyLoopVioletFrequencyMp4 from "@/assets/landing/promo/spotify-loop-violet-frequency.mp4";
 
 type CoverCard = { title: string; artist: string; genre: string; image: string };
 type PromoCard = {
@@ -28,7 +37,7 @@ type PromoCard = {
   badge: string;
   description: string;
   image?: string;
-  video?: string;
+  video?: { webm: string; mp4: string };
   isVideo?: boolean;
   Icon: React.ComponentType<{ className?: string }>;
 };
@@ -46,15 +55,15 @@ const COVER_CARDS: CoverCard[] = [
 ];
 
 const PROMO_CARDS: PromoCard[] = [
-  { title: "Sin Mirar Atrás", badge: "Videoclip", description: "Leo Marín · Latino", video: videoclipNocheDeFuego, isVideo: true, Icon: Video },
-  { title: "Ritmo Salvaje", badge: "Videoclip", description: "Dario Cruz · Latino", video: videoclipUltimaLuz, isVideo: true, Icon: Video },
-  { title: "Before Forgetting You", badge: "Videoclip", description: "Hikari · Balada Pop", video: videoclipBeforeForgettingYou, isVideo: true, Icon: Video },
-  { title: "Golden Road", badge: "Videoclip", description: "Ártico · Indie Folk", video: videoclipGoldenRoad, isVideo: true, Icon: Video },
-  { title: "Neon Pulse", badge: "Reel", description: "Vera Nova · Teaser electrónico", video: reelNeonPulse, isVideo: true, Icon: Film },
-  { title: "The Broken Lines", badge: "Reel", description: "Black River · Rock", video: reelTheBrokenLines, isVideo: true, Icon: Film },
-  { title: "Late Night Frequency", badge: "TikTok", description: "DJ NK · Electrónica", video: tiktokLateNightFrequency, isVideo: true, Icon: Music2 },
-  { title: "Before Forgetting You", badge: "Vídeo loop Spotify", description: "Nora Bloom · Pop", video: spotifyLoopBeforeForgettingYou, isVideo: true, Icon: Layers },
-  { title: "Violet Frequency", badge: "Vídeo loop Spotify", description: "Kira Flux · Electrónica", video: spotifyLoopVioletFrequency, isVideo: true, Icon: Layers },
+  { title: "Sin Mirar Atrás", badge: "Videoclip", description: "Leo Marín · Latino", video: { webm: videoclipNocheDeFuegoAsset.url, mp4: videoclipNocheDeFuegoMp4 }, isVideo: true, Icon: Video },
+  { title: "Ritmo Salvaje", badge: "Videoclip", description: "Dario Cruz · Latino", video: { webm: videoclipUltimaLuzAsset.url, mp4: videoclipUltimaLuzMp4 }, isVideo: true, Icon: Video },
+  { title: "Before Forgetting You", badge: "Videoclip", description: "Hikari · Balada Pop", video: { webm: videoclipBeforeForgettingYouAsset.url, mp4: videoclipBeforeForgettingYouMp4 }, isVideo: true, Icon: Video },
+  { title: "Golden Road", badge: "Videoclip", description: "Ártico · Indie Folk", video: { webm: videoclipGoldenRoadAsset.url, mp4: videoclipGoldenRoadMp4 }, isVideo: true, Icon: Video },
+  { title: "Neon Pulse", badge: "Reel", description: "Vera Nova · Teaser electrónico", video: { webm: reelNeonPulseAsset.url, mp4: reelNeonPulseMp4 }, isVideo: true, Icon: Film },
+  { title: "The Broken Lines", badge: "Reel", description: "Black River · Rock", video: { webm: reelTheBrokenLinesAsset.url, mp4: reelTheBrokenLinesMp4 }, isVideo: true, Icon: Film },
+  { title: "Late Night Frequency", badge: "TikTok", description: "DJ NK · Electrónica", video: { webm: tiktokLateNightFrequencyAsset.url, mp4: tiktokLateNightFrequencyMp4 }, isVideo: true, Icon: Music2 },
+  { title: "Before Forgetting You", badge: "Vídeo loop Spotify", description: "Nora Bloom · Pop", video: { webm: spotifyLoopBeforeForgettingYouAsset.url, mp4: spotifyLoopBeforeForgettingYouMp4 }, isVideo: true, Icon: Layers },
+  { title: "Violet Frequency", badge: "Vídeo loop Spotify", description: "Kira Flux · Electrónica", video: { webm: spotifyLoopVioletFrequencyAsset.url, mp4: spotifyLoopVioletFrequencyMp4 }, isVideo: true, Icon: Layers },
   { title: "Urban Flyer", badge: "Flyer", description: "Kairo Beats · Flyer de lanzamiento", image: flyerUrban, Icon: FileImage },
   { title: "Midnight Pulse", badge: "Flyer", description: "DJ Nova K · Flyer electrónico", image: flyerMidnightPulse, Icon: FileImage },
   { title: "Last Pink Sky", badge: "Post", description: "Maya Rivers · Post Instagram", image: postPop, Icon: Instagram },
@@ -118,14 +127,16 @@ const PromoCardItem = ({ card }: { card: PromoCard }) => {
       {hasVideoSource ? (
         shouldLoadVideo ? (
           <video
-            src={card.video}
             autoPlay
             loop
             muted
             playsInline
             preload="metadata"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.06]"
-          />
+          >
+            <source src={card.video?.webm} type="video/webm" />
+            <source src={card.video?.mp4} type="video/mp4" />
+          </video>
         ) : (
           <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-primary/60 to-accent/60" aria-hidden="true" />
         )

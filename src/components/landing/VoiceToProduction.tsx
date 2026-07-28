@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX, Sparkles, Mic, Wand2 } from "lucide-react";
-import demoVideo from "@/assets/landing/promo/ai-studio-demo.mp4";
+import aiStudioDemoAsset from "@/assets/landing/promo/ai-studio-demo.webm.asset.json";
+import aiStudioDemoMp4 from "@/assets/landing/promo/ai-studio-demo.mp4";
+
+const demoVideoWebm = aiStudioDemoAsset.url;
 
 export function VoiceToProduction() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -17,11 +20,15 @@ export function VoiceToProduction() {
 
   useEffect(() => {
     const el = containerRef.current;
-    if (!el) return;
+    const v = videoRef.current;
+    if (!el || !v) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (userOverrideRef.current) return;
-        setMuted(!entry.isIntersecting || entry.intersectionRatio < 0.5);
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+          v.play().catch(() => {});
+          return;
+        }
+        if (!userOverrideRef.current) v.pause();
       },
       { threshold: [0, 0.5, 1] }
     );
@@ -86,9 +93,8 @@ export function VoiceToProduction() {
                   <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20 h-6 w-24 rounded-full bg-black" />
                   <video
                     ref={videoRef}
-                    src={demoVideo}
                     poster="/placeholder.svg"
-                    preload="auto"
+                    preload="metadata"
                     className="absolute inset-0 w-full h-full object-cover bg-black"
                     autoPlay
                     loop
@@ -96,7 +102,10 @@ export function VoiceToProduction() {
                     playsInline
                     controls={false}
                     onError={(e) => console.warn('[VoiceToProduction] video error', e)}
-                  />
+                  >
+                    <source src={demoVideoWebm} type="video/webm" />
+                    <source src={aiStudioDemoMp4} type="video/mp4" />
+                  </video>
                   {/* Sound toggle (subtle, no classic controls) */}
                   <button
                     type="button"

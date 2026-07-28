@@ -141,20 +141,10 @@ const AppInit = () => {
       globalThis.setTimeout(callback, 1500);
     };
 
-    const runAfterLoad = () => {
-      runWhenIdle(() => {
-        captureAttribution();
-        preloadFeatureCosts();
-      });
-    };
-
-    if (document.readyState === "complete") {
-      runAfterLoad();
-      return;
-    }
-
-    window.addEventListener("load", runAfterLoad, { once: true });
-    return () => window.removeEventListener("load", runAfterLoad);
+    runWhenIdle(() => {
+      captureAttribution();
+      preloadFeatureCosts();
+    });
   }, []);
   return null;
 };
@@ -172,15 +162,11 @@ const DelayedStartupWidgets = () => {
       globalThis.setTimeout(callback, 2500);
     };
 
-    const showWidgets = () => runWhenIdle(() => setShouldRender(true));
+    const timeoutId = window.setTimeout(() => {
+      runWhenIdle(() => setShouldRender(true));
+    }, 2500);
 
-    if (document.readyState === "complete") {
-      const timeoutId = window.setTimeout(showWidgets, 2500);
-      return () => window.clearTimeout(timeoutId);
-    }
-
-    window.addEventListener("load", showWidgets, { once: true });
-    return () => window.removeEventListener("load", showWidgets);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   if (!shouldRender) return null;

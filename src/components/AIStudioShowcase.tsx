@@ -20,7 +20,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Lo-fi hip hop · nostálgico y soñador",
     colors: ["from-primary", "to-accent"],
     glow: "shadow-purple-500/30",
-    audioUrl: "/audio/midnight-drive.mpeg",
+    audioUrl: "/audio/midnight-drive.mp3",
   },
   {
     title: "Fuego Latino",
@@ -28,7 +28,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Reggaeton urbano · energético & bailable",
     colors: ["from-warning", "to-brand"],
     glow: "shadow-pink-500/30",
-    audioUrl: "/audio/fuego-latino.mpeg",
+    audioUrl: "/audio/fuego-latino.mp3",
   },
   {
     title: "Turn It Up",
@@ -36,7 +36,7 @@ const DEMO_SONGS: DemoSong[] = [
     subtitle: "Dance electrónico · oscuro e hipnótico",
     colors: ["from-info", "to-info"],
     glow: "shadow-cyan-500/30",
-    audioUrl: "/audio/turn-it-up.mpeg",
+    audioUrl: "/audio/turn-it-up.mp3",
   },
   {
     title: "Alma Libre",
@@ -155,6 +155,7 @@ export const AIStudioShowcase = () => {
     }
     audioRef.current?.pause();
     const audio = new Audio(song.audioUrl);
+    audio.preload = "metadata";
     audio.onended = () => setPlayingTitle(null);
     audio.play().catch(() => setPlayingTitle(null));
     audioRef.current = audio;
