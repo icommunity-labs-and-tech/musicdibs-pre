@@ -335,6 +335,66 @@ serve(async (req) => {
       }
     }
 
+    // ── 2d. Suscripciones nuevas sin ninguna transaccion de credito
+    // correspondiente (el credito inicial nunca se concedio) ────────────────
+    // FIX 2026-07-30: detectado en produccion (transformatecreando@gmail.com,
+    // danielendara89@gmail.com): a veces NINGUNO de los 3 caminos del webhook
+    // (checkout.session.completed, subscription_create, customer.subscription.
+    // updated) llega a conceder el credito de una compra nueva -- ni siquiera
+    // queda rastro en stripe_price_resolution_log. El plan/tier eventualmente
+    // queda correcto porque check-subscription lo sincroniza en una carga de
+    // dashboard posterior, pero esa funcion NUNCA concede creditos, asi que el
+    // usuario se queda sin ellos indefinidamente salvo que alguien lo reporte.
+    // Este chequeo detecta suscripciones NUEVAS (created_at reciente) sin
+    // ninguna transaccion 'purchase'/'subscription' que otorgue el credito
+    // esperado del tier, y lo concede automaticamente.
+    const { data: newSubs } = await supabase
+      .from("subscriptions")
+      .select("user_id, tier, plan, status, created_at")
+      .gte("created_at", since.toISOString())
+      .eq("status", "active");
+
+    for (const sub of newSubs || []) {
+      const expectedCredits = sub.tier ? EXPECTED_CREDITS[sub.tier] : undefined;
+      if (!expectedCredits) continue; // tier desconocido o topup/individual, no aplica
+
+      const { data: matchingTx } = await supabase
+        .from("credit_transactions")
+        .select("id, amount, created_at")
+        .eq("user_id", sub.user_id)
+        .in("type", ["purchase", "subscription"])
+        .gte("created_at", new Date(new Date(sub.created_at).getTime() - 60 * 60 * 1000).toISOString())
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      const hasMatch = (matchingTx || []).some((tx) => tx.amount === expectedCredits);
+      if (hasMatch) continue;
+
+      const { data: { user } } = await supabase.auth.admin.getUserById(sub.user_id);
+      const email = user?.email || "unknown";
+
+      const { error: grantErr } = await supabase.from("credit_transactions").insert({
+        user_id: sub.user_id, type: "admin_reset", amount: expectedCredits,
+        description: `Autocorreccion (auditoria 2d): suscripcion nueva '${sub.tier}' (activa desde ${sub.created_at}) sin ninguna transaccion de credito correspondiente -- el credito inicial nunca se concedio por ningun camino del webhook. Se otorga el credito esperado (+${expectedCredits}).`,
+      });
+      if (!grantErr) {
+        await supabase.rpc("increment_user_credits", { p_user_id: sub.user_id, p_delta: expectedCredits }).then(
+          () => {},
+          async () => {
+            const { data: prof } = await supabase.from("profiles").select("available_credits").eq("user_id", sub.user_id).single();
+            if (prof) await supabase.from("profiles").update({ available_credits: (prof.available_credits ?? 0) + expectedCredits, updated_at: new Date().toISOString() }).eq("user_id", sub.user_id);
+          }
+        );
+      }
+
+      issues.push({
+        type: "credito_inicial_no_concedido", severity: grantErr ? "critical" : "warning", email,
+        detail: grantErr
+          ? `Suscripcion nueva '${sub.tier}' sin credito inicial -- fallo al autocorregir: ${grantErr.message}. Revisar manualmente (deberia recibir +${expectedCredits}).`
+          : `Suscripcion nueva '${sub.tier}' sin credito inicial detectada y autocorregida (+${expectedCredits} creditos).`,
+      });
+    }
+
     // ── 3. Cancelaciones/impagos: créditos de plan deben estar en 0 ──────────
     const { data: cancelledSubs } = await supabase
       .from("subscriptions")
