@@ -362,7 +362,7 @@ serve(async (req) => {
         .from("credit_transactions")
         .select("id, amount, created_at")
         .eq("user_id", sub.user_id)
-        .in("type", ["purchase", "subscription"])
+        .in("type", ["purchase", "subscription", "admin_reset"])
         .gte("created_at", new Date(new Date(sub.created_at).getTime() - 60 * 60 * 1000).toISOString())
         .order("created_at", { ascending: false })
         .limit(20);
