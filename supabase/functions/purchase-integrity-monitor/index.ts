@@ -90,8 +90,8 @@ serve(async (req) => {
             const { data } = await supabase
               .from("orders").select("id, product_code, product_type, amount_gross, user_id")
               .eq("stripe_subscription_id", subId)
-              .gte("paid_at", new Date(charge.created * 1000 - 10 * 60 * 1000).toISOString())
-              .lte("paid_at", new Date(charge.created * 1000 + 10 * 60 * 1000).toISOString())
+              .gte("paid_at", new Date(charge.created * 1000 - 90 * 60 * 1000).toISOString())
+              .lte("paid_at", new Date(charge.created * 1000 + 90 * 60 * 1000).toISOString())
               .maybeSingle();
             order = data;
           }
@@ -106,8 +106,13 @@ serve(async (req) => {
           .from("orders")
           .select("id, product_code, product_type, amount_gross, user_id")
           .eq("user_id", profile.user_id)
-          .gte("paid_at", new Date(charge.created * 1000 - 15 * 60 * 1000).toISOString())
-          .lte("paid_at", new Date(charge.created * 1000 + 15 * 60 * 1000).toISOString());
+          // FIX 2026-07-30 (caso danielendara89@gmail.com): el cargo succeeded
+          // a las 22:06:17 pero el order no se creo hasta las 23:05:42 -- casi
+          // 1h de retraso real del webhook (no un fallo total), muy por encima
+          // de los 15 min anteriores. Se amplia a 90 min para reducir falsas
+          // alarmas de "charge_sin_order" cuando el webhook solo esta lento.
+          .gte("paid_at", new Date(charge.created * 1000 - 90 * 60 * 1000).toISOString())
+          .lte("paid_at", new Date(charge.created * 1000 + 90 * 60 * 1000).toISOString());
         order = (candidates || []).find((o) => Math.abs(Number(o.amount_gross) - chargeAmount) < 0.5) ?? null;
       }
 
@@ -363,7 +368,7 @@ serve(async (req) => {
         .select("id, amount, created_at")
         .eq("user_id", sub.user_id)
         .in("type", ["purchase", "subscription", "admin_reset"])
-        .gte("created_at", new Date(new Date(sub.created_at).getTime() - 60 * 60 * 1000).toISOString())
+        .gte("created_at", new Date(new Date(sub.created_at).getTime() - 90 * 60 * 1000).toISOString())
         .order("created_at", { ascending: false })
         .limit(20);
 
