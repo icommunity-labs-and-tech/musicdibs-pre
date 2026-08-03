@@ -508,7 +508,7 @@ export default function RegistroMusicalPage() {
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="h-5 w-5" style={{ color: "oklch(0.85 0.22 340)" }} />
                         <span className="text-xs uppercase tracking-[0.22em] text-foreground/80 font-semibold">
-                          Certificado Blockchain
+                          {c.certTitle}
                         </span>
                       </div>
                       <span
