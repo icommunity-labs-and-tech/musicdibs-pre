@@ -649,13 +649,10 @@ export default function RegistroMusicalPage() {
                         }}
                       />
                       <p className="relative text-[10px] uppercase tracking-[0.2em] font-semibold text-page-fg">
-                        Gana el
+                        {c.royaltiesBadgeTop}
                       </p>
-                      <p className="relative font-display font-bold text-3xl sm:text-4xl text-primary-foreground leading-none my-1">
-                        100%
-                      </p>
-                      <p className="relative text-xs sm:text-sm font-bold uppercase tracking-wider text-primary-foreground">
-                        Royalties
+                      <p className="relative text-xs sm:text-sm font-bold uppercase tracking-wider text-primary-foreground mt-1">
+                        {c.royaltiesBadgeBottom}
                       </p>
                     </div>
                   </div>
