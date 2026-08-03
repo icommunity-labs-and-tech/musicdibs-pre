@@ -880,14 +880,12 @@ export default function RegistroMusicalPage() {
                       </svg>
                     </span>
                     <span className="text-sm font-bold text-primary-foreground leading-snug">
-                      Comparte tus canciones con +200k de seguidores
+                      {c.promoBadge}
                     </span>
                   </div>
 
                   <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
-                    Crea o mejora tus canciones, genera contenido visual con
-                    IA y promociona tu música a través de los canales oficiales de
-                    Musicdibs en TikTok e Instagram.
+                    {c.promoDesc}
                   </p>
                   <ul className="space-y-3 mb-8">
                     <li className="flex items-start gap-3 text-sm text-foreground/85">
