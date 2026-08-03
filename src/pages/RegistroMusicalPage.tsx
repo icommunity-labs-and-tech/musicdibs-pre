@@ -563,23 +563,16 @@ export default function RegistroMusicalPage() {
                     className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
                     style={{ color: "oklch(0.85 0.22 340)" }}
                   >
-                    Registro · Derechos de autor
+                    {c.regEyebrow}
                   </p>
                   <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-5">
-                    Tu obra, <span className="text-gradient-brand">protegida para siempre</span>
+                    {c.regTitle1} <span className="text-gradient-brand">{c.regTitleAccent}</span>
                   </h2>
                   <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
-                    Generamos un certificado blockchain inmutable con sello de tiempo
-                    que acredita tu autoría con validez legal internacional. Sin papeleos,
-                    sin esperas, sin intermediarios.
+                    {c.regDesc}
                   </p>
                   <ul className="space-y-3 mb-8">
-                    {[
-                      "Certificación en minutos con hash único y verificable",
-                      "Validez legal bajo el Convenio de Berna (181 países)",
-                      "Descarga tu certificado PDF en cualquier momento",
-                      "Protege letras, melodías, masters y demos",
-                    ].map((t) => (
+                    {c.regBullets.map((t) => (
                       <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
                         <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
                         {t}
