@@ -1,6 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import "@/styles/landing-ai-studio.css";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { REGISTRO_COPY, type RegistroLang } from "./registroMusicalCopy";
 import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
