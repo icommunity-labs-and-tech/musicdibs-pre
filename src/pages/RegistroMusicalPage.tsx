@@ -121,7 +121,7 @@ export default function RegistroMusicalPage() {
 
                   <div className="mt-9 flex flex-col sm:flex-row gap-3">
                     <a
-                      href="#pricing-section"
+                      href="https://www.musicdibs.com/login?tab=register"
                       className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                     >
                       {c.heroCta}
@@ -129,27 +129,25 @@ export default function RegistroMusicalPage() {
                     </a>
                   </div>
 
+                  <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted-foreground">
+                    {c.heroBenefits.map((t) => (
+                      <span key={t} className="inline-flex items-center gap-1.5">
+                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+
                   <p className="mt-4 text-sm text-[oklch(0.98_0.01_295/0.7)]">
                     {c.heroExplore}{" "}
                     <a
-                      href="https://www.musicdibs.com/login?tab=register"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href="#pricing-section"
                       className="font-semibold underline-offset-4 hover:underline transition-colors"
                       style={{ color: "oklch(0.85 0.22 340)" }}
                     >
                       {c.heroExploreLink}
                     </a>
                   </p>
-
-                  <div className="mt-8 flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
-                    {c.heroChips.map((t) => (
-                      <span key={t} className="inline-flex items-center gap-1.5">
-                        <CheckCircle2 className="h-3.5 w-3.5" style={{ color: "oklch(0.85 0.22 340)" }} />
-                        {t}
-                      </span>
-                    ))}
-                  </div>
                 </div>
 
                 {/* Dashboard-style panel mockup */}
