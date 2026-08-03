@@ -849,10 +849,10 @@ export default function RegistroMusicalPage() {
                     className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
                     style={{ color: "oklch(0.85 0.22 340)" }}
                   >
-                    Promoción · TikTok & Instagram
+                    {c.promoEyebrow}
                   </p>
                   <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-5">
-                    Haz que tu música <span className="text-gradient-brand">se vuelva viral</span>
+                    {c.promoTitle1} <span className="text-gradient-brand">{c.promoTitleAccent}</span>
                   </h2>
 
                   {/* Badge viral */}
