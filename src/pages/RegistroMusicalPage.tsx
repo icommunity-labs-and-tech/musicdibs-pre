@@ -87,9 +87,9 @@ export default function RegistroMusicalPage() {
         <main className="relative min-h-screen overflow-hidden">
           <BackgroundScene />
           <Navbar
-            ctaText="🚀 Pruébalo gratis"
+            ctaText={c.navCta}
             ctaHref="https://www.musicdibs.com/login?tab=register"
-            secondaryText="Iniciar sesión"
+            secondaryText={c.navSecondary}
             secondaryHref="https://www.musicdibs.com/login"
           />
 
