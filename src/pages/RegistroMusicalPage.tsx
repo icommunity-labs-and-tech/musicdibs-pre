@@ -355,7 +355,7 @@ export default function RegistroMusicalPage() {
                                   border: "1px solid oklch(0.85 0.22 340 / 0.3)",
                                 }}
                               >
-                                OK
+                                {c.badgeOk}
                               </span>
                             ) : (
                               <span
