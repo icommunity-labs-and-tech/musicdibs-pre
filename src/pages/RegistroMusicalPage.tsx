@@ -188,7 +188,7 @@ export default function RegistroMusicalPage() {
                         />
                       </div>
                       <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                        musicdibs · panel
+                        {c.panelLabel}
                       </span>
                     </div>
 
