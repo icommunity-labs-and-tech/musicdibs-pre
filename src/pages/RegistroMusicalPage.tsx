@@ -422,7 +422,8 @@ export default function RegistroMusicalPage() {
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* platforms ribbon */}
