@@ -675,10 +675,10 @@ export default function RegistroMusicalPage() {
                       <div className="flex items-center gap-2">
                         <Globe2 className="h-5 w-5" style={{ color: "oklch(0.85 0.22 340)" }} />
                         <span className="text-xs uppercase tracking-[0.22em] text-foreground/80 font-semibold">
-                          Lanzamiento global
+                          {c.releaseTitle}
                         </span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground">en curso</span>
+                      <span className="text-[10px] text-muted-foreground">{c.releaseStatus}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
