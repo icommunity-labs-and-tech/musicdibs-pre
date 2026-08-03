@@ -84,6 +84,7 @@ export function Navbar({
           <img src={logo} alt="Musicdibs" className="h-9 sm:h-10 w-auto object-contain" />
         </a>
         <div className="flex items-center gap-2 sm:gap-4">
+          <LandingLanguageButton />
           {secondaryText && (
             <a
               href={secondaryHref}
@@ -94,7 +95,6 @@ export function Navbar({
               {secondaryText}
             </a>
           )}
-          <LandingLanguageButton />
           <a
             href={ctaHref}
             target="_blank"
