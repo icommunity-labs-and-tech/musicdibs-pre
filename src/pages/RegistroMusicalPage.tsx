@@ -60,10 +60,9 @@ export default function RegistroMusicalPage() {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Service",
-            name: "Registro Musical y Distribución con Musicdibs",
-            serviceType: "Registro de propiedad intelectual musical y distribución digital",
-            description:
-              "Registra la propiedad intelectual de tus canciones en blockchain y distribúyelas en más de 220 plataformas globales como Spotify, Apple Music, TikTok, Amazon Music y YouTube Music, sin comisiones sobre tus royalties de streaming.",
+            name: c.ldName,
+            serviceType: c.ldServiceType,
+            description: c.ldDescription,
             areaServed: "Worldwide",
             url: "https://www.musicdibs.com/registro-musical",
             provider: {
