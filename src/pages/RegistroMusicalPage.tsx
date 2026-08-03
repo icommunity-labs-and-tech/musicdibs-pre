@@ -111,13 +111,12 @@ export default function RegistroMusicalPage() {
                     className="font-display font-bold text-[2.6rem] sm:text-5xl lg:text-[3.6rem] leading-[1.05] tracking-tight text-foreground"
                     style={{ textWrap: "balance" as any }}
                   >
-                    Protege y distribuye tu música a nivel{" "}
-                    <span className="text-gradient-brand">global</span>.
+                    {c.heroTitle1}{" "}
+                    <span className="text-gradient-brand">{c.heroTitleAccent}</span>.
                   </h1>
 
                   <p className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed">
-                    Registra tus derechos de autor en minutos, lanza en +220 plataformas y
-                    quédate con el 95 % de tus ingresos. Mantén tu libertad como artista. 
+                    {c.heroSubtitle}
                   </p>
 
                   <div className="mt-9 flex flex-col sm:flex-row gap-3">
@@ -125,13 +124,13 @@ export default function RegistroMusicalPage() {
                       href="#pricing-section"
                       className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                     >
-                      🚀 Registrar y distribuir mi música
+                      {c.heroCta}
                       <ArrowRight className="h-4 w-4" />
                     </a>
                   </div>
 
                   <p className="mt-4 text-sm text-[oklch(0.98_0.01_295/0.7)]">
-                    ¿Prefieres explorar primero?{" "}
+                    {c.heroExplore}{" "}
                     <a
                       href="https://www.musicdibs.com/login?tab=register"
                       target="_blank"
@@ -139,12 +138,12 @@ export default function RegistroMusicalPage() {
                       className="font-semibold underline-offset-4 hover:underline transition-colors"
                       style={{ color: "oklch(0.85 0.22 340)" }}
                     >
-                      Crear una cuenta gratis →
+                      {c.heroExploreLink}
                     </a>
                   </p>
 
                   <div className="mt-8 flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
-                    {["Validez legal", "Blockchain", "+220 plataformas"].map((t) => (
+                    {c.heroChips.map((t) => (
                       <span key={t} className="inline-flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5" style={{ color: "oklch(0.85 0.22 340)" }} />
                         {t}
