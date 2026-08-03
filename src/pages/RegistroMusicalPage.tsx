@@ -282,29 +282,13 @@ export default function RegistroMusicalPage() {
                         }}
                       />
 
-                      {[
-                        {
-                          Icon: ShieldCheck,
-                          label: "Registro",
-                          value: "Propiedad Intelectual",
-                          meta: "Blockchain · Validez legal",
-                          done: true,
-                        },
-                        {
-                          Icon: Globe2,
-                          label: "Distribución",
-                          value: "+220 plataformas",
-                          meta: "Spotify · Apple · TikTok · YouTube",
-                          done: true,
-                        },
-                        {
-                          Icon: TrendingUp,
-                          label: "Promoción",
-                          value: "+12.4k oyentes",
-                          meta: "Crecimiento +28% esta semana",
-                          done: false,
-                        },
-                      ].map(({ Icon, label, value, meta, done }, i) => (
+                      {c.timeline.map((it, idx) => ({
+                        Icon: [ShieldCheck, Globe2, TrendingUp][idx],
+                        label: it.label,
+                        value: it.value,
+                        meta: it.meta,
+                        done: idx < 2,
+                      })).map(({ Icon, label, value, meta, done }, i) => (
                         <div
                           key={label}
                           className="relative mb-4 last:mb-0"
