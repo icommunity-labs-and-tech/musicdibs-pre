@@ -827,7 +827,7 @@ export default function RegistroMusicalPage() {
                       >
                         <img
                           src={urbanArtistTiktok}
-                          alt="Promoción de tu música en TikTok con +245k seguidores"
+                          alt={c.altTiktok}
                           loading="lazy"
                           className="h-full w-full object-contain"
                         />
