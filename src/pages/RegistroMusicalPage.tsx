@@ -891,7 +891,7 @@ export default function RegistroMusicalPage() {
                     <li className="flex items-start gap-3 text-sm text-foreground/85">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
                       <span>
-                        Publicación en{" "}
+                        {c.promoBulletPublish.pre}{" "}
                         <a
                           href="https://www.instagram.com/musicdibs/"
                           target="_blank"
@@ -901,7 +901,7 @@ export default function RegistroMusicalPage() {
                         >
                           @musicdibs
                         </a>{" "}
-                        (Instagram) y{" "}
+                        {c.promoBulletPublish.mid}{" "}
                         <a
                           href="https://www.tiktok.com/@musicdibs_"
                           target="_blank"
@@ -911,17 +911,15 @@ export default function RegistroMusicalPage() {
                         >
                           @musicdibs_
                         </a>{" "}
-                        (TikTok)
+                        {c.promoBulletPublish.post}
                       </span>
                     </li>
-                    <li className="flex items-start gap-3 text-sm text-foreground/85">
-                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
-                      Creatividades adaptadas a Reels y formato vertical
-                    </li>
-                    <li className="flex items-start gap-3 text-sm text-foreground/85">
-                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
-                      Audiencias afines para multiplicar tus reproducciones
-                    </li>
+                    {c.promoBullets.map((t) => (
+                      <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
+                        {t}
+                      </li>
+                    ))}
                   </ul>
                   <a
                     href="#pricing-section"
