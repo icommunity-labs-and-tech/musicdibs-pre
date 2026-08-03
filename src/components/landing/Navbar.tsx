@@ -1,4 +1,59 @@
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { Globe } from "lucide-react";
 import logo from "@/assets/landing/logo_dark.png";
+
+const LANGUAGES = [
+  { code: "es", name: "Español", flag: "🇪🇸" },
+  { code: "en", name: "English", flag: "🇬🇧" },
+  { code: "pt-BR", name: "Português (BR)", flag: "🇧🇷" },
+];
+
+function LandingLanguageButton() {
+  const { i18n } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const current =
+    LANGUAGES.find((l) => l.code === (i18n.resolvedLanguage || i18n.language)) ?? LANGUAGES[0];
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Cambiar idioma. Idioma actual: ${current.name}`}
+        className="inline-flex items-center gap-1.5 rounded-full border border-[oklch(0.98_0.01_295/0.15)] px-3 py-2 text-xs sm:text-sm font-medium text-[oklch(0.98_0.01_295/0.75)] hover:text-[oklch(0.98_0.01_295)] transition-colors"
+      >
+        <Globe className="h-4 w-4" />
+        <span aria-hidden>{current.flag}</span>
+      </button>
+      {open && (
+        <div
+          role="listbox"
+          className="absolute right-0 top-full mt-2 min-w-[10rem] overflow-hidden rounded-xl border border-[oklch(0.98_0.01_295/0.12)] bg-[oklch(0.12_0.06_300)] shadow-lg backdrop-blur-md"
+        >
+          {LANGUAGES.map((lang) => (
+            <button
+              key={lang.code}
+              role="option"
+              aria-selected={lang.code === current.code}
+              onClick={() => {
+                i18n.changeLanguage(lang.code);
+                try { localStorage.setItem("lang", lang.code); } catch { /* ignore */ }
+                setOpen(false);
+              }}
+              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-[oklch(0.98_0.01_295/0.85)] hover:bg-[oklch(0.98_0.01_295/0.08)] transition-colors"
+            >
+              <span aria-hidden>{lang.flag}</span>
+              <span>{lang.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface NavbarProps {
   ctaText?: string;
@@ -39,6 +94,7 @@ export function Navbar({
               {secondaryText}
             </a>
           )}
+          <LandingLanguageButton />
           <a
             href={ctaHref}
             target="_blank"
