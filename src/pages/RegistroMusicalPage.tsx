@@ -366,7 +366,7 @@ export default function RegistroMusicalPage() {
                                     "linear-gradient(135deg, #8B5CF6, oklch(0.68 0.27 322))",
                                 }}
                               >
-                                Activo
+                                {c.badgeActive}
                               </span>
                             )}
                           </div>
