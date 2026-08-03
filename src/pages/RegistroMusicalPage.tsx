@@ -683,12 +683,12 @@ export default function RegistroMusicalPage() {
 
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { name: "Spotify", c: "#1DB954" },
-                        { name: "Apple Music", c: "#FA243C" },
-                        { name: "TikTok", c: "#25F4EE" },
-                        { name: "YouTube Music", c: "#FF0033" },
-                        { name: "Amazon Music", c: "#00A8E1" },
-                      ].map(({ name, c }) => (
+                        { name: "Spotify", color: "#1DB954" },
+                        { name: "Apple Music", color: "#FA243C" },
+                        { name: "TikTok", color: "#25F4EE" },
+                        { name: "YouTube Music", color: "#FF0033" },
+                        { name: "Amazon Music", color: "#00A8E1" },
+                      ].map(({ name, color }) => (
                         <div
                           key={name}
                           className="rounded-xl px-3 py-3 flex items-center gap-3"
@@ -700,15 +700,15 @@ export default function RegistroMusicalPage() {
                           <span
                             className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
                             style={{
-                              background: `${c}22`,
-                              border: `1px solid ${c}55`,
+                              background: `${color}22`,
+                              border: `1px solid ${color}55`,
                             }}
                           >
-                            <Disc3 className="h-4 w-4" style={{ color: c }} />
+                            <Disc3 className="h-4 w-4" style={{ color }} />
                           </span>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold text-foreground truncate">{name}</p>
-                            <p className="text-[10px] text-muted-foreground">Activo</p>
+                            <p className="text-[10px] text-muted-foreground">{c.platformActive}</p>
                           </div>
                           <CheckCircle2 className="h-4 w-4" style={{ color: "oklch(0.85 0.22 340)" }} />
                         </div>
