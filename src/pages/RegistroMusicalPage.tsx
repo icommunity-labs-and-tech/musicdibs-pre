@@ -781,7 +781,7 @@ export default function RegistroMusicalPage() {
                       >
                         <img
                           src={urbanArtistInstagram}
-                          alt="Promoción de tu música en Instagram con +100k seguidores"
+                          alt={c.altInstagram}
                           loading="lazy"
                           className="h-full w-full object-contain"
                         />
