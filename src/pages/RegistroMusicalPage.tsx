@@ -535,12 +535,7 @@ export default function RegistroMusicalPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mb-4">
-                      {[
-                        { k: "Obra", v: "Midnight Echoes" },
-                        { k: "Autor", v: "Tú · 100%" },
-                        { k: "Fecha", v: "27/05/2026" },
-                        { k: "Red", v: "Polygon" },
-                      ].map(({ k, v }) => (
+                      {c.certFields.map(({ k, v }) => (
                         <div
                           key={k}
                           className="rounded-lg px-3 py-2"
