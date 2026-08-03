@@ -104,7 +104,7 @@ export default function RegistroMusicalPage() {
                     style={{ color: "oklch(0.85 0.22 340)" }}
                   >
                     <Sparkles className="h-3 w-3" />
-                    TODO EN UNO
+                    {c.heroBadge}
                   </div>
 
                   <h1
