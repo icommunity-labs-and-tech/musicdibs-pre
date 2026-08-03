@@ -94,6 +94,7 @@ export function Navbar({
               {secondaryText}
             </a>
           )}
+          <LandingLanguageButton />
           <a
             href={ctaHref}
             target="_blank"
