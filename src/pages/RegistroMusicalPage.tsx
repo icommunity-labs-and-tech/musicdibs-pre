@@ -552,7 +552,7 @@ export default function RegistroMusicalPage() {
 
                     <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                       <Lock className="h-3.5 w-3.5" style={{ color: "oklch(0.85 0.22 340)" }} />
-                      Convenio de Berna · Validez en 181 países
+                      {c.certBerne}
                     </div>
                   </div>
                 </div>
