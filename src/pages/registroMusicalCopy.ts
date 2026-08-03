@@ -13,9 +13,9 @@ export interface RegistroCopy {
   heroTitleAccent: string;
   heroSubtitle: string;
   heroCta: string;
+  heroBenefits: string[];
   heroExplore: string;
   heroExploreLink: string;
-  heroChips: string[];
   panelLabel: string;
   panelTrackLabel: string;
   panelTrackMeta: string;
