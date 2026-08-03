@@ -221,7 +221,7 @@ export default function RegistroMusicalPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                            Tu nuevo single
+                            {c.panelTrackLabel}
                           </p>
                           <p className="text-sm font-semibold text-foreground truncate">
                             Midnight Echoes
