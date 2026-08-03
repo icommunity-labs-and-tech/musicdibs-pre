@@ -430,7 +430,7 @@ export default function RegistroMusicalPage() {
               <div className="mt-16 glass rounded-2xl px-6 py-5">
                 <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
                   <span className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-                    Distribuimos en
+                    {c.platformsLabel}
                   </span>
                   {PLATFORMS.map((p) => (
                     <span
