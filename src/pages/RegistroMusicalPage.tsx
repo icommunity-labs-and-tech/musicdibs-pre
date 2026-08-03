@@ -460,13 +460,13 @@ export default function RegistroMusicalPage() {
                   className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
                   style={{ color: "oklch(0.85 0.22 340)" }}
                 >
-                  Reseñas · Artistas
+                  {c.testimonialsEyebrow}
                 </p>
                 <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-4">
-                  Qué dicen los <span className="text-gradient-brand">artistas de nosotros</span>
+                  {c.testimonialsTitle1} <span className="text-gradient-brand">{c.testimonialsTitleAccent}</span>
                 </h2>
                 <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                  Miles de músicos confían en Musicdibs para proteger su obra. Escucha sus experiencias.
+                  {c.testimonialsSubtitle}
                 </p>
               </div>
               <div className="relative mx-auto max-w-3xl rounded-2xl overflow-hidden shadow-2xl border border-border/40">
