@@ -583,7 +583,7 @@ export default function RegistroMusicalPage() {
                     href="#pricing-section"
                     className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                   >
-                    Registrar mi obra
+                    {c.regCta}
                     <ArrowRight className="h-4 w-4" />
                   </a>
                 </div>
