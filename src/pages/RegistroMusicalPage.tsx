@@ -1,6 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import "@/styles/landing-ai-studio.css";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { REGISTRO_COPY, type RegistroLang } from "./registroMusicalCopy";
 import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
@@ -26,26 +28,7 @@ import {
   Disc3,
 } from "lucide-react";
 
-const SERVICES = [
-  {
-    Icon: ShieldCheck,
-    sub: "Registro Digital de Obra",
-    title: "Protege tu propiedad intelectual",
-    desc: "De forma rápida, segura y legalmente vinculante. Certificación blockchain en minutos.",
-  },
-  {
-    Icon: Globe2,
-    sub: "Distribución a +220 Plataformas",
-    title: "Tu música en todo el mundo",
-    desc: "Spotify, Apple Music, TikTok, Amazon y muchas más, desde un solo panel.",
-  },
-  {
-    Icon: TrendingUp,
-    sub: "Promoción Musicdibs",
-    title: "Llega a miles de oyentes",
-    desc: "Crea canciones y actívalas en los canales oficiales de Musicdibs.",
-  },
-];
+const SERVICE_ICONS = [ShieldCheck, Globe2, TrendingUp];
 
 const PLATFORMS = [
   "Spotify",
@@ -56,14 +39,16 @@ const PLATFORMS = [
 ];
 
 export default function RegistroMusicalPage() {
+  const { i18n } = useTranslation();
+  const lang: RegistroLang = (["es", "en", "pt-BR"].includes(i18n.language)
+    ? i18n.language
+    : "es") as RegistroLang;
+  const c = REGISTRO_COPY[lang];
   return (
     <>
       <Helmet>
-        <title>Registro Musical · Protege y distribuye tu música</title>
-        <meta
-          name="description"
-          content="Registra la propiedad intelectual de tus canciones, distribúyelas en +220 plataformas globales y haz crecer tu audiencia con Musicdibs."
-        />
+        <title>{c.seoTitle}</title>
+        <meta name="description" content={c.seoDesc} />
         <link rel="canonical" href="https://www.musicdibs.com/registro-musical" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -75,10 +60,9 @@ export default function RegistroMusicalPage() {
           {JSON.stringify({
             "@context": "https://schema.org",
             "@type": "Service",
-            name: "Registro Musical y Distribución con Musicdibs",
-            serviceType: "Registro de propiedad intelectual musical y distribución digital",
-            description:
-              "Registra la propiedad intelectual de tus canciones en blockchain y distribúyelas en más de 220 plataformas globales como Spotify, Apple Music, TikTok, Amazon Music y YouTube Music, sin comisiones sobre tus royalties de streaming.",
+            name: c.ldName,
+            serviceType: c.ldServiceType,
+            description: c.ldDescription,
             areaServed: "Worldwide",
             url: "https://www.musicdibs.com/registro-musical",
             provider: {
@@ -103,9 +87,9 @@ export default function RegistroMusicalPage() {
         <main className="relative min-h-screen overflow-hidden">
           <BackgroundScene />
           <Navbar
-            ctaText="🚀 Pruébalo gratis"
+            ctaText={c.navCta}
             ctaHref="https://www.musicdibs.com/login?tab=register"
-            secondaryText="Iniciar sesión"
+            secondaryText={c.navSecondary}
             secondaryHref="https://www.musicdibs.com/login"
           />
 
@@ -120,20 +104,19 @@ export default function RegistroMusicalPage() {
                     style={{ color: "oklch(0.85 0.22 340)" }}
                   >
                     <Sparkles className="h-3 w-3" />
-                    TODO EN UNO
+                    {c.heroBadge}
                   </div>
 
                   <h1
                     className="font-display font-bold text-[2.6rem] sm:text-5xl lg:text-[3.6rem] leading-[1.05] tracking-tight text-foreground"
                     style={{ textWrap: "balance" as any }}
                   >
-                    Protege y distribuye tu música a nivel{" "}
-                    <span className="text-gradient-brand">global</span>.
+                    {c.heroTitle1}{" "}
+                    <span className="text-gradient-brand">{c.heroTitleAccent}</span>.
                   </h1>
 
                   <p className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed">
-                    Registra tus derechos de autor en minutos, lanza en +220 plataformas y
-                    quédate con el 95 % de tus ingresos. Mantén tu libertad como artista. 
+                    {c.heroSubtitle}
                   </p>
 
                   <div className="mt-9 flex flex-col sm:flex-row gap-3">
@@ -141,13 +124,13 @@ export default function RegistroMusicalPage() {
                       href="#pricing-section"
                       className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                     >
-                      🚀 Registrar y distribuir mi música
+                      {c.heroCta}
                       <ArrowRight className="h-4 w-4" />
                     </a>
                   </div>
 
                   <p className="mt-4 text-sm text-[oklch(0.98_0.01_295/0.7)]">
-                    ¿Prefieres explorar primero?{" "}
+                    {c.heroExplore}{" "}
                     <a
                       href="https://www.musicdibs.com/login?tab=register"
                       target="_blank"
@@ -155,12 +138,12 @@ export default function RegistroMusicalPage() {
                       className="font-semibold underline-offset-4 hover:underline transition-colors"
                       style={{ color: "oklch(0.85 0.22 340)" }}
                     >
-                      Crear una cuenta gratis →
+                      {c.heroExploreLink}
                     </a>
                   </p>
 
                   <div className="mt-8 flex flex-wrap items-center gap-5 text-xs text-muted-foreground">
-                    {["Validez legal", "Blockchain", "+220 plataformas"].map((t) => (
+                    {c.heroChips.map((t) => (
                       <span key={t} className="inline-flex items-center gap-1.5">
                         <CheckCircle2 className="h-3.5 w-3.5" style={{ color: "oklch(0.85 0.22 340)" }} />
                         {t}
@@ -205,7 +188,7 @@ export default function RegistroMusicalPage() {
                         />
                       </div>
                       <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-                        musicdibs · panel
+                        {c.panelLabel}
                       </span>
                     </div>
 
@@ -238,13 +221,13 @@ export default function RegistroMusicalPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                            Tu nuevo single
+                            {c.panelTrackLabel}
                           </p>
                           <p className="text-sm font-semibold text-foreground truncate">
                             Midnight Echoes
                           </p>
                           <p className="text-[11px] text-muted-foreground">
-                            3:42 · Electronic
+                            {c.panelTrackMeta}
                           </p>
                         </div>
                         <div
@@ -299,29 +282,13 @@ export default function RegistroMusicalPage() {
                         }}
                       />
 
-                      {[
-                        {
-                          Icon: ShieldCheck,
-                          label: "Registro",
-                          value: "Propiedad Intelectual",
-                          meta: "Blockchain · Validez legal",
-                          done: true,
-                        },
-                        {
-                          Icon: Globe2,
-                          label: "Distribución",
-                          value: "+220 plataformas",
-                          meta: "Spotify · Apple · TikTok · YouTube",
-                          done: true,
-                        },
-                        {
-                          Icon: TrendingUp,
-                          label: "Promoción",
-                          value: "+12.4k oyentes",
-                          meta: "Crecimiento +28% esta semana",
-                          done: false,
-                        },
-                      ].map(({ Icon, label, value, meta, done }, i) => (
+                      {c.timeline.map((it, idx) => ({
+                        Icon: [ShieldCheck, Globe2, TrendingUp][idx],
+                        label: it.label,
+                        value: it.value,
+                        meta: it.meta,
+                        done: idx < 2,
+                      })).map(({ Icon, label, value, meta, done }, i) => (
                         <div
                           key={label}
                           className="relative mb-4 last:mb-0"
@@ -388,7 +355,7 @@ export default function RegistroMusicalPage() {
                                   border: "1px solid oklch(0.85 0.22 340 / 0.3)",
                                 }}
                               >
-                                OK
+                                {c.badgeOk}
                               </span>
                             ) : (
                               <span
@@ -399,7 +366,7 @@ export default function RegistroMusicalPage() {
                                     "linear-gradient(135deg, #8B5CF6, oklch(0.68 0.27 322))",
                                 }}
                               >
-                                Activo
+                                {c.badgeActive}
                               </span>
                             )}
                           </div>
@@ -422,16 +389,18 @@ export default function RegistroMusicalPage() {
                   className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
                   style={{ color: "oklch(0.85 0.22 340)" }}
                 >
-                  Servicios
+                  {c.servicesEyebrow}
                 </p>
                 <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground">
-                  Todo lo que tu música necesita,{" "}
-                  <span className="text-gradient-brand">en un solo lugar</span>
+                  {c.servicesTitle1}{" "}
+                  <span className="text-gradient-brand">{c.servicesTitleAccent}</span>
                 </h2>
               </div>
 
               <div className="grid md:grid-cols-3 gap-6">
-                {SERVICES.map(({ Icon, sub, title, desc }) => (
+                {c.services.map(({ sub, title, desc }, idx) => {
+                  const Icon = SERVICE_ICONS[idx];
+                  return (
                   <div key={title} className="group relative glass card-hover rounded-2xl p-7">
                     <div
                       className="inline-flex h-14 w-14 items-center justify-center rounded-2xl mb-6 transition-transform group-hover:scale-110"
@@ -453,14 +422,15 @@ export default function RegistroMusicalPage() {
                     </h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* platforms ribbon */}
               <div className="mt-16 glass rounded-2xl px-6 py-5">
                 <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
                   <span className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
-                    Distribuimos en
+                    {c.distributeIn}
                   </span>
                   {PLATFORMS.map((p) => (
                     <span
@@ -475,7 +445,7 @@ export default function RegistroMusicalPage() {
                     className="text-sm font-semibold"
                     style={{ color: "oklch(0.85 0.22 340)" }}
                   >
-                    + 215 más
+                    {c.morePlatforms}
                   </span>
                 </div>
               </div>
@@ -490,13 +460,13 @@ export default function RegistroMusicalPage() {
                   className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
                   style={{ color: "oklch(0.85 0.22 340)" }}
                 >
-                  Reseñas · Artistas
+                  {c.testimonialsEyebrow}
                 </p>
                 <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-4">
-                  Qué dicen los <span className="text-gradient-brand">artistas de nosotros</span>
+                  {c.testimonialsTitle1} <span className="text-gradient-brand">{c.testimonialsTitleAccent}</span>
                 </h2>
                 <p className="text-muted-foreground leading-relaxed max-w-2xl mx-auto">
-                  Miles de músicos confían en Musicdibs para proteger su obra. Escucha sus experiencias.
+                  {c.testimonialsSubtitle}
                 </p>
               </div>
               <div className="relative mx-auto max-w-3xl rounded-2xl overflow-hidden shadow-2xl border border-border/40">
@@ -538,7 +508,7 @@ export default function RegistroMusicalPage() {
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="h-5 w-5" style={{ color: "oklch(0.85 0.22 340)" }} />
                         <span className="text-xs uppercase tracking-[0.22em] text-foreground/80 font-semibold">
-                          Certificado Blockchain
+                          {c.certTitle}
                         </span>
                       </div>
                       <span
@@ -549,7 +519,7 @@ export default function RegistroMusicalPage() {
                           border: "1px solid oklch(0.85 0.22 340 / 0.3)",
                         }}
                       >
-                        Verificado
+                        {c.certVerified}
                       </span>
                     </div>
 
@@ -565,12 +535,7 @@ export default function RegistroMusicalPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 mb-4">
-                      {[
-                        { k: "Obra", v: "Midnight Echoes" },
-                        { k: "Autor", v: "Tú · 100%" },
-                        { k: "Fecha", v: "27/05/2026" },
-                        { k: "Red", v: "Polygon" },
-                      ].map(({ k, v }) => (
+                      {c.certFields.map(({ k, v }) => (
                         <div
                           key={k}
                           className="rounded-lg px-3 py-2"
@@ -587,7 +552,7 @@ export default function RegistroMusicalPage() {
 
                     <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                       <Lock className="h-3.5 w-3.5" style={{ color: "oklch(0.85 0.22 340)" }} />
-                      Convenio de Berna · Validez en 181 países
+                      {c.certBerne}
                     </div>
                   </div>
                 </div>
@@ -598,23 +563,16 @@ export default function RegistroMusicalPage() {
                     className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
                     style={{ color: "oklch(0.85 0.22 340)" }}
                   >
-                    Registro · Derechos de autor
+                    {c.regEyebrow}
                   </p>
                   <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-5">
-                    Tu obra, <span className="text-gradient-brand">protegida para siempre</span>
+                    {c.regTitle1} <span className="text-gradient-brand">{c.regTitleAccent}</span>
                   </h2>
                   <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
-                    Generamos un certificado blockchain inmutable con sello de tiempo
-                    que acredita tu autoría con validez legal internacional. Sin papeleos,
-                    sin esperas, sin intermediarios.
+                    {c.regDesc}
                   </p>
                   <ul className="space-y-3 mb-8">
-                    {[
-                      "Certificación en minutos con hash único y verificable",
-                      "Validez legal bajo el Convenio de Berna (181 países)",
-                      "Descarga tu certificado PDF en cualquier momento",
-                      "Protege letras, melodías, masters y demos",
-                    ].map((t) => (
+                    {c.regBullets.map((t) => (
                       <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
                         <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
                         {t}
@@ -625,7 +583,7 @@ export default function RegistroMusicalPage() {
                     href="#pricing-section"
                     className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                   >
-                    Registrar mi obra
+                    {c.regCta}
                     <ArrowRight className="h-4 w-4" />
                   </a>
                 </div>
@@ -642,23 +600,16 @@ export default function RegistroMusicalPage() {
                     className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
                     style={{ color: "oklch(0.85 0.22 340)" }}
                   >
-                    Distribución global
+                    {c.distEyebrow}
                   </p>
                   <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-5">
-                    Tu música en <span className="text-gradient-brand">+220 plataformas</span>
+                    {c.distTitle1} <span className="text-gradient-brand">{c.distTitleAccent}</span>
                   </h2>
                   <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
-                    Lanza tus canciones en Spotify, Apple Music, TikTok, YouTube Music,
-                    Amazon Music y más, desde un único panel. Musicdibs no cobra ninguna
-                    comisión sobre tus royalties de streaming.
+                    {c.distDesc}
                   </p>
                   <ul className="space-y-3 mb-8">
-                    {[
-                      "Subida ilimitada de singles, EPs y álbumes",
-                      "Programación de fecha de lanzamiento global",
-                      "Sin comisión de Musicdibs sobre royalties de streaming",
-                      "Estadísticas unificadas de todas las plataformas",
-                    ].map((t) => (
+                    {c.distBullets.map((t) => (
                       <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
                         <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
                         {t}
@@ -669,7 +620,7 @@ export default function RegistroMusicalPage() {
                     href="#pricing-section"
                     className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                   >
-                    Distribuir mi música
+                    {c.distCta}
                     <ArrowRight className="h-4 w-4" />
                   </a>
                 </div>
@@ -698,13 +649,10 @@ export default function RegistroMusicalPage() {
                         }}
                       />
                       <p className="relative text-[10px] uppercase tracking-[0.2em] font-semibold text-page-fg">
-                        Gana el
+                        {c.royaltiesBadgeTop}
                       </p>
-                      <p className="relative font-display font-bold text-3xl sm:text-4xl text-primary-foreground leading-none my-1">
-                        100%
-                      </p>
-                      <p className="relative text-xs sm:text-sm font-bold uppercase tracking-wider text-primary-foreground">
-                        Royalties
+                      <p className="relative text-xs sm:text-sm font-bold uppercase tracking-wider text-primary-foreground mt-1">
+                        {c.royaltiesBadgeBottom}
                       </p>
                     </div>
                   </div>
@@ -727,20 +675,20 @@ export default function RegistroMusicalPage() {
                       <div className="flex items-center gap-2">
                         <Globe2 className="h-5 w-5" style={{ color: "oklch(0.85 0.22 340)" }} />
                         <span className="text-xs uppercase tracking-[0.22em] text-foreground/80 font-semibold">
-                          Lanzamiento global
+                          {c.releaseTitle}
                         </span>
                       </div>
-                      <span className="text-[10px] text-muted-foreground">en curso</span>
+                      <span className="text-[10px] text-muted-foreground">{c.releaseStatus}</span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { name: "Spotify", c: "#1DB954" },
-                        { name: "Apple Music", c: "#FA243C" },
-                        { name: "TikTok", c: "#25F4EE" },
-                        { name: "YouTube Music", c: "#FF0033" },
-                        { name: "Amazon Music", c: "#00A8E1" },
-                      ].map(({ name, c }) => (
+                        { name: "Spotify", color: "#1DB954" },
+                        { name: "Apple Music", color: "#FA243C" },
+                        { name: "TikTok", color: "#25F4EE" },
+                        { name: "YouTube Music", color: "#FF0033" },
+                        { name: "Amazon Music", color: "#00A8E1" },
+                      ].map(({ name, color }) => (
                         <div
                           key={name}
                           className="rounded-xl px-3 py-3 flex items-center gap-3"
@@ -752,15 +700,15 @@ export default function RegistroMusicalPage() {
                           <span
                             className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
                             style={{
-                              background: `${c}22`,
-                              border: `1px solid ${c}55`,
+                              background: `${color}22`,
+                              border: `1px solid ${color}55`,
                             }}
                           >
-                            <Disc3 className="h-4 w-4" style={{ color: c }} />
+                            <Disc3 className="h-4 w-4" style={{ color }} />
                           </span>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold text-foreground truncate">{name}</p>
-                            <p className="text-[10px] text-muted-foreground">Activo</p>
+                            <p className="text-[10px] text-muted-foreground">{c.platformActive}</p>
                           </div>
                           <CheckCircle2 className="h-4 w-4" style={{ color: "oklch(0.85 0.22 340)" }} />
                         </div>
@@ -833,7 +781,7 @@ export default function RegistroMusicalPage() {
                       >
                         <img
                           src={urbanArtistInstagram}
-                          alt="Promoción de tu música en Instagram con +100k seguidores"
+                          alt={c.altInstagram}
                           loading="lazy"
                           className="h-full w-full object-contain"
                         />
@@ -879,7 +827,7 @@ export default function RegistroMusicalPage() {
                       >
                         <img
                           src={urbanArtistTiktok}
-                          alt="Promoción de tu música en TikTok con +245k seguidores"
+                          alt={c.altTiktok}
                           loading="lazy"
                           className="h-full w-full object-contain"
                         />
@@ -901,10 +849,10 @@ export default function RegistroMusicalPage() {
                     className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
                     style={{ color: "oklch(0.85 0.22 340)" }}
                   >
-                    Promoción · TikTok & Instagram
+                    {c.promoEyebrow}
                   </p>
                   <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-5">
-                    Haz que tu música <span className="text-gradient-brand">se vuelva viral</span>
+                    {c.promoTitle1} <span className="text-gradient-brand">{c.promoTitleAccent}</span>
                   </h2>
 
                   {/* Badge viral */}
@@ -932,20 +880,18 @@ export default function RegistroMusicalPage() {
                       </svg>
                     </span>
                     <span className="text-sm font-bold text-primary-foreground leading-snug">
-                      Comparte tus canciones con +200k de seguidores
+                      {c.promoBadge}
                     </span>
                   </div>
 
                   <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
-                    Crea o mejora tus canciones, genera contenido visual con
-                    IA y promociona tu música a través de los canales oficiales de
-                    Musicdibs en TikTok e Instagram.
+                    {c.promoDesc}
                   </p>
                   <ul className="space-y-3 mb-8">
                     <li className="flex items-start gap-3 text-sm text-foreground/85">
                       <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
                       <span>
-                        Publicación en{" "}
+                        {c.promoBulletPublish.pre}{" "}
                         <a
                           href="https://www.instagram.com/musicdibs/"
                           target="_blank"
@@ -955,7 +901,7 @@ export default function RegistroMusicalPage() {
                         >
                           @musicdibs
                         </a>{" "}
-                        (Instagram) y{" "}
+                        {c.promoBulletPublish.mid}{" "}
                         <a
                           href="https://www.tiktok.com/@musicdibs_"
                           target="_blank"
@@ -965,23 +911,21 @@ export default function RegistroMusicalPage() {
                         >
                           @musicdibs_
                         </a>{" "}
-                        (TikTok)
+                        {c.promoBulletPublish.post}
                       </span>
                     </li>
-                    <li className="flex items-start gap-3 text-sm text-foreground/85">
-                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
-                      Creatividades adaptadas a Reels y formato vertical
-                    </li>
-                    <li className="flex items-start gap-3 text-sm text-foreground/85">
-                      <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
-                      Audiencias afines para multiplicar tus reproducciones
-                    </li>
+                    {c.promoBullets.map((t) => (
+                      <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
+                        <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
+                        {t}
+                      </li>
+                    ))}
                   </ul>
                   <a
                     href="#pricing-section"
                     className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                   >
-                    Promocionar mi música
+                    {c.promoCta}
                     <ArrowRight className="h-4 w-4" />
                   </a>
                 </div>
