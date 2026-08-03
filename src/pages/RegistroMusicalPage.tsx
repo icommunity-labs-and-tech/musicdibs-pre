@@ -26,26 +26,7 @@ import {
   Disc3,
 } from "lucide-react";
 
-const SERVICES = [
-  {
-    Icon: ShieldCheck,
-    sub: "Registro Digital de Obra",
-    title: "Protege tu propiedad intelectual",
-    desc: "De forma rápida, segura y legalmente vinculante. Certificación blockchain en minutos.",
-  },
-  {
-    Icon: Globe2,
-    sub: "Distribución a +220 Plataformas",
-    title: "Tu música en todo el mundo",
-    desc: "Spotify, Apple Music, TikTok, Amazon y muchas más, desde un solo panel.",
-  },
-  {
-    Icon: TrendingUp,
-    sub: "Promoción Musicdibs",
-    title: "Llega a miles de oyentes",
-    desc: "Crea canciones y actívalas en los canales oficiales de Musicdibs.",
-  },
-];
+const SERVICE_ICONS = [ShieldCheck, Globe2, TrendingUp];
 
 const PLATFORMS = [
   "Spotify",
@@ -56,6 +37,11 @@ const PLATFORMS = [
 ];
 
 export default function RegistroMusicalPage() {
+  const { i18n } = useTranslation();
+  const lang: RegistroLang = (["es", "en", "pt-BR"].includes(i18n.language)
+    ? i18n.language
+    : "es") as RegistroLang;
+  const c = REGISTRO_COPY[lang];
   return (
     <>
       <Helmet>
