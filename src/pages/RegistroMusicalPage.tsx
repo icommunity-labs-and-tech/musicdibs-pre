@@ -47,11 +47,8 @@ export default function RegistroMusicalPage() {
   return (
     <>
       <Helmet>
-        <title>Registro Musical · Protege y distribuye tu música</title>
-        <meta
-          name="description"
-          content="Registra la propiedad intelectual de tus canciones, distribúyelas en +220 plataformas globales y haz crecer tu audiencia con Musicdibs."
-        />
+        <title>{c.seoTitle}</title>
+        <meta name="description" content={c.seoDesc} />
         <link rel="canonical" href="https://www.musicdibs.com/registro-musical" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
