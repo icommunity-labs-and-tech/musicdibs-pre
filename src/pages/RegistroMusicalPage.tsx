@@ -600,23 +600,16 @@ export default function RegistroMusicalPage() {
                     className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
                     style={{ color: "oklch(0.85 0.22 340)" }}
                   >
-                    Distribución global
+                    {c.distEyebrow}
                   </p>
                   <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground mb-5">
-                    Tu música en <span className="text-gradient-brand">+220 plataformas</span>
+                    {c.distTitle1} <span className="text-gradient-brand">{c.distTitleAccent}</span>
                   </h2>
                   <p className="text-muted-foreground leading-relaxed mb-7 max-w-xl">
-                    Lanza tus canciones en Spotify, Apple Music, TikTok, YouTube Music,
-                    Amazon Music y más, desde un único panel. Musicdibs no cobra ninguna
-                    comisión sobre tus royalties de streaming.
+                    {c.distDesc}
                   </p>
                   <ul className="space-y-3 mb-8">
-                    {[
-                      "Subida ilimitada de singles, EPs y álbumes",
-                      "Programación de fecha de lanzamiento global",
-                      "Sin comisión de Musicdibs sobre royalties de streaming",
-                      "Estadísticas unificadas de todas las plataformas",
-                    ].map((t) => (
+                    {c.distBullets.map((t) => (
                       <li key={t} className="flex items-start gap-3 text-sm text-foreground/85">
                         <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.85 0.22 340)" }} />
                         {t}
