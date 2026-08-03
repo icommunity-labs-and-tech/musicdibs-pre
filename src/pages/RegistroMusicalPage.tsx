@@ -389,16 +389,18 @@ export default function RegistroMusicalPage() {
                   className="text-xs uppercase tracking-[0.28em] mb-4 font-semibold"
                   style={{ color: "oklch(0.85 0.22 340)" }}
                 >
-                  Servicios
+                  {c.servicesEyebrow}
                 </p>
                 <h2 className="font-display font-bold text-3xl sm:text-[2.5rem] leading-[1.15] text-foreground">
-                  Todo lo que tu música necesita,{" "}
-                  <span className="text-gradient-brand">en un solo lugar</span>
+                  {c.servicesTitle1}{" "}
+                  <span className="text-gradient-brand">{c.servicesTitleAccent}</span>
                 </h2>
               </div>
 
               <div className="grid md:grid-cols-3 gap-6">
-                {SERVICES.map(({ Icon, sub, title, desc }) => (
+                {c.services.map(({ sub, title, desc }, idx) => {
+                  const Icon = SERVICE_ICONS[idx];
+                  return (
                   <div key={title} className="group relative glass card-hover rounded-2xl p-7">
                     <div
                       className="inline-flex h-14 w-14 items-center justify-center rounded-2xl mb-6 transition-transform group-hover:scale-110"
