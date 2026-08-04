@@ -537,3 +537,20 @@ All colors MUST be HSL.
   border-radius: 0.5rem;
   overflow-x: auto;
 }
+
+/* Tarjeta destacada AI Enhance — halo del icono y brillo del badge */
+@keyframes star-halo-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.08); }
+}
+.star-halo { animation: star-halo-pulse 4.5s ease-in-out infinite; }
+
+@keyframes badge-shine-move {
+  0% { transform: translateX(0) skewX(-20deg); }
+  60%, 100% { transform: translateX(220px) skewX(-20deg); }
+}
+.badge-shine { animation: badge-shine-move 3.2s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .star-halo, .badge-shine { animation: none; }
+}

@@ -718,9 +718,11 @@ const AIEnhance = () => {
                               className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-accent via-accent to-warning"
                             />
                             {/* Badge MÁS POPULAR */}
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-warning via-accent to-accent px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-primary-foreground shadow-[0_0_20px_rgba(217,70,239,0.6)] ring-1 ring-white/20">
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 overflow-hidden rounded-full bg-gradient-to-r from-orange-500 via-pink-500 to-fuchsia-600 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-[0_6px_20px_-4px_rgba(236,72,153,0.7)] ring-1 ring-white/40">
+                              <span className="pointer-events-none absolute inset-y-0 -left-6 w-6 skew-x-[-20deg] bg-white/40 blur-[2px] badge-shine" aria-hidden />
                               {t('aiEnhance.recommendedBadge')}
                             </div>
+
                           </>
                         )}
                         <button
@@ -740,37 +742,39 @@ const AIEnhance = () => {
                             <>
                               <div className="flex items-start gap-3">
                                 <div className="relative shrink-0">
-                                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent via-accent to-warning flex items-center justify-center text-primary-foreground shadow-lg shadow-fuchsia-500/50 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                                  <span aria-hidden className="pointer-events-none absolute -inset-2 rounded-[1.4rem] bg-fuchsia-500/40 blur-lg star-halo" />
+                                  <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-fuchsia-600 via-purple-600 to-orange-500 flex items-center justify-center text-white ring-2 ring-white/40 shadow-lg shadow-fuchsia-600/50 group-hover:scale-110 group-hover:rotate-3 transition-transform">
                                     <Mic2 className="w-7 h-7" />
                                   </div>
-                                  <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-warning drop-shadow-[0_0_6px_rgba(252,211,77,0.9)] animate-pulse" />
+                                  <Sparkles className="absolute -top-1 -right-1 w-4 h-4 text-amber-300 drop-shadow-[0_0_6px_rgba(252,211,77,0.9)] animate-pulse" />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                  <p className="font-bold text-base sm:text-lg leading-tight bg-gradient-to-r from-accent via-accent to-warning bg-clip-text text-transparent">
+                                  <p className="font-extrabold text-base sm:text-lg leading-tight text-[#4C1D95] dark:text-white">
                                     {t(mode.labelKey)}
                                   </p>
-                                  <p className="text-xs sm:text-[13px] text-muted-foreground mt-1 leading-snug">
+                                  <p className="text-xs sm:text-[13px] text-[#374151] dark:text-white/80 mt-1 leading-snug">
                                     {t(mode.taglineKey)}
                                   </p>
                                 </div>
                               </div>
                               {/* Mini flujo visual */}
-                              <div className="mt-3 flex items-center flex-wrap gap-1.5 text-[11px] font-medium">
-                                <span className="px-2 py-1 rounded-full bg-accent/10 text-accent dark:text-accent border border-accent/20">
+                              <div className="mt-3 flex items-center flex-wrap gap-1.5 text-[11px] font-semibold">
+                                <span className="px-2 py-1 rounded-full bg-white/80 dark:bg-white/10 text-[#4C1D95] dark:text-white border border-[#4C1D95]/25 dark:border-white/20 backdrop-blur-sm">
                                   {t('aiEnhance.modeInstrumentalFlow1')}
                                 </span>
-                                <ArrowRight className="w-3 h-3 text-accent/70 shrink-0" />
-                                <span className="px-2 py-1 rounded-full bg-accent/10 text-accent dark:text-accent border border-accent/20">
+                                <ArrowRight className="w-3.5 h-3.5 text-[#4C1D95] dark:text-white/80 shrink-0" />
+                                <span className="px-2 py-1 rounded-full bg-white/80 dark:bg-white/10 text-[#4C1D95] dark:text-white border border-[#4C1D95]/25 dark:border-white/20 backdrop-blur-sm">
                                   {t('aiEnhance.modeInstrumentalFlow2')}
                                 </span>
-                                <ArrowRight className="w-3 h-3 text-warning/70 shrink-0" />
-                                <span className="px-2 py-1 rounded-full bg-warning/10 text-warning dark:text-warning border border-warning/20">
+                                <ArrowRight className="w-3.5 h-3.5 text-[#9A3412] dark:text-amber-300 shrink-0" />
+                                <span className="px-2 py-1 rounded-full bg-white/80 dark:bg-white/10 text-[#9A3412] dark:text-amber-200 border border-[#9A3412]/25 dark:border-amber-300/30 backdrop-blur-sm">
                                   {t('aiEnhance.modeInstrumentalFlow3')}
                                 </span>
                               </div>
-                              <p className="mt-2.5 text-[11px] font-semibold text-accent dark:text-accent/90">
+                              <p className="mt-2.5 text-[11px] font-bold text-[#9A3412] dark:text-amber-200">
                                 {t('aiEnhance.modeInstrumentalMicro')}
                               </p>
+
                             </>
                           ) : (
                             <>
