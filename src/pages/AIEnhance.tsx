@@ -718,9 +718,11 @@ const AIEnhance = () => {
                               className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-accent via-accent to-warning"
                             />
                             {/* Badge MÁS POPULAR */}
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 rounded-full bg-gradient-to-r from-warning via-accent to-accent px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-primary-foreground shadow-[0_0_20px_rgba(217,70,239,0.6)] ring-1 ring-white/20">
+                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1 overflow-hidden rounded-full bg-gradient-to-r from-orange-500 via-pink-500 to-fuchsia-600 px-3.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-white shadow-[0_6px_20px_-4px_rgba(236,72,153,0.7)] ring-1 ring-white/40">
+                              <span className="pointer-events-none absolute inset-y-0 -left-6 w-6 skew-x-[-20deg] bg-white/40 blur-[2px] badge-shine" aria-hidden />
                               {t('aiEnhance.recommendedBadge')}
                             </div>
+
                           </>
                         )}
                         <button
