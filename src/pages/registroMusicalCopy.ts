@@ -74,7 +74,7 @@ export const REGISTRO_COPY: Record<RegistroLang, RegistroCopy> = {
     ldServiceType: "Registro de propiedad intelectual musical y distribución digital",
     ldDescription:
       "Registra la propiedad intelectual de tus canciones en blockchain y distribúyelas en más de 220 plataformas globales como Spotify, Apple Music, TikTok, Amazon Music y YouTube Music, sin comisiones sobre tus royalties de streaming.",
-    navCta: "🚀 Pruébalo gratis",
+    navCta: "🚀 1ª canción gratis",
     navSecondary: "Iniciar sesión",
     heroBadge: "TODO EN UNO",
     heroTitle1: "Protege y distribuye tu música a nivel",
@@ -184,7 +184,7 @@ export const REGISTRO_COPY: Record<RegistroLang, RegistroCopy> = {
     ldServiceType: "Music copyright registration and digital distribution",
     ldDescription:
       "Register the copyright of your songs on blockchain and distribute them to more than 220 global platforms such as Spotify, Apple Music, TikTok, Amazon Music and YouTube Music, with no commission on your streaming royalties.",
-    navCta: "🚀 Try it free",
+    navCta: "🚀 1st song free",
     navSecondary: "Log in",
     heroBadge: "ALL IN ONE",
     heroTitle1: "Protect and distribute your music",
@@ -294,7 +294,7 @@ export const REGISTRO_COPY: Record<RegistroLang, RegistroCopy> = {
     ldServiceType: "Registro de direitos autorais musicais e distribuição digital",
     ldDescription:
       "Registre os direitos autorais das suas músicas em blockchain e distribua em mais de 220 plataformas globais como Spotify, Apple Music, TikTok, Amazon Music e YouTube Music, sem comissões sobre os seus royalties de streaming.",
-    navCta: "🚀 Teste grátis",
+    navCta: "🚀 1ª música grátis",
     navSecondary: "Entrar",
     heroBadge: "TUDO EM UM",
     heroTitle1: "Proteja e distribua sua música em nível",
