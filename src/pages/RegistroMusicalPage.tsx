@@ -1,7 +1,8 @@
 import { Helmet } from "react-helmet-async";
 import "@/styles/landing-ai-studio.css";
 import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useMemo } from "react";
+import { useTranslation, I18nextProvider } from "react-i18next";
 import { REGISTRO_COPY, type RegistroLang } from "./registroMusicalCopy";
 import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
@@ -56,8 +57,17 @@ export default function RegistroMusicalPage({
   const c = REGISTRO_COPY[lang];
   const canonicalUrl = `https://www.musicdibs.com${canonicalPath}`;
   const htmlLang = lang === "pt-BR" ? "pt-BR" : lang;
+
+  // Shared sections (royalties calculator, pricing, legal validity, footer)
+  // read the global i18n language. When the page is locked to a language via
+  // `forcedLang`, scope those components to a cloned instance fixed to it.
+  const scopedI18n = useMemo(
+    () => (forcedLang ? i18n.cloneInstance({ lng: forcedLang }) : i18n),
+    [forcedLang, i18n],
+  );
+
   return (
-    <>
+    <I18nextProvider i18n={scopedI18n}>
       <Helmet>
         <html lang={htmlLang} />
         <title>{c.seoTitle}</title>
@@ -738,7 +748,7 @@ export default function RegistroMusicalPage({
                         color: "oklch(0.85 0.22 340)",
                       }}
                     >
-                      + 215 más
+                      {c.morePlatforms}
                     </div>
                   </div>
                 </div>
@@ -953,6 +963,6 @@ export default function RegistroMusicalPage({
           <Footer />
         </main>
       </div>
-    </>
+    </I18nextProvider>
   );
 }
