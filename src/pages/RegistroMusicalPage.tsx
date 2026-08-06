@@ -92,7 +92,7 @@ export default function RegistroMusicalPage({
               priceCurrency: "EUR",
               price: "0",
               availability: "https://schema.org/InStock",
-              url: "https://www.musicdibs.com/registro-musical",
+              url: canonicalUrl,
             },
           })}
         </script>
