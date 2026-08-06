@@ -38,18 +38,34 @@ const PLATFORMS = [
   "YouTube Music",
 ];
 
-export default function RegistroMusicalPage() {
+interface RegistroMusicalPageProps {
+  /** Forces the content language regardless of the UI language selector. */
+  forcedLang?: RegistroLang;
+  /** Path used for canonical / JSON-LD URLs. */
+  canonicalPath?: string;
+}
+
+export default function RegistroMusicalPage({
+  forcedLang,
+  canonicalPath = "/registro-musical",
+}: RegistroMusicalPageProps = {}) {
   const { i18n } = useTranslation();
-  const lang: RegistroLang = (["es", "en", "pt-BR"].includes(i18n.language)
+  const lang: RegistroLang = forcedLang ?? ((["es", "en", "pt-BR"].includes(i18n.language)
     ? i18n.language
-    : "es") as RegistroLang;
+    : "es") as RegistroLang);
   const c = REGISTRO_COPY[lang];
+  const canonicalUrl = `https://www.musicdibs.com${canonicalPath}`;
+  const htmlLang = lang === "pt-BR" ? "pt-BR" : lang;
   return (
     <>
       <Helmet>
+        <html lang={htmlLang} />
         <title>{c.seoTitle}</title>
         <meta name="description" content={c.seoDesc} />
-        <link rel="canonical" href="https://www.musicdibs.com/registro-musical" />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={c.seoTitle} />
+        <meta property="og:description" content={c.seoDesc} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -64,7 +80,7 @@ export default function RegistroMusicalPage() {
             serviceType: c.ldServiceType,
             description: c.ldDescription,
             areaServed: "Worldwide",
-            url: "https://www.musicdibs.com/registro-musical",
+            url: canonicalUrl,
             provider: {
               "@type": "Organization",
               name: "Musicdibs",
@@ -76,7 +92,7 @@ export default function RegistroMusicalPage() {
               priceCurrency: "EUR",
               price: "0",
               availability: "https://schema.org/InStock",
-              url: "https://www.musicdibs.com/registro-musical",
+              url: canonicalUrl,
             },
           })}
         </script>
