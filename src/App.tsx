@@ -213,6 +213,7 @@ const App = () => (
               <Route path="/ai-song-generator" element={<AISongGeneratorPage />} />
               <Route path="/generador-canciones-ia" element={<GeneradorCancionesIAPage />} />
               <Route path="/registro-musical" element={<RegistroMusicalPage />} />
+              <Route path="/music-distribution" element={<MusicDistributionPage />} />
               <Route path="/musicdibs-vs-distrokid" element={<MusicdibsVsDistroKidPage />} />
               <Route path="/musicdibs-vs-loudly" element={<MusicdibsVsLoudlyPage />} />
               <Route path="/musicdibs-vs-landr" element={<MusicdibsVsLandrPage />} />
