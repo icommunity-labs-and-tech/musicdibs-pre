@@ -80,7 +80,7 @@ export default function RegistroMusicalPage({
             serviceType: c.ldServiceType,
             description: c.ldDescription,
             areaServed: "Worldwide",
-            url: "https://www.musicdibs.com/registro-musical",
+            url: canonicalUrl,
             provider: {
               "@type": "Organization",
               name: "Musicdibs",
