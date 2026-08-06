@@ -748,7 +748,7 @@ export default function RegistroMusicalPage({
                         color: "oklch(0.85 0.22 340)",
                       }}
                     >
-                      + 215 más
+                      {c.morePlatforms}
                     </div>
                   </div>
                 </div>
