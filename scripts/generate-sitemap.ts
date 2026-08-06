@@ -52,6 +52,7 @@ const staticEntries: SitemapEntry[] = [
   { path: "/ai-song-generator", changefreq: "monthly", priority: "0.9" },
   { path: "/generador-canciones-ia", changefreq: "monthly", priority: "0.9" },
   { path: "/registro-musical", changefreq: "monthly", priority: "0.9" },
+  { path: "/music-distribution", changefreq: "monthly", priority: "0.9" },
   { path: "/all-in-one-music-platform", changefreq: "monthly", priority: "0.9" },
   { path: "/switch-to-musicdibs", changefreq: "monthly", priority: "0.8" },
   { path: "/tools/metadata-finder", changefreq: "monthly", priority: "0.7" },

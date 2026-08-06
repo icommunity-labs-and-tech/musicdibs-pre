@@ -105,6 +105,20 @@ const ROUTES = [
     },
   },
   {
+    path: "/music-distribution",
+    locale: "en",
+    title: "Music Distribution & Blockchain Copyright Registration | Musicdibs",
+    description: "Register your music on blockchain and distribute it to Spotify, Apple Music and 220+ platforms. Immutable certificate, legal validity in 175+ countries, no commission on your royalties.",
+    jsonLd: {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: "Music Distribution and Copyright Registration",
+      provider: { "@type": "Organization", name: "Musicdibs", url: BASE_URL },
+      description: "Blockchain copyright registration and worldwide music distribution for independent artists.",
+      serviceType: "Music Distribution",
+    },
+  },
+  {
     path: "/register-a-song",
     locale: "en",
     title: "Register a Song Online: Blockchain Copyright in Minutes | Musicdibs",
