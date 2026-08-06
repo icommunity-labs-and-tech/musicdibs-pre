@@ -56,8 +56,17 @@ export default function RegistroMusicalPage({
   const c = REGISTRO_COPY[lang];
   const canonicalUrl = `https://www.musicdibs.com${canonicalPath}`;
   const htmlLang = lang === "pt-BR" ? "pt-BR" : lang;
+
+  // Shared sections (royalties calculator, pricing, legal validity, footer)
+  // read the global i18n language. When the page is locked to a language via
+  // `forcedLang`, scope those components to a cloned instance fixed to it.
+  const scopedI18n = useMemo(
+    () => (forcedLang ? i18n.cloneInstance({ lng: forcedLang }) : i18n),
+    [forcedLang, i18n],
+  );
+
   return (
-    <>
+    <I18nextProvider i18n={scopedI18n}>
       <Helmet>
         <html lang={htmlLang} />
         <title>{c.seoTitle}</title>
