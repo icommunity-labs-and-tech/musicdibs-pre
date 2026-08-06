@@ -962,6 +962,6 @@ export default function RegistroMusicalPage({
           <Footer />
         </main>
       </div>
-    </>
+    </I18nextProvider>
   );
 }
