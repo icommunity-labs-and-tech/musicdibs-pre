@@ -90,17 +90,18 @@ serve(async (req) => {
         const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
           apiVersion: "2025-08-27.basil",
         });
-        const subs = await stripe.subscriptions.list({ customer: customerId, status: "active", limit: 5 });
-        for (const sub of subs.data) {
+        // FIX 2026-08-08: unificado a status:"all" + filtro en codigo -- el
+        // patron anterior (llamadas separadas para "active" y "past_due")
+        // seguia sin cubrir "trialing" ni "unpaid" (mismo bug encontrado y
+        // corregido en delete-account/index.ts, caso axsymphony@gmail.com).
+        const allSubs = await stripe.subscriptions.list({ customer: customerId, status: "all", limit: 10 });
+        const cancellableStatuses = ["active", "trialing", "past_due", "unpaid"];
+        const toCancel = allSubs.data.filter((s) => cancellableStatuses.includes(s.status));
+        for (const sub of toCancel) {
           await stripe.subscriptions.cancel(sub.id);
-          results.push(`Stripe sub ${sub.id} cancelada`);
+          results.push(`Stripe sub ${sub.id} (${sub.status}) cancelada`);
         }
-        const pastDueSubs = await stripe.subscriptions.list({ customer: customerId, status: "past_due", limit: 5 });
-        for (const sub of pastDueSubs.data) {
-          await stripe.subscriptions.cancel(sub.id);
-          results.push(`Stripe sub past_due ${sub.id} cancelada`);
-        }
-        if (subs.data.length === 0 && pastDueSubs.data.length === 0) {
+        if (toCancel.length === 0) {
           results.push("No había suscripciones activas en Stripe");
         }
       } catch (stripeErr: any) {

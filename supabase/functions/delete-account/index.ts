@@ -41,6 +41,14 @@ async function executeAccountDeletion(
   }
 
   // 2. Cancel Stripe subscription if exists
+  // FIX 2026-08-08 (caso axsymphony@gmail.com / José de Jesús de Luna Mercado):
+  // el filtro anterior solo buscaba status:"active", que en Stripe NO incluye
+  // "trialing" -- las cuentas migradas usan un mecanismo de trial para preservar
+  // su fecha de renovacion original, asi que si alguien borraba su cuenta
+  // mientras su suscripcion seguia en "trialing", la busqueda devolvia 0
+  // resultados, el bucle nunca se ejecutaba, y NO se registraba ningun error
+  // (subs.data vacio no es una excepcion) -- la suscripcion se quedaba activa
+  // e indefinidamente cobrando a una cuenta ya borrada, sin ningun rastro.
   try {
     const { data: profile } = await admin
       .from("profiles")
@@ -54,20 +62,36 @@ async function executeAccountDeletion(
         const stripe = new Stripe(stripeKey, { apiVersion: "2025-03-31.basil" });
         const subs = await stripe.subscriptions.list({
           customer: profile.stripe_customer_id,
-          status: "active",
+          status: "all",
         });
-        for (const sub of subs.data) {
+        const cancellableStatuses = ["active", "trialing", "past_due", "unpaid"];
+        const toCancel = subs.data.filter((s) => cancellableStatuses.includes(s.status));
+        for (const sub of toCancel) {
           await stripe.subscriptions.update(sub.id, {
             cancel_at_period_end: true,
             metadata: { cancelled_reason: "account_deletion" },
           });
-          console.log(`[DELETE-ACCOUNT] Cancelled subscription ${sub.id}`);
+          console.log(`[DELETE-ACCOUNT] Cancelled subscription ${sub.id} (was ${sub.status})`);
+        }
+        if (toCancel.length === 0 && subs.data.length > 0) {
+          console.log(`[DELETE-ACCOUNT] No cancellable subscriptions for ${profile.stripe_customer_id} (statuses present: ${subs.data.map((s) => s.status).join(", ")})`);
         }
       }
     }
   } catch (e) {
     errors.push(`stripe_cancel: ${e}`);
     console.error("[DELETE-ACCOUNT] Stripe cancel error:", e);
+    // FIX 2026-08-08: alertar de forma persistente (admin_alerts) en vez de
+    // solo loggear a consola -- los logs de Supabase rotan en ~24h, asi que
+    // un fallo aqui pasaba completamente desapercibido hasta que el cliente
+    // reclamaba semanas o meses despues por un cargo sobre una cuenta borrada.
+    try {
+      await admin.from("admin_alerts").insert({
+        source: "delete-account",
+        severity: "critical",
+        message: `Fallo al cancelar la suscripcion de Stripe al borrar la cuenta ${userEmail} (user_id ${userId}): ${e}. La cuenta se va a borrar igualmente -- revisar y cancelar manualmente en Stripe si procede.`,
+      });
+    } catch { /* best-effort */ }
   }
 
   // 3. Anonymize works with blockchain_hash
