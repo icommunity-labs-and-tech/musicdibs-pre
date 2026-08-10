@@ -331,7 +331,16 @@ async function createOrderRecord(
       order_status: params.orderStatus || "paid",
     };
 
-    const { data: order, error } = await supabase.from("orders").insert(orderData).select("id").single();
+    // FIX 2026-08-10: upsert en vez de insert -- ahora se crea una orden minima
+    // inmediatamente despues de conceder el credito (antes de cualquier llamada
+    // adicional a Stripe que pudiera timeoutear), y esta llamada posterior debe
+    // poder completarla con los campos adicionales (charge_id, fee, cupon,
+    // atribucion de campana) sin duplicarla. Solo aplica de forma segura cuando
+    // hay stripe_checkout_session_id (unique constraint); el resto de caminos
+    // (subscription_create, renewals, etc.) siguen insertando como antes.
+    const { data: order, error } = params.stripeCheckoutSessionId
+      ? await supabase.from("orders").upsert(orderData, { onConflict: "stripe_checkout_session_id" }).select("id").single()
+      : await supabase.from("orders").insert(orderData).select("id").single();
     if (error) {
       console.error("[WEBHOOK] Failed to create order:", error.message);
       return null;
@@ -702,15 +711,40 @@ serve(async (req) => {
           : (session.customer as any)?.id || null;
         if (_checkoutSubId) {
           const _checkoutPlanName = PLAN_ID_TO_PLAN_NAME[planId] || null;
+          // FIX 2026-08-10 (caso ojedajean1234@gmail.com, tras
+          // efrenefrencf@gmail.com hace semanas): este upsert nunca incluia
+          // current_period_start/current_period_end/amount. Con
+          // onConflict:"user_id", cualquier campo ausente del payload se deja
+          // TAL CUAL en un UPDATE -- para un cliente que vuelve tras cancelar
+          // (mismo user_id, nueva suscripcion), esto dejaba el periodo y el
+          // importe congelados en los valores de la suscripcion VIEJA/cancelada,
+          // disparando falsas alarmas de "suscripcion vencida activa" en la
+          // auditoria semanal indefinidamente. Se recupera el objeto de
+          // suscripcion completo para refrescar ambos campos siempre.
+          let _checkoutPeriodStart: string | null = null;
+          let _checkoutPeriodEnd: string | null = null;
+          let _checkoutAmount: string | null = null;
+          try {
+            const _fullSub = await stripe.subscriptions.retrieve(_checkoutSubId);
+            const _item = _fullSub.items?.data?.[0] as any;
+            if (_item?.current_period_start) _checkoutPeriodStart = new Date(_item.current_period_start * 1000).toISOString();
+            if (_item?.current_period_end) _checkoutPeriodEnd = new Date(_item.current_period_end * 1000).toISOString();
+            if (_item?.price?.unit_amount != null) _checkoutAmount = (_item.price.unit_amount / 100).toFixed(2);
+          } catch (e) {
+            console.warn(`[WEBHOOK] checkout.session.completed: no se pudo recuperar la suscripcion ${_checkoutSubId} para refrescar current_period_*:`, e);
+          }
           await supabase.from("subscriptions").upsert({
             user_id: userId,
             stripe_customer_id: _checkoutCustomerId,
             stripe_subscription_id: _checkoutSubId,
             plan: _checkoutPlanName || "Annual",
             status: "active",
+            ...(_checkoutPeriodStart ? { current_period_start: _checkoutPeriodStart } : {}),
+            ...(_checkoutPeriodEnd ? { current_period_end: _checkoutPeriodEnd } : {}),
+            ...(_checkoutAmount ? { amount: _checkoutAmount } : {}),
             updated_at: new Date().toISOString(),
           }, { onConflict: "user_id" });
-          console.log(`[WEBHOOK] checkout.session.completed: upserted subscriptions stripe_subscription_id=${_checkoutSubId} user=${userId}`);
+          console.log(`[WEBHOOK] checkout.session.completed: upserted subscriptions stripe_subscription_id=${_checkoutSubId} user=${userId} period=${_checkoutPeriodStart}..${_checkoutPeriodEnd}`);
         }
 
         // ââ Idempotency guard: skip if this checkout session was already processed ââ
@@ -811,6 +845,41 @@ serve(async (req) => {
           const newPermanent = (permProf?.permanent_credits ?? 0) + credits;
           await supabase.from("profiles").update({ permanent_credits: newPermanent, updated_at: new Date().toISOString() }).eq("user_id", userId);
           console.log(`[WEBHOOK] permanent_credits +${credits} → ${newPermanent} for user ${userId} (${planId})`);
+        }
+
+        // FIX 2026-08-10 (caso lui.luna.deimos@gmail.com): createOrderRecord()
+        // original se llamaba ~150 lineas mas abajo, tras varias llamadas
+        // adicionales a Stripe (listLineItems, charges.list, paymentIntents.
+        // retrieve, charges.retrieve para el fee) y el bloque de verificacion+
+        // reintento de tier -- cualquier timeout o excepcion no capturada en
+        // ese tramo dejaba el credito concedido SIN ninguna orden creada,
+        // dejando a los guards de duplicados (#2/#2b, que buscan una orden con
+        // stripe_checkout_session_id) sin nada que encontrar. Se crea aqui una
+        // orden MINIMA de inmediato, justo tras conceder el credito; el
+        // createOrderRecord() de mas abajo la completa despues via upsert
+        // (mismo stripe_checkout_session_id) sin duplicarla.
+        try {
+          const _earlySubId = typeof session.subscription === "string" ? session.subscription : (session.subscription as any)?.id || null;
+          const _earlyCustomerId = typeof session.customer === "string" ? session.customer : (session.customer as any)?.id || null;
+          const _earlyAmount = session.amount_total ? session.amount_total / 100 : 0;
+          await supabase.from("orders").upsert({
+            user_id: userId,
+            stripe_checkout_session_id: session.id,
+            stripe_subscription_id: _earlySubId,
+            stripe_customer_id: _earlyCustomerId,
+            product_type: getProductType(planId),
+            product_code: planId,
+            product_label: planId,
+            amount_gross: _earlyAmount,
+            currency: session.currency || "eur",
+            is_subscription: !!_earlySubId,
+            is_renewal: false,
+            paid_at: new Date().toISOString(),
+            order_status: "paid",
+          }, { onConflict: "stripe_checkout_session_id" });
+          console.log(`[WEBHOOK] checkout.session.completed: orden minima temprana creada para session ${session.id}`);
+        } catch (earlyOrderErr) {
+          console.warn("[WEBHOOK] checkout.session.completed: fallo creando la orden minima temprana (no bloqueante):", earlyOrderErr);
         }
 
         const planName = PLAN_ID_TO_PLAN_NAME[planId];
