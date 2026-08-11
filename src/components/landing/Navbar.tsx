@@ -64,6 +64,8 @@ interface NavbarProps {
   ctaHref?: string;
   secondaryText?: string;
   secondaryHref?: string;
+  /** Called instead of the default i18n change when the visitor picks a language. */
+  onLanguageChange?: (code: string) => void;
 }
 
 export function Navbar({
@@ -71,6 +73,7 @@ export function Navbar({
   ctaHref = "https://www.musicdibs.com/login?tab=register",
   secondaryText = "Iniciar sesión",
   secondaryHref = "https://www.musicdibs.com/login",
+  onLanguageChange,
 }: NavbarProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -88,7 +91,7 @@ export function Navbar({
           <img src={logo} alt="Musicdibs" className="h-9 sm:h-10 w-auto object-contain" />
         </a>
         <div className="flex items-center gap-2 sm:gap-4">
-          <LandingLanguageButton />
+          <LandingLanguageButton onLanguageChange={onLanguageChange} />
           {secondaryText && (
             <a
               href={secondaryHref}
