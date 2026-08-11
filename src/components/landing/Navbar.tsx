@@ -9,7 +9,7 @@ const LANGUAGES = [
   { code: "pt-BR", name: "Português (BR)", flag: "🇧🇷" },
 ];
 
-function LandingLanguageButton() {
+function LandingLanguageButton({ onLanguageChange }: { onLanguageChange?: (code: string) => void }) {
   const { i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const current =
