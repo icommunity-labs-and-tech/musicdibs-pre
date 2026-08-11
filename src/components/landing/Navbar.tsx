@@ -39,7 +39,11 @@ function LandingLanguageButton({ onLanguageChange }: { onLanguageChange?: (code:
               role="option"
               aria-selected={lang.code === current.code}
               onClick={() => {
-                i18n.changeLanguage(lang.code);
+                if (onLanguageChange) {
+                  onLanguageChange(lang.code);
+                } else {
+                  i18n.changeLanguage(lang.code);
+                }
                 try { localStorage.setItem("lang", lang.code); } catch { /* ignore */ }
                 setOpen(false);
               }}
