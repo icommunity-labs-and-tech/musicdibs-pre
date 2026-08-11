@@ -51,7 +51,11 @@ export default function RegistroMusicalPage({
   canonicalPath = "/registro-musical",
 }: RegistroMusicalPageProps = {}) {
   const { i18n } = useTranslation();
-  const lang: RegistroLang = forcedLang ?? ((["es", "en", "pt-BR"].includes(i18n.language)
+  // When the page is locked via `forcedLang`, the header language selector can
+  // still override it for this visit (and it propagates to the global i18n so
+  // the rest of the site follows).
+  const [overrideLang, setOverrideLang] = useState<RegistroLang | null>(null);
+  const lang: RegistroLang = overrideLang ?? forcedLang ?? ((["es", "en", "pt-BR"].includes(i18n.language)
     ? i18n.language
     : "es") as RegistroLang);
   const c = REGISTRO_COPY[lang];
@@ -65,6 +69,14 @@ export default function RegistroMusicalPage({
     () => (forcedLang ? i18n.cloneInstance({ lng: forcedLang }) : i18n),
     [forcedLang, i18n],
   );
+
+  const handleLanguageChange = (code: string) => {
+    const next = (["es", "en", "pt-BR"].includes(code) ? code : "es") as RegistroLang;
+    setOverrideLang(next);
+    if (scopedI18n !== i18n) scopedI18n.changeLanguage(next);
+    i18n.changeLanguage(next);
+  };
+
 
   return (
     <I18nextProvider i18n={scopedI18n}>
