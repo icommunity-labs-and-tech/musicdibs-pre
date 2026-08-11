@@ -274,7 +274,10 @@ async function createOrderRecord(
       .select("id", { count: "exact", head: true })
       .eq("user_id", params.userId);
     if (params.stripeCheckoutSessionId) {
-      countQuery = countQuery.neq("stripe_checkout_session_id", params.stripeCheckoutSessionId);
+      // ojo: neq excluiria tambien las filas con la columna a NULL (renovaciones)
+      countQuery = countQuery.or(
+        `stripe_checkout_session_id.is.null,stripe_checkout_session_id.neq.${params.stripeCheckoutSessionId}`,
+      );
     }
     const { count } = await countQuery;
     const isFirstPurchase = (count || 0) === 0;
