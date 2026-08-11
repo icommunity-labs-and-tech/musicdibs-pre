@@ -2054,6 +2054,28 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       }
 
       if (profile) {
+        // FIX 2026-08-11 (caso ale_saenz09@hotmail.com): detectados 2 registros
+        // "payment_failed"/"subscription_issue" casi identicos a 1.1s de
+        // diferencia para el mismo fallo. Este handler procesa tanto
+        // "invoice.payment_failed" (legacy) como "invoice_payment.failed"
+        // (thin event) en el mismo bloque -- Stripe suele enviar AMBOS para
+        // el mismo fallo subyacente cuando la cuenta tiene activados los dos
+        // tipos de evento, y no habia ninguna deduplicacion entre ellos. Se
+        // comprueba si ya se registro un payment_failed para esta misma
+        // factura+intento en los ultimos 5 minutos antes de reprocesar.
+        const { data: recentDup } = await supabase
+          .from("credit_transactions")
+          .select("id")
+          .eq("user_id", profile.user_id)
+          .eq("type", "payment_failed")
+          .ilike("description", `%intento ${attemptCount}%`)
+          .gte("created_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
+          .maybeSingle();
+        if (recentDup) {
+          console.log(`[WEBHOOK] payment_failed: duplicado (invoice.payment_failed vs invoice_payment.failed) para user ${profile.user_id}, intento ${attemptCount} -- ya procesado, omitiendo`);
+          return new Response(JSON.stringify({ received: true, duplicate: true }), { headers: { "Content-Type": "application/json" } });
+        }
+
         const description = `Fallo en cobro de suscripción (intento ${attemptCount})${nextAttempt ? `. Próximo reintento: ${nextAttempt}`: ". No hay más reintentos."}`;
         await supabase.from("credit_transactions").insert({ user_id: profile.user_id, amount: 0, type: "payment_failed", description });
         console.log(`[WEBHOOK] Payment failed for user ${profile.user_id} (attempt ${attemptCount})`);
