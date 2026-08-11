@@ -9,7 +9,7 @@ const LANGUAGES = [
   { code: "pt-BR", name: "Português (BR)", flag: "🇧🇷" },
 ];
 
-function LandingLanguageButton() {
+function LandingLanguageButton({ onLanguageChange }: { onLanguageChange?: (code: string) => void }) {
   const { i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const current =
@@ -39,7 +39,11 @@ function LandingLanguageButton() {
               role="option"
               aria-selected={lang.code === current.code}
               onClick={() => {
-                i18n.changeLanguage(lang.code);
+                if (onLanguageChange) {
+                  onLanguageChange(lang.code);
+                } else {
+                  i18n.changeLanguage(lang.code);
+                }
                 try { localStorage.setItem("lang", lang.code); } catch { /* ignore */ }
                 setOpen(false);
               }}
@@ -60,6 +64,8 @@ interface NavbarProps {
   ctaHref?: string;
   secondaryText?: string;
   secondaryHref?: string;
+  /** Called instead of the default i18n change when the visitor picks a language. */
+  onLanguageChange?: (code: string) => void;
 }
 
 export function Navbar({
@@ -67,6 +73,7 @@ export function Navbar({
   ctaHref = "https://www.musicdibs.com/login?tab=register",
   secondaryText = "Iniciar sesión",
   secondaryHref = "https://www.musicdibs.com/login",
+  onLanguageChange,
 }: NavbarProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -84,7 +91,7 @@ export function Navbar({
           <img src={logo} alt="Musicdibs" className="h-9 sm:h-10 w-auto object-contain" />
         </a>
         <div className="flex items-center gap-2 sm:gap-4">
-          <LandingLanguageButton />
+          <LandingLanguageButton onLanguageChange={onLanguageChange} />
           {secondaryText && (
             <a
               href={secondaryHref}

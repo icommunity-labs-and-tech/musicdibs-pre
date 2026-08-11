@@ -265,12 +265,23 @@ async function createOrderRecord(
   }
 ) {
   try {
-    // Check if this is the first purchase for this user
-    const { count } = await supabase
+    // Check if this is the first purchase for this user.
+    // FIX: la orden minima temprana (checkout.session.completed) ya inserto una
+    // fila para ESTA misma sesion, asi que hay que excluirla del conteo o
+    // is_first_purchase seria siempre false.
+    let countQuery = supabase
       .from("orders")
       .select("id", { count: "exact", head: true })
       .eq("user_id", params.userId);
+    if (params.stripeCheckoutSessionId) {
+      // ojo: neq excluiria tambien las filas con la columna a NULL (renovaciones)
+      countQuery = countQuery.or(
+        `stripe_checkout_session_id.is.null,stripe_checkout_session_id.neq.${params.stripeCheckoutSessionId}`,
+      );
+    }
+    const { count } = await countQuery;
     const isFirstPurchase = (count || 0) === 0;
+
 
     // Extract UTM data from metadata
     const meta = params.metadata || {};
