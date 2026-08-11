@@ -129,6 +129,7 @@ export default function RegistroMusicalPage({
             ctaHref="https://www.musicdibs.com/login?tab=register"
             secondaryText={c.navSecondary}
             secondaryHref="https://www.musicdibs.com/login"
+            onLanguageChange={handleLanguageChange}
           />
 
           {/* ============================= HERO ============================= */}
