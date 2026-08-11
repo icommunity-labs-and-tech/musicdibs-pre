@@ -1919,14 +1919,22 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       let customerId: string;
       let attemptCount: number;
       let nextAttempt: string | null;
+      let billingReasonFailed: string | null = null;
+      let invoiceIdFailed: string | null = null;
+      let invoiceLinesFailed: any[] = [];
+      let subscriptionIdFailed: string | null = null;
 
       if (event.type === "invoice_payment.failed") {
         const invoiceId = typeof obj.invoice === "string" ? obj.invoice : obj.invoice?.id;
         if (invoiceId) {
-          const invoice = await stripe.invoices.retrieve(invoiceId);
+          const invoice = await stripe.invoices.retrieve(invoiceId, { expand: ["lines.data.price"] });
           customerId = getInvoiceCustomerId(invoice);
           attemptCount = invoice.attempt_count ?? 0;
           nextAttempt = invoice.next_payment_attempt ? new Date((invoice.next_payment_attempt as number) * 1000).toISOString() : null;
+          billingReasonFailed = invoice.billing_reason ?? null;
+          invoiceIdFailed = invoiceId;
+          invoiceLinesFailed = invoice.lines?.data ?? [];
+          subscriptionIdFailed = typeof (invoice as any).subscription === "string" ? (invoice as any).subscription : (invoice as any).subscription?.id ?? null;
         } else {
           console.warn("[WEBHOOK] invoice_payment.failed: no invoice ID found");
           return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
@@ -1939,16 +1947,112 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         const invoiceId = staleInvoice.id;
         let invoice = staleInvoice;
         try {
-          invoice = await stripe.invoices.retrieve(invoiceId);
+          invoice = await stripe.invoices.retrieve(invoiceId, { expand: ["lines.data.price"] });
         } catch (reErr) {
           console.warn("[WEBHOOK] invoice.payment_failed: no se pudo releer invoice, usando payload original:", reErr);
         }
         customerId = getInvoiceCustomerId(invoice);
         attemptCount = invoice.attempt_count ?? staleInvoice.attempt_count;
         nextAttempt = invoice.next_payment_attempt ? new Date((invoice.next_payment_attempt as number) * 1000).toISOString() : null;
+        billingReasonFailed = invoice.billing_reason ?? staleInvoice.billing_reason ?? null;
+        invoiceIdFailed = invoiceId;
+        invoiceLinesFailed = invoice.lines?.data ?? staleInvoice.lines?.data ?? [];
+        subscriptionIdFailed = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id ?? null;
       }
 
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
+
+      // FIX 2026-08-11 (caso ale_saenz09@hotmail.com): si el fallo de pago
+      // corresponde a un CAMBIO DE PLAN (billing_reason=subscription_update,
+      // ej. un upgrade Mensual->Anual) en vez de a una renovacion normal, el
+      // comportamiento correcto NO es aplicar el periodo de gracia estandar
+      // sobre el plan NUEVO al que el usuario nunca llego a acceder realmente
+      // -- es revertir la suscripcion al plan/precio ANTERIOR, como si el
+      // intento de upgrade nunca hubiera ocurrido. Antes, un upgrade fallido
+      // dejaba al usuario "atrapado" en el plan caro nuevo (con 0 creditos,
+      // sin haber pagado nada de mas) y ademas con un downgrade programado
+      // (via Subscription Schedule) de vuelta al plan viejo para dentro de
+      // un ANO -- en vez de revertir de inmediato.
+      if (profile && billingReasonFailed === "subscription_update" && subscriptionIdFailed) {
+        try {
+          // La linea de credito de prorrateo (amount negativo) de la factura
+          // fallida contiene el precio ANTERIOR al que hay que revertir.
+          const prorationCreditLine = invoiceLinesFailed.find((l: any) => l.amount < 0 && l?.parent?.subscription_item_details?.proration === true);
+          const previousPriceId = prorationCreditLine?.pricing?.price_details?.price;
+          const failedSubItem = invoiceLinesFailed.find((l: any) => l.amount > 0)?.parent?.subscription_item_details?.subscription_item;
+
+          if (previousPriceId && failedSubItem) {
+            console.log(`[WEBHOOK] payment_failed: subscription_update fallido para user ${profile.user_id} -- revirtiendo sub ${subscriptionIdFailed} item ${failedSubItem} a precio anterior ${previousPriceId}`);
+
+            const revertedSub = await stripe.subscriptions.update(subscriptionIdFailed, {
+              items: [{ id: failedSubItem, price: previousPriceId }],
+              proration_behavior: "none",
+            });
+
+            // Anular la factura del upgrade fallido para que Stripe no la
+            // siga reintentando en paralelo al plan ya revertido.
+            try {
+              await stripe.invoices.voidInvoice(invoiceIdFailed!);
+            } catch (voidErr) {
+              console.warn(`[WEBHOOK] payment_failed: no se pudo anular la factura ${invoiceIdFailed} del upgrade revertido:`, voidErr);
+            }
+
+            // Liberar cualquier Subscription Schedule asociado -- ya no aplica
+            // ningun cambio de plan futuro derivado del upgrade fallido.
+            if (revertedSub.schedule) {
+              try {
+                const scheduleId = typeof revertedSub.schedule === "string" ? revertedSub.schedule : (revertedSub.schedule as any).id;
+                await stripe.subscriptionSchedules.release(scheduleId);
+              } catch (relErr) {
+                console.warn(`[WEBHOOK] payment_failed: no se pudo liberar el schedule tras revertir el upgrade:`, relErr);
+              }
+            }
+
+            const revertedPlanId = PRICE_TO_PLAN_ID[previousPriceId] ?? null;
+            const revertedPlanName = revertedPlanId ? (PLAN_ID_TO_PLAN_NAME[revertedPlanId] ?? null) : null;
+            if (revertedPlanName && revertedPlanId) {
+              await supabase.from("profiles").update({
+                subscription_plan: revertedPlanName,
+                subscription_tier: revertedPlanId,
+                updated_at: new Date().toISOString(),
+              }).eq("user_id", profile.user_id);
+            }
+            const revertedItem = revertedSub.items?.data?.[0] as any;
+            await supabase.from("subscriptions").upsert({
+              user_id: profile.user_id,
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscriptionIdFailed,
+              plan: revertedPlanName || "Monthly",
+              status: mapStripeStatus(revertedSub.status),
+              current_period_start: revertedItem?.current_period_start ? new Date(revertedItem.current_period_start * 1000).toISOString() : null,
+              current_period_end: revertedItem?.current_period_end ? new Date(revertedItem.current_period_end * 1000).toISOString() : null,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: "user_id" });
+
+            await supabase.from("admin_alerts").insert({
+              source: "stripe-webhook:invoice.payment_failed",
+              severity: "warning",
+              message: `Upgrade fallido revertido automaticamente para user ${profile.user_id} (sub ${subscriptionIdFailed}): vuelto al precio ${previousPriceId}. Revisar que la reversion sea correcta y, si la nueva factura de la renovacion revertida tambien falla, se gestionara como impago normal por separado.`,
+            });
+
+            console.log(`[WEBHOOK] payment_failed: upgrade revertido con exito para user ${profile.user_id}`);
+            return new Response(JSON.stringify({ received: true, reverted_upgrade: true }), { headers: { "Content-Type": "application/json" } });
+          } else {
+            console.warn(`[WEBHOOK] payment_failed: subscription_update fallido para user ${profile.user_id} pero no se pudo determinar el precio anterior -- se procesa como impago normal`);
+          }
+        } catch (revertErr) {
+          console.error(`[WEBHOOK] payment_failed: error revirtiendo upgrade fallido para user ${profile?.user_id}:`, revertErr);
+          await supabase.from("admin_alerts").insert({
+            source: "stripe-webhook:invoice.payment_failed",
+            severity: "critical",
+            message: `Fallo al revertir automaticamente un upgrade fallido para user ${profile?.user_id} (sub ${subscriptionIdFailed}, invoice ${invoiceIdFailed}): ${revertErr}. Revisar y revertir manualmente en Stripe -- el usuario puede haber quedado en el plan nuevo sin haberlo pagado.`,
+          });
+          // No hacemos return aqui -- dejamos que continue el flujo normal de
+          // abajo (grace period estandar) como red de seguridad si la
+          // reversion automatica fallo.
+        }
+      }
+
       if (profile) {
         const description = `Fallo en cobro de suscripción (intento ${attemptCount})${nextAttempt ? `. Próximo reintento: ${nextAttempt}`: ". No hay más reintentos."}`;
         await supabase.from("credit_transactions").insert({ user_id: profile.user_id, amount: 0, type: "payment_failed", description });
