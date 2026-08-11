@@ -289,35 +289,27 @@ serve(async (req) => {
           return json({ users: [], total: 0 });
       }
 
-      // If searching (≥2 chars), pre-resolve user_ids whose email/meta matches (auth.users)
+      // FIX 2026-08-11 (caso ale_saenz09@hotmail.com): antes se recorria
+      // auth.admin.listUsers() paginado, limitado a 10 paginas de 1000
+      // (10.000 usuarios). Con mas de 10.000 usuarios en el sistema, los
+      // usuarios "mas antiguos" (fuera de las primeras 10.000 filas segun el
+      // orden por defecto de listUsers) nunca podian encontrarse por email/
+      // nombre. Se usa ahora la funcion search_auth_users (consulta directa
+      // a auth.users, sin limite de paginacion) en su lugar.
       const MAX_SEARCH_IDS = 250;
       let searchUserIds: string[] = [];
       let searchIdsTruncated = false;
       if (search && search.length >= 2) {
         try {
-          const perPage = 1000;
-          outer: for (let pageIdx = 1; pageIdx <= 10; pageIdx++) {
-            const { data: pageData } = await admin.auth.admin.listUsers({
-              page: pageIdx,
-              perPage,
-            });
-            const usersPage = (pageData as any)?.users || [];
-            for (const au of usersPage) {
-              const em = (au?.email || "").toLowerCase();
-              const meta = (
-                (au?.user_metadata?.display_name ||
-                  au?.user_metadata?.full_name ||
-                  "") as string
-              ).toLowerCase();
-              if (em.includes(search) || meta.includes(search)) {
-                searchUserIds.push(au.id);
-                if (searchUserIds.length > MAX_SEARCH_IDS) {
-                  searchIdsTruncated = true;
-                  break outer;
-                }
-              }
+          const { data: matchedUsers, error: searchErr } = await admin.rpc("search_auth_users", { p_search: search });
+          if (searchErr) {
+            console.error("[ADMIN] search_auth_users RPC error:", searchErr.message);
+          } else {
+            searchUserIds = (matchedUsers || []).map((r: any) => r.user_id);
+            if (searchUserIds.length > MAX_SEARCH_IDS) {
+              searchUserIds = searchUserIds.slice(0, MAX_SEARCH_IDS);
+              searchIdsTruncated = true;
             }
-            if (usersPage.length < perPage) break;
           }
         } catch {
           /* ignore */
