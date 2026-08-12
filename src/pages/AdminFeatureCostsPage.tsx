@@ -279,7 +279,25 @@ export default function AdminFeatureCostsPage() {
       </p>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Tabla de precios ({rows.length} operaciones)</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Tabla de precios ({rows.length} operaciones)</CardTitle>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={autoAssignMissingIcons}
+              disabled={autoAssigning}
+              title="Rellenar iconos por defecto en las filas vacías"
+            >
+              {autoAssigning ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Wand2 className="h-4 w-4 mr-2" />
+              )}
+              Auto-asignar iconos
+            </Button>
+          </div>
+        </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
