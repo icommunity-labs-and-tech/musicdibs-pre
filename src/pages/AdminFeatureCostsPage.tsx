@@ -162,18 +162,18 @@ export default function AdminFeatureCostsPage() {
     if (!changes) return;
 
     setSaving(row.operation_key);
-    const updatePayload: Record<string, unknown> = {};
+    const updatePayload: Partial<OperationRow> = {};
     const fields: (keyof OperationRow)[] = [
       'operation_name', 'credits_cost', 'description', 'operation_icon',
       'model_name', 'llm_provider', 'llm_model', 'category', 'is_annual_only',
     ];
     for (const f of fields) {
-      if (changes[f] !== undefined) updatePayload[f] = changes[f];
+      if (changes[f] !== undefined) updatePayload[f] = changes[f] as OperationRow[typeof f];
     }
 
     const { error } = await supabase
       .from('operation_pricing')
-      .update(updatePayload as any)
+      .update(updatePayload)
       .eq('operation_key', row.operation_key);
 
     if (error) {
