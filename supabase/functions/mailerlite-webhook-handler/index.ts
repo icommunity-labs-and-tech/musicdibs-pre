@@ -92,12 +92,15 @@ async function callMailerLite(
 async function handleUserSignup(p: any) {
   const locale = normalizeLocale(p.locale);
   const groups = MAILERLITE_GROUPS[locale];
-  // Añadir a: Todos Musicdibs + registrados (sin compra) + Sin créditos
-  const groupIds = [
-    groups.todos_musicdibs,
-    groups.registrados,
-    groups.sin_creditos,
-  ].filter(Boolean);
+  // FIX 2026-08-12: confirmado por el equipo -- los nuevos registros solo
+  // deben añadirse a "Todos Musicdibs [idioma]". Los IDs anteriores de
+  // "registrados" (para los 3 idiomas) ya no existen en MailerLite (fueron
+  // eliminados/reestructurados en algun momento sin actualizar este
+  // codigo), lo que causaba un 422 "selected groups.1 is invalid" que se
+  // tragaba silenciosamente -- ningun usuario se llegaba a crear en
+  // MailerLite desde entonces. Se quita tambien "sin_creditos" del alta
+  // inicial (confirmado que no corresponde a este paso).
+  const groupIds = [groups.todos_musicdibs].filter(Boolean);
   console.log(`[ML:signup] ${p.email} → locale=${locale} groups=${groupIds.join(",")}`);
 
   const sub = await callMailerLite("POST", "/subscribers", {
@@ -116,6 +119,15 @@ async function handleUserSignup(p: any) {
     groups: groupIds,
     status: "active",
   });
+  // FIX 2026-08-12 (diagnostico): antes, un error de MailerLite (ej. 422)
+  // se tragaba silenciosamente -- sub._error quedaba true pero
+  // handleUserSignup seguia intentando sub.data?.id (undefined) sin avisar
+  // a nadie, devolviendo un 200 "exitoso" con result:{} vacio. Se propaga
+  // el detalle real del error para poder diagnosticar.
+  if (sub?._error) {
+    console.error(`[ML:signup] ❌ ${p.email} → status=${sub.status} body=${JSON.stringify(sub.body)}`);
+    throw new Error(`MailerLite signup failed for ${p.email}: ${sub.status} ${JSON.stringify(sub.body)}`);
+  }
   console.log(`[ML:signup] ✅ id=${sub.data?.id}`);
   return { subscriber_id: sub.data?.id };
 }

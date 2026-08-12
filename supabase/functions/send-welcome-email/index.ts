@@ -33,14 +33,23 @@ serve(async (req) => {
       );
     }
 
-    // FIX 2026-07-19 (security scan): antes solo se comprobaba que el header
-    // empezara por "Bearer " (cualquier string servia), sin verificar el
-    // token real -- cualquiera podia disparar el envio de "email de
-    // bienvenida" a cualquier direccion arbitraria (userId/email vienen del
-    // body, sin verificar). Ahora se exige que coincida con el service role
-    // real (esta funcion solo la llama register-guest-lead, servidor a servidor).
+    // FIX 2026-08-12: ademas de la comprobacion de service role, se acepta
+    // x-cron-secret -- mismo patron estable que usan todos los crons del
+    // proyecto. El mecanismo anterior (vault.decrypted_secrets +
+    // Authorization Bearer) es el MISMO que causo un 401 Unauthorized
+    // silencioso en kyc-reminder (ver comentario en handle_new_user(), fix
+    // 2026-07-04) -- nunca se aplico el mismo arreglo aqui, y el vault
+    // secret volvio a desincronizarse: CONFIRMADO que send-welcome-email
+    // llevaba fallando con 401 desde el 19 de julio (430 usuarios sin email
+    // de bienvenida ni alta en MailerLite). Se acepta x-cron-secret para no
+    // depender nunca mas de que el vault este sincronizado con el service
+    // role key real.
+    const CRON_SECRET = Deno.env.get("CRON_SECRET") || "";
+    const cronHeader = req.headers.get("x-cron-secret") || "";
     const authHeader = req.headers.get("Authorization");
-    if (authHeader !== `Bearer ${serviceKey}`) {
+    const isServiceAuth = authHeader === `Bearer ${serviceKey}`;
+    const isCronAuth = !!CRON_SECRET && cronHeader === CRON_SECRET;
+    if (!isServiceAuth && !isCronAuth) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -241,18 +250,26 @@ serve(async (req) => {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
           },
+          // FIX 2026-08-12: dos bugs mas encontrados junto al 401 del vault
+          // secret (ver comentario mas arriba): (1) el evento correcto que
+          // reconoce mailerlite-webhook-handler es "user.created", no
+          // "user.signup" (el switch no tenia ese caso, devolvia 400
+          // "Unknown event" silenciosamente); (2) mailerlite-webhook-handler
+          // usa `const { event, ...payload } = await req.json()` -- espera
+          // los campos (id, email, full_name, locale) en el NIVEL SUPERIOR
+          // del body, no anidados bajo una clave "payload". Con la
+          // estructura anterior, incluso si el evento hubiera coincidido,
+          // handleUserSignup habria recibido email/locale undefined.
           body: JSON.stringify({
-            event: "user.signup",
-            payload: {
-              id: userId,
-              email,
-              full_name: displayName || "",
-              locale: language || "es",
-            },
+            event: "user.created",
+            id: userId,
+            email,
+            full_name: displayName || "",
+            locale: language || "es",
           }),
         }
       );
-      console.log(`[WELCOME-EMAIL] ML sync ${mlRes.ok ? "OK" : "WARN"} for ${email}`);
+      console.log(`[WELCOME-EMAIL] ML sync ${mlRes.ok ? "OK" : "WARN"} for ${email}${mlRes.ok ? "" : ` (status ${mlRes.status})`}`);
     } catch (mlErr) {
       console.warn("[WELCOME-EMAIL] ML sync error (non-fatal):", mlErr);
     }
