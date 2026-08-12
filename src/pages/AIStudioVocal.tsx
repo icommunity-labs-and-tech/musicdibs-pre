@@ -356,14 +356,29 @@ export default function AIStudioVocal() {
       if (!res.ok) {
         if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: t('dashboard.noCredits.costMessage', { action: tv('title'), cost: FEATURE_COSTS.generate_vocal_track }), variant: 'destructive' });
         else { const { userMessage } = parseAiError({ status: res.status }, data); toast({ title: s('aiShared.error'), description: userMessage, variant: 'destructive' }); }
+        setIsGenerating(false);
         return;
       }
-      setAudioUrl(data.audioUrl);
-      setHistory(prev => [{ id: data.generationId, audio_url: data.audioUrl, prompt: `Pista vocal: ${selectedClone.name}`, created_at: new Date().toISOString() }, ...prev]);
-      toast({ title: tv('vocalGenerated'), description: tv('vocalGeneratedDesc') });
-      track('vocal_track_generated', { feature: 'vocal' });
-    } catch (err) { const { userMessage } = parseAiError(err); toast({ title: s('aiShared.error'), description: userMessage, variant: 'destructive' }); }
-    finally { setIsGenerating(false); }
+      // KIE es asíncrono: la generación real (música + separación de voz)
+      // llega vía callback. Hacemos polling sobre ai_generations hasta que
+      // el resultado esté listo (o falle).
+      const generationId = data.generationId;
+      const poll = window.setInterval(async () => {
+        const { data: row } = await supabase.from('ai_generations').select('status, audio_url').eq('id', generationId).maybeSingle();
+        if (row?.status === 'completed' && row.audio_url) {
+          window.clearInterval(poll);
+          setAudioUrl(row.audio_url);
+          setHistory(prev => [{ id: generationId, audio_url: row.audio_url, prompt: `Pista vocal: ${selectedClone.name}`, created_at: new Date().toISOString() }, ...prev]);
+          toast({ title: tv('vocalGenerated'), description: tv('vocalGeneratedDesc') });
+          track('vocal_track_generated', { feature: 'vocal' });
+          setIsGenerating(false);
+        } else if (row?.status === 'failed') {
+          window.clearInterval(poll);
+          toast({ title: s('aiShared.error'), description: s('aiVocal.generationFailed', 'La generación ha fallado. Se te ha reembolsado el crédito.'), variant: 'destructive' });
+          setIsGenerating(false);
+        }
+      }, 4000);
+    } catch (err) { const { userMessage } = parseAiError(err); toast({ title: s('aiShared.error'), description: userMessage, variant: 'destructive' }); setIsGenerating(false); }
   };
 
   const hasClones = voiceClones.length > 0;
