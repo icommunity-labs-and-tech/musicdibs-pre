@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Wand2, Sparkles, Music, AlertTriangle, ArrowLeft, Zap, Edit3, Lightbulb, Coins, Image, Users, Mic2 } from "lucide-react";
+import { Wand2, Sparkles, Music, AlertTriangle, ArrowLeft, Zap, Edit3, Lightbulb, Coins, Image, Users, Mic2, Mic } from "lucide-react";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { Navbar } from "@/components/Navbar";
 import { AIStudioThemeBar } from "@/components/ai-studio/AIStudioThemeBar";
@@ -87,6 +87,16 @@ const AIStudio = () => {
       costsCredits: true,
       featureKey: 'generate_cover' as const,
       color: "from-success to-info"
+    },
+    {
+      titleKey: "aiStudio.modules.singYourSong.title",
+      descKey: "aiStudio.modules.singYourSong.desc",
+      icon: Mic,
+      href: "/ai-studio/vocal",
+      available: true,
+      costsCredits: false,
+      featureKey: 'inspiration' as const,
+      color: "from-primary to-accent"
     },
     {
       titleKey: "aiStudio.modules.virtualArtists.title",
@@ -309,7 +319,7 @@ const AIStudio = () => {
             </div>
 
             {/* Row 2 */}
-            <div className="grid md:grid-cols-3 gap-6 mb-10">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
               {bottomRowModules.map((m) => renderModuleCard(m, "flex flex-col"))}
             </div>
 
