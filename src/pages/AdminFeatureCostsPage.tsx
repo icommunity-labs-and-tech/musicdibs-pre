@@ -319,11 +319,18 @@ export default function AdminFeatureCostsPage() {
                 {paginatedRows.map(row => (
                   <TableRow key={row.operation_key} className={!row.is_active ? 'opacity-40' : ''}>
                     <TableCell>
-                      <Input
-                        value={String(getValue(row, 'operation_icon') || '')}
-                        onChange={e => handleChange(row.operation_key, 'operation_icon', e.target.value)}
-                        className="h-8 w-12 text-center"
-                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={String(getValue(row, 'operation_icon') || '')}
+                          onChange={e => handleChange(row.operation_key, 'operation_icon', e.target.value)}
+                          className="h-8 w-12 text-center"
+                        />
+                        {!getValue(row, 'operation_icon') && (
+                          <span className="text-lg opacity-50" title="Icono por defecto">
+                            {getDefaultIcon(row.operation_key, row.category)}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="font-mono text-xs">{row.operation_key}</TableCell>
                     <TableCell>
