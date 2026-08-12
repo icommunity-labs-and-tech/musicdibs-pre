@@ -213,7 +213,7 @@ export default function AdminFeatureCostsPage() {
       const icon = getDefaultIcon(row.operation_key, row.category);
       const { error } = await supabase
         .from('operation_pricing')
-        .update({ operation_icon: icon } as any)
+        .update({ operation_icon: icon })
         .eq('operation_key', row.operation_key);
       if (error) {
         toast.error(`Error actualizando ${row.operation_key}: ${error.message}`);
