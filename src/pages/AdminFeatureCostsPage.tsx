@@ -30,6 +30,60 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 const CATEGORY_KEYS = Object.keys(CATEGORY_LABELS);
 
+// Default emoji icons for rows without an explicit icon. Key-specific entries take precedence;
+// otherwise we fall back to the category. Used for the auto-assign helper and the preview fallback.
+const DEFAULT_ICON_BY_KEY: Record<string, string> = {
+  register_work: '📝',
+  promote_work: '📢',
+  promote_premium: '⭐',
+  generate_audio: '🎵',
+  generate_audio_song: '🎶',
+  generate_audio_elevenlabs: '🎶',
+  generate_vocal_track_kie: '🎙️',
+  clone_voice: '🎤',
+  edit_audio: '✂️',
+  enhance_audio: '✨',
+  enhance_add_vocals: '🎤',
+  enhance_cover: '🔄',
+  enhance_extend: '⏩',
+  enhance_instrumental: '🎹',
+  generate_cover: '🎨',
+  generate_lyrics: '🎼',
+  generate_press_release: '📰',
+  generate_video: '🎬',
+  improve_prompt: '💡',
+  instagram_creative: '📸',
+  youtube_thumbnail: '▶️',
+  event_poster: '📅',
+  social_poster: '📢',
+  social_video: '📱',
+  midi_generate: '🎹',
+  one_click_create: '⚡',
+  voice_translation_per_min: '🗣️',
+  promo_social_regenerate_copies: '📝',
+  promo_social_regenerate_image: '🖼️',
+  distribution_single_annual: '🌍',
+  distribution_album_annual: '🌐',
+  distribution_single_monthly: '🌍',
+  distribution_album_monthly: '🌐',
+  distribution_single_free: '🆓',
+  distribution_album_free: '🆓',
+};
+
+const DEFAULT_ICON_BY_CATEGORY: Record<string, string> = {
+  gratis: '🎁',
+  registro: '📝',
+  distribucion: '🌐',
+  musica: '🎵',
+  audio: '🎙️',
+  visual: '🎨',
+  promo: '📢',
+  promotion: '📢',
+};
+
+const getDefaultIcon = (key: string, category: string) =>
+  DEFAULT_ICON_BY_KEY[key] || DEFAULT_ICON_BY_CATEGORY[category] || '•';
+
 interface OperationRow {
   operation_key: string;
   operation_name: string;
