@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { toast } from 'sonner';
-import { Save, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Trash2 } from 'lucide-react';
+import { Save, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Trash2, Wand2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const PAGE_SIZE = 10;
