@@ -108,6 +108,7 @@ export default function AdminFeatureCostsPage() {
   const [editing, setEditing] = useState<Record<string, Partial<OperationRow>>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [autoAssigning, setAutoAssigning] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>('display_order');
