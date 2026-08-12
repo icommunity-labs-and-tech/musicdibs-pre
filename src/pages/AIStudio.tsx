@@ -116,6 +116,7 @@ const AIStudio = () => {
     const disabled = !module.available || (module.costsCredits && !hasEnough(cost));
     const isInline = !!(module as any).inlineView;
     const isFeatured = !!(module as any).featured;
+    const isVoiceTools = module.href === "/ai-studio/vocal";
 
     const cardInner = (
       <Card
@@ -124,12 +125,21 @@ const AIStudio = () => {
           isFeatured
             ? 'rounded-[10px] hover:shadow-2xl hover:-translate-y-1 border-0'
             : !module.available
-              ? 'opacity-50 grayscale pointer-events-none'
+              ? 'opacity-55 grayscale pointer-events-none cursor-not-allowed border-dashed border-muted-foreground/30'
               : disabled
                 ? 'opacity-60 grayscale'
                 : 'hover:shadow-lg hover:-translate-y-1'
         }`}
       >
+        {/* ── Internal testing overlay for voice tools */}
+        {!module.available && isVoiceTools && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/10 pointer-events-none">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted/90 px-3 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm backdrop-blur-sm">
+              <Zap className="w-3.5 h-3.5" />
+              {t('aiStudio.comingSoon')}
+            </span>
+          </div>
+        )}
         {/* ── Featured: glow strip + shimmer overlay */}
         {isFeatured && (
           <>
