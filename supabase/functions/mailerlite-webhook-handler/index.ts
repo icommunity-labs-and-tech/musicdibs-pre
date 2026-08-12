@@ -92,15 +92,12 @@ async function callMailerLite(
 async function handleUserSignup(p: any) {
   const locale = normalizeLocale(p.locale);
   const groups = MAILERLITE_GROUPS[locale];
-  // FIX 2026-08-12: confirmado por el equipo -- los nuevos registros solo
-  // deben añadirse a "Todos Musicdibs [idioma]". Los IDs anteriores de
-  // "registrados" (para los 3 idiomas) ya no existen en MailerLite (fueron
-  // eliminados/reestructurados en algun momento sin actualizar este
-  // codigo), lo que causaba un 422 "selected groups.1 is invalid" que se
-  // tragaba silenciosamente -- ningun usuario se llegaba a crear en
-  // MailerLite desde entonces. Se quita tambien "sin_creditos" del alta
-  // inicial (confirmado que no corresponde a este paso).
-  const groupIds = [groups.todos_musicdibs].filter(Boolean);
+  // FIX 2026-08-12: confirmado por el equipo -- un registro SIN compra debe
+  // ir a "Todos Musicdibs [idioma]" + "Sin creditos [idioma]" (este ultimo
+  // SI existe en MailerLite, solo "registrados" estaba roto -- ver fix
+  // anterior). Cuando el usuario compre, handlePurchase() ya se encarga de
+  // moverlo a "Mensuales"/"Anuales" segun el plan (sacandolo de aqui).
+  const groupIds = [groups.todos_musicdibs, groups.sin_creditos].filter(Boolean);
   console.log(`[ML:signup] ${p.email} → locale=${locale} groups=${groupIds.join(",")}`);
 
   const sub = await callMailerLite("POST", "/subscribers", {
