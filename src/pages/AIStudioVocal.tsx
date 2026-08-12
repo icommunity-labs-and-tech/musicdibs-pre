@@ -31,6 +31,7 @@ import { Navbar } from '@/components/Navbar';
 import { AIStudioThemeBar } from '@/components/ai-studio/AIStudioThemeBar';
 
 import { VoiceTranslator } from '@/components/voice/VoiceTranslator';
+import { VoiceRecorder } from '@/components/voice/VoiceRecorder';
 import { VoiceToolsTour } from '@/components/ai-studio/VoiceToolsTour';
 import { HelpCircle } from 'lucide-react';
 import { useProductTracking } from '@/hooks/useProductTracking';
@@ -98,15 +99,21 @@ export default function AIStudioVocal() {
   const [lyricsArtistRefs, setLyricsArtistRefs] = useState<string[]>([]);
   const [isGeneratingLyrics, setIsGeneratingLyrics] = useState(false);
 
-  // Cloning form
+  // Cloning form (KIE Suno Voice — flujo multi-paso con verificación anti-fraude)
   const [showCloneForm, setShowCloneForm] = useState(false);
   const [cloneName, setCloneName] = useState('');
   const [cloneDescription, setCloneDescription] = useState('');
-  const [cloneRemoveNoise, setCloneRemoveNoise] = useState(false);
   const [cloneAudioFile, setCloneAudioFile] = useState<File | null>(null);
+  const [cloneAudioBlob, setCloneAudioBlob] = useState<Blob | null>(null);
   const [cloneAudioDuration, setCloneAudioDuration] = useState<number | null>(null);
   const [isCloning, setIsCloning] = useState(false);
   const cloneFileRef = useRef<HTMLInputElement>(null);
+  // 'idle' | 'requesting_phrase' | 'awaiting_verification_recording' | 'generating' | 'active' | 'failed'
+  const [cloneStep, setCloneStep] = useState<'idle' | 'requesting_phrase' | 'awaiting_verification_recording' | 'generating' | 'active' | 'failed'>('idle');
+  const [activeCloneId, setActiveCloneId] = useState<string | null>(null);
+  const [verificationPhrase, setVerificationPhrase] = useState<string | null>(null);
+  const [cloneErrorMsg, setCloneErrorMsg] = useState<string | null>(null);
+  const clonePollRef = useRef<number | null>(null);
 
   // Clone editing
   const [editingCloneId, setEditingCloneId] = useState<string | null>(null);
@@ -171,32 +178,129 @@ export default function AIStudioVocal() {
   const handleCloneFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     setCloneAudioFile(file);
+    setCloneAudioBlob(null);
     const audio = new Audio(URL.createObjectURL(file));
     audio.onloadedmetadata = () => setCloneAudioDuration(Math.round(audio.duration));
   };
 
+  const uploadToVoiceSamples = async (fileOrBlob: File | Blob, ext: string): Promise<string> => {
+    const path = `${user!.id}/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from('voice-samples').upload(path, fileOrBlob, {
+      contentType: fileOrBlob instanceof File ? fileOrBlob.type : 'audio/webm',
+    });
+    if (error) throw error;
+    const { data } = supabase.storage.from('voice-samples').getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  const stopClonePolling = () => { if (clonePollRef.current) { clearInterval(clonePollRef.current); clonePollRef.current = null; } };
+  useEffect(() => () => stopClonePolling(), []);
+
+  const pollCloneStatus = useCallback((cloneId: string) => {
+    stopClonePolling();
+    clonePollRef.current = window.setInterval(async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-voice-clone`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+          body: JSON.stringify({ action: 'check_status', cloneId }),
+        });
+        const data = await res.json();
+        if (!res.ok) return;
+        if (data.status === 'awaiting_verification_recording' && data.verificationPhrase) {
+          setVerificationPhrase(data.verificationPhrase);
+          setCloneStep('awaiting_verification_recording');
+          stopClonePolling();
+        } else if (data.status === 'active') {
+          setCloneStep('active');
+          stopClonePolling();
+          toast({ title: vc('cloneSuccess'), description: vc('cloneSuccessDesc', { name: cloneName.trim() }) });
+          track('voice_cloned', { feature: 'voice_cloning' });
+          await loadClones();
+          setActiveTab('sing');
+          resetCloneFlow();
+        } else if (data.status === 'failed') {
+          setCloneStep('failed');
+          setCloneErrorMsg(data.error || null);
+          stopClonePolling();
+        }
+      } catch { /* reintenta en el siguiente tick */ }
+    }, 4000);
+  }, [cloneName, loadClones, toast, track]);
+
+  const resetCloneFlow = () => {
+    setShowCloneForm(false); setCloneStep('idle'); setActiveCloneId(null);
+    setVerificationPhrase(null); setCloneErrorMsg(null);
+    setCloneName(''); setCloneDescription(''); setCloneAudioFile(null); setCloneAudioBlob(null); setCloneAudioDuration(null);
+    if (cloneFileRef.current) cloneFileRef.current.value = '';
+  };
+
+  // Paso 1: subir la muestra de voz y solicitar la frase de verificación.
   const handleClone = async () => {
-    if (!cloneAudioFile || !cloneName.trim() || !user) return;
-    if (cloneAudioDuration !== null && cloneAudioDuration < 30) {
+    const sample = cloneAudioFile || cloneAudioBlob;
+    if (!sample || !cloneName.trim() || !user) return;
+    if (cloneAudioDuration !== null && cloneAudioDuration < 15) {
       toast({ title: vc('tooShort'), description: vc('tooShortDesc'), variant: 'destructive' }); return;
     }
     setIsCloning(true);
+    setCloneStep('requesting_phrase');
     try {
+      const voiceUrl = await uploadToVoiceSamples(sample, cloneAudioFile ? (cloneAudioFile.name.split('.').pop() || 'mp3') : 'webm');
       const { data: { session } } = await supabase.auth.getSession();
-      const form = new FormData();
-      form.append('audio', cloneAudioFile); form.append('name', cloneName.trim());
-      form.append('description', cloneDescription); form.append('remove_background_noise', String(cloneRemoveNoise));
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/clone-voice`,
-        { method: 'POST', headers: { 'Authorization': `Bearer ${session?.access_token}`, 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY }, body: form });
-      const data = await response.json();
-      if (!response.ok) { const { userMessage } = parseAiError({ status: response.status }, data); toast({ title: vc('cloneError'), description: userMessage, variant: 'destructive' }); return; }
-      toast({ title: vc('cloneSuccess'), description: vc('cloneSuccessDesc', { name: cloneName.trim() }) });
-      track('voice_cloned', { feature: 'voice_cloning' });
-      setCloneName(''); setCloneDescription(''); setCloneAudioFile(null); setCloneAudioDuration(null); setCloneRemoveNoise(false); setShowCloneForm(false);
-      if (cloneFileRef.current) cloneFileRef.current.value = '';
-      await loadClones(); setActiveTab('sing');
-    } catch (err) { const { userMessage } = parseAiError(err); toast({ title: vc('connectionError'), description: userMessage, variant: 'destructive' }); }
-    finally { setIsCloning(false); }
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-voice-clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+        body: JSON.stringify({ action: 'request_phrase', voiceUrl, vocalStartS: 0, vocalEndS: Math.min(cloneAudioDuration ?? 10, 30), language: i18n.resolvedLanguage?.startsWith('en') ? 'en' : i18n.resolvedLanguage?.startsWith('pt') ? 'pt' : 'es', name: cloneName.trim(), description: cloneDescription }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        const { userMessage } = parseAiError({ status: res.status }, data);
+        toast({ title: vc('cloneError'), description: userMessage, variant: 'destructive' });
+        setCloneStep('idle');
+        return;
+      }
+      setActiveCloneId(data.cloneId);
+      pollCloneStatus(data.cloneId);
+    } catch (err) {
+      const { userMessage } = parseAiError(err);
+      toast({ title: vc('connectionError'), description: userMessage, variant: 'destructive' });
+      setCloneStep('idle');
+    } finally {
+      setIsCloning(false);
+    }
+  };
+
+  // Paso 2: el usuario ya leyó la frase de verificación en voz alta.
+  const handleVerificationRecordingComplete = async (blob: Blob) => {
+    if (!activeCloneId) return;
+    setIsCloning(true);
+    try {
+      const verificationAudioUrl = await uploadToVoiceSamples(blob, 'webm');
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-voice-clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+        body: JSON.stringify({ action: 'submit_verification', cloneId: activeCloneId, verificationAudioUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.error === 'insufficient_credits') {
+          toast({ title: tv('insufficientCredits'), variant: 'destructive' });
+        } else {
+          const { userMessage } = parseAiError({ status: res.status }, data);
+          toast({ title: vc('cloneError'), description: userMessage, variant: 'destructive' });
+        }
+        return;
+      }
+      setCloneStep('generating');
+      pollCloneStatus(activeCloneId);
+    } catch (err) {
+      const { userMessage } = parseAiError(err);
+      toast({ title: vc('connectionError'), description: userMessage, variant: 'destructive' });
+    } finally {
+      setIsCloning(false);
+    }
   };
 
   const handleDeleteClone = async (clone: any) => {
@@ -220,8 +324,8 @@ export default function AIStudioVocal() {
 
   const durationBadge = () => {
     if (cloneAudioDuration === null) return null;
-    if (cloneAudioDuration < 30) return <span className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationTooShort')}</span>;
-    if (cloneAudioDuration < 60) return <span className="text-xs text-warning flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationOk')}</span>;
+    if (cloneAudioDuration < 15) return <span className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationTooShort')}</span>;
+    if (cloneAudioDuration < 30) return <span className="text-xs text-warning flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationOk')}</span>;
     return <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {vc('durationOptimal')}</span>;
   };
 
@@ -247,7 +351,7 @@ export default function AIStudioVocal() {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-vocal-track`,
         { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-          body: JSON.stringify({ lyrics, voice_id: selectedClone.elevenlabs_voice_id, voice_name: selectedClone.name }) });
+          body: JSON.stringify({ lyrics, voice_id: selectedClone.provider_voice_id || selectedClone.elevenlabs_voice_id, voice_name: selectedClone.name }) });
       const data = await res.json();
       if (!res.ok) {
         if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: t('dashboard.noCredits.costMessage', { action: tv('title'), cost: FEATURE_COSTS.generate_vocal_track }), variant: 'destructive' });
@@ -276,48 +380,119 @@ export default function AIStudioVocal() {
         <CardDescription>{vc('subtitle')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        <div className="bg-primary/5 rounded-lg p-4 flex gap-3">
-          <Mic className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-          <div className="text-sm space-y-1">
-            <p className="font-medium">{vc('tipsTitle')}</p>
-            <ul className="text-muted-foreground space-y-0.5 list-disc list-inside">
-              <li>{vc('tip1')}</li><li>{vc('tip2')}</li><li>{vc('tip3')}</li><li>{vc('tip4')}</li><li>{vc('tip5')}</li>
-            </ul>
+        {/* Paso 2: leer la frase de verificación en voz alta */}
+        {cloneStep === 'awaiting_verification_recording' && verificationPhrase && (
+          <div className="space-y-4">
+            <div className="bg-primary/5 rounded-lg p-4 space-y-2">
+              <p className="font-medium text-sm flex items-center gap-2"><Mic className="h-4 w-4 text-primary" /> {s('aiVocal.verificationTitle', 'Verificación de identidad vocal')}</p>
+              <p className="text-sm text-muted-foreground">{s('aiVocal.verificationDesc', 'Para confirmar que es tu propia voz, lee en voz alta la siguiente frase y grábala:')}</p>
+              <p className="text-lg font-semibold p-3 bg-background rounded border">{verificationPhrase}</p>
+            </div>
+            <VoiceRecorder
+              onRecordingComplete={(blob) => handleVerificationRecordingComplete(blob)}
+              minDurationSec={2}
+              maxDurationSec={30}
+              recordLabel={s('aiVocal.startRecording', 'Grabar lectura')}
+              stopLabel={s('aiVocal.stopRecording', 'Detener')}
+              retryLabel={s('aiVocal.retryRecording', 'Repetir')}
+              useLabel={isCloning ? s('aiVocal.sending', 'Enviando...') : s('aiVocal.confirmRecording', 'Enviar y crear voz')}
+            />
+            <Button variant="ghost" size="sm" onClick={resetCloneFlow}>{vc('cancel')}</Button>
           </div>
-        </div>
-        <div className="space-y-1.5">
-          <Label>{vc('nameLabel')}</Label>
-          <Input value={cloneName} onChange={e => setCloneName(e.target.value)} placeholder={vc('namePlaceholder')} maxLength={50} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>{vc('descLabel')}</Label>
-          <Input value={cloneDescription} onChange={e => setCloneDescription(e.target.value)} placeholder={vc('descPlaceholder')} maxLength={200} />
-        </div>
-        <div className="space-y-1.5">
-          <Label>{vc('uploadLabel')}</Label>
-          <FileDropzone
-            fileType="audio"
-            accept=".mp3,.wav,.m4a,audio/*"
-            maxSize={50}
-            currentFile={cloneAudioFile}
-            onFileSelect={(file) => {
-              handleCloneFileChange({ target: { files: [file] } } as any);
-            }}
-            onRemove={() => {
-              setCloneAudioFile(null);
-              setCloneAudioDuration(null);
-            }}
-          />
-          {durationBadge()}
-        </div>
-        <label className="flex items-center gap-2 cursor-pointer text-sm">
-          <input type="checkbox" checked={cloneRemoveNoise} onChange={e => setCloneRemoveNoise(e.target.checked)} className="rounded border-border" />
-          {vc('removeNoise')}
-          <span className="text-muted-foreground text-xs">— {vc('removeNoiseHint')}</span>
-        </label>
-        <Button onClick={handleClone} disabled={!cloneAudioFile || !cloneName.trim() || isCloning} className="w-full gap-2">
-          {isCloning ? <><Loader2 className="h-4 w-4 animate-spin" /> {vc('cloningBtn')}</> : <><Mic className="h-4 w-4" /> {vc('cloneBtn')}</>}
-        </Button>
+        )}
+
+        {/* Paso 3: generando la voz */}
+        {cloneStep === 'generating' && (
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="font-medium">{s('aiVocal.generatingVoice', 'Creando tu voz personalizada...')}</p>
+            <p className="text-sm text-muted-foreground">{s('aiVocal.generatingVoiceHint', 'Esto puede tardar unos minutos.')}</p>
+          </div>
+        )}
+
+        {/* Estado de fallo */}
+        {cloneStep === 'failed' && (
+          <div className="space-y-3">
+            <div className="bg-destructive/10 rounded-lg p-4 flex gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium">{s('aiVocal.cloneFailedTitle', 'No se pudo crear la voz')}</p>
+                {cloneErrorMsg && <p className="text-muted-foreground mt-1">{cloneErrorMsg}</p>}
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={resetCloneFlow}>{s('aiVocal.tryAgain', 'Intentarlo de nuevo')}</Button>
+          </div>
+        )}
+
+        {/* Paso 1: nombre + muestra de voz (subir o grabar) */}
+        {(cloneStep === 'idle' || cloneStep === 'requesting_phrase') && (
+          <>
+            <div className="bg-primary/5 rounded-lg p-4 flex gap-3">
+              <Mic className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="text-sm space-y-1">
+                <p className="font-medium">{vc('tipsTitle')}</p>
+                <ul className="text-muted-foreground space-y-0.5 list-disc list-inside">
+                  <li>{vc('tip1')}</li><li>{vc('tip2')}</li><li>{vc('tip3')}</li><li>{vc('tip4')}</li><li>{vc('tip5')}</li>
+                </ul>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{vc('nameLabel')}</Label>
+              <Input value={cloneName} onChange={e => setCloneName(e.target.value)} placeholder={vc('namePlaceholder')} maxLength={50} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{vc('descLabel')}</Label>
+              <Input value={cloneDescription} onChange={e => setCloneDescription(e.target.value)} placeholder={vc('descPlaceholder')} maxLength={200} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{vc('uploadLabel')}</Label>
+              {cloneAudioBlob ? (
+                <div className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <span className="text-sm text-muted-foreground">{s('aiVocal.recordedSample', 'Muestra grabada')} ({cloneAudioDuration}s)</span>
+                  <Button variant="ghost" size="sm" onClick={() => { setCloneAudioBlob(null); setCloneAudioDuration(null); }}>{vc('cancel')}</Button>
+                </div>
+              ) : cloneAudioFile ? (
+                <FileDropzone
+                  fileType="audio"
+                  accept=".mp3,.wav,.m4a,audio/*"
+                  maxSize={50}
+                  currentFile={cloneAudioFile}
+                  onFileSelect={(file) => handleCloneFileChange({ target: { files: [file] } } as any)}
+                  onRemove={() => { setCloneAudioFile(null); setCloneAudioDuration(null); }}
+                />
+              ) : (
+                <div className="space-y-3">
+                  <VoiceRecorder
+                    onRecordingComplete={(blob, durationSec) => { setCloneAudioBlob(blob); setCloneAudioDuration(durationSec); }}
+                    minDurationSec={15}
+                    maxDurationSec={60}
+                    recordLabel={s('aiVocal.recordSample', 'Grabar muestra de voz')}
+                    stopLabel={s('aiVocal.stopRecording', 'Detener')}
+                    retryLabel={s('aiVocal.retryRecording', 'Repetir')}
+                    useLabel={s('aiVocal.useThisSample', 'Usar esta muestra')}
+                  />
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px bg-border" />
+                    <span className="text-xs text-muted-foreground">{s('aiVocal.or', 'o')}</span>
+                    <div className="flex-1 h-px bg-border" />
+                  </div>
+                  <FileDropzone
+                    fileType="audio"
+                    accept=".mp3,.wav,.m4a,audio/*"
+                    maxSize={50}
+                    currentFile={cloneAudioFile}
+                    onFileSelect={(file) => handleCloneFileChange({ target: { files: [file] } } as any)}
+                    onRemove={() => { setCloneAudioFile(null); setCloneAudioDuration(null); }}
+                  />
+                </div>
+              )}
+              {durationBadge()}
+            </div>
+            <Button onClick={handleClone} disabled={(!cloneAudioFile && !cloneAudioBlob) || !cloneName.trim() || isCloning} className="w-full gap-2">
+              {isCloning ? <><Loader2 className="h-4 w-4 animate-spin" /> {vc('cloningBtn')}</> : <><Mic className="h-4 w-4" /> {vc('cloneBtn')}</>}
+            </Button>
+          </>
+        )}
       </CardContent>
     </Card>
   );
