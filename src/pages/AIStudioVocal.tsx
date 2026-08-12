@@ -364,11 +364,14 @@ export default function AIStudioVocal() {
       // el resultado esté listo (o falle).
       const generationId = data.generationId;
       const poll = window.setInterval(async () => {
-        const { data: row } = await supabase.from('ai_generations').select('status, audio_url').eq('id', generationId).maybeSingle();
+        // `status` existe en la tabla de producción aunque los tipos generados
+        // estén desactualizados; casteamos para evitar el error de TS.
+        const { data } = await supabase.from('ai_generations').select('status, audio_url').eq('id', generationId).maybeSingle();
+        const row = data as unknown as { status: string | null; audio_url: string | null } | null;
         if (row?.status === 'completed' && row.audio_url) {
           window.clearInterval(poll);
           setAudioUrl(row.audio_url);
-          setHistory(prev => [{ id: generationId, audio_url: row.audio_url, prompt: `Pista vocal: ${selectedClone.name}`, created_at: new Date().toISOString() }, ...prev]);
+          setHistory(prev => [{ id: generationId, audio_url: row.audio_url as string, prompt: `Pista vocal: ${selectedClone.name}`, created_at: new Date().toISOString() }, ...prev]);
           toast({ title: tv('vocalGenerated'), description: tv('vocalGeneratedDesc') });
           track('vocal_track_generated', { feature: 'vocal' });
           setIsGenerating(false);
