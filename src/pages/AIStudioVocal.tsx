@@ -23,14 +23,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import {
   ArrowLeft, ArrowDown, Mic, Download, Loader2, Music, Sparkles, Upload,
-  Trash2, Pencil, Check, X, Play, Pause, Globe, Lock,
+  Trash2, Pencil, Check, X, Play, Pause, Lock,
   CheckCircle2, AlertCircle, Palette, Users,
 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { AIStudioThemeBar } from '@/components/ai-studio/AIStudioThemeBar';
 
-import { VoiceTranslator } from '@/components/voice/VoiceTranslator';
 import { VoiceRecorder } from '@/components/voice/VoiceRecorder';
 import { VoiceToolsTour } from '@/components/ai-studio/VoiceToolsTour';
 import { HelpCircle } from 'lucide-react';
@@ -389,7 +388,7 @@ export default function AIStudioVocal() {
 
   const voiceToolsTitle = s('aiVocal.voiceToolsTitle', 'Herramientas de Voz');
   const voiceToolsBadge = s('aiVocal.voiceTools', 'Herramientas de Voz');
-  const voiceToolsSub = s('aiVocal.voiceToolsSubtitle', 'Tu estudio vocal IA: clona tu voz, canta en 29 idiomas, traduce audios y mucho más');
+  const voiceToolsSub = s('aiVocal.voiceToolsSubtitle', 'Tu estudio vocal IA: clona tu voz, canta en 29 idiomas y mucho más');
 
   // ──── CLONE FORM (shared) ────
   const cloneFormUI = (
@@ -589,7 +588,7 @@ export default function AIStudioVocal() {
   // ──── REGULAR (has clones) ────
   return (
     <div className="min-h-screen bg-background">
-      <SEO title="Herramientas de Voz" description="Tu estudio vocal IA: clona tu voz, canta en 29 idiomas, genera pistas vocales y traduce audios." path="/ai-studio/vocal" />
+      <SEO title="Herramientas de Voz" description="Tu estudio vocal IA: clona tu voz, canta en 29 idiomas y genera pistas vocales." path="/ai-studio/vocal" />
       <VoiceToolsTour />
       <Navbar />
       <AIStudioThemeBar />
@@ -613,7 +612,7 @@ export default function AIStudioVocal() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="max-w-5xl mx-auto">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="sing" className="gap-2" data-tour="vt-sing-tab">
               <Music className="h-4 w-4" />
               <span className="hidden sm:inline">{s('aiVocal.tabSing', 'Cantar')}</span>
@@ -621,10 +620,6 @@ export default function AIStudioVocal() {
             <TabsTrigger value="clone" className="gap-2" data-tour="vt-clone-tab">
               <Mic className="h-4 w-4" />
               <span className="hidden sm:inline">{s('aiVocal.tabClone', 'Clonar')}</span>
-            </TabsTrigger>
-            <TabsTrigger value="translate" className="gap-2" data-tour="vt-translate-tab">
-              <Globe className="h-4 w-4" />
-              <span className="hidden sm:inline">{s('aiVocal.tabTranslate', 'Traducir')}</span>
             </TabsTrigger>
           </TabsList>
 
@@ -886,17 +881,6 @@ export default function AIStudioVocal() {
                 </div>
               )}
             </div>
-          </TabsContent>
-
-          {/* TAB: TRANSLATE */}
-          <TabsContent value="translate">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><Globe className="h-5 w-5 text-primary" />{s('aiVocal.translateTitle', 'Traductor de voz')}</CardTitle>
-                <CardDescription>{s('aiVocal.translateSubtitle', 'Traduce audios existentes a otros idiomas manteniendo tu timbre')}</CardDescription>
-              </CardHeader>
-              <CardContent><VoiceTranslator clones={voiceClones} /></CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
 

@@ -36,7 +36,6 @@ const DEFAULT_COSTS: Record<string, number> = {
   one_click_create:           1,
   distribute_music:           0,
   inspiration:                0,
-  voice_translation_per_min:  2,
 };
 
 // ── Runtime cache ──────────────────────────────────────────
