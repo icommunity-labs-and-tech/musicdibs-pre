@@ -201,6 +201,31 @@ export default function AdminFeatureCostsPage() {
     setDeleting(null);
   };
 
+  const autoAssignMissingIcons = async () => {
+    const missing = rows.filter(r => !r.operation_icon);
+    if (missing.length === 0) {
+      toast.info('Todas las filas ya tienen icono');
+      return;
+    }
+    setAutoAssigning(true);
+    let updated = 0;
+    for (const row of missing) {
+      const icon = getDefaultIcon(row.operation_key, row.category);
+      const { error } = await supabase
+        .from('operation_pricing')
+        .update({ operation_icon: icon } as any)
+        .eq('operation_key', row.operation_key);
+      if (error) {
+        toast.error(`Error actualizando ${row.operation_key}: ${error.message}`);
+      } else {
+        updated++;
+      }
+    }
+    toast.success(`${updated} de ${missing.length} iconos asignados`);
+    await load();
+    setAutoAssigning(false);
+  };
+
   const getValue = <K extends keyof OperationRow>(row: OperationRow, field: K): OperationRow[K] => {
     return (editing[row.operation_key]?.[field] ?? row[field]) as OperationRow[K];
   };
