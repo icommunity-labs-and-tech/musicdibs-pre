@@ -52,12 +52,6 @@ function useSteps(): Step[] {
       content: vt('step6Content', 'Ajusta cómo suena tu canción:\n\n🎵 Tema central\nAmor, Desamor, Fiesta, Superación, etc.\n\n🎸 Género musical\nPop, Rock, Reggaeton, Hip-Hop, y más\n\n🎭 Mood / Tono\nAlegre, Melancólico, Épico, Enérgico, etc.\n\nEstos parámetros definen el estilo de la pista vocal generada.'),
       disableBeacon: true,
     },
-    {
-      target: '[data-tour="vt-translate-tab"]',
-      title: vt('step7Title', 'Traduce audio a cualquier idioma'),
-      content: vt('step7Content', 'Convierte cualquier audio a otro idioma manteniendo la voz original:\n\n1️⃣ Sube un archivo de audio\n2️⃣ Selecciona idioma de destino (29 disponibles)\n3️⃣ La IA traduce y genera nueva versión\n\nPerfecto para crear versiones internacionales de tus canciones.\n\nCoste: 5 créditos por traducción'),
-      disableBeacon: true,
-    },
   ], [t]);
 }
 
