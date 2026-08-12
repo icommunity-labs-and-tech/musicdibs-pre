@@ -48,6 +48,8 @@ export function VoiceRecorder({
     streamRef.current = null;
   }, []);
 
+  // Limpieza únicamente al desmontar: no debe re-ejecutarse con cada grabación.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => () => { clearTimer(); stopStream(); if (recordedUrl) URL.revokeObjectURL(recordedUrl); }, []);
 
   const startRecording = useCallback(async () => {
