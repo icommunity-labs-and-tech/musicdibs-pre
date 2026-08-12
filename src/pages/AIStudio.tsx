@@ -124,7 +124,7 @@ const AIStudio = () => {
           isFeatured
             ? 'rounded-[10px] hover:shadow-2xl hover:-translate-y-1 border-0'
             : !module.available
-              ? 'opacity-50 grayscale pointer-events-none'
+              ? 'opacity-55 grayscale pointer-events-none cursor-not-allowed border-dashed border-muted-foreground/30'
               : disabled
                 ? 'opacity-60 grayscale'
                 : 'hover:shadow-lg hover:-translate-y-1'
