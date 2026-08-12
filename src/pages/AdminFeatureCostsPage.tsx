@@ -168,7 +168,7 @@ export default function AdminFeatureCostsPage() {
       'model_name', 'llm_provider', 'llm_model', 'category', 'is_annual_only',
     ];
     for (const f of fields) {
-      if (changes[f] !== undefined) updatePayload[f] = changes[f] as OperationRow[typeof f];
+      if (changes[f] !== undefined) (updatePayload as Record<string, unknown>)[f] = changes[f];
     }
 
     const { error } = await supabase
