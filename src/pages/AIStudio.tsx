@@ -93,8 +93,8 @@ const AIStudio = () => {
       descKey: "aiStudio.modules.singYourSong.desc",
       icon: Mic,
       href: "/ai-studio/vocal",
-      available: true,
-      costsCredits: false,
+      available: false,
+      costsCredits: true,
       featureKey: 'inspiration' as const,
       color: "from-primary to-accent"
     },

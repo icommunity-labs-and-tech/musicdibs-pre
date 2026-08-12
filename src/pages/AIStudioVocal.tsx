@@ -38,6 +38,7 @@ import { useProductTracking } from '@/hooks/useProductTracking';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
 import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 import { CreditsChip } from '@/components/ai-studio/CreditsChip';
+import { PricingLink } from '@/components/dashboard/PricingPopup';
 
 const THEMES = ["Amor", "Desamor", "Superación", "Fiesta", "Calle", "Familia", "Libertad", "Nostalgia", "Éxito", "Identidad"];
 const MUSIC_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Reggaeton', 'Flamenco', 'Electrónica', 'Jazz', 'Clásica', 'R&B', 'Latin'];
@@ -509,6 +510,7 @@ export default function AIStudioVocal() {
             <Button onClick={handleClone} disabled={(!cloneAudioFile && !cloneAudioBlob) || !cloneName.trim() || isCloning} className="w-full gap-2">
               {isCloning ? <><Loader2 className="h-4 w-4 animate-spin" /> {vc('cloningBtn')}</> : <><Mic className="h-4 w-4" /> {vc('cloneBtn')}</>}
             </Button>
+            <div className="text-center"><PricingLink /></div>
           </>
         )}
       </CardContent>
