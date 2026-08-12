@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { toast } from 'sonner';
-import { Save, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Trash2 } from 'lucide-react';
+import { Save, Loader2, ArrowUp, ArrowDown, ArrowUpDown, Trash2, Wand2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const PAGE_SIZE = 10;
@@ -29,6 +29,60 @@ const CATEGORY_LABELS: Record<string, string> = {
   promo: 'Promoción',
 };
 const CATEGORY_KEYS = Object.keys(CATEGORY_LABELS);
+
+// Default emoji icons for rows without an explicit icon. Key-specific entries take precedence;
+// otherwise we fall back to the category. Used for the auto-assign helper and the preview fallback.
+const DEFAULT_ICON_BY_KEY: Record<string, string> = {
+  register_work: '📝',
+  promote_work: '📢',
+  promote_premium: '⭐',
+  generate_audio: '🎵',
+  generate_audio_song: '🎶',
+  generate_audio_elevenlabs: '🎶',
+  generate_vocal_track_kie: '🎙️',
+  clone_voice: '🎤',
+  edit_audio: '✂️',
+  enhance_audio: '✨',
+  enhance_add_vocals: '🎤',
+  enhance_cover: '🔄',
+  enhance_extend: '⏩',
+  enhance_instrumental: '🎹',
+  generate_cover: '🎨',
+  generate_lyrics: '🎼',
+  generate_press_release: '📰',
+  generate_video: '🎬',
+  improve_prompt: '💡',
+  instagram_creative: '📸',
+  youtube_thumbnail: '▶️',
+  event_poster: '📅',
+  social_poster: '📢',
+  social_video: '📱',
+  midi_generate: '🎹',
+  one_click_create: '⚡',
+  voice_translation_per_min: '🗣️',
+  promo_social_regenerate_copies: '📝',
+  promo_social_regenerate_image: '🖼️',
+  distribution_single_annual: '🌍',
+  distribution_album_annual: '🌐',
+  distribution_single_monthly: '🌍',
+  distribution_album_monthly: '🌐',
+  distribution_single_free: '🆓',
+  distribution_album_free: '🆓',
+};
+
+const DEFAULT_ICON_BY_CATEGORY: Record<string, string> = {
+  gratis: '🎁',
+  registro: '📝',
+  distribucion: '🌐',
+  musica: '🎵',
+  audio: '🎙️',
+  visual: '🎨',
+  promo: '📢',
+  promotion: '📢',
+};
+
+const getDefaultIcon = (key: string, category: string) =>
+  DEFAULT_ICON_BY_KEY[key] || DEFAULT_ICON_BY_CATEGORY[category] || '•';
 
 interface OperationRow {
   operation_key: string;
@@ -54,6 +108,7 @@ export default function AdminFeatureCostsPage() {
   const [editing, setEditing] = useState<Record<string, Partial<OperationRow>>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [autoAssigning, setAutoAssigning] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [sortField, setSortField] = useState<SortField>('display_order');
@@ -107,18 +162,18 @@ export default function AdminFeatureCostsPage() {
     if (!changes) return;
 
     setSaving(row.operation_key);
-    const updatePayload: Record<string, unknown> = {};
+    const updatePayload: Partial<OperationRow> = {};
     const fields: (keyof OperationRow)[] = [
       'operation_name', 'credits_cost', 'description', 'operation_icon',
       'model_name', 'llm_provider', 'llm_model', 'category', 'is_annual_only',
     ];
     for (const f of fields) {
-      if (changes[f] !== undefined) updatePayload[f] = changes[f];
+      if (changes[f] !== undefined) (updatePayload as Record<string, unknown>)[f] = changes[f];
     }
 
     const { error } = await supabase
       .from('operation_pricing')
-      .update(updatePayload as any)
+      .update(updatePayload)
       .eq('operation_key', row.operation_key);
 
     if (error) {
@@ -144,6 +199,31 @@ export default function AdminFeatureCostsPage() {
       await load();
     }
     setDeleting(null);
+  };
+
+  const autoAssignMissingIcons = async () => {
+    const missing = rows.filter(r => !r.operation_icon);
+    if (missing.length === 0) {
+      toast.info('Todas las filas ya tienen icono');
+      return;
+    }
+    setAutoAssigning(true);
+    let updated = 0;
+    for (const row of missing) {
+      const icon = getDefaultIcon(row.operation_key, row.category);
+      const { error } = await supabase
+        .from('operation_pricing')
+        .update({ operation_icon: icon })
+        .eq('operation_key', row.operation_key);
+      if (error) {
+        toast.error(`Error actualizando ${row.operation_key}: ${error.message}`);
+      } else {
+        updated++;
+      }
+    }
+    toast.success(`${updated} de ${missing.length} iconos asignados`);
+    await load();
+    setAutoAssigning(false);
   };
 
   const getValue = <K extends keyof OperationRow>(row: OperationRow, field: K): OperationRow[K] => {
@@ -199,7 +279,25 @@ export default function AdminFeatureCostsPage() {
       </p>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Tabla de precios ({rows.length} operaciones)</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">Tabla de precios ({rows.length} operaciones)</CardTitle>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={autoAssignMissingIcons}
+              disabled={autoAssigning}
+              title="Rellenar iconos por defecto en las filas vacías"
+            >
+              {autoAssigning ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Wand2 className="h-4 w-4 mr-2" />
+              )}
+              Auto-asignar iconos
+            </Button>
+          </div>
+        </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
             <Table>
@@ -221,11 +319,18 @@ export default function AdminFeatureCostsPage() {
                 {paginatedRows.map(row => (
                   <TableRow key={row.operation_key} className={!row.is_active ? 'opacity-40' : ''}>
                     <TableCell>
-                      <Input
-                        value={String(getValue(row, 'operation_icon') || '')}
-                        onChange={e => handleChange(row.operation_key, 'operation_icon', e.target.value)}
-                        className="h-8 w-12 text-center"
-                      />
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={String(getValue(row, 'operation_icon') || '')}
+                          onChange={e => handleChange(row.operation_key, 'operation_icon', e.target.value)}
+                          className="h-8 w-12 text-center"
+                        />
+                        {!getValue(row, 'operation_icon') && (
+                          <span className="text-lg opacity-50" title="Icono por defecto">
+                            {getDefaultIcon(row.operation_key, row.category)}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="font-mono text-xs">{row.operation_key}</TableCell>
                     <TableCell>
