@@ -2018,10 +2018,56 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           if (previousPriceId && failedSubItem) {
             console.log(`[WEBHOOK] payment_failed: subscription_update fallido para user ${profile.user_id} -- revirtiendo sub ${subscriptionIdFailed} item ${failedSubItem} a precio anterior ${previousPriceId}`);
 
+            // FIX 2026-08-13 (caso ferlmfo@gmail.com): Stripe SIEMPRE resetea la
+            // fecha de facturacion y cobra de inmediato al cambiar el INTERVALO
+            // de una suscripcion (mes<->año), incluso con proration_behavior:
+            // "none" -- esto es documentado, no un bug de Stripe. Si el usuario
+            // YA habia pagado por el periodo actual del plan al que estamos
+            // revirtiendo (caso tipico: pago Mensual, intento de upgrade a
+            // Anual que fallo), la reversion genera un SEGUNDO cobro real por
+            // el mismo periodo. Se detecta comprobando si ya existe una
+            // factura pagada reciente para este mismo precio antes de
+            // revertir, y si la reversion genera una factura nueva PAGADA, se
+            // reembolsa automaticamente.
+            const previousPrice = await stripe.prices.retrieve(previousPriceId);
+            const intervalDays = previousPrice.recurring?.interval === "year" ? 370 : 32;
+            const recentInvoices = await stripe.invoices.list({ subscription: subscriptionIdFailed, status: "paid", limit: 5 });
+            const alreadyPaidForThisPeriod = recentInvoices.data.some((inv: any) => {
+              const samePrice = inv.lines?.data?.some((l: any) => l.pricing?.price_details?.price === previousPriceId);
+              const withinWindow = (Date.now() / 1000 - inv.created) < intervalDays * 24 * 60 * 60;
+              return samePrice && withinWindow;
+            });
+
             const revertedSub = await stripe.subscriptions.update(subscriptionIdFailed, {
               items: [{ id: failedSubItem, price: previousPriceId }],
               proration_behavior: "none",
             });
+
+            if (alreadyPaidForThisPeriod && revertedSub.latest_invoice) {
+              try {
+                const newInvoiceId = typeof revertedSub.latest_invoice === "string" ? revertedSub.latest_invoice : (revertedSub.latest_invoice as any).id;
+                const newInvoice = await stripe.invoices.retrieve(newInvoiceId);
+                if (newInvoice.status === "paid" && newInvoice.amount_paid > 0) {
+                  const paymentIntentId = (newInvoice as any).parent?.subscription_details
+                    ? await (async () => {
+                        const pis = await stripe.paymentIntents.list({ customer: newInvoice.customer as string, limit: 5 });
+                        return pis.data.find((pi: any) => pi.payment_details?.order_reference === newInvoiceId)?.id;
+                      })()
+                    : undefined;
+                  if (paymentIntentId) {
+                    await stripe.refunds.create({ payment_intent: paymentIntentId, reason: "duplicate" });
+                    console.log(`[WEBHOOK] payment_failed: reembolsado cobro duplicado ${paymentIntentId} (${newInvoice.amount_paid / 100}€) generado por la reversion -- el usuario ya habia pagado por este periodo`);
+                  }
+                }
+              } catch (refundErr) {
+                console.error(`[WEBHOOK] payment_failed: fallo al reembolsar posible cobro duplicado tras revertir para user ${profile.user_id}:`, refundErr);
+                await supabase.from("admin_alerts").insert({
+                  source: "stripe-webhook:invoice.payment_failed",
+                  severity: "critical",
+                  message: `Al revertir un upgrade fallido para user ${profile.user_id} (sub ${subscriptionIdFailed}), la reversion pudo haber generado un cobro DUPLICADO (el usuario ya habia pagado por este periodo) y el reembolso automatico fallo: ${refundErr}. Revisar y reembolsar manualmente.`,
+                });
+              }
+            }
 
             // Anular la factura del upgrade fallido para que Stripe no la
             // siga reintentando en paralelo al plan ya revertido.
