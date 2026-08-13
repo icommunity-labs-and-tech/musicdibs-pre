@@ -1210,7 +1210,8 @@ serve(async (req) => {
           billingReason = invoice.billing_reason as string | null;
           priceId = getInvoicePriceId(invoice);
           invoiceId = invId;
-          subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : (invoice.subscription as any)?.id;
+          subscriptionId = (invoice as any).parent?.subscription_details?.subscription
+            ?? (typeof invoice.subscription === "string" ? invoice.subscription : (invoice.subscription as any)?.id);
           invoiceAmount = (invoice.amount_paid || 0) / 100;
           invoiceNet = netFromInvoice(invoice);
           invoiceCurrency = invoice.currency || "eur";
@@ -1225,7 +1226,8 @@ serve(async (req) => {
         billingReason = invoice.billing_reason;
         priceId = getInvoicePriceId(invoice);
         invoiceId = invoice.id;
-        subscriptionId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
+        subscriptionId = (invoice as any).parent?.subscription_details?.subscription
+          ?? (typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id);
         invoiceAmount = (invoice.amount_paid || 0) / 100;
         invoiceNet = netFromInvoice(invoice);
         invoiceCurrency = invoice.currency || "eur";
@@ -1541,13 +1543,20 @@ serve(async (req) => {
 
         if (profile) {
           // Guard #0: If subscriptionId is null in event payload, retrieve from Stripe
-          // (Stripe sometimes sends invoice events before subscription is fully attached)
+          // FIX 2026-08-13: la causa real de que esto fallara sistematicamente no
+          // era "a veces Stripe no lo resuelve" (comentario original) -- era que
+          // fullInv.subscription (campo plano) esta deprecado en la version
+          // actual de la API, el valor real vive en
+          // fullInv.parent.subscription_details.subscription. Este guard #0
+          // fallando en cascada obligaba a caer siempre al guard #2b (por
+          // customerId), causa raiz de fondo de varios incidentes de esta
+          // semana (doctrinamusic, transformatecreando, lui.luna.deimos).
           if (!subscriptionId && invoiceId) {
             try {
               const fullInv = await stripe.invoices.retrieve(invoiceId);
-              const resolvedSubId = typeof fullInv.subscription === "string"
-                ? fullInv.subscription
-                : (fullInv.subscription as any)?.id ?? undefined;
+              const resolvedSubId = (fullInv as any).parent?.subscription_details?.subscription
+                ?? (typeof fullInv.subscription === "string" ? fullInv.subscription : (fullInv.subscription as any)?.id)
+                ?? undefined;
               if (resolvedSubId) {
                 subscriptionId = resolvedSubId;
                 console.log(`[WEBHOOK] subscription_create: resolved subscriptionId ${subscriptionId} from Stripe for invoice ${invoiceId}`);
@@ -1945,7 +1954,19 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
           billingReasonFailed = invoice.billing_reason ?? null;
           invoiceIdFailed = invoiceId;
           invoiceLinesFailed = invoice.lines?.data ?? [];
-          subscriptionIdFailed = typeof (invoice as any).subscription === "string" ? (invoice as any).subscription : (invoice as any).subscription?.id ?? null;
+          // FIX 2026-08-13 (caso ferlmfo@gmail.com): invoice.subscription (campo
+          // plano) esta deprecado en la version actual de la API de Stripe -- el
+          // valor real vive en invoice.parent.subscription_details.subscription.
+          // Con el campo plano siempre undefined, subscriptionIdFailed quedaba
+          // null, la condicion de reversion de upgrade fallido nunca se cumplia
+          // (aunque billing_reason SI coincidia), y el flujo caia silenciosamente
+          // al tratamiento de impago normal -- dejando al usuario en el plan
+          // nuevo (nunca pagado) con el periodo de gracia estandar en vez de
+          // revertirlo de inmediato.
+          const _invAny = invoice as any;
+          subscriptionIdFailed = _invAny.parent?.subscription_details?.subscription
+            ?? (typeof _invAny.subscription === "string" ? _invAny.subscription : _invAny.subscription?.id)
+            ?? null;
         } else {
           console.warn("[WEBHOOK] invoice_payment.failed: no invoice ID found");
           return new Response(JSON.stringify({ received: true }), { headers: { "Content-Type": "application/json" } });
@@ -1968,7 +1989,9 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
         billingReasonFailed = invoice.billing_reason ?? staleInvoice.billing_reason ?? null;
         invoiceIdFailed = invoiceId;
         invoiceLinesFailed = invoice.lines?.data ?? staleInvoice.lines?.data ?? [];
-        subscriptionIdFailed = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id ?? null;
+        subscriptionIdFailed = (invoice as any).parent?.subscription_details?.subscription
+          ?? (typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id)
+          ?? null;
       }
 
       const profile = await findProfileByCustomerId(supabase, stripe, customerId);
