@@ -314,6 +314,46 @@ serve(async (req) => {
           const { data: { user } } = await supabase.auth.admin.getUserById(userId);
           const email = user?.email || "unknown";
 
+          // FIX 2026-08-15 (caso luisdanielrojassanchez74@gmail.com): este
+          // chequeo solo miraba "mismo importe + poco tiempo" como señal de
+          // duplicado -- con una ventana de 10 minutos, esto genera FALSOS
+          // POSITIVOS reales cuando un usuario compra 2 veces seguidas el
+          // mismo producto de forma legitima (ej. 2 topups de 1 credito).
+          // Confirmado en este caso: 3 cargos de Stripe con 3 payment_intent
+          // DISTINTOS, cada uno con su propia compra real -- el guard revirtio
+          // por error la 3a compra pensando que era un duplicado de la 2a
+          // (79s de diferencia), dejando al cliente con 1 credito menos de
+          // los que realmente pago (21EUR en 3 pagos reales).
+          // Antes de revertir, se busca si existen 2 ordenes (con
+          // charge_id/payment_intent_id de Stripe) DISTINTOS que coincidan en
+          // tiempo con cada transaccion -- si es asi, son compras genuinas
+          // y NO se debe tocar nada, solo reportar para visibilidad.
+          const findOrderNear = async (tx: typeof a) => {
+            const win = 5 * 60 * 1000;
+            const { data } = await supabase
+              .from("orders")
+              .select("id, stripe_charge_id, stripe_payment_intent_id")
+              .eq("user_id", userId)
+              .gte("paid_at", new Date(new Date(tx.created_at).getTime() - win).toISOString())
+              .lte("paid_at", new Date(new Date(tx.created_at).getTime() + win).toISOString())
+              .limit(1)
+              .maybeSingle();
+            return data;
+          };
+          const orderA = await findOrderNear(a);
+          const orderB = await findOrderNear(b);
+          const bothHaveDistinctStripeIds = orderA && orderB && orderA.id !== orderB.id &&
+            ((orderA.stripe_charge_id && orderA.stripe_charge_id !== orderB.stripe_charge_id) ||
+             (orderA.stripe_payment_intent_id && orderA.stripe_payment_intent_id !== orderB.stripe_payment_intent_id));
+
+          if (bothHaveDistinctStripeIds) {
+            issues.push({
+              type: "doble_asignacion_creditos", severity: "warning", email,
+              detail: `Posible falso positivo -- NO autocorregido: "${a.description}" (${a.id}) y "${b.description}" (${b.id}) tienen el mismo importe y ${Math.round(deltaMs / 1000)}s de diferencia, pero corresponden a 2 ordenes de Stripe con IDs distintos (${orderA.stripe_charge_id || orderA.stripe_payment_intent_id} vs ${orderB.stripe_charge_id || orderB.stripe_payment_intent_id}) -- parecen ser 2 compras genuinas, no un duplicado. Revisar solo si hay dudas.`,
+            });
+            continue;
+          }
+
           // Autocorregir: revertir la segunda transaccion (la mas reciente)
           const { error: revertErr } = await supabase.from("credit_transactions").insert({
             user_id: userId, type: "admin_reset", amount: -b.amount,
