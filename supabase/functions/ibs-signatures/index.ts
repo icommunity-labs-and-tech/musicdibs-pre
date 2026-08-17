@@ -172,17 +172,39 @@ serve(async (req) => {
 
       const result = await ibsRes.json();
 
-      // Save to local DB with status 'initiated' (signature created in iBS but documents NOT yet submitted by user)
-      // The signature only progresses to 'pending' / kyc_status='pending' when iBS confirms documents received
-      // via the signature.created webhook. This way, if the user abandons the flow before submitting docs,
-      // their kyc_status stays 'unverified' and they can restart.
-      await supabaseAdmin.from("ibs_signatures").insert({
-        user_id: user.id,
-        ibs_signature_id: result.signature_id,
-        signature_name: signatureName,
-        status: "initiated",
-        kyc_url: result.url,
-      });
+      // FIX 2026-08-17 (caso hallodsipe@gmail.com): si esta llamada al proveedor
+      // (arriba) tiene exito pero el INSERT de abajo falla (timeout, corte de
+      // conexion, funcion interrumpida), la sesion de verificacion queda creada
+      // en iBS/icommunitylabs pero SIN NINGUN registro en nuestra tabla -- el
+      // guardrail de arriba (que consulta ibs_signatures) no puede detectarla
+      // en el siguiente intento, permitiendo una segunda sesion huerfana
+      // "Esperando documentos" en el proveedor. Se reintenta el insert una vez
+      // y, si sigue fallando, se deja una alerta persistente con los datos
+      // necesarios para reconciliar manualmente en vez de perderlo en silencio.
+      let insertOk = false;
+      let lastInsertErr: unknown = null;
+      for (let attempt = 0; attempt < 2 && !insertOk; attempt++) {
+        const { error: insertErr } = await supabaseAdmin.from("ibs_signatures").insert({
+          user_id: user.id,
+          ibs_signature_id: result.signature_id,
+          signature_name: signatureName,
+          status: "initiated",
+          kyc_url: result.url,
+        });
+        if (!insertErr) { insertOk = true; break; }
+        lastInsertErr = insertErr;
+        console.warn(`[IBS-SIGNATURES] insert attempt ${attempt + 1} failed for signature ${result.signature_id}:`, insertErr);
+      }
+      if (!insertOk) {
+        console.error(`[IBS-SIGNATURES] CRITICAL: signature ${result.signature_id} created in provider but never persisted locally for user ${user.id}:`, lastInsertErr);
+        try {
+          await supabaseAdmin.from("admin_alerts").insert({
+            source: "ibs-signatures:create",
+            severity: "critical",
+            message: `Firma ${result.signature_id} (kyc_url: ${result.url}) creada en el proveedor iBS para user ${user.id} pero NUNCA se guardo en ibs_signatures tras 2 intentos: ${JSON.stringify(lastInsertErr)}. Revisar y reconciliar manualmente -- el usuario puede quedar con una sesion huerfana "Esperando documentos" en el proveedor sin que nuestro sistema la vea.`,
+          });
+        } catch { /* best-effort */ }
+      }
 
       // DO NOT update profiles.kyc_status here. Keep it as 'unverified' until iBS webhook confirms
       // documents were received (signature.created event).
@@ -324,12 +346,31 @@ serve(async (req) => {
 
       const result = await ibsRes.json();
 
-      await supabaseAdmin.from("ibs_signatures").insert({
-        user_id: user.id,
-        ibs_signature_id: result.signature_id,
-        signature_name: signatureName,
-        status: "success",
-      });
+      // FIX 2026-08-17: mismo fix que action:'create' -- reintento + alerta si
+      // el insert local falla tras crear la firma en el proveedor externo.
+      let insertOk = false;
+      let lastInsertErr: unknown = null;
+      for (let attempt = 0; attempt < 2 && !insertOk; attempt++) {
+        const { error: insertErr } = await supabaseAdmin.from("ibs_signatures").insert({
+          user_id: user.id,
+          ibs_signature_id: result.signature_id,
+          signature_name: signatureName,
+          status: "success",
+        });
+        if (!insertErr) { insertOk = true; break; }
+        lastInsertErr = insertErr;
+        console.warn(`[IBS-SIGNATURES] create_source insert attempt ${attempt + 1} failed for signature ${result.signature_id}:`, insertErr);
+      }
+      if (!insertOk) {
+        console.error(`[IBS-SIGNATURES] CRITICAL: signature ${result.signature_id} (create_source) created in provider but never persisted locally for user ${user.id}:`, lastInsertErr);
+        try {
+          await supabaseAdmin.from("admin_alerts").insert({
+            source: "ibs-signatures:create_source",
+            severity: "critical",
+            message: `Firma ${result.signature_id} creada en el proveedor iBS (create_source) para user ${user.id} pero NUNCA se guardo en ibs_signatures tras 2 intentos: ${JSON.stringify(lastInsertErr)}. Revisar y reconciliar manualmente.`,
+          });
+        } catch { /* best-effort */ }
+      }
 
       return new Response(JSON.stringify({
         signatureId: result.signature_id,
