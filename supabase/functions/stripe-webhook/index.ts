@@ -1321,7 +1321,20 @@ serve(async (req) => {
       if (billingReason === "subscription_update") {
         const profile = await findProfileByCustomerId(supabase, stripe, customerId);
 
-        if (profile) {
+        // FIX 2026-08-19 (caso jf4010@gmail.com): este bloque concedia
+        // creditos del tier basandose SOLO en el precio actual del item,
+        // sin comprobar si la factura de "subscription_update" en cuestion
+        // realmente tuvo un pago real (invoiceAmount > 0). Una factura de
+        // periodo de prueba ($0, "pagada" automaticamente por no requerir
+        // cobro) dispara el MISMO evento de pago exitoso -- al extender
+        // manualmente el trial_end de una suscripcion en soporte (sin
+        // ningun cobro real de por medio), esto concedio el credito
+        // COMPLETO del tier como si fuera una renovacion pagada. Se omite
+        // la concesion de creditos cuando la factura no tuvo ningun cobro
+        // real asociado.
+        if (profile && invoiceAmount === 0) {
+          console.log(`[WEBHOOK] subscription_update: invoice ${invoiceId} con amount_paid=0 (factura de trial u otra sin cobro real) -- omitiendo concesion de creditos para user ${profile.user_id}`);
+        } else if (profile) {
           // ââ Idempotency guard: skip if this plan-change invoice was already processed ââ
           if (invoiceId) {
             const { data: existingUpdateOrder } = await supabase
