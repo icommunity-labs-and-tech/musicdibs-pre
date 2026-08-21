@@ -654,6 +654,29 @@ serve(async (req) => {
       }
     }
 
+    // ── Deteccion de abuso del bono de bienvenida (multiples cuentas con
+    // emails de patron muy similar, ej. cancionerocol1@gmail.com,
+    // cancionerocol2@zohomail.com... creadas en poco tiempo para acumular
+    // creditos gratuitos). Solo lectura -- no bloquea cuentas
+    // automaticamente, siempre requiere revision manual (falsos positivos
+    // son posibles, ej. una empresa/familia con emails legitimamente
+    // similares).
+    try {
+      const { data: similarGroups, error: similarErr } = await supabase.rpc("detect_similar_email_signups", { p_days: 7, p_min_group_size: 3 });
+      if (similarErr) {
+        console.warn("[PURCHASE-AUDIT] detect_similar_email_signups error:", similarErr.message);
+      } else {
+        for (const group of similarGroups || []) {
+          issues.push({
+            type: "posible_abuso_bono_bienvenida", severity: "warning", email: group.emails[0],
+            detail: `${group.account_count} cuentas con el mismo patron de email ("${group.normalized_prefix}X@...") creadas entre ${group.first_created} y ${group.last_created}: ${group.emails.join(", ")}. Posible abuso del bono de bienvenida via multiples cuentas -- revisar manualmente y bloquear si corresponde. No se ha tomado ninguna accion automatica.`,
+          });
+        }
+      }
+    } catch (e: any) {
+      console.warn("[PURCHASE-AUDIT] Error en deteccion de abuso de bono de bienvenida:", e?.message);
+    }
+
     // ── Reporte ─────────────────────────────────────────────────
     const criticals = issues.filter(i => i.severity === "critical");
     const warnings = issues.filter(i => i.severity === "warning");
