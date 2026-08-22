@@ -1134,7 +1134,24 @@ serve(async (req) => {
         // (esto incluye el caso upgrade annual_20 -> annual_100+).
         const PLUS_TIERS = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000", "annual_legacy"];
         const wasPlus = !!previousTier && PLUS_TIERS.includes(previousTier);
-        if (PLUS_TIERS.includes(planId) && !wasPlus) {
+        // FIX 2026-08-22: misma guarda de idempotencia real que en el bloque
+        // de upgrade (subscription_update) -- ver comentario ahi para el caso
+        // real que motivo este fix (smith121079@gmail.com).
+        let alreadyNotifiedDist = false;
+        if (PLUS_TIERS.includes(planId)) {
+          const { data: distUserForCheck2 } = await supabase.auth.admin.getUserById(userId);
+          const distEmailForCheck2 = distUserForCheck2?.user?.email || null;
+          if (distEmailForCheck2) {
+            const { data: existingDistEmail2 } = await supabase
+              .from("email_send_log")
+              .select("id")
+              .eq("recipient_email", distEmailForCheck2)
+              .eq("template_name", "distribution_welcome")
+              .maybeSingle();
+            alreadyNotifiedDist = !!existingDistEmail2;
+          }
+        }
+        if (PLUS_TIERS.includes(planId) && !wasPlus && !alreadyNotifiedDist) {
           try {
             const { data: { user: distUser } } = await supabase.auth.admin.getUserById(userId);
             const distEmail = distUser?.email || "desconocido";
@@ -1454,7 +1471,32 @@ serve(async (req) => {
           // PLUS+ tiers (annual_100+) tienen distribución. annual_20 (Anual Básico) NO.
           const PLUS_TIERS_UP = ["annual_100", "annual_200", "annual_300", "annual_500", "annual_1000", "annual_legacy"];
           const wasPlusUp = !!previousTierBeforeUpgrade && PLUS_TIERS_UP.includes(previousTierBeforeUpgrade);
-          if (resolvedPlanId && PLUS_TIERS_UP.includes(resolvedPlanId) && !wasPlusUp) {
+          // FIX 2026-08-22 (caso smith121079@gmail.com): wasPlusUp comparaba
+          // contra previousTierBeforeUpgrade, leido del perfil AL INICIO de este
+          // bloque -- si un evento duplicado de Stripe para la MISMA operacion
+          // llega justo despues de que el primero ya actualizo el perfil al tier
+          // NUEVO, el segundo evento lee previousTierBeforeUpgrade YA como el
+          // tier nuevo, wasPlusUp sale true por error, y el aviso de alta en
+          // distribucion nunca se envia -- sin dejar ningun rastro en
+          // email_send_log (confirmado: 0 filas para este caso real). Se añade
+          // una guarda de idempotencia real: comprobar si YA se le envio el
+          // email de bienvenida a distribucion antes, en vez de depender solo
+          // de comparar tiers que pueden leerse en un estado transitorio.
+          let alreadyNotifiedDistUp = false;
+          if (resolvedPlanId && PLUS_TIERS_UP.includes(resolvedPlanId)) {
+            const { data: distUserForCheck } = await supabase.auth.admin.getUserById(profile.user_id);
+            const distEmailForCheck = distUserForCheck?.user?.email || null;
+            if (distEmailForCheck) {
+              const { data: existingDistEmail } = await supabase
+                .from("email_send_log")
+                .select("id")
+                .eq("recipient_email", distEmailForCheck)
+                .eq("template_name", "distribution_welcome")
+                .maybeSingle();
+              alreadyNotifiedDistUp = !!existingDistEmail;
+            }
+          }
+          if (resolvedPlanId && PLUS_TIERS_UP.includes(resolvedPlanId) && !wasPlusUp && !alreadyNotifiedDistUp) {
             try {
               const { data: { user: distUser } } = await supabase.auth.admin.getUserById(profile.user_id);
               const distEmail = distUser?.email || "desconocido";
