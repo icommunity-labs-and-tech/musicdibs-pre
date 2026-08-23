@@ -328,20 +328,41 @@ serve(async (req) => {
           // charge_id/payment_intent_id de Stripe) DISTINTOS que coincidan en
           // tiempo con cada transaccion -- si es asi, son compras genuinas
           // y NO se debe tocar nada, solo reportar para visibilidad.
-          const findOrderNear = async (tx: typeof a) => {
-            const win = 5 * 60 * 1000;
-            const { data } = await supabase
-              .from("orders")
-              .select("id, stripe_charge_id, stripe_payment_intent_id")
-              .eq("user_id", userId)
-              .gte("paid_at", new Date(new Date(tx.created_at).getTime() - win).toISOString())
-              .lte("paid_at", new Date(new Date(tx.created_at).getTime() + win).toISOString())
-              .limit(1)
-              .maybeSingle();
-            return data;
+          // FIX 2026-08-23 (caso rainer.derstroff@t-online.de): el fix anterior
+          // (findOrderNear con .limit(1) sin ordenar) traia "cualquier orden
+          // dentro de una ventana de +-5min" para cada transaccion por separado.
+          // Cuando las 2 ordenes reales estaban muy proximas entre si (104s), AMBAS
+          // ventanas se solapaban y Postgres podia devolver la MISMA orden para
+          // ambas transacciones (sin orden explicito de cercania), rompiendo la
+          // comparacion "orderA.id !== orderB.id" -- el guard fallaba en detectar
+          // 2 ordenes genuinas y volvio a revertir un credito real (16.66EUR en
+          // 2 pagos de PayPal reales y distintos). Se reescribe con matching por
+          // cercania real: se traen todas las ordenes en una ventana amplia y se
+          // asigna a cada transaccion la orden mas cercana en el tiempo SIN
+          // reutilizar la misma orden dos veces.
+          const winMs = 10 * 60 * 1000;
+          const { data: nearbyOrders } = await supabase
+            .from("orders")
+            .select("id, stripe_charge_id, stripe_payment_intent_id, paid_at")
+            .eq("user_id", userId)
+            .gte("paid_at", new Date(Math.min(new Date(a.created_at).getTime(), new Date(b.created_at).getTime()) - winMs).toISOString())
+            .lte("paid_at", new Date(Math.max(new Date(a.created_at).getTime(), new Date(b.created_at).getTime()) + winMs).toISOString());
+
+          const usedOrderIds = new Set<string>();
+          const closestOrderTo = (tx: typeof a): any => {
+            const txTime = new Date(tx.created_at).getTime();
+            let best: any = null;
+            let bestDiff = Infinity;
+            for (const o of nearbyOrders || []) {
+              if (usedOrderIds.has(o.id)) continue;
+              const diff = Math.abs(new Date(o.paid_at).getTime() - txTime);
+              if (diff < bestDiff) { bestDiff = diff; best = o; }
+            }
+            if (best) usedOrderIds.add(best.id);
+            return best;
           };
-          const orderA = await findOrderNear(a);
-          const orderB = await findOrderNear(b);
+          const orderA = closestOrderTo(a);
+          const orderB = closestOrderTo(b);
           const bothHaveDistinctStripeIds = orderA && orderB && orderA.id !== orderB.id &&
             ((orderA.stripe_charge_id && orderA.stripe_charge_id !== orderB.stripe_charge_id) ||
              (orderA.stripe_payment_intent_id && orderA.stripe_payment_intent_id !== orderB.stripe_payment_intent_id));
