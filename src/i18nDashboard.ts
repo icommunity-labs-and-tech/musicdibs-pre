@@ -725,7 +725,7 @@ const es = {
       cloningBtn: 'Clonando... puede tardar 30-60 segundos',
       cancel: 'Cancelar',
       tooShort: 'Audio muy corto',
-      tooShortDesc: 'El audio debe tener al menos 30 segundos para una buena clonación.',
+      tooShortDesc: 'El audio debe durar al menos 15 segundos (recomendado 30 segundos o más).',
       invalidFormat: 'Formato no compatible',
       invalidFormatDesc: 'Solo se admiten archivos MP3, WAV o M4A (máx. 25 MB).',
       tooLarge: 'Archivo demasiado grande',
