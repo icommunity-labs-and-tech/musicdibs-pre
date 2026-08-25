@@ -39,7 +39,14 @@ import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 import { CreditsChip } from '@/components/ai-studio/CreditsChip';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
 
+// KIE Suno Voice solo acepta muestras MP3 / WAV / M4A y hasta 25 MB.
+const CLONE_ALLOWED_EXTS = ['mp3', 'wav', 'm4a'];
+const CLONE_ACCEPT = '.mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a';
+const CLONE_MAX_MB = 25;
+const CLONE_MAX_BYTES = CLONE_MAX_MB * 1024 * 1024;
+
 const THEMES = ["Amor", "Desamor", "Superación", "Fiesta", "Calle", "Familia", "Libertad", "Nostalgia", "Éxito", "Identidad"];
+
 const MUSIC_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Reggaeton', 'Flamenco', 'Electrónica', 'Jazz', 'Clásica', 'R&B', 'Latin'];
 const MUSIC_MOODS = ['Alegre', 'Melancólico', 'Épico', 'Relajado', 'Enérgico', 'Romántico', 'Oscuro', 'Motivador'];
 const LYRIC_STYLES = ["Narrativa", "Abstracta", "Descriptiva", "Reivindicativa", "Introspectiva", "Poética"];
