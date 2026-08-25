@@ -93,12 +93,18 @@ serve(async (req) => {
       }
 
 
+      // provider_voice_id tiene una restricción UNIQUE junto a user_id.
+      // No podemos usar "" como marcador para todas las solicitudes pendientes,
+      // porque el segundo intento del usuario colisionaría antes de llamar a KIE.
+      const cloneId = crypto.randomUUID();
+      const pendingProviderVoiceId = `pending_${cloneId}`;
       const { data: row, error: insErr } = await admin
         .from("voice_clones")
         .insert({
+          id: cloneId,
           user_id: user.id,
           provider: "kie",
-          provider_voice_id: "",
+          provider_voice_id: pendingProviderVoiceId,
           name: name.trim(),
           description: description || null,
           sample_url: voiceUrl,
