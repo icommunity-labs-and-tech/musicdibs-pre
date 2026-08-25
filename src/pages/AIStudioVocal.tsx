@@ -141,7 +141,18 @@ export default function AIStudioVocal() {
     const withUrls = await Promise.all((data || []).map(async (c: any) => {
       if (c.sample_storage_path) {
         const { data: urlData } = await supabase.storage.from('voice-clone-samples').createSignedUrl(c.sample_storage_path, 3600);
-        return { ...c, sample_url: urlData?.signedUrl || null };
+        if (urlData?.signedUrl) return { ...c, sample_url: urlData.signedUrl };
+      }
+      // Las muestras se suben al bucket `voice-samples` y se guardan como URL completa.
+      if (typeof c.sample_url === 'string' && c.sample_url) {
+        const marker = '/voice-samples/';
+        const idx = c.sample_url.indexOf(marker);
+        if (idx !== -1) {
+          const path = decodeURIComponent(c.sample_url.slice(idx + marker.length).split('?')[0]);
+          const { data: signed } = await supabase.storage.from('voice-samples').createSignedUrl(path, 3600);
+          return { ...c, sample_url: signed?.signedUrl || c.sample_url };
+        }
+        return c;
       }
       return { ...c, sample_url: null };
     }));
