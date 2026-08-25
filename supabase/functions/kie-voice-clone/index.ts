@@ -62,16 +62,27 @@ serve(async (req) => {
         return json({ error: "name_required" }, 400);
       }
 
+      // Caduca clonaciones colgadas (>30 min) para no bloquear al usuario.
+      const staleCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      await admin
+        .from("voice_clones")
+        .update({ status: "failed", error_message: "timeout" })
+        .eq("user_id", user.id)
+        .in("status", ["pending_phrase", "awaiting_verification_recording", "generating"])
+        .lt("created_at", staleCutoff);
+
       // Límite razonable: 1 clonación en curso a la vez por usuario.
       const { data: inFlight } = await admin
         .from("voice_clones")
         .select("id")
         .eq("user_id", user.id)
         .in("status", ["pending_phrase", "awaiting_verification_recording", "generating"])
+        .limit(1)
         .maybeSingle();
       if (inFlight) {
         return json({ error: "clone_in_progress", message: "Ya tienes una clonación de voz en curso." }, 409);
       }
+
 
       const { data: row, error: insErr } = await admin
         .from("voice_clones")
