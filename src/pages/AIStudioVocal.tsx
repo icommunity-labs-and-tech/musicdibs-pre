@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { parseAiError } from '@/lib/aiErrorHandler';
+import { audioUrlToWavBlob } from '@/lib/audioToWav';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,7 +40,14 @@ import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 import { CreditsChip } from '@/components/ai-studio/CreditsChip';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
 
+// KIE Suno Voice solo acepta muestras MP3 / WAV / M4A y hasta 25 MB.
+const CLONE_ALLOWED_EXTS = ['mp3', 'wav', 'm4a'];
+const CLONE_ACCEPT = '.mp3,.wav,.m4a,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a';
+const CLONE_MAX_MB = 25;
+const CLONE_MAX_BYTES = CLONE_MAX_MB * 1024 * 1024;
+
 const THEMES = ["Amor", "Desamor", "Superación", "Fiesta", "Calle", "Familia", "Libertad", "Nostalgia", "Éxito", "Identidad"];
+
 const MUSIC_GENRES = ['Pop', 'Rock', 'Hip-Hop', 'Reggaeton', 'Flamenco', 'Electrónica', 'Jazz', 'Clásica', 'R&B', 'Latin'];
 const MUSIC_MOODS = ['Alegre', 'Melancólico', 'Épico', 'Relajado', 'Enérgico', 'Romántico', 'Oscuro', 'Motivador'];
 const LYRIC_STYLES = ["Narrativa", "Abstracta", "Descriptiva", "Reivindicativa", "Introspectiva", "Poética"];
@@ -177,16 +185,28 @@ export default function AIStudioVocal() {
 
   const handleCloneFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!CLONE_ALLOWED_EXTS.includes(ext)) {
+      toast({ title: vc('invalidFormat'), description: vc('invalidFormatDesc'), variant: 'destructive' });
+      if (cloneFileRef.current) cloneFileRef.current.value = '';
+      return;
+    }
+    if (file.size > CLONE_MAX_BYTES) {
+      toast({ title: vc('tooLarge'), description: vc('tooLargeDesc'), variant: 'destructive' });
+      if (cloneFileRef.current) cloneFileRef.current.value = '';
+      return;
+    }
     setCloneAudioFile(file);
     setCloneAudioBlob(null);
     const audio = new Audio(URL.createObjectURL(file));
     audio.onloadedmetadata = () => setCloneAudioDuration(Math.round(audio.duration));
   };
 
+
   const uploadToVoiceSamples = async (fileOrBlob: File | Blob, ext: string): Promise<string> => {
     const path = `${user!.id}/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from('voice-samples').upload(path, fileOrBlob, {
-      contentType: fileOrBlob instanceof File ? fileOrBlob.type : 'audio/webm',
+      contentType: fileOrBlob instanceof File ? fileOrBlob.type : 'audio/wav',
     });
     if (error) throw error;
     const { data } = supabase.storage.from('voice-samples').getPublicUrl(path);
@@ -246,7 +266,26 @@ export default function AIStudioVocal() {
     setIsCloning(true);
     setCloneStep('requesting_phrase');
     try {
-      const voiceUrl = await uploadToVoiceSamples(sample, cloneAudioFile ? (cloneAudioFile.name.split('.').pop() || 'mp3') : 'webm');
+      // Las grabaciones del navegador son WebM/MP4, formatos que KIE no acepta:
+      // se convierten a WAV antes de subirlas.
+      let uploadBlob: File | Blob = sample;
+      let ext = 'wav';
+      if (cloneAudioFile) {
+        ext = (cloneAudioFile.name.split('.').pop() || 'mp3').toLowerCase();
+      } else {
+        const objectUrl = URL.createObjectURL(sample);
+        try {
+          uploadBlob = await audioUrlToWavBlob(objectUrl);
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
+      }
+      if (uploadBlob.size > CLONE_MAX_BYTES) {
+        toast({ title: vc('tooLarge'), description: vc('tooLargeDesc'), variant: 'destructive' });
+        setIsCloning(false); setCloneStep('idle');
+        return;
+      }
+      const voiceUrl = await uploadToVoiceSamples(uploadBlob, ext);
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-voice-clone`, {
         method: 'POST',
@@ -478,8 +517,8 @@ export default function AIStudioVocal() {
               ) : cloneAudioFile ? (
                 <FileDropzone
                   fileType="audio"
-                  accept=".mp3,.wav,.m4a,audio/*"
-                  maxSize={50}
+                  accept={CLONE_ACCEPT}
+                  maxSize={CLONE_MAX_MB}
                   currentFile={cloneAudioFile}
                   onFileSelect={(file) => handleCloneFileChange({ target: { files: [file] } } as any)}
                   onRemove={() => { setCloneAudioFile(null); setCloneAudioDuration(null); }}
@@ -502,8 +541,8 @@ export default function AIStudioVocal() {
                   </div>
                   <FileDropzone
                     fileType="audio"
-                    accept=".mp3,.wav,.m4a,audio/*"
-                    maxSize={50}
+                    accept={CLONE_ACCEPT}
+                    maxSize={CLONE_MAX_MB}
                     currentFile={cloneAudioFile}
                     onFileSelect={(file) => handleCloneFileChange({ target: { files: [file] } } as any)}
                     onRemove={() => { setCloneAudioFile(null); setCloneAudioDuration(null); }}

@@ -58,6 +58,15 @@ serve(async (req) => {
       if (!voiceUrl || typeof voiceUrl !== "string") {
         return json({ error: "voiceUrl_required" }, 400);
       }
+      // KIE Suno Voice solo acepta MP3 / WAV / M4A.
+      const sampleExt = (voiceUrl.split("?")[0].split(".").pop() || "").toLowerCase();
+      if (!["mp3", "wav", "m4a"].includes(sampleExt)) {
+        return json({
+          error: "unsupported_audio_format",
+          message: "Formato de audio no compatible. Usa MP3, WAV o M4A (máx. 25 MB).",
+        }, 400);
+      }
+
       if (!name || typeof name !== "string" || !name.trim()) {
         return json({ error: "name_required" }, 400);
       }
