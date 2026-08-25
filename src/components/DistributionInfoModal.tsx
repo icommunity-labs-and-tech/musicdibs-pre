@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Copy, Check, Loader2 } from 'lucide-react';
+import { ExternalLink, Copy, Check, Loader2, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +13,7 @@ interface DistributionInfoModalProps {
 }
 
 export const DistributionInfoModal = ({ open, onOpenChange }: DistributionInfoModalProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const userEmail = user?.email ?? '';
   const { track } = useProductTracking();
@@ -42,6 +42,12 @@ export const DistributionInfoModal = ({ open, onOpenChange }: DistributionInfoMo
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [userEmail]);
+
+  const guideLang = i18n.language?.startsWith('en') ? 'en' : i18n.language?.startsWith('pt') ? 'pt' : 'es';
+  const guideUrl = guideLang === 'es' ? '/music-dist' : `/music-dist?lang=${guideLang}`;
+  const guideLabel = t('dashboard.distribute.guideLink', {
+    defaultValue: 'Consulta la guía de usuario de distribución',
+  });
 
   const distributionUrl = userEmail
     ? `https://dist.musicdibs.com/?login_hint=${encodeURIComponent(userEmail)}`
@@ -96,6 +102,16 @@ export const DistributionInfoModal = ({ open, onOpenChange }: DistributionInfoMo
                   Recupérala aquí
                 </a>
               </p>
+
+              <a
+                href={guideUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-primary underline-offset-2 hover:underline"
+              >
+                <BookOpen className="h-4 w-4 shrink-0" />
+                {guideLabel}
+              </a>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -150,6 +166,16 @@ export const DistributionInfoModal = ({ open, onOpenChange }: DistributionInfoMo
               <p className="text-xs text-muted-foreground rounded-lg border border-border/60 bg-muted/30 p-3">
                 La distribución se gestiona a través de nuestra plataforma especializada. Tu música llegará a Spotify, Apple Music, Amazon Music, TikTok y 215+ plataformas más.
               </p>
+
+              <a
+                href={guideUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-primary underline-offset-2 hover:underline"
+              >
+                <BookOpen className="h-4 w-4 shrink-0" />
+                {guideLabel}
+              </a>
             </div>
 
             <div className="flex gap-3 pt-2">
