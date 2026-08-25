@@ -101,25 +101,39 @@ serve(async (req) => {
 
       const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-voice-clone-callback?cloneId=${row.id}&step=phrase`;
 
+      // KIE exige enteros, con vocalEndS > vocalStartS (segmento de 3-30 s).
+      const startS = Math.max(0, Math.floor(Number(vocalStartS) || 0));
+      const rawEnd = Math.floor(Number(vocalEndS) || 0);
+      const endS = Math.min(startS + 30, Math.max(startS + 3, rawEnd));
+
+      const kiePayload = {
+        voiceUrl,
+        vocalStartS: startS,
+        vocalEndS: endS,
+        language: language || "es",
+        callBackUrl,
+      };
+      console.log("[kie-voice-clone] validate payload", JSON.stringify(kiePayload));
+
       const kieRes = await fetch(`${KIE_BASE}/voice/validate`, {
         method: "POST",
         headers: { Authorization: `Bearer ${KIE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          voiceUrl,
-          vocalStartS: vocalStartS ?? 0,
-          vocalEndS: vocalEndS ?? 10,
-          language: language || "es",
-          callBackUrl,
-        }),
+        body: JSON.stringify(kiePayload),
       });
       const kieJson = await kieRes.json().catch(() => ({}));
       if (!kieRes.ok || (kieJson?.code && kieJson.code !== 200)) {
+        console.error("[kie-voice-clone] validate failed", kieRes.status, JSON.stringify(kieJson));
         await admin.from("voice_clones").update({
           status: "failed",
-          error_message: kieJson?.msg || `HTTP ${kieRes.status}`,
+          error_message: (kieJson?.msg || `HTTP ${kieRes.status}`).toString().slice(0, 300),
         }).eq("id", row.id);
-        return json({ error: "provider_error", message: kieJson?.msg || `HTTP ${kieRes.status}` }, 502);
+        return json({
+          error: "provider_error",
+          providerCode: kieJson?.code ?? kieRes.status,
+          message: kieJson?.msg || `HTTP ${kieRes.status}`,
+        }, 502);
       }
+
 
       const taskId = kieJson?.data?.taskId as string | undefined;
       await admin.from("voice_clones").update({ kie_task_id: taskId ?? null }).eq("id", row.id);
