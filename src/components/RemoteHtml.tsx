@@ -1,46 +1,166 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { MouseEvent } from "react";
 import { Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface RemoteHtmlProps {
   /** URL absoluta del documento remoto (por ejemplo, un index.html en Storage). */
   url: string;
+  /** URL absoluta de la raíz del sitio remoto. */
+  remoteBaseUrl?: string;
+  /** Ruta base local donde se debe navegar al pulsar enlaces internos del HTML remoto. */
+  appBasePath?: string;
   className?: string;
   title?: string;
 }
 
+interface ParsedRemoteHtml {
+  bodyClassName: string;
+  html: string;
+  stylesheets: string[];
+}
+
+const SKIPPED_URL_PREFIXES = ["#", "mailto:", "tel:", "javascript:", "data:"];
+
+const shouldSkipUrl = (value: string) => {
+  const trimmed = value.trim().toLowerCase();
+  return SKIPPED_URL_PREFIXES.some((prefix) => trimmed.startsWith(prefix));
+};
+
+const toAbsoluteUrl = (value: string, baseUrl: URL) => {
+  if (!value || shouldSkipUrl(value)) return value;
+  return new URL(value, baseUrl).href;
+};
+
+const getRemotePath = (absoluteUrl: URL, remoteRoot: URL) => {
+  if (absoluteUrl.origin !== remoteRoot.origin) return null;
+  if (!absoluteUrl.pathname.startsWith(remoteRoot.pathname)) return null;
+
+  return absoluteUrl.pathname.slice(remoteRoot.pathname.length).replace(/^\/+/, "");
+};
+
+const toInternalPath = (remotePath: string, appBasePath: string) => {
+  const withoutIndex = remotePath.replace(/(?:^|\/)index\.html$/i, "").replace(/\/+$/, "");
+  return withoutIndex ? `${appBasePath}/${withoutIndex}` : appBasePath;
+};
+
+const isHtmlNavigationPath = (path: string) => {
+  if (!path || path.endsWith("/")) return true;
+  return /(?:^|\/)index\.html$/i.test(path) || /\.html?$/i.test(path);
+};
+
+const stripExecutableContent = (root: ParentNode) => {
+  root.querySelectorAll("script, iframe, object, embed").forEach((node) => node.remove());
+  root.querySelectorAll("*").forEach((element) => {
+    Array.from(element.attributes).forEach((attribute) => {
+      if (attribute.name.toLowerCase().startsWith("on")) {
+        element.removeAttribute(attribute.name);
+      }
+    });
+  });
+};
+
+const parseRemoteHtml = (
+  rawHtml: string,
+  documentUrl: string,
+  remoteBaseUrl: string,
+  appBasePath: string,
+): ParsedRemoteHtml => {
+  const parser = new DOMParser();
+  const document = parser.parseFromString(rawHtml, "text/html");
+  const baseUrl = new URL(documentUrl);
+  const remoteRoot = new URL(remoteBaseUrl);
+  const stylesheets = new Set<string>();
+
+  stripExecutableContent(document);
+
+  document.querySelectorAll<HTMLLinkElement>('link[rel~="stylesheet"]').forEach((link) => {
+    const href = link.getAttribute("href");
+    if (href) stylesheets.add(toAbsoluteUrl(href, baseUrl));
+    link.remove();
+  });
+
+  document.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((anchor) => {
+    const href = anchor.getAttribute("href");
+    if (!href || shouldSkipUrl(href)) return;
+
+    const absoluteUrl = new URL(href, baseUrl);
+    const remotePath = getRemotePath(absoluteUrl, remoteRoot);
+
+    if (remotePath !== null && isHtmlNavigationPath(remotePath)) {
+      anchor.setAttribute("href", toInternalPath(remotePath, appBasePath));
+      return;
+    }
+
+    anchor.setAttribute("href", absoluteUrl.href);
+  });
+
+  document.querySelectorAll<HTMLElement>("[src], [poster]").forEach((element) => {
+    ["src", "poster"].forEach((attribute) => {
+      const value = element.getAttribute(attribute);
+      if (value) element.setAttribute(attribute, toAbsoluteUrl(value, baseUrl));
+    });
+  });
+
+  return {
+    bodyClassName: document.body.className,
+    html: document.body.innerHTML,
+    stylesheets: Array.from(stylesheets),
+  };
+};
+
 /**
- * Renderiza un sitio HTML remoto (alojado en nuestro propio Storage público).
- *
- * Se usa un iframe en lugar de `dangerouslySetInnerHTML` porque el HTML remoto
- * referencia sus assets y subpáginas con rutas relativas (`assets/style.css`,
- * `guia/.../index.html`). Al inyectarlo en el DOM de la app, esas rutas se
- * resolvían contra `musicdibs.com/music-dist` y devolvían 404 (sin CSS ni
- * navegación). Con el iframe, el documento conserva su propia base y todo
- * (CSS, imágenes y subdirectorios) se resuelve correctamente.
+ * Renderiza un sitio HTML remoto (alojado en nuestro propio Storage público)
+ * dentro de la app para evitar bloqueos de iframe por cabeceras X-Frame-Options.
  */
-const RemoteHtml = ({ url, className, title = "Contenido" }: RemoteHtmlProps) => {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [loaded, setLoaded] = useState(false);
+const RemoteHtml = ({
+  url,
+  remoteBaseUrl,
+  appBasePath = "/music-dist",
+  className,
+  title = "Contenido",
+}: RemoteHtmlProps) => {
+  const navigate = useNavigate();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [content, setContent] = useState<ParsedRemoteHtml | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const normalizedAppBasePath = useMemo(() => appBasePath.replace(/\/+$/, "") || "/", [appBasePath]);
 
-  // Verificamos primero que el documento existe para poder mostrar un error claro.
   useEffect(() => {
-    let cancelled = false;
+    const controller = new AbortController();
     setError(null);
-    setLoaded(false);
+    setContent(null);
 
-    fetch(url, { method: "GET", cache: "no-cache" })
-      .then((res) => {
-        if (!cancelled && !res.ok) setError(`HTTP ${res.status}`);
+    fetch(url, { method: "GET", cache: "no-cache", signal: controller.signal })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const html = await res.text();
+        setContent(parseRemoteHtml(html, url, remoteBaseUrl ?? new URL("./", url).href, normalizedAppBasePath));
       })
       .catch((err: unknown) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Error de carga");
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        setError(err instanceof Error ? err.message : "Error de carga");
       });
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
-  }, [url]);
+  }, [normalizedAppBasePath, remoteBaseUrl, url]);
+
+  const handleClick = (event: MouseEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const anchor = target.closest<HTMLAnchorElement>("a[href]");
+    if (!anchor) return;
+
+    const destination = new URL(anchor.href, window.location.href);
+    if (destination.origin !== window.location.origin) return;
+    if (!destination.pathname.startsWith(normalizedAppBasePath)) return;
+
+    event.preventDefault();
+    navigate(`${destination.pathname}${destination.search}${destination.hash}`);
+  };
 
   if (error) {
     return (
@@ -54,19 +174,20 @@ const RemoteHtml = ({ url, className, title = "Contenido" }: RemoteHtmlProps) =>
 
   return (
     <div className={className ?? "relative w-full"}>
-      {!loaded && (
+      {content?.stylesheets.map((href) => (
+        <link key={href} rel="stylesheet" href={href} />
+      ))}
+      {!content && (
         <div className="absolute inset-0 flex min-h-[50vh] items-center justify-center">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       )}
-      <iframe
-        ref={iframeRef}
-        src={url}
-        title={title}
-        onLoad={() => setLoaded(true)}
-        className="h-[100dvh] w-full border-0"
-        loading="eager"
-        referrerPolicy="no-referrer-when-downgrade"
+      <div
+        ref={containerRef}
+        aria-label={title}
+        className={content?.bodyClassName}
+        onClick={handleClick}
+        dangerouslySetInnerHTML={content ? { __html: content.html } : undefined}
       />
     </div>
   );
