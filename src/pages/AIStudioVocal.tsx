@@ -204,7 +204,8 @@ export default function AIStudioVocal() {
 
 
   const uploadToVoiceSamples = async (fileOrBlob: File | Blob, ext: string): Promise<string> => {
-    const path = `${user!.id}/${crypto.randomUUID()}.${ext}`;
+    if (!user) throw new Error('Unauthorized');
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from('voice-samples').upload(path, fileOrBlob, {
       contentType: fileOrBlob instanceof File ? fileOrBlob.type : 'audio/wav',
     });
@@ -318,7 +319,15 @@ export default function AIStudioVocal() {
     if (!activeCloneId) return;
     setIsCloning(true);
     try {
-      const verificationAudioUrl = await uploadToVoiceSamples(blob, 'webm');
+      // MediaRecorder suele producir WebM, pero KIE solo admite MP3/WAV/M4A.
+      const objectUrl = URL.createObjectURL(blob);
+      let verificationWav: Blob;
+      try {
+        verificationWav = await audioUrlToWavBlob(objectUrl);
+      } finally {
+        URL.revokeObjectURL(objectUrl);
+      }
+      const verificationAudioUrl = await uploadToVoiceSamples(verificationWav, 'wav');
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-voice-clone`, {
         method: 'POST',
