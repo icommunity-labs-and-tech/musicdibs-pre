@@ -108,7 +108,10 @@ const translateHtml = async (html: string, lang: string) => {
     }),
   });
 
-  if (!res.ok) throw new Error(`anthropic_${res.status}`);
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 200).replace(/[\r\n]+/g, " ");
+    throw new Error(`anthropic_${res.status}: ${detail}`);
+  }
   const data = await res.json();
   const text: string = data?.content?.[0]?.text ?? "";
   const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/```\s*$/, "").trim();
