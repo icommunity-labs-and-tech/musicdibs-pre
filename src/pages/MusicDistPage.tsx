@@ -13,8 +13,15 @@ const APP_BASE_PATH = "/music-dist";
 const MusicDistPage = () => {
   const location = useLocation();
   const remoteUrl = useMemo(() => {
-    const localPath = location.pathname.slice(APP_BASE_PATH.length).replace(/^\/+/, "");
-    let remotePath = localPath || "index.html";
+    const pathAfterBase = location.pathname.startsWith(APP_BASE_PATH)
+      ? location.pathname.slice(APP_BASE_PATH.length)
+      : "";
+    const cleanPath = pathAfterBase
+      .split("/")
+      .map((segment) => segment.trim())
+      .filter((segment) => segment && segment !== "*")
+      .join("/");
+    let remotePath = cleanPath || "index.html";
 
     if (!/\.[a-z0-9]+$/i.test(remotePath)) {
       remotePath = `${remotePath.replace(/\/+$/, "")}/index.html`;
