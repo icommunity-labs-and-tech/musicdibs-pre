@@ -1,8 +1,11 @@
 import RemoteHtml from "@/components/RemoteHtml";
 import { SEO } from "@/components/SEO";
 
+// Se sirve a través del proxy `music-dist` porque Storage devuelve todos los
+// objetos como text/plain con nosniff y CSP restrictiva (rompe CSS, imágenes
+// y subdirectorios). El proxy aplica el Content-Type correcto.
 const REMOTE_URL =
-  "https://kmwehyixenybegwhqljx.supabase.co/storage/v1/object/public/music-dist/index.html";
+  "https://kmwehyixenybegwhqljx.supabase.co/functions/v1/music-dist/index.html";
 
 const MusicDistPage = () => (
   <>
@@ -13,7 +16,7 @@ const MusicDistPage = () => (
       lang="en"
     />
     <main>
-      <RemoteHtml url={REMOTE_URL} />
+      <RemoteHtml url={REMOTE_URL} title="MusicDibs — Guía de usuario" />
     </main>
   </>
 );
