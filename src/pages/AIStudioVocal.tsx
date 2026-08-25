@@ -288,14 +288,17 @@ export default function AIStudioVocal() {
       });
       const data = await res.json();
       if (!res.ok) {
+        console.error('[voice-clone] submit_verification failed', res.status, data);
         if (data.error === 'insufficient_credits') {
           toast({ title: tv('insufficientCredits'), variant: 'destructive' });
         } else {
           const { userMessage } = parseAiError({ status: res.status }, data);
-          toast({ title: vc('cloneError'), description: userMessage, variant: 'destructive' });
+          const description = typeof data?.message === 'string' && data.message.trim() ? data.message : userMessage;
+          toast({ title: vc('cloneError'), description, variant: 'destructive' });
         }
         return;
       }
+
       setCloneStep('generating');
       pollCloneStatus(activeCloneId);
     } catch (err) {
