@@ -82,7 +82,41 @@ const cacheObject = async (path: string, html: string) => {
   }
 };
 
-const translateHtml = async (html: string, lang: string) => {
+const translateHtmlWithOpenAI = async (html: string, lang: string) => {
+  if (!OPENAI_API_KEY) throw new Error("missing_openai_key");
+
+  const prompt =
+    `Translate the visible text of this HTML document from Spanish to ${LANGUAGES[lang]}.\n` +
+    "Rules: keep the markup, attributes, classes, hrefs, src and inline SVG exactly as they are; " +
+    `only translate text nodes, the <title>, meta description and alt/title attributes; set lang="${lang}" on <html>; ` +
+    "do not add explanations. Return ONLY the resulting HTML document.\n\n" +
+    html;
+
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-5.4",
+      messages: [{ role: "user", content: prompt }],
+      max_completion_tokens: 32768,
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 200).replace(/[\r\n]+/g, " ");
+    throw new Error(`openai_${res.status}: ${detail}`);
+  }
+  const data = await res.json();
+  const text: string = data?.choices?.[0]?.message?.content ?? "";
+  const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/```\s*$/, "").trim();
+  if (!cleaned.toLowerCase().includes("<body")) throw new Error("translation_invalid");
+  return cleaned;
+};
+
+const translateHtmlWithGemini = async (html: string, lang: string) => {
   if (!GEMINI_API_KEY) throw new Error("missing_gemini_key");
 
   const prompt =
@@ -115,6 +149,22 @@ const translateHtml = async (html: string, lang: string) => {
   const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/```\s*$/, "").trim();
   if (!cleaned.toLowerCase().includes("<body")) throw new Error("translation_invalid");
   return cleaned;
+};
+
+const translateHtml = async (html: string, lang: string) => {
+  if (OPENAI_API_KEY) {
+    try {
+      return await translateHtmlWithOpenAI(html, lang);
+    } catch (error) {
+      console.error("openai_translation_failed", error);
+      if (GEMINI_API_KEY) {
+        console.log("falling_back_to_gemini");
+        return await translateHtmlWithGemini(html, lang);
+      }
+      throw error;
+    }
+  }
+  return await translateHtmlWithGemini(html, lang);
 };
 
 Deno.serve(async (req) => {
