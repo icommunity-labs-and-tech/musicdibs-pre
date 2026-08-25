@@ -14,7 +14,7 @@
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const BUCKET = "music-dist";
 const FUNCTION_PREFIX = "/music-dist";
 
@@ -82,38 +82,35 @@ const cacheObject = async (path: string, html: string) => {
 };
 
 const translateHtml = async (html: string, lang: string) => {
-  if (!ANTHROPIC_API_KEY) throw new Error("missing_anthropic_key");
+  if (!GEMINI_API_KEY) throw new Error("missing_gemini_key");
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "Content-Type": "application/json",
+  const prompt =
+    `Translate the visible text of this HTML document from Spanish to ${LANGUAGES[lang]}.\n` +
+    "Rules: keep the markup, attributes, classes, hrefs, src and inline SVG exactly as they are; " +
+    `only translate text nodes, the <title>, meta description and alt/title attributes; set lang="${lang}" on <html>; ` +
+    "do not add explanations. Return ONLY the resulting HTML document.\n\n" +
+    html;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 32768 },
+      }),
     },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 8000,
-      messages: [
-        {
-          role: "user",
-          content:
-            `Translate the visible text of this HTML document from Spanish to ${LANGUAGES[lang]}.\n` +
-            "Rules: keep the markup, attributes, classes, hrefs, src and inline SVG exactly as they are; " +
-            `only translate text nodes, the <title>, meta description and alt/title attributes; set lang="${lang}" on <html>; ` +
-            "do not add explanations. Return ONLY the resulting HTML document.\n\n" +
-            html,
-        },
-      ],
-    }),
-  });
+  );
 
   if (!res.ok) {
     const detail = (await res.text()).slice(0, 200).replace(/[\r\n]+/g, " ");
-    throw new Error(`anthropic_${res.status}: ${detail}`);
+    throw new Error(`gemini_${res.status}: ${detail}`);
   }
   const data = await res.json();
-  const text: string = data?.content?.[0]?.text ?? "";
+  const text: string = (data?.candidates?.[0]?.content?.parts ?? [])
+    .map((part: { text?: string }) => part?.text ?? "")
+    .join("");
   const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/```\s*$/, "").trim();
   if (!cleaned.toLowerCase().includes("<body")) throw new Error("translation_invalid");
   return cleaned;
