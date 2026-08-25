@@ -255,11 +255,14 @@ export default function AIStudioVocal() {
       });
       const data = await res.json();
       if (!res.ok) {
+        console.error('[voice-clone] request_phrase failed', res.status, data);
         const { userMessage } = parseAiError({ status: res.status }, data);
-        toast({ title: vc('cloneError'), description: userMessage, variant: 'destructive' });
+        const description = typeof data?.message === 'string' && data.message.trim() ? data.message : userMessage;
+        toast({ title: vc('cloneError'), description, variant: 'destructive' });
         setCloneStep('idle');
         return;
       }
+
       setActiveCloneId(data.cloneId);
       pollCloneStatus(data.cloneId);
     } catch (err) {
@@ -285,14 +288,17 @@ export default function AIStudioVocal() {
       });
       const data = await res.json();
       if (!res.ok) {
+        console.error('[voice-clone] submit_verification failed', res.status, data);
         if (data.error === 'insufficient_credits') {
           toast({ title: tv('insufficientCredits'), variant: 'destructive' });
         } else {
           const { userMessage } = parseAiError({ status: res.status }, data);
-          toast({ title: vc('cloneError'), description: userMessage, variant: 'destructive' });
+          const description = typeof data?.message === 'string' && data.message.trim() ? data.message : userMessage;
+          toast({ title: vc('cloneError'), description, variant: 'destructive' });
         }
         return;
       }
+
       setCloneStep('generating');
       pollCloneStatus(activeCloneId);
     } catch (err) {
@@ -388,7 +394,7 @@ export default function AIStudioVocal() {
 
   const voiceToolsTitle = s('aiVocal.voiceToolsTitle', 'Herramientas de Voz');
   const voiceToolsBadge = s('aiVocal.voiceTools', 'Herramientas de Voz');
-  const voiceToolsSub = s('aiVocal.voiceToolsSubtitle', 'Tu estudio vocal IA: clona tu voz, canta en 29 idiomas y mucho más');
+  const voiceToolsSub = s('aiVocal.voiceToolsSubtitle', 'Tu estudio vocal IA: clona tu voz y canta tus letras en 29 idiomas');
 
   // ──── CLONE FORM (shared) ────
   const cloneFormUI = (
@@ -588,7 +594,7 @@ export default function AIStudioVocal() {
   // ──── REGULAR (has clones) ────
   return (
     <div className="min-h-screen bg-background">
-      <SEO title="Herramientas de Voz" description="Tu estudio vocal IA: clona tu voz, canta en 29 idiomas y genera pistas vocales." path="/ai-studio/vocal" />
+      <SEO title="Herramientas de Voz" description="Tu estudio vocal IA: clona tu voz y genera pistas vocales cantadas en 29 idiomas." path="/ai-studio/vocal" />
       <VoiceToolsTour />
       <Navbar />
       <AIStudioThemeBar />

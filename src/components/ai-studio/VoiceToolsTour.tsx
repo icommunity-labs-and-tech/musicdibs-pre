@@ -19,7 +19,7 @@ function useSteps(): Step[] {
       target: 'body',
       placement: 'center' as const,
       title: vt('step1Title', 'Tu estudio vocal con IA 🎤'),
-      content: vt('step1Content', 'Clona tu voz, canta en 29 idiomas y crea versiones vocales profesionales de cualquier letra.\n\nFuncionalidades:\n• Clonar tu voz en segundos\n• Generar pistas vocales con tu voz clonada\n• Traducir audio a cualquier idioma\n• Cantar letras que tú escribas\n\nTe mostramos cómo funciona paso a paso.'),
+      content: vt('step1Content', 'Clona tu voz, canta en 29 idiomas y crea versiones vocales profesionales de cualquier letra.\n\nFuncionalidades:\n• Clonar tu voz en segundos\n• Generar pistas vocales con tu voz clonada\n• Cantar letras que tú escribas\n\nTe mostramos cómo funciona paso a paso.'),
       disableBeacon: true,
     },
     {
