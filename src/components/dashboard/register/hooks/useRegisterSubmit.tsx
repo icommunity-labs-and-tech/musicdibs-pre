@@ -67,6 +67,35 @@ export function useRegisterSubmit({ data, resumeWorkId, onSuccess }: Options) {
         );
         return;
       }
+
+      // FIX 2026-08-25 (caso transformatecreando@gmail.com): el throttle de
+      // arriba solo cubre obras aun EN CURSO (processing/draft) -- si el
+      // primer envio ya se completo con exito (registered) pero la interfaz
+      // se quedo sin dar respuesta visual, el usuario puede reenviar
+      // pensando que fallo, duplicando el registro (y el credito
+      // descontado) sin que el throttle lo detecte. Se avisa si hay una
+      // obra ya registrada con el MISMO titulo en los ultimos 3 minutos,
+      // dejando confirmar si de verdad quiere registrarla de nuevo.
+      const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+      const normalizedTitle = data.title.trim().toLowerCase();
+      if (normalizedTitle) {
+        const { data: recentSameTitle } = await supabase
+          .from('works')
+          .select('id, title, created_at')
+          .eq('user_id', user.id)
+          .eq('status', 'registered')
+          .gte('created_at', threeMinutesAgo)
+          .limit(5);
+        const duplicate = recentSameTitle?.find((w) => w.title.trim().toLowerCase() === normalizedTitle);
+        if (duplicate) {
+          const secondsAgo = Math.max(1, Math.round((Date.now() - new Date(duplicate.created_at).getTime()) / 1000));
+          const confirmed = window.confirm(
+            t('wizard.rw.duplicateTitleConfirm', { title: duplicate.title, seconds: secondsAgo }) ||
+              `Ya registraste "${duplicate.title}" hace ${secondsAgo} segundos. ¿Seguro que quieres registrarla de nuevo? Esto consumirá otro crédito.`
+          );
+          if (!confirmed) return;
+        }
+      }
     }
 
     let uploadFile = data.file;
