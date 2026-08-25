@@ -67,9 +67,18 @@ serve(async (req) => {
     const { data: generation, error: genErr } = await supabase.from('ai_generations').insert({
       user_id: user.id, type: 'vocal_track',
       prompt: `Pista vocal: ${voice_name || 'Voz clonada'} | ${genre || ''} ${mood || ''}`.trim(),
+      // ai_generations exige ambos campos aunque la generación sea asíncrona.
+      // El callback sustituirá audio_url y duration cuando KIE termine.
+      audio_url: '', duration: 0,
       genre: genre || null, mood: mood || null, status: 'processing',
     }).select().single();
     if (genErr || !generation) {
+      console.error('[VOCAL-TRACK] ai_generations insert failed:', {
+        code: genErr?.code,
+        message: genErr?.message,
+        details: genErr?.details,
+        hint: genErr?.hint,
+      });
       await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: vocalDeductedFromPermanent, p_reason: 'Reembolso: fallo creando el registro de generación' });
       return new Response(JSON.stringify({ error: 'db_insert_failed' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
