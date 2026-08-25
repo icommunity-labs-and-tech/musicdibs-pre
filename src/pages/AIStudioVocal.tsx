@@ -390,7 +390,7 @@ export default function AIStudioVocal() {
   const durationBadge = () => {
     if (cloneAudioDuration === null) return null;
     if (cloneAudioDuration < 30) return <span className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationTooShort')}</span>;
-    if (cloneAudioDuration < 30) return <span className="text-xs text-warning flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationOk')}</span>;
+    if (cloneAudioDuration < 45) return <span className="text-xs text-warning flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationOk')}</span>;
     return <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {vc('durationOptimal')}</span>;
   };
 
