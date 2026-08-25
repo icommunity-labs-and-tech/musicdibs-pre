@@ -9,11 +9,12 @@
 // la CSP restrictiva, de forma que las rutas relativas (`assets/style.css`,
 // `guia/<seccion>/index.html`) funcionan con normalidad.
 //
-// Además soporta `?lang=en|pt` para servir el HTML traducido (Claude Haiku),
+// Además soporta `?lang=en|pt` para servir el HTML traducido (OpenAI gpt-5.4),
 // con caché persistente en el propio bucket bajo `_i18n/<lang>/<ruta>`.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const BUCKET = "music-dist";
 const FUNCTION_PREFIX = "/music-dist";
