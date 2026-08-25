@@ -444,6 +444,7 @@ const es = {
     },
     distribute: {
       annualOnly: 'Disponible solo con Plan PLUS+',
+      guideLink: 'Consulta la guía de usuario de distribución',
     },
     paymentAlert: {
       managePayment: 'Gestionar pago',
@@ -1317,6 +1318,7 @@ const en: typeof es = {
     },
     distribute: {
       annualOnly: 'Available only with Plan PLUS+',
+      guideLink: 'Read the distribution user guide',
     },
     paymentAlert: {
       managePayment: 'Manage payment',
@@ -2190,6 +2192,7 @@ const pt: typeof es = {
     },
     distribute: {
       annualOnly: 'Disponível apenas com Plano PLUS+',
+      guideLink: 'Consulte o guia do usuário de distribuição',
     },
     paymentAlert: {
       managePayment: 'Gerenciar pagamento',

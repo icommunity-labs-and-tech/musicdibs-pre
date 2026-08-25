@@ -8,10 +8,20 @@
 // Esta función reenvía el objeto solicitado con el Content-Type correcto y sin
 // la CSP restrictiva, de forma que las rutas relativas (`assets/style.css`,
 // `guia/<seccion>/index.html`) funcionan con normalidad.
+//
+// Además soporta `?lang=en|pt` para servir el HTML traducido (Claude Haiku),
+// con caché persistente en el propio bucket bajo `_i18n/<lang>/<ruta>`.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 const BUCKET = "music-dist";
 const FUNCTION_PREFIX = "/music-dist";
+
+const LANGUAGES: Record<string, string> = {
+  en: "British English",
+  pt: "Brazilian Portuguese",
+};
 
 const MIME_TYPES: Record<string, string> = {
   html: "text/html; charset=utf-8",
@@ -51,6 +61,64 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
 };
 
+const fetchObject = async (path: string) =>
+  await fetch(`${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`, { method: "GET" });
+
+const cacheObject = async (path: string, html: string) => {
+  if (!SERVICE_ROLE_KEY) return;
+  try {
+    await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+        "Content-Type": "text/html; charset=utf-8",
+        "x-upsert": "true",
+      },
+      body: html,
+    });
+  } catch (error) {
+    console.error("cache_upload_failed", path, error);
+  }
+};
+
+const translateHtml = async (html: string, lang: string) => {
+  if (!ANTHROPIC_API_KEY) throw new Error("missing_anthropic_key");
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 8000,
+      messages: [
+        {
+          role: "user",
+          content:
+            `Translate the visible text of this HTML document from Spanish to ${LANGUAGES[lang]}.\n` +
+            "Rules: keep the markup, attributes, classes, hrefs, src and inline SVG exactly as they are; " +
+            `only translate text nodes, the <title>, meta description and alt/title attributes; set lang="${lang}" on <html>; ` +
+            "do not add explanations. Return ONLY the resulting HTML document.\n\n" +
+            html,
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 200).replace(/[\r\n]+/g, " ");
+    throw new Error(`anthropic_${res.status}: ${detail}`);
+  }
+  const data = await res.json();
+  const text: string = data?.content?.[0]?.text ?? "";
+  const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/```\s*$/, "").trim();
+  if (!cleaned.toLowerCase().includes("<body")) throw new Error("translation_invalid");
+  return cleaned;
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -76,14 +144,65 @@ Deno.serve(async (req) => {
     return new Response("Not found", { status: 404, headers: corsHeaders });
   }
 
-  const objectUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
-  const upstream = await fetch(objectUrl, { method: "GET" });
+  const lang = (url.searchParams.get("lang") ?? "").toLowerCase();
+  const isHtml = /\.html?$/i.test(path);
+  const wantsTranslation = isHtml && Boolean(LANGUAGES[lang]);
+
+  if (wantsTranslation) {
+    const cachePath = `_i18n/${lang}/${path}`;
+    const cached = await fetchObject(cachePath);
+    if (cached.ok) {
+      const cachedHtml = await cached.text();
+      return new Response(req.method === "HEAD" ? null : cachedHtml, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": MIME_TYPES.html,
+          "Cache-Control": "public, max-age=300",
+          "X-Frame-Options": "SAMEORIGIN",
+        },
+      });
+    }
+  }
+
+  const upstream = await fetchObject(path);
 
   if (!upstream.ok) {
     return new Response("Not found", {
       status: upstream.status === 400 ? 404 : upstream.status,
       headers: { ...corsHeaders, "Content-Type": "text/plain; charset=utf-8" },
     });
+  }
+
+  if (wantsTranslation) {
+    const source = await upstream.text();
+    try {
+      const translated = await translateHtml(source, lang);
+      await cacheObject(`_i18n/${lang}/${path}`, translated);
+      return new Response(req.method === "HEAD" ? null : translated, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": MIME_TYPES.html,
+          "Cache-Control": "public, max-age=300",
+          "X-Frame-Options": "SAMEORIGIN",
+        },
+      });
+    } catch (error) {
+      console.error("translation_failed", path, lang, error);
+      const reason = error instanceof Error ? error.message : "unknown";
+      // Fallback: devuelve el original en español.
+      return new Response(req.method === "HEAD" ? null : source, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": MIME_TYPES.html,
+          "Cache-Control": "public, max-age=60",
+          "X-Translation-Error": reason,
+          "X-Frame-Options": "SAMEORIGIN",
+        },
+      });
+    }
   }
 
   const body = await upstream.arrayBuffer();

@@ -12,6 +12,8 @@ interface RemoteHtmlProps {
   appBasePath?: string;
   className?: string;
   title?: string;
+  /** Selectores CSS del HTML remoto que se eliminan antes de renderizar. */
+  stripSelectors?: string[];
 }
 
 interface ParsedRemoteHtml {
@@ -65,6 +67,7 @@ const parseRemoteHtml = (
   documentUrl: string,
   remoteBaseUrl: string,
   appBasePath: string,
+  stripSelectors: string[] = [],
 ): ParsedRemoteHtml => {
   const parser = new DOMParser();
   const document = parser.parseFromString(rawHtml, "text/html");
@@ -73,6 +76,10 @@ const parseRemoteHtml = (
   const stylesheets = new Set<string>();
 
   stripExecutableContent(document);
+
+  stripSelectors.forEach((selector) => {
+    document.querySelectorAll(selector).forEach((node) => node.remove());
+  });
 
   document.querySelectorAll<HTMLLinkElement>('link[rel~="stylesheet"]').forEach((link) => {
     const href = link.getAttribute("href");
@@ -119,12 +126,14 @@ const RemoteHtml = ({
   appBasePath = "/music-dist",
   className,
   title = "Contenido",
+  stripSelectors,
 }: RemoteHtmlProps) => {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [content, setContent] = useState<ParsedRemoteHtml | null>(null);
   const [error, setError] = useState<string | null>(null);
   const normalizedAppBasePath = useMemo(() => appBasePath.replace(/\/+$/, "") || "/", [appBasePath]);
+  const stripKey = (stripSelectors ?? []).join(",");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -135,7 +144,15 @@ const RemoteHtml = ({
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const html = await res.text();
-        setContent(parseRemoteHtml(html, url, remoteBaseUrl ?? new URL("./", url).href, normalizedAppBasePath));
+        setContent(
+          parseRemoteHtml(
+            html,
+            url,
+            remoteBaseUrl ?? new URL("./", url).href,
+            normalizedAppBasePath,
+            stripKey ? stripKey.split(",") : [],
+          ),
+        );
       })
       .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === "AbortError") return;
@@ -145,7 +162,7 @@ const RemoteHtml = ({
     return () => {
       controller.abort();
     };
-  }, [normalizedAppBasePath, remoteBaseUrl, url]);
+  }, [normalizedAppBasePath, remoteBaseUrl, stripKey, url]);
 
   const handleClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target;
