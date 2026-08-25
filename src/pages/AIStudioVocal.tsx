@@ -388,7 +388,7 @@ export default function AIStudioVocal() {
 
   const voiceToolsTitle = s('aiVocal.voiceToolsTitle', 'Herramientas de Voz');
   const voiceToolsBadge = s('aiVocal.voiceTools', 'Herramientas de Voz');
-  const voiceToolsSub = s('aiVocal.voiceToolsSubtitle', 'Tu estudio vocal IA: clona tu voz, canta en 29 idiomas y mucho más');
+  const voiceToolsSub = s('aiVocal.voiceToolsSubtitle', 'Tu estudio vocal IA: clona tu voz y canta tus letras en 29 idiomas');
 
   // ──── CLONE FORM (shared) ────
   const cloneFormUI = (
@@ -588,7 +588,7 @@ export default function AIStudioVocal() {
   // ──── REGULAR (has clones) ────
   return (
     <div className="min-h-screen bg-background">
-      <SEO title="Herramientas de Voz" description="Tu estudio vocal IA: clona tu voz, canta en 29 idiomas y genera pistas vocales." path="/ai-studio/vocal" />
+      <SEO title="Herramientas de Voz" description="Tu estudio vocal IA: clona tu voz y genera pistas vocales cantadas en 29 idiomas." path="/ai-studio/vocal" />
       <VoiceToolsTour />
       <Navbar />
       <AIStudioThemeBar />
