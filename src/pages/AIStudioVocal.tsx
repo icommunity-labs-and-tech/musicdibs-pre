@@ -698,11 +698,18 @@ export default function AIStudioVocal() {
                   <CardContent>
                     <div className="space-y-2">
                       {voiceClones.map((c: any) => (
-                        <button key={c.id} onClick={() => setSelectedCloneId(c.id)} className="w-full flex items-center gap-3 rounded-lg p-3 text-left transition-all"
+                        <div key={c.id} className="w-full flex items-center gap-3 rounded-lg p-3 transition-all"
                           style={{ border: selectedCloneId === c.id ? '2px solid hsl(var(--primary))' : '1px solid hsl(var(--border))', background: selectedCloneId === c.id ? 'hsl(var(--primary) / 0.08)' : 'transparent' }}>
-                          <span className="text-lg">🎤</span>
-                          <div><p className="text-sm font-medium">{c.name}</p><p className="text-xs text-muted-foreground">{tv('clonedLabel')}</p></div>
-                        </button>
+                          <button onClick={() => setSelectedCloneId(c.id)} className="flex items-center gap-3 text-left flex-1 min-w-0">
+                            <span className="text-lg">🎤</span>
+                            <div className="min-w-0"><p className="text-sm font-medium truncate">{c.name}</p><p className="text-xs text-muted-foreground">{tv('clonedLabel')}</p></div>
+                          </button>
+                          {c.sample_url && (
+                            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" aria-label={vc('listen', 'Escuchar')} onClick={() => togglePlay(c)}>
+                              {playingId === c.id ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                            </Button>
+                          )}
+                        </div>
                       ))}
                       <Button size="sm" variant="ghost" className="w-full text-xs text-muted-foreground mt-1" onClick={() => setActiveTab('clone')}>
                         <Mic className="w-3 h-3 mr-1" /> {tv('addVoice')}
