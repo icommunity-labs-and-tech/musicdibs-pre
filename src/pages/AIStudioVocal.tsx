@@ -272,7 +272,7 @@ export default function AIStudioVocal() {
   const handleClone = async () => {
     const sample = cloneAudioFile || cloneAudioBlob;
     if (!sample || !cloneName.trim() || !user) return;
-    if (cloneAudioDuration !== null && cloneAudioDuration < 15) {
+    if (cloneAudioDuration !== null && cloneAudioDuration < 30) {
       toast({ title: vc('tooShort'), description: vc('tooShortDesc'), variant: 'destructive' }); return;
     }
     setIsCloning(true);
@@ -389,7 +389,7 @@ export default function AIStudioVocal() {
 
   const durationBadge = () => {
     if (cloneAudioDuration === null) return null;
-    if (cloneAudioDuration < 15) return <span className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationTooShort')}</span>;
+    if (cloneAudioDuration < 30) return <span className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationTooShort')}</span>;
     if (cloneAudioDuration < 30) return <span className="text-xs text-warning flex items-center gap-1"><AlertCircle className="h-3 w-3" /> {vc('durationOk')}</span>;
     return <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {vc('durationOptimal')}</span>;
   };
@@ -547,7 +547,7 @@ export default function AIStudioVocal() {
                 <div className="space-y-3">
                   <VoiceRecorder
                     onRecordingComplete={(blob, durationSec) => { setCloneAudioBlob(blob); setCloneAudioDuration(durationSec); }}
-                    minDurationSec={15}
+                    minDurationSec={30}
                     maxDurationSec={60}
                     recordLabel={s('aiVocal.recordSample', 'Grabar muestra de voz')}
                     stopLabel={s('aiVocal.stopRecording', 'Detener')}
@@ -705,7 +705,7 @@ export default function AIStudioVocal() {
                             <div className="min-w-0"><p className="text-sm font-medium truncate">{c.name}</p><p className="text-xs text-muted-foreground">{tv('clonedLabel')}</p></div>
                           </button>
                           {c.sample_url && (
-                            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" aria-label={vc('listen', 'Escuchar')} onClick={() => togglePlay(c)}>
+                            <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" aria-label={s('dashboard.voiceCloning.listen', 'Escuchar')} onClick={() => togglePlay(c)}>
                               {playingId === c.id ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
                             </Button>
                           )}
