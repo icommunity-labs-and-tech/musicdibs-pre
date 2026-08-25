@@ -225,6 +225,30 @@ serve(async (req) => {
         return json({ error: "provider_error", message: kieJson?.msg || `HTTP ${kieRes.status}` }, 502);
       }
 
+      // FIX 2026-08-25 (caso miguelangel.perezgarcia@gmail.com, BUG CRITICO
+      // de seguridad): antes NUNCA se guardaba el taskId nuevo que devuelve
+      // esta llamada (voice/generate, paso 2) -- se seguia usando
+      // clone.kie_task_id (el taskId del PASO 1, voice/validate, ya
+      // completado) para el resto del proceso, incluido el polling de
+      // check_status. Esto hacia que check_status consultara el estado de
+      // la tarea EQUIVOCADA (la de generar la frase de verificacion, no la
+      // generacion de voz real) -- KIE nunca llego a ejecutar realmente la
+      // verificacion de identidad, y algun campo de la respuesta de esa
+      // tarea vieja se interpretaba por error como si fuera el voiceId
+      // final, marcando la clonacion como "active" SIN QUE LA VERIFICACION
+      // REAL SE HUBIERA EJECUTADO NUNCA. Se guarda ahora el taskId correcto
+      // del paso 2 antes de continuar.
+      const generateTaskId = kieJson?.data?.taskId as string | undefined;
+      if (!generateTaskId) {
+        await refund(admin, user.id, creditsCost, "KIE voice/generate no devolvió taskId");
+        await admin.from("voice_clones").update({
+          status: "failed",
+          error_message: "KIE no devolvió taskId para la generación de voz",
+        }).eq("id", cloneId);
+        return json({ error: "provider_error", message: "no_task_id_returned" }, 502);
+      }
+      await admin.from("voice_clones").update({ kie_task_id: generateTaskId, updated_at: new Date().toISOString() }).eq("id", cloneId);
+
       return json({ ok: true, cloneId, status: "generating" });
     }
 
