@@ -255,11 +255,14 @@ export default function AIStudioVocal() {
       });
       const data = await res.json();
       if (!res.ok) {
+        console.error('[voice-clone] request_phrase failed', res.status, data);
         const { userMessage } = parseAiError({ status: res.status }, data);
-        toast({ title: vc('cloneError'), description: userMessage, variant: 'destructive' });
+        const description = typeof data?.message === 'string' && data.message.trim() ? data.message : userMessage;
+        toast({ title: vc('cloneError'), description, variant: 'destructive' });
         setCloneStep('idle');
         return;
       }
+
       setActiveCloneId(data.cloneId);
       pollCloneStatus(data.cloneId);
     } catch (err) {
