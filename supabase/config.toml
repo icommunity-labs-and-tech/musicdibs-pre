@@ -1,5 +1,10 @@
 project_id = "kmwehyixenybegwhqljx"
 
+[functions.music-dist]
+verify_jwt = false
+
+
+
 [functions.wp-password-login]
 verify_jwt = false
 
