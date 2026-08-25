@@ -177,11 +177,23 @@ export default function AIStudioVocal() {
 
   const handleCloneFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!CLONE_ALLOWED_EXTS.includes(ext)) {
+      toast({ title: vc('invalidFormat'), description: vc('invalidFormatDesc'), variant: 'destructive' });
+      if (cloneFileRef.current) cloneFileRef.current.value = '';
+      return;
+    }
+    if (file.size > CLONE_MAX_BYTES) {
+      toast({ title: vc('tooLarge'), description: vc('tooLargeDesc'), variant: 'destructive' });
+      if (cloneFileRef.current) cloneFileRef.current.value = '';
+      return;
+    }
     setCloneAudioFile(file);
     setCloneAudioBlob(null);
     const audio = new Audio(URL.createObjectURL(file));
     audio.onloadedmetadata = () => setCloneAudioDuration(Math.round(audio.duration));
   };
+
 
   const uploadToVoiceSamples = async (fileOrBlob: File | Blob, ext: string): Promise<string> => {
     const path = `${user!.id}/${crypto.randomUUID()}.${ext}`;
