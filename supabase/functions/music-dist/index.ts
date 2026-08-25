@@ -187,6 +187,7 @@ Deno.serve(async (req) => {
       });
     } catch (error) {
       console.error("translation_failed", path, lang, error);
+      const reason = error instanceof Error ? error.message : "unknown";
       // Fallback: devuelve el original en español.
       return new Response(req.method === "HEAD" ? null : source, {
         status: 200,
@@ -194,6 +195,7 @@ Deno.serve(async (req) => {
           ...corsHeaders,
           "Content-Type": MIME_TYPES.html,
           "Cache-Control": "public, max-age=60",
+          "X-Translation-Error": reason,
           "X-Frame-Options": "SAMEORIGIN",
         },
       });
