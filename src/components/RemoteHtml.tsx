@@ -6,6 +6,8 @@ import { useNavigate } from "react-router-dom";
 interface RemoteHtmlProps {
   /** URL absoluta del documento remoto (por ejemplo, un index.html en Storage). */
   url: string;
+  /** URL absoluta de la raíz del sitio remoto. */
+  remoteBaseUrl?: string;
   /** Ruta base local donde se debe navegar al pulsar enlaces internos del HTML remoto. */
   appBasePath?: string;
   className?: string;
@@ -58,11 +60,16 @@ const stripExecutableContent = (root: ParentNode) => {
   });
 };
 
-const parseRemoteHtml = (rawHtml: string, documentUrl: string, appBasePath: string): ParsedRemoteHtml => {
+const parseRemoteHtml = (
+  rawHtml: string,
+  documentUrl: string,
+  remoteBaseUrl: string,
+  appBasePath: string,
+): ParsedRemoteHtml => {
   const parser = new DOMParser();
   const document = parser.parseFromString(rawHtml, "text/html");
   const baseUrl = new URL(documentUrl);
-  const remoteRoot = new URL("./", baseUrl);
+  const remoteRoot = new URL(remoteBaseUrl);
   const stylesheets = new Set<string>();
 
   stripExecutableContent(document);
@@ -106,7 +113,13 @@ const parseRemoteHtml = (rawHtml: string, documentUrl: string, appBasePath: stri
  * Renderiza un sitio HTML remoto (alojado en nuestro propio Storage público)
  * dentro de la app para evitar bloqueos de iframe por cabeceras X-Frame-Options.
  */
-const RemoteHtml = ({ url, appBasePath = "/music-dist", className, title = "Contenido" }: RemoteHtmlProps) => {
+const RemoteHtml = ({
+  url,
+  remoteBaseUrl,
+  appBasePath = "/music-dist",
+  className,
+  title = "Contenido",
+}: RemoteHtmlProps) => {
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const [content, setContent] = useState<ParsedRemoteHtml | null>(null);
@@ -122,7 +135,7 @@ const RemoteHtml = ({ url, appBasePath = "/music-dist", className, title = "Cont
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const html = await res.text();
-        setContent(parseRemoteHtml(html, url, normalizedAppBasePath));
+        setContent(parseRemoteHtml(html, url, remoteBaseUrl ?? new URL("./", url).href, normalizedAppBasePath));
       })
       .catch((err: unknown) => {
         if (err instanceof DOMException && err.name === "AbortError") return;
@@ -132,7 +145,7 @@ const RemoteHtml = ({ url, appBasePath = "/music-dist", className, title = "Cont
     return () => {
       controller.abort();
     };
-  }, [normalizedAppBasePath, url]);
+  }, [normalizedAppBasePath, remoteBaseUrl, url]);
 
   const handleClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target;

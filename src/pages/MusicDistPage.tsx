@@ -32,7 +32,12 @@ const MusicDistPage = () => {
         lang="en"
       />
       <main>
-        <RemoteHtml appBasePath={APP_BASE_PATH} url={remoteUrl} title="MusicDibs — Guía de usuario" />
+        <RemoteHtml
+          appBasePath={APP_BASE_PATH}
+          remoteBaseUrl={REMOTE_URL}
+          url={remoteUrl}
+          title="MusicDibs — Guía de usuario"
+        />
       </main>
     </>
   );
