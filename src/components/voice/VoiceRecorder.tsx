@@ -55,6 +55,20 @@ export function VoiceRecorder({
   const startRecording = useCallback(async () => {
     setIsRequesting(true);
     try {
+      // FIX 2026-08-25: navigator.mediaDevices puede ser undefined en
+      // contextos no seguros (sin HTTPS) o en navegadores embebidos muy
+      // restrictivos (ej. algunos in-app browsers de redes sociales en
+      // movil) -- sin esta comprobacion, getUserMedia lanza un TypeError
+      // que caia en el mismo catch generico que un permiso denegado,
+      // impidiendo diagnosticar la causa real.
+      if (!navigator.mediaDevices?.getUserMedia) {
+        toast({
+          title: 'Tu navegador no permite grabar audio aquí',
+          description: 'Prueba a abrir MusicDibs directamente en Chrome o Safari (no dentro de otra app como Instagram o Facebook), o sube un archivo de audio en su lugar.',
+          variant: 'destructive',
+        });
+        return;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       chunksRef.current = [];
@@ -85,8 +99,27 @@ export function VoiceRecorder({
           return next;
         });
       }, 1000);
-    } catch {
-      toast({ title: 'No se pudo acceder al micrófono', description: 'Comprueba los permisos de tu navegador.', variant: 'destructive' });
+    } catch (err: any) {
+      // FIX 2026-08-25: diferenciar la causa real en vez de un mensaje
+      // generico -- permite saber si es un problema del usuario (permiso
+      // denegado, sin microfono) o algo a investigar de nuestro lado.
+      const name = err?.name as string | undefined;
+      console.warn('[VoiceRecorder] getUserMedia error:', name, err?.message);
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
+        toast({
+          title: 'Permiso de micrófono denegado',
+          description: 'Has bloqueado el acceso al micrófono para esta web. Revisa los permisos del sitio en la configuración de tu navegador y vuelve a intentarlo.',
+          variant: 'destructive',
+        });
+      } else if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        toast({
+          title: 'No se ha detectado ningún micrófono',
+          description: 'Comprueba que tu dispositivo tiene un micrófono disponible, o sube un archivo de audio en su lugar.',
+          variant: 'destructive',
+        });
+      } else {
+        toast({ title: 'No se pudo acceder al micrófono', description: 'Comprueba los permisos de tu navegador.', variant: 'destructive' });
+      }
     } finally {
       setIsRequesting(false);
     }
