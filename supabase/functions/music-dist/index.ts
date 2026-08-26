@@ -9,7 +9,7 @@
 // la CSP restrictiva, de forma que las rutas relativas (`assets/style.css`,
 // `guia/<seccion>/index.html`) funcionan con normalidad.
 //
-// Además soporta `?lang=en|pt` para servir el HTML traducido (OpenAI gpt-5.4),
+// Además soporta `?lang=en|pt` para servir el HTML traducido (Gemini 1.5 Flash, fallback OpenAI),
 // con caché persistente en el propio bucket bajo `_i18n/<lang>/<ruta>`.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -126,22 +126,30 @@ const translateHtmlWithGemini = async (html: string, lang: string) => {
     "do not add explanations. Return ONLY the resulting HTML document.\n\n" +
     html;
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 32768 },
-      }),
-    },
-  );
+  // Modelos ordenados de más barato a más caro.
+  const models = ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-2.5-flash"];
+  let res: Response | null = null;
+  let lastError = "";
 
-  if (!res.ok) {
-    const detail = (await res.text()).slice(0, 200).replace(/[\r\n]+/g, " ");
-    throw new Error(`gemini_${res.status}: ${detail}`);
+  for (const model of models) {
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 32768 },
+        }),
+      },
+    );
+    if (res.ok) break;
+    lastError = `gemini_${res.status} (${model}): ${(await res.text()).slice(0, 160).replace(/[\r\n]+/g, " ")}`;
+    console.error("gemini_model_failed", lastError);
+    res = null;
   }
+
+  if (!res) throw new Error(lastError || "gemini_failed");
   const data = await res.json();
   const text: string = (data?.candidates?.[0]?.content?.parts ?? [])
     .map((part: { text?: string }) => part?.text ?? "")
@@ -151,20 +159,21 @@ const translateHtmlWithGemini = async (html: string, lang: string) => {
   return { html: cleaned, provider: "gemini" as const };
 };
 
+// Prioriza el proveedor más barato (Gemini 1.5 Flash) y deja OpenAI como fallback.
 const translateHtml = async (html: string, lang: string) => {
-  if (OPENAI_API_KEY) {
+  if (GEMINI_API_KEY) {
     try {
-      return await translateHtmlWithOpenAI(html, lang);
+      return await translateHtmlWithGemini(html, lang);
     } catch (error) {
-      console.error("openai_translation_failed", error);
-      if (GEMINI_API_KEY) {
-        console.log("falling_back_to_gemini");
-        return await translateHtmlWithGemini(html, lang);
+      console.error("gemini_translation_failed", error);
+      if (OPENAI_API_KEY) {
+        console.log("falling_back_to_openai");
+        return await translateHtmlWithOpenAI(html, lang);
       }
       throw error;
     }
   }
-  return await translateHtmlWithGemini(html, lang);
+  return await translateHtmlWithOpenAI(html, lang);
 };
 
 Deno.serve(async (req) => {
@@ -197,20 +206,21 @@ Deno.serve(async (req) => {
   const wantsTranslation = isHtml && Boolean(LANGUAGES[lang]);
 
   if (wantsTranslation) {
-    const cachePath = `_i18n/openai/${lang}/${path}`;
-    const cached = await fetchObject(cachePath);
-    if (cached.ok) {
-      const cachedHtml = await cached.text();
-      return new Response(req.method === "HEAD" ? null : cachedHtml, {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": MIME_TYPES.html,
-          "Cache-Control": "public, max-age=300",
-          "X-Frame-Options": "SAMEORIGIN",
-          "X-Translation-Provider": "openai (cached)",
-        },
-      });
+    for (const provider of ["gemini", "openai"] as const) {
+      const cached = await fetchObject(`_i18n/${provider}/${lang}/${path}`);
+      if (cached.ok) {
+        const cachedHtml = await cached.text();
+        return new Response(req.method === "HEAD" ? null : cachedHtml, {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": MIME_TYPES.html,
+            "Cache-Control": "public, max-age=300",
+            "X-Frame-Options": "SAMEORIGIN",
+            "X-Translation-Provider": `${provider} (cached)`,
+          },
+        });
+      }
     }
   }
 
