@@ -307,6 +307,26 @@ serve(async (req) => {
         const infoJson = await infoRes.json().catch(() => ({}));
         const voiceId = infoJson?.data?.voiceId as string | undefined;
         const genStatus = infoJson?.data?.status as string | undefined;
+        // FIX 2026-08-26 (BUG DE SEGURIDAD CRITICO, confirmado con el
+        // Playground de KIE por Iker): cuando la verificacion de identidad
+        // vocal NO coincide (se sube audio de una persona y se verifica con
+        // la voz de otra), KIE devuelve literalmente voiceId:"fail" +
+        // errorMessage:"Voices sound different. Please try again." -- SIN
+        // el campo status. La condicion anterior (voiceId && (status ===
+        // "success" || !status)) trataba el string "fail" como truthy y, al
+        // faltar status, caia en el "|| !genStatus" y lo aceptaba como
+        // EXITO, guardando "fail" como si fuera un voiceId real. Esto
+        // significaba que la verificacion de identidad NUNCA bloqueaba de
+        // verdad un intento de clonar la voz de otra persona -- se aceptaba
+        // como si hubiera tenido exito. Se rechaza explicitamente ANTES de
+        // cualquier otra comprobacion.
+        if (voiceId === "fail") {
+          const errMsg = infoJson?.data?.errorMessage || "La voz de verificación no coincide con la voz original. Vuelve a intentarlo leyendo la frase con tu propia voz.";
+          const { data: pricingRowFail } = await admin.from("operation_pricing").select("credits_cost").eq("operation_key", "clone_voice").eq("is_active", true).maybeSingle();
+          await refund(admin, user.id, pricingRowFail?.credits_cost ?? 5, "verificación de voz no coincide");
+          await admin.from("voice_clones").update({ status: "failed", error_message: String(errMsg).slice(0, 300) }).eq("id", cloneId);
+          return json({ ok: true, status: "failed", error: errMsg });
+        }
         // FIX 2026-08-26: confirmado con una prueba real en el Playground
         // de KIE que voiceId === taskId es el comportamiento NORMAL de la
         // API en una generacion exitosa (KIE reutiliza el mismo

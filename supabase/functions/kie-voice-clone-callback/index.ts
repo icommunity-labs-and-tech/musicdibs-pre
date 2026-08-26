@@ -86,6 +86,23 @@ serve(async (req) => {
         return json({ received: true });
       }
       const voiceId = payload?.data?.voiceId || payload?.data?.result?.voiceId;
+      // FIX 2026-08-26 (BUG DE SEGURIDAD CRITICO, mismo fix que en
+      // check_status -- ver ese comentario para el detalle completo):
+      // KIE devuelve literalmente voiceId:"fail" cuando la verificacion de
+      // identidad vocal no coincide. Se rechaza explicitamente ANTES de
+      // aceptarlo como si fuera un voiceId real.
+      if (voiceId === "fail") {
+        const errMsg = payload?.data?.errorMessage || "La voz de verificación no coincide con la voz original.";
+        await admin.from("voice_clones").update({ status: "failed", error_message: String(errMsg).slice(0, 300) }).eq("id", cloneId);
+        const { data: pricingRowFail } = await admin.from("operation_pricing").select("credits_cost").eq("operation_key", "clone_voice").eq("is_active", true).maybeSingle();
+        const creditsCostFail = pricingRowFail?.credits_cost ?? 5;
+        const { data: pFail } = await admin.from("profiles").select("available_credits").eq("user_id", clone.user_id).single();
+        if (pFail) {
+          await admin.from("profiles").update({ available_credits: pFail.available_credits + creditsCostFail, updated_at: new Date().toISOString() }).eq("user_id", clone.user_id);
+          await admin.from("credit_transactions").insert({ user_id: clone.user_id, amount: creditsCostFail, type: "refund", description: `Reembolso: verificación de voz no coincide (${errMsg})`.slice(0, 200) });
+        }
+        return json({ received: true });
+      }
       // FIX 2026-08-26 (CORRECCION): confirmado con una prueba real en el
       // Playground de KIE que voiceId === taskId es NORMAL en un exito
       // genuino -- la comprobacion anterior que rechazaba esto bloqueaba
