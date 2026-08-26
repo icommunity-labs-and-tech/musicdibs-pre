@@ -25,7 +25,7 @@ function useSteps(): Step[] {
     {
       target: '[data-tour="vt-clone-tab"]',
       title: vt('step2Title', 'Clona tu voz'),
-      content: vt('step2Content', 'Para usar tu propia voz, primero necesitas clonarla.\n\nRequisitos del audio:\n✓ Mínimo 1 minuto de grabación\n✓ Solo tu voz (sin música de fondo)\n✓ Habla clara y natural\n✓ MP3, WAV o FLAC\n\nConsejo: Graba en un lugar silencioso y habla de forma natural, como si estuvieras contando una historia.'),
+      content: vt('step2Content', 'Para usar tu propia voz, primero necesitas clonarla.\n\nRequisitos del audio:\n✓ Mínimo 30 segundos de grabación\n✓ Solo tu voz (sin música de fondo)\n✓ Habla clara y natural\n✓ MP3, WAV o M4A (máx. 25 MB)\n\nConsejo: Graba en un lugar silencioso y habla de forma natural, como si estuvieras contando una historia.'),
       disableBeacon: true,
     },
     {
