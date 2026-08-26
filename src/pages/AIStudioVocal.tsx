@@ -500,27 +500,43 @@ export default function AIStudioVocal() {
         return;
       }
       // KIE es asíncrono: la generación real (música + separación de voz)
-      // llega vía callback. Hacemos polling sobre ai_generations hasta que
-      // el resultado esté listo (o falle).
+      // llega vía callback. El backend NO usa columna `status`: al terminar
+      // rellena `audio_url`, y si falla BORRA la fila (tras reembolsar).
+      // Polling: audio_url no vacío = OK; fila inexistente = fallo; y un
+      // límite de tiempo para no dejar el spinner girando indefinidamente.
       const generationId = data.generationId;
+      const startedAt = Date.now();
+      const MAX_POLL_MS = 10 * 60 * 1000;
       const poll = window.setInterval(async () => {
-        // `status` existe en la tabla de producción aunque los tipos generados
-        // estén desactualizados; casteamos para evitar el error de TS.
-        const { data } = await supabase.from('ai_generations').select('status, audio_url').eq('id', generationId).maybeSingle();
-        const row = data as unknown as { status: string | null; audio_url: string | null } | null;
-        if (row?.status === 'completed' && row.audio_url) {
+        const { data: row, error: pollError } = await supabase
+          .from('ai_generations')
+          .select('audio_url')
+          .eq('id', generationId)
+          .maybeSingle();
+        if (pollError) return; // error transitorio: reintentamos en el siguiente tick
+        if (row?.audio_url) {
           window.clearInterval(poll);
           setAudioUrl(row.audio_url);
           setHistory(prev => [{ id: generationId, audio_url: row.audio_url as string, prompt: `Pista vocal: ${selectedClone.name}`, created_at: new Date().toISOString() }, ...prev]);
           toast({ title: tv('vocalGenerated'), description: tv('vocalGeneratedDesc') });
           track('vocal_track_generated', { feature: 'vocal' });
           setIsGenerating(false);
-        } else if (row?.status === 'failed') {
+        } else if (!row) {
+          // La fila fue eliminada por el callback => fallo + reembolso.
           window.clearInterval(poll);
           toast({ title: s('aiShared.error'), description: s('aiVocal.generationFailed', 'La generación ha fallado. Se te ha reembolsado el crédito.'), variant: 'destructive' });
           setIsGenerating(false);
+        } else if (Date.now() - startedAt > MAX_POLL_MS) {
+          window.clearInterval(poll);
+          toast({
+            title: s('aiShared.error'),
+            description: s('aiVocal.generationTimeout', 'La generación está tardando demasiado. Si se completa, aparecerá en tu historial en unos minutos.'),
+            variant: 'destructive',
+          });
+          setIsGenerating(false);
         }
       }, 4000);
+
     } catch (err) { const { userMessage } = parseAiError(err); toast({ title: s('aiShared.error'), description: userMessage, variant: 'destructive' }); setIsGenerating(false); }
   };
 
