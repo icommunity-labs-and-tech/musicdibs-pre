@@ -122,6 +122,19 @@ export default function AIStudioVocal() {
   const [verificationPhrase, setVerificationPhrase] = useState<string | null>(null);
   const [cloneErrorMsg, setCloneErrorMsg] = useState<string | null>(null);
   const clonePollRef = useRef<number | null>(null);
+  // Campos que el backend siempre acepto pero el formulario nunca pedia --
+  // el playground oficial de KIE los pide explicitamente en el paso final
+  // (Generate Voice): style y singerSkillLevel. Se piden ahora para poder
+  // verificar que se envian correctamente en cada intento.
+  const [cloneStyle, setCloneStyle] = useState('');
+  const [cloneSingerSkillLevel, setCloneSingerSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
+  // Panel de depuracion: guarda la respuesta cruda (taskId/voiceId/status)
+  // de cada paso, igual que la pestaña "Output > JSON" del playground de
+  // KIE, para poder verificar visualmente que cada paso se ejecuta bien.
+  const [cloneDebugLog, setCloneDebugLog] = useState<{ step: string; data: unknown; at: string }[]>([]);
+  const pushCloneDebug = (step: string, data: unknown) => {
+    setCloneDebugLog((prev) => [...prev, { step, data, at: new Date().toLocaleTimeString() }].slice(-6));
+  };
 
   // Clone editing
   const [editingCloneId, setEditingCloneId] = useState<string | null>(null);
@@ -239,6 +252,7 @@ export default function AIStudioVocal() {
           body: JSON.stringify({ action: 'check_status', cloneId }),
         });
         const data = await res.json();
+        pushCloneDebug('check_status (voice/record-info)', data);
         if (!res.ok) return;
         if (data.status === 'awaiting_verification_recording' && data.verificationPhrase) {
           setVerificationPhrase(data.verificationPhrase);
@@ -307,8 +321,8 @@ export default function AIStudioVocal() {
         body: JSON.stringify({ action: 'request_phrase', voiceUrl, vocalStartS: 0, vocalEndS: Math.min(cloneAudioDuration ?? 10, 30), language: i18n.resolvedLanguage?.startsWith('en') ? 'en' : i18n.resolvedLanguage?.startsWith('pt') ? 'pt' : 'es', name: cloneName.trim(), description: cloneDescription }),
       });
       const data = await res.json();
+      pushCloneDebug('request_phrase (paso 1 → voice/validate)', data);
       if (!res.ok) {
-        console.error('[voice-clone] request_phrase failed', res.status, data);
         const { userMessage } = parseAiError({ status: res.status }, data);
         const description = typeof data?.message === 'string' && data.message.trim() ? data.message : userMessage;
         toast({ title: vc('cloneError'), description, variant: 'destructive' });
@@ -345,9 +359,10 @@ export default function AIStudioVocal() {
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-voice-clone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-        body: JSON.stringify({ action: 'submit_verification', cloneId: activeCloneId, verificationAudioUrl }),
+        body: JSON.stringify({ action: 'submit_verification', cloneId: activeCloneId, verificationAudioUrl, style: cloneStyle.trim() || undefined, singerSkillLevel: cloneSingerSkillLevel }),
       });
       const data = await res.json();
+      pushCloneDebug('submit_verification (paso 2 → voice/generate)', data);
       if (!res.ok) {
         console.error('[voice-clone] submit_verification failed', res.status, data);
         if (data.error === 'insufficient_credits') {
@@ -545,6 +560,23 @@ export default function AIStudioVocal() {
               <Label>{vc('descLabel')}</Label>
               <Input value={cloneDescription} onChange={e => setCloneDescription(e.target.value)} placeholder={vc('descPlaceholder')} maxLength={200} />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>{s('aiVocal.styleLabel', 'Estilo (opcional)')}</Label>
+                <Input value={cloneStyle} onChange={e => setCloneStyle(e.target.value)} placeholder={s('aiVocal.stylePlaceholder', 'Ej: Pop, voz masculina')} maxLength={100} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{s('aiVocal.skillLabel', 'Nivel de canto')}</Label>
+                <Select value={cloneSingerSkillLevel} onValueChange={(v) => setCloneSingerSkillLevel(v as typeof cloneSingerSkillLevel)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">{s('aiVocal.skillBeginner', 'Principiante')}</SelectItem>
+                    <SelectItem value="intermediate">{s('aiVocal.skillIntermediate', 'Intermedio')}</SelectItem>
+                    <SelectItem value="advanced">{s('aiVocal.skillAdvanced', 'Avanzado')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div className="space-y-1.5">
               <Label>{vc('uploadLabel')}</Label>
               {cloneAudioBlob ? (
@@ -594,6 +626,28 @@ export default function AIStudioVocal() {
             </Button>
             <div className="text-center"><PricingLink /></div>
           </>
+        )}
+
+        {/* Panel de depuracion: resultado crudo de cada paso, como el
+            playground de KIE (Output > JSON), para verificar visualmente
+            que cada llamada se ejecuta correctamente. */}
+        {cloneDebugLog.length > 0 && (
+          <details className="rounded-lg border bg-muted/20 p-3 text-xs" open>
+            <summary className="cursor-pointer font-medium text-muted-foreground select-none">
+              {s('aiVocal.debugPanelTitle', 'Ver respuesta técnica de cada paso')} ({cloneDebugLog.length})
+            </summary>
+            <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
+              {cloneDebugLog.map((entry, i) => (
+                <div key={i} className="rounded border bg-background p-2">
+                  <div className="flex justify-between text-muted-foreground mb-1">
+                    <span className="font-medium">{entry.step}</span>
+                    <span>{entry.at}</span>
+                  </div>
+                  <pre className="whitespace-pre-wrap break-all text-[10px] leading-tight">{JSON.stringify(entry.data, null, 2)}</pre>
+                </div>
+              ))}
+            </div>
+          </details>
         )}
       </CardContent>
     </Card>
