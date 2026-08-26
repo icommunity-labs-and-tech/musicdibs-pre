@@ -113,7 +113,7 @@ const translateHtmlWithOpenAI = async (html: string, lang: string) => {
   const text: string = data?.choices?.[0]?.message?.content ?? "";
   const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/```\s*$/, "").trim();
   if (!cleaned.toLowerCase().includes("<body")) throw new Error("translation_invalid");
-  return cleaned;
+  return { html: cleaned, provider: "openai" as const };
 };
 
 const translateHtmlWithGemini = async (html: string, lang: string) => {
@@ -148,7 +148,7 @@ const translateHtmlWithGemini = async (html: string, lang: string) => {
     .join("");
   const cleaned = text.replace(/^```[a-z]*\n?/i, "").replace(/```\s*$/, "").trim();
   if (!cleaned.toLowerCase().includes("<body")) throw new Error("translation_invalid");
-  return cleaned;
+  return { html: cleaned, provider: "gemini" as const };
 };
 
 const translateHtml = async (html: string, lang: string) => {
