@@ -270,12 +270,25 @@ serve(async (req) => {
         });
         const infoJson = await infoRes.json().catch(() => ({}));
         const phrase = infoJson?.data?.validateInfo as string | undefined;
+        const validateStatus = infoJson?.data?.status as string | undefined;
         if (phrase) {
           await admin.from("voice_clones").update({
             verification_phrase: phrase,
             status: "awaiting_verification_recording",
           }).eq("id", cloneId);
           return json({ ok: true, status: "awaiting_verification_recording", verificationPhrase: phrase });
+        }
+        // FIX 2026-08-26: KIE documenta status explicitos para esta tarea
+        // (wait_processing/processing_validate = en curso;
+        // processing_validate_fail/fail = fallo real; wait_validating =
+        // lista para leer; success = completado). Antes solo mirabamos si
+        // "phrase" existia, dejando al usuario esperando indefinidamente
+        // con el spinner girando si KIE realmente fallaba sin generar
+        // ninguna frase.
+        if (validateStatus && /fail/i.test(validateStatus)) {
+          const errMsg = infoJson?.data?.errorMessage || infoJson?.msg || `KIE status: ${validateStatus}`;
+          await admin.from("voice_clones").update({ status: "failed", error_message: String(errMsg).slice(0, 300) }).eq("id", cloneId);
+          return json({ ok: true, status: "failed", error: errMsg });
         }
       }
 
@@ -285,6 +298,7 @@ serve(async (req) => {
         });
         const infoJson = await infoRes.json().catch(() => ({}));
         const voiceId = infoJson?.data?.voiceId as string | undefined;
+        const genStatus = infoJson?.data?.status as string | undefined;
         // FIX 2026-08-26 (condicion de carrera confirmada con logs reales de
         // KIE): NUNCA aparece una tarea "step=voice" en KIE -- KIE reutiliza
         // el MISMO taskId para todo el flujo (paso 1 generar frase, paso 2
@@ -303,6 +317,23 @@ serve(async (req) => {
             status: "active",
           }).eq("id", cloneId);
           return json({ ok: true, status: "active", voiceId });
+        }
+        // Fallo explicito reportado por KIE (mismo patron de status que en
+        // validate-info) -- no dejar esperando si KIE ya dijo que fallo.
+        if (genStatus && /fail/i.test(genStatus)) {
+          const errMsg = infoJson?.data?.errorMessage || infoJson?.msg || `KIE status: ${genStatus}`;
+          await admin.from("voice_clones").update({ status: "failed", error_message: String(errMsg).slice(0, 300) }).eq("id", cloneId);
+          return json({ ok: true, status: "failed", error: errMsg });
+        }
+        // FIX 2026-08-26: salvaguarda de timeout -- si llevamos mas de 10
+        // minutos en "generating" sin que KIE reporte ni exito ni fallo
+        // explicito (caso real reportado: el spinner del frontend gira
+        // indefinidamente sin ningun avance), se marca como fallido en vez
+        // de dejar al usuario esperando para siempre.
+        const { data: cloneWithTime } = await admin.from("voice_clones").select("updated_at").eq("id", cloneId).single();
+        if (cloneWithTime?.updated_at && Date.now() - new Date(cloneWithTime.updated_at).getTime() > 10 * 60 * 1000) {
+          await admin.from("voice_clones").update({ status: "failed", error_message: "Timeout: KIE no completó la generación en 10 minutos." }).eq("id", cloneId);
+          return json({ ok: true, status: "failed", error: "timeout" });
         }
       }
 
