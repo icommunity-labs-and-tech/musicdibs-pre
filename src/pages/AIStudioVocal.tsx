@@ -230,7 +230,7 @@ export default function AIStudioVocal() {
 
   const pollCloneStatus = useCallback((cloneId: string) => {
     stopClonePolling();
-    clonePollRef.current = window.setInterval(async () => {
+    const checkOnce = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-voice-clone`, {
@@ -258,7 +258,9 @@ export default function AIStudioVocal() {
           stopClonePolling();
         }
       } catch { /* reintenta en el siguiente tick */ }
-    }, 4000);
+    };
+    checkOnce();
+    clonePollRef.current = window.setInterval(checkOnce, 4000);
   }, [cloneName, loadClones, toast, track]);
 
   const resetCloneFlow = () => {
@@ -507,8 +509,17 @@ export default function AIStudioVocal() {
           </div>
         )}
 
+        {/* Generando la frase de verificación (justo tras el primer envío) */}
+        {cloneStep === 'requesting_phrase' && (
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="font-medium">{s('aiVocal.requestingPhrase', 'Preparando tu verificación de voz...')}</p>
+            <p className="text-sm text-muted-foreground">{s('aiVocal.requestingPhraseHint', 'Esto tarda solo unos segundos, no cierres esta pantalla.')}</p>
+          </div>
+        )}
+
         {/* Paso 1: nombre + muestra de voz (subir o grabar) */}
-        {(cloneStep === 'idle' || cloneStep === 'requesting_phrase') && (
+        {cloneStep === 'idle' && (
           <>
             <div className="bg-primary/5 rounded-lg p-4 flex gap-3">
               <Mic className="h-5 w-5 text-primary shrink-0 mt-0.5" />
