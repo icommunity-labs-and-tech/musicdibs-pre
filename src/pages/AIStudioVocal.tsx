@@ -275,7 +275,23 @@ export default function AIStudioVocal() {
           resetCloneFlow();
         } else if (data.status === 'failed') {
           setCloneStep('failed');
-          setCloneErrorMsg(data.error || null);
+          // FIX 2026-08-26: KIE no siempre distingue claramente el motivo
+          // del fallo en este paso -- a veces devuelve un mensaje generico
+          // ("Internal Error, Please try again later") incluso cuando la
+          // causa real es que la voz de verificacion no coincidia con el
+          // audio original (confirmado por Iker con una prueba real: uso
+          // una voz ajena a proposito y obtuvo este mismo mensaje generico).
+          // Mostrar el error tecnico crudo no ayuda al usuario a entender
+          // que hacer. Se explica la causa MAS PROBABLE (verificacion no
+          // coincidente) de forma clara y accionable, sin descartar del
+          // todo un fallo tecnico real.
+          const rawErr = data.error || '';
+          const looksLikeMismatch = /different|match|verify|verification/i.test(rawErr) || !/network|timeout|server/i.test(rawErr);
+          setCloneErrorMsg(
+            looksLikeMismatch
+              ? s('aiVocal.verificationMismatch', 'Es muy probable que la grabación de verificación no coincidiera con la voz del audio original. Asegúrate de leer la frase con tu propia voz (la misma persona del audio que subiste) e inténtalo de nuevo. Si el problema persiste, puede tratarse de un error temporal del servicio.')
+              : (rawErr || null)
+          );
           stopClonePolling();
         }
       } catch { /* reintenta en el siguiente tick */ }
