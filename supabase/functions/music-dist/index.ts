@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
   const wantsTranslation = isHtml && Boolean(LANGUAGES[lang]);
 
   if (wantsTranslation) {
-    const cachePath = `_i18n/${lang}/${path}`;
+    const cachePath = `_i18n/openai/${lang}/${path}`;
     const cached = await fetchObject(cachePath);
     if (cached.ok) {
       const cachedHtml = await cached.text();
@@ -208,6 +208,7 @@ Deno.serve(async (req) => {
           "Content-Type": MIME_TYPES.html,
           "Cache-Control": "public, max-age=300",
           "X-Frame-Options": "SAMEORIGIN",
+          "X-Translation-Provider": "openai (cached)",
         },
       });
     }
@@ -225,8 +226,8 @@ Deno.serve(async (req) => {
   if (wantsTranslation) {
     const source = await upstream.text();
     try {
-      const translated = await translateHtml(source, lang);
-      await cacheObject(`_i18n/${lang}/${path}`, translated);
+      const { html: translated, provider } = await translateHtml(source, lang);
+      await cacheObject(`_i18n/${provider}/${lang}/${path}`, translated);
       return new Response(req.method === "HEAD" ? null : translated, {
         status: 200,
         headers: {
@@ -234,6 +235,7 @@ Deno.serve(async (req) => {
           "Content-Type": MIME_TYPES.html,
           "Cache-Control": "public, max-age=300",
           "X-Frame-Options": "SAMEORIGIN",
+          "X-Translation-Provider": provider,
         },
       });
     } catch (error) {
