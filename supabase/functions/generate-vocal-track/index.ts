@@ -37,6 +37,22 @@ serve(async (req) => {
     if (!lyrics?.trim()) return new Response(JSON.stringify({ error: 'lyrics is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     if (!voice_id) return new Response(JSON.stringify({ error: 'voice_id is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
+    // FIX 2026-08-26: antes, si el voice_id no correspondia a una clonacion
+    // realmente activa (ej. quedo en "pending_..." o "failed" por algun
+    // fallo de KIE), esta funcion intentaba generar igualmente, KIE
+    // fallaba, y el usuario veia un "Error interno del servidor" generico
+    // sin ninguna pista de la causa real. Se valida explicitamente ANTES
+    // de cobrar ningun credito.
+    const { data: voiceClone } = await supabase
+      .from('voice_clones')
+      .select('id, status')
+      .eq('user_id', user.id)
+      .eq('provider_voice_id', voice_id)
+      .maybeSingle();
+    if (!voiceClone || voiceClone.status !== 'active' || voice_id.startsWith('pending_')) {
+      return new Response(JSON.stringify({ error: 'invalid_voice_clone', message: 'Esta voz clonada no está lista o no se completó correctamente.' }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Coste propio (2 llamadas a KIE encadenadas: generación + separación,
     // cada una facturada por KIE por separado -- ver operation_pricing).
     const CREDITS_COST = await getOperationCost(supabase, 'generate_vocal_track_kie', 2);

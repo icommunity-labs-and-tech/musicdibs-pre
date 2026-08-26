@@ -422,6 +422,13 @@ export default function AIStudioVocal() {
       const data = await res.json();
       if (!res.ok) {
         if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: t('dashboard.noCredits.costMessage', { action: tv('title'), cost: FEATURE_COSTS.generate_vocal_track }), variant: 'destructive' });
+        else if (data.error === 'invalid_voice_clone') {
+          toast({
+            title: s('aiVocal.invalidVoiceCloneTitle', 'Esta voz clonada no está lista'),
+            description: s('aiVocal.invalidVoiceCloneDesc', 'La clonación no se completó correctamente. Ve a la pestaña "Clonar" y vuelve a intentarlo.'),
+            variant: 'destructive',
+          });
+        }
         else { const { userMessage } = parseAiError({ status: res.status }, data); toast({ title: s('aiShared.error'), description: userMessage, variant: 'destructive' }); }
         setIsGenerating(false);
         return;
