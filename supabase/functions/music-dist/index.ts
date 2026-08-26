@@ -127,7 +127,7 @@ const translateHtmlWithGemini = async (html: string, lang: string) => {
     html;
 
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -151,20 +151,21 @@ const translateHtmlWithGemini = async (html: string, lang: string) => {
   return { html: cleaned, provider: "gemini" as const };
 };
 
+// Prioriza el proveedor más barato (Gemini 1.5 Flash) y deja OpenAI como fallback.
 const translateHtml = async (html: string, lang: string) => {
-  if (OPENAI_API_KEY) {
+  if (GEMINI_API_KEY) {
     try {
-      return await translateHtmlWithOpenAI(html, lang);
+      return await translateHtmlWithGemini(html, lang);
     } catch (error) {
-      console.error("openai_translation_failed", error);
-      if (GEMINI_API_KEY) {
-        console.log("falling_back_to_gemini");
-        return await translateHtmlWithGemini(html, lang);
+      console.error("gemini_translation_failed", error);
+      if (OPENAI_API_KEY) {
+        console.log("falling_back_to_openai");
+        return await translateHtmlWithOpenAI(html, lang);
       }
       throw error;
     }
   }
-  return await translateHtmlWithGemini(html, lang);
+  return await translateHtmlWithOpenAI(html, lang);
 };
 
 Deno.serve(async (req) => {
