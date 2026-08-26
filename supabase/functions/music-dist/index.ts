@@ -198,20 +198,21 @@ Deno.serve(async (req) => {
   const wantsTranslation = isHtml && Boolean(LANGUAGES[lang]);
 
   if (wantsTranslation) {
-    const cachePath = `_i18n/openai/${lang}/${path}`;
-    const cached = await fetchObject(cachePath);
-    if (cached.ok) {
-      const cachedHtml = await cached.text();
-      return new Response(req.method === "HEAD" ? null : cachedHtml, {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          "Content-Type": MIME_TYPES.html,
-          "Cache-Control": "public, max-age=300",
-          "X-Frame-Options": "SAMEORIGIN",
-          "X-Translation-Provider": "openai (cached)",
-        },
-      });
+    for (const provider of ["gemini", "openai"] as const) {
+      const cached = await fetchObject(`_i18n/${provider}/${lang}/${path}`);
+      if (cached.ok) {
+        const cachedHtml = await cached.text();
+        return new Response(req.method === "HEAD" ? null : cachedHtml, {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": MIME_TYPES.html,
+            "Cache-Control": "public, max-age=300",
+            "X-Frame-Options": "SAMEORIGIN",
+            "X-Translation-Provider": `${provider} (cached)`,
+          },
+        });
+      }
     }
   }
 
