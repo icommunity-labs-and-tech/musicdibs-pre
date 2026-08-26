@@ -2428,7 +2428,7 @@ const voiceToolsTourTranslations: Record<string, any> = {
       step1Title: 'Tu estudio vocal con IA 🎤',
       step1Content: 'Clona tu voz, canta en 29 idiomas y crea versiones vocales profesionales de cualquier letra.\n\nFuncionalidades:\n• Clonar tu voz en segundos\n• Generar pistas vocales con tu voz clonada\n• Cantar letras que tú escribas\n\nTe mostramos cómo funciona paso a paso.',
       step2Title: 'Clona tu voz',
-      step2Content: 'Para usar tu propia voz, primero necesitas clonarla.\n\nRequisitos del audio:\n✓ Mínimo 1 minuto de grabación\n✓ Solo tu voz (sin música de fondo)\n✓ Habla clara y natural\n✓ MP3, WAV o FLAC\n\nConsejo: Graba en un lugar silencioso y habla de forma natural, como si estuvieras contando una historia.',
+      step2Content: 'Para usar tu propia voz, primero necesitas clonarla.\n\nRequisitos del audio:\n✓ Mínimo 30 segundos de grabación\n✓ Solo tu voz (sin música de fondo)\n✓ Habla clara y natural\n✓ MP3, WAV o M4A (máx. 25 MB)\n\nConsejo: Graba en un lugar silencioso y habla de forma natural, como si estuvieras contando una historia.'
       step3Title: 'Tus voces clonadas',
       step3Content: 'Una vez clonada tu voz, aparecerá en esta lista.\n\nPuedes:\n• Ver todas tus voces clonadas\n• Escuchar previews de cada voz\n• Eliminar voces que no uses\n• Seleccionar una voz para usar en "Cantar"\n\nLa clonación toma ~2-3 minutos. Se te notificará cuando esté lista.',
       step4Title: 'Genera pistas vocales',
@@ -2448,7 +2448,7 @@ const voiceToolsTourTranslations: Record<string, any> = {
       step1Title: 'Your AI vocal studio 🎤',
       step1Content: 'Clone your voice, sing in 29 languages and create professional vocal versions of any lyrics.\n\nFeatures:\n• Clone your voice in seconds\n• Generate vocal tracks with your cloned voice\n• Sing lyrics you write\n\nLet us show you how it works step by step.',
       step2Title: 'Clone your voice',
-      step2Content: 'To use your own voice, you need to clone it first.\n\nAudio requirements:\n✓ At least 1 minute of recording\n✓ Your voice only (no background music)\n✓ Clear and natural speech\n✓ MP3, WAV or FLAC\n\nTip: Record in a quiet place and speak naturally, as if you were telling a story.',
+      step2Content: 'To use your own voice, you need to clone it first.\n\nAudio requirements:\n✓ At least 30 seconds of recording\n✓ Your voice only (no background music)\n✓ Clear and natural speech\n✓ MP3, WAV or M4A (max. 25 MB)\n\nTip: Record in a quiet place and speak naturally, as if you were telling a story.'
       step3Title: 'Your cloned voices',
       step3Content: 'Once your voice is cloned, it will appear in this list.\n\nYou can:\n• View all your cloned voices\n• Listen to previews of each voice\n• Delete voices you don\'t use\n• Select a voice to use in "Sing"\n\nCloning takes ~2-3 minutes. You\'ll be notified when it\'s ready.',
       step4Title: 'Generate vocal tracks',
@@ -2468,7 +2468,7 @@ const voiceToolsTourTranslations: Record<string, any> = {
       step1Title: 'Seu estúdio vocal com IA 🎤',
       step1Content: 'Clone sua voz, cante em 29 idiomas e crie versões vocais profissionais de qualquer letra.\n\nFuncionalidades:\n• Clonar sua voz em segundos\n• Gerar faixas vocais com sua voz clonada\n• Cantar letras que você escrever\n\nVamos mostrar como funciona passo a passo.',
       step2Title: 'Clone sua voz',
-      step2Content: 'Para usar sua própria voz, primeiro você precisa cloná-la.\n\nRequisitos do áudio:\n✓ Mínimo 1 minuto de gravação\n✓ Apenas sua voz (sem música de fundo)\n✓ Fala clara e natural\n✓ MP3, WAV ou FLAC\n\nDica: Grave em um lugar silencioso e fale naturalmente, como se estivesse contando uma história.',
+      step2Content: 'Para usar sua própria voz, primeiro você precisa cloná-la.\n\nRequisitos do áudio:\n✓ Mínimo 30 segundos de gravação\n✓ Apenas sua voz (sem música de fundo)\n✓ Fala clara e natural\n✓ MP3, WAV ou M4A (máx. 25 MB)\n\nDica: Grave em um lugar silencioso e fale naturalmente, como se estivesse contando uma história.'
       step3Title: 'Suas vozes clonadas',
       step3Content: 'Uma vez clonada sua voz, ela aparecerá nesta lista.\n\nVocê pode:\n• Ver todas as suas vozes clonadas\n• Ouvir previews de cada voz\n• Excluir vozes que não usa\n• Selecionar uma voz para usar em "Cantar"\n\nA clonagem leva ~2-3 minutos. Você será notificado quando estiver pronta.',
       step4Title: 'Gere faixas vocais',
