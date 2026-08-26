@@ -28,7 +28,7 @@ serve(async (req) => {
 
     const { data: clone } = await admin
       .from("voice_clones")
-      .select("id, user_id, status")
+      .select("id, user_id, status, kie_task_id")
       .eq("id", cloneId)
       .maybeSingle();
     if (!clone) {
@@ -77,7 +77,9 @@ serve(async (req) => {
         return json({ received: true });
       }
       const voiceId = payload?.data?.voiceId || payload?.data?.result?.voiceId;
-      if (voiceId) {
+      // FIX 2026-08-26: misma salvaguarda que en check_status -- un voiceId
+      // real de KIE nunca deberia coincidir con el propio taskId de la tarea.
+      if (voiceId && voiceId !== clone.kie_task_id) {
         await admin.from("voice_clones").update({
           provider_voice_id: voiceId,
           status: "active",

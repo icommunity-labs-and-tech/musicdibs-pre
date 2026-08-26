@@ -285,7 +285,19 @@ serve(async (req) => {
         });
         const infoJson = await infoRes.json().catch(() => ({}));
         const voiceId = infoJson?.data?.voiceId as string | undefined;
-        if (voiceId) {
+        // FIX 2026-08-26 (condicion de carrera confirmada con logs reales de
+        // KIE): NUNCA aparece una tarea "step=voice" en KIE -- KIE reutiliza
+        // el MISMO taskId para todo el flujo (paso 1 generar frase, paso 2
+        // generar voz), no crea uno nuevo como se asumia ayer. Si
+        // check_status consulta record-info ANTES de que la llamada real a
+        // voice/generate (con verifyUrl) se haya completado en KIE, la
+        // respuesta sigue siendo la del PASO 1 (ya completado hace rato,
+        // generar la frase) -- y algun campo de esa respuesta se interpreta
+        // por error como voiceId, coincidiendo con el propio taskId. Un
+        // voiceId real generado por KIE NUNCA deberia ser identico al
+        // taskId de la tarea -- se rechaza explicitamente ese falso
+        // positivo y se sigue esperando.
+        if (voiceId && voiceId !== clone.kie_task_id) {
           await admin.from("voice_clones").update({
             provider_voice_id: voiceId,
             status: "active",
