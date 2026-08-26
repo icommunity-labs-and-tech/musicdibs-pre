@@ -109,33 +109,36 @@ serve(async (req) => {
 
     const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${generation.id}&step=music&creditsCost=${CREDITS_COST}&fromPermanent=${vocalDeductedFromPermanent}`;
 
-    // FIX 2026-08-26 (BUG REAL, confirmado con la documentacion oficial de
-    // KIE): /api/v1/generate (Generate Music generico) NO acepta un
-    // parametro "voiceId" -- solo "personaId" (un concepto distinto, para
-    // estilos musicales, no para voces personales clonadas). Enviarlo ahi
-    // hacia que KIE lo ignorara en silencio y generara con una voz
-    // generica del modelo, sin aplicar la voz clonada del usuario en
-    // absoluto -- la "pista vocal" resultante nunca reflejaba la voz
-    // clonada.
+    // FIX 2026-08-26 (CONFIRMADO por soporte oficial de KIE, support@kie.ai,
+    // tras varios intentos fallidos anteriores):
     //
-    // El endpoint correcto (confirmado en docs.kie.ai/suno-api/add-vocals,
-    // y ya en uso en kie-enhance-generate para el modo "add_vocals"/
-    // "convierte tu voz en un hit") es /api/v1/generate/add-vocals, que
-    // toma un audio EXISTENTE via "uploadUrl" y genera una cancion
-    // cantando sobre/a partir de ese audio -- se usa la muestra original
-    // de la clonacion de voz (voiceClone.sample_url) como uploadUrl.
-    console.log(`[VOCAL-TRACK] Generating with add-vocals, sample: ${voiceClone.sample_url}, lyrics: ${formattedLyrics.length} chars`);
+    // 1. /api/v1/generate con "voiceId" -- KIE lo ignoraba en silencio
+    //    (parametro no documentado en ese endpoint), generando con una voz
+    //    generica sin aplicar el timbre clonado.
+    // 2. /api/v1/generate/add-vocals con "uploadUrl" -- genera cantando
+    //    sobre un audio de referencia, pero NO aplica el timbre clonado
+    //    (confirmado por Iker con una prueba real: el resultado no sonaba
+    //    a la voz de la muestra).
+    //
+    // Respuesta oficial de soporte de KIE: el voiceId obtenido del flujo de
+    // Custom Voice se pasa en el campo "personId" (sin "a" -- distinto de
+    // "personaId", que es para Personas de estilo musical) al endpoint
+    // GENERICO /api/v1/generate. Se vuelve a este endpoint con el campo
+    // correcto.
+    console.log(`[VOCAL-TRACK] Generating with personId: ${voice_id}, lyrics: ${formattedLyrics.length} chars`);
 
-    const kieRes = await fetch('https://api.kie.ai/api/v1/generate/add-vocals', {
+    const kieRes = await fetch('https://api.kie.ai/api/v1/generate', {
       method: 'POST',
       headers: { Authorization: `Bearer ${KIE_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        uploadUrl: voiceClone.sample_url,
         prompt: formattedLyrics,
-        title: (voice_name || 'Voz clonada').slice(0, 80),
-        style: userStyle || [genre, mood].filter(Boolean).join(', ') || 'Pop',
-        negativeTags: 'low quality, distorted, noisy',
+        customMode: true,
+        instrumental: false,
         model: 'V4_5PLUS',
+        personId: voice_id,
+        style: userStyle || [genre, mood].filter(Boolean).join(', ') || 'Pop',
+        title: (voice_name || 'Voz clonada').slice(0, 80),
+        negativeTags: 'low quality, distorted, noisy',
         callBackUrl,
         ...(vocal_gender === 'm' || vocal_gender === 'f' ? { vocalGender: vocal_gender } : {}),
       }),
