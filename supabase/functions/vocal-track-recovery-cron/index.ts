@@ -64,7 +64,19 @@ Deno.serve(async (req) => {
       const track = infoJson?.data?.response?.sunoData?.[0];
 
       if (genStatus === "SUCCESS" && track?.id) {
-        const sepCallBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${gen.id}&step=separation&creditsCost=0&fromPermanent=0`;
+        // FIX: se hardcodeaba creditsCost=0/fromPermanent=0 en la URL del
+        // callback de separacion -- si esa separacion fallaba despues,
+        // failAndRefund() no reembolsaba nada porque creditsCost era 0.
+        // Se consulta el coste real actual como aproximacion razonable
+        // (no se guarda el coste historico exacto de cada generacion).
+        const { data: pricingRow } = await supabase
+          .from("operation_pricing")
+          .select("credits_cost")
+          .eq("operation_key", "generate_vocal_track_kie")
+          .eq("is_active", true)
+          .maybeSingle();
+        const realCreditsCost = pricingRow?.credits_cost ?? 2;
+        const sepCallBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${gen.id}&step=separation&creditsCost=${realCreditsCost}&fromPermanent=0`;
         const sepRes = await fetch(`${KIE_BASE}/vocal-removal/generate`, {
           method: "POST",
           headers: { Authorization: `Bearer ${KIE_API_KEY}`, "Content-Type": "application/json" },
