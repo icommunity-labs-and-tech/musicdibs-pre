@@ -33,7 +33,7 @@ serve(async (req) => {
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!KIE_API_KEY) return new Response(JSON.stringify({ error: 'Missing KIE_API_KEY' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    const { lyrics, voice_id, voice_name, genre, mood } = await req.json();
+    const { lyrics, voice_id, voice_name, genre, mood, vocal_gender, style: userStyle } = await req.json();
     if (!lyrics?.trim()) return new Response(JSON.stringify({ error: 'lyrics is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     if (!voice_id) return new Response(JSON.stringify({ error: 'voice_id is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
@@ -133,10 +133,11 @@ serve(async (req) => {
         uploadUrl: voiceClone.sample_url,
         prompt: formattedLyrics,
         title: (voice_name || 'Voz clonada').slice(0, 80),
-        style: [genre, mood].filter(Boolean).join(', ') || 'Pop',
+        style: userStyle || [genre, mood].filter(Boolean).join(', ') || 'Pop',
         negativeTags: 'low quality, distorted, noisy',
         model: 'V4_5PLUS',
         callBackUrl,
+        ...(vocal_gender === 'm' || vocal_gender === 'f' ? { vocalGender: vocal_gender } : {}),
       }),
     });
     const kieJson = await kieRes.json().catch(() => ({}));

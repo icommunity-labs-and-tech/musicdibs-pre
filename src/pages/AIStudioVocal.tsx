@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { cn } from '@/lib/utils';
 import { SEO } from '@/components/SEO';
 import { FileDropzone } from '@/components/FileDropzone';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -93,6 +94,12 @@ export default function AIStudioVocal() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [audioUrl, setAudioUrl] = useState('');
   const [history, setHistory] = useState<any[]>([]);
+  // FIX 2026-08-26: alineados con los parametros reales que acepta
+  // /api/v1/generate/add-vocals (mismo endpoint y mismos campos que ya usa
+  // Enhance para "convierte tu voz en un hit") -- antes el formulario no
+  // pedia ni genero vocal ni estilo musical, y el backend nunca los recibia.
+  const [singVocalGender, setSingVocalGender] = useState<'m' | 'f'>('m');
+  const [singStyle, setSingStyle] = useState('');
 
   // Lyrics generator
   const [lyricsDesc, setLyricsDesc] = useState('');
@@ -477,7 +484,7 @@ export default function AIStudioVocal() {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-vocal-track`,
         { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-          body: JSON.stringify({ lyrics, voice_id: selectedClone.provider_voice_id || selectedClone.elevenlabs_voice_id, voice_name: selectedClone.name }) });
+          body: JSON.stringify({ lyrics, voice_id: selectedClone.provider_voice_id || selectedClone.elevenlabs_voice_id, voice_name: selectedClone.name, vocal_gender: singVocalGender, style: singStyle.trim() || undefined }) });
       const data = await res.json();
       if (!res.ok) {
         if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: t('dashboard.noCredits.costMessage', { action: tv('title'), cost: FEATURE_COSTS.generate_vocal_track }), variant: 'destructive' });
@@ -953,6 +960,42 @@ export default function AIStudioVocal() {
                     <p className="text-xs text-muted-foreground">{tv('charsCount', { count: lyrics.length })}</p>
                   </CardContent>
                 </Card>
+
+                {/* Parametros de generacion -- alineados con add-vocals (mismo endpoint y campos que Enhance) */}
+                <Card>
+                  <CardContent className="pt-4 space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{s('aiVocal.singVocalGenderLabel', 'Voz cantante')}</Label>
+                      <div className="flex gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setSingVocalGender('m')}
+                          className={cn(
+                            'flex-1 h-9 rounded-md border text-sm font-medium transition-all',
+                            singVocalGender === 'm' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+                          )}
+                        >
+                          ♂ {s('aiVocal.vocalGenderMale', 'Masculina')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSingVocalGender('f')}
+                          className={cn(
+                            'flex-1 h-9 rounded-md border text-sm font-medium transition-all',
+                            singVocalGender === 'f' ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+                          )}
+                        >
+                          ♀ {s('aiVocal.vocalGenderFemale', 'Femenina')}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{s('aiVocal.singStyleLabel', 'Estilo musical')}</Label>
+                      <Input value={singStyle} onChange={e => setSingStyle(e.target.value)} placeholder={s('aiVocal.singStylePlaceholder', 'Ej: Pop, Balada, Reggaetón')} maxLength={100} />
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <Button className="w-full" size="lg" onClick={handleGenerate} disabled={isGenerating || !lyrics.trim() || !selectedCloneId}>
                   {isGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{tv('generatingVocal')}</> : <><Mic className="w-4 h-4 mr-2" />{tv('generateVocalBtn')}</>}
                 </Button>
