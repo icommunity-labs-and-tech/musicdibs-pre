@@ -16,7 +16,16 @@ serve(async (req) => {
     const url = new URL(req.url);
     const cloneId = url.searchParams.get("cloneId");
     const step = url.searchParams.get("step");
-    if (!cloneId || !step) return json({ error: "missing_params" }, 400);
+    // FIX 2026-08-26: devolver un error HTTP (400) a KIE cuando algo no
+    // encaja hace que KIE marque el callback como fallido
+    // ("AiModels callback failed", reportado por Iker) -- una buena
+    // practica para webhooks es SIEMPRE aceptar la entrega (200), incluso
+    // si no sabemos que hacer con el payload, y registrar el caso raro
+    // internamente para investigarlo, en vez de rechazarlo.
+    if (!cloneId || !step) {
+      console.warn(`[kie-voice-clone-callback] missing_params: cloneId=${cloneId} step=${step} url=${req.url}`);
+      return json({ received: true });
+    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -95,7 +104,8 @@ serve(async (req) => {
       return json({ received: true });
     }
 
-    return json({ error: "invalid_step" }, 400);
+    console.warn(`[kie-voice-clone-callback] invalid_step: step=${step} cloneId=${cloneId}`);
+    return json({ received: true });
   } catch (err) {
     console.error("[kie-voice-clone-callback] fatal", err);
     return json({ received: true });
