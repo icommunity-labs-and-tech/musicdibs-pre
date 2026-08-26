@@ -45,12 +45,15 @@ serve(async (req) => {
     // de cobrar ningun credito.
     const { data: voiceClone } = await supabase
       .from('voice_clones')
-      .select('id, status')
+      .select('id, status, sample_url')
       .eq('user_id', user.id)
       .eq('provider_voice_id', voice_id)
       .maybeSingle();
     if (!voiceClone || voiceClone.status !== 'active' || voice_id.startsWith('pending_')) {
       return new Response(JSON.stringify({ error: 'invalid_voice_clone', message: 'Esta voz clonada no está lista o no se completó correctamente.' }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (!voiceClone.sample_url) {
+      return new Response(JSON.stringify({ error: 'invalid_voice_clone', message: 'Esta voz clonada no tiene un audio de muestra válido.' }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Coste propio (2 llamadas a KIE encadenadas: generación + separación,
@@ -106,19 +109,33 @@ serve(async (req) => {
 
     const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${generation.id}&step=music&creditsCost=${CREDITS_COST}&fromPermanent=${vocalDeductedFromPermanent}`;
 
-    console.log(`[VOCAL-TRACK] Generating with voiceId: ${voice_id}, lyrics: ${formattedLyrics.length} chars`);
+    // FIX 2026-08-26 (BUG REAL, confirmado con la documentacion oficial de
+    // KIE): /api/v1/generate (Generate Music generico) NO acepta un
+    // parametro "voiceId" -- solo "personaId" (un concepto distinto, para
+    // estilos musicales, no para voces personales clonadas). Enviarlo ahi
+    // hacia que KIE lo ignorara en silencio y generara con una voz
+    // generica del modelo, sin aplicar la voz clonada del usuario en
+    // absoluto -- la "pista vocal" resultante nunca reflejaba la voz
+    // clonada.
+    //
+    // El endpoint correcto (confirmado en docs.kie.ai/suno-api/add-vocals,
+    // y ya en uso en kie-enhance-generate para el modo "add_vocals"/
+    // "convierte tu voz en un hit") es /api/v1/generate/add-vocals, que
+    // toma un audio EXISTENTE via "uploadUrl" y genera una cancion
+    // cantando sobre/a partir de ese audio -- se usa la muestra original
+    // de la clonacion de voz (voiceClone.sample_url) como uploadUrl.
+    console.log(`[VOCAL-TRACK] Generating with add-vocals, sample: ${voiceClone.sample_url}, lyrics: ${formattedLyrics.length} chars`);
 
-    const kieRes = await fetch('https://api.kie.ai/api/v1/generate', {
+    const kieRes = await fetch('https://api.kie.ai/api/v1/generate/add-vocals', {
       method: 'POST',
       headers: { Authorization: `Bearer ${KIE_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        uploadUrl: voiceClone.sample_url,
         prompt: formattedLyrics,
-        customMode: true,
-        instrumental: false,
-        model: 'V4_5',
-        voiceId: voice_id,
-        style: [genre, mood].filter(Boolean).join(', ') || undefined,
         title: (voice_name || 'Voz clonada').slice(0, 80),
+        style: [genre, mood].filter(Boolean).join(', ') || 'Pop',
+        negativeTags: 'low quality, distorted, noisy',
+        model: 'V4_5PLUS',
         callBackUrl,
       }),
     });
