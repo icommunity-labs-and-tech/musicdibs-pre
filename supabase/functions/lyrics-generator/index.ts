@@ -157,10 +157,15 @@ Devuelve SOLO la letra con sus etiquetas de sección entre paréntesis, lista pa
         if (!taskId) throw new Error("KIE: no taskId")
         console.log(`[LYRICS] KIE taskId=${taskId}`)
 
-        // Poll ~40s max (leaves headroom for Gemini fallback within edge timeout)
+        // FIX 2026-08-26 (reportado por Iker: la tarea de KIE se completa
+        // en ~6s pero el resultado tardaba ~30s en verse en el front): el
+        // bucle esperaba 2s ANTES de CADA intento, incluido el primero --
+        // desperdiciando tiempo en el caso comun (tareas rapidas). Ahora la
+        // primera consulta es inmediata, y solo se espera entre reintentos
+        // subsecuentes.
         const maxAttempts = 20
         for (let i = 0; i < maxAttempts; i++) {
-          await new Promise((r) => setTimeout(r, 2000))
+          if (i > 0) await new Promise((r) => setTimeout(r, 1500))
           const pollResp = await fetch(
             `https://api.kie.ai/api/v1/lyrics/record-info?taskId=${encodeURIComponent(taskId)}`,
             { headers: { "Authorization": `Bearer ${KIE_API_KEY}` } }
