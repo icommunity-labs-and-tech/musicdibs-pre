@@ -77,9 +77,11 @@ serve(async (req) => {
         return json({ received: true });
       }
       const voiceId = payload?.data?.voiceId || payload?.data?.result?.voiceId;
-      // FIX 2026-08-26: misma salvaguarda que en check_status -- un voiceId
-      // real de KIE nunca deberia coincidir con el propio taskId de la tarea.
-      if (voiceId && voiceId !== clone.kie_task_id) {
+      // FIX 2026-08-26 (CORRECCION): confirmado con una prueba real en el
+      // Playground de KIE que voiceId === taskId es NORMAL en un exito
+      // genuino -- la comprobacion anterior que rechazaba esto bloqueaba
+      // resultados legitimos.
+      if (voiceId) {
         await admin.from("voice_clones").update({
           provider_voice_id: voiceId,
           status: "active",
