@@ -21,7 +21,13 @@ serve(async (req) => {
     const step = url.searchParams.get("step");
     const creditsCost = Number(url.searchParams.get("creditsCost") ?? "0");
     const fromPermanent = Number(url.searchParams.get("fromPermanent") ?? "0");
-    if (!generationId || !step) return json({ error: "missing_params" }, 400);
+    // FIX 2026-08-26: nunca devolver un error HTTP a KIE por parametros
+    // inesperados -- mismo fix que en kie-voice-clone-callback, para que
+    // KIE no marque el callback como fallido ("AiModels callback failed").
+    if (!generationId || !step) {
+      console.warn(`[kie-vocal-track-callback] missing_params: generationId=${generationId} step=${step}`);
+      return json({ received: true });
+    }
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -114,7 +120,8 @@ serve(async (req) => {
       return json({ received: true });
     }
 
-    return json({ error: "invalid_step" }, 400);
+    console.warn(`[kie-vocal-track-callback] invalid_step: step=${step} generationId=${generationId}`);
+    return json({ received: true });
   } catch (err) {
     console.error("[kie-vocal-track-callback] fatal", err);
     return json({ received: true });
