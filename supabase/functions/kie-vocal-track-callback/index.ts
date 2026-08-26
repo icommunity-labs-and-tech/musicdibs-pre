@@ -34,7 +34,7 @@ serve(async (req) => {
 
     const { data: generation } = await admin
       .from("ai_generations")
-      .select("id, user_id, status")
+      .select("id, user_id")
       .eq("id", generationId)
       .maybeSingle();
     if (!generation) {
@@ -46,7 +46,7 @@ serve(async (req) => {
     const isSuccess = code === undefined || code === 200 || code === "success";
 
     const failAndRefund = async (reason: string) => {
-      await admin.from("ai_generations").update({ status: "failed" }).eq("id", generationId);
+      await admin.from("ai_generations").delete().eq("id", generationId);
       if (creditsCost > 0) {
         await admin.rpc("refund_credits_ordered", {
           p_user_id: generation.user_id, p_amount: creditsCost, p_from_permanent: fromPermanent,
@@ -103,13 +103,13 @@ serve(async (req) => {
         const { error: upErr } = await admin.storage.from("ai-generations").upload(path, buf, { contentType: "audio/mpeg", upsert: false });
         if (upErr) throw upErr;
         const { data: pub } = admin.storage.from("ai-generations").getPublicUrl(path);
-        await admin.from("ai_generations").update({ audio_url: pub.publicUrl, status: "completed" }).eq("id", generationId);
+        await admin.from("ai_generations").update({ audio_url: pub.publicUrl }).eq("id", generationId);
         console.log(`[kie-vocal-track-callback] completed generation ${generationId}`);
       } catch (persistErr) {
         console.error("[kie-vocal-track-callback] failed persisting vocal track, using provider URL directly:", persistErr);
         // Red de seguridad: si falla la persistencia propia, al menos guardamos
         // la URL de KIE para que el usuario no se quede sin nada.
-        await admin.from("ai_generations").update({ audio_url: vocalUrl, status: "completed" }).eq("id", generationId);
+        await admin.from("ai_generations").update({ audio_url: vocalUrl }).eq("id", generationId);
       }
       return json({ received: true });
     }
