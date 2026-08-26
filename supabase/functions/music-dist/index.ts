@@ -126,22 +126,30 @@ const translateHtmlWithGemini = async (html: string, lang: string) => {
     "do not add explanations. Return ONLY the resulting HTML document.\n\n" +
     html;
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.2, maxOutputTokens: 32768 },
-      }),
-    },
-  );
+  // Modelos ordenados de más barato a más caro.
+  const models = ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-2.5-flash"];
+  let res: Response | null = null;
+  let lastError = "";
 
-  if (!res.ok) {
-    const detail = (await res.text()).slice(0, 200).replace(/[\r\n]+/g, " ");
-    throw new Error(`gemini_${res.status}: ${detail}`);
+  for (const model of models) {
+    res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 32768 },
+        }),
+      },
+    );
+    if (res.ok) break;
+    lastError = `gemini_${res.status} (${model}): ${(await res.text()).slice(0, 160).replace(/[\r\n]+/g, " ")}`;
+    console.error("gemini_model_failed", lastError);
+    res = null;
   }
+
+  if (!res) throw new Error(lastError || "gemini_failed");
   const data = await res.json();
   const text: string = (data?.candidates?.[0]?.content?.parts ?? [])
     .map((part: { text?: string }) => part?.text ?? "")
