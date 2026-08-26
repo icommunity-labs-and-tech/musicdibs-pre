@@ -65,12 +65,17 @@ serve(async (req) => {
     }
 
     const { data: generation, error: genErr } = await supabase.from('ai_generations').insert({
-      user_id: user.id, type: 'vocal_track',
+      user_id: user.id,
       prompt: `Pista vocal: ${voice_name || 'Voz clonada'} | ${genre || ''} ${mood || ''}`.trim(),
       // ai_generations exige ambos campos aunque la generación sea asíncrona.
       // El callback sustituirá audio_url y duration cuando KIE termine.
       audio_url: '', duration: 0,
-      genre: genre || null, mood: mood || null, status: 'processing',
+      genre: genre || null,
+      mood: mood || null,
+      provider: 'kie_suno',
+      model: 'vocal_track',
+      voice_id,
+      voice_name: voice_name || null,
     }).select().single();
     if (genErr || !generation) {
       console.error('[VOCAL-TRACK] ai_generations insert failed:', {
@@ -106,7 +111,7 @@ serve(async (req) => {
     if (!kieRes.ok || (kieJson?.code && kieJson.code !== 200)) {
       console.error('[VOCAL-TRACK] KIE generate error:', kieRes.status, kieJson);
       await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: vocalDeductedFromPermanent, p_reason: 'Reembolso: fallo generación KIE' });
-      await supabase.from('ai_generations').update({ status: 'failed' }).eq('id', generation.id);
+      await supabase.from('ai_generations').delete().eq('id', generation.id);
       return new Response(JSON.stringify({ error: 'provider_error', message: kieJson?.msg || `HTTP ${kieRes.status}` }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
