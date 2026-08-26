@@ -404,7 +404,12 @@ export default function AIStudioVocal() {
   };
 
   const handleDeleteClone = async (clone: any) => {
-    await supabase.from('voice_clones').update({ status: 'deleted' }).eq('id', clone.id);
+    const { error } = await supabase.from('voice_clones').update({ status: 'deleted' }).eq('id', clone.id);
+    if (error) {
+      console.error('[voice-clone] delete failed', error);
+      toast({ title: s('aiVocal.deleteError', 'No se pudo eliminar la voz'), description: error.message, variant: 'destructive' });
+      return;
+    }
     setVoiceClones(prev => prev.filter(c => c.id !== clone.id));
     toast({ title: vc('deleted') });
   };
@@ -412,7 +417,12 @@ export default function AIStudioVocal() {
   const handleRenameClone = async (cloneId: string) => {
     const trimmed = editingCloneName.trim(); if (!trimmed) return;
     const { error } = await supabase.from('voice_clones').update({ name: trimmed }).eq('id', cloneId);
-    if (!error) { setVoiceClones(prev => prev.map(c => c.id === cloneId ? { ...c, name: trimmed } : c)); toast({ title: vc('renamed') }); }
+    if (!error) {
+      setVoiceClones(prev => prev.map(c => c.id === cloneId ? { ...c, name: trimmed } : c)); toast({ title: vc('renamed') });
+    } else {
+      console.error('[voice-clone] rename failed', error);
+      toast({ title: s('aiVocal.renameError', 'No se pudo renombrar la voz'), description: error.message, variant: 'destructive' });
+    }
     setEditingCloneId(null);
   };
 
