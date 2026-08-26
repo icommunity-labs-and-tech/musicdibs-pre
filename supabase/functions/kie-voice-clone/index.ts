@@ -218,11 +218,19 @@ serve(async (req) => {
       if (!kieRes.ok || (kieJson?.code && kieJson.code !== 200)) {
         // Reembolso si el disparo a KIE falla antes de procesar nada.
         await refund(admin, user.id, creditsCost, "KIE voice/generate dispatch failed");
+        const kieMsg = kieJson?.msg || `HTTP ${kieRes.status}`;
         await admin.from("voice_clones").update({
           status: "failed",
-          error_message: kieJson?.msg || `HTTP ${kieRes.status}`,
+          error_message: kieMsg,
         }).eq("id", cloneId);
-        return json({ error: "provider_error", message: kieJson?.msg || `HTTP ${kieRes.status}` }, 502);
+        // FIX 2026-08-26: la frase de verificacion generada en el paso 1
+        // caduca tras un tiempo (confirmado por Iker: "Verification phrase
+        // expired or not found"). Se detecta este caso especifico para dar
+        // un mensaje claro al usuario en vez de un error generico.
+        if (/expired|not found/i.test(kieMsg)) {
+          return json({ error: "phrase_expired", message: kieMsg }, 410);
+        }
+        return json({ error: "provider_error", message: kieMsg }, 502);
       }
 
       // FIX 2026-08-25 (caso miguelangel.perezgarcia@gmail.com, BUG CRITICO

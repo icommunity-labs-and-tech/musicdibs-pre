@@ -367,6 +367,17 @@ export default function AIStudioVocal() {
         console.error('[voice-clone] submit_verification failed', res.status, data);
         if (data.error === 'insufficient_credits') {
           toast({ title: tv('insufficientCredits'), variant: 'destructive' });
+        } else if (data.error === 'phrase_expired') {
+          // FIX 2026-08-26: la frase de verificacion caduca si se tarda
+          // demasiado en leerla y enviarla. Mensaje especifico en vez del
+          // generico "no se pudo crear la voz".
+          toast({
+            title: s('aiVocal.phraseExpiredTitle', 'La frase de verificación caducó'),
+            description: s('aiVocal.phraseExpiredDesc', 'Tardaste demasiado en leerla y enviarla. Pulsa "Intentarlo de nuevo" para generar una frase nueva.'),
+            variant: 'destructive',
+          });
+          setCloneErrorMsg(s('aiVocal.phraseExpiredDesc', 'Tardaste demasiado en leerla y enviarla. Pulsa "Intentarlo de nuevo" para generar una frase nueva.'));
+          setCloneStep('failed');
         } else {
           const { userMessage } = parseAiError({ status: res.status }, data);
           const description = typeof data?.message === 'string' && data.message.trim() ? data.message : userMessage;
