@@ -127,6 +127,13 @@ export default function AIStudioVocal() {
   // (Generate Voice): style y singerSkillLevel. Se piden ahora para poder
   // verificar que se envian correctamente en cada intento.
   const [cloneStyle, setCloneStyle] = useState('');
+  // Idioma del audio de muestra -- el playground oficial de KIE lo pide
+  // explicitamente (selector "LANGUAGE" en el popup de Upload/Record
+  // Audio). Antes se inferia automaticamente del idioma de la interfaz,
+  // sin dejar elegir al usuario si graba/sube en un idioma distinto.
+  const [cloneLanguage, setCloneLanguage] = useState<'es' | 'en' | 'pt'>(
+    i18n.resolvedLanguage?.startsWith('en') ? 'en' : i18n.resolvedLanguage?.startsWith('pt') ? 'pt' : 'es'
+  );
   const [cloneSingerSkillLevel, setCloneSingerSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
   // Panel de depuracion: guarda la respuesta cruda (taskId/voiceId/status)
   // de cada paso, igual que la pestaña "Output > JSON" del playground de
@@ -318,7 +325,7 @@ export default function AIStudioVocal() {
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/kie-voice-clone`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-        body: JSON.stringify({ action: 'request_phrase', voiceUrl, vocalStartS: 0, vocalEndS: Math.min(cloneAudioDuration ?? 10, 30), language: i18n.resolvedLanguage?.startsWith('en') ? 'en' : i18n.resolvedLanguage?.startsWith('pt') ? 'pt' : 'es', name: cloneName.trim(), description: cloneDescription }),
+        body: JSON.stringify({ action: 'request_phrase', voiceUrl, vocalStartS: 0, vocalEndS: Math.min(cloneAudioDuration ?? 10, 30), language: cloneLanguage, name: cloneName.trim(), description: cloneDescription }),
       });
       const data = await res.json();
       pushCloneDebug('request_phrase (paso 1 → voice/validate)', data);
@@ -587,6 +594,17 @@ export default function AIStudioVocal() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>{s('aiVocal.audioLanguageLabel', 'Idioma del audio')}</Label>
+              <Select value={cloneLanguage} onValueChange={(v) => setCloneLanguage(v as typeof cloneLanguage)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="es">{s('aiVocal.langSpanish', 'Español')}</SelectItem>
+                  <SelectItem value="en">{s('aiVocal.langEnglish', 'Inglés')}</SelectItem>
+                  <SelectItem value="pt">{s('aiVocal.langPortuguese', 'Portugués')}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-1.5">
               <Label>{vc('uploadLabel')}</Label>
