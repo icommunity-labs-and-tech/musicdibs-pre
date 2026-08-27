@@ -40,7 +40,7 @@ serve(async (req) => {
 
     const { data: generation } = await admin
       .from("ai_generations")
-      .select("id, user_id, error_message, audio_url")
+      .select("id, user_id, error_message, audio_url, voice_id, voice_name, request_payload")
       .eq("id", generationId)
       .maybeSingle();
     if (!generation) {
@@ -78,6 +78,95 @@ serve(async (req) => {
         });
       }
     };
+
+    if (step === "reference") {
+      // FIX 2026-08-27: paso nuevo del flujo de Persona -- una cancion de
+      // referencia generada con el audio de la voz clonada (add-vocals),
+      // usada solo para poder crear un Persona reutilizable con el timbre
+      // real de esa voz. Mismo manejo de callbackType intermedio que en
+      // "music": solo procesar cuando el audio de la referencia ya existe.
+      if (!isSuccess) {
+        await failAndRefund(payload?.msg || "Fallo generando la canción de referencia para la voz clonada");
+        return json({ received: true });
+      }
+      const callbackType = payload?.data?.callbackType as string | undefined;
+      if (callbackType && callbackType !== "complete") {
+        console.log(`[kie-vocal-track-callback] step=reference callbackType=${callbackType} (intermedio, esperando 'complete')`);
+        return json({ received: true });
+      }
+      const { data: genRow } = await admin.from("ai_generations").select("provider_task_id").eq("id", generationId).maybeSingle();
+      const refTaskId = genRow?.provider_task_id || (payload?.data?.taskId as string | undefined);
+      const refTrack =
+        payload?.data?.data?.[0] ??
+        payload?.data?.response?.sunoData?.[0] ??
+        payload?.data?.sunoData?.[0] ??
+        payload?.data?.response?.data?.[0] ??
+        payload?.response?.sunoData?.[0];
+      const refAudioId = refTrack?.id as string | undefined;
+      await admin.from("ai_generations").update({ response_payload: { reference_callback: payload } }).eq("id", generationId);
+      if (!refTaskId || !refAudioId) {
+        await failAndRefund(`KIE no devolvió taskId/audioId en el callback de referencia (taskId=${refTaskId ? "ok" : "missing"}, audioId=${refAudioId ? "ok" : "missing"})`);
+        return json({ received: true });
+      }
+
+      // Generate Persona (sincrono, confirmado por Iker probandolo en el
+      // playground -- devuelve el resultado directamente, sin callback).
+      const pending = (generation.request_payload || {}) as {
+        formattedLyrics?: string; finalStyle?: string; finalTitle?: string; vocal_gender?: string | null; voiceCloneId?: string;
+      };
+      const personaRes = await fetch("https://api.kie.ai/api/v1/generate/generate-persona", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${KIE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          taskId: refTaskId, audioId: refAudioId,
+          name: (generation.voice_name || "Voz clonada").slice(0, 80),
+          description: `Persona de voz generada automáticamente para ${generation.voice_name || "una voz clonada"}`,
+          vocalStart: 0, vocalEnd: 20,
+        }),
+      });
+      const personaJson = await personaRes.json().catch(() => ({}));
+      const personaId = personaJson?.data?.personaId as string | undefined;
+      if (!personaRes.ok || (personaJson?.code && personaJson.code !== 200) || !personaId) {
+        await admin.from("ai_generations").update({
+          response_payload: { reference_callback: payload, persona_request: { taskId: refTaskId, audioId: refAudioId }, persona_error: personaJson, persona_status: personaRes.status },
+        }).eq("id", generationId);
+        await failAndRefund(personaJson?.msg || `Fallo generando el Persona de voz (HTTP ${personaRes.status})`);
+        return json({ received: true });
+      }
+
+      // Cachear el personaId en la voz clonada para futuras canciones.
+      if (pending.voiceCloneId) {
+        await admin.from("voice_clones").update({ persona_id: personaId, updated_at: new Date().toISOString() }).eq("id", pending.voiceCloneId);
+      }
+
+      // Disparar ahora la generación FINAL con la letra real del usuario.
+      const musicCallBackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/kie-vocal-track-callback?generationId=${generationId}&step=music&creditsCost=${creditsCost}&fromPermanent=${fromPermanent}`;
+      const vocalGenderField = (pending.vocal_gender === "m" || pending.vocal_gender === "f") ? { vocalGender: pending.vocal_gender } : {};
+      const finalRes = await fetch("https://api.kie.ai/api/v1/generate", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${KIE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: pending.formattedLyrics || "", customMode: true, instrumental: false, model: "V5",
+          personaId, personaModel: "voice_persona",
+          style: pending.finalStyle || "Pop", title: pending.finalTitle || "Voz clonada",
+          negativeTags: "low quality, distorted, noisy",
+          callBackUrl: musicCallBackUrl, ...vocalGenderField,
+        }),
+      });
+      const finalJson = await finalRes.json().catch(() => ({}));
+      if (!finalRes.ok || (finalJson?.code && finalJson.code !== 200)) {
+        await admin.from("ai_generations").update({
+          response_payload: { reference_callback: payload, persona_id: personaId, final_generate_error: finalJson, final_generate_status: finalRes.status },
+        }).eq("id", generationId);
+        await failAndRefund(finalJson?.msg || `Fallo iniciando la generación final con la voz (HTTP ${finalRes.status})`);
+        return json({ received: true });
+      }
+      const finalTaskId = finalJson?.data?.taskId as string | undefined;
+      // A partir de aqui, esta generacion pasa a esperar el resultado con
+      // el NUEVO taskId (el de la cancion final, no el de la referencia).
+      await admin.from("ai_generations").update({ provider_task_id: finalTaskId ?? null }).eq("id", generationId);
+      return json({ received: true });
+    }
 
     if (step === "music") {
       if (!isSuccess) {

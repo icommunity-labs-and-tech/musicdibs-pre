@@ -1,10 +1,20 @@
 // Generación de pista vocal a capela con la voz clonada del usuario (KIE).
-// Reemplaza el TTS directo de ElevenLabs, ya migrado a KIE Suno Voice.
 //
-// KIE no tiene un endpoint de "solo vocal a capela con voz custom" directo:
-// el flujo es generar la canción COMPLETA (voz+instrumental) con el voiceId
-// del usuario, y luego separar los stems para quedarnos solo con la pista
-// de voz (kie-vocal-track-callback se encarga del segundo paso).
+// FIX 2026-08-27 (CONFIRMADO tras varios intentos): para que KIE aplique
+// el TIMBRE de una voz de referencia a una cancion generada, no basta con
+// pasar un audio o un voiceId de Custom Voice directamente a /generate --
+// hace falta el flujo de "Persona":
+//   1. Generar una cancion de REFERENCIA con el audio de la voz (via
+//      /generate/add-vocals, uploadUrl = sample_url de la clonacion).
+//   2. Con el taskId/audioId de esa referencia, llamar a Generate Persona
+//      (/generate/generate-persona) -> devuelve un personaId (sincrono).
+//   3. Generar la cancion FINAL con ese personaId + personaModel:
+//      "voice_persona" (asi se aplica como VOZ, no como estilo generico
+//      -- solo soportado en el modelo V5) + la letra real del usuario.
+//
+// El personaId se cachea en voice_clones.persona_id -- solo hace falta
+// generar la referencia una vez por voz clonada; las siguientes canciones
+// con esa misma voz saltan directo al paso 3.
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getOperationCost } from "../_shared/operation-pricing.ts";
@@ -37,15 +47,9 @@ serve(async (req) => {
     if (!lyrics?.trim()) return new Response(JSON.stringify({ error: 'lyrics is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     if (!voice_id) return new Response(JSON.stringify({ error: 'voice_id is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    // FIX 2026-08-26: antes, si el voice_id no correspondia a una clonacion
-    // realmente activa (ej. quedo en "pending_..." o "failed" por algun
-    // fallo de KIE), esta funcion intentaba generar igualmente, KIE
-    // fallaba, y el usuario veia un "Error interno del servidor" generico
-    // sin ninguna pista de la causa real. Se valida explicitamente ANTES
-    // de cobrar ningun credito.
     const { data: voiceClone } = await supabase
       .from('voice_clones')
-      .select('id, status, sample_url')
+      .select('id, status, sample_url, persona_id')
       .eq('user_id', user.id)
       .eq('provider_voice_id', voice_id)
       .maybeSingle();
@@ -56,8 +60,9 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'invalid_voice_clone', message: 'Esta voz clonada no tiene un audio de muestra válido.' }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Coste propio (2 llamadas a KIE encadenadas: generación + separación,
-    // cada una facturada por KIE por separado -- ver operation_pricing).
+    // Coste propio (hasta 3 llamadas a KIE encadenadas cuando no hay
+    // persona_id cacheado: referencia + generación final + separación;
+    // 2 cuando ya esta cacheado -- ver operation_pricing).
     const CREDITS_COST = await getOperationCost(supabase, 'generate_vocal_track_kie', 2);
     let vocalDeductedFromPermanent = 0;
     {
@@ -83,11 +88,12 @@ serve(async (req) => {
       }
     }
 
+    const finalStyle = userStyle || [genre, mood].filter(Boolean).join(', ') || 'Pop';
+    const finalTitle = (voice_name || 'Voz clonada').slice(0, 80);
+
     const { data: generation, error: genErr } = await supabase.from('ai_generations').insert({
       user_id: user.id,
       prompt: `Pista vocal: ${voice_name || 'Voz clonada'} | ${genre || ''} ${mood || ''}`.trim(),
-      // ai_generations exige ambos campos aunque la generación sea asíncrona.
-      // El callback sustituirá audio_url y duration cuando KIE termine.
       audio_url: '', duration: 0,
       genre: genre || null,
       mood: mood || null,
@@ -95,67 +101,75 @@ serve(async (req) => {
       model: 'vocal_track',
       voice_id,
       voice_name: voice_name || null,
+      // Guardamos los parametros de la generacion FINAL -- si hace falta
+      // generar primero una cancion de referencia, el callback de ese paso
+      // los recupera de aqui para disparar la generacion real despues.
+      request_payload: { formattedLyrics, finalStyle, finalTitle, vocal_gender: vocal_gender ?? null, voiceCloneId: voiceClone.id },
     }).select().single();
     if (genErr || !generation) {
-      console.error('[VOCAL-TRACK] ai_generations insert failed:', {
-        code: genErr?.code,
-        message: genErr?.message,
-        details: genErr?.details,
-        hint: genErr?.hint,
-      });
+      console.error('[VOCAL-TRACK] ai_generations insert failed:', { code: genErr?.code, message: genErr?.message, details: genErr?.details, hint: genErr?.hint });
       await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: vocalDeductedFromPermanent, p_reason: 'Reembolso: fallo creando el registro de generación' });
       return new Response(JSON.stringify({ error: 'db_insert_failed' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${generation.id}&step=music&creditsCost=${CREDITS_COST}&fromPermanent=${vocalDeductedFromPermanent}`;
+    const vocalGenderField = (vocal_gender === 'm' || vocal_gender === 'f') ? { vocalGender: vocal_gender } : {};
 
-    // FIX 2026-08-26 (CONFIRMADO por soporte oficial de KIE, support@kie.ai,
-    // tras varios intentos fallidos anteriores):
-    //
-    // 1. /api/v1/generate con "voiceId" -- KIE lo ignoraba en silencio
-    //    (parametro no documentado en ese endpoint), generando con una voz
-    //    generica sin aplicar el timbre clonado.
-    // 2. /api/v1/generate/add-vocals con "uploadUrl" -- genera cantando
-    //    sobre un audio de referencia, pero NO aplica el timbre clonado
-    //    (confirmado por Iker con una prueba real: el resultado no sonaba
-    //    a la voz de la muestra).
-    //
-    // Respuesta oficial de soporte de KIE: el voiceId obtenido del flujo de
-    // Custom Voice se pasa en el campo "personId" (sin "a" -- distinto de
-    // "personaId", que es para Personas de estilo musical) al endpoint
-    // GENERICO /api/v1/generate. Se vuelve a este endpoint con el campo
-    // correcto.
-    console.log(`[VOCAL-TRACK] Generating with personId: ${voice_id}, lyrics: ${formattedLyrics.length} chars`);
+    if (voiceClone.persona_id) {
+      // Ya tenemos un personaId cacheado para esta voz -- generar la
+      // cancion final directamente.
+      console.log(`[VOCAL-TRACK] Generating with cached personaId: ${voiceClone.persona_id}`);
+      const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${generation.id}&step=music&creditsCost=${CREDITS_COST}&fromPermanent=${vocalDeductedFromPermanent}`;
+      const kieRes = await fetch('https://api.kie.ai/api/v1/generate', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${KIE_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: formattedLyrics, customMode: true, instrumental: false, model: 'V5',
+          personaId: voiceClone.persona_id, personaModel: 'voice_persona',
+          style: finalStyle, title: finalTitle, negativeTags: 'low quality, distorted, noisy',
+          callBackUrl, ...vocalGenderField,
+        }),
+      });
+      const kieJson = await kieRes.json().catch(() => ({}));
+      if (!kieRes.ok || (kieJson?.code && kieJson.code !== 200)) {
+        console.error('[VOCAL-TRACK] KIE generate error:', kieRes.status, kieJson);
+        await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: vocalDeductedFromPermanent, p_reason: 'Reembolso: fallo generación KIE' });
+        await supabase.from('ai_generations').delete().eq('id', generation.id);
+        return new Response(JSON.stringify({ error: 'provider_error', message: kieJson?.msg || `HTTP ${kieRes.status}` }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      const taskId = kieJson?.data?.taskId as string | undefined;
+      await supabase.from('ai_generations').update({ provider_task_id: taskId ?? null }).eq('id', generation.id).then(() => {}, () => {});
+      return new Response(JSON.stringify({ success: true, processing: true, generationId: generation.id, taskId }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
-    const kieRes = await fetch('https://api.kie.ai/api/v1/generate', {
+    // No hay persona_id todavia -- generar primero una cancion de
+    // referencia con el audio de la voz, para poder crear el Persona.
+    console.log(`[VOCAL-TRACK] No cached personaId, generating reference track first from sample: ${voiceClone.sample_url}`);
+    const refCallBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${generation.id}&step=reference&creditsCost=${CREDITS_COST}&fromPermanent=${vocalDeductedFromPermanent}`;
+    const refRes = await fetch('https://api.kie.ai/api/v1/generate/add-vocals', {
       method: 'POST',
       headers: { Authorization: `Bearer ${KIE_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        prompt: formattedLyrics,
-        customMode: true,
-        instrumental: false,
-        model: 'V5',
-        personId: voice_id,
-        style: userStyle || [genre, mood].filter(Boolean).join(', ') || 'Pop',
-        title: (voice_name || 'Voz clonada').slice(0, 80),
+        uploadUrl: voiceClone.sample_url,
+        prompt: 'A short reference vocal performance to capture the voice timbre.',
+        title: 'Referencia de voz'.slice(0, 80),
+        style: 'Pop',
         negativeTags: 'low quality, distorted, noisy',
-        callBackUrl,
-        ...(vocal_gender === 'm' || vocal_gender === 'f' ? { vocalGender: vocal_gender } : {}),
+        model: 'V4_5PLUS',
+        callBackUrl: refCallBackUrl,
+        ...vocalGenderField,
       }),
     });
-    const kieJson = await kieRes.json().catch(() => ({}));
-
-    if (!kieRes.ok || (kieJson?.code && kieJson.code !== 200)) {
-      console.error('[VOCAL-TRACK] KIE generate error:', kieRes.status, kieJson);
-      await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: vocalDeductedFromPermanent, p_reason: 'Reembolso: fallo generación KIE' });
+    const refJson = await refRes.json().catch(() => ({}));
+    if (!refRes.ok || (refJson?.code && refJson.code !== 200)) {
+      console.error('[VOCAL-TRACK] KIE add-vocals (reference) error:', refRes.status, refJson);
+      await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: vocalDeductedFromPermanent, p_reason: 'Reembolso: fallo generando la cancion de referencia' });
       await supabase.from('ai_generations').delete().eq('id', generation.id);
-      return new Response(JSON.stringify({ error: 'provider_error', message: kieJson?.msg || `HTTP ${kieRes.status}` }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      return new Response(JSON.stringify({ error: 'provider_error', message: refJson?.msg || `HTTP ${refRes.status}` }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
+    const refTaskId = refJson?.data?.taskId as string | undefined;
+    await supabase.from('ai_generations').update({ provider_task_id: refTaskId ?? null }).eq('id', generation.id).then(() => {}, () => {});
 
-    const taskId = kieJson?.data?.taskId as string | undefined;
-    await supabase.from('ai_generations').update({ provider_task_id: taskId ?? null }).eq('id', generation.id).then(() => {}, () => {});
-
-    return new Response(JSON.stringify({ success: true, processing: true, generationId: generation.id, taskId }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true, processing: true, generationId: generation.id, taskId: refTaskId }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
   } catch (error: any) {
     console.error('[VOCAL-TRACK] Fatal:', error);
