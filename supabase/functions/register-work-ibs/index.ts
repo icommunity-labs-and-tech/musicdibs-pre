@@ -501,8 +501,24 @@ serve(async (req) => {
         console.error(`[IBS] Sesión fallida [${sessionRes.status}]:`, errBody);
         await handleIbsFailure(supabaseAdmin, workId, user.id, work.title, `iBS session error ${sessionRes.status}: ${errBody.slice(0, 200)}`, creditCost, ctx.deductedFromPermanent);
         ctx.deducted = false;
+        // FIX 2026-08-26 (reportado por cancherbero@gmail.com): cuando la
+        // causa real es que la firma de verificacion ya no existe en el
+        // proveedor iBS (404 "Resource not found" sobre un recurso
+        // sig_...) -- ocurre tras periodos largos de inactividad, la firma
+        // parece "expirar" del lado del proveedor aunque siga guardada
+        // como valida en nuestra base de datos -- el usuario veia un
+        // mensaje generico "iBS session failed" sin ninguna pista de que
+        // debia volver a verificar su identidad.
+        const isInvalidSignature = sessionRes.status === 404 && /resource not found/i.test(errBody) && /"resource"\s*:\s*"sig_/i.test(errBody);
         return new Response(
-          JSON.stringify({ success: false, error: "iBS session failed", workId, status: "failed", refunded: true }),
+          JSON.stringify({
+            success: false,
+            error: isInvalidSignature
+              ? "Tu verificación de identidad ha caducado. Por favor, vuelve a verificarte desde tu perfil antes de registrar de nuevo."
+              : "iBS session failed",
+            code: isInvalidSignature ? "SIGNATURE_INVALID" : undefined,
+            workId, status: "failed", refunded: true,
+          }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
