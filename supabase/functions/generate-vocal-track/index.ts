@@ -134,7 +134,7 @@ serve(async (req) => {
         prompt: formattedLyrics,
         customMode: true,
         instrumental: false,
-        model: 'V4_5PLUS',
+        model: 'V5',
         personId: voice_id,
         style: userStyle || [genre, mood].filter(Boolean).join(', ') || 'Pop',
         title: (voice_name || 'Voz clonada').slice(0, 80),
