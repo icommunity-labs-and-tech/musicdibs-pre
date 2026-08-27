@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
     .select("id, user_id, provider_task_id, audio_url, created_at")
     .eq("model", "vocal_track")
     .eq("audio_url", "")
+    .is("error_message", null)
     .not("provider_task_id", "is", null)
     .lt("created_at", staleCutoff)
     .limit(30);
@@ -89,8 +90,16 @@ Deno.serve(async (req) => {
           resolved.push({ id: gen.id, result: `separation_trigger_failed: ${sepJson?.msg || sepRes.status}` });
         }
       } else if (genStatus && /FAILED|ERROR/i.test(genStatus)) {
-        await supabase.from("ai_generations").delete().eq("id", gen.id);
-        resolved.push({ id: gen.id, result: `music_failed: ${genStatus}` });
+        const errMsg = `music_generation_failed: ${genStatus}`.slice(0, 300);
+        await supabase.from("ai_generations").update({ error_message: errMsg }).eq("id", gen.id);
+        const { data: pricingRow } = await supabase.from("operation_pricing").select("credits_cost").eq("operation_key", "generate_vocal_track_kie").eq("is_active", true).maybeSingle();
+        const realCreditsCost = pricingRow?.credits_cost ?? 2;
+        const { data: p } = await supabase.from("profiles").select("available_credits").eq("user_id", gen.user_id).single();
+        if (p) {
+          await supabase.from("profiles").update({ available_credits: p.available_credits + realCreditsCost, updated_at: new Date().toISOString() }).eq("user_id", gen.user_id);
+          await supabase.from("credit_transactions").insert({ user_id: gen.user_id, amount: realCreditsCost, type: "refund", description: `Reembolso: ${errMsg}`.slice(0, 200) });
+        }
+        resolved.push({ id: gen.id, result: errMsg });
       }
     } catch (err) {
       console.error(`[vocal-track-recovery-cron] error resolving generation ${gen.id}:`, err);

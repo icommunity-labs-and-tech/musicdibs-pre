@@ -500,17 +500,17 @@ export default function AIStudioVocal() {
         return;
       }
       // KIE es asíncrono: la generación real (música + separación de voz)
-      // llega vía callback. El backend NO usa columna `status`: al terminar
-      // rellena `audio_url`, y si falla BORRA la fila (tras reembolsar).
-      // Polling: audio_url no vacío = OK; fila inexistente = fallo; y un
-      // límite de tiempo para no dejar el spinner girando indefinidamente.
+      // llega vía callback. El backend rellena `audio_url` si tiene éxito,
+      // o `error_message` si falla (ya NO borra la fila -- FIX 2026-08-27,
+      // antes borraba la fila en cualquier fallo, dejando el frontend
+      // esperando indefinidamente un resultado que ya no existía).
       const generationId = data.generationId;
       const startedAt = Date.now();
       const MAX_POLL_MS = 10 * 60 * 1000;
       const poll = window.setInterval(async () => {
         const { data: row, error: pollError } = await supabase
           .from('ai_generations')
-          .select('audio_url')
+          .select('audio_url, error_message')
           .eq('id', generationId)
           .maybeSingle();
         if (pollError) return; // error transitorio: reintentamos en el siguiente tick
@@ -521,8 +521,10 @@ export default function AIStudioVocal() {
           toast({ title: tv('vocalGenerated'), description: tv('vocalGeneratedDesc') });
           track('vocal_track_generated', { feature: 'vocal' });
           setIsGenerating(false);
-        } else if (!row) {
-          // La fila fue eliminada por el callback => fallo + reembolso.
+        } else if (row?.error_message || !row) {
+          // Fallo marcado por el callback (o, como fallback, fila
+          // inexistente si algo la borrase por otra vía) => reembolso ya
+          // aplicado por el backend.
           window.clearInterval(poll);
           toast({ title: s('aiShared.error'), description: s('aiVocal.generationFailed', 'La generación ha fallado. Se te ha reembolsado el crédito.'), variant: 'destructive' });
           setIsGenerating(false);

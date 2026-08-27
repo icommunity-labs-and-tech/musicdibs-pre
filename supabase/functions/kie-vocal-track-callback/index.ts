@@ -40,11 +40,19 @@ serve(async (req) => {
 
     const { data: generation } = await admin
       .from("ai_generations")
-      .select("id, user_id")
+      .select("id, user_id, error_message, audio_url")
       .eq("id", generationId)
       .maybeSingle();
     if (!generation) {
       console.warn(`[kie-vocal-track-callback] generation ${generationId} not found`);
+      return json({ received: true });
+    }
+    // FIX 2026-08-27: guard de idempotencia -- si esta generacion ya quedo
+    // marcada como fallida (error_message) o ya se completo (audio_url),
+    // no reprocesar. Evita un doble reembolso si el mismo callback llega
+    // duplicado (patron ya visto varias veces con los callbacks de KIE).
+    if (generation.error_message || generation.audio_url) {
+      console.log(`[kie-vocal-track-callback] generation ${generationId} already resolved, skipping`);
       return json({ received: true });
     }
 
@@ -52,7 +60,17 @@ serve(async (req) => {
     const isSuccess = code === undefined || code === 200 || code === "success";
 
     const failAndRefund = async (reason: string) => {
-      await admin.from("ai_generations").delete().eq("id", generationId);
+      // FIX 2026-08-27 (reportado por Iker: "el proceso si se hizo
+      // completo en KIE, pero el front se queda esperando" -- el spinner
+      // no avanzaba nunca): antes se borraba la fila por completo con
+      // DELETE en cualquier fallo (ej. si la separacion de voz/
+      // instrumental fallaba tras generarse la musica con exito) -- el
+      // frontend seguia haciendo polling sobre un id que ya no existia en
+      // la base de datos, sin ningun mensaje de error, quedandose
+      // "cargando" para siempre. Se marca el fallo en su lugar,
+      // preservando el registro para que el frontend lo detecte y lo
+      // muestre al usuario.
+      await admin.from("ai_generations").update({ error_message: reason.slice(0, 300) }).eq("id", generationId);
       if (creditsCost > 0) {
         await admin.rpc("refund_credits_ordered", {
           p_user_id: generation.user_id, p_amount: creditsCost, p_from_permanent: fromPermanent,
@@ -66,11 +84,28 @@ serve(async (req) => {
         await failAndRefund(payload?.msg || "Fallo generando la pista con la voz clonada");
         return json({ received: true });
       }
-      const track = payload?.data?.data?.[0] ?? payload?.data?.response?.sunoData?.[0];
-      const taskId = payload?.data?.taskId as string | undefined;
+      // FIX 2026-08-27 (fallo sistematico reportado por Iker, 2 intentos
+      // seguidos con el mismo motivo): antes se exigia que "taskId"
+      // viniera en el payload del callback (payload?.data?.taskId) -- pero
+      // ya tenemos el taskId real guardado en nuestra BD desde el momento
+      // en que se disparo la generacion (provider_task_id), asi que no es
+      // necesario depender de que el callback lo repita en una estructura
+      // exacta. Se amplia tambien la busqueda del audioId a mas
+      // estructuras posibles, y se guarda el payload COMPLETO en
+      // response_payload si aun asi falla, para poder diagnosticar sin
+      // depender de logs.
+      const { data: genRow } = await admin.from("ai_generations").select("provider_task_id").eq("id", generationId).maybeSingle();
+      const taskId = genRow?.provider_task_id || (payload?.data?.taskId as string | undefined);
+      const track =
+        payload?.data?.data?.[0] ??
+        payload?.data?.response?.sunoData?.[0] ??
+        payload?.data?.sunoData?.[0] ??
+        payload?.data?.response?.data?.[0] ??
+        payload?.response?.sunoData?.[0];
       const audioId = track?.id as string | undefined;
       if (!taskId || !audioId) {
-        await failAndRefund("KIE no devolvió taskId/audioId en el callback de música");
+        await admin.from("ai_generations").update({ response_payload: payload }).eq("id", generationId);
+        await failAndRefund(`KIE no devolvió taskId/audioId en el callback de música (taskId=${taskId ? "ok" : "missing"}, audioId=${audioId ? "ok" : "missing"})`);
         return json({ received: true });
       }
 
