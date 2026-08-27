@@ -2093,6 +2093,7 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
               return samePrice && withinWindow;
             });
 
+            const revertAttemptedAt = Math.floor(Date.now() / 1000);
             const revertedSub = await stripe.subscriptions.update(subscriptionIdFailed, {
               items: [{ id: failedSubItem, price: previousPriceId }],
               proration_behavior: "none",
@@ -2102,7 +2103,23 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
               try {
                 const newInvoiceId = typeof revertedSub.latest_invoice === "string" ? revertedSub.latest_invoice : (revertedSub.latest_invoice as any).id;
                 const newInvoice = await stripe.invoices.retrieve(newInvoiceId);
-                if (newInvoice.status === "paid" && newInvoice.amount_paid > 0) {
+                // FIX 2026-08-27 (BUG REAL, caso dsaulul1710@gmail.com):
+                // se reembolso por error el pago de la renovacion MENSUAL
+                // normal (legitimo, cobrado 7 minutos antes tras varios
+                // reintentos) porque el codigo asumia que
+                // revertedSub.latest_invoice era SIEMPRE una factura NUEVA
+                // generada por esta reversion. Si el upgrade fallido NUNCA
+                // llego a cambiar el precio del item (fallo la validacion
+                // de la tarjeta antes de aplicarse), la llamada de
+                // "reversion" es un no-op -- Stripe devuelve la ULTIMA
+                // factura EXISTENTE de la suscripcion, que puede ser un
+                // pago legitimo sin relacion con este intento de upgrade.
+                // Se verifica que la factura se haya creado DESPUES del
+                // intento de reversion antes de considerarla un duplicado
+                // reembolsable.
+                if (newInvoice.created < revertAttemptedAt) {
+                  console.log(`[WEBHOOK] payment_failed: latest_invoice ${newInvoiceId} es ANTERIOR al intento de reversion (created=${newInvoice.created} < revertAttemptedAt=${revertAttemptedAt}) -- no es un duplicado generado por esta reversion, NO se reembolsa.`);
+                } else if (newInvoice.status === "paid" && newInvoice.amount_paid > 0) {
                   const paymentIntentId = (newInvoice as any).parent?.subscription_details
                     ? await (async () => {
                         const pis = await stripe.paymentIntents.list({ customer: newInvoice.customer as string, limit: 5 });
