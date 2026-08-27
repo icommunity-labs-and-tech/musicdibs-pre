@@ -119,6 +119,7 @@ export default function MediaLibraryPage() {
         .from("ai_generations")
         .select("id, prompt, genre, mood, created_at, provider_task_id")
         .eq("user_id", userId)
+        .is("error_message", null)
         .order("created_at", { ascending: false })
         .limit(PAGE_LIMIT),
       supabase

@@ -103,8 +103,13 @@ serve(async (req) => {
         payload?.data?.response?.data?.[0] ??
         payload?.response?.sunoData?.[0];
       const audioId = track?.id as string | undefined;
+      // FIX 2026-08-27: guardar SIEMPRE el payload de music (no solo
+      // cuando falla la extraccion) para tener visibilidad completa de la
+      // estructura real que envia KIE, dado el fallo posterior
+      // "Record does not exist" en el paso de separacion que no dejaba
+      // ningun rastro de que taskId/audioId se habian enviado.
+      await admin.from("ai_generations").update({ response_payload: payload }).eq("id", generationId);
       if (!taskId || !audioId) {
-        await admin.from("ai_generations").update({ response_payload: payload }).eq("id", generationId);
         await failAndRefund(`KIE no devolvió taskId/audioId en el callback de música (taskId=${taskId ? "ok" : "missing"}, audioId=${audioId ? "ok" : "missing"})`);
         return json({ received: true });
       }
@@ -118,7 +123,14 @@ serve(async (req) => {
       });
       const sepJson = await sepRes.json().catch(() => ({}));
       if (!sepRes.ok || (sepJson?.code && sepJson.code !== 200)) {
-        await failAndRefund(sepJson?.msg || "Fallo iniciando la separación de voz/instrumental");
+        // FIX 2026-08-27: guardar el request que enviamos (taskId/audioId
+        // exactos) junto con la respuesta real de error de KIE, para poder
+        // diagnosticar con certeza el motivo del rechazo (ej. "Record does
+        // not exist" reportado por Iker, sin ningun detalle previo).
+        await admin.from("ai_generations").update({
+          response_payload: { music_callback: payload, separation_request: { taskId, audioId }, separation_error: sepJson, separation_status: sepRes.status },
+        }).eq("id", generationId);
+        await failAndRefund(sepJson?.msg || `Fallo iniciando la separación de voz/instrumental (HTTP ${sepRes.status})`);
         return json({ received: true });
       }
       return json({ received: true });
