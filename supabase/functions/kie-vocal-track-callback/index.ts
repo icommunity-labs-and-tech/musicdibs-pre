@@ -84,6 +84,22 @@ serve(async (req) => {
         await failAndRefund(payload?.msg || "Fallo generando la pista con la voz clonada");
         return json({ received: true });
       }
+      // FIX 2026-08-27 (CAUSA RAIZ REAL, confirmada con la documentacion
+      // oficial de KIE tras diagnosticar con el payload completo
+      // capturado): KIE envia VARIOS callbacks progresivos para la misma
+      // tarea de generacion de musica -- "text" (letra generada, SIN
+      // audio todavia), "first" (primera pista lista) y "complete" (todas
+      // las pistas listas). Nuestro codigo procesaba el PRIMER callback
+      // que llegaba (siempre "text", con audio_url vacio) como si fuera
+      // el resultado final, e intentaba separar la voz de un audio que
+      // aun no existia -- de ahi el "Record does not exist" reportado por
+      // Iker en 3 intentos seguidos. Se ignoran los callbacks que no sean
+      // "complete", esperando al callback real con el audio.
+      const callbackType = payload?.data?.callbackType as string | undefined;
+      if (callbackType && callbackType !== "complete") {
+        console.log(`[kie-vocal-track-callback] step=music callbackType=${callbackType} (intermedio, esperando 'complete')`);
+        return json({ received: true });
+      }
       // FIX 2026-08-27 (fallo sistematico reportado por Iker, 2 intentos
       // seguidos con el mismo motivo): antes se exigia que "taskId"
       // viniera en el payload del callback (payload?.data?.taskId) -- pero
