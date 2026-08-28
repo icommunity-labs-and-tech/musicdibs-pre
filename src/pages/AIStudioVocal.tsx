@@ -508,11 +508,14 @@ export default function AIStudioVocal() {
       const startedAt = Date.now();
       const MAX_POLL_MS = 10 * 60 * 1000;
       const poll = window.setInterval(async () => {
-        const { data: row, error: pollError } = await supabase
+        // NOTA: `error_message` existe en la tabla pero aún no está en los
+        // tipos generados, de ahí el cast.
+        const { data: rowRaw, error: pollError } = await supabase
           .from('ai_generations')
-          .select('audio_url, error_message')
+          .select('audio_url, error_message' as '*')
           .eq('id', generationId)
           .maybeSingle();
+        const row = rowRaw as { audio_url: string | null; error_message: string | null } | null;
         if (pollError) return; // error transitorio: reintentamos en el siguiente tick
         if (row?.audio_url) {
           window.clearInterval(poll);
