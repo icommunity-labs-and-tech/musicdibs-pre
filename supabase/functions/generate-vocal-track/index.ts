@@ -56,8 +56,11 @@ serve(async (req) => {
     if (!voiceClone || voiceClone.status !== 'active' || voice_id.startsWith('pending_')) {
       return new Response(JSON.stringify({ error: 'invalid_voice_clone', message: 'Esta voz clonada no está lista o no se completó correctamente.' }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    if (!voiceClone.sample_url) {
-      return new Response(JSON.stringify({ error: 'invalid_voice_clone', message: 'Esta voz clonada no tiene un audio de muestra válido.' }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // El sample_url solo hace falta cuando aun no hay un personaId cacheado
+    // (para generar la cancion de referencia). Las voces antiguas que ya
+    // tienen persona_id pueden cantar sin muestra almacenada.
+    if (!voiceClone.persona_id && !voiceClone.sample_url) {
+      return new Response(JSON.stringify({ error: 'invalid_voice_clone', message: 'Esta voz clonada no tiene un audio de muestra válido. Vuelve a clonar tu voz para poder usarla.' }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Coste propio (hasta 3 llamadas a KIE encadenadas cuando no hay

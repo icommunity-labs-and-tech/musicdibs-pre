@@ -142,12 +142,9 @@ export default function AIStudioVocal() {
     i18n.resolvedLanguage?.startsWith('en') ? 'en' : i18n.resolvedLanguage?.startsWith('pt') ? 'pt' : 'es'
   );
   const [cloneSingerSkillLevel, setCloneSingerSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
-  // Panel de depuracion: guarda la respuesta cruda (taskId/voiceId/status)
-  // de cada paso, igual que la pestaña "Output > JSON" del playground de
-  // KIE, para poder verificar visualmente que cada paso se ejecuta bien.
-  const [cloneDebugLog, setCloneDebugLog] = useState<{ step: string; data: unknown; at: string }[]>([]);
+  // Traza de depuración: solo a consola (nunca visible para el usuario).
   const pushCloneDebug = (step: string, data: unknown) => {
-    setCloneDebugLog((prev) => [...prev, { step, data, at: new Date().toLocaleTimeString() }].slice(-6));
+    console.debug('[voice-clone]', step, data);
   };
 
   // Clone editing
@@ -508,11 +505,14 @@ export default function AIStudioVocal() {
       const startedAt = Date.now();
       const MAX_POLL_MS = 10 * 60 * 1000;
       const poll = window.setInterval(async () => {
-        const { data: row, error: pollError } = await supabase
+        // NOTA: `error_message` existe en la tabla pero aún no está en los
+        // tipos generados, de ahí el cast.
+        const { data: rowRaw, error: pollError } = await supabase
           .from('ai_generations')
-          .select('audio_url, error_message')
+          .select('audio_url, error_message' as '*')
           .eq('id', generationId)
           .maybeSingle();
+        const row = rowRaw as unknown as { audio_url: string | null; error_message: string | null } | null;
         if (pollError) return; // error transitorio: reintentamos en el siguiente tick
         if (row?.audio_url) {
           window.clearInterval(poll);
@@ -715,27 +715,6 @@ export default function AIStudioVocal() {
           </>
         )}
 
-        {/* Panel de depuracion: resultado crudo de cada paso, como el
-            playground de KIE (Output > JSON), para verificar visualmente
-            que cada llamada se ejecuta correctamente. */}
-        {cloneDebugLog.length > 0 && (
-          <details className="rounded-lg border bg-muted/20 p-3 text-xs" open>
-            <summary className="cursor-pointer font-medium text-muted-foreground select-none">
-              {s('aiVocal.debugPanelTitle', 'Ver respuesta técnica de cada paso')} ({cloneDebugLog.length})
-            </summary>
-            <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
-              {cloneDebugLog.map((entry, i) => (
-                <div key={i} className="rounded border bg-background p-2">
-                  <div className="flex justify-between text-muted-foreground mb-1">
-                    <span className="font-medium">{entry.step}</span>
-                    <span>{entry.at}</span>
-                  </div>
-                  <pre className="whitespace-pre-wrap break-all text-[10px] leading-tight">{JSON.stringify(entry.data, null, 2)}</pre>
-                </div>
-              ))}
-            </div>
-          </details>
-        )}
       </CardContent>
     </Card>
   );
