@@ -524,9 +524,16 @@ export default function AIStudioVocal() {
         } else if (row?.error_message || !row) {
           // Fallo marcado por el callback (o, como fallback, fila
           // inexistente si algo la borrase por otra vía) => reembolso ya
-          // aplicado por el backend.
+          // aplicado por el backend. Se muestra el motivo real si lo
+          // tenemos (ej. rechazo por copyright), en vez de un mensaje
+          // generico que oculta informacion util y accionable.
           window.clearInterval(poll);
-          toast({ title: s('aiShared.error'), description: s('aiVocal.generationFailed', 'La generación ha fallado. Se te ha reembolsado el crédito.'), variant: 'destructive' });
+          const specificMsg = row?.error_message?.trim();
+          toast({
+            title: s('aiShared.error'),
+            description: specificMsg || s('aiVocal.generationFailed', 'La generación ha fallado. Se te ha reembolsado el crédito.'),
+            variant: 'destructive',
+          });
           setIsGenerating(false);
         } else if (Date.now() - startedAt > MAX_POLL_MS) {
           window.clearInterval(poll);

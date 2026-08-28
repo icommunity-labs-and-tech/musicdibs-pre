@@ -86,7 +86,20 @@ serve(async (req) => {
       // real de esa voz. Mismo manejo de callbackType intermedio que en
       // "music": solo procesar cuando el audio de la referencia ya existe.
       if (!isSuccess) {
-        await failAndRefund(payload?.msg || "Fallo generando la canción de referencia para la voz clonada");
+        // FIX 2026-08-28 (reportado por Iker: 3 intentos seguidos con el
+        // mismo motivo): el paso de referencia usa el motor completo de
+        // Suno (add-vocals), que SI tiene deteccion de copyright activa --
+        // a diferencia del flujo de Custom Voice (voice/validate +
+        // voice/generate), que nunca la aplicaba. Si la muestra de voz del
+        // usuario es una grabacion cantando una cancion real con derechos
+        // de autor (en vez de hablando o cantando algo propio), KIE la
+        // rechaza con "Uploaded audio contains copyrighted lyrics."
+        const rawMsg: string = payload?.msg || "";
+        const isCopyrightRejection = /copyright/i.test(rawMsg);
+        const failMsg = isCopyrightRejection
+          ? "El audio de tu voz parece contener una canción con derechos de autor. Para clonar tu voz, usa una grabación hablando con normalidad o cantando algo propio/improvisado (no una canción existente), y vuelve a intentarlo."
+          : (rawMsg || "Fallo generando la canción de referencia para la voz clonada");
+        await failAndRefund(failMsg);
         return json({ received: true });
       }
       const callbackType = payload?.data?.callbackType as string | undefined;
