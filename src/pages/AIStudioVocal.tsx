@@ -515,7 +515,7 @@ export default function AIStudioVocal() {
           .select('audio_url, error_message' as '*')
           .eq('id', generationId)
           .maybeSingle();
-        const row = rowRaw as { audio_url: string | null; error_message: string | null } | null;
+        const row = rowRaw as unknown as { audio_url: string | null; error_message: string | null } | null;
         if (pollError) return; // error transitorio: reintentamos en el siguiente tick
         if (row?.audio_url) {
           window.clearInterval(poll);
