@@ -715,27 +715,6 @@ export default function AIStudioVocal() {
           </>
         )}
 
-        {/* Panel de depuracion: resultado crudo de cada paso, como el
-            playground de KIE (Output > JSON), para verificar visualmente
-            que cada llamada se ejecuta correctamente. */}
-        {cloneDebugLog.length > 0 && (
-          <details className="rounded-lg border bg-muted/20 p-3 text-xs" open>
-            <summary className="cursor-pointer font-medium text-muted-foreground select-none">
-              {s('aiVocal.debugPanelTitle', 'Ver respuesta técnica de cada paso')} ({cloneDebugLog.length})
-            </summary>
-            <div className="mt-2 space-y-2 max-h-64 overflow-y-auto">
-              {cloneDebugLog.map((entry, i) => (
-                <div key={i} className="rounded border bg-background p-2">
-                  <div className="flex justify-between text-muted-foreground mb-1">
-                    <span className="font-medium">{entry.step}</span>
-                    <span>{entry.at}</span>
-                  </div>
-                  <pre className="whitespace-pre-wrap break-all text-[10px] leading-tight">{JSON.stringify(entry.data, null, 2)}</pre>
-                </div>
-              ))}
-            </div>
-          </details>
-        )}
       </CardContent>
     </Card>
   );
