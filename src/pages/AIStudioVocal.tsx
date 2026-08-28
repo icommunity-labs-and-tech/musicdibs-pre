@@ -142,12 +142,9 @@ export default function AIStudioVocal() {
     i18n.resolvedLanguage?.startsWith('en') ? 'en' : i18n.resolvedLanguage?.startsWith('pt') ? 'pt' : 'es'
   );
   const [cloneSingerSkillLevel, setCloneSingerSkillLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
-  // Panel de depuracion: guarda la respuesta cruda (taskId/voiceId/status)
-  // de cada paso, igual que la pestaña "Output > JSON" del playground de
-  // KIE, para poder verificar visualmente que cada paso se ejecuta bien.
-  const [cloneDebugLog, setCloneDebugLog] = useState<{ step: string; data: unknown; at: string }[]>([]);
+  // Traza de depuración: solo a consola (nunca visible para el usuario).
   const pushCloneDebug = (step: string, data: unknown) => {
-    setCloneDebugLog((prev) => [...prev, { step, data, at: new Date().toLocaleTimeString() }].slice(-6));
+    console.debug('[voice-clone]', step, data);
   };
 
   // Clone editing
