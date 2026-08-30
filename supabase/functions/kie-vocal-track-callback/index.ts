@@ -266,20 +266,39 @@ serve(async (req) => {
       }
 
       // Descargar la pista de voz y persistirla en nuestro propio storage.
-      try {
-        const fileRes = await fetch(vocalUrl);
-        if (!fileRes.ok) throw new Error(`download failed: ${fileRes.status}`);
-        const buf = await fileRes.arrayBuffer();
-        const path = `${generation.user_id}/vocal_${Date.now()}.mp3`;
-        const { error: upErr } = await admin.storage.from("ai-generations").upload(path, buf, { contentType: "audio/mpeg", upsert: false });
-        if (upErr) throw upErr;
-        const { data: pub } = admin.storage.from("ai-generations").getPublicUrl(path);
-        await admin.from("ai_generations").update({ audio_url: pub.publicUrl }).eq("id", generationId);
-        console.log(`[kie-vocal-track-callback] completed generation ${generationId}`);
-      } catch (persistErr) {
-        console.error("[kie-vocal-track-callback] failed persisting vocal track, using provider URL directly:", persistErr);
+      // FIX 2026-08-30 (incidente de encriptacion de audio de Suno, 28 ago
+      // 2026): mismo fix que en kie-suno-callback -- reintentar una vez
+      // antes de caer al fallback de la URL directa de KIE, y registrar
+      // una alerta explicita si sigue fallando, en vez de un fallback
+      // silencioso que puede dejar al usuario con un enlace roto sin que
+      // nadie se entere.
+      let persisted = false;
+      for (let attempt = 0; attempt < 2 && !persisted; attempt++) {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, 3000));
+        try {
+          const fileRes = await fetch(vocalUrl);
+          if (!fileRes.ok) throw new Error(`download failed: ${fileRes.status}`);
+          const buf = await fileRes.arrayBuffer();
+          const path = `${generation.user_id}/vocal_${Date.now()}.mp3`;
+          const { error: upErr } = await admin.storage.from("ai-generations").upload(path, buf, { contentType: "audio/mpeg", upsert: false });
+          if (upErr) throw upErr;
+          const { data: pub } = admin.storage.from("ai-generations").getPublicUrl(path);
+          await admin.from("ai_generations").update({ audio_url: pub.publicUrl }).eq("id", generationId);
+          console.log(`[kie-vocal-track-callback] completed generation ${generationId}`);
+          persisted = true;
+        } catch (persistErr) {
+          console.error(`[kie-vocal-track-callback] failed persisting vocal track (attempt ${attempt + 1}):`, persistErr);
+        }
+      }
+      if (!persisted) {
+        await admin.from("admin_alerts").insert({
+          source: "kie-vocal-track-callback",
+          severity: "warning",
+          message: `No se pudo copiar la pista vocal de KIE a nuestro storage tras 2 intentos -- se está usando la URL directa del proveedor, que puede dejar de funcionar en el futuro. Requiere revisión y posible recuperación manual.`,
+          context: { user_id: generation.user_id, generation_id: generationId, source_url: vocalUrl },
+        });
         // Red de seguridad: si falla la persistencia propia, al menos guardamos
-        // la URL de KIE para que el usuario no se quede sin nada.
+        // la URL de KIE para que el usuario no se quede sin nada de momento.
         await admin.from("ai_generations").update({ audio_url: vocalUrl }).eq("id", generationId);
       }
       return json({ received: true });

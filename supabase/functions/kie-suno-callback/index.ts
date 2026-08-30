@@ -136,28 +136,53 @@ serve(async (req) => {
       const duration: number = Math.round(Number(t?.duration) || 0);
       let finalUrl = sourceUrl;
       let storagePath: string | null = null;
-      try {
-        const audioRes = await fetch(sourceUrl);
-        if (audioRes.ok) {
-          const arr = new Uint8Array(await audioRes.arrayBuffer());
-          const ownerId = logRow.user_id || "system";
-          const path = `${ownerId}/kie_${Date.now()}_${i}.mp3`;
-          const { error: upErr } = await supabase.storage
-            .from(BUCKET)
-            .upload(path, arr, { contentType: "audio/mpeg", upsert: false });
-          if (!upErr) {
-            storagePath = path;
-            // Compatibility: still emit a signed URL, but storage_path is the source of truth.
-            const { data: signed } = await supabase.storage
+      // FIX 2026-08-30 (incidente de encriptacion de audio de Suno, 28 ago
+      // 2026 20:00-21:00 UTC): antes, si la descarga/copia a nuestro
+      // storage fallaba (por ejemplo porque KIE devolvia el audio
+      // encriptado/con error durante un incidente), el codigo caia en
+      // silencio en usar la URL directa de KIE sin ningun aviso -- 3
+      // generaciones quedaron con enlaces que dejaron de funcionar sin que
+      // nadie se enterara hasta que un usuario se quejo. Se reintenta una
+      // vez tras una breve espera, y si sigue fallando, se registra una
+      // alerta explicita para que el equipo pueda investigar y recuperar
+      // el audio manualmente en vez de perderlo en silencio.
+      let copySucceeded = false;
+      for (let attempt = 0; attempt < 2 && !copySucceeded; attempt++) {
+        if (attempt > 0) await new Promise((r) => setTimeout(r, 3000));
+        try {
+          const audioRes = await fetch(sourceUrl);
+          if (audioRes.ok) {
+            const arr = new Uint8Array(await audioRes.arrayBuffer());
+            const ownerId = logRow.user_id || "system";
+            const path = `${ownerId}/kie_${Date.now()}_${i}.mp3`;
+            const { error: upErr } = await supabase.storage
               .from(BUCKET)
-              .createSignedUrl(path, 60 * 60 * 24 * 365);
-            if (signed?.signedUrl) finalUrl = signed.signedUrl;
+              .upload(path, arr, { contentType: "audio/mpeg", upsert: false });
+            if (!upErr) {
+              storagePath = path;
+              // Compatibility: still emit a signed URL, but storage_path is the source of truth.
+              const { data: signed } = await supabase.storage
+                .from(BUCKET)
+                .createSignedUrl(path, 60 * 60 * 24 * 365);
+              if (signed?.signedUrl) finalUrl = signed.signedUrl;
+              copySucceeded = true;
+            } else {
+              console.error("[kie-suno-callback] storage upload error:", upErr);
+            }
           } else {
-            console.error("[kie-suno-callback] storage upload error:", upErr);
+            console.error(`[kie-suno-callback] audio fetch not ok (attempt ${attempt + 1}):`, audioRes.status, sourceUrl);
           }
+        } catch (e) {
+          console.error(`[kie-suno-callback] copy-to-storage failed (attempt ${attempt + 1}):`, e);
         }
-      } catch (e) {
-        console.error("[kie-suno-callback] copy-to-storage failed:", e);
+      }
+      if (!copySucceeded) {
+        await supabase.from("admin_alerts").insert({
+          source: "kie-suno-callback",
+          severity: "warning",
+          message: `No se pudo copiar el audio de KIE a nuestro storage tras 2 intentos -- se está usando la URL directa del proveedor, que puede dejar de funcionar en el futuro (ej. incidentes de encriptación de Suno). Requiere revisión y posible recuperación manual.`,
+          context: { user_id: logRow.user_id, provider_task_id: logRow.provider_task_id || taskId, source_url: sourceUrl, variant_index: i },
+        });
       }
       savedTracks.push({ url: finalUrl, duration, storage_path: storagePath, variant_index: i });
 

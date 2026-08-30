@@ -151,32 +151,49 @@ serve(async (req) => {
     }
 
     // ── Re-alojar en Supabase Storage para URL permanente sin CORS ────────────
+    // FIX 2026-08-30 (incidente de encriptacion de audio de Suno, 28 ago
+    // 2026): mismo fix que en kie-suno-callback y kie-vocal-track-callback
+    // -- reintentar una vez antes de caer al fallback de la URL directa de
+    // KIE, y registrar una alerta explicita si sigue fallando.
     let outputUrl = kieAudioUrl;
-    try {
-      const audioRes = await fetch(kieAudioUrl, { headers: { "User-Agent": "MusicDibs/1.0" } });
-      if (audioRes.ok) {
-        const arrayBuffer = await audioRes.arrayBuffer();
-        const storePath = `enhance-results/${logId}.mp3`;
-        const { data: storageData, error: storageErr } = await supabase.storage
-          .from("ai-generations")
-          .upload(storePath, new Uint8Array(arrayBuffer), {
-            contentType: "audio/mpeg",
-            upsert: true,
-          });
-        if (storageData && !storageErr) {
-          const { data: urlData } = supabase.storage
+    let reuploaded = false;
+    for (let attempt = 0; attempt < 2 && !reuploaded; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 3000));
+      try {
+        const audioRes = await fetch(kieAudioUrl, { headers: { "User-Agent": "MusicDibs/1.0" } });
+        if (audioRes.ok) {
+          const arrayBuffer = await audioRes.arrayBuffer();
+          const storePath = `enhance-results/${logId}.mp3`;
+          const { data: storageData, error: storageErr } = await supabase.storage
             .from("ai-generations")
-            .getPublicUrl(storePath);
-          outputUrl = urlData.publicUrl;
-          console.log("[kie-enhance-callback] re-uploaded to storage", { storePath, outputUrl });
+            .upload(storePath, new Uint8Array(arrayBuffer), {
+              contentType: "audio/mpeg",
+              upsert: true,
+            });
+          if (storageData && !storageErr) {
+            const { data: urlData } = supabase.storage
+              .from("ai-generations")
+              .getPublicUrl(storePath);
+            outputUrl = urlData.publicUrl;
+            console.log("[kie-enhance-callback] re-uploaded to storage", { storePath, outputUrl });
+            reuploaded = true;
+          } else {
+            console.warn("[kie-enhance-callback] storage upload error, using KIE URL", storageErr);
+          }
         } else {
-          console.warn("[kie-enhance-callback] storage upload error, using KIE URL", storageErr);
+          console.warn(`[kie-enhance-callback] fetch failed for KIE audio (attempt ${attempt + 1})`, audioRes.status, kieAudioUrl);
         }
-      } else {
-        console.warn("[kie-enhance-callback] fetch failed for KIE audio", audioRes.status, kieAudioUrl);
+      } catch (fetchErr) {
+        console.warn(`[kie-enhance-callback] re-upload failed (attempt ${attempt + 1})`, fetchErr);
       }
-    } catch (fetchErr) {
-      console.warn("[kie-enhance-callback] re-upload failed, using KIE URL as fallback", fetchErr);
+    }
+    if (!reuploaded) {
+      await supabase.from("admin_alerts").insert({
+        source: "kie-enhance-callback",
+        severity: "warning",
+        message: `No se pudo copiar el audio de Enhance de KIE a nuestro storage tras 2 intentos -- se está usando la URL directa del proveedor, que puede dejar de funcionar en el futuro. Requiere revisión y posible recuperación manual.`,
+        context: { user_id: userId, log_id: logId, source_url: kieAudioUrl },
+      });
     }
 
     // ── Marcar como completado ────────────────────────────────────────────────
