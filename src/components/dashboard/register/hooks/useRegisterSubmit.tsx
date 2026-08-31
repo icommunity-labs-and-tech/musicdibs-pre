@@ -115,7 +115,28 @@ export function useRegisterSubmit({ data, resumeWorkId, onSuccess }: Options) {
       setLoading(false);
       return;
     }
-    if (!data.signatureId) {
+    let effectiveSignatureId = data.signatureId;
+    if (!effectiveSignatureId && user) {
+      // FIX 2026-08-31 (caso liriakko@gmail.com): si la pestaña lleva
+      // abierta desde antes de completar la verificación KYC, el estado
+      // del wizard se queda con el valor viejo cacheado -- SignatureSelector
+      // solo carga las firmas una vez al montar el componente, no se
+      // re-sincroniza si el estado cambia en el backend mientras la
+      // pestaña sigue abierta. Antes de bloquear el envío, se vuelve a
+      // consultar la firma activa real directamente en la base de datos.
+      const { data: freshSignature } = await supabase
+        .from('ibs_signatures')
+        .select('ibs_signature_id')
+        .eq('user_id', user.id)
+        .eq('status', 'success')
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (freshSignature?.ibs_signature_id) {
+        effectiveSignatureId = freshSignature.ibs_signature_id;
+      }
+    }
+    if (!effectiveSignatureId) {
       toast.error(t('dashboard.registerWork.kycRequired', 'Necesitas una firma KYC válida para registrar la obra.'));
       setLoading(false);
       return;
@@ -136,7 +157,7 @@ export function useRegisterSubmit({ data, resumeWorkId, onSuccess }: Options) {
         file: uploadFiles[0] || uploadFile!,
         files: uploadFiles.length > 0 ? uploadFiles : undefined,
         ownershipDeclaration: true,
-        signatureId: data.signatureId,
+        signatureId: effectiveSignatureId,
         resumeWorkId: resumeWorkId || undefined,
         creators: data.creators,
       });
