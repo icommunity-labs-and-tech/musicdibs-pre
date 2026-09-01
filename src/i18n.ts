@@ -18,7 +18,7 @@ const SPANISH_LANG_TAGS = [
 
 /** Map browser language tag to one of our supported languages */
 export const mapBrowserLang = (detected: string | undefined): string => {
-  if (!detected) return 'es';
+  if (!detected) return 'en';
   const tag = detected.trim().replace(/_/g, '-');
 
   // Spanish variants → es
@@ -27,8 +27,13 @@ export const mapBrowserLang = (detected: string | undefined): string => {
   if (tag.toLowerCase().startsWith('pt')) return 'pt-BR';
   // English variants → en
   if (tag.toLowerCase().startsWith('en')) return 'en';
-  // Default fallback
-  return 'es';
+  // FIX 2026-08-31: cualquier otro idioma no soportado (ej. tagalo/filipino,
+  // frances, aleman, chino...) caia por defecto en español, sin relacion
+  // alguna con el idioma real del navegador del usuario -- reportado por
+  // usuarios con navegador en idiomas no reconocidos viendo la web en
+  // español sin motivo aparente. Se usa ingles como fallback universal,
+  // el estandar para plataformas internacionales.
+  return 'en';
 };
 
 /** Try multiple browser signals to find the best language match */
@@ -39,7 +44,7 @@ const detectBrowserLang = (): string => {
     if (saved) return mapBrowserLang(saved);
   }
 
-  if (typeof navigator === 'undefined') return 'es';
+  if (typeof navigator === 'undefined') return 'en';
 
   // 2. navigator.languages — full priority list (reflects OS region + browser prefs)
   if (navigator.languages?.length) {
@@ -54,7 +59,7 @@ const detectBrowserLang = (): string => {
     return mapBrowserLang(navigator.language);
   }
 
-  return 'es';
+  return 'en';
 };
 
 const detectedLang = detectBrowserLang();
