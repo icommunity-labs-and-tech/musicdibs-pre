@@ -42,7 +42,7 @@ const MAP: Record<string, Entry> = {
   'admin/alerts': { label: 'Alerts' },
   'admin/ai-models': { label: 'AI Models' },
   'admin/credit-coupons': { label: 'Credit Coupons' },
-  'admin/seo-dashboard': { label: 'SEO Dashboard' },
+  'admin/seo-dashboard': { label: 'Panel de Tráfico' },
   'admin/managers': { label: 'Managers' },
   'admin/blog': { label: 'Blog' },
   'admin/ab-tests': { label: 'A/B Tests' },
