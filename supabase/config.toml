@@ -47,7 +47,7 @@ verify_jwt = false
 [functions.track-usage]
 verify_jwt = false
 
-[functions.seo-dashboard]
+[functions.traffic-dashboard]
 verify_jwt = false
 
 
