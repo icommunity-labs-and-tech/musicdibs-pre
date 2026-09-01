@@ -399,8 +399,16 @@ serve(async (req) => {
     });
 
     const rawSa = Deno.env.get("GA4_SERVICE_ACCOUNT_JSON");
-    const propertyId = Deno.env.get("GA4_PROPERTY_ID");
-    if (!rawSa || !propertyId) {
+    // Supports one or more GA4 properties, summed into a single view.
+    // GA4_PROPERTY_IDS="123,456" takes precedence over GA4_PROPERTY_ID.
+    const propertyIds = (
+      Deno.env.get("GA4_PROPERTY_IDS") ?? Deno.env.get("GA4_PROPERTY_ID") ?? ""
+    )
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (!rawSa || propertyIds.length === 0) {
       return json({
         days,
         generatedAt: new Date().toISOString(),
@@ -408,7 +416,7 @@ serve(async (req) => {
         firstParty,
         configured: false,
         error:
-          "Falta configurar GA4_SERVICE_ACCOUNT_JSON y/o GA4_PROPERTY_ID para leer la API de Google Analytics.",
+          "Falta configurar GA4_SERVICE_ACCOUNT_JSON y/o GA4_PROPERTY_IDS para leer la API de Google Analytics.",
       });
     }
 
@@ -417,7 +425,10 @@ serve(async (req) => {
     try {
       const sa = JSON.parse(rawSa);
       const token = await getAccessToken(sa);
-      ga4 = await buildGa4(String(propertyId), token, days);
+      const parts = await Promise.all(
+        propertyIds.map((id) => buildGa4(id, token, days)),
+      );
+      ga4 = parts.length === 1 ? parts[0] : mergeGa4(parts);
     } catch (e) {
       error = String(e);
       console.error("[ga4]", error);
