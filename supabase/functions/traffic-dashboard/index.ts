@@ -357,6 +357,100 @@ async function buildFirstParty(admin: any, days: number) {
   };
 }
 
+// ── Merge several GA4 properties into one summed view ────────────────
+type Ga4 = Awaited<ReturnType<typeof buildGa4>>;
+
+function sumTotals(
+  parts: Ga4[],
+): Ga4["totals"] {
+  const wavg = (key: string, weightKey: string) => {
+    let num = 0, den = 0;
+    for (const p of parts) {
+      const w = p.totals[weightKey]?.value ?? 0;
+      num += (p.totals[key]?.value ?? 0) * w;
+      den += w;
+    }
+    return den > 0 ? num / den : 0;
+  };
+  const sum = (key: string, prev = false) =>
+    parts.reduce((a, p) => a + (p.totals[key]?.[prev ? "previous" : "value"] ?? 0), 0);
+
+  const keys = ["activeUsers", "newUsers", "sessions", "pageViews", "conversions"];
+  const totals: Ga4["totals"] = {};
+  for (const k of keys) {
+    const value = sum(k), previous = sum(k, true);
+    totals[k] = { value, previous, delta: previous ? ((value - previous) / previous) * 100 : 0 };
+  }
+  // Rates and durations: session-weighted averages (current period only).
+  totals.engagementRate = { value: wavg("engagementRate", "sessions"), previous: 0, delta: 0 };
+  totals.bounceRate = { value: wavg("bounceRate", "sessions"), previous: 0, delta: 0 };
+  totals.avgSessionDuration = { value: wavg("avgSessionDuration", "sessions"), previous: 0, delta: 0 };
+  return totals;
+}
+
+function mergeGa4(parts: Ga4[]): Ga4 {
+  const groupSum = <T extends Record<string, any>>(
+    lists: T[][],
+    keyOf: (r: T) => string,
+    numKeys: (keyof T & string)[],
+    wavgKey?: { key: keyof T & string; weight: keyof T & string },
+  ): T[] => {
+    const map = new Map<string, T>();
+    for (const list of lists) {
+      for (const row of list) {
+        const k = keyOf(row);
+        const acc: any = map.get(k) ?? { ...row };
+        if (map.has(k)) {
+          for (const nk of numKeys) acc[nk] = (acc[nk] ?? 0) + (row[nk] ?? 0);
+          if (wavgKey) {
+            const w1 = acc.__w ?? 0, w2 = (row[wavgKey.weight] as number) ?? 0;
+            const v1 = acc[wavgKey.key] ?? 0, v2 = (row[wavgKey.key] as number) ?? 0;
+            acc[wavgKey.key] = w1 + w2 > 0 ? (v1 * w1 + v2 * w2) / (w1 + w2) : 0;
+            acc.__w = w1 + w2;
+          }
+        } else if (wavgKey) {
+          acc.__w = (row[wavgKey.weight] as number) ?? 0;
+        }
+        map.set(k, acc);
+      }
+    }
+    return [...map.values()].map(({ __w, ...rest }: any) => rest) as T[];
+  };
+
+  const seriesMap = new Map<string, { date: string; users: number; sessions: number; pageViews: number }>();
+  for (const p of parts) {
+    for (const s of p.series) {
+      const acc = seriesMap.get(s.date) ?? { date: s.date, users: 0, sessions: 0, pageViews: 0 };
+      acc.users += s.users; acc.sessions += s.sessions; acc.pageViews += s.pageViews;
+      seriesMap.set(s.date, acc);
+    }
+  }
+
+  return {
+    totals: sumTotals(parts),
+    series: [...seriesMap.values()].sort((a, b) => a.date.localeCompare(b.date)),
+    countries: groupSum(parts.map((p) => p.countries), (r) => r.code || r.country, ["users", "sessions"], { key: "engagementRate", weight: "sessions" })
+      .sort((a, b) => b.users - a.users).slice(0, 20),
+    languages: groupSum(parts.map((p) => p.languages), (r) => r.language, ["users", "sessions"])
+      .sort((a, b) => b.users - a.users).slice(0, 15),
+    sources: groupSum(parts.map((p) => p.sources), (r) => `${r.source}|${r.channel}`, ["sessions", "users", "conversions"])
+      .sort((a, b) => b.sessions - a.sessions).slice(0, 20),
+    devices: groupSum(parts.map((p) => p.devices), (r) => r.device, ["users", "sessions"])
+      .sort((a, b) => b.users - a.users),
+    pages: groupSum(parts.map((p) => p.pages), (r) => r.path, ["pageViews", "users"], { key: "avgDuration", weight: "pageViews" })
+      .sort((a, b) => b.pageViews - a.pageViews).slice(0, 25),
+    landings: groupSum(parts.map((p) => p.landings), (r) => r.path, ["sessions", "conversions"], { key: "bounceRate", weight: "sessions" })
+      .sort((a, b) => b.sessions - a.sessions).slice(0, 20),
+    events: groupSum(parts.map((p) => p.events), (r) => r.name, ["count"])
+      .sort((a, b) => b.count - a.count).slice(0, 20),
+    realtime: {
+      users: parts.reduce((a, p) => a + p.realtime.users, 0),
+      byCountry: groupSum(parts.map((p) => p.realtime.byCountry), (r) => r.country, ["users"])
+        .sort((a, b) => b.users - a.users).slice(0, 10),
+    },
+  };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS")
     return new Response(null, { headers: corsHeaders });
@@ -399,8 +493,16 @@ serve(async (req) => {
     });
 
     const rawSa = Deno.env.get("GA4_SERVICE_ACCOUNT_JSON");
-    const propertyId = Deno.env.get("GA4_PROPERTY_ID");
-    if (!rawSa || !propertyId) {
+    // Supports one or more GA4 properties, summed into a single view.
+    // GA4_PROPERTY_IDS="123,456" takes precedence over GA4_PROPERTY_ID.
+    const propertyIds = (
+      Deno.env.get("GA4_PROPERTY_IDS") ?? Deno.env.get("GA4_PROPERTY_ID") ?? ""
+    )
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    if (!rawSa || propertyIds.length === 0) {
       return json({
         days,
         generatedAt: new Date().toISOString(),
@@ -408,7 +510,7 @@ serve(async (req) => {
         firstParty,
         configured: false,
         error:
-          "Falta configurar GA4_SERVICE_ACCOUNT_JSON y/o GA4_PROPERTY_ID para leer la API de Google Analytics.",
+          "Falta configurar GA4_SERVICE_ACCOUNT_JSON y/o GA4_PROPERTY_IDS para leer la API de Google Analytics.",
       });
     }
 
@@ -417,7 +519,10 @@ serve(async (req) => {
     try {
       const sa = JSON.parse(rawSa);
       const token = await getAccessToken(sa);
-      ga4 = await buildGa4(String(propertyId), token, days);
+      const parts = await Promise.all(
+        propertyIds.map((id) => buildGa4(id, token, days)),
+      );
+      ga4 = parts.length === 1 ? parts[0] : mergeGa4(parts);
     } catch (e) {
       error = String(e);
       console.error("[ga4]", error);
