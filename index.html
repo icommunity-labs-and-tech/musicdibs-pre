@@ -120,26 +120,13 @@
     }
     </script>
 
-    <!-- Google Analytics (GA4) + Google Ads conversion tag - deferred to after page load -->
+    <!-- GA4 y Google Ads se gestionan ahora desde Google Tag Manager (GTM-T8ZBZZMF).
+         Mantenemos solo el stub dataLayer/gtag para que los eventos de la app
+         (A/B tests, conversiones Ads) lleguen al dataLayer de GTM. -->
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-518359138');
-      gtag('config', 'AW-18310773693');
-      window.addEventListener('load', function() {
-        var loadAnalytics = function() {
-          var s = document.createElement('script');
-          s.src = 'https://www.googletagmanager.com/gtag/js?id=G-518359138';
-          s.async = true;
-          document.head.appendChild(s);
-        };
-        if ('requestIdleCallback' in window) {
-          window.requestIdleCallback(loadAnalytics, { timeout: 4000 });
-        } else {
-          window.setTimeout(loadAnalytics, 2500);
-        }
-      });
     </script>
     <style>
       .app-lcp-shell {
