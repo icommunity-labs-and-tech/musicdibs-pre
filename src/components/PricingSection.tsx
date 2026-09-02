@@ -230,7 +230,10 @@ export const PricingSection = () => {
                 <Button
                   className="w-full font-semibold rounded-full bg-page-surface hover:bg-page-surface-strong text-primary-foreground border border-page-border-strong py-3 text-sm"
                   disabled={loadingPlan !== null}
-                  onClick={() => handleCheckout('monthly')}
+                  onClick={() => {
+                    trackSignupCtaClick('pricing_monthly', '/login?tab=register');
+                    handleCheckout('monthly');
+                  }}
                 >
                   {loadingPlan === 'monthly' ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
                   {t("pricing.ctaMonthly")}
