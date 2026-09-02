@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { ConsentBanner } from "./components/ConsentBanner";
 import { AuthProvider } from "./hooks/useAuth";
 import { lazyWithRetry } from "./lib/lazyWithRetry";
 import { preloadFeatureCosts } from "./lib/featureCosts";
@@ -190,6 +191,7 @@ const App = () => (
           <ScrollToTop />
           <AppInit />
           <DelayedStartupWidgets />
+          <ConsentBanner />
           <Suspense fallback={null}>
             <Routes>
               <Route path="/" element={<Index />} />
