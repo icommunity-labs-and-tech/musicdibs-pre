@@ -70,30 +70,31 @@ const PAGE_SIZES = [10, 25, 50] as const;
 
 type PageKey = "works" | "form";
 
-function usePaginatedList<T>(items: T[], key: PageKey) {
-  const [pageSize, setPageSize] = useState<(typeof PAGE_SIZES)[number]>(10);
-  const [pages, setPages] = useState<Record<PageKey, number>>({ works: 1, form: 1 });
+interface PaginationState {
+  pageSize: (typeof PAGE_SIZES)[number];
+  pages: Record<PageKey, number>;
+}
 
-  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
-  const currentPage = Math.min(pages[key], totalPages);
-  const start = (currentPage - 1) * pageSize;
-  const paginated = useMemo(() => items.slice(start, start + pageSize), [items, start, pageSize]);
+function useCampaignPagination(items: WorkLead[] | FormLead[], key: PageKey, state: PaginationState, setState: React.Dispatch<React.SetStateAction<PaginationState>>) {
+  const totalPages = Math.max(1, Math.ceil(items.length / state.pageSize));
+  const currentPage = Math.min(state.pages[key], totalPages);
+  const start = (currentPage - 1) * state.pageSize;
+  const paginated = useMemo(() => items.slice(start, start + state.pageSize), [items, start, state.pageSize]);
 
   const setPage = (p: number) =>
-    setPages((prev) => ({ ...prev, [key]: Math.max(1, Math.min(p, totalPages)) }));
+    setState((prev) => ({ ...prev, pages: { ...prev.pages, [key]: Math.max(1, Math.min(p, totalPages)) } }));
 
-  const handlePageSizeChange = (size: (typeof PAGE_SIZES)[number]) => {
-    setPageSize(size);
-    setPages((prev) => ({ ...prev, [key]: 1 }));
-  };
-
-  return { pageSize, setPageSize: handlePageSizeChange, currentPage, setPage, totalPages, paginated, start };
+  return { currentPage, totalPages, paginated, start, setPage };
 }
 
 export function CampaignLeadsPanel() {
   const [data, setData] = useState<LeadsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageSize: 10,
+    pages: { works: 1, form: 1 },
+  });
 
   useEffect(() => {
     let cancelled = false;
