@@ -4734,15 +4734,13 @@ serve(async (req) => {
         .limit(limit);
 
       const userIds = [...new Set((recentWorks || []).map((w: any) => w.user_id).filter(Boolean))];
-      const profileMap = new Map<string, { email: string | null; display_name: string | null }>();
+      const profileMap = new Map<string, string | null>();
       if (userIds.length > 0) {
         const { data: profs } = await admin
           .from("profiles")
-          .select("id, email, display_name")
-          .in("id", userIds);
-        for (const p of profs || []) {
-          profileMap.set(p.id, { email: p.email ?? null, display_name: p.display_name ?? null });
-        }
+          .select("user_id, display_name")
+          .in("user_id", userIds);
+        for (const p of profs || []) profileMap.set(p.user_id, p.display_name ?? null);
       }
 
       const { data: recentForm } = await admin
@@ -4761,8 +4759,7 @@ serve(async (req) => {
           id: w.id,
           title: w.title,
           created_at: w.created_at,
-          user_email: profileMap.get(w.user_id)?.email ?? null,
-          user_name: profileMap.get(w.user_id)?.display_name ?? null,
+          user_name: profileMap.get(w.user_id) ?? null,
         })),
         form_leads: (recentForm || []).map((l: any) => ({
           id: l.id,
