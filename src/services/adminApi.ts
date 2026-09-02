@@ -135,6 +135,7 @@ export const adminApi = {
   setTemporaryPassword: (user_id: string, send_email = false) => adminAction('set_temporary_password', { user_id, send_email }),
   getAllWorks: (offset = 0, status_filter = '', search = '', sort_by = 'created_at', sort_dir: 'asc' | 'desc' = 'desc', limit = 50) => adminAction('get_all_works', { offset, status_filter, search, sort_by, sort_dir, limit }),
   getMetrics: () => adminAction('get_metrics'),
+  getRegistrationLeads: (limit = 50) => adminAction('get_registration_leads', { limit }),
   getSaasMetrics: (filters?: { periodType?: string; weekStart?: string; month?: string; year?: string; force_refresh?: boolean }) => adminAction('get_saas_metrics', filters || {}),
   getAllTransactions: (offset = 0, type_filter = '', date_from = '', date_to = '') => adminAction('get_all_transactions', { offset, type_filter, date_from, date_to }),
   searchUserByEmail: (email: string) => adminAction('search_user_by_email', { email }),

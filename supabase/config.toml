@@ -51,3 +51,6 @@ verify_jwt = false
 verify_jwt = false
 
 
+
+[functions.submit-landing-lead]
+verify_jwt = false
