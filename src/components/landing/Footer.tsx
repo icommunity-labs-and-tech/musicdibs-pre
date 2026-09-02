@@ -1,10 +1,17 @@
 import logoDark from "@/assets/landing/logo-dark.png";
 import { useTranslation } from "react-i18next";
+import { reopenCookieSettings } from "@/components/ConsentBanner";
 
 const RIGHTS: Record<string, string> = {
   es: "Todos los derechos reservados.",
   en: "All rights reserved.",
   "pt-BR": "Todos os direitos reservados.",
+};
+
+const COOKIE_SETTINGS: Record<string, string> = {
+  es: "Configuración de cookies",
+  en: "Cookie settings",
+  "pt-BR": "Configurações de cookies",
 };
 
 export function Footer() {
@@ -22,6 +29,14 @@ export function Footer() {
         <p className="text-xs text-primary-foreground text-center">
           © {new Date().getFullYear()} Musicdibs · IA Music Studio. {rights}
         </p>
+
+        <button
+          type="button"
+          onClick={reopenCookieSettings}
+          className="text-xs text-primary-foreground/70 hover:text-primary-foreground underline underline-offset-2 transition-colors"
+        >
+          {COOKIE_SETTINGS[lang] ?? COOKIE_SETTINGS.es}
+        </button>
       </div>
     </footer>
   );
