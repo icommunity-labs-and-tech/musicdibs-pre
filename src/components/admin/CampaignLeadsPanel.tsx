@@ -188,59 +188,143 @@ export function CampaignLeadsPanel() {
             <TabsTrigger value="form">Formulario ({form_leads.length})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="works" className="mt-3">
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Obra</TableHead>
-                    <TableHead>Usuario</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {work_leads.length === 0 ? (
-                    <TableRow><TableCell colSpan={3} className="text-center text-sm text-muted-foreground py-6">Sin registros todavía.</TableCell></TableRow>
-                  ) : work_leads.map((l) => (
-                    <TableRow key={l.id}>
-                      <TableCell className="whitespace-nowrap text-xs">{fmtDate(l.created_at)}</TableCell>
-                      <TableCell className="text-sm">{l.title}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.user_name || "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
+          <PaginatedTable
+            items={work_leads}
+            tabKey="works"
+            pagination={pagination}
+            setPagination={setPagination}
+            emptyMessage="Sin registros todavía."
+            columns={[
+              { header: "Fecha", render: (l) => <TableCell className="whitespace-nowrap text-xs">{fmtDate(l.created_at)}</TableCell> },
+              { header: "Obra", render: (l) => <TableCell className="text-sm">{l.title}</TableCell> },
+              { header: "Usuario", render: (l) => <TableCell className="text-sm text-muted-foreground">{l.user_name || "—"}</TableCell> },
+            ]}
+          />
 
-          <TabsContent value="form" className="mt-3">
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Perfil</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {form_leads.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center text-sm text-muted-foreground py-6">Sin leads del formulario todavía.</TableCell></TableRow>
-                  ) : form_leads.map((l) => (
-                    <TableRow key={l.id}>
-                      <TableCell className="whitespace-nowrap text-xs">{fmtDate(l.created_at)}</TableCell>
-                      <TableCell className="text-sm">{l.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.email}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.profile || "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
+          <PaginatedTable
+            items={form_leads}
+            tabKey="form"
+            pagination={pagination}
+            setPagination={setPagination}
+            emptyMessage="Sin leads del formulario todavía."
+            columns={[
+              { header: "Fecha", render: (l) => <TableCell className="whitespace-nowrap text-xs">{fmtDate(l.created_at)}</TableCell> },
+              { header: "Nombre", render: (l) => <TableCell className="text-sm">{l.name}</TableCell> },
+              { header: "Email", render: (l) => <TableCell className="text-sm text-muted-foreground">{l.email}</TableCell> },
+              { header: "Perfil", render: (l) => <TableCell className="text-sm text-muted-foreground">{l.profile || "—"}</TableCell> },
+            ]}
+          />
         </Tabs>
       </CardContent>
     </Card>
+  );
+}
+
+interface Column<T> {
+  header: string;
+  render: (item: T) => React.ReactNode;
+}
+
+function PaginatedTable<T extends { id: string }>({
+  items,
+  tabKey,
+  pagination,
+  setPagination,
+  emptyMessage,
+  columns,
+}: {
+  items: T[];
+  tabKey: PageKey;
+  pagination: PaginationState;
+  setPagination: React.Dispatch<React.SetStateAction<PaginationState>>;
+  emptyMessage: string;
+  columns: Column<T>[];
+}) {
+  const { currentPage, totalPages, paginated, start, setPage } = useCampaignPagination(
+    items,
+    tabKey,
+    pagination,
+    setPagination
+  );
+
+  return (
+    <TabsContent value={tabKey} className="mt-3 space-y-3">
+      <div className="rounded-md border overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map((c, i) => (
+                <TableHead key={i}>{c.header}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginated.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="text-center text-sm text-muted-foreground py-6">
+                  {emptyMessage}
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginated.map((item) => <TableRow key={item.id}>{columns.map((c) => c.render(item))}</TableRow>)
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {items.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <span>Mostrar</span>
+            <Select
+              value={String(pagination.pageSize)}
+              onValueChange={(v) =>
+                setPagination((prev) => ({
+                  ...prev,
+                  pageSize: Number(v) as PaginationState["pageSize"],
+                  pages: { ...prev.pages, [tabKey]: 1 },
+                }))
+              }
+            >
+              <SelectTrigger className="h-8 w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZES.map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span>por página</span>
+            <span className="hidden sm:inline">·</span>
+            <span className="hidden sm:inline">
+              {start + 1}-{Math.min(start + pagination.pageSize, items.length)} de {items.length}
+            </span>
+          </div>
+
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setPage(currentPage - 1)}
+                  className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              <PaginationItem className="px-2 text-muted-foreground">
+                Página {currentPage} de {totalPages}
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setPage(currentPage + 1)}
+                  className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+    </TabsContent>
   );
 }
