@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 import { Volume2, VolumeX, Sparkles, Mic, Wand2 } from "lucide-react";
 import aiStudioDemoMobileWebm from "@/assets/landing/promo/ai-studio-demo-mobile.webm";
 import aiStudioDemoMobileMp4 from "@/assets/landing/promo/ai-studio-demo-mobile.mp4";

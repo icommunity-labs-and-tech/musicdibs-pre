@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 import { Sparkles, Image as ImageIcon, Megaphone, Play, Film, Layers, FileImage, Instagram, Music2, Video } from "lucide-react";
 import neonPulse from "@/assets/landing/covers/neon-pulse.webp";
 import fuegoLento from "@/assets/landing/covers/fuego-lento.webp";

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Mic,
