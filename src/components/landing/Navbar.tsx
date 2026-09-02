@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Globe } from "lucide-react";
 import logo from "@/assets/landing/logo_dark.png";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 
 const LANGUAGES = [
   { code: "es", name: "Español", flag: "🇪🇸" },
@@ -106,6 +107,7 @@ export function Navbar({
             href={ctaHref}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackSignupCtaClick("landing_navbar", ctaHref)}
             className="inline-flex items-center gap-2 rounded-full px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-semibold text-primary-foreground shadow-[var(--shadow-magenta)] transition-transform hover:scale-105 whitespace-nowrap"
             style={{
               background:
