@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2, Briefcase, ArrowRight, Check, Sparkles, Star } from "lucide-react";
 import { GuestEmailModal } from "@/components/GuestEmailModal";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 
 // Annual capacity packs — connected to real Stripe prices via the
 // `create-credit-checkout` edge function.
@@ -229,7 +230,10 @@ export const PricingSection = () => {
                 <Button
                   className="w-full font-semibold rounded-full bg-page-surface hover:bg-page-surface-strong text-primary-foreground border border-page-border-strong py-3 text-sm"
                   disabled={loadingPlan !== null}
-                  onClick={() => handleCheckout('monthly')}
+                  onClick={() => {
+                    trackSignupCtaClick('pricing_monthly', '/login?tab=register');
+                    handleCheckout('monthly');
+                  }}
                 >
                   {loadingPlan === 'monthly' ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
                   {t("pricing.ctaMonthly")}
@@ -286,6 +290,7 @@ export const PricingSection = () => {
                   className="w-full font-bold rounded-full bg-primary-foreground hover:bg-muted text-brand py-4 text-base md:text-lg shadow-xl"
                   disabled={loadingPlan !== null}
                   onClick={() => {
+                    trackSignupCtaClick('pricing_annual_starter', '/login?tab=register');
                     trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
                     handleCheckout(STARTER_ANNUAL.planId);
                   }}
@@ -357,6 +362,7 @@ export const PricingSection = () => {
                   className={`w-full font-semibold rounded-full bg-primary-foreground/95 hover:bg-primary-foreground text-primary py-3.5 text-sm md:text-base shadow-lg ${ctaBuy.className}`}
                   disabled={loadingPlan !== null}
                   onClick={() => {
+                    trackSignupCtaClick('pricing_annual_plus', '/login?tab=register');
                     trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
                     handleCheckout(selectedAnnualPlanId);
                   }}
