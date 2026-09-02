@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
+    dataLayer?: Record<string, unknown>[];
   }
 }
 
@@ -83,4 +84,24 @@ export function trackSignupConversion() {
     currency: FALLBACK_CURRENCY,
   });
   sessionStorage.setItem(trackedKey, '1');
+}
+
+/**
+ * Evento GTM (dataLayer) — LEAD: registro de obra completado.
+ * Se empuja al dataLayer para que Google Tag Manager lo recoja con un
+ * activador de "Evento personalizado" (nombre: work_registered_lead) y
+ * dispare la etiqueta de conversión de lead configurada en GTM.
+ * Deduplicado por work_id via sessionStorage.
+ */
+export function trackWorkRegisteredLead(workId?: string, source?: string) {
+  const trackedKey = `gtm_lead_tracked_${workId || 'unknown'}`;
+  if (sessionStorage.getItem(trackedKey)) return;
+  sessionStorage.setItem(trackedKey, '1');
+
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: 'work_registered_lead',
+    work_id: workId || '',
+    lead_source: source || 'register_wizard',
+  });
 }

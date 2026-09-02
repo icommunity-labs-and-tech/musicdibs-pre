@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { registerWork } from '@/services/dashboardApi';
+import { trackWorkRegisteredLead } from '@/lib/googleAdsConversions';
 import { useProductTracking } from '@/hooks/useProductTracking';
 import type { WizardData } from '../types';
 
@@ -188,6 +189,7 @@ export function useRegisterSubmit({ data, resumeWorkId, onSuccess }: Options) {
       window.dispatchEvent(new CustomEvent('musicdibs:work-registered'));
       onSuccess(res.registrationId, res.blockchainHash || '');
       track('work_registered', { feature: 'register', metadata: { work_id: res.registrationId } });
+      trackWorkRegisteredLead(res.registrationId, 'register_wizard');
 
       const lastGen = sessionStorage.getItem('md_last_generation');
       if (lastGen) {
