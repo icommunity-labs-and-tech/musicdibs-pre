@@ -362,6 +362,7 @@ export const PricingSection = () => {
                   className={`w-full font-semibold rounded-full bg-primary-foreground/95 hover:bg-primary-foreground text-primary py-3.5 text-sm md:text-base shadow-lg ${ctaBuy.className}`}
                   disabled={loadingPlan !== null}
                   onClick={() => {
+                    trackSignupCtaClick('pricing_annual_plus', '/login?tab=register');
                     trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
                     handleCheckout(selectedAnnualPlanId);
                   }}
