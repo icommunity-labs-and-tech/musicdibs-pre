@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { getFooterLinks, getNavLinks } from "@/i18nLinks";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { reopenCookieSettings } from "./ConsentBanner";
 
 const Footer = () => {
   const { t, i18n } = useTranslation();
