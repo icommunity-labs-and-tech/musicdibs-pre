@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/HistoricalDataNotice';
+import { CampaignLeadsPanel } from '@/components/admin/CampaignLeadsPanel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -514,6 +515,9 @@ export default function AdminCampaignMetricsPage() {
 
       {/* Historical data quality notice */}
       <HistoricalDataNotice compact collapsible storageKey="admin-campaigns-notice" />
+
+      {/* Leads reales de las campañas de Google Ads */}
+      <CampaignLeadsPanel />
 
       {/* Summary KPIs */}
       {metrics?.summary && (

@@ -104,6 +104,7 @@ const MusicMakerPage = lazyWithRetry(() => import("./pages/MusicMakerPage"));
 const CreadorDeMusicaPage = lazyWithRetry(() => import("./pages/CreadorDeMusicaPage"));
 const AllInOneMusicPlatformPage = lazyWithRetry(() => import("./pages/AllInOneMusicPlatformPage"));
 const SwitchToMusicdibsPage = lazyWithRetry(() => import("./pages/SwitchToMusicdibsPage"));
+const CampaignLandingPage = lazyWithRetry(() => import("./pages/CampaignLandingPage"));
 const MetadataFinderPage = lazyWithRetry(() => import("./pages/MetadataFinderPage"));
 
 const AdminCampaignMetricsPage = lazyWithRetry(() => import("./pages/AdminCampaignMetricsPage"));
@@ -227,6 +228,7 @@ const App = () => (
               <Route path="/creador-de-musica" element={<CreadorDeMusicaPage />} />
               <Route path="/all-in-one-music-platform" element={<AllInOneMusicPlatformPage />} />
               <Route path="/switch-to-musicdibs" element={<SwitchToMusicdibsPage />} />
+              <Route path="/registro-gratis" element={<CampaignLandingPage />} />
               <Route path="/tools/metadata-finder" element={<MetadataFinderPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
