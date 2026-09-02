@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 import { Sparkles, Image as ImageIcon, Megaphone, Play, Film, Layers, FileImage, Instagram, Music2, Video } from "lucide-react";
 import neonPulse from "@/assets/landing/covers/neon-pulse.webp";
 import fuegoLento from "@/assets/landing/covers/fuego-lento.webp";
@@ -253,6 +254,7 @@ export const PromoVisualsShowcase = () => {
             href="https://www.musicdibs.com/login"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackSignupCtaClick("landing_promo_visuals")}
             className="inline-flex items-center gap-2 rounded-xl px-8 py-3.5 text-sm font-semibold text-primary-foreground bg-gradient-to-r from-accent via-brand to-primary hover:from-accent hover:via-brand hover:to-primary shadow-lg shadow-fuchsia-500/30 transition-all"
           >
             <Sparkles className="w-4 h-4" />

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Rocket, Play } from "lucide-react";
 import { SongGenerator } from "./SongGenerator";
 import { HowItWorksDialog } from "./HowItWorksDialog";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 
 export function Hero() {
   const [howOpen, setHowOpen] = useState(false);
@@ -30,7 +31,7 @@ export function Hero() {
           </p>
 
           <div id="cta" className="mt-9 flex flex-wrap items-center gap-4">
-            <a href="https://www.musicdibs.com/login" target="_blank" rel="noopener noreferrer" className="btn-magenta inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold">
+            <a href="https://www.musicdibs.com/login" target="_blank" rel="noopener noreferrer" onClick={() => trackSignupCtaClick("landing_hero", "https://www.musicdibs.com/login")} className="btn-magenta inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold">
               <Rocket className="h-4 w-4" />
               Probar IA Music Studio GRATIS
             </a>

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -75,6 +76,7 @@ export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalP
 
   const goToFinal = () => setStepIndex(FINAL_INDEX);
   const goRegister = () => {
+    trackSignupCtaClick("how_it_works_demo_modal");
     onOpenChange(false);
     navigate("/login?tab=register");
   };

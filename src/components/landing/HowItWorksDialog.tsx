@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Mic,
@@ -281,7 +282,7 @@ export function HowItWorksDialog({
                   href="https://www.musicdibs.com/login"
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => onOpenChange(false)}
+                  onClick={() => { trackSignupCtaClick("landing_how_it_works_dialog"); onOpenChange(false); }}
                   className="btn-magenta inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold"
                 >
                   Empezar <Sparkles className="h-4 w-4" />

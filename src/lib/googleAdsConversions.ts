@@ -105,3 +105,27 @@ export function trackWorkRegisteredLead(workId?: string, source?: string) {
     lead_source: source || 'register_wizard',
   });
 }
+
+/**
+ * Evento GTM (dataLayer) — CLIC en CTA de registro.
+ * Se empuja al hacer clic en cualquier banner/botón que lleva a la página de
+ * registro (/login?tab=register), para medir cuántos visitantes llegan a la
+ * página de signup antes de completarlo. En GTM: activador de "Evento
+ * personalizado" con nombre `signup_cta_click`. Sin deduplicado: cada clic
+ * cuenta (interesa el volumen de intención), pero se limita a 1 por segundo
+ * para evitar dobles disparos por bubbling.
+ */
+let lastSignupCtaPush = 0;
+export function trackSignupCtaClick(source: string, destination?: string) {
+  const now = Date.now();
+  if (now - lastSignupCtaPush < 1000) return;
+  lastSignupCtaPush = now;
+
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: 'signup_cta_click',
+    cta_source: source,
+    cta_destination: destination || '/login?tab=register',
+    cta_language: document.documentElement.lang || 'es',
+  });
+}

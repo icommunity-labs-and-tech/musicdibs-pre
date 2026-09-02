@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 import { Volume2, VolumeX, Sparkles, Mic, Wand2 } from "lucide-react";
 import aiStudioDemoMobileWebm from "@/assets/landing/promo/ai-studio-demo-mobile.webm";
 import aiStudioDemoMobileMp4 from "@/assets/landing/promo/ai-studio-demo-mobile.mp4";
@@ -189,6 +190,7 @@ export function VoiceToProduction() {
                 href="https://www.musicdibs.com/login"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackSignupCtaClick("landing_voice_to_production")}
                 className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-magenta to-pink px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-magenta/30 hover:shadow-magenta/50 hover:scale-[1.02] transition-all"
               >
                 Crear mi canción

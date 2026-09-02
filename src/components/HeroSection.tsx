@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { getFooterLinks } from "@/i18nLinks";
 import { useParallax } from "@/hooks/useParallax";
 import { HowItWorksDemoModal } from "@/components/HowItWorksDemoModal";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 
 export const HeroSection = () => {
   const { t, i18n } = useTranslation();
@@ -78,7 +79,7 @@ export const HeroSection = () => {
               variant="hero"
               size="xl"
               className="font-semibold"
-              onClick={() => navigate("/login?tab=register")}
+              onClick={() => { trackSignupCtaClick("home_hero"); navigate("/login?tab=register"); }}
             >
               {t("hero.cta_start")}
             </Button>
