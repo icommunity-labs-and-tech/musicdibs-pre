@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { Target, FileMusic, Mail, AlertCircle } from "lucide-react";
 import { adminApi } from "@/services/adminApi";
 
@@ -64,10 +66,35 @@ function KpiCard({ label, value, icon }: { label: string; value: number; icon?: 
   );
 }
 
+const PAGE_SIZES = [10, 25, 50] as const;
+
+type PageKey = "works" | "form";
+
+interface PaginationState {
+  pageSize: (typeof PAGE_SIZES)[number];
+  pages: Record<PageKey, number>;
+}
+
+function useCampaignPagination<T>(items: T[], key: PageKey, state: PaginationState, setState: React.Dispatch<React.SetStateAction<PaginationState>>) {
+  const totalPages = Math.max(1, Math.ceil(items.length / state.pageSize));
+  const currentPage = Math.min(state.pages[key], totalPages);
+  const start = (currentPage - 1) * state.pageSize;
+  const paginated = useMemo(() => items.slice(start, start + state.pageSize), [items, start, state.pageSize]);
+
+  const setPage = (p: number) =>
+    setState((prev) => ({ ...prev, pages: { ...prev.pages, [key]: Math.max(1, Math.min(p, totalPages)) } }));
+
+  return { currentPage, totalPages, paginated, start, setPage };
+}
+
 export function CampaignLeadsPanel() {
   const [data, setData] = useState<LeadsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageSize: 10,
+    pages: { works: 1, form: 1 },
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -161,59 +188,143 @@ export function CampaignLeadsPanel() {
             <TabsTrigger value="form">Formulario ({form_leads.length})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="works" className="mt-3">
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Obra</TableHead>
-                    <TableHead>Usuario</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {work_leads.length === 0 ? (
-                    <TableRow><TableCell colSpan={3} className="text-center text-sm text-muted-foreground py-6">Sin registros todavía.</TableCell></TableRow>
-                  ) : work_leads.map((l) => (
-                    <TableRow key={l.id}>
-                      <TableCell className="whitespace-nowrap text-xs">{fmtDate(l.created_at)}</TableCell>
-                      <TableCell className="text-sm">{l.title}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.user_name || "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
+          <PaginatedTable
+            items={work_leads}
+            tabKey="works"
+            pagination={pagination}
+            setPagination={setPagination}
+            emptyMessage="Sin registros todavía."
+            columns={[
+              { header: "Fecha", render: (l) => <TableCell className="whitespace-nowrap text-xs">{fmtDate(l.created_at)}</TableCell> },
+              { header: "Obra", render: (l) => <TableCell className="text-sm">{l.title}</TableCell> },
+              { header: "Usuario", render: (l) => <TableCell className="text-sm text-muted-foreground">{l.user_name || "—"}</TableCell> },
+            ]}
+          />
 
-          <TabsContent value="form" className="mt-3">
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Perfil</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {form_leads.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="text-center text-sm text-muted-foreground py-6">Sin leads del formulario todavía.</TableCell></TableRow>
-                  ) : form_leads.map((l) => (
-                    <TableRow key={l.id}>
-                      <TableCell className="whitespace-nowrap text-xs">{fmtDate(l.created_at)}</TableCell>
-                      <TableCell className="text-sm">{l.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.email}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{l.profile || "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </TabsContent>
+          <PaginatedTable
+            items={form_leads}
+            tabKey="form"
+            pagination={pagination}
+            setPagination={setPagination}
+            emptyMessage="Sin leads del formulario todavía."
+            columns={[
+              { header: "Fecha", render: (l) => <TableCell className="whitespace-nowrap text-xs">{fmtDate(l.created_at)}</TableCell> },
+              { header: "Nombre", render: (l) => <TableCell className="text-sm">{l.name}</TableCell> },
+              { header: "Email", render: (l) => <TableCell className="text-sm text-muted-foreground">{l.email}</TableCell> },
+              { header: "Perfil", render: (l) => <TableCell className="text-sm text-muted-foreground">{l.profile || "—"}</TableCell> },
+            ]}
+          />
         </Tabs>
       </CardContent>
     </Card>
+  );
+}
+
+interface Column<T> {
+  header: string;
+  render: (item: T) => React.ReactNode;
+}
+
+function PaginatedTable<T extends { id: string }>({
+  items,
+  tabKey,
+  pagination,
+  setPagination,
+  emptyMessage,
+  columns,
+}: {
+  items: T[];
+  tabKey: PageKey;
+  pagination: PaginationState;
+  setPagination: React.Dispatch<React.SetStateAction<PaginationState>>;
+  emptyMessage: string;
+  columns: Column<T>[];
+}) {
+  const { currentPage, totalPages, paginated, start, setPage } = useCampaignPagination(
+    items,
+    tabKey,
+    pagination,
+    setPagination
+  );
+
+  return (
+    <TabsContent value={tabKey} className="mt-3 space-y-3">
+      <div className="rounded-md border overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map((c, i) => (
+                <TableHead key={i}>{c.header}</TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginated.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="text-center text-sm text-muted-foreground py-6">
+                  {emptyMessage}
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginated.map((item) => <TableRow key={item.id}>{columns.map((c) => c.render(item))}</TableRow>)
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {items.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <span>Mostrar</span>
+            <Select
+              value={String(pagination.pageSize)}
+              onValueChange={(v) =>
+                setPagination((prev) => ({
+                  ...prev,
+                  pageSize: Number(v) as PaginationState["pageSize"],
+                  pages: { ...prev.pages, [tabKey]: 1 },
+                }))
+              }
+            >
+              <SelectTrigger className="h-8 w-20">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZES.map((size) => (
+                  <SelectItem key={size} value={String(size)}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span>por página</span>
+            <span className="hidden sm:inline">·</span>
+            <span className="hidden sm:inline">
+              {start + 1}-{Math.min(start + pagination.pageSize, items.length)} de {items.length}
+            </span>
+          </div>
+
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => setPage(currentPage - 1)}
+                  className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              <PaginationItem className="px-2 text-muted-foreground">
+                Página {currentPage} de {totalPages}
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => setPage(currentPage + 1)}
+                  className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+    </TabsContent>
   );
 }
