@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { getFooterLinks, getNavLinks } from "@/i18nLinks";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { reopenCookieSettings } from "./ConsentBanner";
 
 const Footer = () => {
   const { t, i18n } = useTranslation();
@@ -124,6 +125,17 @@ const Footer = () => {
             <Link to="/cookies" className="block text-primary-foreground/80 hover:text-primary-foreground transition-colors">
               {t('footer.cookies')}
             </Link>
+            <button
+              type="button"
+              onClick={reopenCookieSettings}
+              className="block text-primary-foreground/80 hover:text-primary-foreground transition-colors"
+            >
+              {i18n.resolvedLanguage === 'en'
+                ? 'Cookie settings'
+                : i18n.resolvedLanguage === 'pt-BR'
+                  ? 'Configurações de cookies'
+                  : 'Configuración de cookies'}
+            </button>
             <Link to="/terms" className="block text-primary-foreground/80 hover:text-primary-foreground transition-colors">
               {t('footer.terms')}
             </Link>
