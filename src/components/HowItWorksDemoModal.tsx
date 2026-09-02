@@ -75,6 +75,7 @@ export const HowItWorksDemoModal = ({ open, onOpenChange }: HowItWorksDemoModalP
 
   const goToFinal = () => setStepIndex(FINAL_INDEX);
   const goRegister = () => {
+    trackSignupCtaClick("how_it_works_demo_modal");
     onOpenChange(false);
     navigate("/login?tab=register");
   };

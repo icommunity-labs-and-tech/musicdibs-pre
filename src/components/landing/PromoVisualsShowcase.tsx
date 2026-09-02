@@ -253,6 +253,7 @@ export const PromoVisualsShowcase = () => {
             href="https://www.musicdibs.com/login"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackSignupCtaClick("landing_promo_visuals")}
             className="inline-flex items-center gap-2 rounded-xl px-8 py-3.5 text-sm font-semibold text-primary-foreground bg-gradient-to-r from-accent via-brand to-primary hover:from-accent hover:via-brand hover:to-primary shadow-lg shadow-fuchsia-500/30 transition-all"
           >
             <Sparkles className="w-4 h-4" />
