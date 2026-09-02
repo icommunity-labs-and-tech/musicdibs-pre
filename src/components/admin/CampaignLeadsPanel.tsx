@@ -75,7 +75,7 @@ interface PaginationState {
   pages: Record<PageKey, number>;
 }
 
-function useCampaignPagination(items: WorkLead[] | FormLead[], key: PageKey, state: PaginationState, setState: React.Dispatch<React.SetStateAction<PaginationState>>) {
+function useCampaignPagination<T>(items: T[], key: PageKey, state: PaginationState, setState: React.Dispatch<React.SetStateAction<PaginationState>>) {
   const totalPages = Math.max(1, Math.ceil(items.length / state.pageSize));
   const currentPage = Math.min(state.pages[key], totalPages);
   const start = (currentPage - 1) * state.pageSize;
