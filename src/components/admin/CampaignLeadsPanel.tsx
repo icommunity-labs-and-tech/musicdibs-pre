@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Target, FileMusic, Mail, AlertCircle } from "lucide-react";
-import { callAdminAction } from "@/services/adminApi";
+import { adminApi } from "@/services/adminApi";
 
 /**
  * Panel de leads de campaña para /dashboard/admin/campaigns.
@@ -75,7 +75,7 @@ export function CampaignLeadsPanel() {
       setLoading(true);
       setError(null);
       try {
-        const res = await callAdminAction<LeadsResponse>("get_registration_leads", { limit: 50 });
+        const res = (await adminApi.getRegistrationLeads(50)) as LeadsResponse;
         if (!cancelled) setData(res);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Error cargando los leads");
