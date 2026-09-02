@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { registerWork } from '@/services/dashboardApi';
+import { trackWorkRegisteredLead } from '@/lib/googleAdsConversions';
 import { useProductTracking } from '@/hooks/useProductTracking';
 import type { WizardData } from '../types';
 
