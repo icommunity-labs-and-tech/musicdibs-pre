@@ -4686,7 +4686,96 @@ serve(async (req) => {
       return json({ success: true, refunded });
     }
 
+    // ── get_registration_leads ────────────────────────────────────
+    // Leads reales de la campaña: obras registradas (conversión
+    // work_registered_lead) + leads del formulario de /registro-gratis.
+    if (action === "get_registration_leads") {
+      const limit = Math.min(payload.limit || 50, 200);
+      const now = Date.now();
+      const iso = (ms: number) => new Date(now - ms).toISOString();
+      const DAY = 24 * 60 * 60 * 1000;
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+
+      const countWorks = async (from?: string) => {
+        let q = admin
+          .from("works")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "registered");
+        if (from) q = q.gte("created_at", from);
+        const { count } = await q;
+        return count ?? 0;
+      };
+
+      const LEAD_PREFIX = "Lead landing campaña";
+      const countFormLeads = async (from?: string) => {
+        let q = admin
+          .from("contact_submissions")
+          .select("id", { count: "exact", head: true })
+          .like("subject", `${LEAD_PREFIX}%`);
+        if (from) q = q.gte("created_at", from);
+        const { count } = await q;
+        return count ?? 0;
+      };
+
+      const [
+        worksTotal, worksToday, works7d, works30d,
+        formTotal, formToday, form7d, form30d,
+      ] = await Promise.all([
+        countWorks(), countWorks(startOfToday.toISOString()), countWorks(iso(7 * DAY)), countWorks(iso(30 * DAY)),
+        countFormLeads(), countFormLeads(startOfToday.toISOString()), countFormLeads(iso(7 * DAY)), countFormLeads(iso(30 * DAY)),
+      ]);
+
+      const { data: recentWorks } = await admin
+        .from("works")
+        .select("id, title, created_at, user_id")
+        .eq("status", "registered")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      const userIds = [...new Set((recentWorks || []).map((w: any) => w.user_id).filter(Boolean))];
+      const profileMap = new Map<string, { email: string | null; display_name: string | null }>();
+      if (userIds.length > 0) {
+        const { data: profs } = await admin
+          .from("profiles")
+          .select("id, email, display_name")
+          .in("id", userIds);
+        for (const p of profs || []) {
+          profileMap.set(p.id, { email: p.email ?? null, display_name: p.display_name ?? null });
+        }
+      }
+
+      const { data: recentForm } = await admin
+        .from("contact_submissions")
+        .select("id, name, email, subject, message, created_at")
+        .like("subject", `${LEAD_PREFIX}%`)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      return json({
+        totals: {
+          works: { total: worksTotal, today: worksToday, last7: works7d, last30: works30d },
+          form: { total: formTotal, today: formToday, last7: form7d, last30: form30d },
+        },
+        work_leads: (recentWorks || []).map((w: any) => ({
+          id: w.id,
+          title: w.title,
+          created_at: w.created_at,
+          user_email: profileMap.get(w.user_id)?.email ?? null,
+          user_name: profileMap.get(w.user_id)?.display_name ?? null,
+        })),
+        form_leads: (recentForm || []).map((l: any) => ({
+          id: l.id,
+          name: l.name,
+          email: l.email,
+          profile: (l.subject || "").replace(`${LEAD_PREFIX}`, "").replace(/^\s*·\s*/, "") || null,
+          created_at: l.created_at,
+        })),
+      });
+    }
+
     // ── get_campaigns_catalog ─────────────────────────────────────
+
     if (action === "get_campaigns_catalog") {
       const { data: campaigns, error } = await admin
         .from("marketing_campaigns")
