@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Loader2, Briefcase, ArrowRight, Check, Sparkles, Star } from "lucide-react";
 import { GuestEmailModal } from "@/components/GuestEmailModal";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 
 // Annual capacity packs — connected to real Stripe prices via the
 // `create-credit-checkout` edge function.
