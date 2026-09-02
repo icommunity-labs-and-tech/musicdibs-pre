@@ -188,6 +188,7 @@ export function useRegisterSubmit({ data, resumeWorkId, onSuccess }: Options) {
       window.dispatchEvent(new CustomEvent('musicdibs:work-registered'));
       onSuccess(res.registrationId, res.blockchainHash || '');
       track('work_registered', { feature: 'register', metadata: { work_id: res.registrationId } });
+      trackWorkRegisteredLead(res.registrationId, 'register_wizard');
 
       const lastGen = sessionStorage.getItem('md_last_generation');
       if (lastGen) {

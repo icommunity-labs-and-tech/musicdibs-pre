@@ -176,6 +176,7 @@ export function RegisterWork({ summary }: { summary: DashboardSummary | null }) 
         // Success — reset form immediately so user can register more works
         // Blockchain certification happens asynchronously via webhook
         window.dispatchEvent(new CustomEvent('musicdibs:work-registered'));
+        trackWorkRegisteredLead(res.registrationId, 'register_work');
         toast.success(t('dashboard.registerWork.toastSuccess'), {
           description: t('dashboard.registerWork.toastSuccessDesc'),
           duration: 6000,
