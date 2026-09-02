@@ -66,6 +66,30 @@ function KpiCard({ label, value, icon }: { label: string; value: number; icon?: 
   );
 }
 
+const PAGE_SIZES = [10, 25, 50] as const;
+
+type PageKey = "works" | "form";
+
+function usePaginatedList<T>(items: T[], key: PageKey) {
+  const [pageSize, setPageSize] = useState<(typeof PAGE_SIZES)[number]>(10);
+  const [pages, setPages] = useState<Record<PageKey, number>>({ works: 1, form: 1 });
+
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const currentPage = Math.min(pages[key], totalPages);
+  const start = (currentPage - 1) * pageSize;
+  const paginated = useMemo(() => items.slice(start, start + pageSize), [items, start, pageSize]);
+
+  const setPage = (p: number) =>
+    setPages((prev) => ({ ...prev, [key]: Math.max(1, Math.min(p, totalPages)) }));
+
+  const handlePageSizeChange = (size: (typeof PAGE_SIZES)[number]) => {
+    setPageSize(size);
+    setPages((prev) => ({ ...prev, [key]: 1 }));
+  };
+
+  return { pageSize, setPageSize: handlePageSizeChange, currentPage, setPage, totalPages, paginated, start };
+}
+
 export function CampaignLeadsPanel() {
   const [data, setData] = useState<LeadsResponse | null>(null);
   const [loading, setLoading] = useState(true);
