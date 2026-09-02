@@ -290,6 +290,7 @@ export const PricingSection = () => {
                   className="w-full font-bold rounded-full bg-primary-foreground hover:bg-muted text-brand py-4 text-base md:text-lg shadow-xl"
                   disabled={loadingPlan !== null}
                   onClick={() => {
+                    trackSignupCtaClick('pricing_annual_starter', '/login?tab=register');
                     trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
                     handleCheckout(STARTER_ANNUAL.planId);
                   }}
