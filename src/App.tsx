@@ -45,6 +45,7 @@ const AdminABTests = lazyWithRetry(() => import("./pages/AdminABTests"));
 const UserLogin = lazyWithRetry(() => import("./pages/UserLogin"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword"));
 const PaymentSuccess = lazyWithRetry(() => import("./pages/PaymentSuccess"));
+const ThankYouPage = lazyWithRetry(() => import("./pages/ThankYouPage"));
 const DashboardLayout = lazyWithRetry(() => import("./pages/DashboardLayout"));
 const DashboardHome = lazyWithRetry(() => import("./pages/DashboardHome"));
 const RegisterPage = lazyWithRetry(() => import("./pages/RegisterPage"));
@@ -246,6 +247,7 @@ const App = () => (
               <Route path="/login" element={<UserLogin />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/auth/payment-success" element={<PaymentSuccess />} />
+              <Route path="/gracias" element={<ThankYouPage />} />
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<DashboardHome />} />
                 <Route path="launch" element={<LaunchPage />} />

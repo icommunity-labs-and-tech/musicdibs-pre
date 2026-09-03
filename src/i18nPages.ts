@@ -1,4 +1,4 @@
-export const pagesTranslations: Record<string, { translation: { verify: any; managerBanner: any; userLogin: any; whyBadge: any; artistsAB: any; promoBanner: any; footerExtra: any; calcStreams: any } }> = {
+export const pagesTranslations: Record<string, { translation: { verify: any; managerBanner: any; userLogin: any; whyBadge: any; artistsAB: any; promoBanner: any; footerExtra: any; calcStreams: any; thankYou: any } }> = {
   es: {
     translation: {
       verify: {
@@ -71,7 +71,13 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
       artistsAB: { joinFreeToday: '🎵 Únete gratis hoy', startCareer: 'Comienza tu carrera', whoTrusts: 'Mira quién confía en nosotros' },
       promoBanner: { label: 'San Valentín', title: 'Verano Musicdibs', offer: '-25% · Solo 7 días', copyAria: 'Copiar código', cta: 'Aprovechar oferta' },
       footerExtra: { web: 'Web', version: 'Versión 1.0.0' },
-      calcStreams: { unit: 'streams' },
+       calcStreams: { unit: 'streams' },
+       thankYou: {
+         seoTitle: 'Gracias | MusicDibs', seoDescription: 'Confirmación de tu registro o compra en MusicDibs.',
+         signup: { title: '¡Gracias por registrarte!', description: 'Tu cuenta se ha creado. Revisa tu email para confirmar el acceso y empezar a usar MusicDibs.' },
+         purchase: { title: '¡Gracias por tu compra!', description: 'Hemos recibido tu pago. Tus créditos y servicios estarán disponibles en tu cuenta en unos instantes.' },
+         goToDashboard: 'Ir a mi cuenta', exploreAiStudio: 'Explorar AI Music Studio',
+       },
     },
   },
   en: {
@@ -146,7 +152,13 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
       artistsAB: { joinFreeToday: '🎵 Join free today', startCareer: 'Start your career', whoTrusts: 'See who trusts us' },
       promoBanner: { label: "Valentine's Day", title: 'Musicdibs Summer', offer: '-25% · 7 days only', copyAria: 'Copy code', cta: 'Get the deal' },
       footerExtra: { web: 'Web', version: 'Version 1.0.0' },
-      calcStreams: { unit: 'streams' },
+       calcStreams: { unit: 'streams' },
+       thankYou: {
+         seoTitle: 'Thank you | MusicDibs', seoDescription: 'Confirmation of your MusicDibs registration or purchase.',
+         signup: { title: 'Thanks for signing up!', description: 'Your account has been created. Check your email to confirm access and start using MusicDibs.' },
+         purchase: { title: 'Thanks for your purchase!', description: 'Your payment has been received. Your credits and services will be available in your account shortly.' },
+         goToDashboard: 'Go to my account', exploreAiStudio: 'Explore AI Music Studio',
+       },
     },
   },
   'pt-BR': {
@@ -221,7 +233,13 @@ export const pagesTranslations: Record<string, { translation: { verify: any; man
       artistsAB: { joinFreeToday: '🎵 Entre grátis hoje', startCareer: 'Comece sua carreira', whoTrusts: 'Veja quem confia em nós' },
       promoBanner: { label: 'Dia dos Namorados', title: 'Verão Musicdibs', offer: '-25% · Só 7 dias', copyAria: 'Copiar código', cta: 'Aproveitar oferta' },
       footerExtra: { web: 'Web', version: 'Versão 1.0.0' },
-      calcStreams: { unit: 'streams' },
+       calcStreams: { unit: 'streams' },
+       thankYou: {
+         seoTitle: 'Obrigado | MusicDibs', seoDescription: 'Confirmação do seu cadastro ou compra no MusicDibs.',
+         signup: { title: 'Obrigado por se cadastrar!', description: 'Sua conta foi criada. Verifique seu email para confirmar o acesso e começar a usar o MusicDibs.' },
+         purchase: { title: 'Obrigado pela sua compra!', description: 'Recebemos seu pagamento. Seus créditos e serviços estarão disponíveis na sua conta em instantes.' },
+         goToDashboard: 'Ir para minha conta', exploreAiStudio: 'Explorar o AI Music Studio',
+       },
     },
   },
 };

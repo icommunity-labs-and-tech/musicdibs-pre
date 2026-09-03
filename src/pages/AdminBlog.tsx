@@ -195,7 +195,7 @@ const AdminBlog = () => {
     .sort((a, b) => new Date(a.published_at || a.created_at).getTime() - new Date(b.published_at || b.created_at).getTime());
 
   const saveMutation = useMutation({
-    mutationFn: async (): Promise<{ id: string; isNew: boolean }> => {
+    mutationFn: async (): Promise<{ id: string; isNew: boolean; published: boolean }> => {
       const payload = {
         title: form.title,
         slug: form.slug || slugify(form.title),
@@ -214,11 +214,11 @@ const AdminBlog = () => {
       if (editing) {
         const { error } = await supabase.from("blog_posts").update(payload).eq("id", editing);
         if (error) throw error;
-        return { id: editing, isNew: false };
+        return { id: editing, isNew: false, published: payload.published };
       } else {
         const { data, error } = await supabase.from("blog_posts").insert(payload).select("id").single();
         if (error) throw error;
-        return { id: data.id as string, isNew: true };
+        return { id: data.id as string, isNew: true, published: payload.published };
       }
     },
     onError: (err: Error) => {
@@ -304,6 +304,12 @@ const AdminBlog = () => {
       if (shouldTranslate && isSpanish) {
         await triggerTranslations(result.id);
       }
+      if (result.published) {
+        const { error } = await supabase.functions.invoke("resubmit-sitemap-gsc", { body: { reason: "blog_post_published" } });
+        if (error) {
+          toast({ title: "Publicado con aviso", description: "El artículo está publicado, pero no se pudo reenviar el sitemap.", variant: "destructive" });
+        }
+      }
       finalizeAfterSave();
     } catch {
       // already toasted
@@ -329,9 +335,11 @@ const AdminBlog = () => {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async (_data, id) => {
       toast({ title: "Publicado", description: "El artículo se ha publicado ahora." });
       queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
+      const { error } = await supabase.functions.invoke("resubmit-sitemap-gsc", { body: { reason: "blog_post_published" } });
+      if (error) toast({ title: "Publicado con aviso", description: "No se pudo reenviar el sitemap automáticamente.", variant: "destructive" });
     },
   });
 

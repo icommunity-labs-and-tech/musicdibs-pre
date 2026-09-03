@@ -12,7 +12,7 @@ const AW_ACCOUNT = 'AW-18310773693';
 const PURCHASE_SEND_TO = `${AW_ACCOUNT}/Wr0CCKOW0NAcEL33oJtE`;
 const SIGNUP_SEND_TO = `${AW_ACCOUNT}/YBe6CK2M69AcEL33oJtE`;
 const LEAD_SEND_TO = `${AW_ACCOUNT}/lJ5FCLTVw-wcEL33oJtE`;
-const FALLBACK_VALUE = 19.9; // valor medio de compra, usado si Stripe no confirma a tiempo
+const FALLBACK_VALUE = 3;
 const FALLBACK_CURRENCY = 'EUR';
 
 /**
@@ -149,7 +149,7 @@ export function trackWorkRegisteredLead(workId?: string, source?: string) {
   //    que era la causa de que la accion de conversion no registrara nada).
   window.gtag?.('event', 'conversion', {
     send_to: LEAD_SEND_TO,
-    value: 1.0,
+    value: 5.0,
     currency: FALLBACK_CURRENCY,
     transaction_id: workId || '',
   });

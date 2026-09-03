@@ -156,6 +156,7 @@ export const adminApi = {
   saveCampaign: (campaign: AdminActionPayload) => adminAction('save_campaign', campaign),
   syncStripeCoupons: () => adminAction('sync_stripe_coupons'),
   getCampaignMetrics: (filters: { periodType?: string; weekStart?: string; month?: string; year?: string }) => adminAction('get_campaign_metrics', filters),
+  getGoogleAdsSpend: (range: { start: string; end: string }) => adminAction('get_google_ads_spend', range),
   getCampaignDetail: (campaign_name: string) => adminAction('get_campaign_detail', { campaign_name }),
   backfillOrdersFromStripe: (dry_run = false, limit?: number) => adminAction('backfill_orders_from_stripe', { dry_run, limit }),
   getUserPurchases: (user_id: string) => adminAction('get_user_purchases', { user_id }),

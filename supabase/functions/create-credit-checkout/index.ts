@@ -725,9 +725,7 @@ serve(async (req) => {
     const rawOrigin = req.headers.get("origin") || "";
     const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://musicdibs.com";
 
-    const successUrl = isGuest
-      ? `${origin}/auth/payment-success?session_id={CHECKOUT_SESSION_ID}`
-      : `${origin}/dashboard/credits?payment=success&session_id={CHECKOUT_SESSION_ID}`;
+    const successUrl = `${origin}/auth/payment-success?session_id={CHECKOUT_SESSION_ID}`;
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
       mode: plan.mode,
       success_url: successUrl,

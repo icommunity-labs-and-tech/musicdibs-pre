@@ -13,12 +13,9 @@ export default function PaymentSuccess() {
     ranRef.current = true;
 
     const sessionId = searchParams.get('session_id');
-    // Propagamos payment=success&session_id a /dashboard/credits para que
-    // dispare el mismo tracking de conversion de compra que usan los usuarios
-    // logueados (ver trackPurchaseConversion en googleAdsConversions.ts).
-    const dashboardDestination = sessionId
-      ? `/dashboard/credits?welcome=true&payment=success&session_id=${encodeURIComponent(sessionId)}`
-      : '/dashboard/credits?welcome=true';
+    const thankYouDestination = sessionId
+      ? `/gracias?type=purchase&session_id=${encodeURIComponent(sessionId)}`
+      : '/gracias?type=purchase';
 
     (async () => {
       const email = sessionStorage.getItem('guest_checkout_email');
@@ -29,7 +26,7 @@ export default function PaymentSuccess() {
       if (sessionData?.session) {
         sessionStorage.removeItem('guest_checkout_email');
         sessionStorage.removeItem('guest_checkout_password');
-        navigate(dashboardDestination, { replace: true });
+        navigate(thankYouDestination, { replace: true });
         return;
       }
 
@@ -38,7 +35,7 @@ export default function PaymentSuccess() {
         if (!error) {
           sessionStorage.removeItem('guest_checkout_email');
           sessionStorage.removeItem('guest_checkout_password');
-          navigate(dashboardDestination, { replace: true });
+          navigate(thankYouDestination, { replace: true });
           return;
         }
         console.error('[PaymentSuccess] auto-login failed:', error.message);

@@ -5,8 +5,36 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
 const GATEWAY_URL = 'https://connector-gateway.lovable.dev/google_search_console/webmasters/v3';
-const SITE_URL = 'sc-domain:musicdibs.com';
+const TARGET_URL = 'https://www.musicdibs.com/';
 const SITEMAP_URL = 'https://www.musicdibs.com/sitemap.xml';
+
+type SiteEntry = { siteUrl: string; permissionLevel?: string };
+
+function coversTarget(siteUrl: string, target: URL): boolean {
+  if (siteUrl.startsWith('sc-domain:')) {
+    const domain = siteUrl.slice('sc-domain:'.length).toLowerCase();
+    const host = target.hostname.toLowerCase();
+    return host === domain || host.endsWith(`.${domain}`);
+  }
+  try {
+    return target.href.startsWith(new URL(siteUrl).href);
+  } catch {
+    return false;
+  }
+}
+
+async function resolveVerifiedSite(headers: Record<string, string>): Promise<string> {
+  const response = await fetch(`${GATEWAY_URL}/sites`, { headers });
+  if (!response.ok) throw new Error(`GSC property list failed [${response.status}]`);
+  const { siteEntry = [] } = await response.json() as { siteEntry?: SiteEntry[] };
+  const target = new URL(TARGET_URL);
+  const matches = siteEntry.filter((entry) => entry.permissionLevel !== 'siteUnverifiedUser' && coversTarget(entry.siteUrl, target));
+  if (matches.length === 0) throw new Error('No verified Search Console property covers the published site');
+  const exactRoot = matches.find((entry) => entry.siteUrl === TARGET_URL);
+  if (exactRoot) return exactRoot.siteUrl;
+  if (matches.length === 1) return matches[0].siteUrl;
+  throw new Error('Multiple verified Search Console properties cover the published site');
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -62,7 +90,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    const encodedSite = encodeURIComponent(SITE_URL);
+    const gatewayHeaders = {
+      Authorization: `Bearer ${LOVABLE_API_KEY}`,
+      'X-Connection-Api-Key': GSC_API_KEY,
+    };
+    const siteUrl = await resolveVerifiedSite(gatewayHeaders);
+    const encodedSite = encodeURIComponent(siteUrl);
     const encodedSitemap = encodeURIComponent(SITEMAP_URL);
 
     // Submit (PUT is idempotent — Google re-fetches the sitemap on each call)
@@ -70,10 +103,7 @@ Deno.serve(async (req) => {
       `${GATEWAY_URL}/sites/${encodedSite}/sitemaps/${encodedSitemap}`,
       {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          'X-Connection-Api-Key': GSC_API_KEY,
-        },
+        headers: gatewayHeaders,
       },
     );
 
@@ -86,16 +116,13 @@ Deno.serve(async (req) => {
     const statusRes = await fetch(
       `${GATEWAY_URL}/sites/${encodedSite}/sitemaps/${encodedSitemap}`,
       {
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          'X-Connection-Api-Key': GSC_API_KEY,
-        },
+        headers: gatewayHeaders,
       },
     );
     const status = statusRes.ok ? await statusRes.json() : null;
 
     return new Response(
-      JSON.stringify({ success: true, sitemap: SITEMAP_URL, status }),
+      JSON.stringify({ success: true, siteUrl, sitemap: SITEMAP_URL, status }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (error: unknown) {
