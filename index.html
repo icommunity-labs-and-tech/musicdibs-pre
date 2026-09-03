@@ -127,13 +127,16 @@
     }
     </script>
 
-    <!-- GA4 y Google Ads se gestionan ahora desde Google Tag Manager (GTM-T8ZBZZMF).
-         Mantenemos solo el stub dataLayer/gtag para que los eventos de la app
-         (A/B tests, conversiones Ads) lleguen al dataLayer de GTM. -->
+    <!-- Google tag (gtag.js) — Google Ads AW-18310773693.
+         GTM (GTM-T8ZBZZMF) sigue gestionando GA4 y los triggers de dataLayer,
+         pero la etiqueta de Ads se carga aquí para que los eventos de
+         conversión con send_to (registro, lead y compra) se atribuyan siempre. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18310773693"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
+      gtag('config', 'AW-18310773693');
     </script>
     <style>
       .app-lcp-shell {
