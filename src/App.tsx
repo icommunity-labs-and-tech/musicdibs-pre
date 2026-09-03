@@ -35,6 +35,7 @@ const AISongGeneratorPage = lazyWithRetry(() => import("./pages/AISongGeneratorP
 const GeneradorCancionesIAPage = lazyWithRetry(() => import("./pages/GeneradorCancionesIAPage"));
 const CopyrightASongPage = lazyWithRetry(() => import("./pages/CopyrightASongPage"));
 const RegistroMusicalPage = lazyWithRetry(() => import("./pages/RegistroMusicalPage"));
+const ComoFuncionaPage = lazyWithRetry(() => import("./pages/ComoFuncionaPage"));
 const MusicDistributionPage = lazyWithRetry(() => import("./pages/MusicDistributionPage"));
 const MusicDistPage = lazyWithRetry(() => import("./pages/MusicDistPage"));
 const News = lazyWithRetry(() => import("./pages/News"));
@@ -219,7 +220,8 @@ const App = () => (
               <Route path="/copyright-a-song" element={<CopyrightASongPage />} />
               <Route path="/ai-song-generator" element={<AISongGeneratorPage />} />
               <Route path="/generador-canciones-ia" element={<GeneradorCancionesIAPage />} />
-              <Route path="/registro-musical" element={<RegistroMusicalPage />} />
+<Route path="/registro-musical" element={<RegistroMusicalPage />} />
+              <Route path="/como-funciona" element={<ComoFuncionaPage />} />
               <Route path="/music-distribution" element={<MusicDistributionPage />} />
               <Route path="/music-dist/*" element={<MusicDistPage />} />
               <Route path="/musicdibs-vs-distrokid" element={<MusicdibsVsDistroKidPage />} />
