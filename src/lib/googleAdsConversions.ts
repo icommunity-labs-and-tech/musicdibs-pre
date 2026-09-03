@@ -50,12 +50,20 @@ export function trackPurchaseConversion(sessionId: string) {
     attempts++;
     const { data: order } = await supabase
       .from('orders')
-      .select('amount_gross, currency')
+      .select('amount_gross, currency, customer_email')
       .eq('stripe_checkout_session_id', sessionId)
       .eq('order_status', 'paid')
       .maybeSingle();
 
     if (order) {
+      // Email para enhanced conversions: el guardado por el webhook en la
+      // orden, o el del usuario autenticado como fallback.
+      let email = order.customer_email as string | null;
+      if (!email) {
+        const { data: authData } = await supabase.auth.getUser();
+        email = authData.user?.email || null;
+      }
+      await setEnhancedConversionEmail(email);
       window.gtag?.('event', 'conversion', {
         send_to: PURCHASE_SEND_TO,
         value: Number(order.amount_gross) || FALLBACK_VALUE,
@@ -90,14 +98,16 @@ export function trackPurchaseConversion(sessionId: string) {
  * registro (email/password) con exito. No requiere transaction_id (no es una
  * compra); se deduplica con una key fija en sessionStorage.
  */
-export function trackSignupConversion() {
+export function trackSignupConversion(email?: string) {
   const trackedKey = 'ga_signup_tracked';
   if (sessionStorage.getItem(trackedKey)) return;
 
-  window.gtag?.('event', 'conversion', {
-    send_to: SIGNUP_SEND_TO,
-    value: FALLBACK_VALUE,
-    currency: FALLBACK_CURRENCY,
+  void setEnhancedConversionEmail(email).finally(() => {
+    window.gtag?.('event', 'conversion', {
+      send_to: SIGNUP_SEND_TO,
+      value: FALLBACK_VALUE,
+      currency: FALLBACK_CURRENCY,
+    });
   });
   sessionStorage.setItem(trackedKey, '1');
 }
