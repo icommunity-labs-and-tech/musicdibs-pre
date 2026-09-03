@@ -56,6 +56,7 @@ const staticEntries: SitemapEntry[] = [
   { path: "/all-in-one-music-platform", changefreq: "monthly", priority: "0.9" },
   { path: "/switch-to-musicdibs", changefreq: "monthly", priority: "0.8" },
   { path: "/tools/metadata-finder", changefreq: "monthly", priority: "0.7" },
+  { path: "/certificado-blockchain", changefreq: "monthly", priority: "0.8" },
   { path: "/musicdibs-vs-distrokid", changefreq: "monthly", priority: "0.6" },
   { path: "/musicdibs-vs-loudly", changefreq: "monthly", priority: "0.6" },
   { path: "/musicdibs-vs-landr", changefreq: "monthly", priority: "0.6" },
