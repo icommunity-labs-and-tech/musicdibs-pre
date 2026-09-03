@@ -2047,9 +2047,11 @@ export type Database = {
           attributed_campaign_name: string | null
           billing_interval: string | null
           campaign_id: string | null
+          country: string | null
           coupon_code: string | null
           created_at: string
           currency: string
+          customer_email: string | null
           dispute_fee: number
           excluded_reason: string | null
           id: string
@@ -2088,9 +2090,11 @@ export type Database = {
           attributed_campaign_name?: string | null
           billing_interval?: string | null
           campaign_id?: string | null
+          country?: string | null
           coupon_code?: string | null
           created_at?: string
           currency?: string
+          customer_email?: string | null
           dispute_fee?: number
           excluded_reason?: string | null
           id?: string
@@ -2129,9 +2133,11 @@ export type Database = {
           attributed_campaign_name?: string | null
           billing_interval?: string | null
           campaign_id?: string | null
+          country?: string | null
           coupon_code?: string | null
           created_at?: string
           currency?: string
+          customer_email?: string | null
           dispute_fee?: number
           excluded_reason?: string | null
           id?: string
