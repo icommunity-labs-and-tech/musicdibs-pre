@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { getAttribution } from '@/lib/attribution';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -157,7 +158,16 @@ export default function UserLogin() {
     const form = new FormData(e.currentTarget);
     const signUpLang = i18n.resolvedLanguage || 'es';
     const signupEmail = form.get('email') as string;
-    const { error } = await signUp(signupEmail, form.get('password') as string, { language: signUpLang });
+    const attribution = getAttribution();
+    const { error } = await signUp(signupEmail, form.get('password') as string, {
+      language: signUpLang,
+      ...(attribution?.utm_source ? { utm_source: attribution.utm_source } : {}),
+      ...(attribution?.utm_medium ? { utm_medium: attribution.utm_medium } : {}),
+      ...(attribution?.utm_campaign ? { utm_campaign: attribution.utm_campaign } : {}),
+      ...(attribution?.utm_content ? { utm_content: attribution.utm_content } : {}),
+      ...(attribution?.utm_term ? { utm_term: attribution.utm_term } : {}),
+      ...(attribution?.landing_path ? { landing_path: attribution.landing_path } : {}),
+    });
     setLoading(false);
     if (error) {
       setError(error.message);

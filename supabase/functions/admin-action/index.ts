@@ -5450,6 +5450,109 @@ serve(async (req) => {
       });
     }
 
+    // ── get_leads_by_language ───────────────────────────────────
+    // Leads (registros de usuario + formulario landing) agrupados por idioma,
+    // con el UTM capturado en el signup (user_metadata) o en el mensaje del
+    // formulario, para ver qué flujos traen tráfico antes de las compras.
+    if (action === "get_leads_by_language") {
+      const start = typeof payload.start === "string" ? payload.start : "";
+      const end = typeof payload.end === "string" ? payload.end : "";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return json({ error: "Invalid date range" }, 400);
+      const endExclusive = new Date(`${end}T00:00:00Z`);
+      endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
+      const startIso = `${start}T00:00:00Z`;
+      const endIso = endExclusive.toISOString();
+
+      // 1) Registros de usuarios (auth.users) en el rango
+      type SignupLead = {
+        user_id: string;
+        email: string;
+        language: string;
+        created_at: string;
+        utm_source: string | null;
+        utm_medium: string | null;
+        utm_campaign: string | null;
+        landing_path: string | null;
+      };
+      const signups: SignupLead[] = [];
+      const perPage = 1000;
+      for (let page = 1; page <= 50; page++) {
+        const { data, error } = await admin.auth.admin.listUsers({ perPage, page });
+        if (error) break;
+        const users = data?.users || [];
+        for (const u of users as any[]) {
+          const createdAt = u.created_at;
+          if (!createdAt || createdAt < startIso || createdAt >= endIso) continue;
+          const meta = u.user_metadata || {};
+          signups.push({
+            user_id: u.id,
+            email: u.email || "",
+            language: (meta.language || "—").toString(),
+            created_at: createdAt,
+            utm_source: meta.utm_source || null,
+            utm_medium: meta.utm_medium || null,
+            utm_campaign: meta.utm_campaign || null,
+            landing_path: meta.landing_path || null,
+          });
+        }
+        if (users.length < perPage) break;
+      }
+      signups.sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+      // 2) Leads del formulario landing (contact_submissions)
+      const LEAD_PREFIX = "Lead landing campaña";
+      const { data: formRows } = await admin
+        .from("contact_submissions")
+        .select("id, name, email, subject, message, created_at")
+        .like("subject", `${LEAD_PREFIX}%`)
+        .gte("created_at", startIso)
+        .lt("created_at", endIso)
+        .order("created_at", { ascending: false })
+        .limit(2000);
+
+      const pickLine = (message: string, label: string): string | null => {
+        const match = (message || "").match(new RegExp(`^${label}:\\s*(.+)$`, "mi"));
+        return match ? match[1].trim() : null;
+      };
+
+      const formLeads = (formRows || []).map((l: any) => ({
+        id: l.id,
+        name: l.name,
+        email: l.email,
+        language: pickLine(l.message, "Idioma") || "—",
+        profile: (l.subject || "").replace(`${LEAD_PREFIX}`, "").replace(/^\s*·\s*/, "") || null,
+        created_at: l.created_at,
+        utm_source: pickLine(l.message, "utm_source"),
+        utm_medium: pickLine(l.message, "utm_medium"),
+        utm_campaign: pickLine(l.message, "utm_campaign"),
+      }));
+
+      // 3) Agregados por idioma y por campaña (registros + formulario)
+      const byLanguage: Record<string, { language: string; signups: number; form_leads: number; total: number }> = {};
+      const byCampaign: Record<string, { campaign: string; signups: number; form_leads: number; total: number }> = {};
+      const bump = (map: Record<string, any>, key: string, field: "signups" | "form_leads") => {
+        map[key] ||= { [map === byLanguage ? "language" : "campaign"]: key, signups: 0, form_leads: 0, total: 0 };
+        map[key][field] += 1;
+        map[key].total += 1;
+      };
+      for (const s of signups) {
+        bump(byLanguage, s.language, "signups");
+        bump(byCampaign, s.utm_campaign || "Directo / sin UTM", "signups");
+      }
+      for (const l of formLeads) {
+        bump(byLanguage, l.language, "form_leads");
+        bump(byCampaign, l.utm_campaign || "Directo / sin UTM", "form_leads");
+      }
+
+      return json({
+        by_language: Object.values(byLanguage).sort((a, b) => b.total - a.total),
+        by_campaign: Object.values(byCampaign).sort((a, b) => b.total - a.total),
+        signups,
+        form_leads: formLeads,
+        range: { start, end },
+      });
+    }
+
     // ── get_revenue_by_utm ────────────────────────────────────────
     if (action === "get_revenue_by_utm") {
       const start = typeof payload.start === "string" ? payload.start : "";
