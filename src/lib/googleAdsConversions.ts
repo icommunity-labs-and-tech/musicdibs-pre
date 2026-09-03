@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { hasAdConsent } from '@/components/ConsentBanner';
 
 declare global {
   interface Window {
@@ -13,6 +14,20 @@ const SIGNUP_SEND_TO = `${AW_ACCOUNT}/YBe6CK2M69AcEL33oJtE`;
 const LEAD_SEND_TO = `${AW_ACCOUNT}/lJ5FCLTVw-wcEL33oJtE`;
 const FALLBACK_VALUE = 19.9; // valor medio de compra, usado si Stripe no confirma a tiempo
 const FALLBACK_CURRENCY = 'EUR';
+
+/**
+ * Enhanced conversions: envia el email del usuario a Google Ads (la etiqueta lo
+ * hashea automaticamente) para mejorar la atribucion y la optimizacion por
+ * valor. Solo se envia si el banner de consentimiento lo permite.
+ */
+async function setEnhancedConversionEmail(email?: string | null) {
+  if (!email) return;
+  try {
+    if (await hasAdConsent()) {
+      window.gtag?.('set', 'user_data', { email });
+    }
+  } catch { /* no bloquear la conversion por esto */ }
+}
 
 /**
  * Google Ads conversion tracking — COMPRA.
