@@ -4,7 +4,7 @@
 import { writeFileSync } from "fs";
 import { resolve } from "path";
 
-const BASE_URL = "https://www.musicdibs.com";
+const BASE_URL = "https://musicdibs.com";
 
 const SUPABASE_URL = "https://kmwehyixenybegwhqljx.supabase.co";
 const SUPABASE_ANON_KEY =
@@ -57,6 +57,7 @@ const staticEntries: SitemapEntry[] = [
   { path: "/switch-to-musicdibs", changefreq: "monthly", priority: "0.8" },
   { path: "/tools/metadata-finder", changefreq: "monthly", priority: "0.7" },
   { path: "/certificado-blockchain", changefreq: "monthly", priority: "0.8" },
+  { path: "/registro-gratis", changefreq: "monthly", priority: "0.8" },
   { path: "/musicdibs-vs-distrokid", changefreq: "monthly", priority: "0.6" },
   { path: "/musicdibs-vs-loudly", changefreq: "monthly", priority: "0.6" },
   { path: "/musicdibs-vs-landr", changefreq: "monthly", priority: "0.6" },

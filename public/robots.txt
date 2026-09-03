@@ -38,4 +38,4 @@ Disallow: /*?product_view=
 Disallow: /*?product_count=
 Disallow: /*?prod=
 
-Sitemap: https://www.musicdibs.com/sitemap.xml
+Sitemap: https://musicdibs.com/sitemap.xml
