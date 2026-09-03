@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import "@/styles/landing-ai-studio.css";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { BackgroundScene } from "@/components/landing/BackgroundScene";
