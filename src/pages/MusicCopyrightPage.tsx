@@ -67,7 +67,7 @@ const COPY: Record<Lang, {
   },
   en: {
     seoTitle: "How to Copyright a Song in 3 Steps (2026 Guide)",
-    seoDesc: "Copyright a song today: 3 steps, proof of authorship in minutes, valid in 175+ countries. See how blockchain timestamping compares with the US Copyright Office on cost and speed. First song free."
+    seoDesc: "Copyright a song today: 3 steps, proof of authorship in minutes, valid in 175+ countries. See how blockchain timestamping compares with the US Copyright Office on cost and speed. First song free.",
     badge: "2026 guide",
     h1: "How to copyright a song in 2026",
     subtitle: "Everything you need to protect your music legally. What rights you own, how to register them and which path is fastest and cheapest.",
