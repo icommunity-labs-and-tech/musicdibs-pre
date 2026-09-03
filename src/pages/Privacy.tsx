@@ -79,6 +79,7 @@ const Privacy = () => {
             <h3 className="text-xl font-semibold text-brand">{t('privacy.data_recipients_title')}</h3>
             <p className="text-page-fg-muted">{t('privacy.data_recipients_1')}</p>
             <p className="text-page-fg-muted">{t('privacy.data_recipients_2')}</p>
+            <p className="text-page-fg-muted">{t('privacy.data_recipients_3')}</p>
 
             <h3 className="text-xl font-semibold text-brand">{t('privacy.data_rights_title')}</h3>
             <p className="text-page-fg-muted">{t('privacy.data_rights_1')}</p>
