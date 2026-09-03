@@ -247,7 +247,7 @@ export default function CampaignLandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen page-bg">
       <SEO
         title={c.seoTitle}
         description={c.seoDesc}
