@@ -141,6 +141,14 @@ const ROUTES = [
     title: "How to Copyright a Song in 2026: Blockchain vs USCO | Musicdibs",
     description: "Step-by-step guide to copyright a song in 2026. Compare US Copyright Office vs blockchain timestamping: cost, speed, global validity and legal weight.",
   },
+  {
+    path: "/certificado-blockchain",
+    locale: "es",
+    title: "Certificado blockchain de tu música: prueba tu autoría | Musicdibs",
+    description: "Cómo se prueba que una canción es tuya: huella digital SHA-512, sello de tiempo en blockchain y certificado verificable. Primera canción gratis.",
+  },
+
+
 
   // ── DISTRIBUCIÓN ────────────────────────────────────────────────────────────
   {
