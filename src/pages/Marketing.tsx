@@ -16,7 +16,7 @@ const Marketing = () => {
 
   return (
     <div className="min-h-screen page-bg">
-      <SEO title="Marketing y Promoción" description="Impulsa tu música con servicios profesionales de diseño de portadas, vídeos y promoción en redes sociales." path="/marketing" />
+      <SEO title={t("marketing.seo_title", "Marketing y Promoción")} description={t("marketing.seo_description", "Impulsa tu música con servicios profesionales de diseño de portadas, vídeos y promoción en redes sociales.")} path="/marketing" />
       <Navbar />
 
       <section className="pt-32 pb-20 px-6">
