@@ -106,6 +106,7 @@ const AllInOneMusicPlatformPage = lazyWithRetry(() => import("./pages/AllInOneMu
 const SwitchToMusicdibsPage = lazyWithRetry(() => import("./pages/SwitchToMusicdibsPage"));
 const CampaignLandingPage = lazyWithRetry(() => import("./pages/CampaignLandingPage"));
 const MetadataFinderPage = lazyWithRetry(() => import("./pages/MetadataFinderPage"));
+const CertificateProofPage = lazyWithRetry(() => import("./pages/CertificateProofPage"));
 
 const AdminCampaignMetricsPage = lazyWithRetry(() => import("./pages/AdminCampaignMetricsPage"));
 const AdminChurnPage = lazyWithRetry(() => import("./pages/AdminChurnPage"));
@@ -230,6 +231,7 @@ const App = () => (
               <Route path="/switch-to-musicdibs" element={<SwitchToMusicdibsPage />} />
               <Route path="/registro-gratis" element={<CampaignLandingPage />} />
               <Route path="/tools/metadata-finder" element={<MetadataFinderPage />} />
+              <Route path="/certificado-blockchain" element={<CertificateProofPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
               {/* Legacy /en/news/* URLs indexed by crawlers — serve the same
