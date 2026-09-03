@@ -108,7 +108,35 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
             ))}
           </DataList>
         </div>
+
+        {data.last_14_days && (
+          <div className="rounded-md border bg-muted/10 p-3 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold flex items-center gap-1.5">
+                <CalendarClock className="h-3.5 w-3.5 text-primary" />
+                Ventana de conversión de 14 días
+              </p>
+              <span className="text-xs text-muted-foreground">Últimos 14 días, independiente del periodo</span>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Metric label="Conversiones (14 d)" value={data.last_14_days.total_conversions.toLocaleString('es-ES')} icon={<Target className="h-3.5 w-3.5" />} />
+              <Metric label="Valor conversiones (14 d)" value={money(data.last_14_days.total_value, data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+            </div>
+            <div className="max-h-40 overflow-y-auto">
+              {data.last_14_days.by_objective.length === 0 ? <Empty /> : data.last_14_days.by_objective.map((row) => (
+                <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
+                  <span className="min-w-0 truncate">{row.objective}</span>
+                  <span className="shrink-0 font-medium">
+                    {row.conversions.toLocaleString('es-ES')}
+                    <span className="ml-2 text-xs text-muted-foreground">{money(row.value, data.currency)}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
+
     </Card>
   );
 }
