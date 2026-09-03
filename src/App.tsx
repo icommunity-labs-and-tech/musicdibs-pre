@@ -232,6 +232,7 @@ const App = () => (
               <Route path="/generador-canciones-ia" element={<GeneradorCancionesIAPage />} />
 <Route path="/registro-musical" element={<RegistroMusicalPage />} />
               <Route path="/como-funciona" element={<ComoFuncionaPage />} />
+              <Route path="/pt/como-funciona" element={<LocalizedRoute lang="pt-BR" prefix="/pt"><ComoFuncionaPage /></LocalizedRoute>} />
               <Route path="/music-distribution" element={<MusicDistributionPage />} />
               <Route path="/music-dist/*" element={<MusicDistPage />} />
               <Route path="/musicdibs-vs-distrokid" element={<MusicdibsVsDistroKidPage />} />

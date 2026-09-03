@@ -231,6 +231,16 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://musicdibs.com/como-funciona</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/pt/como-funciona</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://musicdibs.com/registro-gratis</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
