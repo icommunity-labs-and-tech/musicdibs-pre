@@ -537,7 +537,9 @@ export default function AdminCampaignMetricsPage() {
       <HistoricalDataNotice compact collapsible storageKey="admin-campaigns-notice" />
 
        {/* Gasto real y conversiones de las campañas de Google Ads */}
-       <GoogleAdsSpendPanel data={googleAdsSpend} loading={loadingGoogleAdsSpend} error={googleAdsSpendError} />
+      <GoogleAdsSpendPanel data={googleAdsSpend} loading={loadingGoogleAdsSpend} error={googleAdsSpendError} />
+
+      <RevenueByUtmPanel data={revenueByUtm} loading={loadingRevenueByUtm} error={revenueByUtmError} />
 
 
       {/* Summary KPIs */}
