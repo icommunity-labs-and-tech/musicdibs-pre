@@ -2051,6 +2051,7 @@ export type Database = {
           created_at: string
           currency: string
           dispute_fee: number
+          excluded_reason: string | null
           id: string
           is_first_purchase: boolean
           is_renewal: boolean
@@ -2091,6 +2092,7 @@ export type Database = {
           created_at?: string
           currency?: string
           dispute_fee?: number
+          excluded_reason?: string | null
           id?: string
           is_first_purchase?: boolean
           is_renewal?: boolean
@@ -2131,6 +2133,7 @@ export type Database = {
           created_at?: string
           currency?: string
           dispute_fee?: number
+          excluded_reason?: string | null
           id?: string
           is_first_purchase?: boolean
           is_renewal?: boolean
