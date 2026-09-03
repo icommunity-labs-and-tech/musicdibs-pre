@@ -196,18 +196,6 @@ All colors MUST be HSL.
   transition: background 0.4s ease, color 0.4s ease;
 }
 
-/* Outline buttons inside landing surfaces: avoid white-on-white */
-.page-bg .border-input.bg-background {
-  background-color: transparent;
-  border-color: hsl(var(--page-border-strong));
-  color: hsl(var(--page-fg));
-}
-
-.page-bg .border-input.bg-background:hover {
-  background-color: hsl(var(--page-surface-strong));
-  color: hsl(var(--page-fg));
-}
-
 
 
 .page-bg .text-white {

@@ -265,7 +265,7 @@ const SwitchToMusicdibsPage = () => {
                 </Button>
               </Link>
               <Link to="/musicdibs-vs-distrokid">
-                <Button variant="outline" size="xl" className="font-semibold">
+                <Button variant="outline" size="xl" className="bg-transparent border-page-border-strong text-page-fg hover:bg-page-surface-strong hover:text-page-fg font-semibold">
                   Read the full comparison
                 </Button>
               </Link>
