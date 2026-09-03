@@ -21,8 +21,8 @@ const COPY: Record<Lang, {
   closingTitle: string; closingDesc: string; closingCta: string;
 }> = {
   es: {
-    seoTitle: "Derechos de Autor en Música: Guía Completa 2026",
-    seoDesc: "Cómo proteger los derechos de autor de tu música paso a paso. Registro tradicional vs blockchain, costes, validez legal y plazos en 2026.",
+    seoTitle: "Derechos de Autor de la Música: Cómo Registrarlos Hoy (2026)",
+    seoDesc: "Registra los derechos de autor de tu música en minutos: certificado blockchain con validez legal en +175 países. Comparativa con el registro tradicional y costes reales. 1ª canción gratis.",
     badge: "Guía 2026",
     h1: "Derechos de autor en música: guía 2026",
     subtitle: "Todo lo que necesitas saber para proteger tu música legalmente. Qué derechos tienes, cómo registrarlos y cuál es el camino más rápido y barato.",
@@ -66,8 +66,8 @@ const COPY: Record<Lang, {
     closingCta: "Registrar mi obra",
   },
   en: {
-    seoTitle: "How to Copyright a Song in 2026: Complete Guide",
-    seoDesc: "How to copyright your music step by step. Traditional registration vs blockchain timestamping — costs, legal validity and timelines in 2026.",
+    seoTitle: "How to Copyright a Song in 3 Steps (2026 Guide)",
+    seoDesc: "Copyright a song today: 3 steps, proof of authorship in minutes, valid in 175+ countries. See how blockchain timestamping compares with the US Copyright Office on cost and speed. First song free.",
     badge: "2026 guide",
     h1: "How to copyright a song in 2026",
     subtitle: "Everything you need to protect your music legally. What rights you own, how to register them and which path is fastest and cheapest.",
@@ -111,8 +111,8 @@ const COPY: Record<Lang, {
     closingCta: "Register my song",
   },
   "pt-BR": {
-    seoTitle: "Direitos Autorais na Música: Guia Completo 2026",
-    seoDesc: "Como proteger os direitos autorais da sua música passo a passo. Registro tradicional vs blockchain — custos, validade legal e prazos em 2026.",
+    seoTitle: "Direitos Autorais da Música: Como Registrar em 2026",
+    seoDesc: "Registre os direitos autorais da sua música em minutos: certificado blockchain com validade legal em +175 países. Comparativo com o registro tradicional e custos reais. 1ª música grátis.",
     badge: "Guia 2026",
     h1: "Direitos autorais na música: guia 2026",
     subtitle: "Tudo o que você precisa para proteger sua música legalmente. Quais direitos você tem, como registrá-los e qual é o caminho mais rápido e barato.",

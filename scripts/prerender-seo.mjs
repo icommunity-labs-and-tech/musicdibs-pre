@@ -72,8 +72,8 @@ const ROUTES = [
   {
     path: "/registro-obras-musicales",
     locale: "es",
-    title: "Registro de Obras Musicales en Blockchain | Musicdibs",
-    description: "Registra tus canciones con certificación blockchain en minutos. Prueba legal de autoría válida en España y +175 países. Desde €6,90/mes.",
+    title: "Registro de Obras Musicales: Registra tu Canción Hoy | Musicdibs",
+    description: "Cómo registrar una canción en España en minutos: certificado blockchain con prueba legal de autoría válida en +175 países. Sin gestiones ni esperas. 1ª canción gratis.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "Service",
@@ -87,8 +87,8 @@ const ROUTES = [
   {
     path: "/derechos-autor-musica",
     locale: "es",
-    title: "Derechos de Autor en Música: Guía Completa 2026 | Musicdibs",
-    description: "Cómo proteger los derechos de autor de tu música paso a paso. Registro tradicional vs blockchain, costes, validez legal y plazos en 2026.",
+    title: "Derechos de Autor de la Música: Cómo Registrarlos Hoy | Musicdibs",
+    description: "Registra los derechos de autor de tu música en minutos: certificado blockchain con validez legal en +175 países. Comparativa con el registro tradicional y costes reales. 1ª canción gratis.",
   },
   {
     path: "/registro-musical",
@@ -121,8 +121,8 @@ const ROUTES = [
   {
     path: "/register-a-song",
     locale: "en",
-    title: "Register a Song Online: Blockchain Copyright in Minutes | Musicdibs",
-    description: "Register a song online with blockchain-certified proof of authorship. Legally valid in 175+ countries. From €6.90/month, instant certificate, no paperwork.",
+    title: "Register a Song Online in Minutes — First Song Free | Musicdibs",
+    description: "Register a song, register music or a full album online with blockchain proof of authorship. Instant certificate, legally valid in 175+ countries, no paperwork. First song free.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "HowTo",
@@ -138,8 +138,8 @@ const ROUTES = [
   {
     path: "/copyright-a-song",
     locale: "en",
-    title: "How to Copyright a Song in 2026: Blockchain vs USCO | Musicdibs",
-    description: "Step-by-step guide to copyright a song in 2026. Compare US Copyright Office vs blockchain timestamping: cost, speed, global validity and legal weight.",
+    title: "How to Copyright a Song in 3 Steps (2026 Guide) | Musicdibs",
+    description: "Copyright a song today: 3 steps, proof of authorship in minutes, valid in 175+ countries. Blockchain timestamping vs the US Copyright Office on cost and speed. First song free.",
   },
   {
     path: "/certificado-blockchain",
