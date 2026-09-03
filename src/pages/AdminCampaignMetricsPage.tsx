@@ -21,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/HistoricalDataNotice';
 
 import { GoogleAdsSpendPanel, type GoogleAdsSpendData } from '@/components/admin/GoogleAdsSpendPanel';
+import { RevenueByUtmPanel, type RevenueByUtmData } from '@/components/admin/RevenueByUtmPanel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -98,6 +99,9 @@ export default function AdminCampaignMetricsPage() {
   const [googleAdsSpend, setGoogleAdsSpend] = useState<GoogleAdsSpendData | null>(null);
   const [loadingGoogleAdsSpend, setLoadingGoogleAdsSpend] = useState(true);
   const [googleAdsSpendError, setGoogleAdsSpendError] = useState<string | null>(null);
+  const [revenueByUtm, setRevenueByUtm] = useState<RevenueByUtmData | null>(null);
+  const [loadingRevenueByUtm, setLoadingRevenueByUtm] = useState(true);
+  const [revenueByUtmError, setRevenueByUtmError] = useState<string | null>(null);
   const [detailCampaign, setDetailCampaign] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<any>(null);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
@@ -130,6 +134,8 @@ export default function AdminCampaignMetricsPage() {
     setLoading(true);
     setLoadingGoogleAdsSpend(true);
     setGoogleAdsSpendError(null);
+    setLoadingRevenueByUtm(true);
+    setRevenueByUtmError(null);
     try {
       const filters: any = { periodType };
       if (periodType === 'week') filters.weekStart = weekStart;
@@ -144,11 +150,20 @@ export default function AdminCampaignMetricsPage() {
       setMetrics(metricsRes);
       setCampaigns(catalogRes.campaigns || []);
 
+      const dateRange = { start: range.fromIso.slice(0, 10), end: range.toIso.slice(0, 10) };
+
       try {
-        const adsRes = await adminApi.getGoogleAdsSpend({ start: range.fromIso.slice(0, 10), end: range.toIso.slice(0, 10) });
+        const adsRes = await adminApi.getGoogleAdsSpend(dateRange);
         setGoogleAdsSpend(adsRes as GoogleAdsSpendData);
       } catch (adsError) {
         setGoogleAdsSpendError(adsError instanceof Error ? adsError.message : 'No se pudo cargar el gasto de Google Ads');
+      }
+
+      try {
+        const revenueRes = await adminApi.getRevenueByUtm(dateRange);
+        setRevenueByUtm(revenueRes as RevenueByUtmData);
+      } catch (revenueError) {
+        setRevenueByUtmError(revenueError instanceof Error ? revenueError.message : 'No se pudieron cargar los ingresos por UTM');
       }
     } catch (e: any) {
       const message = e instanceof Error ? e.message : 'No se pudieron cargar las métricas';
@@ -156,8 +171,10 @@ export default function AdminCampaignMetricsPage() {
     } finally {
       setLoading(false);
       setLoadingGoogleAdsSpend(false);
+      setLoadingRevenueByUtm(false);
     }
   }, [periodType, weekStart, selectedMonth, selectedYear]);
+
 
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => {
@@ -536,7 +553,9 @@ export default function AdminCampaignMetricsPage() {
       <HistoricalDataNotice compact collapsible storageKey="admin-campaigns-notice" />
 
        {/* Gasto real y conversiones de las campañas de Google Ads */}
-       <GoogleAdsSpendPanel data={googleAdsSpend} loading={loadingGoogleAdsSpend} error={googleAdsSpendError} />
+      <GoogleAdsSpendPanel data={googleAdsSpend} loading={loadingGoogleAdsSpend} error={googleAdsSpendError} />
+
+      <RevenueByUtmPanel data={revenueByUtm} loading={loadingRevenueByUtm} error={revenueByUtmError} />
 
 
       {/* Summary KPIs */}

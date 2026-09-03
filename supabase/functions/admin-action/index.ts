@@ -5397,9 +5397,10 @@ serve(async (req) => {
         }
         return response.json() as Promise<{ results?: Array<Record<string, { name?: string; costMicros?: string; impressions?: string; clicks?: string; conversions?: string; conversionActionName?: string }>> }>;
       };
-      const [campaignData, objectiveData] = await Promise.all([
+      const [campaignData, objectiveData, last14Data] = await Promise.all([
         query(`SELECT campaign.name, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions, segments.date FROM campaign WHERE segments.date BETWEEN '${start}' AND '${end}' ORDER BY metrics.cost_micros DESC`),
         query(`SELECT campaign.name, segments.conversion_action_name, metrics.conversions FROM campaign WHERE segments.date BETWEEN '${start}' AND '${end}' ORDER BY metrics.conversions DESC`),
+        query(`SELECT campaign.name, segments.conversion_action_name, metrics.conversions, metrics.conversions_value FROM campaign WHERE segments.date DURING LAST_14_DAYS ORDER BY metrics.conversions DESC`),
       ]);
       const campaignMap: Record<string, { campaign_name: string; spend: number; clicks: number; impressions: number; conversions: number }> = {};
       for (const row of campaignData.results || []) {
@@ -5419,8 +5420,132 @@ serve(async (req) => {
         const name = segments.conversionActionName || "Sin objetivo";
         objectiveMap[name] = (objectiveMap[name] || 0) + Number(metrics.conversions || 0);
       }
-      return json({ campaign_spend: Object.values(campaignMap).sort((a, b) => b.spend - a.spend), objective_conversions: Object.entries(objectiveMap).map(([objective, conversions]) => ({ objective, conversions })).sort((a, b) => b.conversions - a.conversions), currency: "EUR", range: { start, end }, refreshed_at: new Date().toISOString() });
+      // Ventana de 14 días (independiente del periodo seleccionado)
+      const last14Map: Record<string, { objective: string; conversions: number; value: number }> = {};
+      let last14Total = 0;
+      let last14Value = 0;
+      for (const row of last14Data.results || []) {
+        const segments = row.segments || {};
+        const metrics = (row.metrics || {}) as Record<string, string | undefined>;
+        const name = segments.conversionActionName || "Sin objetivo";
+        const conversions = Number(metrics.conversions || 0);
+        const value = Number(metrics.conversionsValue || 0);
+        last14Map[name] ||= { objective: name, conversions: 0, value: 0 };
+        last14Map[name].conversions += conversions;
+        last14Map[name].value += value;
+        last14Total += conversions;
+        last14Value += value;
+      }
+      return json({
+        campaign_spend: Object.values(campaignMap).sort((a, b) => b.spend - a.spend),
+        objective_conversions: Object.entries(objectiveMap).map(([objective, conversions]) => ({ objective, conversions })).sort((a, b) => b.conversions - a.conversions),
+        last_14_days: {
+          total_conversions: parseFloat(last14Total.toFixed(2)),
+          total_value: parseFloat(last14Value.toFixed(2)),
+          by_objective: Object.values(last14Map).sort((a, b) => b.conversions - a.conversions),
+        },
+        currency: "EUR",
+        range: { start, end },
+        refreshed_at: new Date().toISOString(),
+      });
     }
+
+    // ── get_revenue_by_utm ────────────────────────────────────────
+    if (action === "get_revenue_by_utm") {
+      const start = typeof payload.start === "string" ? payload.start : "";
+      const end = typeof payload.end === "string" ? payload.end : "";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return json({ error: "Invalid date range" }, 400);
+      const endExclusive = new Date(`${end}T00:00:00Z`);
+      endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
+
+      type OrderRow = {
+        amount_gross: number | null;
+        amount_net: number | null;
+        currency: string | null;
+        country: string | null;
+        utm_source: string | null;
+        utm_medium: string | null;
+        utm_campaign: string | null;
+        attributed_campaign_name: string | null;
+        customer_email: string | null;
+        product_label: string | null;
+        paid_at: string;
+      };
+
+      const rows: OrderRow[] = [];
+      const pageSize = 1000;
+      for (let page = 0; page < 60; page++) {
+        const { data, error } = await admin
+          .from("orders")
+          .select("amount_gross, amount_net, currency, country, utm_source, utm_medium, utm_campaign, attributed_campaign_name, customer_email, product_label, paid_at")
+          .eq("order_status", "paid")
+          .is("excluded_reason", null)
+          .gte("paid_at", `${start}T00:00:00Z`)
+          .lt("paid_at", endExclusive.toISOString())
+          .order("paid_at", { ascending: false })
+          .range(page * pageSize, page * pageSize + pageSize - 1);
+        if (error) return json({ error: error.message }, 500);
+        const batch = (data || []) as OrderRow[];
+        rows.push(...batch);
+        if (batch.length < pageSize) break;
+      }
+
+      const campaignKey = (row: OrderRow) =>
+        row.utm_campaign || row.attributed_campaign_name || (row.utm_source ? `${row.utm_source} (sin utm_campaign)` : "Directo / sin UTM");
+
+      const byCampaign: Record<string, { campaign: string; source: string; medium: string; orders: number; buyers: number; revenue: number; net: number; _emails: Set<string> }> = {};
+      const byCountry: Record<string, { country: string; orders: number; revenue: number; net: number }> = {};
+      const byCampaignCountry: Record<string, { campaign: string; country: string; orders: number; revenue: number }> = {};
+
+      for (const row of rows) {
+        const gross = Number(row.amount_gross || 0);
+        const net = Number(row.amount_net ?? row.amount_gross ?? 0);
+        const campaign = campaignKey(row);
+        const country = (row.country || "—").toUpperCase();
+
+        byCampaign[campaign] ||= { campaign, source: row.utm_source || "—", medium: row.utm_medium || "—", orders: 0, buyers: 0, revenue: 0, net: 0, _emails: new Set<string>() };
+        byCampaign[campaign].orders += 1;
+        byCampaign[campaign].revenue += gross;
+        byCampaign[campaign].net += net;
+        if (row.customer_email) byCampaign[campaign]._emails.add(row.customer_email.toLowerCase());
+
+        byCountry[country] ||= { country, orders: 0, revenue: 0, net: 0 };
+        byCountry[country].orders += 1;
+        byCountry[country].revenue += gross;
+        byCountry[country].net += net;
+
+        const crossKey = `${campaign}||${country}`;
+        byCampaignCountry[crossKey] ||= { campaign, country, orders: 0, revenue: 0 };
+        byCampaignCountry[crossKey].orders += 1;
+        byCampaignCountry[crossKey].revenue += gross;
+      }
+
+      const round = (value: number) => parseFloat(value.toFixed(2));
+
+      return json({
+        by_campaign: Object.values(byCampaign)
+          .map(({ _emails, ...rest }) => ({
+            ...rest,
+            buyers: _emails.size,
+            revenue: round(rest.revenue),
+            net: round(rest.net),
+            avg_ticket: rest.orders ? round(rest.revenue / rest.orders) : 0,
+          }))
+          .sort((a, b) => b.revenue - a.revenue),
+        by_country: Object.values(byCountry)
+          .map((row) => ({ ...row, revenue: round(row.revenue), net: round(row.net), avg_ticket: row.orders ? round(row.revenue / row.orders) : 0 }))
+          .sort((a, b) => b.revenue - a.revenue),
+        by_campaign_country: Object.values(byCampaignCountry)
+          .map((row) => ({ ...row, revenue: round(row.revenue) }))
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 100),
+        total_orders: rows.length,
+        total_revenue: round(rows.reduce((sum, row) => sum + Number(row.amount_gross || 0), 0)),
+        currency: "EUR",
+        range: { start, end },
+      });
+    }
+
 
     // ── get_campaign_detail ───────────────────────────────────────
     if (action === "get_campaign_detail") {
