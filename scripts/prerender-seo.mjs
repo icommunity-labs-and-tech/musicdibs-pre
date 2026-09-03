@@ -564,6 +564,9 @@ const buildHtmlForRoute = (template, route) => {
   html = replaceOrInsertMeta(html, "name", "description", route.description);
   html = replaceOrInsertCanonical(html, url);
 
+  // Real document language for crawlers without JS.
+  html = html.replace(/<html([^>]*)\slang=["'][^"']*["']/i, `<html$1 lang="${route.locale}"`);
+
   // Open Graph
   html = replaceOrInsertMeta(html, "property", "og:title", route.title);
   html = replaceOrInsertMeta(html, "property", "og:description", route.description);
