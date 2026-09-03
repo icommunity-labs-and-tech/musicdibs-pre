@@ -101,7 +101,7 @@ const MusicMakerPage = () => {
                 </Button>
               </Link>
               <Link to="/musicdibs-vs-udio">
-                <Button variant="outline" size="xl" className="font-semibold">Compare to Udio</Button>
+                <Button variant="outline" size="xl" className="bg-transparent border-page-border-strong text-page-fg hover:bg-page-surface-strong hover:text-page-fg font-semibold">Compare to Udio</Button>
               </Link>
             </div>
             <div className="flex flex-wrap justify-center gap-6 mt-10 text-page-fg-subtle text-sm">

@@ -145,7 +145,7 @@ const MusicdibsVsUdioPage = () => {
                 </Button>
               </Link>
               <Link to="/ai-song-generator">
-                <Button variant="outline" size="xl" className="font-semibold">
+                <Button variant="outline" size="xl" className="bg-transparent border-page-border-strong text-page-fg hover:bg-page-surface-strong hover:text-page-fg font-semibold">
                   See the AI Song Generator
                 </Button>
               </Link>
@@ -235,10 +235,10 @@ const MusicdibsVsUdioPage = () => {
                 </Button>
               </Link>
               <Link to="/musicdibs-vs-distrokid">
-                <Button variant="outline" size="lg">Musicdibs vs DistroKid</Button>
+                <Button variant="outline" size="lg" className="bg-transparent border-page-border-strong text-page-fg hover:bg-page-surface-strong hover:text-page-fg">Musicdibs vs DistroKid</Button>
               </Link>
               <Link to="/musicdibs-vs-loudly">
-                <Button variant="outline" size="lg">Musicdibs vs Loudly</Button>
+                <Button variant="outline" size="lg" className="bg-transparent border-page-border-strong text-page-fg hover:bg-page-surface-strong hover:text-page-fg">Musicdibs vs Loudly</Button>
               </Link>
             </div>
           </section>

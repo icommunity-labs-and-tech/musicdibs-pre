@@ -205,10 +205,11 @@ export default function ComoFuncionaPage() {
           })}
         </script>
       </Helmet>
-      <div className="min-h-screen font-sans text-[oklch(0.98_0.01_295)]">
+      <div className="landing-ai-studio">
+        <main className="relative min-h-screen overflow-hidden font-sans text-[oklch(0.98_0.01_295)] pb-16">
         <BackgroundScene />
         <Navbar ctaText={c.ctaPrimary} />
-        <main className="relative pt-28 sm:pt-36 pb-16">
+        <div className="relative pt-28 sm:pt-36">
           {/* Hero */}
           <section className="mx-auto max-w-4xl px-4 sm:px-6 text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-[oklch(0.98_0.01_295/0.15)] bg-[oklch(0.98_0.01_295/0.06)] px-4 py-1.5 text-xs sm:text-sm font-medium text-[oklch(0.98_0.01_295/0.85)]">
@@ -307,9 +308,10 @@ export default function ComoFuncionaPage() {
               <ArrowRight className="h-4 w-4" />
             </a>
           </section>
-        </main>
+        </div>
         <SocialBanner />
         <Footer />
+        </main>
       </div>
     </>
   );

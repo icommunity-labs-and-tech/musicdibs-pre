@@ -196,6 +196,8 @@ All colors MUST be HSL.
   transition: background 0.4s ease, color 0.4s ease;
 }
 
+
+
 .page-bg .text-white {
   color: hsl(var(--page-text));
 }
