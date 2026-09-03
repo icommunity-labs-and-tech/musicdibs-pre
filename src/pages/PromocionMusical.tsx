@@ -1,4 +1,6 @@
 import { Helmet } from "react-helmet-async";
+import { useTranslation } from "react-i18next";
+import { useLocalizedRoute } from "@/components/LocalizedRoute";
 import { useEffect, useState } from "react";
 import Autoplay from "embla-carousel-autoplay";
 import {
@@ -45,9 +47,15 @@ const CTA_HREF = "https://www.musicdibs.com/dashboard";
 
 export default function PromocionMusical() {
   const t = usePromocionMusicalCopy();
+  const localizedRoute = useLocalizedRoute();
+  const { i18n } = useTranslation();
+  const uiLang = (["es", "en", "pt-BR"].includes(i18n.language) ? i18n.language : "es");
+  const htmlLang = localizedRoute?.lang ?? uiLang;
+  const canonical = `https://www.musicdibs.com${localizedRoute?.prefix ?? ""}/promocion-musical`;
   return (
     <>
       <Helmet>
+        <html lang={htmlLang} />
         <title>{t.seo.title}</title>
         <meta
           name="description"
@@ -58,7 +66,8 @@ export default function PromocionMusical() {
           property="og:description"
           content={t.seo.ogDescription}
         />
-        <link rel="canonical" href="https://musicdibs.com/promocion-musical" />
+        <link rel="canonical" href={canonical} />
+        <meta property="og:url" content={canonical} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
