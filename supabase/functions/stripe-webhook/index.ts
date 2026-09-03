@@ -558,6 +558,8 @@ serve(async (req) => {
             currency: session.currency || "eur",
             isSubscription: false,
             isRenewal: false,
+            customerEmail: session.customer_details?.email || session.customer_email || undefined,
+            customerCountry: session.customer_details?.address?.country || undefined,
             metadata: session.metadata || {},
           });
 
