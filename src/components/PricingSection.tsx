@@ -86,6 +86,28 @@ export const PricingSection = () => {
       const refCode = localStorage.getItem('referral_code');
       if (refCode) body.referral_code = refCode;
     } catch { /* ignore */ }
+    // FIX 2026-09-03: nunca se enviaba la atribucion (UTMs) al crear el
+    // checkout desde este componente -- es la seccion de precios de la
+    // landing page principal, donde llegarian los clics directos de
+    // campañas de Google Ads. Mismo patron ya usado en CreditStore.tsx.
+    try {
+      const raw = localStorage.getItem('md_attribution');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const attribution: Record<string, string> = {};
+        if (parsed.utm_source) attribution.utm_source = parsed.utm_source;
+        if (parsed.utm_medium) attribution.utm_medium = parsed.utm_medium;
+        if (parsed.utm_campaign) attribution.utm_campaign = parsed.utm_campaign;
+        if (parsed.utm_content) attribution.utm_content = parsed.utm_content;
+        if (parsed.utm_term) attribution.utm_term = parsed.utm_term;
+        if (parsed.coupon) attribution.coupon_code = parsed.coupon;
+        if (parsed.ref) attribution.referrer_code = parsed.ref;
+        if (parsed.referrer) attribution.referrer = parsed.referrer;
+        if (parsed.landing_path) attribution.landing_path = parsed.landing_path;
+        if (parsed.utm_campaign) attribution.attributed_campaign_name = parsed.utm_campaign;
+        if (Object.keys(attribution).length > 0) body.attribution = attribution;
+      }
+    } catch { /* ignore */ }
     const { data, error } = await supabase.functions.invoke('create-credit-checkout', { body });
     if (error) throw error;
     if (data?.already_subscribed) {
