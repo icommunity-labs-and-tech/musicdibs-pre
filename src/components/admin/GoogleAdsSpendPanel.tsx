@@ -19,6 +19,11 @@ type ObjectiveConversions = {
 export type GoogleAdsSpendData = {
   campaign_spend: CampaignSpend[];
   objective_conversions: ObjectiveConversions[];
+  last_14_days?: {
+    total_conversions: number;
+    total_value: number;
+    by_objective: Array<{ objective: string; conversions: number; value: number }>;
+  };
   currency: string;
   range: { start: string; end: string };
   refreshed_at: string;
