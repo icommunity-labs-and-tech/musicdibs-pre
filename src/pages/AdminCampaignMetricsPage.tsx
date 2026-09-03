@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/HistoricalDataNotice';
-import { CampaignLeadsPanel } from '@/components/admin/CampaignLeadsPanel';
+
 import { GoogleAdsSpendPanel, type GoogleAdsSpendData } from '@/components/admin/GoogleAdsSpendPanel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -538,8 +538,6 @@ export default function AdminCampaignMetricsPage() {
        {/* Gasto real y conversiones de las campañas de Google Ads */}
        <GoogleAdsSpendPanel data={googleAdsSpend} loading={loadingGoogleAdsSpend} error={googleAdsSpendError} />
 
-       {/* Leads reales de las campañas de Google Ads */}
-       <CampaignLeadsPanel />
 
       {/* Summary KPIs */}
       {metrics?.summary && (
