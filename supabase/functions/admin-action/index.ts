@@ -5385,12 +5385,16 @@ serve(async (req) => {
       if (!apiKey || !customerId || !lovableKey) return json({ error: "Google Ads is not configured" }, 503);
 
       const query = async (gaql: string): Promise<{ results?: Array<Record<string, { name?: string; costMicros?: string; impressions?: string; clicks?: string; conversions?: string; conversionActionName?: string }>> }> => {
-        const response = await fetch("https://connector-gateway.lovable.dev/google_ads/googleAds:search", {
+        const response = await fetch(`https://connector-gateway.lovable.dev/google_ads/v25/customers/${customerId}/googleAds:search`, {
           method: "POST",
           headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": apiKey, "Content-Type": "application/json" },
-          body: JSON.stringify({ customer_id: customerId, query: gaql }),
+          body: JSON.stringify({ query: gaql }),
         });
-        if (!response.ok) throw new Error(`Google Ads request failed (${response.status})`);
+        if (!response.ok) {
+          const detail = await response.text();
+          console.error(`[get_google_ads_spend] ${response.status}: ${detail}`);
+          throw new Error(`Google Ads request failed (${response.status})`);
+        }
         return response.json() as Promise<{ results?: Array<Record<string, { name?: string; costMicros?: string; impressions?: string; clicks?: string; conversions?: string; conversionActionName?: string }>> }>;
       };
       const [campaignData, objectiveData] = await Promise.all([
