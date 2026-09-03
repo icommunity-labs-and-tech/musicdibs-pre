@@ -659,6 +659,27 @@ serve(async (req) => {
         }
       }
 
+      // FIX 2026-09-03: profiles.billing_country existia en el esquema
+      // pero ningun codigo lo rellenaba activamente -- solo ~30% de los
+      // compradores tenian pais conocido, insuficiente para segmentar
+      // campañas de Google Ads por geografia. Se sincroniza aqui, en
+      // cada pago completado, desde el pais que Stripe ya captura en el
+      // checkout (customer_details.address.country). No bloqueante: un
+      // fallo aqui nunca debe afectar el procesamiento del pago en si.
+      if (userId) {
+        try {
+          const billingCountry = session.customer_details?.address?.country;
+          if (billingCountry) {
+            await supabase.from("profiles").update({
+              billing_country: billingCountry,
+              billing_country_updated_at: new Date().toISOString(),
+            }).eq("user_id", userId);
+          }
+        } catch (countryErr) {
+          console.error("[WEBHOOK] billing_country sync failed (non-blocking):", countryErr);
+        }
+      }
+
       //  Fallback B: recover credits/planId when missing from metadata 
       // FIX 2026-07-15: originally gated to session.mode === "payment" only, so
       // subscription-mode checkouts with missing metadata had NO recovery path —
