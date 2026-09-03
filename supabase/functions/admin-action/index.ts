@@ -5374,6 +5374,50 @@ serve(async (req) => {
       });
     }
 
+    // ── get_google_ads_spend ───────────────────────────────────────
+    if (action === "get_google_ads_spend") {
+      const start = typeof payload.start === "string" ? payload.start : "";
+      const end = typeof payload.end === "string" ? payload.end : "";
+      if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(start) || !/^\\d{4}-\\d{2}-\\d{2}$/.test(end)) return json({ error: "Invalid date range" }, 400);
+      const apiKey = Deno.env.get("GOOGLE_ADS_API_KEY");
+      const customerId = Deno.env.get("GOOGLE_ADS_CUSTOMER_ID");
+      const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+      if (!apiKey || !customerId || !lovableKey) return json({ error: "Google Ads is not configured" }, 503);
+
+      const query = async (gaql: string): Promise<{ results?: Array<Record<string, { name?: string; costMicros?: string; impressions?: string; clicks?: string; conversions?: string; conversionActionName?: string }>> }> => {
+        const response = await fetch("https://connector-gateway.lovable.dev/google_ads/googleAds:search", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": apiKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ customer_id: customerId, query: gaql }),
+        });
+        if (!response.ok) throw new Error(`Google Ads request failed (${response.status})`);
+        return response.json() as Promise<{ results?: Array<Record<string, { name?: string; costMicros?: string; impressions?: string; clicks?: string; conversions?: string; conversionActionName?: string }>> }>;
+      };
+      const [campaignData, objectiveData] = await Promise.all([
+        query(`SELECT campaign.name, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions, segments.date FROM campaign WHERE segments.date BETWEEN '${start}' AND '${end}' ORDER BY metrics.cost_micros DESC`),
+        query(`SELECT campaign.name, segments.conversion_action_name, metrics.conversions FROM campaign WHERE segments.date BETWEEN '${start}' AND '${end}' ORDER BY metrics.conversions DESC`),
+      ]);
+      const campaignMap: Record<string, { campaign_name: string; spend: number; clicks: number; impressions: number; conversions: number }> = {};
+      for (const row of campaignData.results || []) {
+        const campaign = row.campaign || {};
+        const metrics = row.metrics || {};
+        const name = campaign.name || "Sin campaña";
+        campaignMap[name] ||= { campaign_name: name, spend: 0, clicks: 0, impressions: 0, conversions: 0 };
+        campaignMap[name].spend += Number(metrics.costMicros || 0) / 1_000_000;
+        campaignMap[name].clicks += Number(metrics.clicks || 0);
+        campaignMap[name].impressions += Number(metrics.impressions || 0);
+        campaignMap[name].conversions += Number(metrics.conversions || 0);
+      }
+      const objectiveMap: Record<string, number> = {};
+      for (const row of objectiveData.results || []) {
+        const segments = row.segments || {};
+        const metrics = row.metrics || {};
+        const name = segments.conversionActionName || "Sin objetivo";
+        objectiveMap[name] = (objectiveMap[name] || 0) + Number(metrics.conversions || 0);
+      }
+      return json({ campaign_spend: Object.values(campaignMap).sort((a, b) => b.spend - a.spend), objective_conversions: Object.entries(objectiveMap).map(([objective, conversions]) => ({ objective, conversions })).sort((a, b) => b.conversions - a.conversions), currency: "EUR", range: { start, end }, refreshed_at: new Date().toISOString() });
+    }
+
     // ── get_campaign_detail ───────────────────────────────────────
     if (action === "get_campaign_detail") {
       const { campaign_name } = payload;

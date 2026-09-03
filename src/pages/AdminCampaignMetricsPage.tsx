@@ -20,6 +20,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/HistoricalDataNotice';
 import { CampaignLeadsPanel } from '@/components/admin/CampaignLeadsPanel';
+import { GoogleAdsSpendPanel, type GoogleAdsSpendData } from '@/components/admin/GoogleAdsSpendPanel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -60,19 +61,21 @@ function getPeriodLabel(periodType: PeriodType, weekStart?: string, month?: stri
 
 function getPeriodRange(periodType: PeriodType, weekStart: string, month: string, year: string): { fromIso: string; toIso: string } {
   let from: Date;
-  let to: Date;
+  let exclusiveTo: Date;
   if (periodType === 'week') {
     from = new Date(weekStart + 'T00:00:00');
-    to = new Date(from);
-    to.setDate(to.getDate() + 7);
+    exclusiveTo = new Date(from);
+    exclusiveTo.setDate(exclusiveTo.getDate() + 7);
   } else if (periodType === 'month') {
     from = new Date(parseInt(year), parseInt(month) - 1, 1);
-    to = new Date(parseInt(year), parseInt(month), 1);
+    exclusiveTo = new Date(parseInt(year), parseInt(month), 1);
   } else {
     from = new Date(parseInt(year), 0, 1);
-    to = new Date(parseInt(year) + 1, 0, 1);
+    exclusiveTo = new Date(parseInt(year) + 1, 0, 1);
   }
-  return { fromIso: from.toISOString(), toIso: to.toISOString() };
+  // Google Ads uses an inclusive BETWEEN range, so exclude the next period's first day.
+  const inclusiveTo = new Date(exclusiveTo.getTime() - 24 * 60 * 60 * 1000);
+  return { fromIso: from.toISOString(), toIso: inclusiveTo.toISOString() };
 }
 
 const MONTHS = [
@@ -92,6 +95,9 @@ export default function AdminCampaignMetricsPage() {
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<any>(null);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [googleAdsSpend, setGoogleAdsSpend] = useState<GoogleAdsSpendData | null>(null);
+  const [loadingGoogleAdsSpend, setLoadingGoogleAdsSpend] = useState(true);
+  const [googleAdsSpendError, setGoogleAdsSpendError] = useState<string | null>(null);
   const [detailCampaign, setDetailCampaign] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<any>(null);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
@@ -122,11 +128,14 @@ export default function AdminCampaignMetricsPage() {
 
   const loadData = useCallback(async () => {
     setLoading(true);
+    setLoadingGoogleAdsSpend(true);
+    setGoogleAdsSpendError(null);
     try {
       const filters: any = { periodType };
       if (periodType === 'week') filters.weekStart = weekStart;
       if (periodType === 'month') { filters.month = selectedMonth; filters.year = selectedYear; }
       if (periodType === 'year') filters.year = selectedYear;
+      const range = getPeriodRange(periodType, weekStart, selectedMonth, selectedYear);
 
       const [metricsRes, catalogRes] = await Promise.all([
         adminApi.getCampaignMetrics(filters),
@@ -134,10 +143,20 @@ export default function AdminCampaignMetricsPage() {
       ]);
       setMetrics(metricsRes);
       setCampaigns(catalogRes.campaigns || []);
+
+      try {
+        const adsRes = await adminApi.getGoogleAdsSpend({ start: range.fromIso.slice(0, 10), end: range.toIso.slice(0, 10) });
+        setGoogleAdsSpend(adsRes as GoogleAdsSpendData);
+      } catch (adsError) {
+        setGoogleAdsSpendError(adsError instanceof Error ? adsError.message : 'No se pudo cargar el gasto de Google Ads');
+      }
     } catch (e: any) {
-      toast.error(e.message);
+      const message = e instanceof Error ? e.message : 'No se pudieron cargar las métricas';
+      toast.error(message);
+    } finally {
+      setLoading(false);
+      setLoadingGoogleAdsSpend(false);
     }
-    setLoading(false);
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -516,8 +535,11 @@ export default function AdminCampaignMetricsPage() {
       {/* Historical data quality notice */}
       <HistoricalDataNotice compact collapsible storageKey="admin-campaigns-notice" />
 
-      {/* Leads reales de las campañas de Google Ads */}
-      <CampaignLeadsPanel />
+       {/* Gasto real y conversiones de las campañas de Google Ads */}
+       <GoogleAdsSpendPanel data={googleAdsSpend} loading={loadingGoogleAdsSpend} error={googleAdsSpendError} />
+
+       {/* Leads reales de las campañas de Google Ads */}
+       <CampaignLeadsPanel />
 
       {/* Summary KPIs */}
       {metrics?.summary && (
