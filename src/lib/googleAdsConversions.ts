@@ -98,13 +98,24 @@ export function trackWorkRegisteredLead(workId?: string, source?: string) {
   if (sessionStorage.getItem(trackedKey)) return;
   sessionStorage.setItem(trackedKey, '1');
 
+  // 1) Evento dataLayer para GTM (por si hay etiqueta configurada alli)
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push({
     event: 'work_registered_lead',
     work_id: workId || '',
     lead_source: source || 'register_wizard',
   });
+
+  // 2) Disparo directo a Google Ads (no depende de que exista la etiqueta en GTM,
+  //    que era la causa de que la accion de conversion no registrara nada).
+  window.gtag?.('event', 'conversion', {
+    send_to: LEAD_SEND_TO,
+    value: 1.0,
+    currency: FALLBACK_CURRENCY,
+    transaction_id: workId || '',
+  });
 }
+
 
 /**
  * Evento GTM (dataLayer) — CLIC en CTA de registro.
