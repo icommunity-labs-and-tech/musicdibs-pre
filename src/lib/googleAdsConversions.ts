@@ -49,11 +49,21 @@ export function trackPurchaseConversion(sessionId: string) {
   const tryFetchAndFire = async () => {
     attempts++;
     // Nota: customer_email es una columna nueva (sept-2026); los tipos
-    // generados aun no la incluyen, por eso el select va como variable.
-    const orderColumns = 'amount_gross, currency, customer_email';
-    const { data: order } = await supabase
+    // generados aun no la incluyen, por eso se consulta con cliente sin tipar.
+    const untyped = supabase as unknown as {
+      from: (t: string) => {
+        select: (c: string) => {
+          eq: (c: string, v: string) => {
+            eq: (c: string, v: string) => {
+              maybeSingle: () => Promise<{ data: { amount_gross: number; currency: string; customer_email: string | null } | null }>;
+            };
+          };
+        };
+      };
+    };
+    const { data: order } = await untyped
       .from('orders')
-      .select(orderColumns)
+      .select('amount_gross, currency, customer_email')
       .eq('stripe_checkout_session_id', sessionId)
       .eq('order_status', 'paid')
       .maybeSingle();
