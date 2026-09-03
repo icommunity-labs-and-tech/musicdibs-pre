@@ -10,6 +10,7 @@ declare global {
 const AW_ACCOUNT = 'AW-18310773693';
 const PURCHASE_SEND_TO = `${AW_ACCOUNT}/Wr0CCKOW0NAcEL33oJtE`;
 const SIGNUP_SEND_TO = `${AW_ACCOUNT}/YBe6CK2M69AcEL33oJtE`;
+const LEAD_SEND_TO = `${AW_ACCOUNT}/lJ5FCLTVw-wcEL33oJtE`;
 const FALLBACK_VALUE = 19.9; // valor medio de compra, usado si Stripe no confirma a tiempo
 const FALLBACK_CURRENCY = 'EUR';
 
