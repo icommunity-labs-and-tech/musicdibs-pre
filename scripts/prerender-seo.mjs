@@ -33,6 +33,50 @@ const LOCALE_MAP = {
  */
 const ROUTES = [
 
+  // ── PORTUGUESE (pt-BR) MIRRORS OF SHARED PAGES ─────────────────────────────
+  {
+    path: "/pt/features",
+    locale: "pt-BR",
+    title: "Funcionalidades: Crie, Proteja, Distribua e Promova a sua Música | Musicdibs",
+    description: "Tudo o que um artista independente precisa em uma única plataforma: AI Music Studio, registro em blockchain, distribuição para mais de 220 plataformas e promoção com IA. A partir de €6,90/mês.",
+  },
+  {
+    path: "/pt/distribution",
+    locale: "pt-BR",
+    title: "Distribuição Musical | Musicdibs",
+    description: "Distribua sua música em mais de 220 plataformas digitais. A Musicdibs não cobra nenhuma comissão sobre seus royalties de streaming.",
+  },
+  {
+    path: "/pt/legal-validity",
+    locale: "pt-BR",
+    title: "Validade Legal | Musicdibs",
+    description: "Certificação em blockchain com validade legal internacional para proteger suas obras musicais em mais de 175 países.",
+  },
+  {
+    path: "/pt/marketing",
+    locale: "pt-BR",
+    title: "Marketing e Promoção | Musicdibs",
+    description: "Impulsione sua música com serviços profissionais de capas, vídeos e promoção nas redes sociais.",
+  },
+  {
+    path: "/pt/partners",
+    locale: "pt-BR",
+    title: "Cresça com a Musicdibs | Musicdibs",
+    description: "Acordos comerciais e soluções de marca branca para entidades do ecossistema musical que desejam integrar nossa tecnologia blockchain de certificação de autoria.",
+  },
+  {
+    path: "/pt/promocion-musical",
+    locale: "pt-BR",
+    title: "Distribuição e promoção musical · Leve sua música ao mundo | Musicdibs",
+    description: "Distribua sua música em mais de 220 plataformas globais e promova-a na rede da Musicdibs com centenas de milhares de seguidores reais no Instagram.",
+  },
+  {
+    path: "/pt/tools/metadata-finder",
+    locale: "pt-BR",
+    title: "Buscador de ISRC e UPC grátis · Musicdibs",
+    description: "Encontre o código ISRC de uma gravação ou o UPC/EAN de um álbum em segundos. Ferramenta gratuita para artistas, produtores e managers que distribuem música.",
+  },
+
   // ── FEATURES HUB ────────────────────────────────────────────────────────────
   {
     path: "/features",
