@@ -1056,6 +1056,8 @@ serve(async (req) => {
           isRenewal: false,
           couponCode: couponCode || sessionMeta.coupon_code,
           promotionCode,
+          customerEmail: session.customer_details?.email || session.customer_email || undefined,
+          customerCountry: session.customer_details?.address?.country || undefined,
           metadata: sessionMeta,
         });
 
