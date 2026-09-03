@@ -1,4 +1,4 @@
-import { AlertCircle, BarChart3, DollarSign, Target } from 'lucide-react';
+import { AlertCircle, BarChart3, CalendarClock, DollarSign, Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
