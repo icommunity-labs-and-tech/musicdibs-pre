@@ -94,7 +94,12 @@ const CertificateProofPage = () => {
                 {c.ctaPrimary} <ArrowRight className="w-4 h-4 ml-1.5" />
               </Link>
             </Button>
-            <Button asChild size="lg" variant="outline">
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="bg-transparent border-brand/40 text-page-fg hover:bg-brand/10 hover:text-page-fg"
+            >
               <Link to="/verify">
                 <Eye className="w-4 h-4 mr-1.5" /> {c.ctaSecondary}
               </Link>
@@ -215,7 +220,12 @@ const CertificateProofPage = () => {
             ))}
           </div>
           <div className="text-center">
-            <Button asChild variant="outline" size="lg">
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="bg-transparent border-brand/40 text-page-fg hover:bg-brand/10 hover:text-page-fg"
+            >
               <Link to="/verify">
                 <Eye className="w-4 h-4 mr-1.5" /> {c.verifyCta}
               </Link>
