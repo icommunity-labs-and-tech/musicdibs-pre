@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import LocalizedRoute from "@/components/LocalizedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { ConsentBanner } from "./components/ConsentBanner";
@@ -214,6 +215,15 @@ const App = () => (
               <Route path="/distribution" element={<Distribution />} />
               <Route path="/features" element={<Features />} />
               <Route path="/marketing" element={<Marketing />} />
+              {/* Portuguese (pt-BR) mirrors of shared pages: real, crawlable
+                  URLs per language so the prerenderer can emit PT metadata. */}
+              <Route path="/pt/features" element={<LocalizedRoute lang="pt-BR" prefix="/pt"><Features /></LocalizedRoute>} />
+              <Route path="/pt/distribution" element={<LocalizedRoute lang="pt-BR" prefix="/pt"><Distribution /></LocalizedRoute>} />
+              <Route path="/pt/legal-validity" element={<LocalizedRoute lang="pt-BR" prefix="/pt"><LegalValidity /></LocalizedRoute>} />
+              <Route path="/pt/marketing" element={<LocalizedRoute lang="pt-BR" prefix="/pt"><Marketing /></LocalizedRoute>} />
+              <Route path="/pt/partners" element={<LocalizedRoute lang="pt-BR" prefix="/pt"><Partners /></LocalizedRoute>} />
+              <Route path="/pt/promocion-musical" element={<LocalizedRoute lang="pt-BR" prefix="/pt"><PromocionMusical /></LocalizedRoute>} />
+              <Route path="/pt/tools/metadata-finder" element={<LocalizedRoute lang="pt-BR" prefix="/pt"><MetadataFinderPage /></LocalizedRoute>} />
               <Route path="/registro-obras-musicales" element={<SongRegistrationPage />} />
               <Route path="/derechos-autor-musica" element={<MusicCopyrightPage />} />
               <Route path="/register-a-song" element={<RegisterASongPage />} />

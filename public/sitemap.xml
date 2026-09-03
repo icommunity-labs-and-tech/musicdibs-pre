@@ -191,6 +191,41 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://musicdibs.com/pt/features</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/pt/distribution</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/pt/legal-validity</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/pt/marketing</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/pt/partners</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/pt/promocion-musical</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/pt/tools/metadata-finder</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://musicdibs.com/certificado-blockchain</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
