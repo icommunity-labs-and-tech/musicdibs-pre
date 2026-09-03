@@ -30,7 +30,19 @@ interface LocalizedRouteProps {
  */
 export const LocalizedRoute = ({ lang, prefix, children }: LocalizedRouteProps) => {
   const { i18n } = useTranslation();
-  const scopedI18n = useMemo(() => i18n.cloneInstance({ lng: lang }), [i18n, lang]);
+  const scopedI18n = useMemo(() => {
+    // `cloneInstance` shares the language detector, so cloning would persist the
+    // forced language into localStorage and leak it to the rest of the site.
+    // Snapshot the cached preference and restore it right after.
+    const KEYS = ["lang", "i18nextLng"];
+    const cached = KEYS.map((k) => [k, localStorage.getItem(k)] as const);
+    const clone = i18n.cloneInstance({ lng: lang });
+    cached.forEach(([k, v]) => {
+      if (v === null) localStorage.removeItem(k);
+      else localStorage.setItem(k, v);
+    });
+    return clone;
+  }, [i18n, lang]);
   const value = useMemo(() => ({ lang, prefix }), [lang, prefix]);
 
   return (
