@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Upload, Search, Megaphone, ShoppingBag, User,
   CreditCard, LifeBuoy, Music, LogOut, Mic, Sparkles, Shield,
   HelpCircle, Users, BarChart3, Settings2, Rocket, Briefcase,
-  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell, Youtube,
+  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell, Youtube, Mail,
   type LucideIcon,
 } from 'lucide-react';
 import { DistributionInfoModal } from '@/components/DistributionInfoModal';
