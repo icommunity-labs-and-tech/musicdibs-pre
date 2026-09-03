@@ -1,4 +1,6 @@
 import { Helmet } from "react-helmet-async";
+import { useTranslation } from "react-i18next";
+import { useLocalizedRoute } from "@/components/LocalizedRoute";
 
 interface SEOProps {
   title: string;
@@ -46,13 +48,23 @@ export const SEO = ({
   path = "/",
   type = "website",
   image,
-  lang = "es",
+  lang,
   jsonLd,
   noIndex = false,
 }: SEOProps) => {
-  const url = `${BASE_URL}${path}`;
+  const { i18n } = useTranslation();
+  const localizedRoute = useLocalizedRoute();
+  // Priority: localized route (/pt/...) > explicit prop > current UI language.
+  // Falling back to the live UI language keeps <html lang> honest on shared
+  // pages whose content is translated dynamically.
+  const uiLang = (["es", "en", "pt-BR"].includes(i18n.language)
+    ? i18n.language
+    : "es") as "es" | "en" | "pt-BR";
+  const resolvedLang = localizedRoute?.lang ?? lang ?? uiLang;
+  const resolvedPath = localizedRoute ? `${localizedRoute.prefix}${path}` : path;
+  const url = `${BASE_URL}${resolvedPath}`;
   const normalizedTitle = normalizeBrandName(title);
-  const fullTitle = path === "/"
+  const fullTitle = resolvedPath === "/"
     ? normalizedTitle
     : normalizedTitle.includes(BRAND_NAME)
       ? normalizedTitle
@@ -66,7 +78,7 @@ export const SEO = ({
   // No fake hreflang alternates (URLs are single-locale). Each page declares
   // its OWN language honestly via the `lang` prop — so English landings like
   // /register-a-song or /copyright-a-song report en/en_US instead of es_ES.
-  const { html: htmlLang, og: ogLocale } = LOCALE_MAP[lang];
+  const { html: htmlLang, og: ogLocale } = LOCALE_MAP[resolvedLang];
 
   const schemas = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
 
