@@ -48,9 +48,12 @@ export function trackPurchaseConversion(sessionId: string) {
 
   const tryFetchAndFire = async () => {
     attempts++;
+    // Nota: customer_email es una columna nueva (sept-2026); los tipos
+    // generados aun no la incluyen, por eso el select va como variable.
+    const orderColumns = 'amount_gross, currency, customer_email';
     const { data: order } = await supabase
       .from('orders')
-      .select('amount_gross, currency, customer_email')
+      .select(orderColumns)
       .eq('stripe_checkout_session_id', sessionId)
       .eq('order_status', 'paid')
       .maybeSingle();
