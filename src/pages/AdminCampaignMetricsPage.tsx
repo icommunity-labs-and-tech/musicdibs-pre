@@ -134,6 +134,8 @@ export default function AdminCampaignMetricsPage() {
     setLoading(true);
     setLoadingGoogleAdsSpend(true);
     setGoogleAdsSpendError(null);
+    setLoadingRevenueByUtm(true);
+    setRevenueByUtmError(null);
     try {
       const filters: any = { periodType };
       if (periodType === 'week') filters.weekStart = weekStart;
@@ -148,11 +150,20 @@ export default function AdminCampaignMetricsPage() {
       setMetrics(metricsRes);
       setCampaigns(catalogRes.campaigns || []);
 
+      const dateRange = { start: range.fromIso.slice(0, 10), end: range.toIso.slice(0, 10) };
+
       try {
-        const adsRes = await adminApi.getGoogleAdsSpend({ start: range.fromIso.slice(0, 10), end: range.toIso.slice(0, 10) });
+        const adsRes = await adminApi.getGoogleAdsSpend(dateRange);
         setGoogleAdsSpend(adsRes as GoogleAdsSpendData);
       } catch (adsError) {
         setGoogleAdsSpendError(adsError instanceof Error ? adsError.message : 'No se pudo cargar el gasto de Google Ads');
+      }
+
+      try {
+        const revenueRes = await adminApi.getRevenueByUtm(dateRange);
+        setRevenueByUtm(revenueRes as RevenueByUtmData);
+      } catch (revenueError) {
+        setRevenueByUtmError(revenueError instanceof Error ? revenueError.message : 'No se pudieron cargar los ingresos por UTM');
       }
     } catch (e: any) {
       const message = e instanceof Error ? e.message : 'No se pudieron cargar las métricas';
@@ -160,8 +171,10 @@ export default function AdminCampaignMetricsPage() {
     } finally {
       setLoading(false);
       setLoadingGoogleAdsSpend(false);
+      setLoadingRevenueByUtm(false);
     }
   }, [periodType, weekStart, selectedMonth, selectedYear]);
+
 
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => {
