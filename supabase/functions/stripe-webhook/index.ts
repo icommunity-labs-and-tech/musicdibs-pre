@@ -284,6 +284,26 @@ async function createOrderRecord(
     const { count } = await countQuery;
     const isFirstPurchase = (count || 0) === 0;
 
+    // FIX 2026-09-04: solo el checkout inicial pasaba customerEmail/
+    // customerCountry (via session.customer_details) -- las otras 6 llamadas
+    // a esta funcion (renovaciones, upgrades, cambios de plan, fallos,
+    // cancelaciones) nunca lo hacian, dejando orders.country y
+    // orders.customer_email vacios en la gran mayoria de las ordenes
+    // (todo lo que no fuera la primerisima compra). Se completa aqui con
+    // datos ya disponibles en nuestra propia BD si no vienen ya
+    // especificados, cubriendo los 8 caminos de llamada de forma uniforme.
+    let resolvedCustomerEmail = params.customerEmail || null;
+    let resolvedCustomerCountry = params.customerCountry || null;
+    if (!resolvedCustomerEmail || !resolvedCustomerCountry) {
+      if (!resolvedCustomerEmail) {
+        const { data: userRow } = await supabase.auth.admin.getUserById(params.userId);
+        resolvedCustomerEmail = userRow?.user?.email || null;
+      }
+      if (!resolvedCustomerCountry) {
+        const { data: profRow } = await supabase.from("profiles").select("billing_country").eq("user_id", params.userId).maybeSingle();
+        resolvedCustomerCountry = profRow?.billing_country || null;
+      }
+    }
 
     // Extract UTM data from metadata
     const meta = params.metadata || {};
@@ -327,8 +347,8 @@ async function createOrderRecord(
       is_subscription: params.isSubscription,
       is_renewal: params.isRenewal,
       stripe_customer_id: params.stripeCustomerId || null,
-      customer_email: params.customerEmail || null,
-      country: params.customerCountry || null,
+      customer_email: resolvedCustomerEmail,
+      country: resolvedCustomerCountry,
       is_first_purchase: isFirstPurchase,
       coupon_code: params.couponCode || null,
       promotion_code: params.promotionCode || null,
