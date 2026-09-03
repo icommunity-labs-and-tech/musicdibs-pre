@@ -10,6 +10,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel";
 import "@/styles/landing-ai-studio.css";
+import { usePromocionMusicalCopy } from "@/i18nPromocionMusical";
 import { RoyaltiesCalculator } from "@/components/RoyaltiesCalculator";
 import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
@@ -43,18 +44,19 @@ import {
 const CTA_HREF = "https://www.musicdibs.com/dashboard";
 
 export default function PromocionMusical() {
+  const t = usePromocionMusicalCopy();
   return (
     <>
       <Helmet>
-        <title>Distribución y promoción musical · Lanza tu música al mundo | Musicdibs</title>
+        <title>{t.seo.title}</title>
         <meta
           name="description"
-          content="Distribuye tu música en +220 plataformas globales y promociónala en la red de Musicdibs con cientos de miles de seguidores reales en Instagram."
+          content={t.seo.description}
         />
-        <meta property="og:title" content="Distribución y promoción musical · Musicdibs" />
+        <meta property="og:title" content={t.seo.ogTitle} />
         <meta
           property="og:description"
-          content="Distribución global ilimitada + promoción orgánica en redes. Todo en un solo lugar."
+          content={t.seo.ogDescription}
         />
         <link rel="canonical" href="https://musicdibs.com/promocion-musical" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -68,7 +70,7 @@ export default function PromocionMusical() {
       <div className="landing-ai-studio">
         <main className="relative min-h-screen overflow-hidden">
           <BackgroundScene />
-          <Navbar ctaText="Empezar ahora" ctaHref={CTA_HREF} />
+          <Navbar ctaText={t.navbar.cta} ctaHref={CTA_HREF} />
 
           {/* HERO — Dual Powerhouse */}
           <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-24">
@@ -90,7 +92,7 @@ export default function PromocionMusical() {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" style={{ background: "oklch(0.78 0.25 322)" }} />
                     <span className="relative inline-flex h-2 w-2 rounded-full" style={{ background: "oklch(0.78 0.25 322)" }} />
                   </span>
-                  Distribución global + Promoción en redes
+                  {t.hero.badge}
                 </span>
               </div>
 
@@ -98,12 +100,12 @@ export default function PromocionMusical() {
                 className="mt-7 text-center font-display font-bold tracking-tight text-5xl sm:text-6xl lg:text-7xl leading-[1.02] max-w-5xl mx-auto animate-fade-in"
                 style={{ textWrap: "balance" as any }}
               >
-                Lanza tu música al mundo y{" "}
-                <span className="text-gradient-brand">llega a miles de fans</span>
+                {t.hero.titleA}{" "}
+                <span className="text-gradient-brand">{t.hero.titleB}</span>
               </h1>
               <p className="mt-6 text-center text-base sm:text-lg text-foreground/75 max-w-3xl mx-auto leading-relaxed">
-                Distribuye tus canciones en más de <strong className="text-foreground">220 plataformas globales</strong> y, al mismo tiempo, impúlsalas en los canales de Musicdibs, con una audiencia de{" "}
-                <strong className="text-foreground">cientos de miles de seguidores reales</strong> especializados en el sector musical.
+                {t.hero.subtitle.split("{platforms}")[0]}<strong className="text-foreground">{t.hero.platforms}</strong>{t.hero.subtitle.split("{platforms}")[1].split("{followers}")[0]}{" "}
+                <strong className="text-foreground">{t.hero.followers}</strong>{t.hero.subtitle.split("{followers}")[1]}
               </p>
 
               {/* CTA */}
@@ -114,7 +116,7 @@ export default function PromocionMusical() {
                   rel="noopener noreferrer"
                   className="btn-magenta inline-flex items-center gap-2 rounded-full px-8 py-4 text-sm font-semibold"
                 >
-                  Empezar ahora
+                  {t.hero.cta}
                 </a>
               </div>
 
@@ -123,9 +125,9 @@ export default function PromocionMusical() {
                 {/* LADO IZQ — Distribución global */}
                 <div className="relative glass rounded-3xl p-7 sm:p-9 overflow-hidden min-h-[420px]">
                   <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider" style={{ background: "oklch(0.7 0.25 195 / 0.15)", color: "oklch(0.85 0.22 195)", border: "1px solid oklch(0.7 0.25 195 / 0.3)" }}>
-                    <Globe2 className="h-3 w-3" /> Distribución
+                    <Globe2 className="h-3 w-3" /> {t.hero.distribution.badge}
                   </span>
-                  <h3 className="mt-4 font-display font-bold text-2xl sm:text-3xl leading-tight">+220 plataformas globales</h3>
+                  <h3 className="mt-4 font-display font-bold text-2xl sm:text-3xl leading-tight">{t.hero.distribution.title}</h3>
 
                   {/* Globo con anillos */}
                   <div className="relative mt-6 h-56 flex items-center justify-center" aria-hidden>
@@ -149,8 +151,8 @@ export default function PromocionMusical() {
                   </div>
 
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {["Regalías", "Estadísticas", "Lanzamientos"].map((t) => (
-                      <span key={t} className="text-[11px] px-2.5 py-1 rounded-full glass text-foreground/75">{t}</span>
+                    {t.hero.distribution.chips.map((chip) => (
+                      <span key={chip} className="text-[11px] px-2.5 py-1 rounded-full glass text-foreground/75">{chip}</span>
                     ))}
                   </div>
                 </div>
@@ -158,9 +160,9 @@ export default function PromocionMusical() {
                 {/* LADO DER — Promoción orgánica */}
                 <div className="relative glass rounded-3xl p-7 sm:p-9 overflow-hidden min-h-[420px] glow-magenta">
                   <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-wider" style={{ background: "oklch(0.68 0.27 322 / 0.18)", color: "oklch(0.85 0.25 322)", border: "1px solid oklch(0.68 0.27 322 / 0.35)" }}>
-                    <Instagram className="h-3 w-3" /> Promoción
+                    <Instagram className="h-3 w-3" /> {t.hero.promotion.badge}
                   </span>
-                  <h3 className="mt-4 font-display font-bold text-2xl sm:text-3xl leading-tight">Cientos de miles de fans reales</h3>
+                  <h3 className="mt-4 font-display font-bold text-2xl sm:text-3xl leading-tight">{t.hero.promotion.title}</h3>
 
                   {/* Disco + engagement */}
                   <div className="relative mt-6 h-56 flex items-center justify-center" aria-hidden>
@@ -232,14 +234,14 @@ export default function PromocionMusical() {
               <div className="max-w-3xl">
                 <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-foreground/80">
                   <span className="h-1.5 w-1.5 rounded-full" style={{ background: "oklch(0.78 0.25 322)" }} />
-                  Dos servicios. Un solo lugar.
+                  {t.pillars.badge}
                 </span>
                 <h2 className="mt-6 font-display font-bold tracking-tight text-4xl sm:text-5xl lg:text-6xl leading-[1.05]">
-                  Los <span className="text-gradient-brand">dos pilares</span><br className="hidden sm:block" /> de tu lanzamiento
+                  {t.pillars.titleA} <span className="text-gradient-brand">{t.pillars.titleHighlight}</span><br className="hidden sm:block" /> {t.pillars.titleB}
                 </h2>
                 <p className="mt-5 text-base sm:text-lg text-foreground/70 max-w-xl">
-                  Distribuir sin promocionar es publicar al vacío. Promocionar sin distribuir es no existir.
-                  <span className="text-foreground"> Nosotros hacemos las dos.</span>
+                  {t.pillars.subtitle}
+                  <span className="text-foreground"> {t.pillars.subtitleHighlight}</span>
                 </p>
               </div>
 
@@ -254,40 +256,40 @@ export default function PromocionMusical() {
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
                       style={{ background: "oklch(0.7 0.25 195 / 0.12)", color: "oklch(0.88 0.18 195)", border: "1px solid oklch(0.7 0.25 195 / 0.3)" }}>
-                      <Globe2 className="h-3 w-3" /> Distribución
+                      <Globe2 className="h-3 w-3" /> {t.pillars.row1.badge}
                     </span>
                   </div>
 
                   <div className="col-span-12 lg:col-span-6 px-8 py-10 lg:py-12 border-b lg:border-b-0 lg:border-r border-page-border">
                     <h3 className="font-display font-bold text-2xl sm:text-3xl leading-tight">
-                      Lleva tu música a todo el mundo
+                      {t.pillars.row1.title}
                     </h3>
                     <p className="mt-3 text-foreground/70 leading-relaxed">
-                      Lanza en <span className="text-foreground font-medium">+220 plataformas digitales</span> y conserva
-                      <span className="text-foreground font-medium"> el 100% de las regalías</span>. Un solo panel para gestionarlo todo.
+                      {t.pillars.row1.description.split("{platforms}")[0]}<span className="text-foreground font-medium">{t.pillars.row1.platforms}</span>{t.pillars.row1.description.split("{platforms}")[1].split("{royalties}")[0]}
+                      <span className="text-foreground font-medium"> {t.pillars.row1.royalties}</span>{t.pillars.row1.description.split("{royalties}")[1]}
                     </p>
 
                     <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
                       <div>
-                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>+220</div>
-                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Plataformas</div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>{t.pillars.row1.stat1Value}</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">{t.pillars.row1.stat1Label}</div>
                       </div>
                       <div className="h-10 w-px bg-page-surface self-center" aria-hidden />
                       <div>
-                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>100%</div>
-                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Regalías para ti</div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>{t.pillars.row1.stat2Value}</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">{t.pillars.row1.stat2Label}</div>
                       </div>
                       <div className="h-10 w-px bg-page-surface self-center" aria-hidden />
                       <div>
-                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>∞</div>
-                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Lanzamientos</div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.85 0.22 195)" }}>{t.pillars.row1.stat3Value}</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">{t.pillars.row1.stat3Label}</div>
                       </div>
                     </div>
 
                     <ul className="mt-6 space-y-2 text-sm text-foreground/75">
-                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 195)" }} /> Spotify, Apple Music, Amazon, YouTube Music…</li>
-                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 195)" }} /> Estadísticas en tiempo real</li>
-                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 195)" }} /> Lanzamientos ilimitados</li>
+                      {t.pillars.row1.features.map((f) => (
+                        <li key={f} className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 195)" }} /> {f}</li>
+                      ))}
                     </ul>
                   </div>
 
@@ -355,26 +357,26 @@ export default function PromocionMusical() {
 
                   <div className="col-span-12 lg:col-span-6 lg:order-2 px-8 py-10 lg:py-12 border-b lg:border-b-0 lg:border-r border-page-border">
                     <h3 className="font-display font-bold text-2xl sm:text-3xl leading-tight">
-                      Conecta con audiencia real
+                      {t.pillars.row2.title}
                     </h3>
                     <p className="mt-3 text-foreground/70 leading-relaxed">
-                      Te hacemos visible ante una comunidad de <span className="text-foreground font-medium">cientos de miles de melómanos</span> y profesionales del sector.
+                      {t.pillars.row2.description.split("{audience}")[0]}<span className="text-foreground font-medium">{t.pillars.row2.audience}</span>{t.pillars.row2.description.split("{audience}")[1]}
                     </p>
 
                     <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
                       <div>
-                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>+500k</div>
-                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Seguidores RRSS</div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>{t.pillars.row2.stat1Value}</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">{t.pillars.row2.stat1Label}</div>
                       </div>
                       <div className="h-10 w-px bg-page-surface self-center" aria-hidden />
                       <div>
-                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>100%</div>
-                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Audiencia real</div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>{t.pillars.row2.stat2Value}</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">{t.pillars.row2.stat2Label}</div>
                       </div>
                       <div className="h-10 w-px bg-page-surface self-center" aria-hidden />
                       <div>
-                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>2</div>
-                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">Canales activos</div>
+                        <div className="font-display font-bold text-2xl" style={{ color: "oklch(0.82 0.22 322)" }}>{t.pillars.row2.stat3Value}</div>
+                        <div className="text-[11px] uppercase tracking-wider text-foreground/55 mt-0.5">{t.pillars.row2.stat3Label}</div>
                       </div>
                     </div>
 
@@ -382,12 +384,12 @@ export default function PromocionMusical() {
                       <li className="flex items-start gap-2">
                         <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 322)" }} />
                         <span>
-                          Instagram <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">@musicdibs</a>
-                          {" "}+ TikTok <a href="https://www.tiktok.com/@musicdibs_" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">@musicdibs_</a>
+                          {t.pillars.row2.instagramPrefix} <a href="https://www.instagram.com/musicdibs/" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">{t.pillars.row2.instagramHandle}</a>
+                          {" "}{t.pillars.row2.tiktokPrefix} <a href="https://www.tiktok.com/@musicdibs_" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground transition-colors">{t.pillars.row2.tiktokHandle}</a>
                         </span>
                       </li>
-                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 322)" }} /> Promoción curada por expertos</li>
-                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 322)" }} /> Crecimiento orgánico medible</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 322)" }} /> {t.pillars.row2.feature2}</li>
+                      <li className="flex items-start gap-2"><CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "oklch(0.78 0.22 322)" }} /> {t.pillars.row2.feature3}</li>
                     </ul>
                   </div>
 
@@ -398,7 +400,7 @@ export default function PromocionMusical() {
                     </span>
                     <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em]"
                       style={{ background: "oklch(0.68 0.27 322 / 0.14)", color: "oklch(0.88 0.22 322)", border: "1px solid oklch(0.68 0.27 322 / 0.32)" }}>
-                      <Megaphone className="h-3 w-3" /> Promoción
+                      <Megaphone className="h-3 w-3" /> {t.pillars.row2.badge}
                     </span>
                   </div>
                 </article>
@@ -412,9 +414,9 @@ export default function PromocionMusical() {
                   rel="noopener noreferrer"
                   className="btn-magenta inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                 >
-                  Empezar ahora <ArrowRight className="h-4 w-4" />
+                  {t.pillars.cta} <ArrowRight className="h-4 w-4" />
                 </a>
-                <span className="text-xs text-foreground/55">Sin permanencia · Cancela cuando quieras</span>
+                <span className="text-xs text-foreground/55">{t.pillars.ctaNote}</span>
               </div>
             </div>
 
@@ -438,14 +440,14 @@ export default function PromocionMusical() {
             <div className="mx-auto max-w-6xl px-6">
               <div className="text-center max-w-2xl mx-auto">
                 <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-foreground/80">
-                  Todo el poder de Musicdibs
+                  {t.ecosystem.badge}
                 </span>
                 <h2 className="mt-5 font-display font-bold tracking-tight text-3xl sm:text-4xl lg:text-5xl">
-                  Mucho más que distribución y{" "}
-                  <span className="text-gradient-brand">promoción</span>
+                  {t.ecosystem.titleA}{" "}
+                  <span className="text-gradient-brand">{t.ecosystem.titleHighlight}</span>
                 </h2>
                 <p className="mt-4 text-foreground/70">
-                  Descubre el resto de herramientas diseñadas para potenciar tu carrera musical en cada etapa.
+                  {t.ecosystem.subtitle}
                 </p>
               </div>
 
@@ -465,7 +467,7 @@ export default function PromocionMusical() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-sm font-semibold text-foreground/80 hover:text-foreground transition-colors"
                 >
-                  Explora todas las herramientas
+                  {t.ecosystem.cta}
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
@@ -480,11 +482,11 @@ export default function PromocionMusical() {
                 className="font-display font-bold tracking-tight text-4xl sm:text-5xl lg:text-6xl leading-[1.1]"
                 style={{ textWrap: "balance" as any }}
               >
-                ¿Listo para llevar tu música al{" "}
-                <span className="text-gradient-brand">siguiente nivel</span>?
+                {t.finalCta.titleA}{" "}
+                <span className="text-gradient-brand">{t.finalCta.titleHighlight}</span>{t.finalCta.titleEnd}
               </h2>
               <p className="mt-5 text-foreground/70 text-lg max-w-xl mx-auto">
-                Distribuye en +220 plataformas y promociónala con nuestra red en un solo clic.
+                {t.finalCta.subtitle}
               </p>
               <div className="mt-9">
                 <a
@@ -493,7 +495,7 @@ export default function PromocionMusical() {
                   rel="noopener noreferrer"
                   className="btn-magenta inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-semibold"
                 >
-                  Distribuir y promocionar mi música
+                  {t.finalCta.cta}
                   <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
@@ -893,94 +895,31 @@ type FeatureSlide = {
   accent: "cyan" | "magenta";
 };
 
-const FEATURE_SLIDES: FeatureSlide[] = [
-  {
-    badge: "Registro Musical",
-    badgeIcon: <ShieldCheck className="h-3 w-3" />,
-    title: "Registra tus canciones y protege tus",
-    highlight: "derechos de autor",
-    desc: "Evidencia blockchain con fecha, autoría y certificado verificable con validez legal en +180 países.",
-    icon: <ShieldCheck className="h-7 w-7" />,
-    bullets: [
-      "Registro en blockchain inmutable",
-      "Derechos de autor con validez legal",
-      "Certificado verificable internacional",
-    ],
-    accent: "cyan",
-  },
-  {
-    badge: "AI Music Studio",
-    badgeIcon: <Wand2 className="h-3 w-3" />,
-    title: "Crea y mejora canciones con",
-    highlight: "inteligencia artificial",
-    desc: "Genera ideas nuevas o lleva tus demos al siguiente nivel con modelos de última generación.",
-    icon: <Wand2 className="h-7 w-7" />,
-    bullets: [
-      "Composición asistida por IA",
-      "Mejora calidad de tus pistas",
-      "Variaciones y remezclas en segundos",
-    ],
-    accent: "magenta",
-  },
-  {
-    badge: "Sube y profesionaliza",
-    badgeIcon: <Upload className="h-3 w-3" />,
-    title: "Convierte tus demos en",
-    highlight: "música profesional",
-    desc: "Sube tu material y obtén versiones limpias, equilibradas y listas para sonar como un disco editado.",
-    icon: <Upload className="h-7 w-7" />,
-    bullets: [
-      "Procesado de audio profesional",
-      "Mezcla y limpieza automática",
-      "Resultados listos para distribuir",
-    ],
-    accent: "magenta",
-  },
-  {
-    badge: "Masterización",
-    badgeIcon: <Headphones className="h-3 w-3" />,
-    title: "Máster final con sonido",
-    highlight: "de estudio",
-    desc: "Masterización inteligente adaptada a streaming, radio y plataformas digitales sin perder dinámica.",
-    icon: <Headphones className="h-7 w-7" />,
-    bullets: [
-      "Optimizado para Spotify y YouTube",
-      "Loudness adaptado a cada plataforma",
-      "Calidad broadcast en un clic",
-    ],
-    accent: "magenta",
-  },
-  {
-    badge: "Contenido promocional",
-    badgeIcon: <ImageIcon className="h-3 w-3" />,
-    title: "Genera portadas, vídeos y",
-    highlight: "creatividades virales",
-    desc: "Todo el material visual que necesitas para lanzar tu canción y destacar en redes sociales.",
-    icon: <ImageIcon className="h-7 w-7" />,
-    bullets: [
-      "Portadas únicas con IA",
-      "Vídeos para Reels y TikTok",
-      "Creatividades para campañas",
-    ],
-    accent: "magenta",
-  },
-  {
-    badge: "Artistas virtuales",
-    badgeIcon: <Users className="h-3 w-3" />,
-    title: "Crea perfiles e identidades",
-    highlight: "con IA",
-    desc: "Diseña artistas virtuales completos, con estética, biografía y catálogo coherente desde cero.",
-    icon: <Users className="h-7 w-7" />,
-    bullets: [
-      "Identidad visual coherente",
-      "Estilo, voz y biografía a medida",
-      "Catálogo musical asociado",
-    ],
-    accent: "magenta",
-  },
-];
+function useFeatureSlides(): FeatureSlide[] {
+  const t = usePromocionMusicalCopy();
+  const icons: { badgeIcon: React.ReactNode; icon: React.ReactNode; accent: "cyan" | "magenta" }[] = [
+    { badgeIcon: <ShieldCheck className="h-3 w-3" />, icon: <ShieldCheck className="h-7 w-7" />, accent: "cyan" },
+    { badgeIcon: <Wand2 className="h-3 w-3" />, icon: <Wand2 className="h-7 w-7" />, accent: "magenta" },
+    { badgeIcon: <Upload className="h-3 w-3" />, icon: <Upload className="h-7 w-7" />, accent: "magenta" },
+    { badgeIcon: <Headphones className="h-3 w-3" />, icon: <Headphones className="h-7 w-7" />, accent: "magenta" },
+    { badgeIcon: <ImageIcon className="h-3 w-3" />, icon: <ImageIcon className="h-7 w-7" />, accent: "magenta" },
+    { badgeIcon: <Users className="h-3 w-3" />, icon: <Users className="h-7 w-7" />, accent: "magenta" },
+  ];
+  return t.slides.map((slide, i) => ({
+    badge: slide.badge,
+    badgeIcon: icons[i].badgeIcon,
+    title: slide.title,
+    highlight: slide.highlight,
+    desc: slide.desc,
+    icon: icons[i].icon,
+    bullets: slide.bullets,
+    accent: icons[i].accent,
+  }));
+}
 
 function FeaturesCarousel() {
+  const t = usePromocionMusicalCopy();
+  const slides = useFeatureSlides();
   const [api, setApi] = useState<CarouselApi>();
   const [selected, setSelected] = useState(0);
   const [count, setCount] = useState(0);
@@ -1006,7 +945,7 @@ function FeaturesCarousel() {
         className="w-full"
       >
         <CarouselContent>
-          {FEATURE_SLIDES.map((s, i) => (
+          {slides.map((s, i) => (
             <CarouselItem key={i}>
               <FeatureSlideCard slide={s} />
             </CarouselItem>
@@ -1022,7 +961,7 @@ function FeaturesCarousel() {
           <button
             key={i}
             onClick={() => api?.scrollTo(i)}
-            aria-label={`Ir a la diapositiva ${i + 1}`}
+            aria-label={t.carousel.goToSlide(i + 1)}
             className="h-1.5 rounded-full transition-all"
             style={{
               width: i === selected ? 28 : 8,

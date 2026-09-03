@@ -13,11 +13,14 @@ const benefitKeys = ['whitelabel', 'api', 'flexible'] as const;
 
 const Partners = () => {
   const { t } = useTranslation();
-  const p = (key: string) => t(`privacy.partners_page.${key}`);
+  // Some locales expose these strings at the root, others nested under `privacy`.
+  const p = (key: string) =>
+    t(`partners_page.${key}`, { defaultValue: t(`privacy.partners_page.${key}`) });
 
   return (
     <div className="min-h-screen page-bg">
-      <SEO title="Partners" description={p('subtitle')} path="/partners" />
+      <SEO title={p('title')} description={p('subtitle')} path="/partners" />
+
       <Navbar />
 
       <div className="pt-32 pb-20 px-6">

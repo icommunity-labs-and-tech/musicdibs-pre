@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import { legalTranslations } from './i18nLegal';
 import { faqTranslations } from './i18nFaq';
+import { marketingPageTranslations } from './i18nMarketingPage';
 import { aiStudioTranslations } from './i18nAIStudio';
 import { wizardTranslations } from './i18nWizard';
 import { dashboardTranslations } from './i18nDashboard';
@@ -2176,7 +2177,11 @@ langs.forEach((lang) => {
   if (resources[key] && faqTranslations[lang]) {
     Object.assign(resources[key].translation, faqTranslations[lang]);
   }
+  if (resources[key] && marketingPageTranslations[lang]) {
+    Object.assign(resources[key].translation, marketingPageTranslations[lang]);
+  }
 });
+
 
 // Merge AI Music Studio subpage translations
 const allLangs = ['es', 'en', 'pt-BR'] as const;
