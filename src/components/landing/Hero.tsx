@@ -3,9 +3,12 @@ import { Rocket, Play } from "lucide-react";
 import { SongGenerator } from "./SongGenerator";
 import { HowItWorksDialog } from "./HowItWorksDialog";
 import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
+import { useLandingStudioCopy } from "@/i18nLandingStudio";
 
 export function Hero() {
   const [howOpen, setHowOpen] = useState(false);
+  const copy = useLandingStudioCopy();
+  const t = copy.hero;
   return (
     <section className="relative pt-36 pb-20 overflow-hidden">
       {/* Background orbs */}
@@ -17,44 +20,42 @@ export function Hero() {
         <div>
           <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs text-muted-foreground mb-6">
             <span className="h-2 w-2 rounded-full bg-magenta animate-pulse" />
-            Nuevo · IA Music Studio
+            {t.badge}
           </div>
 
           <h1 className="font-display font-bold text-5xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-tight">
-            Crea y Mejora tu música <span className="text-gradient-brand">con IA</span>
+            {t.titleA} <span className="text-gradient-brand">{t.titleB}</span>
           </h1>
 
           <p className="mt-6 text-lg text-muted-foreground max-w-xl leading-relaxed">
-            El estudio musical definitivo con Inteligencia Artificial. Crea y mejora tus canciones,
-            masteriza de forma profesional, genera material promocional y diseña tus propios
-            artistas virtuales en minutos.
+            {t.subtitle}
           </p>
 
           <div id="cta" className="mt-9 flex flex-wrap items-center gap-4">
             <a href="https://www.musicdibs.com/login" target="_blank" rel="noopener noreferrer" onClick={() => trackSignupCtaClick("landing_hero", "https://www.musicdibs.com/login")} className="btn-magenta inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold">
               <Rocket className="h-4 w-4" />
-              Probar IA Music Studio GRATIS
+              {t.ctaPrimary}
             </a>
             <button onClick={() => setHowOpen(true)} className="btn-ghost inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold">
               <Play className="h-4 w-4" />
-              Ver cómo funciona
+              {t.ctaSecondary}
             </button>
           </div>
 
           <div className="mt-10 flex items-center gap-8 text-xs text-muted-foreground">
             <div>
               <p className="text-2xl font-display font-bold text-foreground">+120k</p>
-              <p>Canciones creadas</p>
+              <p>{t.stat1}</p>
             </div>
             <div className="h-10 w-px bg-border" />
             <div>
               <p className="text-2xl font-display font-bold text-foreground">4.9★</p>
-              <p>Valoración artistas</p>
+              <p>{t.stat2}</p>
             </div>
             <div className="h-10 w-px bg-border hidden sm:block" />
             <div className="hidden sm:block">
               <p className="text-2xl font-display font-bold text-foreground">100%</p>
-              <p>Propiedad legal</p>
+              <p>{t.stat3}</p>
             </div>
           </div>
         </div>

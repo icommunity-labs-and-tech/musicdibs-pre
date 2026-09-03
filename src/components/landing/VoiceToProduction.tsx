@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
+import { useLandingStudioCopy } from "@/i18nLandingStudio";
 import { Volume2, VolumeX, Sparkles, Mic, Wand2 } from "lucide-react";
 import aiStudioDemoMobileWebm from "@/assets/landing/promo/ai-studio-demo-mobile.webm";
 import aiStudioDemoMobileMp4 from "@/assets/landing/promo/ai-studio-demo-mobile.mp4";
@@ -12,6 +13,7 @@ const demoVideoMp4 = aiStudioDemoMp4;
 const demoVideoPoster = aiStudioDemoPosterJpg;
 
 export function VoiceToProduction() {
+  const t = useLandingStudioCopy().voice;
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [muted, setMuted] = useState(true);
@@ -127,7 +129,7 @@ export function VoiceToProduction() {
                   <button
                     type="button"
                     onClick={toggleSound}
-                    aria-label={muted ? "Activar sonido" : "Silenciar"}
+                    aria-label={muted ? t.unmute : t.mute}
                     className="absolute bottom-4 right-4 z-20 inline-flex items-center justify-center h-10 w-10 rounded-full bg-black/55 hover:bg-black/75 backdrop-blur-md border border-page-border text-primary-foreground transition"
                   >
                     {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -137,7 +139,7 @@ export function VoiceToProduction() {
 
               {/* Caption below */}
               <p className="mt-5 text-center text-xs text-page-fg-muted">
-                🔊 Activa el sonido y escucha la magia
+                {t.soundHint}
               </p>
             </div>
           </div>
@@ -146,13 +148,13 @@ export function VoiceToProduction() {
           <div className="order-1 lg:order-2">
             <div className="inline-flex items-center gap-2 rounded-full glass px-3 py-1.5 text-xs text-page-fg-muted mb-6">
               <span className="h-2 w-2 rounded-full bg-magenta animate-pulse" />
-              Voz a producción · IA
+              {t.badge}
             </div>
             <h2 className="font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight">
-              Tu pones la voz. <span className="text-gradient-brand">La IA crea el hit.</span>
+              {t.titleA} <span className="text-gradient-brand">{t.titleB}</span>
             </h2>
             <p className="mt-6 text-lg text-page-fg-muted leading-relaxed">
-              ¿Cantas? Sube tu voz a capela y nuestra IA construye toda la producción a tu alrededor: afinación profesional, instrumentación, arreglos y mezcla profesional en minutos. Tú pones la semilla, el AI Music Studio hace la magia.
+              {t.subtitle}
             </p>
 
             <ul className="mt-8 space-y-4">
@@ -161,8 +163,8 @@ export function VoiceToProduction() {
                   <Mic className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="font-medium">Sube tu voz</p>
-                  <p className="text-sm text-page-fg-muted">Una toma rápida desde el móvil es suficiente.</p>
+                  <p className="font-medium">{t.step1Title}</p>
+                  <p className="text-sm text-page-fg-muted">{t.step1Desc}</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -170,8 +172,8 @@ export function VoiceToProduction() {
                   <Wand2 className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="font-medium">La IA produce</p>
-                  <p className="text-sm text-page-fg-muted">Genera instrumentación, arreglos y mezcla a medida.</p>
+                  <p className="font-medium">{t.step2Title}</p>
+                  <p className="text-sm text-page-fg-muted">{t.step2Desc}</p>
                 </div>
               </li>
               <li className="flex items-start gap-3">
@@ -179,8 +181,8 @@ export function VoiceToProduction() {
                   <Sparkles className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="font-medium">Listo para publicar</p>
-                  <p className="text-sm text-page-fg-muted">Exporta tu track terminado en minutos.</p>
+                  <p className="font-medium">{t.step3Title}</p>
+                  <p className="text-sm text-page-fg-muted">{t.step3Desc}</p>
                 </div>
               </li>
             </ul>
@@ -193,7 +195,7 @@ export function VoiceToProduction() {
                 onClick={() => trackSignupCtaClick("landing_voice_to_production")}
                 className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-magenta to-pink px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-magenta/30 hover:shadow-magenta/50 hover:scale-[1.02] transition-all"
               >
-                Crear mi canción
+                {t.cta}
               </a>
             </div>
           </div>

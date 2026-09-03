@@ -1,4 +1,6 @@
 import { Helmet } from "react-helmet-async";
+import { useTranslation } from "react-i18next";
+import { useLandingStudioCopy } from "@/i18nLandingStudio";
 import "@/styles/landing-ai-studio.css";
 import { BackgroundScene } from "@/components/landing/BackgroundScene";
 import { Navbar } from "@/components/landing/Navbar";
@@ -10,19 +12,17 @@ import { SocialBanner } from "@/components/landing/SocialBanner";
 import { Footer } from "@/components/landing/Footer";
 
 export default function IAMusicStudio() {
+  const { i18n } = useTranslation();
+  const copy = useLandingStudioCopy();
+  const lang = i18n.resolvedLanguage || i18n.language || "es";
   return (
     <>
       <Helmet>
-        <title>Musicdibs IA Music Studio · Crea, masteriza y domina con IA</title>
-        <meta
-          name="description"
-          content="Estudio musical con IA para crear canciones desde cero, masterizar, generar material promocional y diseñar artistas virtuales en minutos."
-        />
+        <html lang={lang} />
+        <title>{copy.seo.title}</title>
+        <meta name="description" content={copy.seo.description} />
         <meta property="og:title" content="Musicdibs IA Music Studio" />
-        <meta
-          property="og:description"
-          content="Crea. Perfecciona. Domina con IA. El estudio musical definitivo."
-        />
+        <meta property="og:description" content={copy.seo.ogDescription} />
         <meta property="og:type" content="website" />
         <link rel="canonical" href="https://www.musicdibs.com/ia-music-studio" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -73,9 +73,9 @@ export default function IAMusicStudio() {
                 className="font-display font-semibold tracking-tight text-foreground/90 text-3xl sm:text-4xl md:text-5xl lg:text-6xl leading-[1.15]"
                 style={{ textWrap: "balance" as any }}
               >
-                Y cuando tu canción esté lista…{" "}
+                {copy.closing.partA}{" "}
                 <span className="block sm:inline text-foreground/70 font-medium">
-                  también puedes{" "}
+                  {copy.closing.partB}{" "}
                 </span>
                 <span
                   className="bg-clip-text text-transparent font-bold"
@@ -86,9 +86,9 @@ export default function IAMusicStudio() {
                       "drop-shadow(0 0 24px oklch(0.68 0.27 322 / 0.45))",
                   }}
                 >
-                  registrar sus derechos de autor
+                  {copy.closing.partC}
                 </span>
-                <span className="text-foreground/70 font-medium"> y </span>
+                <span className="text-foreground/70 font-medium"> {copy.closing.partD} </span>
                 <span
                   className="bg-clip-text text-transparent font-semibold"
                   style={{
@@ -96,9 +96,9 @@ export default function IAMusicStudio() {
                       "linear-gradient(90deg, oklch(0.92 0.05 322), oklch(0.85 0.12 295))",
                   }}
                 >
-                  distribuirla internacionalmente
+                  {copy.closing.partE}
                 </span>
-                <span className="text-foreground/70 font-medium"> con </span>
+                <span className="text-foreground/70 font-medium"> {copy.closing.partF} </span>
                 <span className="text-foreground font-semibold">Musicdibs</span>
                 <span className="text-foreground/70">.</span>
               </p>

@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, Play, Pause, Download, Heart } from "lucide-react";
 import demoSong from "@/assets/landing/musicdibs-demo.mp3";
-
-const FULL_PROMPT =
-  "Un tema de Synthwave de los 80 con sintetizadores nostálgicos y un ritmo bailable a 120 BPM";
+import { useLandingStudioCopy } from "@/i18nLandingStudio";
 
 const AUDIO_URL = demoSong;
 
 export function SongGenerator() {
+  const t = useLandingStudioCopy().generator;
+  const FULL_PROMPT = t.prompt;
   const [typed, setTyped] = useState("");
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -24,7 +24,7 @@ export function SongGenerator() {
       if (i >= FULL_PROMPT.length) clearInterval(interval);
     }, 45);
     return () => clearInterval(interval);
-  }, []);
+  }, [FULL_PROMPT]);
 
   // Init audio
   useEffect(() => {
@@ -92,11 +92,11 @@ export function SongGenerator() {
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-magenta/20 text-magenta">
             <Sparkles className="h-4 w-4" />
           </span>
-          <h3 className="font-display font-semibold text-lg">Generador de canciones</h3>
+          <h3 className="font-display font-semibold text-lg">{t.title}</h3>
         </div>
 
         <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-2">
-          Describe tu canción
+          {t.label}
         </label>
         <div
           aria-readonly
@@ -127,7 +127,7 @@ export function SongGenerator() {
             <div className="flex items-center gap-4">
               <button
                 onClick={togglePlay}
-                aria-label={playing ? "Pausar" : "Reproducir"}
+                aria-label={playing ? t.pause : t.play}
                 className="btn-magenta h-12 w-12 grid place-items-center rounded-full shrink-0"
               >
                 {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useLandingStudioCopy } from "@/i18nLandingStudio";
 import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 import { Sparkles, Image as ImageIcon, Megaphone, Play, Film, Layers, FileImage, Instagram, Music2, Video } from "lucide-react";
 import neonPulse from "@/assets/landing/covers/neon-pulse.webp";
@@ -72,7 +73,7 @@ const PROMO_CARDS: PromoCard[] = [
 
 const Reveal = ({ children }: { children: ReactNode }) => <div>{children}</div>;
 
-const CoverCardItem = ({ card }: { card: CoverCard }) => (
+const CoverCardItem = ({ card, coverLabel }: { card: CoverCard; coverLabel: string }) => (
   <div className="group relative shrink-0 w-52 sm:w-60 aspect-[4/5] rounded-2xl overflow-hidden border border-page-border shadow-xl shadow-fuchsia-500/20 transition-transform duration-300 hover:scale-[1.03] hover:shadow-fuchsia-500/40">
     <img
       src={card.image}
@@ -83,7 +84,7 @@ const CoverCardItem = ({ card }: { card: CoverCard }) => (
     <div className="absolute inset-0 bg-black/0 group-hover:bg-page-surface transition-colors duration-300" />
     <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md border border-page-border text-primary-foreground text-[11px] font-medium">
       <ImageIcon className="w-3.5 h-3.5" />
-      <span>Portada</span>
+      <span>{coverLabel}</span>
     </div>
     <div className="absolute inset-x-0 bottom-0 p-3.5 bg-gradient-to-t from-black/85 via-black/55 to-transparent">
       <p className="text-primary-foreground font-semibold text-sm sm:text-base tracking-tight drop-shadow leading-tight">{card.title}</p>
@@ -178,6 +179,7 @@ const COVER_EXTRA_TITLES = [
 ];
 
 export const PromoVisualsShowcase = () => {
+  const t = useLandingStudioCopy().promo;
   const extraPromoCards = PROMO_CARDS.filter((c) => COVER_EXTRA_TITLES.includes(c.title));
   const firstRowItems: Array<{ kind: "cover"; card: CoverCard } | { kind: "promo"; card: PromoCard }> = [
     ...COVER_CARDS.map((card) => ({ kind: "cover" as const, card })),
@@ -203,17 +205,17 @@ export const PromoVisualsShowcase = () => {
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-14">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-page-border bg-page-surface backdrop-blur-sm text-page-fg text-xs font-medium mb-5 shadow-sm">
               <Megaphone className="w-3.5 h-3.5" />
-              Material promocional con IA
+              {t.badge}
             </div>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary-foreground mb-4 tracking-tight">
-              Crea todo el material visual de{" "}
+              {t.titleA}{" "}
               <span className="bg-gradient-to-r from-brand via-accent to-primary bg-clip-text text-transparent">
-                tu lanzamiento
+                {t.titleB}
               </span>
-              , en minutos.
+              {t.titleC}
             </h2>
             <p className="text-base sm:text-lg text-page-fg-muted leading-relaxed">
-              Genera portadas, posts, flyers y vídeos cortos para promocionar tu música en redes. Todo desde Musicdibs.
+              {t.subtitle}
             </p>
           </div>
         </Reveal>
@@ -224,7 +226,7 @@ export const PromoVisualsShowcase = () => {
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-page-surface border border-page-border text-page-fg-muted text-xs sm:text-[13px] font-medium tracking-wide">
             <ImageIcon className="w-3.5 h-3.5 text-brand" />
-            Portadas y piezas para tu lanzamiento
+            {t.divider}
           </div>
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/15 to-transparent" />
         </div>
@@ -240,7 +242,7 @@ export const PromoVisualsShowcase = () => {
         <div className="promo-marquee flex gap-5 py-6 w-max">
           {loopedCovers.map((item, i) =>
             item.kind === "cover" ? (
-              <CoverCardItem key={`cover-${item.card.title}-${i}`} card={item.card} />
+              <CoverCardItem key={`cover-${item.card.title}-${i}`} card={item.card} coverLabel={t.coverBadge} />
             ) : (
               <PromoCardItem key={`cover-promo-${item.card.title}-${i}`} card={item.card} />
             )
@@ -258,10 +260,10 @@ export const PromoVisualsShowcase = () => {
             className="inline-flex items-center gap-2 rounded-xl px-8 py-3.5 text-sm font-semibold text-primary-foreground bg-gradient-to-r from-accent via-brand to-primary hover:from-accent hover:via-brand hover:to-primary shadow-lg shadow-fuchsia-500/30 transition-all"
           >
             <Sparkles className="w-4 h-4" />
-            Crear mi material promocional
+            {t.cta}
           </a>
           <p className="text-xs text-page-fg-subtle">
-            Portadas, posts, flyers y vídeos generados con IA en minutos.
+            {t.ctaNote}
           </p>
         </div>
       </div>
