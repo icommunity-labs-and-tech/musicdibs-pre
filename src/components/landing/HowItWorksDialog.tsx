@@ -19,23 +19,19 @@ import coverNeonPulse from "@/assets/landing/covers/neon-pulse.webp";
 import coverFuegoLento from "@/assets/landing/covers/fuego-lento.webp";
 import coverCaminoDeAbril from "@/assets/landing/covers/camino-de-abril.webp";
 import coverDistrito9 from "@/assets/landing/covers/distrito-9.webp";
+import { useLandingStudioCopy } from "@/i18nLandingStudio";
 import artist1 from "@/assets/landing/artist-1.jpg";
 import artist2 from "@/assets/landing/artist-2.jpg";
 import artist3 from "@/assets/landing/artist-3.jpg";
 
 type Step = {
-  badge: string;
-  title: string;
-  description: string;
   mockup: ReactNode;
 };
 
-const steps: Step[] = [
+type StepCopy = ReturnType<typeof useLandingStudioCopy>["howItWorks"]["steps"][number];
+
+const buildSteps = (c: ReturnType<typeof useLandingStudioCopy>["howItWorks"]): Step[] => [
   {
-    badge: "Paso 1 · Empieza",
-    title: "🚀 Regístrate y entra en AI Music Studio",
-    description:
-      "Dentro del AI Music Studio encontrarás todas las funciones para crear y mejorar tu música.",
     mockup: (
       <div className="relative h-full w-full rounded-xl overflow-hidden border border-magenta/30 bg-background/70">
         <div className="absolute inset-0 bg-gradient-to-br from-magenta/10 via-transparent to-pink/10 pointer-events-none" />
@@ -56,23 +52,19 @@ const steps: Step[] = [
     ),
   },
   {
-    badge: "Paso 2 · Crear",
-    title: "Crea tu canción desde una idea o mejora tu voz",
-    description:
-      "Escribe la idea de tu canción o sube una grabación de tu voz. La IA se encarga del resto.",
     mockup: (
       <div className="grid grid-cols-2 gap-3 h-full">
         <div className="rounded-xl border border-magenta/30 bg-background/70 p-4 flex flex-col">
           <div className="flex items-center gap-2 text-magenta text-xs font-semibold mb-2">
-            <Lightbulb className="h-3.5 w-3.5" /> Desde una idea
+            <Lightbulb className="h-3.5 w-3.5" /> {(c.steps[1] as any).fromIdea}
           </div>
           <div className="text-[11px] text-muted-foreground rounded-md bg-background/80 border border-border p-2 flex-1">
-            "Un tema synthwave con voz femenina y bajo potente a 120 BPM…"
+            {(c.steps[1] as any).ideaExample}
           </div>
         </div>
         <div className="rounded-xl border border-pink/30 bg-background/70 p-4 flex flex-col">
           <div className="flex items-center gap-2 text-pink text-xs font-semibold mb-2">
-            <Mic className="h-3.5 w-3.5" /> Desde tu voz
+            <Mic className="h-3.5 w-3.5" /> {(c.steps[1] as any).fromVoice}
           </div>
           <div className="flex-1 rounded-md bg-background/80 border border-border p-2 flex items-center justify-center gap-1">
             {Array.from({ length: 18 }).map((_, i) => (
@@ -91,21 +83,17 @@ const steps: Step[] = [
     ),
   },
   {
-    badge: "Paso 3 · Masterizar",
-    title: "Masterización profesional con un clic",
-    description:
-      "Sube tu mezcla y obtén un master con calidad de estudio listo para publicar.",
     mockup: (
       <div className="h-full rounded-xl border border-magenta/30 bg-background/70 p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted-foreground">cancion-final.wav</span>
           <span className="inline-flex items-center gap-1 text-magenta font-semibold">
-            <Check className="h-3 w-3" /> Masterizado
+            <Check className="h-3 w-3" /> {(c.steps[2] as any).mastered}
           </span>
         </div>
         <div className="grid grid-cols-2 gap-3 flex-1">
           <div className="rounded-md bg-background/80 border border-border p-2 flex flex-col">
-            <span className="text-[10px] text-muted-foreground mb-1">Antes</span>
+            <span className="text-[10px] text-muted-foreground mb-1">{(c.steps[2] as any).before}</span>
             <div className="flex-1 flex items-end gap-[2px]">
               {Array.from({ length: 28 }).map((_, i) => (
                 <span
@@ -117,7 +105,7 @@ const steps: Step[] = [
             </div>
           </div>
           <div className="rounded-md bg-background/80 border border-magenta/30 p-2 flex flex-col">
-            <span className="text-[10px] text-magenta mb-1">Después</span>
+            <span className="text-[10px] text-magenta mb-1">{(c.steps[2] as any).after}</span>
             <div className="flex-1 flex items-end gap-[2px]">
               {Array.from({ length: 28 }).map((_, i) => (
                 <span
@@ -131,17 +119,13 @@ const steps: Step[] = [
         </div>
         <div className="flex gap-2 text-[10px]">
           <span className="px-2 py-1 rounded-full bg-magenta/15 text-magenta">+6 dB LUFS</span>
-          <span className="px-2 py-1 rounded-full bg-pink/15 text-pink">EQ balanceado</span>
+          <span className="px-2 py-1 rounded-full bg-pink/15 text-pink">{(c.steps[2] as any).eq}</span>
           <span className="px-2 py-1 rounded-full bg-foreground/10 text-muted-foreground">Stereo wide</span>
         </div>
       </div>
     ),
   },
   {
-    badge: "Paso 4 · Material visual",
-    title: "Genera todo el material promocional",
-    description:
-      "Portadas, posts, reels, flyers y vídeos creados automáticamente a partir de tu canción.",
     mockup: (
       <div className="grid grid-cols-3 gap-3 h-full content-center">
         {[
@@ -161,10 +145,6 @@ const steps: Step[] = [
     ),
   },
   {
-    badge: "Paso 5 · Artistas virtuales",
-    title: "Diseña tus propios artistas con IA",
-    description:
-      "Crea avatares de artistas únicos, personaliza su estilo y úsalos en tus campañas.",
     mockup: (
       <div className="grid grid-cols-3 gap-3 h-full">
         {[
@@ -179,7 +159,7 @@ const steps: Step[] = [
             <img src={a.img} alt={`Artista ${a.name}`} loading="lazy" className="w-full h-full object-cover" />
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-2">
               <div className="text-[11px] font-semibold text-foreground">{a.name}</div>
-              <div className="text-[9px] text-muted-foreground">IA generado</div>
+              <div className="text-[9px] text-muted-foreground">{(c.steps[4] as any).aiGenerated}</div>
             </div>
           </div>
         ))}
@@ -197,8 +177,11 @@ export function HowItWorksDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const copy = useLandingStudioCopy().howItWorks;
+  const steps = buildSteps(copy);
   const [current, setCurrent] = useState(0);
   const step = steps[current];
+  const stepCopy: StepCopy = copy.steps[current];
 
   const goTo = (i: number) => setCurrent(Math.max(0, Math.min(steps.length - 1, i)));
 
@@ -219,7 +202,7 @@ export function HowItWorksDialog({
                     key={i}
                     onClick={() => goTo(i)}
                     className="flex items-center gap-2 group"
-                    aria-label={`Ir al paso ${i + 1}`}
+                    aria-label={`${copy.goToStep} ${i + 1}`}
                   >
                     <span
                       className={`h-8 w-8 grid place-items-center rounded-full border transition-all ${
@@ -243,13 +226,13 @@ export function HowItWorksDialog({
             {/* Content */}
             <div className="text-center mb-5">
               <p className="text-xs uppercase tracking-wider text-pink font-semibold mb-2">
-                {step.badge}
+                {stepCopy.badge}
               </p>
               <h3 className="font-display font-bold text-2xl sm:text-3xl mb-2">
-                {step.title}
+                {stepCopy.title}
               </h3>
               <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-                {step.description}
+                {stepCopy.description}
               </p>
             </div>
 
@@ -265,7 +248,7 @@ export function HowItWorksDialog({
                 disabled={current === 0}
                 className="btn-ghost inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                <ChevronLeft className="h-4 w-4" /> Anterior
+                <ChevronLeft className="h-4 w-4" /> {copy.prev}
               </button>
               <span className="text-xs text-muted-foreground font-mono">
                 {current + 1} / {steps.length}
@@ -275,7 +258,7 @@ export function HowItWorksDialog({
                   onClick={() => goTo(current + 1)}
                   className="btn-magenta inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold"
                 >
-                  Siguiente <ChevronRight className="h-4 w-4" />
+                  {copy.next} <ChevronRight className="h-4 w-4" />
                 </button>
               ) : (
                 <a
