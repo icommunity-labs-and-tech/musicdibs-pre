@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -203,6 +203,7 @@ export type Database = {
           callback_token: string | null
           created_at: string
           duration: number
+          error_message: string | null
           final_prompt_sent: string | null
           generation_group_id: string | null
           genre: string | null
@@ -240,6 +241,7 @@ export type Database = {
           callback_token?: string | null
           created_at?: string
           duration: number
+          error_message?: string | null
           final_prompt_sent?: string | null
           generation_group_id?: string | null
           genre?: string | null
@@ -277,6 +279,7 @@ export type Database = {
           callback_token?: string | null
           created_at?: string
           duration?: number
+          error_message?: string | null
           final_prompt_sent?: string | null
           generation_group_id?: string | null
           genre?: string | null
@@ -2956,45 +2959,6 @@ export type Database = {
         }
         Relationships: []
       }
-      seo_keyword_snapshots: {
-        Row: {
-          captured_date: string
-          cpc: number | null
-          created_at: string
-          db: string
-          id: string
-          phrase: string
-          position: number
-          traffic_share: number | null
-          url: string | null
-          volume: number | null
-        }
-        Insert: {
-          captured_date?: string
-          cpc?: number | null
-          created_at?: string
-          db: string
-          id?: string
-          phrase: string
-          position: number
-          traffic_share?: number | null
-          url?: string | null
-          volume?: number | null
-        }
-        Update: {
-          captured_date?: string
-          cpc?: number | null
-          created_at?: string
-          db?: string
-          id?: string
-          phrase?: string
-          position?: number
-          traffic_share?: number | null
-          url?: string | null
-          volume?: number | null
-        }
-        Relationships: []
-      }
       social_promotions: {
         Row: {
           copy_ig_feed: string | null
@@ -3548,41 +3512,56 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          error_message: string | null
           id: string
+          kie_task_id: string | null
           mureka_vocal_id: string | null
           name: string
+          persona_id: string | null
           provider: string
           provider_voice_id: string
           sample_url: string | null
           status: string
           updated_at: string
           user_id: string
+          verification_audio_url: string | null
+          verification_phrase: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
+          error_message?: string | null
           id?: string
+          kie_task_id?: string | null
           mureka_vocal_id?: string | null
           name?: string
+          persona_id?: string | null
           provider?: string
           provider_voice_id: string
           sample_url?: string | null
           status?: string
           updated_at?: string
           user_id: string
+          verification_audio_url?: string | null
+          verification_phrase?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
+          error_message?: string | null
           id?: string
+          kie_task_id?: string | null
           mureka_vocal_id?: string | null
           name?: string
+          persona_id?: string | null
           provider?: string
           provider_voice_id?: string
           sample_url?: string | null
           status?: string
           updated_at?: string
           user_id?: string
+          verification_audio_url?: string | null
+          verification_phrase?: string | null
         }
         Relationships: []
       }
@@ -4192,6 +4171,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      detect_similar_email_signups: {
+        Args: { p_days?: number; p_min_group_size?: number }
+        Returns: {
+          account_count: number
+          emails: string[]
+          first_created: string
+          last_created: string
+          normalized_prefix: string
+          unblocked_count: number
+        }[]
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
@@ -4407,6 +4397,12 @@ export type Database = {
         Args: { p_amount: number; p_reason?: string; p_user_id: string }
         Returns: Json
       }
+      search_auth_users: {
+        Args: { p_search: string }
+        Returns: {
+          user_id: string
+        }[]
+      }
       set_user_password_hash: {
         Args: { new_hash: string; target_user_id: string }
         Returns: undefined
@@ -4442,12 +4438,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4471,11 +4467,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4496,11 +4492,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4521,11 +4517,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -4538,11 +4534,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
