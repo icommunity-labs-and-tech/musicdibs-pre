@@ -158,7 +158,7 @@ export default function UserLogin() {
     const signUpLang = i18n.resolvedLanguage || 'es';
     const { error } = await signUp(form.get('email') as string, form.get('password') as string, { language: signUpLang });
     setLoading(false);
-    if (error) { setError(error.message); } else { setSuccess(t('userLogin.checkEmailConfirm')); trackSignupConversion(); }
+    if (error) { setError(error.message); } else { setSuccess(t('userLogin.checkEmailConfirm')); trackSignupConversion(form.get('email') as string); }
   };
 
   const GoogleIcon = () => (

@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { hasAdConsent } from '@/components/ConsentBanner';
 
 declare global {
   interface Window {
@@ -13,6 +14,20 @@ const SIGNUP_SEND_TO = `${AW_ACCOUNT}/YBe6CK2M69AcEL33oJtE`;
 const LEAD_SEND_TO = `${AW_ACCOUNT}/lJ5FCLTVw-wcEL33oJtE`;
 const FALLBACK_VALUE = 19.9; // valor medio de compra, usado si Stripe no confirma a tiempo
 const FALLBACK_CURRENCY = 'EUR';
+
+/**
+ * Enhanced conversions: envia el email del usuario a Google Ads (la etiqueta lo
+ * hashea automaticamente) para mejorar la atribucion y la optimizacion por
+ * valor. Solo se envia si el banner de consentimiento lo permite.
+ */
+async function setEnhancedConversionEmail(email?: string | null) {
+  if (!email) return;
+  try {
+    if (await hasAdConsent()) {
+      window.gtag?.('set', 'user_data', { email });
+    }
+  } catch { /* no bloquear la conversion por esto */ }
+}
 
 /**
  * Google Ads conversion tracking — COMPRA.
@@ -33,14 +48,35 @@ export function trackPurchaseConversion(sessionId: string) {
 
   const tryFetchAndFire = async () => {
     attempts++;
-    const { data: order } = await supabase
+    // Nota: customer_email es una columna nueva (sept-2026); los tipos
+    // generados aun no la incluyen, por eso se consulta con cliente sin tipar.
+    const untyped = supabase as unknown as {
+      from: (t: string) => {
+        select: (c: string) => {
+          eq: (c: string, v: string) => {
+            eq: (c: string, v: string) => {
+              maybeSingle: () => Promise<{ data: { amount_gross: number; currency: string; customer_email: string | null } | null }>;
+            };
+          };
+        };
+      };
+    };
+    const { data: order } = await untyped
       .from('orders')
-      .select('amount_gross, currency')
+      .select('amount_gross, currency, customer_email')
       .eq('stripe_checkout_session_id', sessionId)
       .eq('order_status', 'paid')
       .maybeSingle();
 
     if (order) {
+      // Email para enhanced conversions: el guardado por el webhook en la
+      // orden, o el del usuario autenticado como fallback.
+      let email = order.customer_email as string | null;
+      if (!email) {
+        const { data: authData } = await supabase.auth.getUser();
+        email = authData.user?.email || null;
+      }
+      await setEnhancedConversionEmail(email);
       window.gtag?.('event', 'conversion', {
         send_to: PURCHASE_SEND_TO,
         value: Number(order.amount_gross) || FALLBACK_VALUE,
@@ -75,14 +111,16 @@ export function trackPurchaseConversion(sessionId: string) {
  * registro (email/password) con exito. No requiere transaction_id (no es una
  * compra); se deduplica con una key fija en sessionStorage.
  */
-export function trackSignupConversion() {
+export function trackSignupConversion(email?: string) {
   const trackedKey = 'ga_signup_tracked';
   if (sessionStorage.getItem(trackedKey)) return;
 
-  window.gtag?.('event', 'conversion', {
-    send_to: SIGNUP_SEND_TO,
-    value: FALLBACK_VALUE,
-    currency: FALLBACK_CURRENCY,
+  void setEnhancedConversionEmail(email).finally(() => {
+    window.gtag?.('event', 'conversion', {
+      send_to: SIGNUP_SEND_TO,
+      value: FALLBACK_VALUE,
+      currency: FALLBACK_CURRENCY,
+    });
   });
   sessionStorage.setItem(trackedKey, '1');
 }

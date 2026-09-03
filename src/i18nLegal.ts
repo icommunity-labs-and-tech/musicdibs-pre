@@ -391,6 +391,7 @@ export const legalTranslations = {
       data_recipients_title: 'A que destinatários serão comunicados seus dados?',
       data_recipients_1: 'A ninguém fora da iCommunity salvo consentimento do usuário ou obrigação legal.',
       data_recipients_2: 'Informamos também que a iCommunity trabalha com diversas entidades que prestam um serviço que requer acesso a dados pessoais, sendo essas entidades, portanto, responsáveis pelo tratamento da iCommunity.',
+      data_recipients_3: 'Da mesma forma, com o seu consentimento, compartilhamos seu endereço de e-mail (protegido por hash) com o Google para a medição de campanhas publicitárias (conversões otimizadas do Google Ads), conforme a política de dados de clientes do Google.',
       data_rights_title: 'Quais direitos você tem como titular dos dados?',
       data_rights_1: 'Você, como titular de dados pessoais, tanto por conta própria como através de um representante devidamente credenciado, pode exercer os direitos de acesso, retificação, limitação do tratamento, supressão, oposição, bem como o direito à portabilidade de seus dados.',
       data_rights_2: 'Para exercê-los, deve entrar em contato conosco enviando um e-mail para',

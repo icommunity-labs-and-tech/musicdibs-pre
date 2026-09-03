@@ -259,6 +259,8 @@ async function createOrderRecord(
     stripeCustomerId?: string;
     couponCode?: string;
     promotionCode?: string;
+    customerEmail?: string;
+    customerCountry?: string;
     metadata?: Record<string, any>;
     paidAt?: string;
     orderStatus?: string;
@@ -325,6 +327,8 @@ async function createOrderRecord(
       is_subscription: params.isSubscription,
       is_renewal: params.isRenewal,
       stripe_customer_id: params.stripeCustomerId || null,
+      customer_email: params.customerEmail || null,
+      country: params.customerCountry || null,
       is_first_purchase: isFirstPurchase,
       coupon_code: params.couponCode || null,
       promotion_code: params.promotionCode || null,
@@ -554,6 +558,8 @@ serve(async (req) => {
             currency: session.currency || "eur",
             isSubscription: false,
             isRenewal: false,
+            customerEmail: session.customer_details?.email || session.customer_email || undefined,
+            customerCountry: session.customer_details?.address?.country || undefined,
             metadata: session.metadata || {},
           });
 
@@ -1052,6 +1058,8 @@ serve(async (req) => {
           isRenewal: false,
           couponCode: couponCode || sessionMeta.coupon_code,
           promotionCode,
+          customerEmail: session.customer_details?.email || session.customer_email || undefined,
+          customerCountry: session.customer_details?.address?.country || undefined,
           metadata: sessionMeta,
         });
 
