@@ -65,6 +65,8 @@ const staticEntries: SitemapEntry[] = [
   { path: "/pt/promocion-musical", changefreq: "monthly", priority: "0.8" },
   { path: "/pt/tools/metadata-finder", changefreq: "monthly", priority: "0.7" },
   { path: "/certificado-blockchain", changefreq: "monthly", priority: "0.8" },
+  { path: "/como-funciona", changefreq: "monthly", priority: "0.8" },
+  { path: "/pt/como-funciona", changefreq: "monthly", priority: "0.8" },
   { path: "/registro-gratis", changefreq: "monthly", priority: "0.8" },
   { path: "/musicdibs-vs-distrokid", changefreq: "monthly", priority: "0.6" },
   { path: "/musicdibs-vs-loudly", changefreq: "monthly", priority: "0.6" },
