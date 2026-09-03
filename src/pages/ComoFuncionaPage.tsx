@@ -308,9 +308,10 @@ export default function ComoFuncionaPage() {
               <ArrowRight className="h-4 w-4" />
             </a>
           </section>
-        </main>
+        </div>
         <SocialBanner />
         <Footer />
+        </main>
       </div>
     </>
   );
