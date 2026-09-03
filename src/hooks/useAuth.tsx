@@ -105,6 +105,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             return;
           }
 
+          // Conversion de registro para altas via OAuth (Google). Estos usuarios
+          // entran por el callback y van directos a /dashboard, sin pasar por
+          // el formulario de registro donde se dispara trackSignupConversion,
+          // asi que sus altas no se atribuian a Google Ads. Solo disparamos
+          // cuando la cuenta se acaba de crear (< 10 min) para no contar
+          // logins de usuarios existentes, y deduplicamos en localStorage por
+          // user_id (sessionStorage no siempre sobrevive al redirect OAuth).
+          if (_event === 'SIGNED_IN' && newSession?.user) {
+            const u = newSession.user;
+            const createdAt = u.created_at ? Date.parse(u.created_at) : 0;
+            const isNewAccount = createdAt > 0 && Date.now() - createdAt < 10 * 60 * 1000;
+            const dedupeKey = `ga_signup_tracked_${u.id}`;
+            if (isNewAccount && !localStorage.getItem(dedupeKey)) {
+              localStorage.setItem(dedupeKey, '1');
+              void import('@/lib/googleAdsConversions').then((m) =>
+                m.trackSignupConversion(u.email || undefined),
+              );
+            }
+          }
+
           // Set loading=true immediately so DashboardLayout shows the spinner
           // and does NOT redirect to /login during the async initializeUser tick.
           // Without this, a race condition causes a redirect loop after login:
