@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Upload, Search, Megaphone, ShoppingBag, User,
   CreditCard, LifeBuoy, Music, LogOut, Mic, Sparkles, Shield,
   HelpCircle, Users, BarChart3, Settings2, Rocket, Briefcase,
-  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell, Youtube,
+  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell, Youtube, Mail,
   type LucideIcon,
 } from 'lucide-react';
 import { DistributionInfoModal } from '@/components/DistributionInfoModal';
@@ -104,6 +104,8 @@ export function DashboardSidebar() {
     { title: 'Proveedores IA', url: '/dashboard/admin/ai-models', icon: Sparkles },
     { title: 'Panel de Tráfico', url: '/dashboard/admin/seo-dashboard', icon: BarChart3 },
     { title: 'Managers', url: '/dashboard/admin/managers', icon: Briefcase },
+    { title: 'Leads y compras', url: '/dashboard/admin/leads', icon: Mail },
+
 
   ];
 
