@@ -4771,6 +4771,63 @@ serve(async (req) => {
       });
     }
 
+    // ── get_leads_and_purchases ───────────────────────────────────
+    // Listado unificado para /dashboard/admin/leads: leads de registro de
+    // obra (conversión work_registered_lead) y compras pagadas, ambos con
+    // email del usuario y fecha.
+    if (action === "get_leads_and_purchases") {
+      const limit = Math.min(payload.limit || 100, 500);
+      const emailsMap = await getAllEmailsMap();
+
+      const { data: works } = await admin
+        .from("works")
+        .select("id, title, created_at, user_id, status")
+        .eq("status", "registered")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      const { data: orders } = await admin
+        .from("orders")
+        .select("id, user_id, paid_at, amount_gross, currency, product_label, product_type, order_status")
+        .eq("order_status", "paid")
+        .order("paid_at", { ascending: false })
+        .limit(limit);
+
+      const userIds = [
+        ...new Set([
+          ...(works || []).map((w: any) => w.user_id),
+          ...(orders || []).map((o: any) => o.user_id),
+        ].filter(Boolean)),
+      ];
+      const namesMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: profs } = await admin
+          .from("profiles")
+          .select("user_id, display_name")
+          .in("user_id", userIds);
+        for (const p of profs || []) namesMap[p.user_id] = p.display_name || "";
+      }
+
+      return json({
+        leads: (works || []).map((w: any) => ({
+          id: w.id,
+          title: w.title,
+          created_at: w.created_at,
+          email: emailsMap[w.user_id] || "",
+          name: namesMap[w.user_id] || "",
+        })),
+        purchases: (orders || []).map((o: any) => ({
+          id: o.id,
+          created_at: o.paid_at,
+          email: emailsMap[o.user_id] || "",
+          name: namesMap[o.user_id] || "",
+          amount: Number(o.amount_gross) || 0,
+          currency: o.currency || "EUR",
+          product: o.product_label || o.product_type || "",
+        })),
+      });
+    }
+
     // ── get_campaigns_catalog ─────────────────────────────────────
 
     if (action === "get_campaigns_catalog") {
