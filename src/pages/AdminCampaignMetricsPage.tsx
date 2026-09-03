@@ -99,6 +99,9 @@ export default function AdminCampaignMetricsPage() {
   const [googleAdsSpend, setGoogleAdsSpend] = useState<GoogleAdsSpendData | null>(null);
   const [loadingGoogleAdsSpend, setLoadingGoogleAdsSpend] = useState(true);
   const [googleAdsSpendError, setGoogleAdsSpendError] = useState<string | null>(null);
+  const [revenueByUtm, setRevenueByUtm] = useState<RevenueByUtmData | null>(null);
+  const [loadingRevenueByUtm, setLoadingRevenueByUtm] = useState(true);
+  const [revenueByUtmError, setRevenueByUtmError] = useState<string | null>(null);
   const [detailCampaign, setDetailCampaign] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<any>(null);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
