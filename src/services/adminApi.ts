@@ -167,4 +167,8 @@ export const adminApi = {
   updateCreditCoupon: (payload: { coupon_id: string; code?: string; campaign_name?: string; collaborator_name?: string | null; credits?: number; max_redemptions?: number | null; expires_at?: string | null }) => adminAction('update_credit_coupon', payload),
   toggleCreditCoupon: (coupon_id: string, is_active: boolean) => adminAction('toggle_credit_coupon', { coupon_id, is_active }),
   getCreditCouponConversions: () => adminAction('get_credit_coupon_conversions'),
+  getLeadsAndPurchases: (limit = 200) => adminAction('get_leads_and_purchases', { limit }) as Promise<{
+    leads: Array<{ id: string; title: string; created_at: string; email: string; name: string }>;
+    purchases: Array<{ id: string; created_at: string; email: string; name: string; amount: number; currency: string; product: string }>;
+  }>,
 };
