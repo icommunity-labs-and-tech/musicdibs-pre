@@ -33,6 +33,7 @@ import {
   Radio,
 } from "lucide-react";
 import { toast } from "sonner";
+import SeoKeywordStrategyPanel from "@/components/admin/SeoKeywordStrategyPanel";
 
 interface Metric {
   value: number;
@@ -470,6 +471,8 @@ export default function AdminTrafficDashboardPage() {
           </div>
         </>
       )}
+
+      <SeoKeywordStrategyPanel />
 
       {data && (
         <p className="text-xs text-muted-foreground">
