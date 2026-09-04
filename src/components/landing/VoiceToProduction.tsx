@@ -189,7 +189,7 @@ export function VoiceToProduction() {
 
             <div className="mt-8">
               <a
-                href="https://www.musicdibs.com/login"
+                href="https://musicdibs.com/login"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackSignupCtaClick("landing_voice_to_production")}

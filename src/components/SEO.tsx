@@ -26,7 +26,7 @@ const LOCALE_MAP: Record<"es" | "en" | "pt-BR", { html: string; og: string }> = 
 };
 
 
-const BASE_URL = "https://www.musicdibs.com";
+const BASE_URL = "https://musicdibs.com";
 const DEFAULT_OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/27fdd7c8-3e07-4d0d-886d-53859f68e5de";
 
 

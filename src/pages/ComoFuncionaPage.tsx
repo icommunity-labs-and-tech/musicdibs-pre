@@ -176,7 +176,7 @@ export default function ComoFuncionaPage() {
     ? i18n.language
     : "es") as ComoLang;
   const c = COPY[lang];
-  const canonicalUrl = "https://www.musicdibs.com/como-funciona";
+  const canonicalUrl = "https://musicdibs.com/como-funciona";
 
   return (
     <>
@@ -224,7 +224,7 @@ export default function ComoFuncionaPage() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <a
-                href="https://www.musicdibs.com/login?tab=register"
+                href="https://musicdibs.com/login?tab=register"
                 className="inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm sm:text-base font-semibold text-primary-foreground shadow-[var(--shadow-magenta)] transition-transform hover:scale-105"
                 style={{
                   background:
@@ -297,7 +297,7 @@ export default function ComoFuncionaPage() {
             <h2 className="text-2xl sm:text-4xl font-bold">{c.finalTitle}</h2>
             <p className="mt-3 text-[oklch(0.98_0.01_295/0.72)]">{c.finalSub}</p>
             <a
-              href="https://www.musicdibs.com/login?tab=register"
+              href="https://musicdibs.com/login?tab=register"
               className="mt-7 inline-flex items-center gap-2 rounded-full px-7 py-3.5 text-sm sm:text-base font-semibold text-primary-foreground shadow-[var(--shadow-magenta)] transition-transform hover:scale-105"
               style={{
                 background:

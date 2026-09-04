@@ -71,9 +71,9 @@ interface NavbarProps {
 
 export function Navbar({
   ctaText = "🚀 Pruébalo gratis",
-  ctaHref = "https://www.musicdibs.com/login?tab=register",
+  ctaHref = "https://musicdibs.com/login?tab=register",
   secondaryText = "Iniciar sesión",
-  secondaryHref = "https://www.musicdibs.com/login",
+  secondaryHref = "https://musicdibs.com/login",
   onLanguageChange,
 }: NavbarProps) {
   return (

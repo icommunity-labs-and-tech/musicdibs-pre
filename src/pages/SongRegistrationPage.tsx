@@ -167,7 +167,7 @@ const SongRegistrationPage = ({ forcedLang, forcedPath, forcedSeoTitle, forcedSe
   const seoTitle = forcedSeoTitle ?? c.seoTitle;
   const seoDesc = forcedSeoDesc ?? c.seoDesc;
 
-  const baseUrl = "https://www.musicdibs.com";
+  const baseUrl = "https://musicdibs.com";
   const fullUrl = `${baseUrl}${path}`;
 
   const articleSchema = {

@@ -59,7 +59,7 @@ export default function RegistroMusicalPage({
     ? i18n.language
     : "es") as RegistroLang);
   const c = REGISTRO_COPY[lang];
-  const canonicalUrl = `https://www.musicdibs.com${canonicalPath}`;
+  const canonicalUrl = `https://musicdibs.com${canonicalPath}`;
   const htmlLang = lang === "pt-BR" ? "pt-BR" : lang;
 
   // Shared sections (royalties calculator, pricing, legal validity, footer)
@@ -106,8 +106,8 @@ export default function RegistroMusicalPage({
             provider: {
               "@type": "Organization",
               name: "Musicdibs",
-              url: "https://www.musicdibs.com",
-              logo: "https://www.musicdibs.com/logo.png",
+              url: "https://musicdibs.com",
+              logo: "https://musicdibs.com/logo.png",
             },
             offers: {
               "@type": "Offer",
@@ -126,9 +126,9 @@ export default function RegistroMusicalPage({
           <BackgroundScene />
           <Navbar
             ctaText={c.navCta}
-            ctaHref="https://www.musicdibs.com/login?tab=register"
+            ctaHref="https://musicdibs.com/login?tab=register"
             secondaryText={c.navSecondary}
-            secondaryHref="https://www.musicdibs.com/login"
+            secondaryHref="https://musicdibs.com/login"
             onLanguageChange={handleLanguageChange}
           />
 
@@ -160,7 +160,7 @@ export default function RegistroMusicalPage({
 
                   <div className="mt-9 flex flex-col sm:flex-row gap-3">
                     <a
-                      href="https://www.musicdibs.com/login?tab=register"
+                      href="https://musicdibs.com/login?tab=register"
                       className="btn-magenta inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold"
                     >
                       {c.heroCta}

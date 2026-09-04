@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
  */
 
 const PATH = "/musicdibs-vs-loudly";
-const URL = `https://www.musicdibs.com${PATH}`;
+const URL = `https://musicdibs.com${PATH}`;
 
 type Row = {
   feature: string;
@@ -80,8 +80,8 @@ const MusicdibsVsLoudlyPage = () => {
     publisher: {
       "@type": "Organization",
       name: "Musicdibs",
-      url: "https://www.musicdibs.com",
-      logo: { "@type": "ImageObject", url: "https://www.musicdibs.com/og-image.png" },
+      url: "https://musicdibs.com",
+      logo: { "@type": "ImageObject", url: "https://musicdibs.com/og-image.png" },
     },
   };
   const faqSchema = {
@@ -97,7 +97,7 @@ const MusicdibsVsLoudlyPage = () => {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Musicdibs", item: "https://www.musicdibs.com" },
+      { "@type": "ListItem", position: 1, name: "Musicdibs", item: "https://musicdibs.com" },
       { "@type": "ListItem", position: 2, name: "Musicdibs vs Loudly", item: URL },
     ],
   };

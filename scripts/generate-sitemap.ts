@@ -32,7 +32,6 @@ const staticEntries: SitemapEntry[] = [
   { path: "/manager", changefreq: "monthly", priority: "0.8" },
   { path: "/partners", changefreq: "monthly", priority: "0.6" },
   { path: "/news", changefreq: "weekly", priority: "0.8" },
-  { path: "/en/news", changefreq: "weekly", priority: "0.8" },
   { path: "/faq", changefreq: "monthly", priority: "0.6" },
   { path: "/legal-validity", changefreq: "yearly", priority: "0.5" },
   { path: "/registro-obras-musicales", changefreq: "monthly", priority: "0.9" },
@@ -96,20 +95,18 @@ async function fetchBlogPosts(): Promise<SitemapEntry[]> {
     const entries: SitemapEntry[] = [];
     for (const r of rows) {
       if (!r.slug) continue;
-      const lastmod = r.updated_at?.split("T")[0];
+      // Only the canonical /news/:slug URL belongs in the sitemap. The legacy
+      // /en/news/:slug route still resolves for old inbound links, but it
+      // renders the same article and canonicalises to /news/:slug — listing it
+      // here made Search Console report ~128 "alternate page with canonical".
       entries.push({
         path: `/news/${r.slug}`,
-        lastmod,
+        lastmod: r.updated_at?.split("T")[0],
         changefreq: "monthly" as const,
         priority: "0.6",
       });
-      entries.push({
-        path: `/en/news/${r.slug}`,
-        lastmod,
-        changefreq: "monthly" as const,
-        priority: "0.5",
-      });
     }
+
     return entries;
   } catch (err) {
     console.warn(`[sitemap] blog_posts fetch error:`, err);
