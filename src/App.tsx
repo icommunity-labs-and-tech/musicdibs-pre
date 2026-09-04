@@ -1,6 +1,12 @@
 import { Suspense, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+
+/** Legacy /admin/* URLs live under /dashboard/admin/* — redirect instead of 404. */
+const AdminLegacyRedirect = () => {
+  const { pathname, search, hash } = useLocation();
+  return <Navigate to={`/dashboard${pathname}${search}${hash}`} replace />;
+};
 import LocalizedRoute from "@/components/LocalizedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/ThemeProvider";
