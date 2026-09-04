@@ -97,7 +97,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
           <span className="text-xs text-muted-foreground">Periodo seleccionado</span>
         </div>
         <p className="text-xs text-muted-foreground">
-          El gasto se muestra por campaña. Las conversiones se detallan por objetivo porque Google Ads no atribuye el coste a cada acción.
+          El gasto se muestra por campaña. Las conversiones principales son registros, leads y compras; las secundarias son visitas a páginas clave y otras acciones de observación.
         </p>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -117,11 +117,19 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
               </div>
             ))}
           </DataList>
-          <DataList title="Conversiones por objetivo">
-            {data.objective_conversions.length === 0 ? <Empty /> : data.objective_conversions.map((row) => (
+          <DataList title={`Conversiones principales (${totalPrimary.toLocaleString('es-ES')})`}>
+            {primaryConversions.length === 0 ? <Empty /> : primaryConversions.map((row) => (
               <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
                 <span className="min-w-0 truncate">{row.objective}</span>
                 <span className="shrink-0 font-medium">{row.conversions.toLocaleString('es-ES')}</span>
+              </div>
+            ))}
+          </DataList>
+          <DataList title={`Acciones secundarias · visitas y observación (${totalSecondary.toLocaleString('es-ES')})`}>
+            {secondaryConversions.length === 0 ? <Empty /> : secondaryConversions.map((row) => (
+              <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
+                <span className="min-w-0 truncate text-muted-foreground">{row.objective}</span>
+                <span className="shrink-0 font-medium text-muted-foreground">{row.conversions.toLocaleString('es-ES')}</span>
               </div>
             ))}
           </DataList>
