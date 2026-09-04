@@ -1,6 +1,7 @@
-import { AlertCircle, BarChart3, CalendarClock, DollarSign, Target } from 'lucide-react';
+import { AlertCircle, BarChart3, CalendarClock, DollarSign, MousePointerClick, Target, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type CampaignSpend = {
@@ -84,6 +85,8 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
   const secondaryConversions = data.objective_conversions.filter((row) => !isPrimaryObjective(row.objective));
   const totalPrimary = primaryConversions.reduce((sum, row) => sum + row.conversions, 0);
   const totalSecondary = secondaryConversions.reduce((sum, row) => sum + row.conversions, 0);
+  const totalActions = totalPrimary + totalSecondary;
+  const primaryRate = totalActions > 0 ? Math.round((totalPrimary / totalActions) * 100) : 0;
 
   return (
     <Card>
@@ -97,46 +100,89 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
           <span className="text-xs text-muted-foreground">Periodo seleccionado</span>
         </div>
         <p className="text-xs text-muted-foreground">
-          El gasto se muestra por campaña. Las conversiones principales son registros, leads y compras; las secundarias son visitas a páginas clave y otras acciones de observación.
+          Separamos las conversiones que realmente importan (registros, leads y compras) de las visitas y acciones de observación.
         </p>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Metric label="Gasto total" value={money(totalSpend, data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
-          <Metric label="Conversiones principales" value={totalPrimary.toLocaleString('es-ES')} icon={<Target className="h-3.5 w-3.5" />} />
-          <Metric label="Clics" value={totalClicks.toLocaleString('es-ES')} />
-          <Metric label="Impresiones" value={totalImpressions.toLocaleString('es-ES')} />
+          <Metric label="Clics" value={totalClicks.toLocaleString('es-ES')} icon={<MousePointerClick className="h-3.5 w-3.5" />} />
+          <Metric label="Impresiones" value={totalImpressions.toLocaleString('es-ES')} icon={<Users className="h-3.5 w-3.5" />} />
+          <Metric label="Acciones totales" value={totalActions.toLocaleString('es-ES')} icon={<BarChart3 className="h-3.5 w-3.5" />} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          <DataList title="Gasto por campaña">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="rounded-lg border bg-emerald-50/50 dark:bg-emerald-950/20 p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                  <Target className="h-3.5 w-3.5" />
+                  Conversiones principales
+                </p>
+                <p className="text-2xl font-bold text-emerald-800 dark:text-emerald-300 mt-1">
+                  {totalPrimary.toLocaleString('es-ES')}
+                </p>
+              </div>
+              <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 hover:bg-emerald-100">
+                {primaryRate} % del total
+              </Badge>
+            </div>
+            <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80">
+              Registros, leads de obra y compras. Estas acciones optimizan el negocio.
+            </p>
+            <div className="max-h-44 overflow-y-auto">
+              {primaryConversions.length === 0 ? <Empty /> : primaryConversions.map((row) => (
+                <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 border-emerald-200/60 dark:border-emerald-800/40 py-2 text-sm">
+                  <span className="min-w-0 truncate font-medium text-emerald-900 dark:text-emerald-200">{row.objective}</span>
+                  <span className="shrink-0 font-semibold text-emerald-800 dark:text-emerald-300">{row.conversions.toLocaleString('es-ES')}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <MousePointerClick className="h-3.5 w-3.5" />
+                  Visitas y acciones secundarias
+                </p>
+                <p className="text-2xl font-bold mt-1">
+                  {totalSecondary.toLocaleString('es-ES')}
+                </p>
+              </div>
+              <Badge variant="secondary">
+                {totalActions > 0 ? Math.round((totalSecondary / totalActions) * 100) : 0} % del total
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Vistas de página clave, engagement de YouTube y otras acciones de observación.
+            </p>
+            <div className="max-h-44 overflow-y-auto">
+              {secondaryConversions.length === 0 ? <Empty /> : secondaryConversions.map((row) => (
+                <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
+                  <span className="min-w-0 truncate text-muted-foreground">{row.objective}</span>
+                  <span className="shrink-0 font-medium text-muted-foreground">{row.conversions.toLocaleString('es-ES')}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-lg border p-4 space-y-3">
+          <p className="text-xs font-semibold text-muted-foreground">Gasto por campaña</p>
+          <div className="max-h-56 overflow-y-auto">
             {data.campaign_spend.length === 0 ? <Empty /> : data.campaign_spend.map((row) => (
               <div key={row.campaign_name} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
                 <span className="min-w-0 truncate">{row.campaign_name}</span>
                 <span className="shrink-0 font-medium">{money(row.spend, data.currency)}</span>
               </div>
             ))}
-          </DataList>
-          <DataList title={`Conversiones principales (${totalPrimary.toLocaleString('es-ES')})`}>
-            {primaryConversions.length === 0 ? <Empty /> : primaryConversions.map((row) => (
-              <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
-                <span className="min-w-0 truncate">{row.objective}</span>
-                <span className="shrink-0 font-medium">{row.conversions.toLocaleString('es-ES')}</span>
-              </div>
-            ))}
-          </DataList>
-          <DataList title={`Acciones secundarias · visitas y observación (${totalSecondary.toLocaleString('es-ES')})`}>
-            {secondaryConversions.length === 0 ? <Empty /> : secondaryConversions.map((row) => (
-              <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
-                <span className="min-w-0 truncate text-muted-foreground">{row.objective}</span>
-                <span className="shrink-0 font-medium text-muted-foreground">{row.conversions.toLocaleString('es-ES')}</span>
-              </div>
-            ))}
-          </DataList>
+          </div>
         </div>
 
         {data.last_14_days && (
-          <div className="rounded-md border bg-muted/10 p-3 space-y-3">
+          <div className="rounded-md border bg-muted/10 p-4 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs font-semibold flex items-center gap-1.5">
                 <CalendarClock className="h-3.5 w-3.5 text-primary" />
@@ -144,18 +190,33 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
               </p>
               <span className="text-xs text-muted-foreground">Últimos 14 días, independiente del periodo</span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Metric
-                label="Conversiones principales (14 d)"
+                label="Conversiones principales"
                 value={data.last_14_days.by_objective.filter((row) => isPrimaryObjective(row.objective)).reduce((sum, row) => sum + row.conversions, 0).toLocaleString('es-ES')}
-                icon={<Target className="h-3.5 w-3.5" />}
+                icon={<Target className="h-3.5 w-3.5 text-emerald-600" />}
               />
-              <Metric label="Valor conversiones (14 d)" value={money(data.last_14_days.total_value, data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+              <Metric
+                label="Visitas / secundarias"
+                value={data.last_14_days.by_objective.filter((row) => !isPrimaryObjective(row.objective)).reduce((sum, row) => sum + row.conversions, 0).toLocaleString('es-ES')}
+                icon={<MousePointerClick className="h-3.5 w-3.5" />}
+              />
+              <Metric label="Valor conversiones" value={money(data.last_14_days.total_value, data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
             </div>
+
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Distribución principal vs. visitas</span>
+                <span>{primaryRate} % principal</span>
+              </div>
+              <Progress value={primaryRate} className="h-2" />
+            </div>
+
             <div className="max-h-40 overflow-y-auto">
               {data.last_14_days.by_objective.length === 0 ? <Empty /> : data.last_14_days.by_objective.map((row) => (
                 <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
-                  <span className={`min-w-0 truncate ${isPrimaryObjective(row.objective) ? '' : 'text-muted-foreground'}`}>
+                  <span className={`min-w-0 truncate ${isPrimaryObjective(row.objective) ? 'font-medium' : 'text-muted-foreground'}`}>
                     {row.objective}
                     {!isPrimaryObjective(row.objective) && (
                       <Badge variant="outline" className="ml-2 text-[10px] font-normal">visita</Badge>
@@ -181,15 +242,6 @@ function Metric({ label, value, icon }: { label: string; value: string; icon?: R
     <div className="rounded-md border bg-muted/20 p-3 space-y-1">
       <p className="text-xs text-muted-foreground flex items-center gap-1.5">{icon}{label}</p>
       <p className="text-lg font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function DataList({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold text-muted-foreground mb-1">{title}</p>
-      <div className="max-h-56 overflow-y-auto">{children}</div>
     </div>
   );
 }
