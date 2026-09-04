@@ -3220,6 +3220,7 @@ export type Database = {
           pending_plan_label: string | null
           pending_price_id: string | null
           plan: string
+          plan_change_lock_at: string | null
           plan_type: string | null
           schedule_id: string | null
           status: string
@@ -3246,6 +3247,7 @@ export type Database = {
           pending_plan_label?: string | null
           pending_price_id?: string | null
           plan: string
+          plan_change_lock_at?: string | null
           plan_type?: string | null
           schedule_id?: string | null
           status?: string
@@ -3272,6 +3274,7 @@ export type Database = {
           pending_plan_label?: string | null
           pending_price_id?: string | null
           plan?: string
+          plan_change_lock_at?: string | null
           plan_type?: string | null
           schedule_id?: string | null
           status?: string
