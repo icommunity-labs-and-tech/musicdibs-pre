@@ -253,7 +253,7 @@ export const PromoVisualsShowcase = () => {
       <div className="container mx-auto px-4 relative">
         <div className="flex flex-col items-center gap-3 mt-12">
           <a
-            href="https://www.musicdibs.com/login"
+            href="https://musicdibs.com/login"
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackSignupCtaClick("landing_promo_visuals")}

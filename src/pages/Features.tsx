@@ -31,7 +31,7 @@ const featuresJsonLd = {
   name: "Musicdibs",
   applicationCategory: "MusicApplication",
   operatingSystem: "Web",
-  url: "https://www.musicdibs.com",
+  url: "https://musicdibs.com",
   description:
     "Plataforma todo-en-uno para artistas independientes: crea música con IA, registra tu propiedad intelectual en blockchain, distribuye a 220+ plataformas y promociona con contenido generado por IA.",
   offers: {

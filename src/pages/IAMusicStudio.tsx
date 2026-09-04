@@ -24,7 +24,7 @@ export default function IAMusicStudio() {
         <meta property="og:title" content="Musicdibs IA Music Studio" />
         <meta property="og:description" content={copy.seo.ogDescription} />
         <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://www.musicdibs.com/ia-music-studio" />
+        <link rel="canonical" href="https://musicdibs.com/ia-music-studio" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
@@ -40,19 +40,19 @@ export default function IAMusicStudio() {
             description:
               "Estudio musical con IA para crear canciones desde cero, masterizar audio, generar material promocional visual y diseñar artistas virtuales en minutos.",
             areaServed: "Worldwide",
-            url: "https://www.musicdibs.com/ia-music-studio",
+            url: "https://musicdibs.com/ia-music-studio",
             provider: {
               "@type": "Organization",
               name: "Musicdibs",
-              url: "https://www.musicdibs.com",
-              logo: "https://www.musicdibs.com/logo.png",
+              url: "https://musicdibs.com",
+              logo: "https://musicdibs.com/logo.png",
             },
             offers: {
               "@type": "Offer",
               priceCurrency: "EUR",
               price: "0",
               availability: "https://schema.org/InStock",
-              url: "https://www.musicdibs.com/ia-music-studio",
+              url: "https://musicdibs.com/ia-music-studio",
             },
           })}
         </script>

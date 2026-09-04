@@ -6,7 +6,7 @@ import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 
 const PATH = "/musicdibs-vs-udio";
-const URL = `https://www.musicdibs.com${PATH}`;
+const URL = `https://musicdibs.com${PATH}`;
 
 type Row = {
   feature: string;
@@ -80,8 +80,8 @@ const MusicdibsVsUdioPage = () => {
     name: "Musicdibs",
     applicationCategory: "MusicApplication",
     operatingSystem: "Web",
-    url: "https://www.musicdibs.com",
-    image: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
+    url: "https://musicdibs.com",
+    image: "https://musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
     description: seoDesc,
     offers: {
       "@type": "AggregateOffer",
@@ -105,7 +105,7 @@ const MusicdibsVsUdioPage = () => {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Musicdibs", item: "https://www.musicdibs.com" },
+      { "@type": "ListItem", position: 1, name: "Musicdibs", item: "https://musicdibs.com" },
       { "@type": "ListItem", position: 2, name: "Musicdibs vs Udio", item: URL },
     ],
   };

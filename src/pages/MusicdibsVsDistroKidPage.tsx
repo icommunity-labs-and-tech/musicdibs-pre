@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
  */
 
 const PATH = "/musicdibs-vs-distrokid";
-const URL = `https://www.musicdibs.com${PATH}`;
+const URL = `https://musicdibs.com${PATH}`;
 
 const TABLE_ROWS: { feature: string; distrokid: string | boolean; musicdibs: string | boolean }[] = [
   { feature: "Distribute to Spotify, Apple Music, TikTok, etc.", distrokid: true, musicdibs: "Yes — 220+ platforms" },
@@ -64,16 +64,16 @@ const MusicdibsVsDistroKidPage = () => {
     headline: "Musicdibs vs DistroKid: Complete Workflow vs Distribution Only",
     description: seoDesc,
     inLanguage: "en",
-    image: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
+    image: "https://musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
     datePublished: "2026-01-15",
     dateModified: "2026-07-20",
-    author: { "@type": "Organization", name: "Musicdibs", url: "https://www.musicdibs.com" },
+    author: { "@type": "Organization", name: "Musicdibs", url: "https://musicdibs.com" },
     mainEntityOfPage: { "@type": "WebPage", "@id": URL },
     publisher: {
       "@type": "Organization",
       name: "Musicdibs",
-      url: "https://www.musicdibs.com",
-      logo: { "@type": "ImageObject", url: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png" },
+      url: "https://musicdibs.com",
+      logo: { "@type": "ImageObject", url: "https://musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png" },
     },
   };
 
@@ -91,7 +91,7 @@ const MusicdibsVsDistroKidPage = () => {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Musicdibs", item: "https://www.musicdibs.com" },
+      { "@type": "ListItem", position: 1, name: "Musicdibs", item: "https://musicdibs.com" },
       { "@type": "ListItem", position: 2, name: "Musicdibs vs DistroKid", item: URL },
     ],
   };

@@ -238,8 +238,8 @@ const AIStudio = () => {
             "@context": "https://schema.org",
             "@type": "Organization",
             name: "Musicdibs",
-            url: "https://www.musicdibs.com",
-            logo: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
+            url: "https://musicdibs.com",
+            logo: "https://musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
             sameAs: [
               "https://twitter.com/musicdibs",
               "https://www.instagram.com/musicdibs/",
@@ -251,9 +251,9 @@ const AIStudio = () => {
             "@context": "https://schema.org",
             "@type": "WebSite",
             name: "Musicdibs",
-            url: "https://www.musicdibs.com",
+            url: "https://musicdibs.com",
             inLanguage: ["es", "en", "pt-BR"],
-            publisher: { "@type": "Organization", name: "Musicdibs", url: "https://www.musicdibs.com" },
+            publisher: { "@type": "Organization", name: "Musicdibs", url: "https://musicdibs.com" },
           },
         ]}
       />

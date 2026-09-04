@@ -262,7 +262,7 @@ export function HowItWorksDialog({
                 </button>
               ) : (
                 <a
-                  href="https://www.musicdibs.com/login"
+                  href="https://musicdibs.com/login"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => { trackSignupCtaClick("landing_how_it_works_dialog"); onOpenChange(false); }}

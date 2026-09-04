@@ -22,7 +22,7 @@ export function Footer() {
   return (
     <footer className="relative border-t border-border mt-12">
       <div className="mx-auto max-w-7xl px-6 py-12 flex flex-col items-center gap-6">
-        <a href="https://www.musicdibs.com" target="_blank" rel="noopener noreferrer">
+        <a href="https://musicdibs.com" target="_blank" rel="noopener noreferrer">
           <img src={logoDark} alt="Musicdibs" className="h-10 w-auto" />
         </a>
 

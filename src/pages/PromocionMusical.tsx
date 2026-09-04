@@ -43,7 +43,7 @@ import {
 } from "lucide-react";
 
 
-const CTA_HREF = "https://www.musicdibs.com/dashboard";
+const CTA_HREF = "https://musicdibs.com/dashboard";
 
 export default function PromocionMusical() {
   const t = usePromocionMusicalCopy();
@@ -51,7 +51,7 @@ export default function PromocionMusical() {
   const { i18n } = useTranslation();
   const uiLang = (["es", "en", "pt-BR"].includes(i18n.language) ? i18n.language : "es");
   const htmlLang = localizedRoute?.lang ?? uiLang;
-  const canonical = `https://www.musicdibs.com${localizedRoute?.prefix ?? ""}/promocion-musical`;
+  const canonical = `https://musicdibs.com${localizedRoute?.prefix ?? ""}/promocion-musical`;
   return (
     <>
       <Helmet>

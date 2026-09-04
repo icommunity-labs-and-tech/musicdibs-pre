@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
  */
 
 const PATH = "/switch-to-musicdibs";
-const URL = `https://www.musicdibs.com${PATH}`;
+const URL = `https://musicdibs.com${PATH}`;
 
 const STEPS = [
   {
@@ -90,8 +90,8 @@ const SwitchToMusicdibsPage = () => {
     publisher: {
       "@type": "Organization",
       name: "Musicdibs",
-      url: "https://www.musicdibs.com",
-      logo: { "@type": "ImageObject", url: "https://www.musicdibs.com/og-image.png" },
+      url: "https://musicdibs.com",
+      logo: { "@type": "ImageObject", url: "https://musicdibs.com/og-image.png" },
     },
   };
 
@@ -109,7 +109,7 @@ const SwitchToMusicdibsPage = () => {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Musicdibs", item: "https://www.musicdibs.com" },
+      { "@type": "ListItem", position: 1, name: "Musicdibs", item: "https://musicdibs.com" },
       { "@type": "ListItem", position: 2, name: "Switch to Musicdibs", item: URL },
     ],
   };

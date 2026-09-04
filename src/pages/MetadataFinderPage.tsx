@@ -22,7 +22,7 @@ import { useMetadataFinderCopy } from "@/i18nMetadataFinder";
  */
 
 const PATH = "/tools/metadata-finder";
-const URL_FULL = `https://www.musicdibs.com${PATH}`;
+const URL_FULL = `https://musicdibs.com${PATH}`;
 const MB_HEADERS = { Accept: "application/json" } as const;
 
 type RecordingResult = {

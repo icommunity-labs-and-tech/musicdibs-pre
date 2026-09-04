@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
  */
 
 const PATH = "/all-in-one-music-platform";
-const URL = `https://www.musicdibs.com${PATH}`;
+const URL = `https://musicdibs.com${PATH}`;
 
 const STEPS = [
   {
@@ -66,8 +66,8 @@ const AllInOneMusicPlatformPage = () => {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Musicdibs",
-    url: "https://www.musicdibs.com",
-    logo: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
+    url: "https://musicdibs.com",
+    logo: "https://musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
     sameAs: [
       "https://twitter.com/musicdibs",
       "https://www.instagram.com/musicdibs/",
@@ -80,9 +80,9 @@ const AllInOneMusicPlatformPage = () => {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Musicdibs",
-    url: "https://www.musicdibs.com",
+    url: "https://musicdibs.com",
     inLanguage: ["es", "en", "pt-BR"],
-    publisher: { "@type": "Organization", name: "Musicdibs", url: "https://www.musicdibs.com" },
+    publisher: { "@type": "Organization", name: "Musicdibs", url: "https://musicdibs.com" },
   };
 
   const appSchema = {
@@ -93,9 +93,9 @@ const AllInOneMusicPlatformPage = () => {
     operatingSystem: "Web",
     description: seoDesc,
     url: URL,
-    image: "https://www.musicdibs.com/og-image.png",
+    image: "https://musicdibs.com/og-image.png",
     inLanguage: "en",
-    offers: { "@type": "Offer", price: "0", priceCurrency: "USD", availability: "https://schema.org/InStock", url: "https://www.musicdibs.com/#pricing" },
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD", availability: "https://schema.org/InStock", url: "https://musicdibs.com/#pricing" },
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: 4.8,
@@ -106,8 +106,8 @@ const AllInOneMusicPlatformPage = () => {
     publisher: {
       "@type": "Organization",
       name: "Musicdibs",
-      url: "https://www.musicdibs.com",
-      logo: { "@type": "ImageObject", url: "https://www.musicdibs.com/og-image.png" },
+      url: "https://musicdibs.com",
+      logo: { "@type": "ImageObject", url: "https://musicdibs.com/og-image.png" },
     },
   };
 
@@ -115,7 +115,7 @@ const AllInOneMusicPlatformPage = () => {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Musicdibs", item: "https://www.musicdibs.com" },
+      { "@type": "ListItem", position: 1, name: "Musicdibs", item: "https://musicdibs.com" },
       { "@type": "ListItem", position: 2, name: "All-in-One Music Platform", item: URL },
     ],
   };

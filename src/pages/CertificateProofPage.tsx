@@ -29,7 +29,7 @@ import {
  */
 
 const PATH = "/certificado-blockchain";
-const BASE_URL = "https://www.musicdibs.com";
+const BASE_URL = "https://musicdibs.com";
 
 const CertificateProofPage = () => {
   const { i18n } = useTranslation();

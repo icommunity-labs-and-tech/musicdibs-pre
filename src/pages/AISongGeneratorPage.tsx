@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 
-const BASE_URL = "https://www.musicdibs.com";
+const BASE_URL = "https://musicdibs.com";
 const PATH = "/ai-song-generator";
 const FULL_URL = `${BASE_URL}${PATH}`;
 
@@ -88,7 +88,7 @@ const AISongGeneratorPage = () => {
     "@type": "Organization",
     name: "Musicdibs",
     url: BASE_URL,
-    logo: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
+    logo: "https://musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
     sameAs: [
       "https://twitter.com/musicdibs",
       "https://www.instagram.com/musicdibs/",
@@ -123,7 +123,7 @@ const AISongGeneratorPage = () => {
     applicationCategory: "MultimediaApplication",
     operatingSystem: "Web",
     url: FULL_URL,
-    image: "https://www.musicdibs.com/og-image.png",
+    image: "https://musicdibs.com/og-image.png",
     description:
       "Create complete songs with AI from a description or your own voice. Instrumentation, mixing and mastering included.",
     offers: { "@type": "Offer", price: "0", priceCurrency: "EUR", availability: "https://schema.org/InStock" },

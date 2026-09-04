@@ -5,7 +5,7 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 
-const BASE_URL = "https://www.musicdibs.com";
+const BASE_URL = "https://musicdibs.com";
 const PATH = "/creador-de-musica";
 const URL = `${BASE_URL}${PATH}`;
 
@@ -55,7 +55,7 @@ const CreadorDeMusicaPage = () => {
     applicationCategory: "MusicApplication",
     operatingSystem: "Web",
     url: URL,
-    image: "https://www.musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
+    image: "https://musicdibs.com/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png",
     description: seoDesc,
     offers: { "@type": "AggregateOffer", lowPrice: "0", highPrice: "399.90", priceCurrency: "EUR", offerCount: "5" },
     aggregateRating: { "@type": "AggregateRating", ratingValue: 4.8, reviewCount: 137 },
