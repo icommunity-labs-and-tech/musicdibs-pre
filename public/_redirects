@@ -1,0 +1,24 @@
+# Legacy WordPress / WooCommerce / Zendesk URLs reported as 404 in Search Console.
+# Only paths with a clear current equivalent are redirected; everything else keeps
+# returning 404 on purpose so Google drops it from the index.
+#
+# Honoured by hosting layers that read Netlify-style _redirects. The same map is
+# mirrored client-side in src/lib/legacyRedirects.ts so the SPA also handles them.
+
+/support                /faq            301
+/licenses               /terms          301
+/hc/*                   /faq            301
+/finalizar-compra       /pricing        301
+/finalizar-compra/*     /pricing        301
+/en/order-received      /               301
+/en/order-received/*    /               301
+/carrito                /pricing        301
+/checkout               /pricing        301
+/mi-cuenta              /dashboard      301
+/mi-cuenta/*            /dashboard      301
+/tienda                 /pricing        301
+/producto/*             /pricing        301
+/categoria-producto/*   /pricing        301
+/wp-content/uploads/*   /distribution   301
+/blog                   /news           301
+/blog/*                 /news           301
