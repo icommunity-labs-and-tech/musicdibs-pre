@@ -471,6 +471,8 @@ export default function AdminTrafficDashboardPage() {
         </>
       )}
 
+      <SeoKeywordStrategyPanel />
+
       {data && (
         <p className="text-xs text-muted-foreground">
           Última actualización: {new Date(data.generatedAt).toLocaleString("es-ES")}
