@@ -1,24 +1,79 @@
-# Legacy WordPress / WooCommerce / Zendesk URLs reported as 404 in Search Console.
-# Only paths with a clear current equivalent are redirected; everything else keeps
-# returning 404 on purpose so Google drops it from the index.
-#
-# Honoured by hosting layers that read Netlify-style _redirects. The same map is
-# mirrored client-side in src/lib/legacyRedirects.ts so the SPA also handles them.
+# Legacy WordPress / WooCommerce / Zendesk URLs reported as 404 / Soft 404 in Search Console.
+# Mirrored client-side in src/lib/legacyRedirects.ts so the SPA also handles them.
+# NOTE: Lovable hosting does not currently process this file; it is kept for parity
+# and for any CDN layer (Cloudflare/Netlify style) that does honour it.
 
-/support                /faq            301
-/licenses               /terms          301
-/hc/*                   /faq            301
-/finalizar-compra       /pricing        301
-/finalizar-compra/*     /pricing        301
-/en/order-received      /               301
-/en/order-received/*    /               301
-/carrito                /pricing        301
-/checkout               /pricing        301
-/mi-cuenta              /dashboard      301
-/mi-cuenta/*            /dashboard      301
-/tienda                 /pricing        301
-/producto/*             /pricing        301
-/categoria-producto/*   /pricing        301
-/wp-content/uploads/*   /distribution   301
-/blog                   /news           301
-/blog/*                 /news           301
+/registro-canciones-y-musica            /registro-obras-musicales   301
+/registro-canciones-y-musica/*          /registro-obras-musicales   301
+/registro-legal-canciones-musica/*      /registro-obras-musicales   301
+/registro-propiedad-intelectual-musica/* /registro-obras-musicales  301
+/registra-musica-copyright/*            /registro-obras-musicales   301
+/proteger-musica-canciones/*            /registro-obras-musicales   301
+/evitar-plagio-musical-canciones/*      /registro-obras-musicales   301
+/alternativa-registro-musica-tradicionales/* /registro-obras-musicales 301
+/promocion                              /marketing      301
+/promocion/*                            /marketing      301
+/certification                          /legal-validity 301
+/verificar-id                           /verify         301
+/verificar-id/*                         /verify         301
+/faq-items/*                            /faq            301
+/privacy-policy                         /privacy        301
+/politica-de-privacidad                 /privacy        301
+/terms-and-conditions                   /terms          301
+/purchase-terms-and-condition           /terms          301
+/service-level-agreement                /sla            301
+/tech-and-legal                         /legal-validity 301
+/legal-and-technical-solidity           /legal-validity 301
+/musicdibs-credits                      /               301
+/musicdibs-awards                       /news           301
+/support                                /faq            301
+/licenses                               /terms          301
+/hc/*                                   /faq            301
+/register                               /registro-gratis 301
+/register/*                             /registro-gratis 301
+/inactive-user                          /login          301
+/en/song-and-music-registration         /register-a-song 301
+/en/legal-registration-songs-copyrights /register-a-song 301
+/en/legal-musical-registration-songs-copyrights /register-a-song 301
+/en/distribution-music                  /distribution   301
+/en/distribution                        /distribution   301
+/en/faq-items/*                         /faq            301
+/en/faq                                 /faq            301
+/en/contact                             /contact        301
+/en/partners                            /partners       301
+/en/marketing                           /marketing      301
+/en/register                            /registro-gratis 301
+/en/ai-song-generator                   /ai-song-generator 301
+/en/generador-canciones-ia              /ai-song-generator 301
+/en/order-received                      /               301
+/en/order-received/*                    /               301
+/eng/faq                                /faq            301
+/eng/support                            /faq            301
+/eng/distribution                       /distribution   301
+/eng/privacy-policy                     /privacy        301
+/eng/terms-and-conditions               /terms          301
+/eng/tech-and-legal                     /legal-validity 301
+/esp/faq                                /faq            301
+/esp/support                            /faq            301
+/esp/distribution                       /distribution   301
+/esp/terms-and-conditions               /terms          301
+/esp/tech-and-legal                     /legal-validity 301
+/pt-br/*                                /pt/features    301
+/finalizar-compra                       /               301
+/finalizar-compra/*                     /               301
+/carrito                                /               301
+/checkout                               /               301
+/tienda                                 /               301
+/producto/*                             /               301
+/categoria-producto/*                   /               301
+/mi-cuenta                              /dashboard      301
+/mi-cuenta/*                            /dashboard      301
+/wp-content/uploads/*                   /distribution   301
+/wp-content/*                           /               301
+/entrevista-a-*                         /news           301
+/como-los-raperos-pueden-triunfar-en-el-mundo-digital /news 301
+/blog                                   /news           301
+/blog/*                                 /news           301
+/eng/*                                  /               301
+/esp/*                                  /               301
+/fr/*                                   /               301
