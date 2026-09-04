@@ -363,6 +363,32 @@ serve(async (req) => {
       const activeSub = subs.data.find((subscription: Stripe.Subscription) => isSubscriptionActive(subscription));
 
       if (activeSub) {
+        // FIX 2026-09-04 (caso israeldela56@gmail.com): lock de idempotencia
+        // contra doble-submit -- un doble clic en "actualizar de plan"
+        // disparaba 2 llamadas concurrentes a stripe.subscriptions.update,
+        // generando 2 facturas de upgrade con prorrateos distintos (una de
+        // ellas calculando su credito sobre una renovacion que se colaba
+        // justo en medio), terminando en un reembolso indebido de un pago
+        // legitimo. UPDATE condicional atomico: solo tiene exito si no hay
+        // un cambio de plan en curso en los ultimos 10s para este usuario.
+        // Garantiza que exista una fila para este usuario, sin pisar datos si ya existe.
+        await supabaseAdmin
+          .from("subscriptions")
+          .upsert({ user_id: user.id }, { onConflict: "user_id", ignoreDuplicates: true });
+
+        const lockCutoff = new Date(Date.now() - 10_000).toISOString();
+        const { data: lockRows, error: lockErr } = await supabaseAdmin
+          .from("subscriptions")
+          .update({ plan_change_lock_at: new Date().toISOString() })
+          .eq("user_id", user.id)
+          .or(`plan_change_lock_at.is.null,plan_change_lock_at.lt.${lockCutoff}`)
+          .select("user_id");
+        if (lockErr) {
+          console.error("[CHECKOUT] plan_change lock check failed:", lockErr);
+        } else if (!lockRows || lockRows.length === 0) {
+          return json({ error: "Ya hay un cambio de plan en curso para tu cuenta. Espera unos segundos e intenta de nuevo." }, 409);
+        }
+
         const currentPriceId = activeSub.items.data[0]?.price?.id;
         if (currentPriceId === plan.priceId && !activeSub.cancel_at_period_end && !activeSub.schedule) {
           return json({ already_subscribed: true, message: "Ya tienes este plan activo." });
