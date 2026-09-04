@@ -151,7 +151,12 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
             <div className="max-h-40 overflow-y-auto">
               {data.last_14_days.by_objective.length === 0 ? <Empty /> : data.last_14_days.by_objective.map((row) => (
                 <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
-                  <span className="min-w-0 truncate">{row.objective}</span>
+                  <span className={`min-w-0 truncate ${isPrimaryObjective(row.objective) ? '' : 'text-muted-foreground'}`}>
+                    {row.objective}
+                    {!isPrimaryObjective(row.objective) && (
+                      <Badge variant="outline" className="ml-2 text-[10px] font-normal">visita</Badge>
+                    )}
+                  </span>
                   <span className="shrink-0 font-medium">
                     {row.conversions.toLocaleString('es-ES')}
                     <span className="ml-2 text-xs text-muted-foreground">{money(row.value, data.currency)}</span>
