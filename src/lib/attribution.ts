@@ -116,7 +116,7 @@ export function getAttributionForCheckout(): Record<string, string> {
   if (attr.utm_content) result.utm_content = attr.utm_content;
   if (attr.utm_term) result.utm_term = attr.utm_term;
   if (attr.gclid) result.gclid = attr.gclid;
-
+  if (attr.coupon) result.coupon_code = attr.coupon;
   if (attr.ref) result.referrer_code = attr.ref;
   if (attr.referrer) result.referrer = attr.referrer;
   if (attr.landing_path) result.landing_path = attr.landing_path;
