@@ -86,6 +86,10 @@ const RULES: Rule[] = [
   { prefix: "/wp-content/uploads", to: "/distribution" },
   { prefix: "/wp-content", to: "/" },
 
+  // Old Spanish blog articles (interviews / posts) now living under /news
+  { prefix: "/entrevista-a", to: "/news" },
+  { prefix: "/como-los-raperos-pueden-triunfar-en-el-mundo-digital", to: "/news" },
+
   // Blog
   { prefix: "/blog", to: "/news" },
 
