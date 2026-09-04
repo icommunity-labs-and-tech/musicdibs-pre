@@ -80,7 +80,10 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
   const totalSpend = data.campaign_spend.reduce((sum, row) => sum + row.spend, 0);
   const totalClicks = data.campaign_spend.reduce((sum, row) => sum + row.clicks, 0);
   const totalImpressions = data.campaign_spend.reduce((sum, row) => sum + row.impressions, 0);
-  const totalConversions = data.objective_conversions.reduce((sum, row) => sum + row.conversions, 0);
+  const primaryConversions = data.objective_conversions.filter((row) => isPrimaryObjective(row.objective));
+  const secondaryConversions = data.objective_conversions.filter((row) => !isPrimaryObjective(row.objective));
+  const totalPrimary = primaryConversions.reduce((sum, row) => sum + row.conversions, 0);
+  const totalSecondary = secondaryConversions.reduce((sum, row) => sum + row.conversions, 0);
 
   return (
     <Card>
