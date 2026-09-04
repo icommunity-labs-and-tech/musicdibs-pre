@@ -103,7 +103,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
       <CardContent className="space-y-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Metric label="Gasto total" value={money(totalSpend, data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
-          <Metric label="Conversiones" value={totalConversions.toLocaleString('es-ES')} icon={<Target className="h-3.5 w-3.5" />} />
+          <Metric label="Conversiones principales" value={totalPrimary.toLocaleString('es-ES')} icon={<Target className="h-3.5 w-3.5" />} />
           <Metric label="Clics" value={totalClicks.toLocaleString('es-ES')} />
           <Metric label="Impresiones" value={totalImpressions.toLocaleString('es-ES')} />
         </div>
