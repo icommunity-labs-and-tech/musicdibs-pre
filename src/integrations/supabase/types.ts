@@ -4388,6 +4388,7 @@ export type Database = {
         }
         Returns: number
       }
+      publish_due_blog_posts: { Args: never; Returns: number }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
