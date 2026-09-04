@@ -297,7 +297,18 @@ serve(async (req) => {
       .order("user_id")
       .order("created_at");
 
-    const dupWindowMs = 10 * 60 * 1000; // 10 minutos
+    // FIX 2026-09-04 (caso ihignaciohernandez@gmail.com): la ventana de 10
+    // minutos solo cubria duplicados de webhooks llegando casi simultaneos
+    // (segundos) -- no detecto un caso real donde una reconciliacion manual
+    // (tras un email con typo mal vinculado) fue seguida 44 minutos despues
+    // por el webhook real procesandose por su cuenta, duplicando la
+    // concesion de creditos sin que el guard lo detectara. La verificacion
+    // posterior (2 ordenes de Stripe con IDs distintos = compras genuinas,
+    // no se toca) sigue protegiendo contra falsos positivos con compras
+    // legitimas separadas en el tiempo, asi que ampliar la ventana es
+    // seguro. Se amplia a 6 horas para cubrir reconciliaciones manuales del
+    // mismo dia sin capturar compras genuinas de dias distintos.
+    const dupWindowMs = 6 * 60 * 60 * 1000; // 6 horas
     const seenByUser = new Map<string, typeof recentPurchaseTx>();
     for (const tx of recentPurchaseTx || []) {
       if (!seenByUser.has(tx.user_id)) seenByUser.set(tx.user_id, []);
@@ -340,7 +351,9 @@ serve(async (req) => {
           // cercania real: se traen todas las ordenes en una ventana amplia y se
           // asigna a cada transaccion la orden mas cercana en el tiempo SIN
           // reutilizar la misma orden dos veces.
-          const winMs = 10 * 60 * 1000;
+          // FIX 2026-09-04: misma ampliacion que dupWindowMs, para que la
+          // busqueda de ordenes reales cubra el mismo rango de tiempo.
+          const winMs = 6 * 60 * 60 * 1000; // 6 horas
           const { data: nearbyOrders } = await supabase
             .from("orders")
             .select("id, stripe_charge_id, stripe_payment_intent_id, paid_at")
