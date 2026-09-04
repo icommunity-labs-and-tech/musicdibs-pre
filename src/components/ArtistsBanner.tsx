@@ -91,8 +91,7 @@ const ArtistsBanner = () => {
             className={`border-2 border-primary-foreground text-brand hover:bg-primary-foreground hover:text-brand font-bold px-6 py-2 text-base rounded-full ${ctaTestimonials.className}`}
             onClick={() => {
               trackABClick('artists_cta_testimonials', ctaTestimonials.variantIndex, ctaTestimonials.text);
-              const testimonialsSection = document.querySelector('section:nth-of-type(5)');
-              testimonialsSection?.scrollIntoView({ behavior: 'smooth' });
+              document.getElementById('testimonials')?.scrollIntoView({ behavior: 'smooth' });
             }}
           >
             {ctaTestimonials.text}
