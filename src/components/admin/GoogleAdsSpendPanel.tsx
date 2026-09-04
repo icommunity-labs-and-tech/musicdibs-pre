@@ -16,6 +16,16 @@ type ObjectiveConversions = {
   conversions: number;
 };
 
+// Objetivos que cuentan como conversión real del negocio (registro, lead, compra).
+// El resto (vistas de página clave, engagement de YouTube…) son acciones de observación.
+const PRIMARY_OBJECTIVES = new Set([
+  'Compra Musicdibs',
+  'Registro Musicdibs',
+  'Lead registro de obra',
+]);
+
+const isPrimaryObjective = (objective: string) => PRIMARY_OBJECTIVES.has(objective);
+
 export type GoogleAdsSpendData = {
   campaign_spend: CampaignSpend[];
   objective_conversions: ObjectiveConversions[];
