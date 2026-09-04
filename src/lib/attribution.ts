@@ -56,11 +56,12 @@ export function captureAttribution(): void {
   const utm_campaign = params.get('utm_campaign') || undefined;
   const utm_content = params.get('utm_content') || undefined;
   const utm_term = params.get('utm_term') || undefined;
+  const gclid = params.get('gclid') || undefined;
   const coupon = params.get('coupon') || params.get('promo') || undefined;
   const ref = params.get('ref') || undefined;
 
   // Only store if there's at least one trackable param or external referrer
-  const hasParams = utm_source || utm_medium || utm_campaign || coupon || ref;
+  const hasParams = utm_source || utm_medium || utm_campaign || gclid || coupon || ref;
   const referrer = document.referrer && !document.referrer.includes(window.location.hostname)
     ? document.referrer
     : undefined;
@@ -73,12 +74,14 @@ export function captureAttribution(): void {
     utm_campaign,
     utm_content,
     utm_term,
+    gclid,
     coupon,
     ref,
     referrer,
     landing_path: window.location.pathname,
     captured_at: Date.now(),
   };
+
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
