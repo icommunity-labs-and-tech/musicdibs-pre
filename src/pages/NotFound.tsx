@@ -1,16 +1,25 @@
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { SEO } from "@/components/SEO";
+import { resolveLegacyRedirect } from "@/lib/legacyRedirects";
 
 const NotFound = () => {
   const location = useLocation();
+  // Old WordPress/WooCommerce/Zendesk URLs still receive traffic and backlinks.
+  const legacyTarget = resolveLegacyRedirect(location.pathname);
 
   useEffect(() => {
+    if (legacyTarget) return;
     console.error(
       "404 Error: User attempted to access non-existent route:",
       location.pathname
     );
-  }, [location.pathname]);
+  }, [location.pathname, legacyTarget]);
+
+  if (legacyTarget) {
+    return <Navigate to={legacyTarget} replace />;
+  }
+
 
   return (
     <>
