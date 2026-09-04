@@ -145,7 +145,11 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
               <span className="text-xs text-muted-foreground">Últimos 14 días, independiente del periodo</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Metric label="Conversiones (14 d)" value={data.last_14_days.total_conversions.toLocaleString('es-ES')} icon={<Target className="h-3.5 w-3.5" />} />
+              <Metric
+                label="Conversiones principales (14 d)"
+                value={data.last_14_days.by_objective.filter((row) => isPrimaryObjective(row.objective)).reduce((sum, row) => sum + row.conversions, 0).toLocaleString('es-ES')}
+                icon={<Target className="h-3.5 w-3.5" />}
+              />
               <Metric label="Valor conversiones (14 d)" value={money(data.last_14_days.total_value, data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
             </div>
             <div className="max-h-40 overflow-y-auto">
