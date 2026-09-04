@@ -16,6 +16,16 @@ type ObjectiveConversions = {
   conversions: number;
 };
 
+// Objetivos que cuentan como conversión real del negocio (registro, lead, compra).
+// El resto (vistas de página clave, engagement de YouTube…) son acciones de observación.
+const PRIMARY_OBJECTIVES = new Set([
+  'Compra Musicdibs',
+  'Registro Musicdibs',
+  'Lead registro de obra',
+]);
+
+const isPrimaryObjective = (objective: string) => PRIMARY_OBJECTIVES.has(objective);
+
 export type GoogleAdsSpendData = {
   campaign_spend: CampaignSpend[];
   objective_conversions: ObjectiveConversions[];
@@ -70,7 +80,10 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
   const totalSpend = data.campaign_spend.reduce((sum, row) => sum + row.spend, 0);
   const totalClicks = data.campaign_spend.reduce((sum, row) => sum + row.clicks, 0);
   const totalImpressions = data.campaign_spend.reduce((sum, row) => sum + row.impressions, 0);
-  const totalConversions = data.objective_conversions.reduce((sum, row) => sum + row.conversions, 0);
+  const primaryConversions = data.objective_conversions.filter((row) => isPrimaryObjective(row.objective));
+  const secondaryConversions = data.objective_conversions.filter((row) => !isPrimaryObjective(row.objective));
+  const totalPrimary = primaryConversions.reduce((sum, row) => sum + row.conversions, 0);
+  const totalSecondary = secondaryConversions.reduce((sum, row) => sum + row.conversions, 0);
 
   return (
     <Card>
@@ -84,13 +97,13 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
           <span className="text-xs text-muted-foreground">Periodo seleccionado</span>
         </div>
         <p className="text-xs text-muted-foreground">
-          El gasto se muestra por campaña. Las conversiones se detallan por objetivo porque Google Ads no atribuye el coste a cada acción.
+          El gasto se muestra por campaña. Las conversiones principales son registros, leads y compras; las secundarias son visitas a páginas clave y otras acciones de observación.
         </p>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Metric label="Gasto total" value={money(totalSpend, data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
-          <Metric label="Conversiones" value={totalConversions.toLocaleString('es-ES')} icon={<Target className="h-3.5 w-3.5" />} />
+          <Metric label="Conversiones principales" value={totalPrimary.toLocaleString('es-ES')} icon={<Target className="h-3.5 w-3.5" />} />
           <Metric label="Clics" value={totalClicks.toLocaleString('es-ES')} />
           <Metric label="Impresiones" value={totalImpressions.toLocaleString('es-ES')} />
         </div>
@@ -104,11 +117,19 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
               </div>
             ))}
           </DataList>
-          <DataList title="Conversiones por objetivo">
-            {data.objective_conversions.length === 0 ? <Empty /> : data.objective_conversions.map((row) => (
+          <DataList title={`Conversiones principales (${totalPrimary.toLocaleString('es-ES')})`}>
+            {primaryConversions.length === 0 ? <Empty /> : primaryConversions.map((row) => (
               <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
                 <span className="min-w-0 truncate">{row.objective}</span>
                 <span className="shrink-0 font-medium">{row.conversions.toLocaleString('es-ES')}</span>
+              </div>
+            ))}
+          </DataList>
+          <DataList title={`Acciones secundarias · visitas y observación (${totalSecondary.toLocaleString('es-ES')})`}>
+            {secondaryConversions.length === 0 ? <Empty /> : secondaryConversions.map((row) => (
+              <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
+                <span className="min-w-0 truncate text-muted-foreground">{row.objective}</span>
+                <span className="shrink-0 font-medium text-muted-foreground">{row.conversions.toLocaleString('es-ES')}</span>
               </div>
             ))}
           </DataList>
@@ -124,13 +145,22 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
               <span className="text-xs text-muted-foreground">Últimos 14 días, independiente del periodo</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Metric label="Conversiones (14 d)" value={data.last_14_days.total_conversions.toLocaleString('es-ES')} icon={<Target className="h-3.5 w-3.5" />} />
+              <Metric
+                label="Conversiones principales (14 d)"
+                value={data.last_14_days.by_objective.filter((row) => isPrimaryObjective(row.objective)).reduce((sum, row) => sum + row.conversions, 0).toLocaleString('es-ES')}
+                icon={<Target className="h-3.5 w-3.5" />}
+              />
               <Metric label="Valor conversiones (14 d)" value={money(data.last_14_days.total_value, data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
             </div>
             <div className="max-h-40 overflow-y-auto">
               {data.last_14_days.by_objective.length === 0 ? <Empty /> : data.last_14_days.by_objective.map((row) => (
                 <div key={row.objective} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
-                  <span className="min-w-0 truncate">{row.objective}</span>
+                  <span className={`min-w-0 truncate ${isPrimaryObjective(row.objective) ? '' : 'text-muted-foreground'}`}>
+                    {row.objective}
+                    {!isPrimaryObjective(row.objective) && (
+                      <Badge variant="outline" className="ml-2 text-[10px] font-normal">visita</Badge>
+                    )}
+                  </span>
                   <span className="shrink-0 font-medium">
                     {row.conversions.toLocaleString('es-ES')}
                     <span className="ml-2 text-xs text-muted-foreground">{money(row.value, data.currency)}</span>
