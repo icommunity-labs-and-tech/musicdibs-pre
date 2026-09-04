@@ -13,6 +13,7 @@ export interface AttributionData {
   utm_campaign?: string;
   utm_content?: string;
   utm_term?: string;
+  gclid?: string;
   coupon?: string;
   ref?: string;
   referrer?: string;
