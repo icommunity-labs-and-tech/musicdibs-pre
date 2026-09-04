@@ -262,6 +262,8 @@ const App = () => (
               <Route path="/admin" element={<AdminLogin />} />
               <Route path="/admin/blog" element={<AdminBlog />} />
               <Route path="/admin/ab-tests" element={<AdminABTests />} />
+              {/* Legacy: /admin/* routes actually live under /dashboard/admin/* */}
+              <Route path="/admin/*" element={<AdminLegacyRedirect />} />
               <Route path="/manager" element={<ManagerLanding />} />
               <Route path="/login" element={<UserLogin />} />
               <Route path="/reset-password" element={<ResetPassword />} />
