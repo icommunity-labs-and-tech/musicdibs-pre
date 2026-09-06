@@ -5399,7 +5399,7 @@ serve(async (req) => {
       };
       const [campaignData, objectiveData, last14Data] = await Promise.all([
         query(`SELECT campaign.name, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions, segments.date FROM campaign WHERE segments.date BETWEEN '${start}' AND '${end}' ORDER BY metrics.cost_micros DESC`),
-        query(`SELECT campaign.name, segments.conversion_action_name, metrics.conversions FROM campaign WHERE segments.date BETWEEN '${start}' AND '${end}' ORDER BY metrics.conversions DESC`),
+        query(`SELECT campaign.name, segments.conversion_action_name, metrics.conversions, metrics.conversions_value FROM campaign WHERE segments.date BETWEEN '${start}' AND '${end}' ORDER BY metrics.conversions DESC`),
         query(`SELECT campaign.name, segments.conversion_action_name, metrics.conversions, metrics.conversions_value FROM campaign WHERE segments.date DURING LAST_14_DAYS ORDER BY metrics.conversions DESC`),
       ]);
       const campaignMap: Record<string, { campaign_name: string; spend: number; clicks: number; impressions: number; conversions: number }> = {};
@@ -5413,12 +5413,14 @@ serve(async (req) => {
         campaignMap[name].impressions += Number(metrics.impressions || 0);
         campaignMap[name].conversions += Number(metrics.conversions || 0);
       }
-      const objectiveMap: Record<string, number> = {};
+      const objectiveMap: Record<string, { conversions: number; value: number }> = {};
       for (const row of objectiveData.results || []) {
         const segments = row.segments || {};
-        const metrics = row.metrics || {};
+        const metrics = (row.metrics || {}) as Record<string, string | undefined>;
         const name = segments.conversionActionName || "Sin objetivo";
-        objectiveMap[name] = (objectiveMap[name] || 0) + Number(metrics.conversions || 0);
+        objectiveMap[name] ||= { conversions: 0, value: 0 };
+        objectiveMap[name].conversions += Number(metrics.conversions || 0);
+        objectiveMap[name].value += Number(metrics.conversionsValue || 0);
       }
       // Ventana de 14 días (independiente del periodo seleccionado)
       const last14Map: Record<string, { objective: string; conversions: number; value: number }> = {};
