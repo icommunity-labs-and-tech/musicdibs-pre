@@ -372,9 +372,15 @@ serve(async (req) => {
         // legitimo. UPDATE condicional atomico: solo tiene exito si no hay
         // un cambio de plan en curso en los ultimos 10s para este usuario.
         // Garantiza que exista una fila para este usuario, sin pisar datos si ya existe.
+        // La columna plan es NOT NULL con CHECK ('Annual'|'Monthly'): sin ella
+        // el insert falla cuando el usuario aun no tiene fila (p.ej. cliente
+        // antiguo cuyo webhook nunca la creo), el UPDATE del lock matchea 0
+        // filas y TODO intento de upgrade devuelve un falso 409 en bucle.
+        // Derivamos el plan de la suscripcion activa en Stripe (intervalo real).
+        const placeholderPlan = activeSub.items.data[0]?.price?.recurring?.interval === "year" ? "Annual" : "Monthly";
         await supabaseAdmin
           .from("subscriptions")
-          .upsert({ user_id: user.id }, { onConflict: "user_id", ignoreDuplicates: true });
+          .upsert({ user_id: user.id, plan: placeholderPlan }, { onConflict: "user_id", ignoreDuplicates: true });
 
         const lockCutoff = new Date(Date.now() - 10_000).toISOString();
         const { data: lockRows, error: lockErr } = await supabaseAdmin
