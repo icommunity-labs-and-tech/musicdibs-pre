@@ -5440,7 +5440,7 @@ serve(async (req) => {
       }
       return json({
         campaign_spend: Object.values(campaignMap).sort((a, b) => b.spend - a.spend),
-        objective_conversions: Object.entries(objectiveMap).map(([objective, conversions]) => ({ objective, conversions })).sort((a, b) => b.conversions - a.conversions),
+        objective_conversions: Object.entries(objectiveMap).map(([objective, data]) => ({ objective, conversions: data.conversions, value: parseFloat(data.value.toFixed(2)) })).sort((a, b) => b.conversions - a.conversions),
         last_14_days: {
           total_conversions: parseFloat(last14Total.toFixed(2)),
           total_value: parseFloat(last14Value.toFixed(2)),
