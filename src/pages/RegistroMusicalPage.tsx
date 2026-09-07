@@ -118,6 +118,9 @@ export default function RegistroMusicalPage({
             },
           })}
         </script>
+        <script type="application/ld+json">
+          {JSON.stringify(REGISTRO_TESTIMONIAL_VIDEO)}
+        </script>
       </Helmet>
 
 
