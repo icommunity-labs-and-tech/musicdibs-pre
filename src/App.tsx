@@ -255,10 +255,11 @@ const App = () => (
               <Route path="/certificado-blockchain" element={<CertificateProofPage />} />
               <Route path="/news" element={<News />} />
               <Route path="/news/:slug" element={<NewsArticle />} />
-              {/* Legacy /en/news/* URLs indexed by crawlers — serve the same
-                  components instead of falling through to NotFound (3s wasted). */}
-              <Route path="/en/news" element={<News />} />
-              <Route path="/en/news/:slug" element={<NewsArticle />} />
+              {/* Legacy /en/news/* URLs: Google indexed them as duplicates of
+                  /news/*, so send both users and crawlers to the canonical path. */}
+              <Route path="/en/news" element={<Navigate to="/news" replace />} />
+              <Route path="/en/news/:slug" element={<EnNewsRedirect />} />
+
               <Route path="/admin" element={<AdminLogin />} />
               <Route path="/admin/blog" element={<AdminBlog />} />
               <Route path="/admin/ab-tests" element={<AdminABTests />} />
