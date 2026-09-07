@@ -281,6 +281,16 @@ export const ROUTES = [
         priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
       },
     },
+    videoJsonLd: videoObject({
+      name: "Demo del IA Music Studio de Musicdibs",
+      description:
+        "Demostración del IA Music Studio: de una idea cantada a una producción completa, con letras, portada y material promocional generados con inteligencia artificial.",
+      contentPath: "/videos/ai-studio-demo.mp4",
+      thumbnailPath: "/videos/ai-studio-demo-poster.jpg",
+      duration: "PT22S",
+      uploadDate: "2025-08-01T09:00:00+02:00",
+      pagePath: "/ia-music-studio",
+    }),
   },
   {
     path: "/ai-studio",
