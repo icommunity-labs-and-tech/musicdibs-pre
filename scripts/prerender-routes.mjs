@@ -18,7 +18,40 @@ export const DEFAULT_OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-fil
  * Each route gets a full set of meta.
  * Add new SEO landings here — keep sorted by priority desc, then alpha.
  */
+/** Builds a VideoObject schema so a page qualifies as a video watch page. */
+export const videoObject = ({
+  name,
+  description,
+  contentPath,
+  thumbnailPath,
+  duration,
+  uploadDate,
+  pagePath,
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  name,
+  description,
+  thumbnailUrl: [BASE_URL + thumbnailPath],
+  uploadDate,
+  duration,
+  contentUrl: BASE_URL + contentPath,
+  embedUrl: BASE_URL + contentPath,
+  isFamilyFriendly: true,
+  inLanguage: "es",
+  publisher: {
+    "@type": "Organization",
+    name: "Musicdibs",
+    logo: {
+      "@type": "ImageObject",
+      url: `${BASE_URL}/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png`,
+    },
+  },
+  potentialAction: { "@type": "WatchAction", target: BASE_URL + pagePath },
+});
+
 export const ROUTES = [
+
 
   // ── PORTUGUESE (pt-BR) MIRRORS OF SHARED PAGES ─────────────────────────────
   {
