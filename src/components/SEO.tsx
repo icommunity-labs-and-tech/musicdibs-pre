@@ -1,6 +1,8 @@
+import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useTranslation } from "react-i18next";
 import { useLocalizedRoute } from "@/components/LocalizedRoute";
+
 
 interface SEOProps {
   title: string;
