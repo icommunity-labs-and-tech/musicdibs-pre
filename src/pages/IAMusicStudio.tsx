@@ -8,6 +8,7 @@ import { Hero } from "@/components/landing/Hero";
 import { VoiceToProduction } from "@/components/landing/VoiceToProduction";
 import { PromoVisualsShowcase } from "@/components/landing/PromoVisualsShowcase";
 import { SocialBanner } from "@/components/landing/SocialBanner";
+import { AI_STUDIO_DEMO_VIDEO } from "@/lib/videoSchema";
 
 import { Footer } from "@/components/landing/Footer";
 
