@@ -10,10 +10,157 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+# AI agent / assistant bots — explicit rules (kept in sync with the wildcard below)
+User-agent: GPTBot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
+User-agent: anthropic-ai
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
+User-agent: CCBot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
+User-agent: Amazonbot
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
+User-agent: Bytespider
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
+User-agent: Meta-ExternalAgent
+Allow: /
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager
+Disallow: /manager/
+
 User-agent: *
 Allow: /
 Allow: /llms.txt
 Allow: /sitemap.xml
+
+# Content Signals (contentsignals.org) — business decision confirmed by client: allow all
+Content-Signal: ai-train=yes, ai-input=yes, search=yes
 
 # Private / authenticated areas — no SEO value
 Disallow: /dashboard

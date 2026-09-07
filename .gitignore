@@ -23,3 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 supabase/.temp/
+
+# Env / secrets
+.env
+.env.*
+
+# AEO audit working docs — confidenciales, no forman parte del código público del sitio
+docs/aeo-status.md
+docs/aeo-report-*.md
