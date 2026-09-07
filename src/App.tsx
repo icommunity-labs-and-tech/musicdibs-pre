@@ -7,6 +7,13 @@ const AdminLegacyRedirect = () => {
   const { pathname, search, hash } = useLocation();
   return <Navigate to={`/dashboard${pathname}${search}${hash}`} replace />;
 };
+
+/** Legacy /en/news/:slug URLs are duplicates of /news/:slug — redirect. */
+const EnNewsRedirect = () => {
+  const { pathname, search, hash } = useLocation();
+  return <Navigate to={`${pathname.replace(/^\/en/, "")}${search}${hash}`} replace />;
+};
+
 import LocalizedRoute from "@/components/LocalizedRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/ThemeProvider";
