@@ -175,7 +175,9 @@ const Index = () => {
               offerCount: 3
             },
             inLanguage: ["es", "en", "pt-BR"]
-          }
+          },
+          HOME_HERO_VIDEO,
+          AI_STUDIO_DEMO_VIDEO
         ]}
       />
       <Navbar />
