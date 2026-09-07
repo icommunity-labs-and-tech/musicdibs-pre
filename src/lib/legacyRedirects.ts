@@ -82,9 +82,23 @@ const RULES: Rule[] = [
   { prefix: "/tienda", to: PRICING },
   { prefix: "/producto", to: PRICING },
   { prefix: "/categoria-producto", to: PRICING },
+  { prefix: "/etiqueta-producto", to: PRICING },
+  { prefix: "/dibs", to: PRICING },
   { prefix: "/mi-cuenta", to: "/dashboard" },
+  { prefix: "/inicio-sesion", to: "/login" },
   { prefix: "/wp-content/uploads", to: "/distribution" },
   { prefix: "/wp-content", to: "/" },
+  { prefix: "/wp-includes", to: "/" },
+  { prefix: "/wp-json", to: "/" },
+
+  // Old WordPress taxonomy / author / search archives
+  { prefix: "/tag", to: "/news" },
+  { prefix: "/etiqueta", to: "/news" },
+  { prefix: "/author", to: "/news" },
+  { prefix: "/categoria", to: "/news" },
+  { prefix: "/search", to: "/news" },
+  { prefix: "/dist", to: "/distribution" },
+
 
   // Old Spanish blog articles (interviews / posts) now living under /news
   { prefix: "/entrevista-a", to: "/news" },
