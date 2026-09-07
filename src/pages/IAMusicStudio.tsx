@@ -56,6 +56,9 @@ export default function IAMusicStudio() {
             },
           })}
         </script>
+        <script type="application/ld+json">
+          {JSON.stringify(AI_STUDIO_DEMO_VIDEO)}
+        </script>
       </Helmet>
 
 
