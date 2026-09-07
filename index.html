@@ -24,6 +24,11 @@
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />
     <meta name="language" content="Spanish" />
     <meta name="google-site-verification" content="0kZx2ShDqINNzGQUoaHdFz8TPgZsnPYZSNeycc3nX98" />
+    <!-- Default canonical for the homepage. Removed at runtime by <SEO /> so
+         client-rendered routes only ever expose their own canonical, and
+         overwritten at build time by scripts/prerender-seo.mjs per route. -->
+    <link rel="canonical" href="https://musicdibs.com/" data-static-canonical="true" />
+
     
     <!-- Open Graph / Facebook (fallback for non-JS crawlers; per-route tags injected via react-helmet-async) -->
     <meta property="og:title" content="Musicdibs — Registro, Distribución y IA para Artistas" />
