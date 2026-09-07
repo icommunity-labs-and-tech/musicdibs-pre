@@ -39,12 +39,19 @@ Disallow: /*?product_count=
 Disallow: /*?prod=
 
 # Legacy WooCommerce store paths — crawl-budget waste
+Disallow: /dibs
 Disallow: /dibs/
+Disallow: /tienda
 Disallow: /tienda/
+Disallow: /producto
 Disallow: /producto/
+Disallow: /categoria-producto
 Disallow: /categoria-producto/
+Disallow: /cart
 Disallow: /cart/
+Disallow: /checkout
 Disallow: /checkout/
+Disallow: /my-account
 Disallow: /my-account/
 
 Sitemap: https://musicdibs.com/sitemap.xml
