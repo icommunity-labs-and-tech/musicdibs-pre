@@ -56,6 +56,12 @@ export const SEO = ({
 }: SEOProps) => {
   const { i18n } = useTranslation();
   const localizedRoute = useLocalizedRoute();
+  // The static homepage canonical in index.html must not coexist with the
+  // per-route canonical Helmet injects (link tags don't dedupe by rel).
+  useEffect(() => {
+    document.head.querySelector('link[data-static-canonical]')?.remove();
+  }, []);
+
   // Priority: localized route (/pt/...) > explicit prop > current UI language.
   // Falling back to the live UI language keeps <html lang> honest on shared
   // pages whose content is translated dynamically.
