@@ -108,6 +108,13 @@ const buildHtmlForRoute = (template, route) => {
     html = injectJsonLd(html, route.jsonLd);
   }
 
+  // VideoObject JSON-LD so the page qualifies as a video watch page
+  if (route.videoJsonLd) {
+    for (const video of [].concat(route.videoJsonLd)) {
+      html = injectJsonLd(html, video);
+    }
+  }
+
   // Real rendered body for crawlers (fixes Soft 404 — see injectBody below)
   if (route.bodyHtml) {
     html = injectBody(html, route.bodyHtml);
