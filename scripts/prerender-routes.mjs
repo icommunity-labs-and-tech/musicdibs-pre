@@ -134,6 +134,16 @@ export const ROUTES = [
       description: "Registro de obras musicales con certificado blockchain y validez legal internacional.",
       serviceType: "Music Copyright Registration",
     },
+    videoJsonLd: videoObject({
+      name: "Testimonio de artista: registrar una canción en Musicdibs",
+      description:
+        "Un artista explica cómo registró su canción en Musicdibs y obtuvo un certificado blockchain con validez legal en minutos.",
+      contentPath: "/videos/testimonio-0528.mp4",
+      thumbnailPath: "/videos/testimonio-0528-poster.jpg",
+      duration: "PT27S",
+      uploadDate: "2025-07-15T09:00:00+02:00",
+      pagePath: "/registro-musical",
+    }),
   },
   {
     path: "/music-distribution",
