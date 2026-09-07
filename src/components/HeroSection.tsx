@@ -24,7 +24,9 @@ export const HeroSection = () => {
         loop
         muted
         playsInline
-        preload="none"
+        preload="metadata"
+        title="Musicdibs: registra, protege y distribuye tu música"
+        aria-label="Musicdibs: registra, protege y distribuye tu música"
         poster="/lovable-uploads/8a9c1220-8213-4d45-a928-debd5429a44c.webp"
         onError={(e) => console.error("Video failed to load:", e)}
         className="absolute inset-0 w-full h-full object-cover will-change-transform"
