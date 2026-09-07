@@ -108,6 +108,13 @@ const buildHtmlForRoute = (template, route) => {
     html = injectJsonLd(html, route.jsonLd);
   }
 
+  // Drop the homepage VideoObject inherited from index.html: only the page
+  // that actually embeds a video may declare one.
+  html = html.replace(
+    /<script type="application\/ld\+json">\s*\{[^<]*"@type":\s*"VideoObject"[\s\S]*?<\/script>/gi,
+    ""
+  );
+
   // VideoObject JSON-LD so the page qualifies as a video watch page
   if (route.videoJsonLd) {
     for (const video of [].concat(route.videoJsonLd)) {
