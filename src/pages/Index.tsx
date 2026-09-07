@@ -6,6 +6,7 @@ import { LaunchPromoPopup } from "@/components/LaunchPromoPopup";
 import { ArtistsBanner } from "@/components/ArtistsBanner";
 import { SEO } from "@/components/SEO";
 import { lazyWithRetry } from "@/lib/lazyWithRetry";
+import { HOME_HERO_VIDEO, AI_STUDIO_DEMO_VIDEO } from "@/lib/videoSchema";
 
 // Lazy-load below-fold sections to reduce initial JS and improve TTI
 const WhyChooseSection = lazyWithRetry(() => import("@/components/WhyChooseSection").then(m => ({ default: m.WhyChooseSection })));
@@ -174,7 +175,9 @@ const Index = () => {
               offerCount: 3
             },
             inLanguage: ["es", "en", "pt-BR"]
-          }
+          },
+          HOME_HERO_VIDEO,
+          AI_STUDIO_DEMO_VIDEO
         ]}
       />
       <Navbar />

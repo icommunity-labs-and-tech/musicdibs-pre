@@ -117,6 +117,8 @@ export function VoiceToProduction() {
                       muted
                       playsInline
                       controls={false}
+                      title="Demo del IA Music Studio de Musicdibs"
+                      aria-label="Demo del IA Music Studio de Musicdibs"
                     >
                       <source src={demoVideoMobileWebm} type="video/webm" />
                       <source src={demoVideoMobileMp4} type="video/mp4" />

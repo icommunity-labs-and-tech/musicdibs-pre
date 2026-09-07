@@ -18,7 +18,40 @@ export const DEFAULT_OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-fil
  * Each route gets a full set of meta.
  * Add new SEO landings here — keep sorted by priority desc, then alpha.
  */
+/** Builds a VideoObject schema so a page qualifies as a video watch page. */
+export const videoObject = ({
+  name,
+  description,
+  contentPath,
+  thumbnailPath,
+  duration,
+  uploadDate,
+  pagePath,
+}) => ({
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  name,
+  description,
+  thumbnailUrl: [BASE_URL + thumbnailPath],
+  uploadDate,
+  duration,
+  contentUrl: BASE_URL + contentPath,
+  embedUrl: BASE_URL + contentPath,
+  isFamilyFriendly: true,
+  inLanguage: "es",
+  publisher: {
+    "@type": "Organization",
+    name: "Musicdibs",
+    logo: {
+      "@type": "ImageObject",
+      url: `${BASE_URL}/lovable-uploads/b347ac8a-e7a2-4c60-a54e-6bc186ef2ce3.png`,
+    },
+  },
+  potentialAction: { "@type": "WatchAction", target: BASE_URL + pagePath },
+});
+
 export const ROUTES = [
+
 
   // ── PORTUGUESE (pt-BR) MIRRORS OF SHARED PAGES ─────────────────────────────
   {
@@ -134,6 +167,16 @@ export const ROUTES = [
       description: "Registro de obras musicales con certificado blockchain y validez legal internacional.",
       serviceType: "Music Copyright Registration",
     },
+    videoJsonLd: videoObject({
+      name: "Testimonio de artista: registrar una canción en Musicdibs",
+      description:
+        "Un artista explica cómo registró su canción en Musicdibs y obtuvo un certificado blockchain con validez legal en minutos.",
+      contentPath: "/videos/testimonio-0528.mp4",
+      thumbnailPath: "/videos/testimonio-0528-poster.jpg",
+      duration: "PT27S",
+      uploadDate: "2025-07-15T09:00:00+02:00",
+      pagePath: "/registro-musical",
+    }),
   },
   {
     path: "/music-distribution",
@@ -238,6 +281,16 @@ export const ROUTES = [
         priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
       },
     },
+    videoJsonLd: videoObject({
+      name: "Demo del IA Music Studio de Musicdibs",
+      description:
+        "Demostración del IA Music Studio: de una idea cantada a una producción completa, con letras, portada y material promocional generados con inteligencia artificial.",
+      contentPath: "/videos/ai-studio-demo.mp4",
+      thumbnailPath: "/videos/ai-studio-demo-poster.jpg",
+      duration: "PT22S",
+      uploadDate: "2025-08-01T09:00:00+02:00",
+      pagePath: "/ia-music-studio",
+    }),
   },
   {
     path: "/ai-studio",

@@ -15,6 +15,7 @@ import promoTiktokAsset from "@/assets/promo-tiktok-245k.png.asset.json";
 const urbanArtistInstagram = promoInstagramAsset.url;
 const urbanArtistTiktok = promoTiktokAsset.url;
 import testimonioPoster from "@/assets/testimonio-poster.jpg";
+import { REGISTRO_TESTIMONIAL_VIDEO } from "@/lib/videoSchema";
 import {
   ShieldCheck,
   Globe2,
@@ -117,6 +118,9 @@ export default function RegistroMusicalPage({
               url: canonicalUrl,
             },
           })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(REGISTRO_TESTIMONIAL_VIDEO)}
         </script>
       </Helmet>
 
@@ -512,7 +516,9 @@ export default function RegistroMusicalPage({
                   poster={testimonioPoster}
                   controls
                   playsInline
-                  preload="none"
+                  preload="metadata"
+                  title="Testimonio de artista: registrar una canción en Musicdibs"
+                  aria-label="Testimonio de artista: registrar una canción en Musicdibs"
                   className="w-full h-auto block"
                 />
 
