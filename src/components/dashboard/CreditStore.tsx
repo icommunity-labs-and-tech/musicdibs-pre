@@ -14,6 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { CancellationSurveyModal } from './CancellationSurveyModal';
 import { useCheckout } from '@/hooks/useCheckout';
+import { getAttributionForCheckout } from '@/lib/attribution';
 
 type StripePlan = {
   planId: string;
@@ -122,23 +123,9 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
     setError(null);
     try {
       // Include attribution data from localStorage
-      let attribution: Record<string, string> = {};
-      try {
-        const raw = localStorage.getItem('md_attribution');
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed.utm_source) attribution.utm_source = parsed.utm_source;
-          if (parsed.utm_medium) attribution.utm_medium = parsed.utm_medium;
-          if (parsed.utm_campaign) attribution.utm_campaign = parsed.utm_campaign;
-          if (parsed.utm_content) attribution.utm_content = parsed.utm_content;
-          if (parsed.utm_term) attribution.utm_term = parsed.utm_term;
-          if (parsed.coupon) attribution.coupon_code = parsed.coupon;
-          if (parsed.ref) attribution.referrer_code = parsed.ref;
-          if (parsed.referrer) attribution.referrer = parsed.referrer;
-          if (parsed.landing_path) attribution.landing_path = parsed.landing_path;
-          if (parsed.utm_campaign) attribution.attributed_campaign_name = parsed.utm_campaign;
-        }
-      } catch { /* ignore */ }
+      // Incluye UTMs + gclid (identificador de clic de Google Ads) para poder
+      // atribuir cada compra a su campaña real.
+      const attribution: Record<string, string> = getAttributionForCheckout();
       let referralCode: string | null = null;
       try { referralCode = localStorage.getItem('referral_code'); } catch { /* ignore */ }
       const { data, error: fnError } = await supabase.functions.invoke('create-credit-checkout', { body: { planId, attribution, ...(referralCode ? { referral_code: referralCode } : {}) } });

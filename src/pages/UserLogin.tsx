@@ -167,6 +167,10 @@ export default function UserLogin() {
       ...(attribution?.utm_content ? { utm_content: attribution.utm_content } : {}),
       ...(attribution?.utm_term ? { utm_term: attribution.utm_term } : {}),
       ...(attribution?.landing_path ? { landing_path: attribution.landing_path } : {}),
+      // gclid: identificador del clic de Google Ads; permite saber con certeza
+      // que altas vienen de las campañas aunque falten UTMs.
+      ...(attribution?.gclid ? { gclid: attribution.gclid } : {}),
+      ...(attribution?.referrer ? { referrer: attribution.referrer } : {}),
     });
     setLoading(false);
     if (error) {

@@ -328,6 +328,16 @@ async function createOrderRecord(
       }
     }
 
+    // FIX 2026-09-08: si la compra trae gclid (clic de Google Ads) pero no hay
+    // UTMs, la marcamos igualmente como trafico de pago de Google para no
+    // perder la atribucion en los paneles.
+    const hasGclid = typeof meta.gclid === "string" && meta.gclid.trim().length > 0;
+    if (hasGclid) {
+      if (!meta.utm_source) meta.utm_source = "google";
+      if (!meta.utm_medium) meta.utm_medium = "cpc";
+      if (!attributedCampaignName) attributedCampaignName = "Google Ads (gclid)";
+    }
+
     const orderData = {
       user_id: params.userId,
       stripe_checkout_session_id: params.stripeCheckoutSessionId || null,
