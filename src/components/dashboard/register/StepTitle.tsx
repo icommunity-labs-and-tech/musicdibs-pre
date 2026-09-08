@@ -31,8 +31,9 @@ export function StepTitle({ data, onUpdate, onNext, onBack }: StepTitleProps) {
           <Label className="text-sm">{t('wizard.stepTitle.titleLabel')} *</Label>
           <Input
             value={data.title}
-            onChange={(e) => onUpdate({ title: e.target.value })}
+            onChange={(e) => onUpdate({ title: e.target.value.replace(/[\r\n]+/g, ' ').slice(0, 200) })}
             placeholder={t('wizard.stepTitle.titlePlaceholder')}
+            maxLength={200}
           />
         </div>
 
