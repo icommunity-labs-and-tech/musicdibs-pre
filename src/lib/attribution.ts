@@ -5,6 +5,7 @@
  */
 
 const STORAGE_KEY = 'md_attribution';
+const VISIT_KEY = 'md_visit_logged';
 const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export interface AttributionData {
