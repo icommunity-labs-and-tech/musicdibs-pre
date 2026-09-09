@@ -95,9 +95,9 @@ const COPY: Record<Lang, {
     optionsTitle: "3 ways to copyright your music in 2026",
     optionsIntro: "There is no single valid option. Each has trade-offs — and they're combinable.",
     options: [
-      { name: "Government copyright office (USCO, IPO)", pros: "Classic institutional recognition, accepted by every court.", cons: "Slow (3-12 months), bureaucratic, mid-cost ($45+ USCO), country-specific by default." },
-      { name: "Blockchain timestamp (Musicdibs)", pros: "Instant, cheap (from €2.99), valid in 180+ countries via the Berne Convention, public online verification.", cons: "New technology — some judges aren't familiar yet, though EU eIDAS regulation backs it." },
-      { name: "Collecting society (ASCAP, BMI, PRS)", pros: "Essential to collect royalties from broadcast and streaming.", cons: "Not a true authorship registry: you must prove ownership beforehand." },
+      { name: "US Copyright Office (USCO)", pros: "Classic institutional recognition, accepted by every US court, and required before you can sue for infringement in the US.", cons: "Slow (typically 3-10 months for standard applications), $45-65 per filing, and it only covers the United States." },
+      { name: "Blockchain timestamp (Musicdibs)", pros: "Instant, cheap (from €2.99, about $3), valid in 180+ countries via the Berne Convention, public online verification. First song free.", cons: "New technology — some judges aren't familiar yet, though EU eIDAS regulation backs it. It is evidence of date and authorship, not a USCO filing." },
+      { name: "Collecting society or PRO (ASCAP, BMI, PRS)", pros: "Essential to collect royalties from broadcast and streaming.", cons: "Not a true authorship registry: you must prove ownership beforehand." },
     ],
     mythsTitle: "Myths about music copyright",
     myths: [
