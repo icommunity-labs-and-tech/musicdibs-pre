@@ -52,9 +52,13 @@ function recordVisit(): void {
     const utm_content = params.get('utm_content') || undefined;
     const utm_term = params.get('utm_term') || undefined;
     const gclid = params.get('gclid') || undefined;
-    const referrer = document.referrer && !document.referrer.includes(window.location.hostname)
-      ? document.referrer
-      : undefined;
+    // Ignore internal referrers and Lovable editor/preview traffic — those are
+    // us browsing the app, not real visitors.
+    const ref = document.referrer || '';
+    const isSelf = ref.includes(window.location.hostname);
+    const isLovable = /(^|\.)lovable\.(dev|app|project)(\/|$|:)/.test(ref)
+      || /lovable\.app/.test(ref);
+    const referrer = ref && !isSelf && !isLovable ? ref : undefined;
 
     if (!utm_source && !utm_campaign && !gclid && !referrer) return;
 
