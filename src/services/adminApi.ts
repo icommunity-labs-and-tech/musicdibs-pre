@@ -160,6 +160,7 @@ export const adminApi = {
   getRevenueByUtm: (range: { start: string; end: string }) => adminAction('get_revenue_by_utm', range),
   getLeadsByLanguage: (range: { start: string; end: string }) => adminAction('get_leads_by_language', range),
   getUtmVisits: (range: { start: string; end: string }) => adminAction('get_utm_visits', range),
+  getUtmVisitLog: (params: { start: string; end: string; search?: string; limit?: number; offset?: number }) => adminAction('get_utm_visit_log', params),
   getCampaignDetail: (campaign_name: string) => adminAction('get_campaign_detail', { campaign_name }),
   backfillOrdersFromStripe: (dry_run = false, limit?: number) => adminAction('backfill_orders_from_stripe', { dry_run, limit }),
   getUserPurchases: (user_id: string) => adminAction('get_user_purchases', { user_id }),

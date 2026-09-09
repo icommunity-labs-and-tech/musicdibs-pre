@@ -125,6 +125,7 @@ const MetadataFinderPage = lazyWithRetry(() => import("./pages/MetadataFinderPag
 const CertificateProofPage = lazyWithRetry(() => import("./pages/CertificateProofPage"));
 
 const AdminCampaignMetricsPage = lazyWithRetry(() => import("./pages/AdminCampaignMetricsPage"));
+const AdminVisitsPage = lazyWithRetry(() => import("./pages/AdminVisitsPage"));
 const AdminChurnPage = lazyWithRetry(() => import("./pages/AdminChurnPage"));
 const AdminAIModelsPage = lazyWithRetry(() => import("./pages/AdminAIModelsPage"));
 const AdminCreditCouponsPage = lazyWithRetry(() => import("./pages/AdminCreditCouponsPage"));
@@ -303,6 +304,7 @@ const App = () => (
                 <Route path="admin/works" element={<Suspense fallback={null}><AdminGuard><AdminWorksPage /></AdminGuard></Suspense>} />
                 <Route path="admin/metrics" element={<Suspense fallback={null}><AdminGuard><AdminMetricsPage /></AdminGuard></Suspense>} />
                 <Route path="admin/campaigns" element={<Suspense fallback={null}><AdminGuard><AdminCampaignMetricsPage /></AdminGuard></Suspense>} />
+                <Route path="admin/visits" element={<Suspense fallback={null}><AdminGuard><AdminVisitsPage /></AdminGuard></Suspense>} />
                 <Route path="admin/system" element={<Suspense fallback={null}><AdminGuard><AdminSystemPage /></AdminGuard></Suspense>} />
                 <Route path="admin/premium-promos" element={<Suspense fallback={null}><AdminGuard><AdminPremiumPromosPage /></AdminGuard></Suspense>} />
                 <Route path="admin/youtube-services" element={<Suspense fallback={null}><AdminGuard><AdminYoutubeServicesPage /></AdminGuard></Suspense>} />
