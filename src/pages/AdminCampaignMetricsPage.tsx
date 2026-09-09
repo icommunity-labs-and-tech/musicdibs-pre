@@ -23,6 +23,7 @@ import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/H
 import { GoogleAdsSpendPanel, type GoogleAdsSpendData } from '@/components/admin/GoogleAdsSpendPanel';
 import { RevenueByUtmPanel, type RevenueByUtmData } from '@/components/admin/RevenueByUtmPanel';
 import { LeadsByLanguagePanel, type LeadsByLanguageData } from '@/components/admin/LeadsByLanguagePanel';
+import { UtmVisitsPanel, type UtmVisitsData } from '@/components/admin/UtmVisitsPanel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -106,6 +107,9 @@ export default function AdminCampaignMetricsPage() {
   const [leadsByLanguage, setLeadsByLanguage] = useState<LeadsByLanguageData | null>(null);
   const [loadingLeadsByLanguage, setLoadingLeadsByLanguage] = useState(true);
   const [leadsByLanguageError, setLeadsByLanguageError] = useState<string | null>(null);
+  const [utmVisits, setUtmVisits] = useState<UtmVisitsData | null>(null);
+  const [loadingUtmVisits, setLoadingUtmVisits] = useState(true);
+  const [utmVisitsError, setUtmVisitsError] = useState<string | null>(null);
   const [detailCampaign, setDetailCampaign] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<any>(null);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
@@ -566,6 +570,8 @@ export default function AdminCampaignMetricsPage() {
 
        {/* Gasto real y conversiones de las campañas de Google Ads */}
       <GoogleAdsSpendPanel data={googleAdsSpend} loading={loadingGoogleAdsSpend} error={googleAdsSpendError} />
+
+      <UtmVisitsPanel data={utmVisits} loading={loadingUtmVisits} error={utmVisitsError} />
 
       <RevenueByUtmPanel data={revenueByUtm} loading={loadingRevenueByUtm} error={revenueByUtmError} />
 
