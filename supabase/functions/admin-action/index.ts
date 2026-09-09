@@ -5721,6 +5721,50 @@ serve(async (req) => {
       });
     }
 
+    // ── get_utm_visit_log (detalle: fecha, origen, canal, página) ──
+    if (action === "get_utm_visit_log") {
+      const start = typeof payload.start === "string" ? payload.start : "";
+      const end = typeof payload.end === "string" ? payload.end : "";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return json({ error: "Invalid date range" }, 400);
+      const endEx = new Date(`${end}T00:00:00Z`);
+      endEx.setUTCDate(endEx.getUTCDate() + 1);
+
+      const search = typeof payload.search === "string" ? payload.search.trim() : "";
+      const limit = Math.min(Math.max(Number(payload.limit) || 200, 1), 1000);
+      const offset = Math.max(Number(payload.offset) || 0, 0);
+
+      let q = admin
+        .from("utm_visits")
+        .select("id, created_at, utm_source, utm_medium, utm_campaign, utm_content, utm_term, gclid, referrer, landing_path, language", { count: "exact" })
+        .gte("created_at", `${start}T00:00:00Z`)
+        .lt("created_at", endEx.toISOString());
+
+      if (search) {
+        const s = search.replace(/[,%]/g, "");
+        q = q.or(`utm_source.ilike.%${s}%,utm_campaign.ilike.%${s}%,referrer.ilike.%${s}%,landing_path.ilike.%${s}%`);
+      }
+
+      const { data, error, count } = await q.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
+      if (error) return json({ error: error.message }, 500);
+
+      const rows = (data || []).map((v: Record<string, unknown>) => ({
+        id: v.id as string,
+        created_at: v.created_at as string,
+        source: (v.utm_source as string) || (v.gclid ? "google" : (v.referrer ? hostOf(v.referrer as string) : "directo")),
+        medium: (v.utm_medium as string) || (v.gclid ? "cpc" : (v.referrer ? "referral" : "directo")),
+        campaign: (v.utm_campaign as string) || null,
+        content: (v.utm_content as string) || null,
+        term: (v.utm_term as string) || null,
+        referrer: (v.referrer as string) || null,
+        landing_path: (v.landing_path as string) || "/",
+        language: (v.language as string) || null,
+      }));
+
+      return json({ rows, total: count ?? rows.length, limit, offset, range: { start, end } });
+    }
+
+
+
     // ── get_campaign_detail ───────────────────────────────────────
     if (action === "get_campaign_detail") {
       const { campaign_name } = payload;
