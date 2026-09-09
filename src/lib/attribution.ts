@@ -47,6 +47,11 @@ export function captureAttribution(): void {
     if (refParam) localStorage.setItem('referral_code', refParam);
   } catch { /* ignore */ }
 
+  // Record the visit (once per session) so campaign traffic is visible even
+  // when the visitor never signs up or buys.
+  recordVisit();
+
+
   // Don't overwrite existing first-touch data
   if (getAttribution()) return;
 
