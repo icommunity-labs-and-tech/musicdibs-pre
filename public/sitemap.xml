@@ -276,14 +276,20 @@
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/evolucion-distribucion-digital-musica-cd-blockchain-pt</loc>
-    <lastmod>2026-09-04</lastmod>
+    <loc>https://musicdibs.com/news/derechos-de-autor-de-una-cancion-es</loc>
+    <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/la-era-de-los-avatares-creando-promocionando-artistas-virtuales-musicdibs-en</loc>
-    <lastmod>2026-09-04</lastmod>
+    <loc>https://musicdibs.com/news/derechos-de-autor-de-una-cancion-pt</loc>
+    <lastmod>2026-09-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/derechos-de-autor-de-una-cancion-en</loc>
+    <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -294,13 +300,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/evolucion-distribucion-digital-musica-cd-blockchain-en</loc>
-    <lastmod>2026-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/mas-alla-melodia-escribir-letras-resuenen-audiencia-pt</loc>
+    <loc>https://musicdibs.com/news/la-era-de-los-avatares-creando-promocionando-artistas-virtuales-musicdibs-es</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -312,7 +312,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/la-era-de-los-avatares-creando-promocionando-artistas-virtuales-musicdibs-pt</loc>
+    <loc>https://musicdibs.com/news/la-era-de-los-avatares-creando-promocionando-artistas-virtuales-musicdibs-en</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -324,7 +324,25 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/la-era-de-los-avatares-creando-promocionando-artistas-virtuales-musicdibs-es</loc>
+    <loc>https://musicdibs.com/news/evolucion-distribucion-digital-musica-cd-blockchain-pt</loc>
+    <lastmod>2026-09-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/la-era-de-los-avatares-creando-promocionando-artistas-virtuales-musicdibs-pt</loc>
+    <lastmod>2026-09-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/mas-alla-melodia-escribir-letras-resuenen-audiencia-pt</loc>
+    <lastmod>2026-09-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/evolucion-distribucion-digital-musica-cd-blockchain-en</loc>
     <lastmod>2026-09-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -348,49 +366,19 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/derechos-de-autor-de-una-cancion-en</loc>
-    <lastmod>2026-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/derechos-de-autor-de-una-cancion-pt</loc>
-    <lastmod>2026-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/derechos-de-autor-de-una-cancion-es</loc>
-    <lastmod>2026-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/registrar-canciones-guia-en</loc>
-    <lastmod>2026-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/registrar-canciones-guia-es</loc>
-    <lastmod>2026-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/registrar-canciones-guia-pt</loc>
-    <lastmod>2026-09-04</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://musicdibs.com/news/how-to-get-verified-on-tiktok-as-a-musician-pt</loc>
     <lastmod>2026-09-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/what-is-an-oac-on-youtube-and-how-to-set-it-up</loc>
+    <loc>https://musicdibs.com/news/how-to-get-your-apple-artist-id-step-by-step-pt</loc>
+    <lastmod>2026-09-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/how-to-get-spotify-artist-id</loc>
     <lastmod>2026-09-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -402,7 +390,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/how-to-get-spotify-artist-id</loc>
+    <loc>https://musicdibs.com/news/what-is-an-oac-on-youtube-and-how-to-set-it-up</loc>
     <lastmod>2026-09-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -421,12 +409,6 @@
   </url>
   <url>
     <loc>https://musicdibs.com/news/what-is-an-oac-on-youtube-and-how-to-set-it-up-es</loc>
-    <lastmod>2026-09-03</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/how-to-get-your-apple-artist-id-step-by-step-pt</loc>
     <lastmod>2026-09-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -456,6 +438,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://musicdibs.com/news/spotify-how-to-get-your-artist-profile-verified</loc>
+    <lastmod>2026-09-03</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://musicdibs.com/news/how-to-get-verified-on-tiktok-as-a-musician</loc>
     <lastmod>2026-09-03</lastmod>
     <changefreq>monthly</changefreq>
@@ -463,12 +451,6 @@
   </url>
   <url>
     <loc>https://musicdibs.com/news/how-to-get-your-apple-artist-id-step-by-step</loc>
-    <lastmod>2026-09-03</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/spotify-how-to-get-your-artist-profile-verified</loc>
     <lastmod>2026-09-03</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -492,13 +474,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/el-toque-final-perfecto-masterizacion-ia-musicdibs-pt</loc>
-    <lastmod>2026-07-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/derechos-autor-musicos-guia-esencial-proteger-obra-pt</loc>
+    <loc>https://musicdibs.com/news/el-toque-final-perfecto-masterizacion-ia-musicdibs-en</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -510,19 +486,25 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/derechos-autor-musicos-guia-esencial-proteger-obra-en</loc>
-    <lastmod>2026-07-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://musicdibs.com/news/derechos-autor-musicos-guia-esencial-proteger-obra-es</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/el-toque-final-perfecto-masterizacion-ia-musicdibs-en</loc>
+    <loc>https://musicdibs.com/news/derechos-autor-musicos-guia-esencial-proteger-obra-pt</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/el-toque-final-perfecto-masterizacion-ia-musicdibs-pt</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/derechos-autor-musicos-guia-esencial-proteger-obra-en</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -570,13 +552,13 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/melhor-alternativa-ao-suno-ia</loc>
+    <loc>https://musicdibs.com/news/best-suno-ai-alternative</loc>
     <lastmod>2026-07-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/best-suno-ai-alternative</loc>
+    <loc>https://musicdibs.com/news/melhor-alternativa-ao-suno-ia</loc>
     <lastmod>2026-07-19</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -708,13 +690,13 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/launching-dibs-token-artists-fans-pt</loc>
+    <loc>https://musicdibs.com/news/winners-of-musicdibs-awards-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/interview-alcala-norte-pt</loc>
+    <loc>https://musicdibs.com/news/dibs-token-presale-success-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -732,37 +714,13 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/musicdibs-at-merge-madrid-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/musicdibs-dibs-token-new-era-web3-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/how-to-reserve-dibs-tokens-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://musicdibs.com/news/importance-of-personal-branding-musicians-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/interview-caracazador-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/winners-of-musicdibs-awards-pt</loc>
+    <loc>https://musicdibs.com/news/launching-dibs-token-artists-fans-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -774,19 +732,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/dibs-token-listed-march-1-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/interview-sofos-redefining-urban-music-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/dibs-token-presale-success-pt</loc>
+    <loc>https://musicdibs.com/news/intellectual-property-vs-copyright-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -798,7 +744,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/intellectual-property-vs-copyright-pt</loc>
+    <loc>https://musicdibs.com/news/musicdibs-at-merge-madrid-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -822,103 +768,43 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://musicdibs.com/news/dibs-token-listed-march-1-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/interview-sofos-redefining-urban-music-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/musicdibs-dibs-token-new-era-web3-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://musicdibs.com/news/legal-validity-of-registering-on-musicdibs-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/steps-to-register-a-song-pt</loc>
+    <loc>https://musicdibs.com/news/interview-alcala-norte-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/myths-about-copyright-in-music-pt</loc>
+    <loc>https://musicdibs.com/news/interview-caracazador-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/song-and-music-registration-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/youtube-content-id-what-it-is-and-how-to-request-it-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/how-to-register-a-song-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/plan-update-and-new-visual-quality-standards-at-musicdibs-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/musicdibs-launches-new-music-distribution-feature-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/work-made-with-ai-or-by-ai-legal-difference-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/interview-with-kyra-new-stage-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/interview-with-alba-mbengue-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/important-information-to-improve-your-releases-on-musicdibs-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/boost-your-presence-on-spotify-and-tiktok-with-musicdibs-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/how-to-migrate-your-music-catalog-with-musicdibs-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/improvements-to-the-musicdibs-distribution-service-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/apple-music-for-artists-how-to-claim-your-profile-pt</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/over-400-artists-demand-copyright-protection-ai-pt</loc>
+    <loc>https://musicdibs.com/news/how-to-reserve-dibs-tokens-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -930,25 +816,97 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/dibs-token-purchase-guide-es</loc>
+    <loc>https://musicdibs.com/news/important-information-to-improve-your-releases-on-musicdibs-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/intellectual-property-vs-copyright-es</loc>
+    <loc>https://musicdibs.com/news/apple-music-for-artists-how-to-claim-your-profile-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/protect-music-in-the-metaverse-es</loc>
+    <loc>https://musicdibs.com/news/work-made-with-ai-or-by-ai-legal-difference-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/interview-sofos-redefining-urban-music-es</loc>
+    <loc>https://musicdibs.com/news/musicdibs-launches-new-music-distribution-feature-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/myths-about-copyright-in-music-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/steps-to-register-a-song-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/how-to-migrate-your-music-catalog-with-musicdibs-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/boost-your-presence-on-spotify-and-tiktok-with-musicdibs-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/interview-with-alba-mbengue-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/interview-with-kyra-new-stage-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/plan-update-and-new-visual-quality-standards-at-musicdibs-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/improvements-to-the-musicdibs-distribution-service-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/over-400-artists-demand-copyright-protection-ai-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/how-to-register-a-song-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/youtube-content-id-what-it-is-and-how-to-request-it-pt</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/song-and-music-registration-pt</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -960,13 +918,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/importance-of-personal-branding-musicians-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/interview-caracazador-es</loc>
+    <loc>https://musicdibs.com/news/how-to-reserve-dibs-tokens-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -978,31 +930,7 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/interview-zpu-25-years-hip-hop-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://musicdibs.com/news/common-mistakes-registering-music-copyrights-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/launching-dibs-token-artists-fans-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/legal-validity-of-registering-on-musicdibs-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/how-to-reserve-dibs-tokens-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -1014,7 +942,25 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://musicdibs.com/news/legal-validity-of-registering-on-musicdibs-es</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/protect-music-in-the-metaverse-es</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://musicdibs.com/news/musicdibs-at-merge-madrid-es</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/dibs-token-purchase-guide-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -1032,6 +978,18 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://musicdibs.com/news/intellectual-property-vs-copyright-es</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/interview-sofos-redefining-urban-music-es</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://musicdibs.com/news/interview-alcala-norte-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
@@ -1044,91 +1002,31 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://musicdibs.com/news/interview-zpu-25-years-hip-hop-es</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://musicdibs.com/news/musicdibs-vs-traditional-records-legal-validity-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/how-to-migrate-your-music-catalog-with-musicdibs-es</loc>
+    <loc>https://musicdibs.com/news/importance-of-personal-branding-musicians-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/myths-about-copyright-in-music-es</loc>
+    <loc>https://musicdibs.com/news/launching-dibs-token-artists-fans-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/spotify-discovery-mode-and-penalties-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/interview-with-alba-mbengue-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/plan-update-and-new-visual-quality-standards-at-musicdibs-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/steps-to-register-a-song-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/youtube-content-id-what-it-is-and-how-to-request-it-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/work-made-with-ai-or-by-ai-legal-difference-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/over-400-artists-demand-copyright-protection-ai-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/interview-with-kyra-new-stage-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/how-to-register-a-song-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/apple-music-for-artists-how-to-claim-your-profile-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/song-and-music-registration-es</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/boost-your-presence-on-spotify-and-tiktok-with-musicdibs-es</loc>
+    <loc>https://musicdibs.com/news/interview-caracazador-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -1140,7 +1038,31 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/musicdibs-launches-new-music-distribution-feature-es</loc>
+    <loc>https://musicdibs.com/news/boost-your-presence-on-spotify-and-tiktok-with-musicdibs-es</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/how-to-migrate-your-music-catalog-with-musicdibs-es</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/how-to-register-a-song-es</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/interview-with-kyra-new-stage-es</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/spotify-discovery-mode-and-penalties-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -1152,67 +1074,61 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/interview-with-kyra-new-stage</loc>
+    <loc>https://musicdibs.com/news/work-made-with-ai-or-by-ai-legal-difference-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/youtube-content-id-what-it-is-and-how-to-request-it</loc>
+    <loc>https://musicdibs.com/news/plan-update-and-new-visual-quality-standards-at-musicdibs-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/dibs-token-purchase-guide</loc>
+    <loc>https://musicdibs.com/news/youtube-content-id-what-it-is-and-how-to-request-it-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/interview-dlyro</loc>
+    <loc>https://musicdibs.com/news/steps-to-register-a-song-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/dibs-token-presale-success</loc>
+    <loc>https://musicdibs.com/news/musicdibs-launches-new-music-distribution-feature-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/interview-sofos-redefining-urban-music</loc>
+    <loc>https://musicdibs.com/news/apple-music-for-artists-how-to-claim-your-profile-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/interview-zpu-25-years-hip-hop</loc>
+    <loc>https://musicdibs.com/news/myths-about-copyright-in-music-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/common-mistakes-registering-music-copyrights</loc>
+    <loc>https://musicdibs.com/news/song-and-music-registration-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/dibs-token-listed-march-1</loc>
+    <loc>https://musicdibs.com/news/over-400-artists-demand-copyright-protection-ai-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/apple-music-for-artists-how-to-claim-your-profile</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/steps-to-register-a-song</loc>
+    <loc>https://musicdibs.com/news/interview-with-alba-mbengue-es</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -1224,7 +1140,19 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://musicdibs.com/news/dibs-token-listed-march-1</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://musicdibs.com/news/plan-update-and-new-visual-quality-standards-at-musicdibs</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/protect-music-in-the-metaverse</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -1242,19 +1170,13 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/protect-music-in-the-metaverse</loc>
+    <loc>https://musicdibs.com/news/interview-alcala-norte</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://musicdibs.com/news/musicdibs-vs-traditional-records-legal-validity</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://musicdibs.com/news/interview-alcala-norte</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -1273,6 +1195,12 @@
   </url>
   <url>
     <loc>https://musicdibs.com/news/legal-validity-of-registering-on-musicdibs</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/interview-with-kyra-new-stage</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -1326,12 +1254,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://musicdibs.com/news/how-to-register-a-song</loc>
-    <lastmod>2026-03-07</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
     <loc>https://musicdibs.com/news/important-information-to-improve-your-releases-on-musicdibs</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
@@ -1369,6 +1291,66 @@
   </url>
   <url>
     <loc>https://musicdibs.com/news/musicdibs-at-merge-madrid</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/dibs-token-purchase-guide</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/interview-dlyro</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/dibs-token-presale-success</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/interview-sofos-redefining-urban-music</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/interview-zpu-25-years-hip-hop</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/common-mistakes-registering-music-copyrights</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/youtube-content-id-what-it-is-and-how-to-request-it</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/how-to-register-a-song</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/apple-music-for-artists-how-to-claim-your-profile</loc>
+    <lastmod>2026-03-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/news/steps-to-register-a-song</loc>
     <lastmod>2026-03-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
