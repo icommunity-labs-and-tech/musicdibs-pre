@@ -38,6 +38,47 @@ export function getAttribution(): AttributionData | null {
   }
 }
 
+/** Log one visit per session when the URL carries campaign params or an
+ *  external referrer, so blog/partner/campaign traffic is measurable even if
+ *  the visitor never signs up. Fire-and-forget: never blocks or throws. */
+function recordVisit(): void {
+  try {
+    if (sessionStorage.getItem(VISIT_KEY)) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const utm_source = params.get('utm_source') || undefined;
+    const utm_medium = params.get('utm_medium') || undefined;
+    const utm_campaign = params.get('utm_campaign') || undefined;
+    const utm_content = params.get('utm_content') || undefined;
+    const utm_term = params.get('utm_term') || undefined;
+    const gclid = params.get('gclid') || undefined;
+    const referrer = document.referrer && !document.referrer.includes(window.location.hostname)
+      ? document.referrer
+      : undefined;
+
+    if (!utm_source && !utm_campaign && !gclid && !referrer) return;
+
+    sessionStorage.setItem(VISIT_KEY, '1');
+
+    void import('@/integrations/supabase/client').then(({ supabase }) =>
+      supabase.from('utm_visits').insert({
+        utm_source: utm_source ?? null,
+        utm_medium: utm_medium ?? null,
+        utm_campaign: utm_campaign ?? null,
+        utm_content: utm_content ?? null,
+        utm_term: utm_term ?? null,
+        gclid: gclid ?? null,
+        referrer: referrer ?? null,
+        landing_path: window.location.pathname,
+        language: (navigator.language || '').slice(0, 5) || null,
+        session_id: null,
+      }),
+    ).catch(() => { /* ignore */ });
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Capture UTMs from current URL. Only writes if no existing attribution (first-touch).
  *  The ?ref= param is ALWAYS persisted separately under `referral_code` (overwrites),
  *  so referral links work even when the user already had prior attribution. */
