@@ -23,6 +23,14 @@ function json(body: unknown, status = 200) {
   });
 }
 
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return url.slice(0, 60);
+  }
+}
+
 async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
