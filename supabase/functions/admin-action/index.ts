@@ -5652,6 +5652,67 @@ serve(async (req) => {
     }
 
 
+    // ── get_utm_visits ────────────────────────────────────────────
+    if (action === "get_utm_visits") {
+      const start = typeof payload.start === "string" ? payload.start : "";
+      const end = typeof payload.end === "string" ? payload.end : "";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return json({ error: "Invalid date range" }, 400);
+      const endExclusive = new Date(`${end}T00:00:00Z`);
+      endExclusive.setUTCDate(endExclusive.getUTCDate() + 1);
+
+      type VisitRow = {
+        utm_source: string | null;
+        utm_medium: string | null;
+        utm_campaign: string | null;
+        referrer: string | null;
+        landing_path: string | null;
+        gclid: string | null;
+      };
+
+      const visits: VisitRow[] = [];
+      const pageSize = 1000;
+      for (let page = 0; page < 60; page++) {
+        const { data, error } = await admin
+          .from("utm_visits")
+          .select("utm_source, utm_medium, utm_campaign, referrer, landing_path, gclid")
+          .gte("created_at", `${start}T00:00:00Z`)
+          .lt("created_at", endExclusive.toISOString())
+          .order("created_at", { ascending: false })
+          .range(page * pageSize, page * pageSize + pageSize - 1);
+        if (error) return json({ error: error.message }, 500);
+        const batch = (data || []) as VisitRow[];
+        visits.push(...batch);
+        if (batch.length < pageSize) break;
+      }
+
+      const bySource: Record<string, { source: string; medium: string; campaign: string; visits: number; landing_pages: Record<string, number> }> = {};
+      for (const v of visits) {
+        const source = v.utm_source || (v.gclid ? "google" : (v.referrer ? hostOf(v.referrer) : "directo"));
+        const medium = v.utm_medium || (v.gclid ? "cpc" : "referral");
+        const campaign = v.utm_campaign || "—";
+        const key = `${source}||${medium}||${campaign}`;
+        bySource[key] ||= { source, medium, campaign, visits: 0, landing_pages: {} };
+        bySource[key].visits += 1;
+        const lp = v.landing_path || "/";
+        bySource[key].landing_pages[lp] = (bySource[key].landing_pages[lp] || 0) + 1;
+      }
+
+      return json({
+        total_visits: visits.length,
+        by_source: Object.values(bySource)
+          .map((row) => ({
+            source: row.source,
+            medium: row.medium,
+            campaign: row.campaign,
+            visits: row.visits,
+            top_landing: Object.entries(row.landing_pages).sort((a, b) => b[1] - a[1])[0]?.[0] || "/",
+          }))
+          .sort((a, b) => b.visits - a.visits)
+          .slice(0, 100),
+        range: { start, end },
+      });
+    }
+
     // ── get_campaign_detail ───────────────────────────────────────
     if (action === "get_campaign_detail") {
       const { campaign_name } = payload;
