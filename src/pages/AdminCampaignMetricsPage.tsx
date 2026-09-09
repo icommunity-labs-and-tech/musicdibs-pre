@@ -144,6 +144,8 @@ export default function AdminCampaignMetricsPage() {
     setGoogleAdsSpendError(null);
     setLoadingRevenueByUtm(true);
     setRevenueByUtmError(null);
+    setLoadingUtmVisits(true);
+    setUtmVisitsError(null);
     try {
       const filters: any = { periodType };
       if (periodType === 'week') filters.weekStart = weekStart;
