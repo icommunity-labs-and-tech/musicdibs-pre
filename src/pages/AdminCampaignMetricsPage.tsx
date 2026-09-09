@@ -180,6 +180,12 @@ export default function AdminCampaignMetricsPage() {
       } catch (leadsError) {
         setLeadsByLanguageError(leadsError instanceof Error ? leadsError.message : 'No se pudieron cargar los leads por idioma');
       }
+      try {
+        const visitsRes = await adminApi.getUtmVisits(dateRange);
+        setUtmVisits(visitsRes as UtmVisitsData);
+      } catch (visitsError) {
+        setUtmVisitsError(visitsError instanceof Error ? visitsError.message : 'No se pudieron cargar las visitas por UTM');
+      }
     } catch (e: any) {
       const message = e instanceof Error ? e.message : 'No se pudieron cargar las métricas';
       toast.error(message);
@@ -188,6 +194,7 @@ export default function AdminCampaignMetricsPage() {
       setLoadingGoogleAdsSpend(false);
       setLoadingRevenueByUtm(false);
       setLoadingLeadsByLanguage(false);
+      setLoadingUtmVisits(false);
     }
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
