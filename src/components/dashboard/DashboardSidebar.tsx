@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Upload, Search, Megaphone, ShoppingBag, User,
   CreditCard, LifeBuoy, Music, LogOut, Mic, Sparkles, Shield,
   HelpCircle, Users, BarChart3, Settings2, Rocket, Briefcase,
-  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell, Youtube, Mail,
+  ClipboardList, ChevronDown, Palette, Lock, FolderOpen, UserX, Bell, Youtube, Mail, MousePointerClick,
   type LucideIcon,
 } from 'lucide-react';
 import { DistributionInfoModal } from '@/components/DistributionInfoModal';
@@ -92,6 +92,7 @@ export function DashboardSidebar() {
     { title: tr('dashboard.sidebar.works', 'Obras'), url: '/dashboard/admin/works', icon: Music },
     { title: tr('dashboard.sidebar.metrics', 'MÃ©tricas'), url: '/dashboard/admin/metrics', icon: BarChart3 },
     { title: tr('dashboard.sidebar.campaigns', 'CampaÃ±as'), url: '/dashboard/admin/campaigns', icon: Megaphone },
+    { title: 'Visitas por campaña', url: '/dashboard/admin/visits', icon: MousePointerClick },
     { title: 'Cupones regalo', url: '/dashboard/admin/credit-coupons', icon: Sparkles },
     { title: tr('dashboard.sidebar.system', 'Sistema'), url: '/dashboard/admin/system', icon: Settings2 },
     { title: tr('dashboard.sidebar.premiumPromos', 'Promos Premium'), url: '/dashboard/admin/premium-promos', icon: Megaphone },

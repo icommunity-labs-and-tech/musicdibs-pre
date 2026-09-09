@@ -32,6 +32,7 @@ const MAP: Record<string, Entry> = {
   'admin/works': { key: 'dashboard.sidebar.works' },
   'admin/metrics': { key: 'dashboard.sidebar.metrics' },
   'admin/campaigns': { key: 'dashboard.sidebar.campaigns' },
+  'admin/visits': { label: 'Visitas por campaña' },
   'admin/system': { key: 'dashboard.sidebar.system' },
   'admin/premium-promos': { key: 'dashboard.sidebar.premiumPromos' },
   'admin/youtube-services': { label: 'YouTube Services' },
