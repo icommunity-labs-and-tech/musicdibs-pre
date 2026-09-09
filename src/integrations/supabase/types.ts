@@ -3466,6 +3466,51 @@ export type Database = {
         }
         Relationships: []
       }
+      utm_visits: {
+        Row: {
+          created_at: string
+          gclid: string | null
+          id: string
+          landing_path: string | null
+          language: string | null
+          referrer: string | null
+          session_id: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          created_at?: string
+          gclid?: string | null
+          id?: string
+          landing_path?: string | null
+          language?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          created_at?: string
+          gclid?: string | null
+          id?: string
+          landing_path?: string | null
+          language?: string | null
+          referrer?: string | null
+          session_id?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
       video_generations: {
         Row: {
           aspect_ratio: string | null
