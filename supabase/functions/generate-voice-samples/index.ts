@@ -79,7 +79,7 @@ serve(async (req) => {
             'xi-api-key': ELEVENLABS_API_KEY,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ prompt, duration_seconds: 30 }),
+          body: JSON.stringify({ prompt, duration_seconds: 30, model_id: "music_v2" }),
         });
 
         if (!elRes.ok) {

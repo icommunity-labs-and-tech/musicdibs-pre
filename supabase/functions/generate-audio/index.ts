@@ -82,7 +82,7 @@ async function buildCompositionPlan(
     const planResp = await fetch('https://api.elevenlabs.io/v1/music/composition-plan', {
       method: 'POST',
       headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: stylePrompt }),
+      body: JSON.stringify({ prompt: stylePrompt, model_id: "music_v2" }),
     });
 
     if (!planResp.ok) {
@@ -239,7 +239,12 @@ async function generateWithElevenLabs(opts: {
   const { enrichedPrompt, lyricsAwarePrompt, hasLyrics, explicitDuration, apiKey } = opts;
 
   const callElevenLabs = async (callOpts: { plan?: any; promptText?: string }) => {
-    const body: Record<string, unknown> = {};
+    // ElevenLabs lanzo Music v2 en junio 2026 (mejor composicion por
+    // secciones, transiciones de genero, sound effects integrados). Sin
+    // model_id explicito, la API usaba v1 por defecto durante el periodo
+    // de transicion -- se especifica explicitamente para usar la version
+    // mas reciente.
+    const body: Record<string, unknown> = { model_id: "music_v2" };
     if (callOpts.plan) {
       body.composition_plan = callOpts.plan;
     } else {

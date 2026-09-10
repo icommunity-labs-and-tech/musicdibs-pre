@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 /* ── fal.ai config ── */
-const FAL_MODEL = 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video';
+const FAL_MODEL = 'fal-ai/kling-video/v3/turbo/pro/text-to-video';
 const FAL_SUBMIT_URL = `https://queue.fal.run/${FAL_MODEL}`;
 const FAL_QUEUE_BASE_URL = 'https://queue.fal.run/fal-ai/kling-video';
 
@@ -17,8 +17,8 @@ const RUNWAY_API_BASE = 'https://api.dev.runwayml.com/v1';
 
 /* ── KIE config ── */
 const KIE_API_BASE = 'https://api.kie.ai/api/v1';
-const KIE_T2V_MODEL = 'kling/v2-5-turbo-text-to-video-pro';
-const KIE_I2V_MODEL = 'kling/v2-5-turbo-image-to-video-pro';
+const KIE_T2V_MODEL = 'kling/v3-turbo-text-to-video';
+const KIE_I2V_MODEL = 'kling/v3-turbo-image-to-video';
 
 type Provider = 'fal' | 'runway' | 'kie';
 
@@ -161,7 +161,7 @@ async function submitFal(
   };
 
   if (imageBase64) {
-    submitUrl = 'https://queue.fal.run/fal-ai/kling-video/v2.5-turbo/pro/image-to-video';
+    submitUrl = 'https://queue.fal.run/fal-ai/kling-video/v3/turbo/pro/image-to-video';
     body.image_url = `data:image/jpeg;base64,${imageBase64}`;
   }
 
@@ -546,7 +546,7 @@ serve(async (req) => {
         providerRows && providerRows.length > 0
           ? providerRows.map((r: any) => ({ provider: String(r.provider), model: String(r.model || '') }))
           : [
-              { provider: 'fal', model: 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video' },
+              { provider: 'fal', model: 'fal-ai/kling-video/v3/turbo/pro/text-to-video' },
               { provider: 'runway', model: 'gen4_turbo' },
             ];
 
