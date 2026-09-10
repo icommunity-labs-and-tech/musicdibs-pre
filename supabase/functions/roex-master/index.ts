@@ -270,8 +270,12 @@ serve(async (req) => {
               storage_path: persistedStoragePath,
               storage_bucket: 'ai-generations',
             });
-            if (insErr) console.error('[ROEX] final: failed to insert ai_generations row:', insErr.message);
-            else console.log(`[ROEX] final: persisted master for user ${user.id} at ${storagePath}`);
+            if (insErr) {
+              console.error('[ROEX] final: failed to insert ai_generations row:', insErr.message);
+              persistedAudioUrl = null; // no se puede confiar en que el usuario lo encuentre
+            } else {
+              console.log(`[ROEX] final: persisted master for user ${user.id} at ${storagePath}`);
+            }
           }
         } else {
           console.error('[ROEX] final: could not download master from ROEX for persistence, status', fileRes.status);
@@ -280,7 +284,27 @@ serve(async (req) => {
         console.error('[ROEX] final: persistence step threw (non-blocking):', persistErr);
       }
 
-      return new Response(JSON.stringify({ success: true, finalUrl, persistedAudioUrl }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      // FIX 2026-09-10 (caso villafuerteeduardo85@gmail.com, mismo patron
+      // que aarampulparick@gmail.com en julio): si la persistencia falla
+      // por cualquier motivo (descarga de ROEX, subida a storage, o insert
+      // en ai_generations), el usuario se quedaba con el credito ya
+      // cobrado y sin ningun rastro del master en su biblioteca -- el
+      // finalUrl de ROEX es una URL temporal que expira, asi que si el
+      // usuario no la descarga en el momento, pierde el resultado sin
+      // saberlo. En vez de fallar en silencio, se reembolsa
+      // automaticamente el credito y se deja una alerta explicita para
+      // poder investigar/recuperar manualmente si hace falta.
+      if (!persistedAudioUrl) {
+        await supabase.rpc('refund_credits_ordered', { p_user_id: user.id, p_amount: CREDITS_COST, p_from_permanent: roexDeductedFromPermanent, p_reason: 'Reembolso automatico: la masterizacion se genero en ROEX pero no se pudo persistir en nuestro storage/biblioteca' });
+        await supabase.from('admin_alerts').insert({
+          source: 'roex-master',
+          severity: 'warning',
+          message: 'Masterizacion generada en ROEX pero no persistida en nuestro storage -- credito reembolsado automaticamente. El finalUrl de ROEX puede seguir siendo valido por un tiempo limitado si se quiere recuperar manualmente.',
+          context: { user_id: user.id, task_id: taskId, final_url: finalUrl },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, finalUrl, persistedAudioUrl, refunded: !persistedAudioUrl }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     return new Response(JSON.stringify({ error: 'invalid_action' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
