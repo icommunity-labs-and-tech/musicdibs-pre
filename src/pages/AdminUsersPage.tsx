@@ -447,6 +447,19 @@ export default function AdminUsersPage() {
         }}>
           <Download className="h-4 w-4 mr-1" /> {activeFiltersCount > 0 ? 'Exportar filtrados' : 'Exportar todo'}
         </Button>
+        <Button variant="outline" size="sm" onClick={async () => {
+          try {
+            const res = await adminApi.exportCsv('customer_match');
+            const blob = new Blob([res.csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `google_ads_customer_match_${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click(); URL.revokeObjectURL(url);
+            toast.success('Lista de clientes descargada');
+          } catch (e: any) { toast.error(e.message); }
+        }}>
+          <Download className="h-4 w-4 mr-1" /> Lista Google Ads
+        </Button>
         <Button variant="outline" size="sm" onClick={openBulkPastDueModal} className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning">
           ⚠️ Notificar past_due
         </Button>
