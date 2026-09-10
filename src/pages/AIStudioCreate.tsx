@@ -51,7 +51,6 @@ import { MusicCreatorTour } from "@/components/ai-studio/MusicCreatorTour";
 import { LyricsSectionsEditor } from "@/components/ai-studio/LyricsSectionsEditor";
 import { useProductTracking } from "@/hooks/useProductTracking";
 import { CreditsChip } from "@/components/ai-studio/CreditsChip";
-import { PoweredBySunoBadge } from "@/components/ai-studio/PoweredBySunoBadge";
 
 // ── Music tab constants ──
 const DURATION_OPTIONS: { value: number; label: string }[] = [
@@ -1087,9 +1086,6 @@ const AIStudioCreate = () => {
               <div className="min-w-0 flex-1">
                 <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">{t('aiCreate.title')}</h1>
                 <p className="text-muted-foreground break-words">{t('aiCreate.subtitle')}</p>
-                <div className="mt-3">
-                  <PoweredBySunoBadge />
-                </div>
               </div>
               <Button
                 variant="ghost"

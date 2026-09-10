@@ -46,7 +46,7 @@ const AIStudio = () => {
   },
     {
     titleKey: "aiStudio.modules.enhance.title",
-    descKey: "aiStudio.modules.createMusic.desc",
+    descKey: "aiStudio.modules.enhance.desc",
     icon: Mic2,
     href: "/ai-studio/enhance",
     available: true,
