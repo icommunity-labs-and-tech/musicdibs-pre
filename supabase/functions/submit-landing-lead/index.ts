@@ -36,7 +36,7 @@ function detectMlLang(input?: string): "ES" | "EN" | "BR" {
 }
 
 async function generateReplyDraft(
-  anthropicKey: string,
+  geminiKey: string,
   lead: { name: string; profile: string; message: string; language: string },
 ): Promise<string | null> {
   const langLabel = lead.language.startsWith("pt")
@@ -52,31 +52,49 @@ Catálogo de referencia (usa solo lo relevante, no listes todo):
 - Planes anuales de créditos: 20 (19,90€), 100 (59,90€), 200 (109,90€), 300 (149,90€), 500 (229,90€), 1000 (399,90€).
 - Incluye: registro con certificado blockchain válido en 180+ países, distribución a Spotify/Apple Music/YouTube Music y demás, generador de canciones con IA, mejora de audio (masterización) con IA.
 
-Escribe un borrador de respuesta breve (máx. 120 palabras), cálido y directo, en ${langLabel}, dirigido a esta persona por su nombre. Responde específicamente a lo que escribió en su mensaje (si menciona un número de canciones, una letra, o cualquier detalle concreto, reconócelo y ajusta la recomendación de plan al volumen si aplica). Si el mensaje es ambiguo o no da pistas claras, sé más general pero igual de cálido, y termina con una pregunta abierta para conocer más su proyecto. Incluye siempre un enlace a https://musicdibs.com para crear la cuenta. No incluyas saludo/despedida tipo "Estimado" formal; usa un tono cercano. Responde solo con el cuerpo del email, sin asunto ni explicaciones adicionales.`;
+Escribe un borrador de respuesta en ${langLabel}, dirigido a esta persona por su nombre, siguiendo ESTE ESTILO (ejemplos reales que ya funcionaron, en español, adapta el idioma pero mantén el nivel de detalle y estructura):
+
+Ejemplo 1 (lead menciona un número concreto de canciones -- reconoce el número, recomienda el plan de créditos que mejor encaje con ese volumen, explica brevemente qué incluye, y cierra con el link):
+"Hola [Nombre], ¡Qué buena noticia que tengas [N] canciones listas! Con ese volumen, el plan Anual [X] créditos ([precio]€/año) es la opción que mejor encaja -- te permite registrar todas con certificado blockchain válido en 180+ países, y además incluye distribución a Spotify, Apple Music y 220+ plataformas más, con el 100% de tus royalties. Crea tu cuenta gratuita aquí y empieza: https://musicdibs.com. Cuéntame más sobre tu proyecto y te ayudo a organizar por dónde empezar."
+
+Ejemplo 2 (lead sin mensaje claro o con perfil de músico genérico -- explica el valor central, ofrece el bono gratis, y pregunta para conocer más):
+"Hola [Nombre], gracias por tu interés en MusicDibs. Como músico, sabes lo importante que es proteger tu autoría antes de lanzar una canción -- para eso existimos. Tu cuenta gratuita ya incluye 3 créditos de bienvenida para registrar tus primeras obras con certificado en blockchain. Crea tu cuenta aquí: https://musicdibs.com. Cuéntame cuántas canciones tienes listas o qué buscas, y te oriento mejor."
+
+Reglas:
+- Máximo 120 palabras.
+- SIEMPRE incluye el enlace https://musicdibs.com de forma natural dentro del texto (no al final como nota aparte).
+- Responde específicamente a lo que escribió el lead en su mensaje: si menciona un número de canciones, una letra, o cualquier detalle concreto, reconócelo explícitamente y ajusta la recomendación de plan al volumen si aplica.
+- Si el mensaje es ambiguo o no da pistas claras, sé más general (como el Ejemplo 2) pero igual de cálido e informativo, y termina con una pregunta abierta.
+- Menciona al menos un beneficio concreto (certificado blockchain, distribución a 220+ plataformas, 100% royalties, o el precio de un plan si aplica) -- no te quedes solo en una frase de cortesía.
+- Tono cercano y directo, sin fórmulas formales tipo "Estimado/a".
+- Responde solo con el cuerpo del email, sin asunto ni explicaciones adicionales.`;
 
   const userPrompt = `Nombre: ${lead.name}\nPerfil: ${lead.profile || "no especificado"}\nMensaje del lead: ${lead.message || "(sin mensaje)"}`;
 
+  const ALLOWED_MODELS = new Set(["gemini-2.5-flash", "gemini-2.5-pro"]);
+  const requestedModel = (Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash").trim();
+  const model = ALLOWED_MODELS.has(requestedModel) ? requestedModel : "gemini-2.5-flash";
+
   try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": anthropicKey,
-        "anthropic-version": "2023-06-01",
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          generationConfig: { maxOutputTokens: 1024, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
+        }),
       },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 500,
-        system: systemPrompt,
-        messages: [{ role: "user", content: userPrompt }],
-      }),
-    });
+    );
     if (!res.ok) {
       console.error("[LANDING-LEAD] draft generation failed:", res.status, await res.text());
       return null;
     }
     const data = await res.json();
-    return data.content?.[0]?.text?.trim() || null;
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    return text || null;
   } catch (e) {
     console.error("[LANDING-LEAD] draft generation exception:", String(e));
     return null;
@@ -275,10 +293,10 @@ serve(async (req: Request) => {
       );
     }
 
-    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     let aiDraft: string | null = null;
-    if (ANTHROPIC_API_KEY) {
-      aiDraft = await generateReplyDraft(ANTHROPIC_API_KEY, { name, profile, message: note, language });
+    if (GEMINI_API_KEY) {
+      aiDraft = await generateReplyDraft(GEMINI_API_KEY, { name, profile, message: note, language });
     }
 
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
