@@ -12,7 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
 import { CreditsChip } from "@/components/ai-studio/CreditsChip";
-import { PoweredBySunoBadge } from "@/components/ai-studio/PoweredBySunoBadge";
 import { ArrowLeft, Sparkles, Dice5, Loader2, Download, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 
 const GENRES = ["pop", "urban pop", "reggaeton", "trap", "indie pop", "electronic", "ballad"];
@@ -392,9 +391,6 @@ const AIStudioInspire = () => {
           <p className="text-lg text-muted-foreground mb-4">
             {t("aiInspire.subtitle")}
           </p>
-          <div className="flex justify-center mb-10">
-            <PoweredBySunoBadge />
-          </div>
 
           <Button
             onClick={handleSurprise}
