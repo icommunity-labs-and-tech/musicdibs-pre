@@ -39,6 +39,7 @@ import { useProductTracking } from '@/hooks/useProductTracking';
 import { FEATURE_COSTS } from '@/lib/featureCosts';
 import { GenerationWarning } from '@/components/ai-studio/GenerationWarning';
 import { CreditsChip } from '@/components/ai-studio/CreditsChip';
+import { PoweredBySunoBadge } from '@/components/ai-studio/PoweredBySunoBadge';
 import { PricingLink } from '@/components/dashboard/PricingPopup';
 
 // KIE Suno Voice solo acepta muestras MP3 / WAV / M4A y hasta 25 MB.
