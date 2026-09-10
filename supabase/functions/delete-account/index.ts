@@ -273,6 +273,20 @@ serve(async (req) => {
 
     if (errors.length > 0) {
       console.warn("[DELETE-ACCOUNT] Completed with errors:", errors);
+      // FIX 2026-09-10 (caso jaimeliceam@gmail.com): si falla especificamente
+      // el borrado de auth.users, el usuario queda con una cuenta "fantasma"
+      // (perfil borrado, auth.users vivo) -- antes esto solo se veia en logs
+      // de consola que nadie revisaba, y el problema no se detectaba hasta
+      // que el usuario volvia a escribir confundido, meses despues. Ahora se
+      // deja una alerta explicita para poder corregirlo proactivamente.
+      if (errors.some((e) => e.startsWith("delete_auth_user:"))) {
+        await admin.from("admin_alerts").insert({
+          source: "delete-account",
+          severity: "warning",
+          message: `Fallo al eliminar auth.users tras borrar el perfil -- cuenta fantasma (perfil borrado, login sigue activo) para ${user.email}. Revisar manualmente: puede requerir eliminar auth.users a mano o recrear el perfil si el usuario vuelve.`,
+          context: { user_id: user.id, email: user.email, errors },
+        });
+      }
     }
 
     return json({ success: true, deletedAt: new Date().toISOString() });
