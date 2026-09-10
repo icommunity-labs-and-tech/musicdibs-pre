@@ -2196,6 +2196,48 @@ serve(async (req) => {
         return json({ csv: [header, ...rows].join("\n") });
       }
 
+      // Google Ads Customer Match: confirmed emails, excluding suppressed and blocked users.
+      if (dataset === "customer_match") {
+        const { data: suppressed } = await admin
+          .from("suppressed_emails")
+          .select("email");
+        const suppressedSet = new Set(
+          (suppressed || [])
+            .map((s: any) => String(s.email || "").toLowerCase().trim())
+            .filter(Boolean),
+        );
+
+        const blockedProfiles = await fetchAllPaginated(() =>
+          admin.from("profiles").select("user_id").eq("is_blocked", true),
+        );
+        const blockedSet = new Set(
+          (blockedProfiles || []).map((p: any) => p.user_id),
+        );
+
+        const emails: string[] = [];
+        const seen = new Set<string>();
+        const perPage = 1000;
+        for (let page = 1; page <= 50; page++) {
+          const { data, error } = await admin.auth.admin.listUsers({
+            perPage,
+            page,
+          });
+          if (error) break;
+          const users = data?.users || [];
+          for (const u of users as any[]) {
+            const email = String(u?.email || "").toLowerCase().trim();
+            if (!email || !u?.email_confirmed_at) continue;
+            if (suppressedSet.has(email) || blockedSet.has(u.id)) continue;
+            if (seen.has(email)) continue;
+            seen.add(email);
+            emails.push(email);
+          }
+          if (users.length < perPage) break;
+        }
+
+        return json({ csv: ["Email", ...emails].join("\n") });
+      }
+
       return json({ error: "Invalid dataset" }, 400);
     }
 
