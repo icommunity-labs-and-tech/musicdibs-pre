@@ -249,8 +249,57 @@ const AIStudioInspire = () => {
       }
       if (data?.error) throw new Error(data.message || data.error);
 
+      // Async provider (KIE Suno): the song arrives via callback — poll until ready.
+      if (data?.status === "processing" && !data?.audio && !data?.audioUrl) {
+        toast({
+          title: t("aiInspire.processingTitle"),
+          description: data.message || t("aiInspire.processingDesc"),
+        });
+
+        const startedAt = Date.now();
+        const maxWaitMs = 6 * 60 * 1000;
+        const logId: string | undefined = data?.logId;
+        const generationId: string | undefined = data?.generationId;
+        let found: any = null;
+        let failedEarly = false;
+
+        while (Date.now() - startedAt < maxWaitMs) {
+          await new Promise((r) => setTimeout(r, 5000));
+
+          const { data: rows } = await supabase
+            .from("ai_generations")
+            .select("*")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(5);
+          const fresh = (rows || []).find(
+            (row: any) =>
+              row.audio_url &&
+              (generationId ? row.id === generationId : new Date(row.created_at).getTime() >= startedAt - 60000),
+          );
+          if (fresh) { found = fresh; break; }
+
+          if (logId) {
+            const { data: logRow } = await supabase
+              .from("ai_generation_logs")
+              .select("status")
+              .eq("id", logId)
+              .maybeSingle();
+            if (logRow?.status === "failed") { failedEarly = true; break; }
+          }
+        }
+
+        if (found) {
+          setResult({ audioUrl: found.audio_url, prompt: basePrompt, duration: found.duration || 0 });
+          track("generation_completed", { feature: "create_music", metadata: { mode: "song", source: "inspire", async: true } });
+          return;
+        }
+        if (failedEarly) throw new Error(t("aiInspire.providerRejected"));
+        throw new Error(t("aiInspire.stillProcessing"));
+      }
+
       if (!data?.audio && !data?.audioUrl) {
-        throw new Error("No se recibió audio del servicio");
+        throw new Error(t("aiInspire.genericError"));
       }
 
       const audioUrl = data.audioUrl || `data:${data.format};base64,${data.audio}`;
