@@ -46,6 +46,7 @@ import {
 import { useMp4Export } from "@/hooks/useMp4Export";
 import { cn } from "@/lib/utils";
 import { CreditsChip } from "@/components/ai-studio/CreditsChip";
+import { PoweredBySunoBadge } from "@/components/ai-studio/PoweredBySunoBadge";
 
 type EnhanceMode = "instrumental" | "cover" | "extend" | "add_vocals";
 type JobStatus = "idle" | "uploading" | "processing" | "completed" | "failed";
@@ -670,6 +671,9 @@ const AIEnhance = () => {
               <p className="text-muted-foreground mt-1">
                 {t('aiEnhance.pageSubtitle')}
               </p>
+              <div className="mt-3">
+                <PoweredBySunoBadge />
+              </div>
             </div>
             <CreditsChip />
             <Button

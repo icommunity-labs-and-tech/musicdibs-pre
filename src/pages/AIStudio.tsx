@@ -42,7 +42,8 @@ const AIStudio = () => {
       available: true,
       costsCredits: true,
       featureKey: 'generate_audio' as const,
-      color: "from-primary to-brand"
+      color: "from-primary to-brand",
+      poweredBySuno: true,
     },
     {
       titleKey: "aiStudio.modules.enhance.title",
@@ -53,7 +54,8 @@ const AIStudio = () => {
       costsCredits: true,
       featured: true,
       featureKey: 'enhance_audio' as const,
-      color: "from-accent to-primary"
+      color: "from-accent to-primary",
+      poweredBySuno: true,
     },
     {
       titleKey: "aiStudio.modules.editModify.title",
@@ -76,7 +78,8 @@ const AIStudio = () => {
       available: true,
       costsCredits: true,
       featureKey: 'inspiration' as const,
-      color: "from-warning to-warning"
+      color: "from-warning to-warning",
+      poweredBySuno: true,
     },
     {
       titleKey: "aiStudio.modules.createCovers.title",
@@ -96,7 +99,8 @@ const AIStudio = () => {
       available: false,
       costsCredits: true,
       featureKey: 'inspiration' as const,
-      color: "from-primary to-accent"
+      color: "from-primary to-accent",
+      poweredBySuno: true,
     },
     {
       titleKey: "aiStudio.modules.virtualArtists.title",
@@ -161,6 +165,11 @@ const AIStudio = () => {
         {!isFeatured && module.available && !hasEnough(cost) && module.costsCredits && (
           <Badge variant="destructive" className="absolute top-3 right-3 z-10 text-[10px]">
             {t('aiStudio.noCredits')}
+          </Badge>
+        )}
+        {module.poweredBySuno && (
+          <Badge className="absolute top-3 left-3 z-10 text-[10px] bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
+            {t('aiShared.poweredBySuno', 'Suno')}
           </Badge>
         )}
 
