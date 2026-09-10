@@ -272,8 +272,8 @@ serve(async (req) => {
     //   defaultParamFlag:true → sends style, title, prompt, continueAt properly
     // V5_5 for instrumental (newer, better vocal accompaniment generation)
     // V5 for cover/extend (consistent with source music model version requirement)
-    const MODEL_INSTRUMENTAL = "V5_5";
-    const MODEL_COVER_EXTEND = "V5";
+    const MODEL_INSTRUMENTAL = "V6";
+    const MODEL_COVER_EXTEND = "V6";
     const title = source_filename
       ? source_filename.replace(/\.[^.]+$/, "").slice(0, 80)
       : styleParts.slice(0, 80) || "Enhanced audio";

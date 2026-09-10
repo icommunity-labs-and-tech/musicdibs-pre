@@ -99,7 +99,7 @@ serve(async (req) => {
         409,
       );
     }
-    const model = setting.model ?? "V4_5";
+    const model = setting.model ?? "V6";
 
     // Idempotency — always required. Generate one if the client didn't provide it.
     const idempotencyKey: string =

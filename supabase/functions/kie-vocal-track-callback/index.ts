@@ -159,7 +159,7 @@ serve(async (req) => {
         method: "POST",
         headers: { Authorization: `Bearer ${KIE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          prompt: pending.formattedLyrics || "", customMode: true, instrumental: false, model: "V5",
+          prompt: pending.formattedLyrics || "", customMode: true, instrumental: false, model: "V6",
           personaId, personaModel: "voice_persona",
           style: pending.finalStyle || "Pop", title: pending.finalTitle || "Voz clonada",
           negativeTags: "low quality, distorted, noisy",

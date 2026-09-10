@@ -126,7 +126,7 @@ serve(async (req) => {
         method: 'POST',
         headers: { Authorization: `Bearer ${KIE_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: formattedLyrics, customMode: true, instrumental: false, model: 'V5',
+          prompt: formattedLyrics, customMode: true, instrumental: false, model: 'V6',
           personaId: voiceClone.persona_id, personaModel: 'voice_persona',
           style: finalStyle, title: finalTitle, negativeTags: 'low quality, distorted, noisy',
           callBackUrl, ...vocalGenderField,
@@ -157,7 +157,7 @@ serve(async (req) => {
         title: 'Referencia de voz'.slice(0, 80),
         style: 'Pop',
         negativeTags: 'low quality, distorted, noisy',
-        model: 'V4_5PLUS',
+        model: 'V6',
         callBackUrl: refCallBackUrl,
         ...vocalGenderField,
       }),
