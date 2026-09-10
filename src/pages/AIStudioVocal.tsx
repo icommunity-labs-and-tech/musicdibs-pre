@@ -100,6 +100,14 @@ export default function AIStudioVocal() {
   // pedia ni genero vocal ni estilo musical, y el backend nunca los recibia.
   const [singVocalGender, setSingVocalGender] = useState<'m' | 'f'>('m');
   const [singStyle, setSingStyle] = useState('');
+  const [songDuration, setSongDuration] = useState<number | null>(null);
+  const SONG_DURATION_OPTIONS: { value: number; label: string }[] = [
+    { value: 60, label: '1 min' },
+    { value: 120, label: '2 min' },
+    { value: 180, label: '3 min' },
+    { value: 210, label: '3:30 min' },
+    { value: 240, label: '4 min' },
+  ];
 
   // Lyrics generator
   const [lyricsDesc, setLyricsDesc] = useState('');
@@ -481,7 +489,7 @@ export default function AIStudioVocal() {
       const { data: { session } } = await supabase.auth.getSession();
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-vocal-track`,
         { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}`, 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-          body: JSON.stringify({ lyrics, voice_id: selectedClone.provider_voice_id || selectedClone.elevenlabs_voice_id, voice_name: selectedClone.name, vocal_gender: singVocalGender, style: singStyle.trim() || undefined }) });
+          body: JSON.stringify({ lyrics, voice_id: selectedClone.provider_voice_id || selectedClone.elevenlabs_voice_id, voice_name: selectedClone.name, vocal_gender: singVocalGender, style: singStyle.trim() || undefined, ...(songDuration ? { duration: songDuration } : {}) }) });
       const data = await res.json();
       if (!res.ok) {
         if (data.error === 'insufficient_credits') toast({ title: tv('insufficientCredits'), description: t('dashboard.noCredits.costMessage', { action: tv('title'), cost: FEATURE_COSTS.generate_vocal_track }), variant: 'destructive' });
@@ -996,6 +1004,34 @@ export default function AIStudioVocal() {
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium">{s('aiVocal.singStyleLabel', 'Estilo musical')}</Label>
                       <Input value={singStyle} onChange={e => setSingStyle(e.target.value)} placeholder={s('aiVocal.singStylePlaceholder', 'Ej: Pop, Balada, Reggaetón')} maxLength={100} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">{s('aiVocal.songDurationLabel', 'Duración')}</Label>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge
+                          variant={songDuration === null ? "default" : "outline"}
+                          className={cn(
+                            "cursor-pointer text-xs px-3 py-1.5 transition-colors",
+                            songDuration === null ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                          )}
+                          onClick={() => setSongDuration(null)}
+                        >
+                          {s('aiVocal.songDurationAuto', 'Auto (IA decide)')}
+                        </Badge>
+                        {SONG_DURATION_OPTIONS.map((opt) => (
+                          <Badge
+                            key={opt.value}
+                            variant={songDuration === opt.value ? "default" : "outline"}
+                            className={cn(
+                              "cursor-pointer text-xs px-3 py-1.5 transition-colors",
+                              songDuration === opt.value ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                            )}
+                            onClick={() => setSongDuration(opt.value)}
+                          >
+                            {opt.label}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

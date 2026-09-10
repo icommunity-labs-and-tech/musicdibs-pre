@@ -546,6 +546,10 @@ serve(async (req) => {
         if (typeof styleWeight === 'number') kiePayload.styleWeight = styleWeight;
         if (typeof weirdnessConstraint === 'number') kiePayload.weirdnessConstraint = weirdnessConstraint;
         if (typeof audioWeight === 'number') kiePayload.audioWeight = audioWeight;
+        // El rango valido (10-240s) se valida en kie-suno-generate -- aqui
+        // solo reenviamos si el usuario especifico una duracion explicita
+        // (ya viene validada como numero positivo desde mas arriba).
+        if (explicitDuration !== null) kiePayload.duration = explicitDuration;
         const idemKey = crypto.randomUUID();
         const supaUrl = Deno.env.get('SUPABASE_URL')!;
         const dispatchRes = await fetch(`${supaUrl}/functions/v1/kie-suno-generate`, {

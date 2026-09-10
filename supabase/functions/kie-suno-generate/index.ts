@@ -56,11 +56,28 @@ serve(async (req) => {
       styleWeight,
       weirdnessConstraint,
       audioWeight,
+      duration,
     } = body || {};
     // adminTest is intentionally NOT read from body — admins use ai-provider-test.
 
     if (!prompt || typeof prompt !== "string" || prompt.trim().length < 5) {
       return json({ error: "prompt_required", message: "Prompt is required (min 5 chars)" }, 400);
+    }
+
+    // Duracion opcional de la cancion, en segundos. Solo tiene efecto en
+    // modelos V6/V6_MINI/V6_WILD (ver logica mas abajo, donde se anade al
+    // payload solo si el modelo activo pertenece a esa familia). Maximo de
+    // 240s (4 minutos) -- por encima de eso no se acepta: mas alla de la
+    // duracion tipica de una cancion comercial, y fuera de ese rango KIE
+    // puede degradar en calidad/tiempo de generacion.
+    const MAX_DURATION_SECONDS = 240;
+    let validatedDuration: number | undefined;
+    if (duration !== undefined && duration !== null) {
+      const d = Number(duration);
+      if (!Number.isFinite(d) || d < 10 || d > MAX_DURATION_SECONDS) {
+        return json({ error: "invalid_duration", message: `duration must be a number between 10 and ${MAX_DURATION_SECONDS} seconds` }, 400);
+      }
+      validatedDuration = Math.round(d);
     }
 
     // ── Sanitize inputs before sending to KIE/Suno ──────────────────────────
@@ -198,6 +215,9 @@ serve(async (req) => {
       if (typeof styleWeight === "number") p.styleWeight = styleWeight;
       if (typeof weirdnessConstraint === "number") p.weirdnessConstraint = weirdnessConstraint;
       if (typeof audioWeight === "number") p.audioWeight = audioWeight;
+      if (validatedDuration !== undefined && /^V6(_MINI|_WILD)?$/i.test(model)) {
+        p.duration = validatedDuration;
+      }
       return p;
     };
 

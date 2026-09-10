@@ -43,7 +43,21 @@ serve(async (req) => {
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!KIE_API_KEY) return new Response(JSON.stringify({ error: 'Missing KIE_API_KEY' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    const { lyrics, voice_id, voice_name, genre, mood, vocal_gender, style: userStyle } = await req.json();
+    const { lyrics, voice_id, voice_name, genre, mood, vocal_gender, style: userStyle, duration } = await req.json();
+
+    // Duracion opcional en segundos, solo tiene efecto con modelos V6 (que
+    // es lo unico que usamos ahora). Maximo 240s (4 minutos), igual que en
+    // kie-suno-generate.
+    const MAX_DURATION_SECONDS = 240;
+    let validatedDuration: number | undefined;
+    if (duration !== undefined && duration !== null) {
+      const d = Number(duration);
+      if (!Number.isFinite(d) || d < 10 || d > MAX_DURATION_SECONDS) {
+        return new Response(JSON.stringify({ error: 'invalid_duration', message: `duration must be a number between 10 and ${MAX_DURATION_SECONDS} seconds` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      validatedDuration = Math.round(d);
+    }
+    const durationField = validatedDuration !== undefined ? { duration: validatedDuration } : {};
     if (!lyrics?.trim()) return new Response(JSON.stringify({ error: 'lyrics is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     if (!voice_id) return new Response(JSON.stringify({ error: 'voice_id is required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
@@ -107,7 +121,7 @@ serve(async (req) => {
       // Guardamos los parametros de la generacion FINAL -- si hace falta
       // generar primero una cancion de referencia, el callback de ese paso
       // los recupera de aqui para disparar la generacion real despues.
-      request_payload: { formattedLyrics, finalStyle, finalTitle, vocal_gender: vocal_gender ?? null, voiceCloneId: voiceClone.id },
+      request_payload: { formattedLyrics, finalStyle, finalTitle, vocal_gender: vocal_gender ?? null, voiceCloneId: voiceClone.id, duration: validatedDuration ?? null },
     }).select().single();
     if (genErr || !generation) {
       console.error('[VOCAL-TRACK] ai_generations insert failed:', { code: genErr?.code, message: genErr?.message, details: genErr?.details, hint: genErr?.hint });
@@ -129,7 +143,7 @@ serve(async (req) => {
           prompt: formattedLyrics, customMode: true, instrumental: false, model: 'V6',
           personaId: voiceClone.persona_id, personaModel: 'voice_persona',
           style: finalStyle, title: finalTitle, negativeTags: 'low quality, distorted, noisy',
-          callBackUrl, ...vocalGenderField,
+          callBackUrl, ...vocalGenderField, ...durationField,
         }),
       });
       const kieJson = await kieRes.json().catch(() => ({}));

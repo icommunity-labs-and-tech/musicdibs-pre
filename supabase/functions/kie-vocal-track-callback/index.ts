@@ -155,6 +155,7 @@ serve(async (req) => {
       // Disparar ahora la generación FINAL con la letra real del usuario.
       const musicCallBackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/kie-vocal-track-callback?generationId=${generationId}&step=music&creditsCost=${creditsCost}&fromPermanent=${fromPermanent}`;
       const vocalGenderField = (pending.vocal_gender === "m" || pending.vocal_gender === "f") ? { vocalGender: pending.vocal_gender } : {};
+      const durationField = (typeof pending.duration === "number") ? { duration: pending.duration } : {};
       const finalRes = await fetch("https://api.kie.ai/api/v1/generate", {
         method: "POST",
         headers: { Authorization: `Bearer ${KIE_API_KEY}`, "Content-Type": "application/json" },
@@ -163,7 +164,7 @@ serve(async (req) => {
           personaId, personaModel: "voice_persona",
           style: pending.finalStyle || "Pop", title: pending.finalTitle || "Voz clonada",
           negativeTags: "low quality, distorted, noisy",
-          callBackUrl: musicCallBackUrl, ...vocalGenderField,
+          callBackUrl: musicCallBackUrl, ...vocalGenderField, ...durationField,
         }),
       });
       const finalJson = await finalRes.json().catch(() => ({}));
