@@ -516,6 +516,7 @@ const AIStudioCreate = () => {
           // KIE rejected the generation — credits refunded by backend
           const errMsg = String((await supabase.from('ai_generation_logs').select('error_message').eq('id', logId!).maybeSingle()).data?.error_message || '');
           const artistMatch = errMsg.match(/artist name\s+([^\-\n]+?)\s*-\s*we don't reference/i);
+          const isTemporaryError = /code=500|internal error|timed out|please try again later|service unavailable|upstream/i.test(errMsg);
           if (artistMatch || /we don't reference specific artists/i.test(errMsg)) {
             const name = artistMatch?.[1]?.trim();
             toast({
@@ -523,6 +524,12 @@ const AIStudioCreate = () => {
               description: name
                 ? t('aiCreate.artistRejectedDesc', { name })
                 : t('aiCreate.artistRejectedDescGeneric'),
+              variant: 'destructive',
+            });
+          } else if (isTemporaryError) {
+            toast({
+              title: t('aiCreate.temporaryErrorTitle'),
+              description: t('aiCreate.temporaryErrorDesc'),
               variant: 'destructive',
             });
           } else {

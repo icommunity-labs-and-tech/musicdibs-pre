@@ -289,12 +289,24 @@ const AIStudioInspire = () => {
           }
         }
 
+        let lastErrorMessage = "";
         if (found) {
           setResult({ audioUrl: found.audio_url, prompt: basePrompt, duration: found.duration || 0 });
           track("generation_completed", { feature: "create_music", metadata: { mode: "song", source: "inspire", async: true } });
           return;
         }
-        if (failedEarly) throw new Error(t("aiInspire.providerRejected"));
+        if (failedEarly) {
+          if (logId) {
+            const { data: logRow } = await supabase
+              .from("ai_generation_logs")
+              .select("error_message")
+              .eq("id", logId)
+              .maybeSingle();
+            lastErrorMessage = String(logRow?.error_message || "");
+          }
+          const isTemporaryError = /code=500|internal error|timed out|please try again later|service unavailable|upstream/i.test(lastErrorMessage);
+          throw new Error(t(isTemporaryError ? "aiInspire.temporaryError" : "aiInspire.providerRejected"));
+        }
         throw new Error(t("aiInspire.stillProcessing"));
       }
 
