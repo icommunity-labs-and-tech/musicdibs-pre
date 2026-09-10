@@ -5700,33 +5700,61 @@ serve(async (req) => {
         if (batch.length < pageSize) break;
       }
 
-      const bySource: Record<string, { source: string; medium: string; campaign: string; visits: number; landing_pages: Record<string, number> }> = {};
+      const norm = (s: string) => s.trim().toLowerCase().replace(/^www\./, "");
+      type Group = {
+        source: string;
+        visits: number;
+        mediums: Record<string, number>;
+        campaigns: Record<string, number>;
+        landing_pages: Record<string, number>;
+        details: Record<string, { medium: string; campaign: string; visits: number; landing_pages: Record<string, number> }>;
+      };
+      const bySource: Record<string, Group> = {};
       for (const v of visits) {
-        const source = v.utm_source || (v.gclid ? "google" : (v.referrer ? hostOf(v.referrer) : "directo"));
-        const medium = v.utm_medium || (v.gclid ? "cpc" : "referral");
-        const campaign = v.utm_campaign || "—";
-        const key = `${source}||${medium}||${campaign}`;
-        bySource[key] ||= { source, medium, campaign, visits: 0, landing_pages: {} };
-        bySource[key].visits += 1;
+        const source = norm(v.utm_source || (v.gclid ? "google" : (v.referrer ? hostOf(v.referrer) : "directo")));
+        const medium = norm(v.utm_medium || (v.gclid ? "cpc" : "referral"));
+        const campaign = v.utm_campaign ? norm(v.utm_campaign) : "—";
         const lp = v.landing_path || "/";
-        bySource[key].landing_pages[lp] = (bySource[key].landing_pages[lp] || 0) + 1;
+        const g = (bySource[source] ||= { source, visits: 0, mediums: {}, campaigns: {}, landing_pages: {}, details: {} });
+        g.visits += 1;
+        g.mediums[medium] = (g.mediums[medium] || 0) + 1;
+        if (campaign !== "—") g.campaigns[campaign] = (g.campaigns[campaign] || 0) + 1;
+        g.landing_pages[lp] = (g.landing_pages[lp] || 0) + 1;
+        const dk = `${medium}||${campaign}`;
+        const d = (g.details[dk] ||= { medium, campaign, visits: 0, landing_pages: {} });
+        d.visits += 1;
+        d.landing_pages[lp] = (d.landing_pages[lp] || 0) + 1;
       }
+      const topKey = (o: Record<string, number>, fallback: string) =>
+        Object.entries(o).sort((a, b) => b[1] - a[1])[0]?.[0] || fallback;
 
       return json({
         total_visits: visits.length,
         by_source: Object.values(bySource)
-          .map((row) => ({
-            source: row.source,
-            medium: row.medium,
-            campaign: row.campaign,
-            visits: row.visits,
-            top_landing: Object.entries(row.landing_pages).sort((a, b) => b[1] - a[1])[0]?.[0] || "/",
+          .map((g) => ({
+            source: g.source,
+            medium: topKey(g.mediums, "referral"),
+            campaign: topKey(g.campaigns, "—"),
+            visits: g.visits,
+            top_landing: topKey(g.landing_pages, "/"),
+            mediums_count: Object.keys(g.mediums).length,
+            campaigns_count: Object.keys(g.campaigns).length,
+            details: Object.values(g.details)
+              .map((d) => ({
+                medium: d.medium,
+                campaign: d.campaign,
+                visits: d.visits,
+                top_landing: topKey(d.landing_pages, "/"),
+              }))
+              .sort((a, b) => b.visits - a.visits)
+              .slice(0, 20),
           }))
           .sort((a, b) => b.visits - a.visits)
-          .slice(0, 100),
+          .slice(0, 50),
         range: { start, end },
       });
     }
+
 
     // ── get_utm_visit_log (detalle: fecha, origen, canal, página) ──
     if (action === "get_utm_visit_log") {

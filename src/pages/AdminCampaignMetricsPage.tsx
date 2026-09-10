@@ -22,7 +22,6 @@ import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/H
 
 import { GoogleAdsSpendPanel, type GoogleAdsSpendData } from '@/components/admin/GoogleAdsSpendPanel';
 import { RevenueByUtmPanel, type RevenueByUtmData } from '@/components/admin/RevenueByUtmPanel';
-import { LeadsByLanguagePanel, type LeadsByLanguageData } from '@/components/admin/LeadsByLanguagePanel';
 import { UtmVisitsPanel, type UtmVisitsData } from '@/components/admin/UtmVisitsPanel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -104,9 +103,6 @@ export default function AdminCampaignMetricsPage() {
   const [revenueByUtm, setRevenueByUtm] = useState<RevenueByUtmData | null>(null);
   const [loadingRevenueByUtm, setLoadingRevenueByUtm] = useState(true);
   const [revenueByUtmError, setRevenueByUtmError] = useState<string | null>(null);
-  const [leadsByLanguage, setLeadsByLanguage] = useState<LeadsByLanguageData | null>(null);
-  const [loadingLeadsByLanguage, setLoadingLeadsByLanguage] = useState(true);
-  const [leadsByLanguageError, setLeadsByLanguageError] = useState<string | null>(null);
   const [utmVisits, setUtmVisits] = useState<UtmVisitsData | null>(null);
   const [loadingUtmVisits, setLoadingUtmVisits] = useState(true);
   const [utmVisitsError, setUtmVisitsError] = useState<string | null>(null);
@@ -177,12 +173,6 @@ export default function AdminCampaignMetricsPage() {
       }
 
       try {
-        const leadsRes = await adminApi.getLeadsByLanguage(dateRange);
-        setLeadsByLanguage(leadsRes as LeadsByLanguageData);
-      } catch (leadsError) {
-        setLeadsByLanguageError(leadsError instanceof Error ? leadsError.message : 'No se pudieron cargar los leads por idioma');
-      }
-      try {
         const visitsRes = await adminApi.getUtmVisits(dateRange);
         setUtmVisits(visitsRes as UtmVisitsData);
       } catch (visitsError) {
@@ -195,7 +185,6 @@ export default function AdminCampaignMetricsPage() {
       setLoading(false);
       setLoadingGoogleAdsSpend(false);
       setLoadingRevenueByUtm(false);
-      setLoadingLeadsByLanguage(false);
       setLoadingUtmVisits(false);
     }
   }, [periodType, weekStart, selectedMonth, selectedYear]);
@@ -584,7 +573,6 @@ export default function AdminCampaignMetricsPage() {
 
       <RevenueByUtmPanel data={revenueByUtm} loading={loadingRevenueByUtm} error={revenueByUtmError} />
 
-      <LeadsByLanguagePanel data={leadsByLanguage} loading={loadingLeadsByLanguage} error={leadsByLanguageError} />
 
 
       {/* Summary KPIs */}
