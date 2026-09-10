@@ -35,6 +35,54 @@ function detectMlLang(input?: string): "ES" | "EN" | "BR" {
   return "ES";
 }
 
+async function generateReplyDraft(
+  anthropicKey: string,
+  lead: { name: string; profile: string; message: string; language: string },
+): Promise<string | null> {
+  const langLabel = lead.language.startsWith("pt")
+    ? "portugués de Brasil"
+    : lead.language.startsWith("en")
+    ? "inglés"
+    : "español";
+
+  const systemPrompt = `Eres un asistente de ventas de MusicDibs (musicdibs.com), una plataforma de registro de obras musicales en blockchain, distribución a 220+ plataformas (100% de royalties, sin comisión) y herramientas de creación musical con IA.
+
+Catálogo de referencia (usa solo lo relevante, no listes todo):
+- Cuenta gratuita: 3 créditos de bienvenida (1 crédito = 1 registro de obra).
+- Planes anuales de créditos: 20 (19,90€), 100 (59,90€), 200 (109,90€), 300 (149,90€), 500 (229,90€), 1000 (399,90€).
+- Incluye: registro con certificado blockchain válido en 180+ países, distribución a Spotify/Apple Music/YouTube Music y demás, generador de canciones con IA, mejora de audio (masterización) con IA.
+
+Escribe un borrador de respuesta breve (máx. 120 palabras), cálido y directo, en ${langLabel}, dirigido a esta persona por su nombre. Responde específicamente a lo que escribió en su mensaje (si menciona un número de canciones, una letra, o cualquier detalle concreto, reconócelo y ajusta la recomendación de plan al volumen si aplica). Si el mensaje es ambiguo o no da pistas claras, sé más general pero igual de cálido, y termina con una pregunta abierta para conocer más su proyecto. Incluye siempre un enlace a https://musicdibs.com para crear la cuenta. No incluyas saludo/despedida tipo "Estimado" formal; usa un tono cercano. Responde solo con el cuerpo del email, sin asunto ni explicaciones adicionales.`;
+
+  const userPrompt = `Nombre: ${lead.name}\nPerfil: ${lead.profile || "no especificado"}\nMensaje del lead: ${lead.message || "(sin mensaje)"}`;
+
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": anthropicKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 500,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      }),
+    });
+    if (!res.ok) {
+      console.error("[LANDING-LEAD] draft generation failed:", res.status, await res.text());
+      return null;
+    }
+    const data = await res.json();
+    return data.content?.[0]?.text?.trim() || null;
+  } catch (e) {
+    console.error("[LANDING-LEAD] draft generation exception:", String(e));
+    return null;
+  }
+}
+
 async function addToMailerLite(email: string, name: string, lang: "ES" | "EN" | "BR", fields: Record<string, string>) {
   const ML_KEY = Deno.env.get("MAILERLITE_API_KEY");
   if (!ML_KEY) {
@@ -227,6 +275,12 @@ serve(async (req: Request) => {
       );
     }
 
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    let aiDraft: string | null = null;
+    if (ANTHROPIC_API_KEY) {
+      aiDraft = await generateReplyDraft(ANTHROPIC_API_KEY, { name, profile, message: note, language });
+    }
+
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (RESEND_API_KEY) {
       try {
@@ -249,6 +303,7 @@ serve(async (req: Request) => {
               <p><strong>Idioma:</strong> ${escapeHtml(language)}</p>
               ${note ? `<p><strong>Mensaje:</strong><br/>${escapeHtml(note).replace(/\n/g, "<br/>")}</p>` : ""}
               ${attribution ? `<p><strong>Atribución:</strong><br/>${escapeHtml(attribution).replace(/\n/g, "<br/>")}</p>` : ""}
+              ${aiDraft ? `<hr/><p><strong>✏️ Borrador de respuesta sugerido (revisar antes de enviar):</strong></p><div style="background:#f5f5f5;padding:12px;border-radius:6px;white-space:pre-wrap;">${escapeHtml(aiDraft)}</div><p style="font-size:12px;color:#888;">Responde directamente a este correo (reply-to ya apunta a ${escapeHtml(email)}) para enviarlo.</p>` : ""}
             `,
           }),
         });
