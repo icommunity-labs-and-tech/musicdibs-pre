@@ -167,6 +167,11 @@ const AIStudio = () => {
             {t('aiStudio.noCredits')}
           </Badge>
         )}
+        {module.poweredBySuno && (
+          <Badge className="absolute top-3 left-3 z-10 text-[10px] bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
+            {t('aiShared.poweredBySuno', 'Suno')}
+          </Badge>
+        )}
 
         <CardHeader className={extraClass ? "flex-1" : undefined}>
           <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${module.color} flex items-center justify-center mb-4 ${isFeatured ? 'shadow-[0_4px_14px_rgba(139,92,246,0.45)]' : ''}`}>
