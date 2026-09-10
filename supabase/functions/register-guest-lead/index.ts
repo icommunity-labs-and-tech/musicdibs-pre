@@ -11,7 +11,7 @@ const corsHeaders = {
 const ML_GROUPS_NO_PURCHASE: Record<"ES" | "EN" | "BR", string> = {
   ES: "180552557100270838",
   EN: "180552563766068699",
-  BR: "180552569505974164",
+  BR: "184095895331013822",
 };
 
 function detectLang(input?: string): "ES" | "EN" | "BR" {

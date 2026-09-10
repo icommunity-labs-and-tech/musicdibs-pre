@@ -33,7 +33,7 @@ const MAILERLITE_GROUPS: Record<string, Record<string, string>> = {
     todos_musicdibs: "184893161875703104",
   },
   "pt-br": {
-    registrados: "180552569505974164",
+    registrados: "184095895331013822",
     mensuales: "179655918471874176",
     anuales: "179655947115824759",
     single: "179655975825835602",

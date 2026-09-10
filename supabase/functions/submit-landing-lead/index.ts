@@ -25,7 +25,7 @@ const LEAD_NOTIFY_TO = "info@musicdibs.com";
 const ML_GROUPS_NO_PURCHASE: Record<"ES" | "EN" | "BR", string> = {
   ES: "180552557100270838",
   EN: "180552563766068699",
-  BR: "180552569505974164",
+  BR: "184095895331013822",
 };
 
 function detectMlLang(input?: string): "ES" | "EN" | "BR" {
