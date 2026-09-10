@@ -5405,12 +5405,19 @@ serve(async (req) => {
         }
         return response.json() as Promise<{ results?: Array<Record<string, { name?: string; costMicros?: string; impressions?: string; clicks?: string; conversions?: string; conversionActionName?: string }>> }>;
       };
-      const [campaignData, objectiveData, last14Data] = await Promise.all([
-        query(`SELECT campaign.name, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions, segments.date FROM campaign WHERE segments.date BETWEEN '${start}' AND '${end}' ORDER BY metrics.cost_micros DESC`),
+      const [activeCampaigns, campaignData, objectiveData, last14Data] = await Promise.all([
+        query(`SELECT campaign.name, campaign.status FROM campaign WHERE campaign.status != 'REMOVED'`),
+        query(`SELECT campaign.name, metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions, segments.date FROM campaign WHERE segments.date BETWEEN '${start}' AND '${end}' AND campaign.status != 'REMOVED' ORDER BY metrics.cost_micros DESC`),
         query(`SELECT campaign.name, segments.conversion_action_name, metrics.conversions, metrics.conversions_value FROM campaign WHERE segments.date BETWEEN '${start}' AND '${end}' ORDER BY metrics.conversions DESC`),
         query(`SELECT campaign.name, segments.conversion_action_name, metrics.conversions, metrics.conversions_value FROM campaign WHERE segments.date DURING LAST_14_DAYS ORDER BY metrics.conversions DESC`),
       ]);
       const campaignMap: Record<string, { campaign_name: string; spend: number; clicks: number; impressions: number; conversions: number }> = {};
+      // Sembramos todas las campañas activas para que aparezcan aunque aún no hayan gastado.
+      for (const row of activeCampaigns.results || []) {
+        const campaign = (row.campaign || {}) as { name?: string; status?: string };
+        if (!campaign.name || campaign.status !== "ENABLED") continue;
+        campaignMap[campaign.name] ||= { campaign_name: campaign.name, spend: 0, clicks: 0, impressions: 0, conversions: 0 };
+      }
       for (const row of campaignData.results || []) {
         const campaign = row.campaign || {};
         const metrics = row.metrics || {};
