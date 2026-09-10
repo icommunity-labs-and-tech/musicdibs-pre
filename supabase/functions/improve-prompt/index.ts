@@ -304,7 +304,7 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
     // Try Google Generative Language API (Gemini 3 Flash) first
     if (GEMINI_API_KEY) {
       try {
-        const geminiModel = 'gemini-2.5-flash';
+        const geminiModel = 'gemini-3.7-flash';
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${GEMINI_API_KEY}`;
 
         const parts: any[] = [{ text: userTextContent }];
@@ -320,7 +320,7 @@ Return ONLY the rewritten prompt as a single paragraph. No preamble, no explanat
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [{ role: 'user', parts }],
-            generationConfig: { maxOutputTokens: 8192, temperature: 0.8 },
+            generationConfig: { maxOutputTokens: 8192, temperature: 0.8, thinkingConfig: { thinkingLevel: "LOW" } },
           }),
         });
 

@@ -141,10 +141,10 @@ serve(async (req) => {
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
 
     // Model selectable via secret without code changes.
-    // Allowed values: "gemini-2.5-flash" (default) or "gemini-2.5-pro".
-    const ALLOWED_MODELS = new Set(["gemini-2.5-flash", "gemini-2.5-pro"]);
-    const requestedModel = (Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash").trim();
-    const model = ALLOWED_MODELS.has(requestedModel) ? requestedModel : "gemini-2.5-flash";
+    // Allowed values: "gemini-3.7-flash" (default) or "gemini-3.8-flash".
+    const ALLOWED_MODELS = new Set(["gemini-3.7-flash", "gemini-3.8-flash"]);
+    const requestedModel = (Deno.env.get("GEMINI_MODEL") || "gemini-3.7-flash").trim();
+    const model = ALLOWED_MODELS.has(requestedModel) ? requestedModel : "gemini-3.7-flash";
     console.log(`chat-support using model: ${model}`);
 
     // Convert messages to Gemini format
@@ -161,7 +161,7 @@ serve(async (req) => {
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
           contents,
-          generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
+          generationConfig: { maxOutputTokens: 2048, temperature: 0.7, thinkingConfig: { thinkingLevel: "LOW" } },
         }),
       }
     );

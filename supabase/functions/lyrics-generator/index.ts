@@ -42,7 +42,7 @@ serve(async (req) => {
     )
     // Lyrics: Suno (KIE) is primary; Gemini Flash 2.5 is fallback on any failure/timeout.
     const KIE_API_KEY = Deno.env.get("KIE_API_KEY")
-    const GEMINI_FALLBACK_MODEL = "gemini-2.5-flash"
+    const GEMINI_FALLBACK_MODEL = "gemini-3.7-flash"
     if (!KIE_API_KEY && !GEMINI_API_KEY) {
       return new Response(JSON.stringify({ error: "No lyrics provider configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } })
@@ -199,7 +199,7 @@ Devuelve SOLO la letra con sus etiquetas de sección entre paréntesis, lista pa
         body: JSON.stringify({
           system_instruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-          generationConfig: { maxOutputTokens: 4096, temperature: 0.85 },
+          generationConfig: { maxOutputTokens: 4096, temperature: 0.85, thinkingConfig: { thinkingLevel: "LOW" } },
         }),
       })
       if (!gResp.ok) {

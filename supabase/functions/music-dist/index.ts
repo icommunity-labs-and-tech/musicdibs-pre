@@ -99,7 +99,7 @@ const translateHtmlWithOpenAI = async (html: string, lang: string) => {
       Authorization: `Bearer ${OPENAI_API_KEY}`,
     },
     body: JSON.stringify({
-      model: "gpt-5.4",
+      model: "gpt-5.6-luna",
       messages: [{ role: "user", content: prompt }],
       max_completion_tokens: 32768,
     }),
@@ -127,7 +127,7 @@ const translateHtmlWithGemini = async (html: string, lang: string) => {
     html;
 
   // Modelos ordenados de más barato a más caro.
-  const models = ["gemini-2.5-flash-lite", "gemini-2.0-flash-lite", "gemini-2.5-flash"];
+  const models = ["gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-3.7-flash"];
   let res: Response | null = null;
   let lastError = "";
 
@@ -139,7 +139,7 @@ const translateHtmlWithGemini = async (html: string, lang: string) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 32768 },
+          generationConfig: { temperature: 0.2, maxOutputTokens: 32768, thinkingConfig: { thinkingLevel: "LOW" } },
         }),
       },
     );
