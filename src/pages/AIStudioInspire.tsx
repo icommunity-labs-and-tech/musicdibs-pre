@@ -388,9 +388,12 @@ const AIStudioInspire = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             {t("aiInspire.title")}
           </h1>
-          <p className="text-lg text-muted-foreground mb-10">
+          <p className="text-lg text-muted-foreground mb-4">
             {t("aiInspire.subtitle")}
           </p>
+          <div className="flex justify-center mb-10">
+            <PoweredBySunoBadge />
+          </div>
 
           <Button
             onClick={handleSurprise}

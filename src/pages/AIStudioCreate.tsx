@@ -1086,6 +1086,9 @@ const AIStudioCreate = () => {
               <div className="min-w-0 flex-1">
                 <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">{t('aiCreate.title')}</h1>
                 <p className="text-muted-foreground break-words">{t('aiCreate.subtitle')}</p>
+                <div className="mt-3">
+                  <PoweredBySunoBadge />
+                </div>
               </div>
               <Button
                 variant="ghost"

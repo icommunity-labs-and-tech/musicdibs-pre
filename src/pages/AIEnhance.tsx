@@ -670,6 +670,9 @@ const AIEnhance = () => {
               <p className="text-muted-foreground mt-1">
                 {t('aiEnhance.pageSubtitle')}
               </p>
+              <div className="mt-3">
+                <PoweredBySunoBadge />
+              </div>
             </div>
             <CreditsChip />
             <Button
