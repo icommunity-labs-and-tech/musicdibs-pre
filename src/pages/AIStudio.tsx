@@ -35,28 +35,26 @@ const AIStudio = () => {
 
   const topRowModules = [
     {
-      titleKey: "aiStudio.modules.createMusic.title",
-      descKey: "aiStudio.modules.createMusic.desc",
-      icon: Wand2,
-      href: "/ai-studio/create",
-      available: true,
-      costsCredits: true,
-      featureKey: 'generate_audio' as const,
-      color: "from-primary to-brand",
-      poweredBySuno: true,
-    },
+    titleKey: "aiStudio.modules.createMusic.title",
+    descKey: "aiStudio.modules.createMusic.desc",
+    icon: Wand2,
+    href: "/ai-studio/create",
+    available: true,
+    costsCredits: true,
+    featureKey: 'generate_audio' as const,
+    color: "from-primary to-brand",
+  },
     {
-      titleKey: "aiStudio.modules.enhance.title",
-      descKey: "aiStudio.modules.enhance.desc",
-      icon: Mic2,
-      href: "/ai-studio/enhance",
-      available: true,
-      costsCredits: true,
-      featured: true,
-      featureKey: 'enhance_audio' as const,
-      color: "from-accent to-primary",
-      poweredBySuno: true,
-    },
+    titleKey: "aiStudio.modules.enhance.title",
+    descKey: "aiStudio.modules.createMusic.desc",
+    icon: Mic2,
+    href: "/ai-studio/enhance",
+    available: true,
+    costsCredits: true,
+    featured: true,
+    featureKey: 'enhance_audio' as const,
+    color: "from-accent to-primary",
+  },
     {
       titleKey: "aiStudio.modules.editModify.title",
       descKey: "aiStudio.modules.editModify.desc",
@@ -71,16 +69,15 @@ const AIStudio = () => {
 
   const bottomRowModules = [
     {
-      titleKey: "aiStudio.modules.inspire.title",
-      descKey: "aiStudio.modules.inspire.desc",
-      icon: Lightbulb,
-      href: "/ai-studio/inspire",
-      available: true,
-      costsCredits: true,
-      featureKey: 'inspiration' as const,
-      color: "from-warning to-warning",
-      poweredBySuno: true,
-    },
+    titleKey: "aiStudio.modules.inspire.title",
+    descKey: "aiStudio.modules.inspire.desc",
+    icon: Lightbulb,
+    href: "/ai-studio/inspire",
+    available: true,
+    costsCredits: true,
+    featureKey: 'inspiration' as const,
+    color: "from-warning to-warning",
+  },
     {
       titleKey: "aiStudio.modules.createCovers.title",
       descKey: "aiStudio.modules.createCovers.desc",
@@ -92,16 +89,15 @@ const AIStudio = () => {
       color: "from-success to-info"
     },
     {
-      titleKey: "aiStudio.modules.singYourSong.title",
-      descKey: "aiStudio.modules.singYourSong.desc",
-      icon: Mic,
-      href: "/ai-studio/vocal",
-      available: false,
-      costsCredits: true,
-      featureKey: 'inspiration' as const,
-      color: "from-primary to-accent",
-      poweredBySuno: true,
-    },
+    titleKey: "aiStudio.modules.singYourSong.title",
+    descKey: "aiStudio.modules.singYourSong.desc",
+    icon: Mic,
+    href: "/ai-studio/vocal",
+    available: false,
+    costsCredits: true,
+    featureKey: 'inspiration' as const,
+    color: "from-primary to-accent",
+  },
     {
       titleKey: "aiStudio.modules.virtualArtists.title",
       descKey: "aiStudio.modules.virtualArtists.desc",
@@ -165,11 +161,6 @@ const AIStudio = () => {
         {!isFeatured && module.available && !hasEnough(cost) && module.costsCredits && (
           <Badge variant="destructive" className="absolute top-3 right-3 z-10 text-[10px]">
             {t('aiStudio.noCredits')}
-          </Badge>
-        )}
-        {module.poweredBySuno && (
-          <Badge className="absolute top-3 left-3 z-10 text-[10px] bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
-            {t('aiShared.poweredBySuno', 'Suno')}
           </Badge>
         )}
 
