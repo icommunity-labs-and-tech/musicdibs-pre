@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { AlertCircle, ChevronDown, ChevronRight, MousePointerClick } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,9 +93,8 @@ export function UtmVisitsPanel({ data, loading, error }: Props) {
                 const expandable = details.length > 1;
                 const isOpen = !!open[row.source];
                 return (
-                  <>
+                  <Fragment key={row.source}>
                     <TableRow
-                      key={row.source}
                       className={expandable ? 'cursor-pointer' : undefined}
                       onClick={expandable ? () => setOpen((p) => ({ ...p, [row.source]: !p[row.source] })) : undefined}
                     >
@@ -125,7 +124,7 @@ export function UtmVisitsPanel({ data, loading, error }: Props) {
                         <TableCell className="text-right text-xs tabular-nums">{d.visits}</TableCell>
                       </TableRow>
                     ))}
-                  </>
+                  </Fragment>
                 );
               })}
             </TableBody>

@@ -22,7 +22,6 @@ import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/H
 
 import { GoogleAdsSpendPanel, type GoogleAdsSpendData } from '@/components/admin/GoogleAdsSpendPanel';
 import { RevenueByUtmPanel, type RevenueByUtmData } from '@/components/admin/RevenueByUtmPanel';
-import { LeadsByLanguagePanel, type LeadsByLanguageData } from '@/components/admin/LeadsByLanguagePanel';
 import { UtmVisitsPanel, type UtmVisitsData } from '@/components/admin/UtmVisitsPanel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -584,7 +583,6 @@ export default function AdminCampaignMetricsPage() {
 
       <RevenueByUtmPanel data={revenueByUtm} loading={loadingRevenueByUtm} error={revenueByUtmError} />
 
-      <LeadsByLanguagePanel data={leadsByLanguage} loading={loadingLeadsByLanguage} error={leadsByLanguageError} />
 
 
       {/* Summary KPIs */}
