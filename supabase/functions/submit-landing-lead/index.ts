@@ -71,9 +71,15 @@ Reglas:
 
   const userPrompt = `Nombre: ${lead.name}\nPerfil: ${lead.profile || "no especificado"}\nMensaje del lead: ${lead.message || "(sin mensaje)"}`;
 
-  const ALLOWED_MODELS = new Set(["gemini-2.5-flash", "gemini-2.5-pro"]);
-  const requestedModel = (Deno.env.get("GEMINI_MODEL") || "gemini-2.5-flash").trim();
-  const model = ALLOWED_MODELS.has(requestedModel) ? requestedModel : "gemini-2.5-flash";
+  const ALLOWED_MODELS = new Set(["gemini-3.7-flash", "gemini-2.5-flash", "gemini-2.5-pro"]);
+  const requestedModel = (Deno.env.get("GEMINI_MODEL") || "gemini-3.7-flash").trim();
+  const model = ALLOWED_MODELS.has(requestedModel) ? requestedModel : "gemini-3.7-flash";
+  // Gemini 3.x usa thinkingLevel (no se puede desactivar del todo, a
+  // diferencia de 2.5 que sí admite thinkingBudget=0) -- LOW es suficiente
+  // para esta tarea simple de generacion de texto, y evita el truncamiento
+  // que causaba el thinking en nivel alto consumiendo el presupuesto de
+  // salida.
+  const isGemini3 = model.startsWith("gemini-3");
 
   try {
     const res = await fetch(
@@ -84,7 +90,11 @@ Reglas:
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: systemPrompt }] },
           contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-          generationConfig: { maxOutputTokens: 1024, temperature: 0.7, thinkingConfig: { thinkingBudget: 0 } },
+          generationConfig: {
+            maxOutputTokens: 1024,
+            temperature: 0.7,
+            thinkingConfig: isGemini3 ? { thinkingLevel: "LOW" } : { thinkingBudget: 0 },
+          },
         }),
       },
     );
