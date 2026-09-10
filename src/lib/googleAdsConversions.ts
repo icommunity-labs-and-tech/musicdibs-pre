@@ -157,6 +157,28 @@ export function trackWorkRegisteredLead(workId?: string, source?: string) {
 
 
 /**
+ * Google Ads conversion tracking — LEAD DE LANDING DE CAMPAÑA.
+ * Dispara tras el envio exitoso del formulario de /registro-gratis (u otras
+ * landings de campaña). Reutiliza la misma etiqueta de conversion LEAD_SEND_TO
+ * que work_registered_lead, ya que ambos representan un lead de valor real
+ * para el negocio. Deduplicado por email via sessionStorage.
+ */
+export function trackLandingLeadConversion(email: string) {
+  const trackedKey = `ga_landing_lead_tracked_${email}`;
+  if (sessionStorage.getItem(trackedKey)) return;
+  sessionStorage.setItem(trackedKey, '1');
+
+  void setEnhancedConversionEmail(email).finally(() => {
+    window.gtag?.('event', 'conversion', {
+      send_to: LEAD_SEND_TO,
+      value: 5.0,
+      currency: FALLBACK_CURRENCY,
+      transaction_id: email,
+    });
+  });
+}
+
+/**
  * Evento GTM (dataLayer) — CLIC en CTA de registro.
  * Se empuja al hacer clic en cualquier banner/botón que lleva a la página de
  * registro (/login?tab=register), para medir cuántos visitantes llegan a la

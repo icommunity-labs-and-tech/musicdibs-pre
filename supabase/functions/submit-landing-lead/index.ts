@@ -20,6 +20,99 @@ const corsHeaders = {
 export const LEAD_SUBJECT_PREFIX = "Lead landing campaña";
 const LEAD_NOTIFY_TO = "info@musicdibs.com";
 
+// MailerLite groups: "Registrados (No compra)" -- segmento mas cercano
+// disponible para nutrir leads de landing que aun no tienen cuenta.
+const ML_GROUPS_NO_PURCHASE: Record<"ES" | "EN" | "BR", string> = {
+  ES: "180552557100270838",
+  EN: "180552563766068699",
+  BR: "180552569505974164",
+};
+
+function detectMlLang(input?: string): "ES" | "EN" | "BR" {
+  const l = (input || "es").toLowerCase();
+  if (l.startsWith("pt") || l === "br") return "BR";
+  if (l.startsWith("en")) return "EN";
+  return "ES";
+}
+
+async function addToMailerLite(email: string, name: string, lang: "ES" | "EN" | "BR", fields: Record<string, string>) {
+  const ML_KEY = Deno.env.get("MAILERLITE_API_KEY");
+  if (!ML_KEY) {
+    console.log("[LANDING-LEAD] MAILERLITE_API_KEY not set, skipping ML");
+    return false;
+  }
+  const groupId = ML_GROUPS_NO_PURCHASE[lang];
+  try {
+    const res = await fetch("https://connect.mailerlite.com/api/subscribers", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${ML_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ email, name, groups: [groupId], status: "active", fields }),
+    });
+    if (!res.ok) {
+      console.error(`[LANDING-LEAD] ML error ${res.status}`, (await res.text()).slice(0, 300));
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error("[LANDING-LEAD] ML exception", String(e));
+    return false;
+  }
+}
+
+// Autorespuesta al lead en su idioma -- hasta ahora solo se notificaba a
+// info@musicdibs.com, el lead nunca recibia confirmacion de que su mensaje
+// se habia recibido.
+const AUTORESPONSE: Record<"ES" | "EN" | "BR", { subject: string; html: (name: string) => string }> = {
+  ES: {
+    subject: "Hemos recibido tu mensaje — MusicDibs",
+    html: (name) => `
+      <p>Hola ${escapeHtml(name)},</p>
+      <p>Gracias por tu interés en MusicDibs. Hemos recibido tu mensaje y en breve nos pondremos en contacto contigo.</p>
+      <p>Mientras tanto, puedes crear tu cuenta gratuita y empezar a registrar tus obras en <a href="https://musicdibs.com">musicdibs.com</a>.</p>
+      <p>Un saludo,<br/>Equipo de MusicDibs</p>
+    `,
+  },
+  EN: {
+    subject: "We've received your message — MusicDibs",
+    html: (name) => `
+      <p>Hi ${escapeHtml(name)},</p>
+      <p>Thanks for your interest in MusicDibs. We've received your message and will get back to you shortly.</p>
+      <p>In the meantime, you can create your free account and start registering your works at <a href="https://musicdibs.com">musicdibs.com</a>.</p>
+      <p>Best,<br/>The MusicDibs Team</p>
+    `,
+  },
+  BR: {
+    subject: "Recebemos sua mensagem — MusicDibs",
+    html: (name) => `
+      <p>Olá ${escapeHtml(name)},</p>
+      <p>Obrigado pelo seu interesse na MusicDibs. Recebemos sua mensagem e entraremos em contato em breve.</p>
+      <p>Enquanto isso, você já pode criar sua conta gratuita e começar a registrar suas obras em <a href="https://musicdibs.com">musicdibs.com</a>.</p>
+      <p>Atenciosamente,<br/>Equipe MusicDibs</p>
+    `,
+  },
+};
+
+async function sendAutoresponse(resendKey: string, to: string, name: string, lang: "ES" | "EN" | "BR") {
+  const tpl = AUTORESPONSE[lang];
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "MusicDibs <noreply@notify.musicdibs.com>",
+        to: [to],
+        subject: tpl.subject,
+        html: tpl.html(name),
+      }),
+    });
+    if (!res.ok) {
+      console.error(`[LANDING-LEAD] autoresponse error ${res.status}`, (await res.text()).slice(0, 300));
+    }
+  } catch (e) {
+    console.error("[LANDING-LEAD] autoresponse exception", String(e));
+  }
+}
+
 interface LeadPayload {
   name?: string;
   email?: string;
@@ -166,6 +259,19 @@ serve(async (req: Request) => {
     } else {
       console.warn("[LANDING-LEAD] RESEND_API_KEY not set, email notification skipped");
     }
+
+    // Autorespuesta al lead + alta en MailerLite -- mejoras 2 y 3 (best-effort,
+    // no bloquean la respuesta al usuario si alguna falla).
+    const mlLang = detectMlLang(language);
+    if (RESEND_API_KEY) {
+      await sendAutoresponse(RESEND_API_KEY, email, name, mlLang);
+    }
+    await addToMailerLite(email, name, mlLang, {
+      origen: "lead_ads_landing",
+      perfil: profile || "",
+      gclid: payload.gclid || "",
+      utm_campaign: payload.utm_campaign || "",
+    });
 
     return new Response(
       JSON.stringify({ ok: true }),

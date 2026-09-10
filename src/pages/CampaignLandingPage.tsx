@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { CheckCircle2, Loader2, ShieldCheck, Sparkles, Timer, Send } from "lucide-react";
+import { trackLandingLeadConversion } from "@/lib/googleAdsConversions";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
@@ -237,6 +238,7 @@ export default function CampaignLandingPage() {
         lead_profile: profile,
         lead_language: lang,
       });
+      trackLandingLeadConversion(cleanEmail);
 
       setSent(true);
     } catch {
