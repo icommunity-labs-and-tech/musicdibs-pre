@@ -199,6 +199,7 @@ export default function AdminCampaignMetricsPage() {
       setLoadingGoogleAdsSpend(false);
       setLoadingRevenueByUtm(false);
       setLoadingUtmVisits(false);
+      setLoadingLeadsByLanguage(false);
     }
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
