@@ -148,40 +148,6 @@ export function LeadsByLanguagePanel({ data, loading, error }: Props) {
 
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-            <UserPlus className="h-3.5 w-3.5" /> Registros de usuario (UTM capturado en el signup)
-            <Badge variant="secondary" className="text-[10px]">máx. 500</Badge>
-          </p>
-          <div className="overflow-x-auto max-h-96 overflow-y-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Idioma</TableHead>
-                  <TableHead>UTM (fuente / medio / campaña)</TableHead>
-                  <TableHead>Landing</TableHead>
-                  <TableHead className="text-right">Fecha</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.signups.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground">Sin registros en el periodo</TableCell></TableRow>
-                )}
-                {data.signups.slice(0, 500).map((row) => (
-                  <TableRow key={row.user_id}>
-                    <TableCell className="text-xs">{row.email}</TableCell>
-                    <TableCell className="uppercase text-xs">{row.language}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{utmLabel(row.utm_source, row.utm_medium, row.utm_campaign)}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{row.landing_path || '—'}</TableCell>
-                    <TableCell className="text-right text-xs whitespace-nowrap">{fmtDate(row.created_at)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
             <FormInput className="h-3.5 w-3.5" /> Leads del formulario (landing campañas)
           </p>
           <div className="overflow-x-auto max-h-96 overflow-y-auto">
