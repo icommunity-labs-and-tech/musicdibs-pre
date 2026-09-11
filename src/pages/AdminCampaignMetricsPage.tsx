@@ -182,6 +182,13 @@ export default function AdminCampaignMetricsPage() {
       } catch (visitsError) {
         setUtmVisitsError(visitsError instanceof Error ? visitsError.message : 'No se pudieron cargar las visitas por UTM');
       }
+
+      try {
+        const leadsRes = await adminApi.getLeadsByLanguage(dateRange);
+        setLeadsByLanguage(leadsRes as LeadsByLanguageData);
+      } catch (leadsError) {
+        setLeadsByLanguageError(leadsError instanceof Error ? leadsError.message : 'No se pudieron cargar los leads por idioma');
+      }
     } catch (e: any) {
       const message = e instanceof Error ? e.message : 'No se pudieron cargar las métricas';
       toast.error(message);
