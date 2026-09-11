@@ -71,8 +71,8 @@ export function LeadsByLanguagePanel({ data, loading, error }: Props) {
 
   if (!data) return null;
 
-  const totalSignups = data.signups.length;
-  const totalForm = data.form_leads.length;
+  const totalSignups = data.by_language.reduce((s, r) => s + r.signups, 0);
+  const totalForm = data.by_language.reduce((s, r) => s + r.form_leads, 0);
 
   return (
     <Card>
