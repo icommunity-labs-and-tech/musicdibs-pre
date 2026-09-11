@@ -511,7 +511,17 @@ serve(async (req) => {
         // otro proveedor) -- el usuario veia un mensaje generico "iBS
         // session failed" sin ninguna pista de que debia volver a
         // verificar su identidad.
-        const isInvalidSignature = sessionRes.status === 404 && /resource not found/i.test(errBody) && /"resource"\s*:\s*"sig_/i.test(errBody);
+        // FIX 2026-09-11 (reportado por 24.7.sound.life@gmail.com): misma
+        // familia de problema, pero iBS devuelve un patron distinto para
+        // ello -- 412 "Flow broken" / "The request you sent is not valid",
+        // sin mencionar "resource not found" ni el signature id. Firma de
+        // este caso: de 2024, muy antigua, 21 intentos fallidos consecutivos
+        // con el mismo error exacto -- coherente con un problema de la
+        // firma en si, no del archivo/titulo (que el usuario ya vario sin
+        // efecto). Se amplia la deteccion para cubrir tambien este patron.
+        const isInvalidSignature =
+          (sessionRes.status === 404 && /resource not found/i.test(errBody) && /"resource"\s*:\s*"sig_/i.test(errBody)) ||
+          (sessionRes.status === 412 && /flow broken/i.test(errBody));
         return new Response(
           JSON.stringify({
             success: false,
