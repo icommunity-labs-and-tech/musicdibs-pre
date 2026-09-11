@@ -43,7 +43,19 @@ serve(async (req) => {
       created: { gte: Math.floor(since.getTime() / 1000) },
       limit: 100,
     });
-    const succeededCharges = charges.data.filter(c => c.status === "succeeded" && c.amount > 0);
+    const allSucceededCharges = charges.data.filter(c => c.status === "succeeded" && c.amount > 0);
+    // FIX 2026-09-11 (caso Certyfile, pedido 36582): la cuenta de Stripe se
+    // comparte con otros negocios de iCommunity (ya vimos ICOM antes, ahora
+    // tambien Certyfile/Certypass) -- sus cargos nunca tendran una order en
+    // Supabase de MusicDibs porque no son pedidos de MusicDibs, generando
+    // falsos positivos constantes de "charge_sin_order". Se excluyen por
+    // metadata.site_url cuando esta presente y no es de musicdibs -- no se
+    // excluyen cargos SIN site_url, ya que la mayoria de renovaciones nativas
+    // de suscripcion de Stripe no lo llevan y SI son de MusicDibs.
+    const succeededCharges = allSucceededCharges.filter(c => {
+      const siteUrl = (c.metadata as Record<string, string> | undefined)?.site_url;
+      return !siteUrl || siteUrl.toLowerCase().includes("musicdibs");
+    });
 
     for (const charge of succeededCharges) {
       const customerId = typeof charge.customer === "string" ? charge.customer : charge.customer?.id;
