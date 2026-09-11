@@ -146,6 +146,8 @@ export default function AdminCampaignMetricsPage() {
     setRevenueByUtmError(null);
     setLoadingUtmVisits(true);
     setUtmVisitsError(null);
+    setLoadingLeadsByLanguage(true);
+    setLeadsByLanguageError(null);
     try {
       const filters: any = { periodType };
       if (periodType === 'week') filters.weekStart = weekStart;
@@ -581,6 +583,8 @@ export default function AdminCampaignMetricsPage() {
       <GoogleAdsSpendPanel data={googleAdsSpend} loading={loadingGoogleAdsSpend} error={googleAdsSpendError} />
 
       <UtmVisitsPanel data={utmVisits} loading={loadingUtmVisits} error={utmVisitsError} />
+
+      <LeadsByLanguagePanel data={leadsByLanguage} loading={loadingLeadsByLanguage} error={leadsByLanguageError} />
 
       <RevenueByUtmPanel data={revenueByUtm} loading={loadingRevenueByUtm} error={revenueByUtmError} />
 
