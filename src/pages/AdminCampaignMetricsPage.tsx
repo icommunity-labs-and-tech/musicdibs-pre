@@ -23,6 +23,7 @@ import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/H
 import { GoogleAdsSpendPanel, type GoogleAdsSpendData } from '@/components/admin/GoogleAdsSpendPanel';
 import { RevenueByUtmPanel, type RevenueByUtmData } from '@/components/admin/RevenueByUtmPanel';
 import { UtmVisitsPanel, type UtmVisitsData } from '@/components/admin/UtmVisitsPanel';
+import { LeadsByLanguagePanel, type LeadsByLanguageData } from '@/components/admin/LeadsByLanguagePanel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';

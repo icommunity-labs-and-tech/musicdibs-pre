@@ -1,5 +1,4 @@
-import { AlertCircle, Languages, UserPlus, FormInput } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { AlertCircle, Languages, FormInput } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
