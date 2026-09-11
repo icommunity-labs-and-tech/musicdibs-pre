@@ -4424,6 +4424,7 @@ export type Database = {
         Returns: boolean
       }
       mark_abandoned_drafts_as_failed: { Args: never; Returns: number }
+      ml_lifecycle_tick: { Args: never; Returns: undefined }
       move_to_dlq: {
         Args: {
           dlq_name: string
