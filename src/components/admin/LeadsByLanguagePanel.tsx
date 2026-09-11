@@ -6,16 +6,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 export type LeadsByLanguageData = {
   by_language: Array<{ language: string; signups: number; form_leads: number; total: number }>;
   by_campaign: Array<{ campaign: string; signups: number; form_leads: number; total: number }>;
-  signups: Array<{
-    user_id: string;
-    email: string;
-    language: string;
-    created_at: string;
-    utm_source: string | null;
-    utm_medium: string | null;
-    utm_campaign: string | null;
-    landing_path: string | null;
-  }>;
   form_leads: Array<{
     id: string;
     name: string;

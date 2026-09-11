@@ -107,6 +107,9 @@ export default function AdminCampaignMetricsPage() {
   const [utmVisits, setUtmVisits] = useState<UtmVisitsData | null>(null);
   const [loadingUtmVisits, setLoadingUtmVisits] = useState(true);
   const [utmVisitsError, setUtmVisitsError] = useState<string | null>(null);
+  const [leadsByLanguage, setLeadsByLanguage] = useState<LeadsByLanguageData | null>(null);
+  const [loadingLeadsByLanguage, setLoadingLeadsByLanguage] = useState(true);
+  const [leadsByLanguageError, setLeadsByLanguageError] = useState<string | null>(null);
   const [detailCampaign, setDetailCampaign] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<any>(null);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
