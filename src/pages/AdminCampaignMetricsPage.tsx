@@ -23,6 +23,7 @@ import HistoricalDataNotice, { normalizeAttribution } from '@/components/admin/H
 import { GoogleAdsSpendPanel, type GoogleAdsSpendData } from '@/components/admin/GoogleAdsSpendPanel';
 import { RevenueByUtmPanel, type RevenueByUtmData } from '@/components/admin/RevenueByUtmPanel';
 import { UtmVisitsPanel, type UtmVisitsData } from '@/components/admin/UtmVisitsPanel';
+import { LeadsByLanguagePanel, type LeadsByLanguageData } from '@/components/admin/LeadsByLanguagePanel';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -106,6 +107,9 @@ export default function AdminCampaignMetricsPage() {
   const [utmVisits, setUtmVisits] = useState<UtmVisitsData | null>(null);
   const [loadingUtmVisits, setLoadingUtmVisits] = useState(true);
   const [utmVisitsError, setUtmVisitsError] = useState<string | null>(null);
+  const [leadsByLanguage, setLeadsByLanguage] = useState<LeadsByLanguageData | null>(null);
+  const [loadingLeadsByLanguage, setLoadingLeadsByLanguage] = useState(true);
+  const [leadsByLanguageError, setLeadsByLanguageError] = useState<string | null>(null);
   const [detailCampaign, setDetailCampaign] = useState<string | null>(null);
   const [detailData, setDetailData] = useState<any>(null);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
@@ -142,6 +146,8 @@ export default function AdminCampaignMetricsPage() {
     setRevenueByUtmError(null);
     setLoadingUtmVisits(true);
     setUtmVisitsError(null);
+    setLoadingLeadsByLanguage(true);
+    setLeadsByLanguageError(null);
     try {
       const filters: any = { periodType };
       if (periodType === 'week') filters.weekStart = weekStart;
@@ -178,6 +184,13 @@ export default function AdminCampaignMetricsPage() {
       } catch (visitsError) {
         setUtmVisitsError(visitsError instanceof Error ? visitsError.message : 'No se pudieron cargar las visitas por UTM');
       }
+
+      try {
+        const leadsRes = await adminApi.getLeadsByLanguage(dateRange);
+        setLeadsByLanguage(leadsRes as LeadsByLanguageData);
+      } catch (leadsError) {
+        setLeadsByLanguageError(leadsError instanceof Error ? leadsError.message : 'No se pudieron cargar los leads por idioma');
+      }
     } catch (e: any) {
       const message = e instanceof Error ? e.message : 'No se pudieron cargar las métricas';
       toast.error(message);
@@ -186,6 +199,7 @@ export default function AdminCampaignMetricsPage() {
       setLoadingGoogleAdsSpend(false);
       setLoadingRevenueByUtm(false);
       setLoadingUtmVisits(false);
+      setLoadingLeadsByLanguage(false);
     }
   }, [periodType, weekStart, selectedMonth, selectedYear]);
 
@@ -570,6 +584,8 @@ export default function AdminCampaignMetricsPage() {
       <GoogleAdsSpendPanel data={googleAdsSpend} loading={loadingGoogleAdsSpend} error={googleAdsSpendError} />
 
       <UtmVisitsPanel data={utmVisits} loading={loadingUtmVisits} error={utmVisitsError} />
+
+      <LeadsByLanguagePanel data={leadsByLanguage} loading={loadingLeadsByLanguage} error={leadsByLanguageError} />
 
       <RevenueByUtmPanel data={revenueByUtm} loading={loadingRevenueByUtm} error={revenueByUtmError} />
 

@@ -1,5 +1,4 @@
-import { AlertCircle, Languages, UserPlus, FormInput } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { AlertCircle, Languages, FormInput } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -7,16 +6,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 export type LeadsByLanguageData = {
   by_language: Array<{ language: string; signups: number; form_leads: number; total: number }>;
   by_campaign: Array<{ campaign: string; signups: number; form_leads: number; total: number }>;
-  signups: Array<{
-    user_id: string;
-    email: string;
-    language: string;
-    created_at: string;
-    utm_source: string | null;
-    utm_medium: string | null;
-    utm_campaign: string | null;
-    landing_path: string | null;
-  }>;
   form_leads: Array<{
     id: string;
     name: string;
@@ -72,8 +61,8 @@ export function LeadsByLanguagePanel({ data, loading, error }: Props) {
 
   if (!data) return null;
 
-  const totalSignups = data.signups.length;
-  const totalForm = data.form_leads.length;
+  const totalSignups = data.by_language.reduce((s, r) => s + r.signups, 0);
+  const totalForm = data.by_language.reduce((s, r) => s + r.form_leads, 0);
 
   return (
     <Card>
@@ -140,40 +129,6 @@ export function LeadsByLanguagePanel({ data, loading, error }: Props) {
                     <TableCell className="text-right">{row.signups}</TableCell>
                     <TableCell className="text-right">{row.form_leads}</TableCell>
                     <TableCell className="text-right font-semibold">{row.total}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-            <UserPlus className="h-3.5 w-3.5" /> Registros de usuario (UTM capturado en el signup)
-            <Badge variant="secondary" className="text-[10px]">máx. 500</Badge>
-          </p>
-          <div className="overflow-x-auto max-h-96 overflow-y-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Idioma</TableHead>
-                  <TableHead>UTM (fuente / medio / campaña)</TableHead>
-                  <TableHead>Landing</TableHead>
-                  <TableHead className="text-right">Fecha</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.signups.length === 0 && (
-                  <TableRow><TableCell colSpan={5} className="text-center text-sm text-muted-foreground">Sin registros en el periodo</TableCell></TableRow>
-                )}
-                {data.signups.slice(0, 500).map((row) => (
-                  <TableRow key={row.user_id}>
-                    <TableCell className="text-xs">{row.email}</TableCell>
-                    <TableCell className="uppercase text-xs">{row.language}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{utmLabel(row.utm_source, row.utm_medium, row.utm_campaign)}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{row.landing_path || '—'}</TableCell>
-                    <TableCell className="text-right text-xs whitespace-nowrap">{fmtDate(row.created_at)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
