@@ -48,13 +48,21 @@ serve(async (req) => {
     // comparte con otros negocios de iCommunity (ya vimos ICOM antes, ahora
     // tambien Certyfile/Certypass) -- sus cargos nunca tendran una order en
     // Supabase de MusicDibs porque no son pedidos de MusicDibs, generando
-    // falsos positivos constantes de "charge_sin_order". Se excluyen por
-    // metadata.site_url cuando esta presente y no es de musicdibs -- no se
-    // excluyen cargos SIN site_url, ya que la mayoria de renovaciones nativas
-    // de suscripcion de Stripe no lo llevan y SI son de MusicDibs.
+    // falsos positivos constantes de "charge_sin_order". Stripe no permite
+    // filtrar por metadata en charges.list() (solo en .search(), que tiene
+    // lag de indexacion inaceptable para una ventana de 24h), asi que se
+    // filtra aqui en 2 pasos: (a) metadata.site_url cuando esta presente y
+    // no es de musicdibs, y (b) description con el nombre de un negocio
+    // conocido, como capa extra por si llegara sin site_url. No se excluye
+    // por ausencia total de ambas señales, ya que la mayoria de renovaciones
+    // nativas de suscripcion (generadas directamente por Stripe) no llevan
+    // site_url y SI son legitimas de MusicDibs.
+    const OTHER_BUSINESS_DESCRIPTIONS = ["icom", "certyfile", "certypass"];
     const succeededCharges = allSucceededCharges.filter(c => {
       const siteUrl = (c.metadata as Record<string, string> | undefined)?.site_url;
-      return !siteUrl || siteUrl.toLowerCase().includes("musicdibs");
+      if (siteUrl) return siteUrl.toLowerCase().includes("musicdibs");
+      const desc = (c.description || "").toLowerCase();
+      return !OTHER_BUSINESS_DESCRIPTIONS.some((b) => desc.includes(b));
     });
 
     for (const charge of succeededCharges) {
