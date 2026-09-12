@@ -19,6 +19,11 @@ interface SEOProps {
   lang?: "es" | "en" | "pt-BR";
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   noIndex?: boolean;
+  /**
+   * When false, the title is used verbatim (no " | Musicdibs" suffix and no
+   * brand prefix in the description). Used by pages with hand-tuned SEO copy.
+   */
+  appendBrand?: boolean;
 }
 
 const LOCALE_MAP: Record<"es" | "en" | "pt-BR", { html: string; og: string }> = {
