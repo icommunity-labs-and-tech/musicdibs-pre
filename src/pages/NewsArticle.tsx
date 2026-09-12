@@ -8,10 +8,12 @@ import { Calendar, ArrowLeft, Tag } from "lucide-react";
 import DOMPurify from "dompurify";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
+import { getNewsSeoOverride } from "@/lib/newsSeoOverrides";
 
 const NewsArticle = () => {
   const { slug } = useParams<{ slug: string }>();
   const { t } = useTranslation();
+  const seoOverride = getNewsSeoOverride(slug);
 
   const { data: post, isLoading } = useQuery({
     queryKey: ["blog-post", slug],
