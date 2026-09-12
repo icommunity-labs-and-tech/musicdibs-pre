@@ -66,6 +66,9 @@ export const SEO = ({
   // per-route canonical Helmet injects (link tags don't dedupe by rel).
   useEffect(() => {
     document.head.querySelector('link[data-static-canonical]')?.remove();
+    // Same for the static description: Helmet appends its own, so both would
+    // ship and crawlers would read the static (first) one.
+    document.head.querySelector('meta[data-static-description]')?.remove();
   }, []);
 
   // Priority: localized route (/pt/...) > explicit prop > current UI language.
