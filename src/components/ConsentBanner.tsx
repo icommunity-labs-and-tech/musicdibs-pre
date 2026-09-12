@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-declare global {
-  interface Window {
-    gtag?: (...args: unknown[]) => void;
-  }
-}
+
+
 
 export const CONSENT_STORAGE_KEY = "cookie_consent";
 const REOPEN_KEY = "cookie_consent_reopen";
@@ -41,6 +38,11 @@ function updateConsent(decision: "granted" | "denied") {
     ad_user_data: decision,
     ad_personalization: decision,
     analytics_storage: decision,
+  });
+  // Evento para que las etiquetas de GTM puedan dispararse tras la decisión.
+  (window as unknown as { dataLayer?: unknown[] }).dataLayer?.push({
+    event: "consent_update",
+    consent_state: decision,
   });
 }
 
