@@ -2455,6 +2455,8 @@ export type Database = {
           referral_influencer: string | null
           referral_set_at: string | null
           referral_source: string | null
+          signup_country: string | null
+          signup_country_captured_at: string | null
           sonosuite_legacy: boolean | null
           stripe_customer_id: string | null
           subscription_plan: string
@@ -2495,6 +2497,8 @@ export type Database = {
           referral_influencer?: string | null
           referral_set_at?: string | null
           referral_source?: string | null
+          signup_country?: string | null
+          signup_country_captured_at?: string | null
           sonosuite_legacy?: boolean | null
           stripe_customer_id?: string | null
           subscription_plan?: string
@@ -2535,6 +2539,8 @@ export type Database = {
           referral_influencer?: string | null
           referral_set_at?: string | null
           referral_source?: string | null
+          signup_country?: string | null
+          signup_country_captured_at?: string | null
           sonosuite_legacy?: boolean | null
           stripe_customer_id?: string | null
           subscription_plan?: string
