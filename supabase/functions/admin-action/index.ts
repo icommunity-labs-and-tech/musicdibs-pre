@@ -2506,14 +2506,20 @@ serve(async (req) => {
       // selected period from Stripe (invoice total_tax_amounts / session tax)
       // and persist the corrected amount_net/fee for future cached reads.
       const roundMoney = (value: number) => Math.round(value * 100) / 100;
+      // Stripe API versions from 2025 onward replaced `invoice.tax` /
+      // `invoice.total_tax_amounts` with `invoice.total_taxes`. Reading only the
+      // legacy fields made every invoice look tax-free, so IVA showed as €0.
       const invoiceTaxCents = (invoice: any): number => {
-        const taxFromBreakdown = Array.isArray(invoice?.total_tax_amounts)
-          ? invoice.total_tax_amounts.reduce(
-              (sum: number, item: any) => sum + (Number(item?.amount) || 0),
-              0,
-            )
-          : 0;
-        return taxFromBreakdown || Number(invoice?.tax ?? 0) || 0;
+        const sumAmounts = (list: any) =>
+          Array.isArray(list)
+            ? list.reduce((sum: number, item: any) => sum + (Number(item?.amount) || 0), 0)
+            : 0;
+        return (
+          sumAmounts(invoice?.total_taxes) ||
+          sumAmounts(invoice?.total_tax_amounts) ||
+          Number(invoice?.tax ?? 0) ||
+          0
+        );
       };
       const netFromStripeInvoice = (invoice: any): number => {
         // For sales metrics, match Stripe's collected revenue: amount_paid can be
