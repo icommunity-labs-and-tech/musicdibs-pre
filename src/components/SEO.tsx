@@ -58,6 +58,7 @@ export const SEO = ({
   lang,
   jsonLd,
   noIndex = false,
+  appendBrand = true,
 }: SEOProps) => {
   const { i18n } = useTranslation();
   const localizedRoute = useLocalizedRoute();
