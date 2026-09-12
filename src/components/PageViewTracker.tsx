@@ -1,11 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
-declare global {
-  interface Window {
-    dataLayer?: unknown[];
-  }
-}
 
 /**
  * The GTM container only fires its GA4 page_view on the initial document load.
