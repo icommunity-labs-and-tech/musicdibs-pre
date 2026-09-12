@@ -8,10 +8,12 @@ import { Calendar, ArrowLeft, Tag } from "lucide-react";
 import DOMPurify from "dompurify";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
+import { getNewsSeoOverride } from "@/lib/newsSeoOverrides";
 
 const NewsArticle = () => {
   const { slug } = useParams<{ slug: string }>();
   const { t } = useTranslation();
+  const seoOverride = getNewsSeoOverride(slug);
 
   const { data: post, isLoading } = useQuery({
     queryKey: ["blog-post", slug],
@@ -96,12 +98,13 @@ const NewsArticle = () => {
   return (
     <div className="min-h-screen page-bg">
       <SEO
-        title={(() => {
+        title={seoOverride?.title ?? (() => {
           const raw = post?.title || "Artículo";
           // Reserve space for " | Musicdibs" (12 chars) → keep title ≤ 47 chars
           return raw.length > 47 ? `${raw.slice(0, 44).trimEnd()}…` : raw;
         })()}
-        description={post?.excerpt || ""}
+        appendBrand={!seoOverride}
+        description={seoOverride?.description ?? post?.excerpt ?? ""}
         path={`/news/${slug}`}
         type="article"
         image={post?.image_url || undefined}

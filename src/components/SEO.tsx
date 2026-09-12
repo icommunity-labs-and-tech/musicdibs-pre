@@ -19,6 +19,11 @@ interface SEOProps {
   lang?: "es" | "en" | "pt-BR";
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
   noIndex?: boolean;
+  /**
+   * When false, the title is used verbatim (no " | Musicdibs" suffix and no
+   * brand prefix in the description). Used by pages with hand-tuned SEO copy.
+   */
+  appendBrand?: boolean;
 }
 
 const LOCALE_MAP: Record<"es" | "en" | "pt-BR", { html: string; og: string }> = {
@@ -53,6 +58,7 @@ export const SEO = ({
   lang,
   jsonLd,
   noIndex = false,
+  appendBrand = true,
 }: SEOProps) => {
   const { i18n } = useTranslation();
   const localizedRoute = useLocalizedRoute();
@@ -60,6 +66,9 @@ export const SEO = ({
   // per-route canonical Helmet injects (link tags don't dedupe by rel).
   useEffect(() => {
     document.head.querySelector('link[data-static-canonical]')?.remove();
+    // Same for the static description: Helmet appends its own, so both would
+    // ship and crawlers would read the static (first) one.
+    document.head.querySelector('meta[data-static-description]')?.remove();
   }, []);
 
   // Priority: localized route (/pt/...) > explicit prop > current UI language.
@@ -72,12 +81,12 @@ export const SEO = ({
   const resolvedPath = localizedRoute ? `${localizedRoute.prefix}${path}` : path;
   const url = `${BASE_URL}${resolvedPath}`;
   const normalizedTitle = normalizeBrandName(title);
-  const fullTitle = resolvedPath === "/"
+  const fullTitle = !appendBrand || resolvedPath === "/"
     ? normalizedTitle
     : normalizedTitle.includes(BRAND_NAME)
       ? normalizedTitle
       : `${normalizedTitle} | ${BRAND_NAME}`;
-  const fullDescription = withBrandInDescription(description);
+  const fullDescription = appendBrand ? withBrandInDescription(description) : description;
   const resolveImageUrl = (img: string) =>
     img.startsWith("http") ? img : `${BASE_URL}${img}`;
   const imageUrl = image ? resolveImageUrl(image) : resolveImageUrl(DEFAULT_OG_IMAGE);

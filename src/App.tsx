@@ -16,6 +16,7 @@ const EnNewsRedirect = () => {
 
 import LocalizedRoute from "@/components/LocalizedRoute";
 import ScrollToTop from "./components/ScrollToTop";
+import PageViewTracker from "./components/PageViewTracker";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { ConsentBanner } from "./components/ConsentBanner";
 import { AuthProvider } from "./hooks/useAuth";
@@ -209,6 +210,7 @@ const App = () => (
     <ThemeProvider>
         <BrowserRouter>
           <ScrollToTop />
+          <PageViewTracker />
           <AppInit />
           <DelayedStartupWidgets />
           <ConsentBanner />
