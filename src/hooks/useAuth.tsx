@@ -196,7 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, metadata?: Record<string, string>) => {
     try {
       const supabase = await getSupabaseClient();
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -204,6 +204,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           emailRedirectTo: window.location.origin,
         },
       });
+
+      // Best-effort: capturar el pais de origen para reporting. No bloquea
+      // el registro si falla (por ejemplo, si el servicio de geolocalizacion
+      // esta caido).
+      if (!error && data?.user?.id) {
+        supabase.functions
+          .invoke('capture-signup-country', { body: { user_id: data.user.id } })
+          .catch((e) => console.warn('[auth] capture-signup-country failed (non-blocking):', e));
+      }
 
       return { error };
     } catch (error) {
