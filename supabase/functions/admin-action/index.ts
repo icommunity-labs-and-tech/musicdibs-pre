@@ -6311,12 +6311,14 @@ serve(async (req) => {
           const priceId = lineItem?.price?.id || null;
           const interval = lineItem?.price?.recurring?.interval || null;
           const amount = (inv.amount_paid || 0) / 100;
-          const invTax = Array.isArray((inv as any).total_tax_amounts)
-            ? (inv as any).total_tax_amounts.reduce(
-                (sum: number, item: any) => sum + (Number(item?.amount) || 0),
-                0,
-              )
-            : (Number((inv as any).tax ?? 0) || 0);
+          const sumTaxAmounts = (list: any) =>
+            Array.isArray(list)
+              ? list.reduce((sum: number, item: any) => sum + (Number(item?.amount) || 0), 0)
+              : 0;
+          const invTax =
+            sumTaxAmounts((inv as any).total_taxes) ||
+            sumTaxAmounts((inv as any).total_tax_amounts) ||
+            (Number((inv as any).tax ?? 0) || 0);
           const stripeNet = ((inv.amount_paid || 0) - invTax) / 100;
 
           const { productType, productCode, billingInterval, isSub } =
