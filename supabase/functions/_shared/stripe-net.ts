@@ -18,15 +18,30 @@
 
 import type Stripe from "npm:stripe@17";
 
+/**
+ * Total tax (in cents) of a Stripe invoice, across API versions.
+ *
+ * Stripe API versions from 2025 onward dropped `invoice.tax` and
+ * `invoice.total_tax_amounts` in favour of `invoice.total_taxes`.
+ * Reading only the legacy fields made every invoice look tax-free (IVA = 0).
+ */
+export function invoiceTaxCents(invoice: any): number {
+  const sumAmounts = (list: any) =>
+    Array.isArray(list)
+      ? list.reduce((sum: number, item: any) => sum + (Number(item?.amount) || 0), 0)
+      : 0;
+
+  return (
+    sumAmounts(invoice?.total_taxes) ||
+    sumAmounts(invoice?.total_tax_amounts) ||
+    Number(invoice?.tax ?? 0) ||
+    0
+  );
+}
+
 export function netFromInvoice(invoice: Stripe.Invoice): number {
   const paid = invoice.amount_paid ?? 0;
-  const taxFromBreakdown = Array.isArray((invoice as any).total_tax_amounts)
-    ? (invoice as any).total_tax_amounts.reduce(
-        (sum: number, item: any) => sum + (Number(item?.amount) || 0),
-        0,
-      )
-    : 0;
-  const tax = taxFromBreakdown || Number((invoice as any).tax ?? 0) || 0;
+  const tax = invoiceTaxCents(invoice);
 
   return Math.round((paid - tax)) / 100;
 }
