@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-declare global {
-  interface Window {
-    gtag?: (...args: unknown[]) => void;
-  }
-}
+
+
 
 export const CONSENT_STORAGE_KEY = "cookie_consent";
 const REOPEN_KEY = "cookie_consent_reopen";
