@@ -42,6 +42,11 @@ function updateConsent(decision: "granted" | "denied") {
     ad_personalization: decision,
     analytics_storage: decision,
   });
+  // Evento para que las etiquetas de GTM puedan dispararse tras la decisión.
+  (window as unknown as { dataLayer?: unknown[] }).dataLayer?.push({
+    event: "consent_update",
+    consent_state: decision,
+  });
 }
 
 /** Reabre el banner (enlace "Configuración de cookies" del footer). */
