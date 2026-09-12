@@ -78,12 +78,12 @@ export const SEO = ({
   const resolvedPath = localizedRoute ? `${localizedRoute.prefix}${path}` : path;
   const url = `${BASE_URL}${resolvedPath}`;
   const normalizedTitle = normalizeBrandName(title);
-  const fullTitle = resolvedPath === "/"
+  const fullTitle = !appendBrand || resolvedPath === "/"
     ? normalizedTitle
     : normalizedTitle.includes(BRAND_NAME)
       ? normalizedTitle
       : `${normalizedTitle} | ${BRAND_NAME}`;
-  const fullDescription = withBrandInDescription(description);
+  const fullDescription = appendBrand ? withBrandInDescription(description) : description;
   const resolveImageUrl = (img: string) =>
     img.startsWith("http") ? img : `${BASE_URL}${img}`;
   const imageUrl = image ? resolveImageUrl(image) : resolveImageUrl(DEFAULT_OG_IMAGE);
