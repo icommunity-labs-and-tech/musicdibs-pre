@@ -1,166 +1,9 @@
+# robots.txt — musicdibs.com
+# Google applies ONLY the most specific matching user-agent group, so the
+# Disallow list is repeated in every group instead of living only under `*`.
+
 User-agent: Googlebot
 Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
-# AI agent / assistant bots — explicit rules (kept in sync with the wildcard below)
-User-agent: GPTBot
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: ChatGPT-User
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: OAI-SearchBot
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: ClaudeBot
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: anthropic-ai
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: PerplexityBot
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: Google-Extended
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: CCBot
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: Amazonbot
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: Bytespider
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: Meta-ExternalAgent
-Allow: /
-Disallow: /dashboard
-Disallow: /dashboard/
-Disallow: /login
-Disallow: /admin
-Disallow: /admin/
-Disallow: /reset-password
-Disallow: /payment-success
-Disallow: /identity-verification
-Disallow: /manager
-Disallow: /manager/
-
-User-agent: *
-Allow: /
-Allow: /llms.txt
-Allow: /sitemap.xml
-
-# Content Signals (contentsignals.org) — business decision confirmed by client: allow all
-Content-Signal: ai-train=yes, ai-input=yes, search=yes
 
 # Private / authenticated areas — no SEO value
 Disallow: /dashboard
@@ -171,12 +14,57 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
-# Legacy WordPress/WooCommerce paths now redirect via 301 — let crawlers follow them
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
 
-# Legacy WooCommerce query strings — thousands of duplicate variants
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
 Disallow: /*?add-to-cart=
 Disallow: /*&add-to-cart=
 Disallow: /*?product_orderby=
@@ -185,20 +73,941 @@ Disallow: /*?product_view=
 Disallow: /*?product_count=
 Disallow: /*?prod=
 
-# Legacy WooCommerce store paths — crawl-budget waste
+User-agent: Bingbot
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
 Disallow: /dibs
 Disallow: /dibs/
 Disallow: /tienda
 Disallow: /tienda/
-Disallow: /producto
-Disallow: /producto/
-Disallow: /categoria-producto
-Disallow: /categoria-producto/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
 Disallow: /cart
 Disallow: /cart/
 Disallow: /checkout
 Disallow: /checkout/
 Disallow: /my-account
 Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+# AI agent / assistant bots
+
+User-agent: GPTBot
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: ChatGPT-User
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: ClaudeBot
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: anthropic-ai
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: PerplexityBot
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: Google-Extended
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: CCBot
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: Amazonbot
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: Bytespider
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
+
+User-agent: *
+Allow: /llms.txt
+Allow: /sitemap.xml
+
+# Content Signals (contentsignals.org) — business decision confirmed by client: allow all
+Content-Signal: ai-train=yes, ai-input=yes, search=yes
+
+Allow: /
+
+# Private / authenticated areas — no SEO value
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /login
+Disallow: /admin
+Disallow: /admin/
+Disallow: /reset-password
+Disallow: /payment-success
+Disallow: /identity-verification
+Disallow: /manager/
+
+# Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
+# equity to consolidate). Thousands of them were eating the crawl budget and
+# starving the real pages in the sitemap.
+Disallow: /certification/
+Disallow: /panel
+Disallow: /panel/
+Disallow: /tag/
+Disallow: /etiqueta/
+Disallow: /etiqueta-producto/
+Disallow: /author/
+Disallow: /categoria/
+Disallow: /categoria-producto/
+Disallow: /producto/
+Disallow: /store/
+Disallow: /hc/
+Disallow: /faq-items/
+Disallow: /search
+Disallow: /search/
+Disallow: /blog/
+Disallow: /en/
+Disallow: /eng/
+Disallow: /esp/
+Disallow: /fr/
+Disallow: /pt-br/
+Disallow: /wp-content/
+Disallow: /wp-includes/
+Disallow: /wp-json/
+Disallow: /wp-admin/
+Disallow: /*/feed/
+Disallow: /feed/
+Disallow: /*?s=
+Disallow: /*?p=
+Disallow: /*?wc-ajax=
+Disallow: /*?_wpnonce=
+
+# Legacy WooCommerce store paths and query strings
+Disallow: /dibs
+Disallow: /dibs/
+Disallow: /tienda
+Disallow: /tienda/
+Disallow: /carrito
+Disallow: /finalizar-compra
+Disallow: /mi-cuenta
+Disallow: /cart
+Disallow: /cart/
+Disallow: /checkout
+Disallow: /checkout/
+Disallow: /my-account
+Disallow: /my-account/
+Disallow: /*?add-to-cart=
+Disallow: /*&add-to-cart=
+Disallow: /*?product_orderby=
+Disallow: /*?product_order=
+Disallow: /*?product_view=
+Disallow: /*?product_count=
+Disallow: /*?prod=
 
 Sitemap: https://musicdibs.com/sitemap.xml
