@@ -334,6 +334,82 @@ const dedupeDescriptions = (routes) => {
   return routes;
 };
 
+
+// ── Internal linking for blog articles ───────────────────────────────────────
+//
+// Search Console reported ~156 "Discovered – currently not indexed" article
+// URLs: Google knew them from the sitemap but never crawled them. The static
+// /news listing only exposes the 9 most recent posts and every article ended
+// with the same 3 generic links, so the rest of the archive had no internal
+// link pointing at it. Sitemap-only URLs get the lowest crawl priority.
+//
+// These helpers add real crawlable links: the full archive under /news, and a
+// rotating set of same-language siblings at the end of every article.
+
+const cleanTitle = (title) => String(title || "").replace(/\s*\|\s*Musicdibs\s*$/i, "").trim();
+
+const linkList = (routes) =>
+  routes
+    .map((r) => `<li><a href="${escapeAttr(r.path)}">${escapeHtml(cleanTitle(r.title))}</a></li>`)
+    .join("");
+
+const NAV_HEADING = {
+  es: "Todos los artículos del blog",
+  en: "All blog articles",
+  "pt-BR": "Todos os artigos do blog",
+};
+const RELATED_HEADING = {
+  es: "Sigue leyendo en el blog de Musicdibs",
+  en: "Keep reading on the Musicdibs blog",
+  "pt-BR": "Continue lendo no blog da Musicdibs",
+};
+
+/** Full crawlable archive appended to the static /news body. */
+const buildArchiveNav = (blogRoutes) => {
+  if (!blogRoutes.length) return "";
+  const byLocale = { es: [], en: [], "pt-BR": [] };
+  for (const r of blogRoutes) (byLocale[r.locale] || byLocale.es).push(r);
+  const sections = Object.entries(byLocale)
+    .filter(([, list]) => list.length)
+    .map(
+      ([locale, list]) =>
+        `<h2>${escapeHtml(NAV_HEADING[locale] || NAV_HEADING.es)}</h2><ul>${linkList(list)}</ul>`,
+    )
+    .join("");
+  return `<nav aria-label="Blog archive" class="blog-archive-links">${sections}</nav>`;
+};
+
+/**
+ * Related links for one article: same-language siblings, picked from a window
+ * that rotates with the article's index so every post in the archive receives
+ * inbound links instead of the newest ones absorbing them all.
+ */
+const buildRelatedNav = (route, siblings, index) => {
+  const pool = siblings.filter((r) => r.path !== route.path);
+  if (!pool.length) return "";
+  const take = Math.min(12, pool.length);
+  const picked = [];
+  for (let i = 0; i < take; i++) picked.push(pool[(index * 7 + i * 3) % pool.length]);
+  const unique = [...new Map(picked.map((r) => [r.path, r])).values()];
+  const heading = RELATED_HEADING[route.locale] || RELATED_HEADING.es;
+  return `<nav aria-label="Related articles"><h2>${escapeHtml(heading)}</h2><ul>${linkList(unique)}</ul></nav>`;
+};
+
+/** Appends the related-articles nav to every prerendered article body. */
+const addInternalLinks = (blogRoutes) => {
+  const byLocale = new Map();
+  for (const r of blogRoutes) {
+    if (!byLocale.has(r.locale)) byLocale.set(r.locale, []);
+    byLocale.get(r.locale).push(r);
+  }
+  blogRoutes.forEach((r, i) => {
+    if (!r.bodyHtml) return;
+    const nav = buildRelatedNav(r, byLocale.get(r.locale) || [], i);
+    if (nav) r.bodyHtml = `${r.bodyHtml}\n${nav}`;
+  });
+  return blogRoutes;
+};
+
 const main = async () => {
   const indexPath = path.join(DIST, "index.html");
   let template;
@@ -354,6 +430,14 @@ const main = async () => {
     console.warn(
       `[prerender-seo] ${missing.length} route(s) without body snapshot (Google may treat them as Soft 404): ${missing.join(", ")}`,
     );
+  }
+  addInternalLinks(blogRoutes);
+  // Expose the whole archive from /news so no article is sitemap-only.
+  const archiveNav = buildArchiveNav(blogRoutes);
+  const newsRoute = staticRoutes.find((r) => r.path === "/news");
+  if (newsRoute && archiveNav) {
+    newsRoute.bodyHtml = `${newsRoute.bodyHtml || ""}\n${archiveNav}`;
+    console.log(`[prerender-seo] /news archive nav: ${blogRoutes.length} article links`);
   }
   const allRoutes = dedupeDescriptions([...staticRoutes, ...blogRoutes]);
   console.log(`[prerender-seo] generating static SEO HTML for ${allRoutes.length} routes (${blogRoutes.length} blog posts):`);
