@@ -554,7 +554,12 @@ serve(async (req) => {
         // El rango valido (10-240s) se valida en kie-suno-generate -- aqui
         // solo reenviamos si el usuario especifico una duracion explicita
         // (ya viene validada como numero positivo desde mas arriba).
-        if (explicitDuration !== null) kiePayload.duration = explicitDuration;
+        // KIE rechaza `duration` cuando customMode=false ("duration is only
+        // supported when customMode is true..."), asi que solo lo enviamos
+        // en custom mode.
+        if (explicitDuration !== null && kiePayload.customMode !== false) {
+          kiePayload.duration = explicitDuration;
+        }
         const idemKey = crypto.randomUUID();
         const supaUrl = Deno.env.get('SUPABASE_URL')!;
         const dispatchRes = await fetch(`${supaUrl}/functions/v1/kie-suno-generate`, {
