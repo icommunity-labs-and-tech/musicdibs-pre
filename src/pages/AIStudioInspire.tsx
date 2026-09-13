@@ -210,7 +210,7 @@ const AIStudioInspire = () => {
     navigate(`/ai-studio/create?${params.toString()}`);
   };
 
-  const generateInline = async (basePrompt: string) => {
+  const generateInline = async (basePrompt: string, skipContentCheck = false) => {
     if (!user) {
       toast({
         title: t("aiInspire.loginRequiredTitle"),
@@ -218,6 +218,17 @@ const AIStudioInspire = () => {
         variant: "destructive",
       });
       return;
+    }
+
+    // Pre-flight copyright check — warn before spending credits
+    if (!skipContentCheck) {
+      setIsCheckingContent(true);
+      const check = await validateAudioContent(basePrompt);
+      setIsCheckingContent(false);
+      if (check.risk !== "none") {
+        setContentWarning({ ...check, prompt: basePrompt });
+        return;
+      }
     }
 
     // Append the language directive so Lyria sings in the user's UI language.

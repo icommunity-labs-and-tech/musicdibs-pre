@@ -217,15 +217,31 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
     setIsImproving(false);
   };
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) {
-      toast.error(t("dashboard.firstHit.describeError"));
+  const handleGenerate = async (skipContentCheck = false) => {
+    if (!user) {
+      toast.error(t("dashboard.firstHit.loginToGenerate"));
       return;
     }
-    if (!hasEnough(genMode === "song" ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio)) {
-      toast.error(t("dashboard.firstHit.noCreditsAudio"));
+    if (!prompt.trim() || prompt.trim().length < 10) {
+      toast.error(t("dashboard.firstHit.describeSongToastDesc"));
       return;
     }
+    if (credits < FEATURE_COSTS.aiSong) {
+      setShowNoCredits(true);
+      return;
+    }
+
+    // Pre-flight copyright check — warn before spending credits
+    if (!skipContentCheck) {
+      setIsCheckingContent(true);
+      const check = await validateAudioContent(prompt.trim());
+      setIsCheckingContent(false);
+      if (check.risk !== "none") {
+        setContentWarning(check);
+        return;
+      }
+    }
+
     setGenerating(true);
     setGenError(null);
     try {
