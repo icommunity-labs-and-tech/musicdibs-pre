@@ -44,7 +44,6 @@ const staticEntries: SitemapEntry[] = [
   { path: "/privacy", changefreq: "yearly", priority: "0.3" },
   { path: "/terms", changefreq: "yearly", priority: "0.3" },
   { path: "/cookies", changefreq: "yearly", priority: "0.3" },
-  { path: "/login", changefreq: "yearly", priority: "0.4" },
   { path: "/ia-music-studio", changefreq: "monthly", priority: "0.9" },
   { path: "/promocion-musical", changefreq: "monthly", priority: "0.8" },
   { path: "/features", changefreq: "monthly", priority: "0.8" },

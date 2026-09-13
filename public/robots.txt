@@ -14,7 +14,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -86,7 +85,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -166,7 +164,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -238,7 +235,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -310,7 +306,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -382,7 +377,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -454,7 +448,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -526,7 +519,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -598,7 +590,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -670,7 +661,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -742,7 +732,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -814,7 +803,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -886,7 +874,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
@@ -964,7 +951,6 @@ Disallow: /admin/
 Disallow: /reset-password
 Disallow: /payment-success
 Disallow: /identity-verification
-Disallow: /manager
 Disallow: /manager/
 
 # Legacy WordPress / WooCommerce / Zendesk URLs (301 to generic hubs, no link
