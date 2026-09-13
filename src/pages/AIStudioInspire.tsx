@@ -319,8 +319,9 @@ const AIStudioInspire = () => {
               .maybeSingle();
             lastErrorMessage = String(logRow?.error_message || "");
           }
+          const isModerationError = /flagged for moderation|moderation|content.?policy/i.test(lastErrorMessage);
           const isTemporaryError = /code=500|internal error|timed out|please try again later|service unavailable|upstream/i.test(lastErrorMessage);
-          throw new Error(t(isTemporaryError ? "aiInspire.temporaryError" : "aiInspire.providerRejected"));
+          throw new Error(t(isModerationError ? "aiInspire.moderationError" : isTemporaryError ? "aiInspire.temporaryError" : "aiInspire.providerRejected"));
         }
         throw new Error(t("aiInspire.stillProcessing"));
       }
