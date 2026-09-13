@@ -48,6 +48,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
+import { ContentWarningDialog } from "@/components/ai-studio/ContentWarningDialog";
+import { validateAudioContent, type AudioContentCheck } from "@/lib/validateAudioContent";
 import { registerWork, listIbsSignatures, createIbsSignature, syncIbsSignatures } from "@/services/dashboardApi";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -173,6 +175,8 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
   const [audioTitle, setAudioTitle] = useState("");
   const [playing, setPlaying] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
+  const [contentWarning, setContentWarning] = useState<AudioContentCheck | null>(null);
+  const [isCheckingContent, setIsCheckingContent] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Voice profiles
