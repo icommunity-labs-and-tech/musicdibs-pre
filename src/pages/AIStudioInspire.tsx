@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { PricingLink } from "@/components/dashboard/PricingPopup";
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { ContentWarningDialog } from "@/components/ai-studio/ContentWarningDialog";
+import { validateAudioContent, type AudioContentCheck } from "@/lib/validateAudioContent";
 import { CreditsChip } from "@/components/ai-studio/CreditsChip";
 import { ArrowLeft, Sparkles, Dice5, Loader2, Download, RefreshCw, ArrowRight, AlertCircle } from "lucide-react";
 
@@ -196,6 +198,8 @@ const AIStudioInspire = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastPrompt, setLastPrompt] = useState<string>("");
   const [selectedChip, setSelectedChip] = useState<string | null>(null);
+  const [contentWarning, setContentWarning] = useState<(AudioContentCheck & { prompt: string }) | null>(null);
+  const [isCheckingContent, setIsCheckingContent] = useState(false);
 
   useEffect(() => {
     track("ai_studio_entered", { feature: "inspire" });
@@ -206,7 +210,7 @@ const AIStudioInspire = () => {
     navigate(`/ai-studio/create?${params.toString()}`);
   };
 
-  const generateInline = async (basePrompt: string) => {
+  const generateInline = async (basePrompt: string, skipContentCheck = false) => {
     if (!user) {
       toast({
         title: t("aiInspire.loginRequiredTitle"),
@@ -214,6 +218,17 @@ const AIStudioInspire = () => {
         variant: "destructive",
       });
       return;
+    }
+
+    // Pre-flight copyright check — warn before spending credits
+    if (!skipContentCheck) {
+      setIsCheckingContent(true);
+      const check = await validateAudioContent(basePrompt);
+      setIsCheckingContent(false);
+      if (check.risk !== "none") {
+        setContentWarning({ ...check, prompt: basePrompt });
+        return;
+      }
     }
 
     // Append the language directive so Lyria sings in the user's UI language.
@@ -457,6 +472,21 @@ const AIStudioInspire = () => {
                 {t("aiInspire.tryAgain")}
               </Button>
             </div>
+          )}
+
+          {contentWarning && (
+            <ContentWarningDialog
+              open
+              onOpenChange={(open) => { if (!open) setContentWarning(null); }}
+              risk={contentWarning.risk as Exclude<AudioContentCheck["risk"], "none">}
+              detected={contentWarning.detected}
+              explanation={contentWarning.explanation}
+              onContinue={() => {
+                const p = contentWarning.prompt;
+                setContentWarning(null);
+                generateInline(p, true);
+              }}
+            />
           )}
 
           {/* Result card */}

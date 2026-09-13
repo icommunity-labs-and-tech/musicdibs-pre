@@ -1,4 +1,6 @@
 import { GenerationWarning } from "@/components/ai-studio/GenerationWarning";
+import { ContentWarningDialog } from "@/components/ai-studio/ContentWarningDialog";
+import { validateAudioContent, type AudioContentCheck } from "@/lib/validateAudioContent";
 import { CopyrightBlockedAlert } from "@/components/ai-studio/CopyrightBlockedAlert";
 import { SEO } from "@/components/SEO";
 import { useAiGenerationsRealtime } from "@/hooks/useAiGenerationsRealtime";
@@ -129,6 +131,8 @@ const AIStudioCreate = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationError, setGenerationError] = useState<{ message: string; details?: string } | null>(null);
   const [copyrightError, setCopyrightError] = useState<{ message: string; suggestions: string[]; detected?: string | null } | null>(null);
+  const [contentWarning, setContentWarning] = useState<AudioContentCheck | null>(null);
+  const [isCheckingContent, setIsCheckingContent] = useState(false);
   const [lastResult, setLastResult] = useState<GenerationResult | null>(null);
 
   // ── History & playback state ──
@@ -374,14 +378,34 @@ const AIStudioCreate = () => {
   };
 
   // ── Generate music ──
-  const handleGenerate = async () => {
+  const handleGenerate = async (skipContentCheck = false) => {
     if (!prompt.trim() || prompt.trim().length < 10) {
-      toast({ title: t('aiShared.error'), description: 'Escribe al menos 10 caracteres describiendo tu canción', variant: "destructive" });
+      toast({
+        title: t('aiCreate.describeSongToastTitle'),
+        description: t('aiCreate.describeSongToastDesc'),
+        variant: "destructive",
+      });
       return;
     }
+
     if (!user) {
-      toast({ title: t('aiShared.error'), description: t('aiCreate.errorLogin'), variant: "destructive" });
+      toast({
+        title: t('common.error'),
+        description: t('aiCreate.loginToGenerate'),
+        variant: "destructive",
+      });
       return;
+    }
+
+    // Pre-flight copyright check — warn before spending credits
+    if (!skipContentCheck) {
+      setIsCheckingContent(true);
+      const check = await validateAudioContent(prompt.trim(), mode === 'song' ? lyrics.trim() : '');
+      setIsCheckingContent(false);
+      if (check.risk !== 'none') {
+        setContentWarning(check);
+        return;
+      }
     }
 
     setIsGenerating(true);
@@ -1674,20 +1698,33 @@ const AIStudioCreate = () => {
                         </Alert>
                       )}
 
-                      {/* CTA */}
+              {contentWarning && (
+                <ContentWarningDialog
+                  open
+                  onOpenChange={(open) => { if (!open) setContentWarning(null); }}
+                  risk={contentWarning.risk as Exclude<AudioContentCheck["risk"], "none">}
+                  detected={contentWarning.detected}
+                  explanation={contentWarning.explanation}
+                  onContinue={() => { setContentWarning(null); handleGenerate(true); }}
+                />
+              )}
+
+              {/* CTA */}
                       {!hasEnough(currentCost) ? (
                         <NoCreditsAlert message={`Necesitas ${currentCost} créditos para generar ${mode === 'song' ? 'una canción' : 'un instrumental'}.`} />
                       ) : (
                         <>
                         <Button
-                          onClick={handleGenerate}
-                          disabled={isGenerating || !prompt.trim() || prompt.trim().length < 10}
+                          onClick={() => handleGenerate()}
+                          disabled={isGenerating || isCheckingContent || !prompt.trim() || prompt.trim().length < 10}
                           className="w-full"
                           size="lg"
                           data-tour="mc-generate"
                         >
                           <Wand2 className="w-4 h-4 mr-2" />
-                          {t('aiCreate.generateBtn')} {mode === 'song' ? 'canción' : 'instrumental'} con IA
+                          {isCheckingContent
+                            ? t('aiCreate.contentWarningChecking')
+                            : `${t('aiCreate.generateBtn')} ${mode === 'song' ? 'canción' : 'instrumental'} con IA`}
                         </Button>
                         <GenerationWarning />
                         <PricingLink className="mt-1 block text-center" />

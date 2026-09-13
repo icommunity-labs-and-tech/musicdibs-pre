@@ -48,6 +48,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCredits } from "@/hooks/useCredits";
 import { FEATURE_COSTS } from "@/lib/featureCosts";
 import { NoCreditsAlert } from "@/components/dashboard/NoCreditsAlert";
+import { ContentWarningDialog } from "@/components/ai-studio/ContentWarningDialog";
+import { validateAudioContent, type AudioContentCheck } from "@/lib/validateAudioContent";
 import { registerWork, listIbsSignatures, createIbsSignature, syncIbsSignatures } from "@/services/dashboardApi";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -173,6 +175,8 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
   const [audioTitle, setAudioTitle] = useState("");
   const [playing, setPlaying] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
+  const [contentWarning, setContentWarning] = useState<AudioContentCheck | null>(null);
+  const [isCheckingContent, setIsCheckingContent] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Voice profiles
@@ -213,7 +217,7 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
     setIsImproving(false);
   };
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (skipContentCheck = false) => {
     if (!prompt.trim()) {
       toast.error(t("dashboard.firstHit.describeError"));
       return;
@@ -222,6 +226,18 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
       toast.error(t("dashboard.firstHit.noCreditsAudio"));
       return;
     }
+
+    // Pre-flight copyright check — warn before spending credits
+    if (!skipContentCheck) {
+      setIsCheckingContent(true);
+      const check = await validateAudioContent(prompt.trim());
+      setIsCheckingContent(false);
+      if (check.risk !== "none") {
+        setContentWarning(check);
+        return;
+      }
+    }
+
     setGenerating(true);
     setGenError(null);
     try {
@@ -925,6 +941,17 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                 </p>
               )}
 
+              {contentWarning && (
+                <ContentWarningDialog
+                  open
+                  onOpenChange={(open) => { if (!open) setContentWarning(null); }}
+                  risk={contentWarning.risk as Exclude<AudioContentCheck["risk"], "none">}
+                  detected={contentWarning.detected}
+                  explanation={contentWarning.explanation}
+                  onContinue={() => { setContentWarning(null); handleGenerate(true); }}
+                />
+              )}
+
               {/* Preview */}
               {audioUrl && (
                 <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 flex items-center gap-3">
@@ -965,9 +992,9 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
                 <Button
                   className="flex-1 gap-2 bg-gradient-to-r from-accent to-info hover:from-accent hover:to-info"
-                  onClick={handleGenerate}
+                  onClick={() => handleGenerate()}
                   disabled={
-                    generating || !prompt.trim() || prompt.trim().length < 10 || (genMode === "song" && !selectedVoice)
+                    generating || isCheckingContent || !prompt.trim() || prompt.trim().length < 10 || (genMode === "song" && !selectedVoice)
                   }
                 >
                   {generating ? (
