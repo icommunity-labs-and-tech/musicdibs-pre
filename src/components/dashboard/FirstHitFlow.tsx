@@ -941,6 +941,17 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
                 </p>
               )}
 
+              {contentWarning && (
+                <ContentWarningDialog
+                  open
+                  onOpenChange={(open) => { if (!open) setContentWarning(null); }}
+                  risk={contentWarning.risk as Exclude<AudioContentCheck["risk"], "none">}
+                  detected={contentWarning.detected}
+                  explanation={contentWarning.explanation}
+                  onContinue={() => { setContentWarning(null); handleGenerate(true); }}
+                />
+              )}
+
               {/* Preview */}
               {audioUrl && (
                 <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 flex items-center gap-3">
