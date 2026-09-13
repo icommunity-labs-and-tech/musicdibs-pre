@@ -4352,6 +4352,7 @@ export type Database = {
           created_at: string
           email: string
           had_topup: boolean
+          has_used_credit: boolean
           kyc_status: string
           language: string
           sub_period_end: string
