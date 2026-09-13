@@ -18,6 +18,7 @@ const ML_GROUPS = {
   aniversario_sin_plan_es: "184095907676947790", aniversario_sin_plan_en: "184136761695274907", aniversario_sin_plan_pt: "184136770538964767",
   recuperar_es: "180549266623694014", recuperar_en: "180549280191218751", recuperar_pt: "180549290870965583",
   single_recompra_es: "184095898858424250", single_recompra_en: "184095901652878676", single_recompra_pt: "184095904732547024",
+  bono_sin_usar_es: "198486096643884228", bono_sin_usar_en: "198486098709579369", bono_sin_usar_pt: "198486101023786598",
 } as const;
 
 type GroupKey = keyof typeof ML_GROUPS;
@@ -41,6 +42,7 @@ interface Profile {
   available_credits: number | null; created_at: string;
   sub_period_end?: string | null; sub_status?: string | null;
   had_topup?: boolean;
+  has_used_credit?: boolean;
 }
 
 function computeCreditThresholds(plan: string, tier: string | null): { critical: number; low: number } {
@@ -97,10 +99,20 @@ function computeTargetGroups(p: Profile): Set<string> {
   const isActivePaidSub = hasPaidPlan && p.sub_status === 'active';
   if (!isActivePaidSub) {
     const credits = p.available_credits ?? 0;
-    const { critical, low } = computeCreditThresholds(p.subscription_plan || 'Free', p.subscription_tier);
-    if (credits === 0) groups.add(ML_GROUPS[`sin_creditos_${lang}` as GroupKey]);
-    else if (credits <= critical) groups.add(ML_GROUPS[`creditos_criticos_${lang}` as GroupKey]);
-    else if (credits <= low) groups.add(ML_GROUPS[`pocos_creditos_${lang}` as GroupKey]);
+    // FIX 2026-09-13: quien nunca ha usado ningun credito (tipicamente el
+    // bono de bienvenida intacto, pero cubre cualquier caso similar) necesita
+    // un mensaje de ACTIVACION ("aun no has probado la plataforma"), no de
+    // RECOMPRA ("se te estan acabando, compra mas") -- antes ambos casos se
+    // mezclaban indistintamente en pocos_creditos/creditos_criticos segun el
+    // numero exacto, aunque semanticamente son necesidades opuestas.
+    if (credits > 0 && !p.has_used_credit) {
+      groups.add(ML_GROUPS[`bono_sin_usar_${lang}` as GroupKey]);
+    } else {
+      const { critical, low } = computeCreditThresholds(p.subscription_plan || 'Free', p.subscription_tier);
+      if (credits === 0) groups.add(ML_GROUPS[`sin_creditos_${lang}` as GroupKey]);
+      else if (credits <= critical) groups.add(ML_GROUPS[`creditos_criticos_${lang}` as GroupKey]);
+      else if (credits <= low) groups.add(ML_GROUPS[`pocos_creditos_${lang}` as GroupKey]);
+    }
   }
 
   // 8. Renovacion (active subs only, 7-day window)
@@ -200,6 +212,7 @@ serve(async (req) => {
         available_credits: row.available_credits, created_at: row.created_at,
         sub_period_end: row.sub_period_end, sub_status: row.sub_status,
         had_topup: row.had_topup,
+        has_used_credit: row.has_used_credit,
       };
       if (dryRun) { totalProcessed++; continue; }
       try {
