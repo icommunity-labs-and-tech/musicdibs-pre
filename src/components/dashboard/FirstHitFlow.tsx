@@ -981,9 +981,9 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
               <div className="flex flex-col sm:flex-row gap-3 pt-1">
                 <Button
                   className="flex-1 gap-2 bg-gradient-to-r from-accent to-info hover:from-accent hover:to-info"
-                  onClick={handleGenerate}
+                  onClick={() => handleGenerate()}
                   disabled={
-                    generating || !prompt.trim() || prompt.trim().length < 10 || (genMode === "song" && !selectedVoice)
+                    generating || isCheckingContent || !prompt.trim() || prompt.trim().length < 10 || (genMode === "song" && !selectedVoice)
                   }
                 >
                   {generating ? (
