@@ -88,7 +88,7 @@ export function Navbar({
         aria-hidden
       />
       <div className="relative mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-4 gap-3">
-        <a href="#" className="inline-flex items-center shrink-0">
+        <a href="/" className="inline-flex items-center shrink-0">
           <img src={logo} alt="Musicdibs" className="h-9 sm:h-10 w-auto object-contain" />
         </a>
         <div className="flex items-center gap-2 sm:gap-4">
