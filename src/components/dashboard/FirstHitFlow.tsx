@@ -218,16 +218,12 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
   };
 
   const handleGenerate = async (skipContentCheck = false) => {
-    if (!user) {
-      toast.error(t("dashboard.firstHit.loginToGenerate"));
+    if (!prompt.trim()) {
+      toast.error(t("dashboard.firstHit.describeError"));
       return;
     }
-    if (!prompt.trim() || prompt.trim().length < 10) {
-      toast.error(t("dashboard.firstHit.describeSongToastDesc"));
-      return;
-    }
-    if (credits < FEATURE_COSTS.aiSong) {
-      setShowNoCredits(true);
+    if (!hasEnough(genMode === "song" ? FEATURE_COSTS.generate_audio_song : FEATURE_COSTS.generate_audio)) {
+      toast.error(t("dashboard.firstHit.noCreditsAudio"));
       return;
     }
 
