@@ -381,8 +381,8 @@ const AIStudioCreate = () => {
   const handleGenerate = async (skipContentCheck = false) => {
     if (!prompt.trim() || prompt.trim().length < 10) {
       toast({
-        title: t('aiCreate.describeSongToastTitle'),
-        description: t('aiCreate.describeSongToastDesc'),
+        title: t('aiShared.error'),
+        description: t('aiCreate.describeSongOrTheme'),
         variant: "destructive",
       });
       return;
@@ -390,8 +390,8 @@ const AIStudioCreate = () => {
 
     if (!user) {
       toast({
-        title: t('common.error'),
-        description: t('aiCreate.loginToGenerate'),
+        title: t('aiShared.error'),
+        description: t('aiCreate.errorLogin'),
         variant: "destructive",
       });
       return;
