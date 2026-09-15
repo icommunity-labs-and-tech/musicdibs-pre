@@ -83,6 +83,27 @@ export type Database = {
         }
         Relationships: []
       }
+      abandoned_checkout_notified: {
+        Row: {
+          checkout_session_id: string
+          email: string
+          notified_at: string
+          user_id: string | null
+        }
+        Insert: {
+          checkout_session_id: string
+          email: string
+          notified_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          checkout_session_id?: string
+          email?: string
+          notified_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_alerts: {
         Row: {
           context: Json | null
@@ -1046,6 +1067,24 @@ export type Database = {
           ip_hint?: string | null
           outcome?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      disposable_email_domains: {
+        Row: {
+          added_at: string
+          domain: string
+          note: string | null
+        }
+        Insert: {
+          added_at?: string
+          domain: string
+          note?: string | null
+        }
+        Update: {
+          added_at?: string
+          domain?: string
+          note?: string | null
         }
         Relationships: []
       }
@@ -4161,6 +4200,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      block_profile_by_email: { Args: { p_email: string }; Returns: boolean }
       check_renewals_cron_health: { Args: never; Returns: undefined }
       create_manager_contract: {
         Args: {
@@ -4351,7 +4391,9 @@ export type Database = {
           available_credits: number
           created_at: string
           email: string
+          first_usage_at: string
           had_topup: boolean
+          has_purchased: boolean
           has_used_credit: boolean
           kyc_status: string
           language: string
@@ -4362,6 +4404,13 @@ export type Database = {
         }[]
       }
       get_public_app_setting: { Args: { setting_key: string }; Returns: Json }
+      get_recent_disposable_domain_signups: {
+        Args: { p_days?: number }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
       get_sitemap_cron_secret: { Args: never; Returns: string }
       get_user_auth_data: {
         Args: { user_email: string }
