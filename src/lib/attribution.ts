@@ -97,10 +97,6 @@ export function captureAttribution(): void {
   // when the visitor never signs up or buys.
   recordVisit();
 
-
-  // Don't overwrite existing first-touch data
-  if (getAttribution()) return;
-
   const params = new URLSearchParams(window.location.search);
   const utm_source = params.get('utm_source') || undefined;
   const utm_medium = params.get('utm_medium') || undefined;
@@ -115,9 +111,24 @@ export function captureAttribution(): void {
     ? document.referrer
     : undefined;
 
-  // Siempre guardamos el primer contacto, aunque no haya UTMs ni referrer
-  // externo: sin esto, el trafico directo/organico se queda sin origen y no
-  // podemos saber por que pagina entraron los usuarios que acaban registrando.
+  const hasCampaign = Boolean(
+    utm_source || utm_medium || utm_campaign || utm_content || utm_term ||
+    gclid || coupon || ref,
+  );
+
+  const existing = getAttribution();
+  if (existing) {
+    // Solo se pisa una ficha "directa" (sin datos de campana) cuando la visita
+    // nueva si trae campana, cupon o codigo de referido. Asi el trafico directo
+    // deja rastro pero no bloquea la atribucion posterior de anuncios y cupones.
+    const existingHasCampaign = Boolean(
+      existing.utm_source || existing.utm_medium || existing.utm_campaign ||
+      existing.utm_content || existing.utm_term || existing.gclid ||
+      existing.coupon || existing.ref,
+    );
+    if (existingHasCampaign || !hasCampaign) return;
+  }
+
   const data: AttributionData = {
     utm_source,
     utm_medium,
@@ -131,6 +142,7 @@ export function captureAttribution(): void {
     landing_path: window.location.pathname,
     captured_at: Date.now(),
   };
+
 
 
   try {
