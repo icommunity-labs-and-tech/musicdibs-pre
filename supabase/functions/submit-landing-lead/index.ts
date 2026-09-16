@@ -20,12 +20,21 @@ const corsHeaders = {
 export const LEAD_SUBJECT_PREFIX = "Lead landing campaña";
 const LEAD_NOTIFY_TO = "info@musicdibs.com";
 
-// MailerLite groups: "Registrados (No compra)" -- segmento mas cercano
-// disponible para nutrir leads de landing que aun no tienen cuenta.
-const ML_GROUPS_NO_PURCHASE: Record<"ES" | "EN" | "BR", string> = {
-  ES: "180552557100270838",
-  EN: "180552563766068699",
-  BR: "184095895331013822",
+// MailerLite: grupos propios de leads de landing de campañas. Los IDs
+// anteriores (ES/EN) ya no existian en la cuenta, asi que los leads acababan
+// solo en el grupo BR o sin grupo util. 2026-09-16: grupos dedicados.
+const ML_GROUPS_LEADS: Record<"ES" | "EN" | "BR", string> = {
+  ES: "198802365691725297",
+  EN: "198802365790291471",
+  BR: "198802365886760481",
+};
+
+// Lista general por idioma, para que los leads reciban tambien los envios
+// generales de MusicDibs.
+const ML_GROUPS_ALL: Record<"ES" | "EN" | "BR", string> = {
+  ES: "184716034425488438",
+  EN: "184893161875703104",
+  BR: "184893167954298415",
 };
 
 function detectMlLang(input?: string): "ES" | "EN" | "BR" {
@@ -117,17 +126,18 @@ async function addToMailerLite(email: string, name: string, lang: "ES" | "EN" | 
     console.log("[LANDING-LEAD] MAILERLITE_API_KEY not set, skipping ML");
     return false;
   }
-  const groupId = ML_GROUPS_NO_PURCHASE[lang];
+  const groups = [ML_GROUPS_LEADS[lang], ML_GROUPS_ALL[lang]];
   try {
     const res = await fetch("https://connect.mailerlite.com/api/subscribers", {
       method: "POST",
       headers: { Authorization: `Bearer ${ML_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ email, name, groups: [groupId], status: "active", fields }),
+      body: JSON.stringify({ email, name, groups, status: "active", fields }),
     });
     if (!res.ok) {
       console.error(`[LANDING-LEAD] ML error ${res.status}`, (await res.text()).slice(0, 300));
       return false;
     }
+    console.log(`[LANDING-LEAD] ML ok (${lang}) groups=${groups.join(",")}`);
     return true;
   } catch (e) {
     console.error("[LANDING-LEAD] ML exception", String(e));
