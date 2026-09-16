@@ -188,19 +188,19 @@ const resources = {
         conditionsText: '* Impuestos NO incluidos (se aplicará el 21% de IVA para países UE). Las suscripciones mensuales y anuales se renuevan automáticamente al finalizar el periodo de suscripción. Más información en FAQ y en términos de uso y compra.',
         features: {
           annual: [
-            'Todo el AI Music Studio',
-            'Producción y masterización profesional',
-            'Registro de derechos de autor (con blockchain)',
+            'Crea y edita hasta 100 canciones con IA',
+            'Remasteriza hasta 15 canciones con IA',
+            'Registra y protege hasta 100 canciones (con blockchain)',
             'Distribución GRATUITA e ILIMITADA en +220 plataformas',
             '100% de tus royalties',
             'Herramientas de promoción',
             'Soporte prioritario',
           ],
           monthly: [
-            'AI Music Studio',
+            'Crea y edita hasta 8 canciones con IA',
             'Producción musical con IA',
-            'Masterización profesional',
-            'Registro de derechos de autor (con blockchain)',
+            'Remasteriza hasta 1 canción con IA',
+            'Registra y protege hasta 8 canciones (con blockchain)',
             'Creación de portadas y contenido',
           ],
           monthlyExcluded: [
@@ -210,9 +210,9 @@ const resources = {
             'Mejor opción para lanzamientos',
           ],
           starter: [
-            'Todo el AI Music Studio',
-            'Producción y masterización con IA',
-            'Registro de derechos de autor (con blockchain)',
+            'Crea y edita hasta 20 canciones con IA',
+            'Remasteriza hasta 3 canciones con IA',
+            'Registra y protege hasta 20 canciones (con blockchain)',
             'Creación de portadas, vídeos y contenido promocional',
             'Herramientas creativas',
           ],
