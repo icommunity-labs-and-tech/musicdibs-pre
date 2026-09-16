@@ -8,7 +8,30 @@ serve(async (req: Request) => {
   }
   const ML_KEY = Deno.env.get("MAILERLITE_API_KEY")!;
   const auth = { Authorization: `Bearer ${ML_KEY}`, "Content-Type": "application/json", Accept: "application/json" };
-  const body = await req.json() as { emails?: string[]; createGroups?: string[]; createFields?: string[] };
+  const body = await req.json() as {
+    emails?: string[];
+    createGroups?: string[];
+    createFields?: string[];
+    backfill?: { email: string; perfil: string }[];
+    backfillGroups?: string[];
+  };
+
+  if (body.backfill?.length) {
+    const out: Record<string, unknown> = {};
+    for (const b of body.backfill) {
+      const res = await fetch("https://connect.mailerlite.com/api/subscribers", {
+        method: "POST", headers: auth,
+        body: JSON.stringify({
+          email: b.email,
+          groups: body.backfillGroups,
+          status: "active",
+          fields: { origen: "lead_ads_landing", perfil: b.perfil },
+        }),
+      });
+      out[b.email] = res.status;
+    }
+    return new Response(JSON.stringify(out, null, 2), { headers: { "Content-Type": "application/json" } });
+  }
 
   if (body.createGroups?.length || body.createFields?.length) {
     const out: Record<string, unknown> = {};
