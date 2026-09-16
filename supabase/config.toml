@@ -54,6 +54,3 @@ verify_jwt = false
 
 [functions.submit-landing-lead]
 verify_jwt = false
-
-[functions.tmp-ml-check]
-verify_jwt = false
