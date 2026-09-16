@@ -6,6 +6,7 @@ import UserPurchasesPanel from './UserPurchasesPanel';
 import UserUsagePanel from './UserUsagePanel';
 import DisputeTimeline from './DisputeTimeline';
 import UserCreditAuditPanel from './UserCreditAuditPanel';
+import { planDisplayName } from '@/lib/planLabel';
 
 interface UserDetailSheetProps {
   user: any | null;

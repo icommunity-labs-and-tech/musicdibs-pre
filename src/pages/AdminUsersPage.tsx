@@ -14,6 +14,7 @@ import { Users, MoreHorizontal, Search, Download, ChevronLeft, ChevronRight, Che
 import { useAuth } from '@/hooks/useAuth';
 import UserDetailSheet from '@/components/admin/UserDetailSheet';
 import AdminUserModals from '@/components/admin/AdminUserModals';
+import { planDisplayName } from '@/lib/planLabel';
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
