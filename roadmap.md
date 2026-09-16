@@ -12,4 +12,4 @@
   - PMax: freno real es el rank (52 %), no el presupuesto (35 %). Trabajar assets/señales de audiencia antes de subir €.
   - Recordatorio: inversión total tras 16 sep ~108 €/día (ES/PT 40 + Brasil 26 + EE. UU. 15 + PMax 22 + remarketing 5) ≈ 3.250-3.350 €/mes; bajo el tope de 3.500 €/mes. Decisión 16 sep: recorte EE. UU. 25→15 € (-40 %, campaña más afectada) y subida Brasil 22→26 €; ES/PT se mantiene en 40 € porque solo gasta ~20 €/día (investigar por qué no agota: pujas, cobertura horaria, concordancias); PMax se mantiene en 22 € (su freno es el rank, no el presupuesto).
 
-- [ ] Actualizar el contenido de los tres planes de la home según la referencia, manteniendo el diseño y sincronizando ES/EN/PT-BR.
+- [x] Actualizar el contenido de los tres planes de la home según la referencia, manteniendo el diseño y sincronizando ES/EN/PT-BR.
