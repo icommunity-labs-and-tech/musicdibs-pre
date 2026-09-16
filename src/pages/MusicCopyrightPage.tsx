@@ -51,7 +51,7 @@ const COPY: Record<Lang, {
     optionsIntro: "No existe una única opción válida. Cada una tiene ventajas y limitaciones — incluso son combinables.",
     options: [
       { name: "Registro de la Propiedad Intelectual", pros: "Reconocimiento institucional clásico y aceptado por todos los tribunales españoles.", cons: "Lento (3-12 meses), presencial o con certificado digital, coste medio (13,80 € + tasas), poca utilidad internacional directa." },
-      { name: "Sello de tiempo blockchain (Musicdibs)", pros: "Instantáneo, barato (desde 2,99 €), válido en +180 países por el Convenio de Berna, verificación pública online.", cons: "Tecnología nueva — algunos jueces todavía no la conocen, aunque la regulación eIDAS la respalda." },
+      { name: "Sello de tiempo blockchain (Musicdibs)", pros: "Instantáneo, barato (desde 0,60 €), válido en +180 países por el Convenio de Berna, verificación pública online.", cons: "Tecnología nueva — algunos jueces todavía no la conocen, aunque la regulación eIDAS la respalda." },
       { name: "Entidad de gestión (SGAE, AGEDI)", pros: "Imprescindible para cobrar regalías por difusión pública y streaming.", cons: "No es propiamente un registro de autoría: requiere demostrar previamente que la obra es tuya." },
     ],
     mythsTitle: "Mitos sobre los derechos de autor",
@@ -96,7 +96,7 @@ const COPY: Record<Lang, {
     optionsIntro: "There is no single valid option. Each has trade-offs — and they're combinable.",
     options: [
       { name: "US Copyright Office (USCO)", pros: "Classic institutional recognition, accepted by every US court, and required before you can sue for infringement in the US.", cons: "Slow (typically 3-10 months for standard applications), $45-65 per filing, and it only covers the United States." },
-      { name: "Blockchain timestamp (Musicdibs)", pros: "Instant, cheap (from €2.99, about $3), valid in 180+ countries via the Berne Convention, public online verification. First song free.", cons: "New technology — some judges aren't familiar yet, though EU eIDAS regulation backs it. It is evidence of date and authorship, not a USCO filing." },
+      { name: "Blockchain timestamp (Musicdibs)", pros: "Instant, cheap (from €0.60), valid in 180+ countries via the Berne Convention, public online verification. First song free.", cons: "New technology — some judges aren't familiar yet, though EU eIDAS regulation backs it. It is evidence of date and authorship, not a USCO filing." },
       { name: "Collecting society or PRO (ASCAP, BMI, PRS)", pros: "Essential to collect royalties from broadcast and streaming.", cons: "Not a true authorship registry: you must prove ownership beforehand." },
     ],
     mythsTitle: "Myths about music copyright",
