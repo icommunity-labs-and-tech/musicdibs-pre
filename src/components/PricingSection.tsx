@@ -9,7 +9,7 @@ import { useABTest, trackABClick } from "@/hooks/useABTest";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Loader2, Briefcase, ArrowRight, Check, Sparkles, Star } from "lucide-react";
+import { Loader2, Briefcase, ArrowRight, Check, Minus, Sparkles, Star } from "lucide-react";
 import { GuestEmailModal } from "@/components/GuestEmailModal";
 import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 import { getAttributionForCheckout } from "@/lib/attribution";
@@ -120,8 +120,8 @@ export const PricingSection = () => {
     setLoadingPlan(planId);
     try {
       await launchCheckout(planId);
-    } catch (err: any) {
-      toast.error(err.message || 'Error al iniciar el pago');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al iniciar el pago');
     } finally {
       setLoadingPlan(null);
     }
@@ -145,8 +145,8 @@ export const PricingSection = () => {
       await launchCheckout(planId, email);
       setGuestModalOpen(false);
       setPendingGuestPlanId(null);
-    } catch (err: any) {
-      toast.error(err.message || 'Error al continuar');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Error al continuar');
       throw err;
     } finally {
       setLoadingPlan(null);
@@ -172,6 +172,7 @@ export const PricingSection = () => {
     individual: formatPrice(BASE_PRICES.individual, lang),
     starter: formatPrice(STARTER_ANNUAL.priceEur, lang),
     annual: formatPrice(selectedAnnual.priceEur, lang),
+    annualMonthly: formatPrice(selectedAnnual.priceEur / 12, lang),
     annualPerCredit: formatPrice(selectedAnnual.pricePerCreditEur, lang),
   }), [lang, selectedAnnual]);
 
@@ -200,6 +201,15 @@ export const PricingSection = () => {
         <Check className={`w-3 h-3 ${tone === 'accent' ? 'text-success' : 'text-slate-700'}`} strokeWidth={3} />
       </div>
       <span className="text-sm leading-relaxed text-page-fg">{text}</span>
+    </div>
+  );
+
+  const renderExcludedFeature = (text: string) => (
+    <div className="flex items-start space-x-3 text-page-fg-subtle">
+      <div className="w-5 h-5 rounded-full bg-page-surface-strong flex items-center justify-center mt-0.5 flex-shrink-0">
+        <Minus className="w-3 h-3" strokeWidth={3} />
+      </div>
+      <span className="text-sm leading-relaxed">{text}</span>
     </div>
   );
 
@@ -252,7 +262,7 @@ export const PricingSection = () => {
             </Card>
           </div>
 
-          {/* ─────────── COLUMNA CENTRAL — Anual Básico (destacada) ─────────── */}
+          {/* ─────────── COLUMNA CENTRAL — Artist Pro (destacada) ─────────── */}
           <div className="order-2 md:order-2 flex">
             <Card
               className="w-full border-[3px] border-warning text-primary-foreground flex flex-col relative md:-mt-4 md:mb-0"
@@ -272,73 +282,20 @@ export const PricingSection = () => {
               <CardContent className="p-7 pt-9 flex flex-col flex-1">
                 <div className="text-center mb-5">
                   <h3 className="text-2xl md:text-3xl font-bold mb-1">
-                    {t('pricing.starter.name')}
+                    {t('pricing.nameAnnual')}
                   </h3>
                   <p className="text-page-fg text-sm mb-4">
-                    {t('pricing.starter.brief')}
-                  </p>
-                  <div className="text-5xl md:text-6xl font-bold mb-2">
-                    {prices.starter}
-                    <span className="text-xl font-normal">{t("pricing.priceAnnualSuffix")}</span>
-                  </div>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-page-surface-strong backdrop-blur-sm border border-primary-foreground/40 text-primary-foreground font-semibold px-4 py-1.5 text-sm">
-                    <Sparkles className="w-4 h-4" />
-                    {t('pricing.starter.credits')}
-                  </div>
-                </div>
-
-                <div className="space-y-2.5 mb-4 text-left flex-1">
-                  {starterFeatures.map((f, i) => <div key={i}>{renderFeature(f, 'accent')}</div>)}
-                </div>
-
-                {/* Upsell tenue hacia Plus+ */}
-                <p className="text-[11px] md:text-xs text-page-fg-muted text-center mb-5 leading-relaxed">
-                  {t('pricing.starter.upsell')} <ArrowRight className="inline w-3 h-3 -mt-0.5" />
-                </p>
-
-                <Button
-                  className="w-full font-bold rounded-full bg-primary-foreground hover:bg-muted text-brand py-4 text-base md:text-lg shadow-xl"
-                  disabled={loadingPlan !== null}
-                  onClick={() => {
-                    trackSignupCtaClick('pricing_annual_starter', '/login?tab=register');
-                    trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
-                    handleCheckout(STARTER_ANNUAL.planId);
-                  }}
-                >
-                  {loadingPlan === STARTER_ANNUAL.planId ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                  {t('pricing.starter.cta')}
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* ─────────── COLUMNA DERECHA — Plan Plus+ ─────────── */}
-          <div className="order-3 md:order-3 flex">
-            <Card className="w-full border border-page-border-strong bg-gradient-to-br from-primary/80 via-brand/70 to-primary/80 text-primary-foreground shadow-xl flex flex-col">
-              <CardContent className="p-6 flex flex-col flex-1">
-                <div className="text-center mb-4">
-                  <div className="inline-flex items-center gap-1.5 bg-page-surface-strong backdrop-blur-sm border border-primary-foreground/25 text-primary-foreground font-semibold text-[11px] md:text-xs px-3 py-1 rounded-full mb-3">
-                    {t("pricing.badgeAnnual")}
-                  </div>
-                  <h3 className="text-xl md:text-2xl font-bold mb-1">
-                    {t("pricing.nameAnnual")}
-                  </h3>
-                  <p className="text-page-fg-muted text-xs md:text-sm mb-4">
-                    {t("pricing.briefAnnual")}
+                    {t('pricing.briefAnnual')}
                   </p>
 
                   <div className="mb-4 text-left">
-                    <p className="text-[11px] md:text-xs text-page-fg-muted mb-1.5 text-center">
-                      {t('pricing.annualSelectorHelp')}
-                    </p>
                     <Select
                       value={selectedAnnualPlanId}
                       onValueChange={(v) => setSelectedAnnualPlanId(v as AnnualOption['planId'])}
                     >
                       <SelectTrigger
                         aria-label={t('pricing.annualSelectorAria', { defaultValue: 'Selecciona pack anual' })}
-                        className="w-full bg-page-surface-strong border-page-border-strong text-primary-foreground hover:bg-page-surface-strong backdrop-blur-sm font-semibold h-11 text-sm"
+                        className="w-full bg-page-surface-strong border-primary-foreground/40 text-primary-foreground hover:bg-page-surface-strong backdrop-blur-sm font-semibold h-11 text-sm"
                       >
                         <SelectValue>{annualOptionLabel(selectedAnnual)}</SelectValue>
                       </SelectTrigger>
@@ -351,25 +308,25 @@ export const PricingSection = () => {
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div className="text-4xl md:text-5xl font-bold mb-2">
+                  <div className="text-5xl md:text-6xl font-bold mb-2">
                     {prices.annual}
-                    <span className="text-lg font-normal">{t("pricing.priceAnnualSuffix")}</span>
+                    <span className="text-xl font-normal">{t("pricing.priceAnnualSuffix")}</span>
                   </div>
-                  <div className="inline-block rounded-full bg-page-surface-strong backdrop-blur-sm border border-page-border-strong text-primary-foreground font-semibold px-3 py-1 text-xs">
+                  <p className="mb-2 text-sm font-semibold text-page-fg">
+                    {t('pricing.annualMonthlyEquivalent', { price: prices.annualMonthly })}
+                  </p>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-page-surface-strong backdrop-blur-sm border border-primary-foreground/40 text-primary-foreground font-semibold px-4 py-1.5 text-sm">
+                    <Sparkles className="w-4 h-4" />
                     {t('pricing.creditsAnnualDynamic', { count: selectedAnnual.credits })}
                   </div>
-                  <p className="mt-1.5 text-[11px] text-page-fg-muted">
-                    {t('pricing.annualPerCredit', { price: prices.annualPerCredit })}
-                  </p>
                 </div>
 
-                <div className="space-y-2 mb-6 text-left flex-1">
+                <div className="space-y-2.5 mb-4 text-left flex-1">
                   {annualFeatures.map((f, i) => <div key={i}>{renderFeature(f, 'accent')}</div>)}
                 </div>
 
                 <Button
-                  className={`w-full font-semibold rounded-full bg-primary-foreground/95 hover:bg-primary-foreground text-primary py-3.5 text-sm md:text-base shadow-lg ${ctaBuy.className}`}
+                  className="w-full font-bold rounded-full bg-primary-foreground hover:bg-muted text-brand py-4 text-base md:text-lg shadow-xl"
                   disabled={loadingPlan !== null}
                   onClick={() => {
                     trackSignupCtaClick('pricing_annual_plus', '/login?tab=register');
@@ -378,7 +335,49 @@ export const PricingSection = () => {
                   }}
                 >
                   {loadingPlan === selectedAnnualPlanId ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
-                  {t("pricing.ctaAnnual")}
+                  {t('pricing.ctaAnnual')}
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* ─────────── COLUMNA DERECHA — Creator ─────────── */}
+          <div className="order-3 md:order-3 flex">
+            <Card className="w-full border border-page-border-strong bg-gradient-to-br from-primary/80 via-brand/70 to-primary/80 text-primary-foreground shadow-xl flex flex-col">
+              <CardContent className="p-6 flex flex-col flex-1">
+                <div className="text-center mb-4">
+                  <h3 className="text-xl md:text-2xl font-bold mb-1">
+                    {t('pricing.starter.name')}
+                  </h3>
+                  <p className="text-page-fg-muted text-xs md:text-sm mb-4">
+                    {t('pricing.starter.brief')}
+                  </p>
+                  <div className="text-4xl md:text-5xl font-bold mb-2">
+                    {prices.starter}
+                    <span className="text-lg font-normal">{t("pricing.priceAnnualSuffix")}</span>
+                  </div>
+                  <div className="inline-block rounded-full bg-page-surface-strong backdrop-blur-sm border border-page-border-strong text-primary-foreground font-semibold px-3 py-1 text-xs">
+                    {t('pricing.starter.credits')}
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-6 text-left flex-1">
+                  {starterFeatures.map((f, i) => <div key={i}>{renderFeature(f, 'accent')}</div>)}
+                  {renderExcludedFeature(t('pricing.distributionExcluded'))}
+                </div>
+
+                <Button
+                  className={`w-full font-semibold rounded-full bg-primary-foreground/95 hover:bg-primary-foreground text-primary py-3.5 text-sm md:text-base shadow-lg ${ctaBuy.className}`}
+                  disabled={loadingPlan !== null}
+                  onClick={() => {
+                    trackSignupCtaClick('pricing_annual_starter', '/login?tab=register');
+                    trackABClick('pricing_cta_buy', ctaBuy.variantIndex, ctaBuy.text);
+                    handleCheckout(STARTER_ANNUAL.planId);
+                  }}
+                >
+                  {loadingPlan === STARTER_ANNUAL.planId ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : null}
+                  {t('pricing.starter.cta')}
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </CardContent>
