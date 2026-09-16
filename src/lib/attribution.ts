@@ -140,6 +140,38 @@ export function captureAttribution(): void {
   }
 }
 
+/** Guarda el origen del usuario recien registrado cuando el alta no pudo
+ *  llevarlo en los metadatos (por ejemplo, entrando con Google). Se ejecuta
+ *  una sola vez por usuario: si ya existe ficha de origen, no hace nada.
+ *  Fire-and-forget: nunca bloquea ni lanza errores. */
+export async function ensureAttribution(userId: string): Promise<void> {
+  try {
+    const flagKey = `md_attr_synced_${userId}`;
+    if (localStorage.getItem(flagKey)) return;
+    localStorage.setItem(flagKey, '1');
+
+    const attr = getAttribution();
+    const host = attr?.referrer?.match(/^[a-z]+:\/\/([^/:]+)/i)?.[1]?.toLowerCase() ?? '';
+    const isSearch = /(google|bing|yahoo|duckduckgo|ecosia|yandex)\./.test(host);
+
+    const { supabase } = await import('@/integrations/supabase/client');
+    await supabase.from('user_attribution').insert({
+      user_id: userId,
+      first_source: attr?.utm_source || (attr?.gclid ? 'google' : '') || host || 'directo',
+      first_medium: attr?.utm_medium || (attr?.gclid ? 'cpc' : '') ||
+        (isSearch ? 'organic' : host ? 'referral' : 'none'),
+      first_campaign: attr?.utm_campaign ?? null,
+      first_content: attr?.utm_content ?? null,
+      first_term: attr?.utm_term ?? null,
+      first_referrer: attr?.referrer ?? null,
+      first_landing_path: attr?.landing_path ?? null,
+      attributed_campaign_name: attr?.utm_campaign ?? (attr?.gclid ? 'Google Ads (gclid)' : null),
+    });
+  } catch {
+    /* ya existia o no se pudo guardar: nunca bloquea el flujo */
+  }
+}
+
 /** Clear stored attribution (e.g. after successful registration + save) */
 export function clearAttribution(): void {
   localStorage.removeItem(STORAGE_KEY);
