@@ -198,7 +198,7 @@ const resources = {
           ],
           monthly: [
             'Crea y edita hasta 8 canciones con IA',
-            'Producción musical con IA',
+            
             'Remasteriza hasta 1 canción con IA',
             'Registra y protege hasta 8 canciones (con blockchain)',
             'Crea portadas y videoclips para tus RRSS',
@@ -841,7 +841,7 @@ const resources = {
           ],
           monthly: [
             'Create and edit up to 8 songs with AI',
-            'AI music production',
+            
             'Remaster up to 1 song with AI',
             'Register and protect up to 8 songs (with blockchain)',
             'Create covers and videoclips for your social media',
@@ -1438,7 +1438,7 @@ const resources = {
           ],
           monthly: [
             'Crie e edite até 8 músicas com IA',
-            'Produção musical com IA',
+            
             'Remasterize até 1 música com IA',
             'Registre e proteja até 8 músicas (com blockchain)',
             'Crie capas e videoclipes para suas redes sociais',
