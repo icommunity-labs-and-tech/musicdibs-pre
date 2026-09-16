@@ -193,7 +193,6 @@ const resources = {
             'Registra y protege hasta 100 canciones (con blockchain)',
             'Distribución GRATUITA e ILIMITADA en +220 plataformas (100% de tus royalties)',
             'Promociona tus creaciones en nuestras RRSS',
-            'Herramientas de promoción',
             'Soporte prioritario',
           ],
           monthly: [
@@ -837,7 +836,6 @@ const resources = {
             'Copyright registration (with blockchain)',
             'Global distribution included on 220+ platforms',
             '100% of your royalties',
-            'Promotion tools',
             'Priority support',
           ],
           monthly: [
@@ -1435,7 +1433,6 @@ const resources = {
             'Registro de direitos autorais (com blockchain)',
             'Distribuição global incluída em mais de 220 plataformas',
             '100% dos seus royalties',
-            'Ferramentas de promoção',
             'Suporte prioritário',
           ],
           monthly: [
