@@ -44,7 +44,7 @@ const es = {
       title: 'Facturación',
       currentPlan: 'Plan actual',
       planFree: 'Free',
-      planMonthly: 'Mensual',
+      planMonthly: 'Básico (mensual)',
       planAnnual: 'Anual',
       noSubscription: 'Sin suscripción activa',
       renewalMonthly: 'Renovación mensual',
