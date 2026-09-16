@@ -189,18 +189,29 @@ export const PricingSection = () => {
   const starterFeatures = t('pricing.features.starter', { returnObjects: true }) as string[];
   const annualFeatures = t('pricing.features.annual', { returnObjects: true }) as string[];
 
-  const renderFeature = (text: string, tone: 'plain' | 'accent' = 'plain') => (
+  // Bullet de distribución del plan Artist Pro — resaltado especial.
+  const DISTRIBUTION_INCLUDED_PATTERN =
+    /(100% de tus royalties|100% of your royalties|100% dos seus royalties)/;
+  const isDistributionFeature = (text: string) => DISTRIBUTION_INCLUDED_PATTERN.test(text);
+
+  const renderFeature = (text: string, tone: 'plain' | 'accent' | 'highlight' = 'plain') => (
     <div className="flex items-start space-x-3">
       <div
         className={`w-5 h-5 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0 ${
-          tone === 'accent'
-            ? 'bg-success ring-2 ring-success/40 shadow-[0_0_10px_rgba(74,222,128,0.45)]'
-            : 'bg-primary-foreground/90'
+          tone === 'highlight'
+            ? 'bg-warning ring-2 ring-warning/50 shadow-[0_0_12px_rgba(250,204,21,0.55)]'
+            : tone === 'accent'
+              ? 'bg-success ring-2 ring-success/40 shadow-[0_0_10px_rgba(74,222,128,0.45)]'
+              : 'bg-primary-foreground/90'
         }`}
       >
-        <Check className={`w-3 h-3 ${tone === 'accent' ? 'text-success' : 'text-slate-700'}`} strokeWidth={3} />
+        {tone === 'highlight' ? (
+          <Star className="w-3 h-3 fill-brand text-brand" strokeWidth={3} />
+        ) : (
+          <Check className={`w-3 h-3 ${tone === 'accent' ? 'text-success' : 'text-slate-700'}`} strokeWidth={3} />
+        )}
       </div>
-      <span className="text-sm leading-relaxed text-page-fg">{text}</span>
+      <span className={`text-sm leading-relaxed text-page-fg ${tone === 'highlight' ? 'font-semibold' : ''}`}>{text}</span>
     </div>
   );
 
@@ -325,7 +336,7 @@ export const PricingSection = () => {
                 </div>
 
                 <div className="space-y-2.5 mb-4 text-left flex-1">
-                  {annualFeatures.map((f, i) => <div key={i}>{renderFeature(f, 'accent')}</div>)}
+                  {annualFeatures.map((f, i) => <div key={i}>{renderFeature(f, isDistributionFeature(f) ? 'highlight' : 'accent')}</div>)}
                 </div>
 
                 <Button
