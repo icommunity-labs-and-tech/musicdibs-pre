@@ -7,10 +7,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// MailerLite groups: "Registrados (No compra)"
+// MailerLite groups: "Sin créditos" por idioma (registrados sin compra).
+// 2026-09-16: los IDs ES/EN anteriores ya no existian en la cuenta.
 const ML_GROUPS_NO_PURCHASE: Record<"ES" | "EN" | "BR", string> = {
-  ES: "180552557100270838",
-  EN: "180552563766068699",
+  ES: "184095888770073830",
+  EN: "184095891299239754",
   BR: "184095895331013822",
 };
 
