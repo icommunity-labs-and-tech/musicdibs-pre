@@ -126,17 +126,18 @@ async function addToMailerLite(email: string, name: string, lang: "ES" | "EN" | 
     console.log("[LANDING-LEAD] MAILERLITE_API_KEY not set, skipping ML");
     return false;
   }
-  const groupId = ML_GROUPS_NO_PURCHASE[lang];
+  const groups = [ML_GROUPS_LEADS[lang], ML_GROUPS_ALL[lang]];
   try {
     const res = await fetch("https://connect.mailerlite.com/api/subscribers", {
       method: "POST",
       headers: { Authorization: `Bearer ${ML_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ email, name, groups: [groupId], status: "active", fields }),
+      body: JSON.stringify({ email, name, groups, status: "active", fields }),
     });
     if (!res.ok) {
       console.error(`[LANDING-LEAD] ML error ${res.status}`, (await res.text()).slice(0, 300));
       return false;
     }
+    console.log(`[LANDING-LEAD] ML ok (${lang}) groups=${groups.join(",")}`);
     return true;
   } catch (e) {
     console.error("[LANDING-LEAD] ML exception", String(e));
