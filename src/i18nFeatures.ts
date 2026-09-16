@@ -128,7 +128,7 @@ const COPY_ES = {
     subtitle: "Más de 100.000 artistas ya usan Musicdibs. Empieza gratis y escala cuando quieras.",
     ctaPrimary: "Crear cuenta gratis",
     ctaSecondary: "Ver preguntas frecuentes",
-    footnote: "Desde €6,90/mes · Sin permanencia · 3 créditos gratis al registrarte",
+    footnote: "Desde €6,90/mes · Sin permanencia · 1 crédito gratis al registrarte",
   },
 };
 
@@ -257,7 +257,7 @@ const COPY_EN: FeaturesCopy = {
     subtitle: "Over 100,000 artists already use Musicdibs. Start for free and scale whenever you want.",
     ctaPrimary: "Create free account",
     ctaSecondary: "See FAQ",
-    footnote: "From €6.90/month · No commitment · 3 free credits when you sign up",
+    footnote: "From €6.90/month · No commitment · 1 free credit when you sign up",
   },
 };
 
@@ -386,7 +386,7 @@ const COPY_PT: FeaturesCopy = {
     subtitle: "Mais de 100.000 artistas já usam a Musicdibs. Comece grátis e escale quando quiser.",
     ctaPrimary: "Criar conta grátis",
     ctaSecondary: "Ver perguntas frequentes",
-    footnote: "A partir de €6,90/mês · Sem fidelidade · 3 créditos grátis ao se cadastrar",
+    footnote: "A partir de €6,90/mês · Sem fidelidade · 1 crédito grátis ao se cadastrar",
   },
 };
 
