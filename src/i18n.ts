@@ -172,7 +172,7 @@ const resources = {
         annualPerCredit: '{{price}} / crédito',
         creditsMonthly: '8 créditos al mes',
         annualMonthlyEquivalent: 'Solo {{price}} al mes',
-        distributionExcluded: 'Distribución musical no incluida',
+        distributionExcluded: 'Distribución GRATUITA e ILIMITADA en +220 plataformas',
         briefAnnual: 'Todo lo que necesitas para crear, proteger y lanzar tu música.',
         briefMonthly: 'Prueba Musicdibs sin compromisos.',
         excludedTitle: 'No incluido en el plan mensual',
