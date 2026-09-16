@@ -214,7 +214,6 @@ const resources = {
             'Remasteriza hasta 3 canciones con IA',
             'Registra y protege hasta 20 canciones (con blockchain)',
             'Crea portadas y videoclips para tus RRSS',
-            'Herramientas creativas',
           ],
         },
         starter: {
@@ -858,7 +857,6 @@ const resources = {
             'Remaster up to 3 songs with AI',
             'Register and protect up to 20 songs (with blockchain)',
             'Create covers and videoclips for your social media',
-            'Creative tools',
           ],
         },
         starter: {
@@ -1456,7 +1454,6 @@ const resources = {
             'Remasterize até 3 músicas com IA',
             'Registre e proteja até 20 músicas (com blockchain)',
             'Crie capas e videoclipes para suas redes sociais',
-            'Ferramentas criativas',
           ],
         },
         starter: {
