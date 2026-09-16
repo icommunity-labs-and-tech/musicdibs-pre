@@ -1718,6 +1718,34 @@ const AIStudioCreate = () => {
                         </Alert>
                       )}
 
+              <Dialog open={!!registerPrompt} onOpenChange={(open) => { if (!open) setRegisterPrompt(null); }}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <ShieldCheck className="h-5 w-5 text-primary" />
+                      {t('aiCreate.registerPromptTitle')}
+                    </DialogTitle>
+                    <DialogDescription>{t('aiCreate.registerPromptDesc')}</DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter className="gap-2 sm:gap-2">
+                    <Button variant="outline" onClick={() => setRegisterPrompt(null)}>
+                      {t('aiCreate.registerPromptLater')}
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const target = registerPrompt;
+                        setRegisterPrompt(null);
+                        if (target) registerAsWork(target);
+                      }}
+                      className="gap-2"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      {t('aiCreate.registerPromptCta')}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               {contentWarning && (
                 <ContentWarningDialog
                   open
