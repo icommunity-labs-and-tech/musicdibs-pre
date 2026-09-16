@@ -19,7 +19,7 @@ import {
 import {
   Gift, Copy, Check, Users, Coins, AlertTriangle, ChevronDown, Share2, Loader2,
 } from 'lucide-react';
-import { ANNUAL_TIER_CREDITS } from '@/lib/planLabel';
+import { ANNUAL_TIER_CREDITS, planDisplayName } from '@/lib/planLabel';
 import { toast } from 'sonner';
 
 interface ReferralRow {
@@ -100,8 +100,9 @@ export function ReferralsSection() {
 
   const tierLabel = (tier: string) => {
     const credits = ANNUAL_TIER_CREDITS[tier];
-    if (credits) return `${credits} ${tr('dashboard.billing.creditsLabel', 'créditos')}/año`;
-    return tier;
+    const name = planDisplayName(null, tier);
+    if (credits) return `${name} · ${credits} ${tr('dashboard.billing.creditsLabel', 'créditos')}/año`;
+    return name;
   };
 
   if (loading) {

@@ -15,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowLeft, Pencil, Save, Upload, Search, Link2, Unlink, CheckCircle2, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { planDisplayName } from '@/lib/planLabel';
 
 const REP_LABELS: Record<string, string> = { full: 'Completa', registration: 'Solo registro', distribution: 'Solo distribución' };
 const STATUS_LABELS: Record<string, string> = { processing: 'Procesando', registered: 'Registrada', certified: 'Registrada', failed: 'Fallida' };
@@ -239,7 +240,7 @@ export default function ManagerArtistDetail() {
                     <div className="flex items-center justify-between p-3 rounded-lg border border-primary/30 bg-primary/5">
                       <div>
                         <p className="text-sm font-medium">{searchResult.display_name}</p>
-                        <p className="text-xs text-muted-foreground">{searchResult.email} · Plan {searchResult.subscription_plan}</p>
+                        <p className="text-xs text-muted-foreground">{searchResult.email} · Plan {planDisplayName(searchResult.subscription_plan)}</p>
                       </div>
                       <Button size="sm" onClick={() => handleLinkUser(searchResult.user_id)} disabled={linking}>
                         <Link2 className="h-4 w-4 mr-1" /> {linking ? 'Vinculando...' : 'Vincular'}

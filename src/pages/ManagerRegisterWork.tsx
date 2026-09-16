@@ -17,6 +17,7 @@ import { AlertTriangle, Upload, Search, Link2, X, FileUp, Plus } from 'lucide-re
 import { SignatureSelector } from '@/components/dashboard/register/SignatureSelector';
 import { Skeleton } from '@/components/ui/skeleton';
 import { buildWorksFilePath, assertWorksPathBelongsToUser } from '@/lib/worksStoragePath';
+import { planDisplayName } from '@/lib/planLabel';
 
 const WORK_TYPES = [
   { value: 'audio', label: 'Canción' },
@@ -304,7 +305,7 @@ export default function ManagerRegisterWork() {
                       <div className="flex items-center justify-between bg-muted/50 rounded-md p-3">
                         <div>
                           <p className="text-sm font-medium">{linkResult.display_name}</p>
-                          <p className="text-xs text-muted-foreground">{linkResult.email} · {linkResult.subscription_plan}</p>
+                          <p className="text-xs text-muted-foreground">{linkResult.email} · {planDisplayName(linkResult.subscription_plan)}</p>
                         </div>
                         <Button type="button" size="sm" onClick={handleLinkAccount}>
                           <Link2 className="h-4 w-4 mr-1" /> Vincular
