@@ -167,12 +167,18 @@ export const PricingSection = () => {
     [selectedAnnualPlanId]
   );
 
+  // Precio mensual equivalente: redondeo hacia abajo a 2 decimales
+  // (59,90 € / 12 → 4,99 €; 19,90 € / 12 → 1,65 €) para no anunciar
+  // céntimos por encima del cobro real anual.
+  const floor2 = (n: number) => Math.floor(n * 100) / 100;
+
   const prices = useMemo(() => ({
     monthly: formatPrice(BASE_PRICES.monthly, lang),
     individual: formatPrice(BASE_PRICES.individual, lang),
     starter: formatPrice(STARTER_ANNUAL.priceEur, lang),
     annual: formatPrice(selectedAnnual.priceEur, lang),
-    annualMonthly: formatPrice(selectedAnnual.priceEur / 12, lang),
+    annualMonthly: formatPrice(floor2(selectedAnnual.priceEur / 12), lang),
+    starterMonthly: formatPrice(floor2(STARTER_ANNUAL.priceEur / 12), lang),
     annualPerCredit: formatPrice(selectedAnnual.pricePerCreditEur, lang),
   }), [lang, selectedAnnual]);
 
@@ -300,12 +306,12 @@ export const PricingSection = () => {
                     {t('pricing.briefAnnual')}
                   </p>
 
-                  <div className="text-5xl md:text-6xl font-bold mb-2">
-                    {prices.annual}
-                    <span className="text-xl font-normal">{t("pricing.priceAnnualSuffix")}</span>
+                  <div className="text-5xl md:text-6xl font-bold mb-1">
+                    {prices.annualMonthly}
+                    <span className="text-xl font-normal">{t("pricing.priceMonthlySuffix")}</span>
                   </div>
-                  <p className="mb-2 text-sm font-semibold text-page-fg">
-                    {t('pricing.annualMonthlyEquivalent', { price: prices.annualMonthly })}
+                  <p className="mb-2 text-sm text-page-fg">
+                    {t('pricing.annualSinglePayment', { price: prices.annual })}
                   </p>
                   <div className="inline-flex items-center gap-1.5 rounded-full bg-page-surface-strong backdrop-blur-sm border border-primary-foreground/40 text-primary-foreground font-semibold px-4 py-1.5 text-sm">
                     <Sparkles className="w-4 h-4" />
@@ -367,10 +373,13 @@ export const PricingSection = () => {
                   <p className="text-page-fg-muted text-xs md:text-sm mb-4">
                     {t('pricing.starter.brief')}
                   </p>
-                  <div className="text-4xl md:text-5xl font-bold mb-2">
-                    {prices.starter}
-                    <span className="text-lg font-normal">{t("pricing.priceAnnualSuffix")}</span>
+                  <div className="text-4xl md:text-5xl font-bold mb-1">
+                    {prices.starterMonthly}
+                    <span className="text-lg font-normal">{t("pricing.priceMonthlySuffix")}</span>
                   </div>
+                  <p className="mb-2 text-xs md:text-sm text-page-fg-muted">
+                    {t('pricing.annualSinglePayment', { price: prices.starter })}
+                  </p>
                   <div className="inline-block rounded-full bg-page-surface-strong backdrop-blur-sm border border-page-border-strong text-primary-foreground font-semibold px-3 py-1 text-xs">
                     {t('pricing.starter.credits')}
                   </div>
