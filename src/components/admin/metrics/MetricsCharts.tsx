@@ -227,7 +227,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
                   <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
                   <Bar dataKey="annual" stackId="a" fill="hsl(262, 83%, 58%)" name="Creator / Artist Pro" />
-                  <Bar dataKey="monthly" stackId="a" fill="hsl(217, 91%, 60%)" name="Básico" />
+                  <Bar dataKey="monthly" stackId="a" fill="hsl(217, 91%, 60%)" name="Starter" />
                   <Bar dataKey="single" stackId="a" fill="hsl(142, 76%, 36%)" name="Single" />
                   <Bar dataKey="topup" stackId="a" fill="hsl(38, 92%, 50%)" name="Topup" />
                 </BarChart>
@@ -269,7 +269,7 @@ export default function MetricsCharts({ metrics, periodType = 'month' }: Metrics
         <CardContent>
           <div className="space-y-4">
             <RevenueBar label="Creator / Artist Pro" value={m.revenueAnnual ?? 0} percent={periodRevenue > 0 ? Math.round(((m.revenueAnnual ?? 0) / periodRevenue) * 100) : 0} gradient="from-accent to-primary" />
-            <RevenueBar label="Básico" value={m.revenueMonthly ?? 0} percent={periodRevenue > 0 ? Math.round(((m.revenueMonthly ?? 0) / periodRevenue) * 100) : 0} gradient="from-info to-info" />
+            <RevenueBar label="Starter" value={m.revenueMonthly ?? 0} percent={periodRevenue > 0 ? Math.round(((m.revenueMonthly ?? 0) / periodRevenue) * 100) : 0} gradient="from-info to-info" />
             <RevenueBar label="Singles / Topups" value={(m.revenueSingle ?? 0) + (m.revenueTopup ?? 0)} percent={periodRevenue > 0 ? Math.round((((m.revenueSingle ?? 0) + (m.revenueTopup ?? 0)) / periodRevenue) * 100) : 0} gradient="from-success to-info" sub="Compras únicas" />
           </div>
 
