@@ -16,6 +16,12 @@ export const ANNUAL_TIER_CREDITS: Record<string, number> = {
  * - Monthly   → "Mensual"
  * - Annual    → "Anual · 200 créditos/año" (when tier is known)
  */
+// Annual tier → commercial plan name shown across dashboard and admin
+export const ANNUAL_TIER_NAMES: Record<string, string> = {
+  annual_20: 'Creator',
+  annual_100: 'Artist Pro',
+};
+
 export function formatPlanLabel(
   plan: string | null | undefined,
   tier: string | null | undefined,
@@ -23,9 +29,10 @@ export function formatPlanLabel(
 ): string {
   const p = plan || 'Free';
   if (p === 'Free') return t('dashboard.billing.planFree', { defaultValue: 'Free' });
-  if (p === 'Monthly') return t('dashboard.billing.planMonthly', { defaultValue: 'Mensual' });
+  if (p === 'Monthly') return t('dashboard.billing.planMonthly', { defaultValue: 'Básico' });
   if (p === 'Annual') {
-    const base = t('dashboard.billing.planAnnual', { defaultValue: 'Anual' });
+    const base = (tier ? ANNUAL_TIER_NAMES[tier] : undefined)
+      ?? t('dashboard.billing.planAnnual', { defaultValue: 'Anual' });
     const credits = tier ? ANNUAL_TIER_CREDITS[tier] : undefined;
     if (credits) {
       const creditsLabel = t('dashboard.billing.creditsLabel', { defaultValue: 'créditos' });
@@ -33,5 +40,26 @@ export function formatPlanLabel(
     }
     return base;
   }
+  return p;
+}
+
+/**
+ * Commercial plan name for badges and admin tables (language-neutral).
+ * Free → "Free", Monthly → "Básico", Annual+tier → "Creator" / "Artist Pro" / "Anual 200".
+ */
+export function planDisplayName(
+  plan: string | null | undefined,
+  tier?: string | null,
+): string {
+  if (tier && tier.trim() !== '') {
+    const named = ANNUAL_TIER_NAMES[tier];
+    if (named) return named;
+    const credits = ANNUAL_TIER_CREDITS[tier];
+    if (credits) return `Anual ${credits}`;
+    return tier.charAt(0).toUpperCase() + tier.slice(1).replace(/_/g, ' ');
+  }
+  const p = plan || 'Free';
+  if (p === 'Monthly') return 'Básico';
+  if (p === 'Annual') return 'Anual';
   return p;
 }
