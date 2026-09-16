@@ -1792,7 +1792,7 @@ const pt: typeof es = {
       title: 'Faturamento',
       currentPlan: 'Plano atual',
       planFree: 'Free',
-      planMonthly: 'Mensal',
+      planMonthly: 'Básico (mensal)',
       planAnnual: 'Anual',
       noSubscription: 'Sem assinatura ativa',
       renewalMonthly: 'Renovação mensal',
