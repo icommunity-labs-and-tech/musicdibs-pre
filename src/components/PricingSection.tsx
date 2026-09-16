@@ -246,6 +246,7 @@ export const PricingSection = () => {
                 </div>
                 <div className="space-y-2.5 mb-6 text-left flex-1">
                   {monthlyFeatures.map((f, i) => <div key={i}>{renderFeature(f)}</div>)}
+                  {renderExcludedFeature(t('pricing.distributionExcluded'))}
                 </div>
                 <Button
                   className="w-full font-semibold rounded-full bg-page-surface hover:bg-page-surface-strong text-primary-foreground border border-page-border-strong py-3 text-sm"
