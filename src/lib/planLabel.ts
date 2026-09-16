@@ -20,6 +20,10 @@ export const ANNUAL_TIER_CREDITS: Record<string, number> = {
 export const ANNUAL_TIER_NAMES: Record<string, string> = {
   annual_20: 'Creator',
   annual_100: 'Artist Pro',
+  annual_200: 'Artist Pro',
+  annual_300: 'Artist Pro',
+  annual_500: 'Artist Pro',
+  annual_1000: 'Artist Pro',
 };
 
 export function formatPlanLabel(
