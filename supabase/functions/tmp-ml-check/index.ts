@@ -8,6 +8,20 @@ serve(async (req: Request) => {
   }
   const ML_KEY = Deno.env.get("MAILERLITE_API_KEY")!;
   const { emails } = await req.json() as { emails: string[] };
+  if (!emails?.length) {
+    const g = await fetch("https://connect.mailerlite.com/api/groups?limit=200", {
+      headers: { Authorization: `Bearer ${ML_KEY}`, Accept: "application/json" },
+    });
+    const gd = await g.json();
+    const f = await fetch("https://connect.mailerlite.com/api/fields?limit=200", {
+      headers: { Authorization: `Bearer ${ML_KEY}`, Accept: "application/json" },
+    });
+    const fd = await f.json();
+    return new Response(JSON.stringify({
+      groups: (gd.data || []).map((x: { id: string; name: string }) => `${x.id}:${x.name}`),
+      fields: (fd.data || []).map((x: { key: string; type: string }) => `${x.key}:${x.type}`),
+    }, null, 2), { headers: { "Content-Type": "application/json" } });
+  }
   const out: Record<string, unknown> = {};
   for (const email of emails) {
     const res = await fetch(
