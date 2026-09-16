@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { CancellationSurveyModal } from './CancellationSurveyModal';
 import { useCheckout } from '@/hooks/useCheckout';
 import { getAttributionForCheckout } from '@/lib/attribution';
+import { ANNUAL_TIER_NAMES } from '@/lib/planLabel';
 
 type StripePlan = {
   planId: string;
@@ -246,11 +247,7 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
                   </SelectTrigger>
                   <SelectContent>
                     {annualOptions.map(o => {
-                      const planName = o.planId === 'annual_20'
-                        ? 'Creator'
-                        : o.planId === 'annual_100'
-                          ? 'Artist Pro'
-                          : null;
+                      const planName = ANNUAL_TIER_NAMES[o.planId] ?? null;
                       return (
                         <SelectItem key={o.planId} value={o.planId}>
                           {planName ? `${planName} · ` : ''}
