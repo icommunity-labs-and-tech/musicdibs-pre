@@ -191,7 +191,7 @@ const resources = {
             'Todo el AI Music Studio',
             'Producción y masterización profesional',
             'Registro de derechos de autor (con blockchain)',
-            'Distribución global incluida en +220 plataformas',
+            'Distribución GRATUITA e ILIMITADA en +220 plataformas',
             '100% de tus royalties',
             'Herramientas de promoción',
             'Soporte prioritario',
