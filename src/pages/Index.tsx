@@ -115,7 +115,7 @@ const Index = () => {
             offers: [
               {
                 "@type": "Offer",
-                name: "Básico",
+                name: "Starter",
                 price: "6.90",
                 priceCurrency: "EUR",
                 availability: "https://schema.org/InStock"

@@ -550,7 +550,7 @@ export default function AdminProductMetrics() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {[
                       { label: "Creator / Artist Pro (anual)", data: cancellationCharts.annual, total: cancellationCharts.totalAnnual },
-                      { label: "Básico (mensual)", data: cancellationCharts.monthly, total: cancellationCharts.totalMonthly },
+                      { label: "Starter (mensual)", data: cancellationCharts.monthly, total: cancellationCharts.totalMonthly },
                     ].map((plan) => (
                       <div key={plan.label}>
                         <div className="flex items-center gap-2 mb-2">

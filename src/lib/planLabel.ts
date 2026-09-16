@@ -33,7 +33,7 @@ export function formatPlanLabel(
 ): string {
   const p = plan || 'Free';
   if (p === 'Free') return t('dashboard.billing.planFree', { defaultValue: 'Free' });
-  if (p === 'Monthly') return t('dashboard.billing.planMonthly', { defaultValue: 'Básico' });
+  if (p === 'Monthly') return t('dashboard.billing.planMonthly', { defaultValue: 'Starter' });
   if (p === 'Annual') {
     const base = (tier ? ANNUAL_TIER_NAMES[tier] : undefined)
       ?? t('dashboard.billing.planAnnual', { defaultValue: 'Anual' });
@@ -49,7 +49,7 @@ export function formatPlanLabel(
 
 /**
  * Commercial plan name for badges and admin tables (language-neutral).
- * Free → "Free", Monthly → "Básico", Annual+tier → "Creator" / "Artist Pro" / "Anual 200".
+ * Free → "Free", Monthly → "Starter", Annual+tier → "Creator" / "Artist Pro" / "Anual 200".
  */
 export function planDisplayName(
   plan: string | null | undefined,
@@ -63,7 +63,7 @@ export function planDisplayName(
     return tier.charAt(0).toUpperCase() + tier.slice(1).replace(/_/g, ' ');
   }
   const p = plan || 'Free';
-  if (p === 'Monthly') return 'Básico';
+  if (p === 'Monthly') return 'Starter';
   if (p === 'Annual') return 'Anual';
   return p;
 }
