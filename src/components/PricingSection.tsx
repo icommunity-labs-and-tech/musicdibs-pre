@@ -292,8 +292,8 @@ export const PricingSection = () => {
             >
               {/* Badge superior grande */}
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                <div className="inline-flex items-center gap-1.5 bg-warning text-brand font-extrabold text-xs md:text-sm px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
-                  <Star className="w-4 h-4 fill-pink-800" />
+                <div className="inline-flex items-center gap-1.5 bg-warning text-brand-foreground font-extrabold text-xs md:text-sm px-4 py-2 rounded-full shadow-lg whitespace-nowrap">
+                  <Star className="w-4 h-4 fill-brand-foreground" />
                   {t('pricing.starter.badge')}
                 </div>
               </div>
