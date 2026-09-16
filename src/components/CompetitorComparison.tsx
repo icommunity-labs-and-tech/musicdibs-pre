@@ -55,7 +55,7 @@ const COPY: Record<Lang, Block> = {
         competitorName: "Copyright.gov",
         rows: [
           { label: "Time to register", icon: Clock, musicdibs: { value: "Under 5 minutes", positive: true }, competitor: { value: "3 to 12 months" } },
-          { label: "Cost per work", icon: DollarSign, musicdibs: { value: "From €2.99", positive: true }, competitor: { value: "$45+" } },
+          { label: "Cost per work", icon: DollarSign, musicdibs: { value: "From €0.60", positive: true }, competitor: { value: "$45+" } },
           { label: "International coverage", icon: Globe, musicdibs: { value: "180+ countries (Berne)", positive: true }, competitor: { value: "USA primarily" } },
           { label: "Public verification", icon: Link2, musicdibs: { value: "One-click online", positive: true }, competitor: { value: "Mail / in person" } },
         ],
@@ -91,7 +91,7 @@ const COPY: Record<Lang, Block> = {
         competitorName: "Songtrust",
         rows: [
           { label: "Proof of authorship", icon: ShieldCheck, musicdibs: { value: "Blockchain certificate", positive: true }, competitor: { value: "No (royalty admin only)" } },
-          { label: "Setup cost", icon: DollarSign, musicdibs: { value: "From €2.99 / work", positive: true }, competitor: { value: "$100 one-time" } },
+          { label: "Setup cost", icon: DollarSign, musicdibs: { value: "From €0.60 / work", positive: true }, competitor: { value: "$100 one-time" } },
           { label: "Royalty collection", icon: Check, musicdibs: { value: "Via partners", positive: true }, competitor: { value: "Yes (15% commission)" } },
           { label: "Time to active proof", icon: Clock, musicdibs: { value: "Minutes", positive: true }, competitor: { value: "Weeks" } },
         ],
@@ -115,7 +115,7 @@ const COPY: Record<Lang, Block> = {
         competitorName: "Copyright.gov",
         rows: [
           { label: "Tiempo de registro", icon: Clock, musicdibs: { value: "Menos de 5 minutos", positive: true }, competitor: { value: "3 a 12 meses" } },
-          { label: "Coste por obra", icon: DollarSign, musicdibs: { value: "Desde 2,99 €", positive: true }, competitor: { value: "Desde 45 $" } },
+          { label: "Coste por obra", icon: DollarSign, musicdibs: { value: "Desde 0,60 €", positive: true }, competitor: { value: "Desde 45 $" } },
           { label: "Cobertura internacional", icon: Globe, musicdibs: { value: "+180 países (Berna)", positive: true }, competitor: { value: "Principalmente EE. UU." } },
           { label: "Verificación pública", icon: Link2, musicdibs: { value: "Online, un clic", positive: true }, competitor: { value: "Por correo o presencial" } },
         ],
@@ -151,7 +151,7 @@ const COPY: Record<Lang, Block> = {
         competitorName: "Songtrust",
         rows: [
           { label: "Prueba de autoría", icon: ShieldCheck, musicdibs: { value: "Certificado blockchain", positive: true }, competitor: { value: "No (solo regalías)" } },
-          { label: "Coste inicial", icon: DollarSign, musicdibs: { value: "Desde 2,99 € / obra", positive: true }, competitor: { value: "100 $ pago único" } },
+          { label: "Coste inicial", icon: DollarSign, musicdibs: { value: "Desde 0,60 € / obra", positive: true }, competitor: { value: "100 $ pago único" } },
           { label: "Cobro de regalías", icon: Check, musicdibs: { value: "Vía partners", positive: true }, competitor: { value: "Sí (15% comisión)" } },
           { label: "Tiempo a prueba activa", icon: Clock, musicdibs: { value: "Minutos", positive: true }, competitor: { value: "Semanas" } },
         ],

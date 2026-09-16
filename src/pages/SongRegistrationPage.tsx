@@ -21,7 +21,7 @@ const COPY: Record<Lang, {
 }> = {
   es: {
     seoTitle: "Registro de Obras Musicales en Blockchain",
-    seoDesc: "Registra tus canciones con certificación blockchain en minutos. Prueba legal de autoría válida en España y +60 países. Desde 2,99 €.",
+    seoDesc: "Registra tus canciones con certificación blockchain en minutos. Prueba legal de autoría válida en España y +60 países. Desde 0,60 €.",
     badge: "Registro de propiedad intelectual",
     h1: "Registro de obras musicales en blockchain",
     subtitle: "Protege la autoría de tus canciones con un certificado blockchain válido legalmente. Sin papeleo, sin esperas, en menos de 5 minutos.",
@@ -31,21 +31,21 @@ const COPY: Record<Lang, {
     why: [
       { title: "Validez legal internacional", desc: "Certificado reconocido por el Convenio de Berna en más de 180 países, con sello de tiempo blockchain inalterable." },
       { title: "Registro en minutos", desc: "Sube el archivo, paga y recibe tu certificado. No hay listas de espera ni trámites burocráticos." },
-      { title: "Coste imbatible", desc: "Desde 2,99 € por obra. Sin cuotas de mantenimiento ni renovaciones obligatorias." },
+      { title: "Coste imbatible", desc: "Desde 0,60 € por obra. Sin cuotas de mantenimiento ni renovaciones obligatorias." },
       { title: "Prueba técnica indeleble", desc: "Tu obra queda anclada en blockchain con su huella digital única — imposible de falsificar o modificar." },
     ],
     stepsTitle: "Cómo registrar una canción paso a paso",
     steps: [
       { title: "1. Sube el archivo original", desc: "Audio, partitura, letra o vídeo. Aceptamos los formatos más comunes hasta 100 MB por archivo." },
       { title: "2. Identifica autores y participantes", desc: "Indica los compositores, letristas, productores y porcentajes de autoría de cada uno." },
-      { title: "3. Firma y paga", desc: "Confirma con tu firma digital verificada por iBS y completa el pago. Desde 2,99 €." },
+      { title: "3. Firma y paga", desc: "Confirma con tu firma digital verificada por iBS y completa el pago. Desde 0,60 €." },
       { title: "4. Recibe tu certificado blockchain", desc: "En pocos minutos descargas el certificado PDF con hash, timestamp y enlace de verificación pública." },
     ],
     vsTitle: "Registro tradicional vs Musicdibs blockchain",
     vsIntro: "El Registro de la Propiedad Intelectual sigue siendo válido, pero hay alternativas más rápidas y baratas con la misma fuerza probatoria.",
     vsRows: [
       { feature: "Tiempo de registro", trad: "3 a 12 meses", mdb: "Menos de 5 minutos" },
-      { feature: "Coste por obra", trad: "13,80 € + tasas", mdb: "Desde 2,99 €" },
+      { feature: "Coste por obra", trad: "13,80 € + tasas", mdb: "Desde 0,60 €" },
       { feature: "Validez internacional", trad: "Solo España (extensión por convenios)", mdb: "+180 países (Convenio de Berna)" },
       { feature: "Verificación pública", trad: "Solicitud presencial o por correo", mdb: "Instantánea online con un clic" },
       { feature: "Modificación posterior", trad: "Imposible o muy lenta", mdb: "Imposible (inmutable por diseño)" },
@@ -64,7 +64,7 @@ const COPY: Record<Lang, {
   },
   en: {
     seoTitle: "Register Songs on Blockchain — Music Copyright Made Easy",
-    seoDesc: "Register your songs with blockchain-certified proof of authorship in minutes. Legally valid in 180+ countries via the Berne Convention. From €2.99.",
+    seoDesc: "Register your songs with blockchain-certified proof of authorship in minutes. Legally valid in 180+ countries via the Berne Convention. From €0.60.",
     badge: "Intellectual property registration",
     h1: "Register your songs on blockchain",
     subtitle: "Protect your music with legally valid blockchain proof of authorship. No paperwork, no waiting — done in under 5 minutes.",
@@ -74,21 +74,21 @@ const COPY: Record<Lang, {
     why: [
       { title: "International legal validity", desc: "Certificate recognized by the Berne Convention across 180+ countries, with a tamper-proof blockchain timestamp." },
       { title: "Registered in minutes", desc: "Upload the file, pay and get your certificate. No queues, no bureaucracy." },
-      { title: "Unbeatable cost", desc: "From €2.99 per work. No maintenance fees, no mandatory renewals." },
+      { title: "Unbeatable cost", desc: "From €0.60 per work. No maintenance fees, no mandatory renewals." },
       { title: "Indelible technical proof", desc: "Your work is anchored on-chain with its unique digital fingerprint — impossible to forge or alter." },
     ],
     stepsTitle: "How to register a song step by step",
     steps: [
       { title: "1. Upload the original file", desc: "Audio, score, lyrics or video. We accept all common formats up to 100 MB per file." },
       { title: "2. Identify authors and contributors", desc: "List composers, lyricists, producers and the authorship share for each." },
-      { title: "3. Sign and pay", desc: "Confirm with your iBS-verified digital signature and complete payment. From €2.99." },
+      { title: "3. Sign and pay", desc: "Confirm with your iBS-verified digital signature and complete payment. From €0.60." },
       { title: "4. Receive your blockchain certificate", desc: "Within minutes you download the PDF certificate with hash, timestamp and a public verification link." },
     ],
     vsTitle: "Traditional copyright registration vs Musicdibs blockchain",
     vsIntro: "Government copyright offices remain valid, but there are faster and cheaper alternatives with equivalent evidentiary weight.",
     vsRows: [
       { feature: "Registration time", trad: "3 to 12 months", mdb: "Under 5 minutes" },
-      { feature: "Cost per work", trad: "$45+ (USCO) / €13.80+ (EU)", mdb: "From €2.99" },
+      { feature: "Cost per work", trad: "$45+ (USCO) / €13.80+ (EU)", mdb: "From €0.60" },
       { feature: "International validity", trad: "Country-specific (treaties extend it)", mdb: "180+ countries (Berne Convention)" },
       { feature: "Public verification", trad: "By mail or in person", mdb: "Instant online, one click" },
       { feature: "Post-registration changes", trad: "Impossible or very slow", mdb: "Impossible (immutable by design)" },
