@@ -171,8 +171,9 @@ const Index = () => {
             offers: {
               "@type": "AggregateOffer",
               priceCurrency: "EUR",
-              lowPrice: "2.99",
-              highPrice: "9.99",
+              lowPrice: "6.90",
+              highPrice: "59.90",
+
               offerCount: 3
             },
             inLanguage: ["es", "en", "pt-BR"]
