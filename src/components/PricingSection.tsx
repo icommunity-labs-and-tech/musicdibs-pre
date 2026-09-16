@@ -289,7 +289,19 @@ export const PricingSection = () => {
                     {t('pricing.briefAnnual')}
                   </p>
 
-                  <div className="mb-4 text-left">
+                  <div className="text-5xl md:text-6xl font-bold mb-2">
+                    {prices.annual}
+                    <span className="text-xl font-normal">{t("pricing.priceAnnualSuffix")}</span>
+                  </div>
+                  <p className="mb-2 text-sm font-semibold text-page-fg">
+                    {t('pricing.annualMonthlyEquivalent', { price: prices.annualMonthly })}
+                  </p>
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-page-surface-strong backdrop-blur-sm border border-primary-foreground/40 text-primary-foreground font-semibold px-4 py-1.5 text-sm">
+                    <Sparkles className="w-4 h-4" />
+                    {t('pricing.creditsAnnualDynamic', { count: selectedAnnual.credits })}
+                  </div>
+
+                  <div className="mt-4 text-left">
                     <Select
                       value={selectedAnnualPlanId}
                       onValueChange={(v) => setSelectedAnnualPlanId(v as AnnualOption['planId'])}
@@ -309,17 +321,7 @@ export const PricingSection = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="text-5xl md:text-6xl font-bold mb-2">
-                    {prices.annual}
-                    <span className="text-xl font-normal">{t("pricing.priceAnnualSuffix")}</span>
-                  </div>
-                  <p className="mb-2 text-sm font-semibold text-page-fg">
-                    {t('pricing.annualMonthlyEquivalent', { price: prices.annualMonthly })}
-                  </p>
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-page-surface-strong backdrop-blur-sm border border-primary-foreground/40 text-primary-foreground font-semibold px-4 py-1.5 text-sm">
-                    <Sparkles className="w-4 h-4" />
-                    {t('pricing.creditsAnnualDynamic', { count: selectedAnnual.credits })}
-                  </div>
+
                 </div>
 
                 <div className="space-y-2.5 mb-4 text-left flex-1">

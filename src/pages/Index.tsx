@@ -115,26 +115,27 @@ const Index = () => {
             offers: [
               {
                 "@type": "Offer",
-                name: "Essential",
-                price: "2.99",
+                name: "Básico",
+                price: "6.90",
                 priceCurrency: "EUR",
                 availability: "https://schema.org/InStock"
               },
               {
                 "@type": "Offer",
-                name: "Professional",
-                price: "4.99",
+                name: "Creator",
+                price: "19.90",
                 priceCurrency: "EUR",
                 availability: "https://schema.org/InStock"
               },
               {
                 "@type": "Offer",
-                name: "Premium",
-                price: "9.99",
+                name: "Artist Pro",
+                price: "59.90",
                 priceCurrency: "EUR",
                 availability: "https://schema.org/InStock"
               }
             ]
+
           },
           {
             "@context": "https://schema.org",
@@ -170,8 +171,9 @@ const Index = () => {
             offers: {
               "@type": "AggregateOffer",
               priceCurrency: "EUR",
-              lowPrice: "2.99",
-              highPrice: "9.99",
+              lowPrice: "6.90",
+              highPrice: "59.90",
+
               offerCount: 3
             },
             inLanguage: ["es", "en", "pt-BR"]
