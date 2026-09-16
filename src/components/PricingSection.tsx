@@ -257,7 +257,7 @@ export const PricingSection = () => {
                     {prices.monthly}
                     <span className="text-base font-normal">{t("pricing.priceMonthlySuffix")}</span>
                   </div>
-                  <p className="text-xs text-page-fg-muted mb-2">{t("pricing.noCommitment")}</p>
+                  
                   <div className="inline-block rounded-full bg-page-surface text-page-fg-muted px-3 py-1 text-xs font-semibold">
                     {t("pricing.creditsMonthly")}
                   </div>
