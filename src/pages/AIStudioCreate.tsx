@@ -934,6 +934,16 @@ const AIStudioCreate = () => {
 
 
 
+  // ── Invitar a registrar la obra al terminar una generacion (una vez por cancion) ──
+  useEffect(() => {
+    if (!lastResult?.audioUrl) return;
+    const key = `md_regprompt_${lastResult.id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    const timer = setTimeout(() => setRegisterPrompt(lastResult), 1200);
+    return () => clearTimeout(timer);
+  }, [lastResult]);
+
   // ── Regenerate with same params ──
   const handleRegenerate = () => {
     setLastResult(null);
