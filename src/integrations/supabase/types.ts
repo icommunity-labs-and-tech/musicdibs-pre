@@ -4289,6 +4289,18 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      enrich_user_attribution: {
+        Args: {
+          p_campaign?: string
+          p_content?: string
+          p_landing_path?: string
+          p_medium: string
+          p_referrer?: string
+          p_source: string
+          p_term?: string
+        }
+        Returns: undefined
+      }
       get_admin_ai_generation_log_payloads: {
         Args: { p_log_id: string }
         Returns: {
