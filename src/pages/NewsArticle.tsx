@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
@@ -29,6 +30,16 @@ const NewsArticle = () => {
     },
     enabled: !!slug,
   });
+
+  /**
+   * Sanitiza una sola vez por artículo y marca las imágenes del cuerpo como
+   * diferidas (mejora LCP/INP en móvil).
+   */
+  const sanitizedContent = useMemo(() => {
+    if (!post?.content) return "";
+    return DOMPurify.sanitize(post.content)
+      .replace(/<img(?![^>]*\bloading=)/gi, '<img loading="lazy" decoding="async"');
+  }, [post?.content]);
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "";
@@ -159,6 +170,10 @@ const NewsArticle = () => {
                 <img
                   src={post.image_url}
                   alt={post.title}
+                  width={768}
+                  height={400}
+                  fetchPriority="high"
+                  decoding="async"
                   className="w-full rounded-xl mb-8 max-h-[400px] object-cover"
                 />
               )}
@@ -166,7 +181,7 @@ const NewsArticle = () => {
               {post.content ? (
                 <div
                   className="article-content article-content-lg"
-                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
+                  dangerouslySetInnerHTML={{ __html: sanitizedContent }}
                 />
               ) : post.excerpt ? (
                 <p className="text-page-fg-muted text-lg leading-relaxed">
