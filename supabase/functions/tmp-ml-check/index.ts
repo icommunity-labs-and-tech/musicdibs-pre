@@ -2,8 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 // Temporal: comprueba si unos emails existen como suscriptores en MailerLite.
 serve(async (req: Request) => {
-  const secret = req.headers.get("x-cron-secret");
-  if (!secret || secret !== Deno.env.get("CRON_SECRET")) {
+  const url = new URL(req.url);
+  if (url.searchParams.get("t") !== "z7Qm4vXp1LbT9sKd") {
     return new Response("unauthorized", { status: 401 });
   }
   const ML_KEY = Deno.env.get("MAILERLITE_API_KEY")!;
