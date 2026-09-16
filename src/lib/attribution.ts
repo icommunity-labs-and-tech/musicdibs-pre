@@ -111,14 +111,13 @@ export function captureAttribution(): void {
   const coupon = params.get('coupon') || params.get('promo') || undefined;
   const ref = params.get('ref') || undefined;
 
-  // Only store if there's at least one trackable param or external referrer
-  const hasParams = utm_source || utm_medium || utm_campaign || gclid || coupon || ref;
   const referrer = document.referrer && !document.referrer.includes(window.location.hostname)
     ? document.referrer
     : undefined;
 
-  if (!hasParams && !referrer) return;
-
+  // Siempre guardamos el primer contacto, aunque no haya UTMs ni referrer
+  // externo: sin esto, el trafico directo/organico se queda sin origen y no
+  // podemos saber por que pagina entraron los usuarios que acaban registrando.
   const data: AttributionData = {
     utm_source,
     utm_medium,
