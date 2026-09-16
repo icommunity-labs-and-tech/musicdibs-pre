@@ -4,7 +4,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   const secret = req.headers.get('x-admin-secret')
-  if (!secret || secret !== Deno.env.get('CRON_SECRET')) {
+  if (!secret || secret !== Deno.env.get('TMP_STRIPE_ADMIN_TOKEN')) {
     return new Response(JSON.stringify({ error: 'unauthorized' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
