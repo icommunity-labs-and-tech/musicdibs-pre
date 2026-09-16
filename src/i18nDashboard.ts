@@ -918,7 +918,7 @@ const en: typeof es = {
       title: 'Billing',
       currentPlan: 'Current plan',
       planFree: 'Free',
-      planMonthly: 'Monthly',
+      planMonthly: 'Básico (monthly)',
       planAnnual: 'Annual',
       noSubscription: 'No active subscription',
       renewalMonthly: 'Monthly renewal',
