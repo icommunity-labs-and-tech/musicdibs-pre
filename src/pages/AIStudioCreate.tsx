@@ -134,6 +134,9 @@ const AIStudioCreate = () => {
   const [contentWarning, setContentWarning] = useState<AudioContentCheck | null>(null);
   const [isCheckingContent, setIsCheckingContent] = useState(false);
   const [lastResult, setLastResult] = useState<GenerationResult | null>(null);
+  // Invitacion a registrar la obra justo despues de generarla: es el momento
+  // en el que el usuario tiene la cancion delante y mas valor percibido.
+  const [registerPrompt, setRegisterPrompt] = useState<GenerationResult | null>(null);
 
   // ── History & playback state ──
   const [isLoading, setIsLoading] = useState(true);
