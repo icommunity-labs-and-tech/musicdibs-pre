@@ -134,6 +134,9 @@ const AIStudioCreate = () => {
   const [contentWarning, setContentWarning] = useState<AudioContentCheck | null>(null);
   const [isCheckingContent, setIsCheckingContent] = useState(false);
   const [lastResult, setLastResult] = useState<GenerationResult | null>(null);
+  // Invitacion a registrar la obra justo despues de generarla: es el momento
+  // en el que el usuario tiene la cancion delante y mas valor percibido.
+  const [registerPrompt, setRegisterPrompt] = useState<GenerationResult | null>(null);
 
   // ── History & playback state ──
   const [isLoading, setIsLoading] = useState(true);
@@ -931,6 +934,16 @@ const AIStudioCreate = () => {
 
 
 
+  // ── Invitar a registrar la obra al terminar una generacion (una vez por cancion) ──
+  useEffect(() => {
+    if (!lastResult?.audioUrl) return;
+    const key = `md_regprompt_${lastResult.id}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, '1');
+    const timer = setTimeout(() => setRegisterPrompt(lastResult), 1200);
+    return () => clearTimeout(timer);
+  }, [lastResult]);
+
   // ── Regenerate with same params ──
   const handleRegenerate = () => {
     setLastResult(null);
@@ -1704,6 +1717,7 @@ const AIStudioCreate = () => {
                           </AlertDescription>
                         </Alert>
                       )}
+
 
               {contentWarning && (
                 <ContentWarningDialog
@@ -2550,6 +2564,33 @@ const AIStudioCreate = () => {
               }}
             >
               {t('aiCreate.onboardingTipCta', 'Entendido')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!registerPrompt} onOpenChange={(open) => { if (!open) setRegisterPrompt(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+              {t('aiCreate.registerPromptTitle')}
+            </DialogTitle>
+            <DialogDescription>{t('aiCreate.registerPromptDesc')}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setRegisterPrompt(null)}>
+              {t('aiCreate.registerPromptLater')}
+            </Button>
+            <Button
+              onClick={() => {
+                const target = registerPrompt;
+                setRegisterPrompt(null);
+                if (target) registerAsWork(target);
+              }}
+              className="gap-2"
+            >
+              <ShieldCheck className="h-4 w-4" />
+              {t('aiCreate.registerPromptCta')}
             </Button>
           </DialogFooter>
         </DialogContent>

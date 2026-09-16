@@ -123,6 +123,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 m.trackSignupConversion(u.email || undefined),
               );
             }
+
+            // Guardar el origen tambien para las altas que no pasan por el
+            // formulario (Google OAuth): sin esto no sabemos de que campana
+            // o pagina vienen. No bloquea y solo escribe si aun no existe.
+            if (isNewAccount) {
+              void import('@/lib/attribution').then((m) => m.ensureAttribution(u.id));
+            }
           }
 
           // Set loading=true immediately so DashboardLayout shows the spinner
