@@ -14,6 +14,11 @@
 /promocion                              /marketing      301
 /promocion/*                            /marketing      301
 /certification                          /legal-validity 301
+/certification/*                        /verify         301
+/en/certification/*                     /verify         301
+/pt-br/certification/*                  /verify         301
+/dibs-token/*                           /verify         301
+/en/dibs-token/*                        /verify         301
 /verificar-id                           /verify         301
 /verificar-id/*                         /verify         301
 /faq-items/*                            /faq            301
