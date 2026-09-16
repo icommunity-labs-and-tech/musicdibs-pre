@@ -642,14 +642,10 @@ export default function AdminUsersPage() {
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
-                    <Badge variant="outline">{(() => {
-                      const tier = (u as any).subscription_tier as string | null | undefined;
-                      // Guarda: si hay tier, NUNCA dejar que subscription_plan sobrescriba la visualización
-                      if (tier && tier.trim() !== '') {
-                        return tier.charAt(0).toUpperCase() + tier.slice(1).replace(/_/g, ' ');
-                      }
-                      return u.subscription_plan || 'Free';
-                    })()}</Badge>
+                    <Badge variant="outline">{planDisplayName(
+                      u.subscription_plan,
+                      (u as { subscription_tier?: string | null }).subscription_tier,
+                    )}</Badge>
                     {u.payment_grace_expires_at && (
                       new Date(u.payment_grace_expires_at) > new Date()
                         ? <Badge className="bg-warning/20 text-warning border-warning/30 text-xs">⚠️ Gracia hasta {new Date(u.payment_grace_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })}</Badge>
