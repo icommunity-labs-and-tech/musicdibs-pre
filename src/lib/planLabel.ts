@@ -42,3 +42,24 @@ export function formatPlanLabel(
   }
   return p;
 }
+
+/**
+ * Commercial plan name for badges and admin tables (language-neutral).
+ * Free → "Free", Monthly → "Básico", Annual+tier → "Creator" / "Artist Pro" / "Anual 200".
+ */
+export function planDisplayName(
+  plan: string | null | undefined,
+  tier?: string | null,
+): string {
+  if (tier && tier.trim() !== '') {
+    const named = ANNUAL_TIER_NAMES[tier];
+    if (named) return named;
+    const credits = ANNUAL_TIER_CREDITS[tier];
+    if (credits) return `Anual ${credits}`;
+    return tier.charAt(0).toUpperCase() + tier.slice(1).replace(/_/g, ' ');
+  }
+  const p = plan || 'Free';
+  if (p === 'Monthly') return 'Básico';
+  if (p === 'Annual') return 'Anual';
+  return p;
+}
