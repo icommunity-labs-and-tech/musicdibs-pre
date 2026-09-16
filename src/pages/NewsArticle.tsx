@@ -31,6 +31,16 @@ const NewsArticle = () => {
     enabled: !!slug,
   });
 
+  /**
+   * Sanitiza una sola vez por artículo y marca las imágenes del cuerpo como
+   * diferidas (mejora LCP/INP en móvil).
+   */
+  const sanitizedContent = useMemo(() => {
+    if (!post?.content) return "";
+    return DOMPurify.sanitize(post.content)
+      .replace(/<img(?![^>]*\bloading=)/gi, '<img loading="lazy" decoding="async"');
+  }, [post?.content]);
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "";
     return new Date(dateStr).toLocaleDateString("es-ES", {
