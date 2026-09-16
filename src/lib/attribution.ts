@@ -155,20 +155,21 @@ export async function ensureAttribution(userId: string): Promise<void> {
     const isSearch = /(google|bing|yahoo|duckduckgo|ecosia|yandex)\./.test(host);
 
     const { supabase } = await import('@/integrations/supabase/client');
-    await supabase.from('user_attribution').insert({
-      user_id: userId,
-      first_source: attr?.utm_source || (attr?.gclid ? 'google' : '') || host || 'directo',
-      first_medium: attr?.utm_medium || (attr?.gclid ? 'cpc' : '') ||
+    // El alta por Google no lleva metadatos, asi que la ficha de origen se crea
+    // como "directo". Esta funcion la completa (campana, buscador, pagina de
+    // entrada) sin pisar datos mejores ya guardados.
+    await supabase.rpc('enrich_user_attribution', {
+      p_source: attr?.utm_source || (attr?.gclid ? 'google' : '') || host || 'directo',
+      p_medium: attr?.utm_medium || (attr?.gclid ? 'cpc' : '') ||
         (isSearch ? 'organic' : host ? 'referral' : 'none'),
-      first_campaign: attr?.utm_campaign ?? null,
-      first_content: attr?.utm_content ?? null,
-      first_term: attr?.utm_term ?? null,
-      first_referrer: attr?.referrer ?? null,
-      first_landing_path: attr?.landing_path ?? null,
-      attributed_campaign_name: attr?.utm_campaign ?? (attr?.gclid ? 'Google Ads (gclid)' : null),
+      p_campaign: attr?.utm_campaign ?? (attr?.gclid ? 'Google Ads (gclid)' : null),
+      p_content: attr?.utm_content ?? null,
+      p_term: attr?.utm_term ?? null,
+      p_referrer: attr?.referrer ?? null,
+      p_landing_path: attr?.landing_path ?? null,
     });
   } catch {
-    /* ya existia o no se pudo guardar: nunca bloquea el flujo */
+    /* nunca bloquea el flujo */
   }
 }
 
