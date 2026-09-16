@@ -26,6 +26,13 @@ const RULES: Rule[] = [
   { prefix: "/alternativa-registro-musica-tradicionales", to: "/registro-obras-musicales" },
   { prefix: "/promocion", to: "/marketing" },
   { prefix: "/certification", exact: true, to: "/legal-validity" },
+  // Old per-certificate WordPress pages (/certification/<slug>) — the current
+  // equivalent is the public certificate verifier.
+  { prefix: "/certification", to: "/verify" },
+  { prefix: "/en/certification", to: "/verify" },
+  { prefix: "/pt-br/certification", to: "/verify" },
+  { prefix: "/dibs-token", to: "/verify" },
+  { prefix: "/en/dibs-token", to: "/verify" },
   { prefix: "/verificar-id", to: "/verify" },
   { prefix: "/faq-items", to: "/faq" },
   { prefix: "/privacy-policy", to: "/privacy" },
