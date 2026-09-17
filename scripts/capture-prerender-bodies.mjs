@@ -155,6 +155,12 @@ const capture = async (browser, route) => {
       undefined,
       { timeout: NAV_TIMEOUT },
     );
+    // The home defers below-the-fold sections until the first interaction.
+    // Trigger them and wait for the pricing cards before taking its SEO snapshot.
+    if (route.path === "/") {
+      await page.mouse.wheel(0, 1200);
+      await page.waitForSelector("#pricing-section", { timeout: NAV_TIMEOUT });
+    }
     // Let lazy sections settle.
     await page.waitForTimeout(600);
     const html = await page.evaluate(CLEANUP_IN_PAGE);

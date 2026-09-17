@@ -142,11 +142,41 @@
       "image": "https://musicdibs.com/og-image.png",
       "description": "Plataforma de creación, registro blockchain y distribución musical con IA a Spotify, Apple Music y 220+ plataformas.",
       "offers": {
-        "@type": "Offer",
-        "price": "6.90",
+        "@type": "AggregateOffer",
+        "lowPrice": "6.90",
+        "highPrice": "59.90",
         "priceCurrency": "EUR",
-        "availability": "https://schema.org/InStock",
-        "url": "https://musicdibs.com/#pricing"
+        "offerCount": 3,
+        "url": "https://musicdibs.com/#pricing-section",
+        "offers": [
+          {
+            "@type": "Offer",
+            "name": "Starter",
+            "price": "6.90",
+            "priceCurrency": "EUR",
+            "availability": "https://schema.org/InStock",
+            "priceSpecification": { "@type": "UnitPriceSpecification", "billingDuration": "P1M" },
+            "description": "8 créditos al mes para creación con IA y registro blockchain. No incluye distribución."
+          },
+          {
+            "@type": "Offer",
+            "name": "Creator",
+            "price": "19.90",
+            "priceCurrency": "EUR",
+            "availability": "https://schema.org/InStock",
+            "priceSpecification": { "@type": "UnitPriceSpecification", "billingDuration": "P1Y" },
+            "description": "20 créditos al año para creación con IA y registro blockchain. No incluye distribución."
+          },
+          {
+            "@type": "Offer",
+            "name": "Artist Pro",
+            "price": "59.90",
+            "priceCurrency": "EUR",
+            "availability": "https://schema.org/InStock",
+            "priceSpecification": { "@type": "UnitPriceSpecification", "billingDuration": "P1Y" },
+            "description": "100 créditos al año con distribución gratuita e ilimitada en más de 220 plataformas y el 100% de tus royalties."
+          }
+        ]
       },
       "aggregateRating": {
         "@type": "AggregateRating",

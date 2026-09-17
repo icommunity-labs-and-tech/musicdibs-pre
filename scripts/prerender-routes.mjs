@@ -14,6 +14,36 @@ export const snapshotFileName = (routePath) =>
 export const BASE_URL = "https://musicdibs.com";
 export const DEFAULT_OG_IMAGE = "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/27fdd7c8-3e07-4d0d-886d-53859f68e5de";
 
+const CURRENT_PLAN_OFFERS = [
+  {
+    "@type": "Offer",
+    name: "Starter",
+    price: "6.90",
+    priceCurrency: "EUR",
+    availability: "https://schema.org/InStock",
+    priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
+    description: "8 credits per month for AI creation and blockchain registration. Distribution is not included.",
+  },
+  {
+    "@type": "Offer",
+    name: "Creator",
+    price: "19.90",
+    priceCurrency: "EUR",
+    availability: "https://schema.org/InStock",
+    priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1Y" },
+    description: "20 credits per year for AI creation and blockchain registration. Distribution is not included.",
+  },
+  {
+    "@type": "Offer",
+    name: "Artist Pro",
+    price: "59.90",
+    priceCurrency: "EUR",
+    availability: "https://schema.org/InStock",
+    priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1Y" },
+    description: "100 credits per year with free unlimited distribution to 220+ platforms and 100% of artist royalties.",
+  },
+];
+
 /**
  * Each route gets a full set of meta.
  * Add new SEO landings here — keep sorted by priority desc, then alpha.
@@ -52,13 +82,21 @@ export const videoObject = ({
 
 export const ROUTES = [
 
+  // ── HOME ────────────────────────────────────────────────────────────────────
+  {
+    path: "/",
+    locale: "es",
+    title: "Musicdibs - Registro y Distribución Musical",
+    description: "Distribuye tu música en Spotify, Apple Music, YouTube Music y más de 220 plataformas digitales. Protege tus derechos con certificación blockchain.",
+  },
+
 
   // ── PORTUGUESE (pt-BR) MIRRORS OF SHARED PAGES ─────────────────────────────
   {
     path: "/pt/features",
     locale: "pt-BR",
     title: "Funcionalidades: Crie, Proteja, Distribua e Promova a sua Música | Musicdibs",
-    description: "Tudo o que um artista independente precisa em uma única plataforma: AI Music Studio, registro em blockchain, distribuição para mais de 220 plataformas e promoção com IA. A partir de €6,90/mês.",
+    description: "Tudo o que um artista independente precisa em uma única plataforma: AI Music Studio, registro em blockchain, distribuição para mais de 220 plataformas e promoção com IA. Planos Starter, Creator e Artist Pro.",
   },
   {
     path: "/pt/distribution",
@@ -102,7 +140,7 @@ export const ROUTES = [
     path: "/features",
     locale: "es",
     title: "Funcionalidades: Crea, Protege, Distribuye y Promociona tu Música | Musicdibs",
-    description: "Todo lo que necesita un artista independiente: AI Music Studio, registro blockchain de IP, distribución a 220+ plataformas y promoción con IA. Sin permanencia. Desde €6,90/mes.",
+    description: "Todo lo que necesita un artista independiente: AI Music Studio, registro blockchain de IP, distribución a 220+ plataformas y promoción con IA. Planes Starter, Creator y Artist Pro.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
@@ -114,9 +152,10 @@ export const ROUTES = [
       offers: {
         "@type": "AggregateOffer",
         lowPrice: "6.90",
-        highPrice: "399.90",
+        highPrice: "59.90",
         priceCurrency: "EUR",
-        offerCount: "5",
+        offerCount: "3",
+        offers: CURRENT_PLAN_OFFERS,
       },
       featureList: [
         "Generación de música completa con IA",
@@ -239,10 +278,11 @@ export const ROUTES = [
       serviceType: "Music Distribution",
       offers: {
         "@type": "Offer",
+        name: "Artist Pro",
         priceCurrency: "EUR",
-        price: "6.90",
-        priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1M" },
-        description: "Monthly plan including distribution, registration and AI tools",
+        price: "59.90",
+        priceSpecification: { "@type": "UnitPriceSpecification", billingDuration: "P1Y" },
+        description: "Annual plan with 100 credits, free unlimited distribution to 220+ platforms and 100% of artist royalties",
       },
     },
   },
