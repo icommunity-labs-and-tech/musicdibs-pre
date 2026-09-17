@@ -443,7 +443,7 @@ const es = {
       genTypeInstrumentalLog: 'Instrumental',
     },
     distribute: {
-      annualOnly: 'Disponible solo con Plan PLUS+',
+      annualOnly: 'Disponible solo con Artist Pro',
       guideLink: 'Consulta la guía de usuario de distribución',
     },
     paymentAlert: {
@@ -1317,7 +1317,7 @@ const en: typeof es = {
       genTypeInstrumentalLog: 'Instrumental',
     },
     distribute: {
-      annualOnly: 'Available only with Plan PLUS+',
+      annualOnly: 'Available only with Artist Pro',
       guideLink: 'Read the distribution user guide',
     },
     paymentAlert: {
@@ -2191,7 +2191,7 @@ const pt: typeof es = {
       genTypeInstrumentalLog: 'Instrumental',
     },
     distribute: {
-      annualOnly: 'Disponível apenas com Plano PLUS+',
+      annualOnly: 'Disponível apenas com Artist Pro',
       guideLink: 'Consulte o guia do usuário de distribuição',
     },
     paymentAlert: {

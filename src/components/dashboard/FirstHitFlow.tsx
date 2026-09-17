@@ -153,7 +153,7 @@ export function FirstHitFlow({ onSkip, onComplete }: { onSkip?: () => void; onCo
       .then(({ data }) => {
         setKycStatus(data?.kyc_status || "unverified");
         const tier = (data as { subscription_tier?: string | null } | null)?.subscription_tier;
-        // Sólo tiers PLUS+ (annual_100+) tienen distribución.
+        // Sólo tiers Artist Pro (annual_100+) tienen distribución.
         setIsAnnual(hasDistributionAccess(tier));
       });
   }, [user]);
