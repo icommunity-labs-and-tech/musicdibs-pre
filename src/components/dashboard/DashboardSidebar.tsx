@@ -190,7 +190,7 @@ export function DashboardSidebar() {
     const isKycGuarded = !!item.kycGuarded;
 
     if (isDistribute) {
-      // Sólo tiers PLUS+ (annual_100 y superiores) tienen distribución. annual_20 (Anual Básico) NO.
+      // Sólo tiers Artist Pro (annual_100 y superiores) tienen distribución. annual_20 (Creator) NO.
       const isAnnual = hasDistributionAccess(subscriptionTier) ||
         (subscriptionPlan === 'Annual' && !subscriptionTier); // fallback si tier no está aún hidratado
       return (

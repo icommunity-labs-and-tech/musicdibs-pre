@@ -32,7 +32,7 @@ export function DistributeButton({ workId, distributedAt, currentClicks = 0, var
       .single()
       .then(({ data }) => {
         const tier = (data as { subscription_tier?: string | null } | null)?.subscription_tier;
-        // Sólo tiers PLUS+ (annual_100+) tienen distribución. annual_20 no.
+        // Sólo tiers Artist Pro (annual_100+) tienen distribución. annual_20 no.
         setIsAnnual(hasDistributionAccess(tier));
       });
   }, [user]);

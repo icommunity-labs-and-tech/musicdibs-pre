@@ -1,5 +1,5 @@
-// Tiers PLUS+ (annual_100 y superiores) que dan acceso al servicio de distribución.
-// El plan "Anual Básico" (annual_20) NO incluye distribución.
+// Tiers Artist Pro (annual_100 y superiores) que dan acceso al servicio de distribución.
+// El plan Creator (annual_20) NO incluye distribución.
 export const PLUS_TIERS = new Set<string>([
   "annual_100",
   "annual_200",

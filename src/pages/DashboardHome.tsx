@@ -171,7 +171,7 @@ export default function DashboardHome() {
                       <Lock className="h-3.5 w-3.5" />
                       {t('dashboard.home.goToDistribute')}
                     </Button>
-                    <p className="text-xs text-muted-foreground">{t('dashboard.distribute.annualOnly', { defaultValue: 'Disponible solo con Plan PLUS+' })}</p>
+                    <p className="text-xs text-muted-foreground">{t('dashboard.distribute.annualOnly', { defaultValue: 'Disponible solo con Artist Pro' })}</p>
                   </div>
                 )}
               </CardContent>
