@@ -89,13 +89,23 @@ export function trackPurchaseConversion(sessionId: string) {
         email = authData.user?.email || null;
       }
       await setEnhancedConversionEmail(email);
+      const value = Number(order.amount_gross) || FALLBACK_VALUE;
+      const currency = order.currency || FALLBACK_CURRENCY;
       window.gtag?.('event', 'conversion', {
         send_to: PURCHASE_SEND_TO,
-        value: Number(order.amount_gross) || FALLBACK_VALUE,
-        currency: order.currency || FALLBACK_CURRENCY,
+        value,
+        currency,
         transaction_id: sessionId,
       });
+      // GA4 ecommerce: alimenta el informe de monetización (ingresos).
+      ga4Event('purchase', {
+        transaction_id: sessionId,
+        value,
+        currency,
+        items: [{ item_id: 'musicdibs_order', item_name: 'Musicdibs', price: value, quantity: 1 }],
+      });
       sessionStorage.setItem(trackedKey, '1');
+
       return;
     }
 
