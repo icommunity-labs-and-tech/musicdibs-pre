@@ -10,6 +10,8 @@ import DOMPurify from "dompurify";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
 import { getNewsSeoOverride } from "@/lib/newsSeoOverrides";
+import { Button } from "@/components/ui/button";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 
 const NewsArticle = () => {
   const { slug } = useParams<{ slug: string }>();
