@@ -83,12 +83,13 @@ export const videoObject = ({
 export const ROUTES = [
 
   // ── HOME ────────────────────────────────────────────────────────────────────
-  {
-    path: "/",
-    locale: "es",
-    title: "Musicdibs - Registro y Distribución Musical",
-    description: "Distribuye tu música en Spotify, Apple Music, YouTube Music y más de 220 plataformas digitales. Protege tus derechos con certificación blockchain.",
-  },
+  // NOT prerendered on purpose: dist/index.html is also the SPA fallback served
+  // for every non-prerendered route (/dashboard, /login, ...). Injecting the
+  // homepage body there would ship ~264 KB of homepage markup on every deep
+  // link and flash the home before React mounts. The homepage head metadata
+  // (title, description, canonical, JSON-LD) already lives in index.html.
+
+
 
 
   // ── PORTUGUESE (pt-BR) MIRRORS OF SHARED PAGES ─────────────────────────────
