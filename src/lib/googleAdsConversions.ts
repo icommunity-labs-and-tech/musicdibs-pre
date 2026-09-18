@@ -12,8 +12,20 @@ const AW_ACCOUNT = 'AW-18310773693';
 const PURCHASE_SEND_TO = `${AW_ACCOUNT}/Wr0CCKOW0NAcEL33oJtE`;
 const SIGNUP_SEND_TO = `${AW_ACCOUNT}/YBe6CK2M69AcEL33oJtE`;
 const LEAD_SEND_TO = `${AW_ACCOUNT}/lJ5FCLTVw-wcEL33oJtE`;
+const GA4_MEASUREMENT_ID = 'G-6GMWJ1ZPLN';
 const FALLBACK_VALUE = 3;
 const FALLBACK_CURRENCY = 'EUR';
+
+/**
+ * Evento GA4 (no Google Ads). Necesario para que los informes de monetización
+ * y los eventos clave de GA4 tengan datos: hasta ahora solo se enviaban
+ * conversiones a Google Ads (`send_to: AW-...`), por lo que GA4 no recibía
+ * ningún `purchase` con importe y los ingresos salían siempre a 0.
+ */
+function ga4Event(name: string, params: Record<string, unknown>) {
+  window.gtag?.('event', name, { send_to: GA4_MEASUREMENT_ID, ...params });
+}
+
 
 /**
  * Enhanced conversions: envia el email del usuario a Google Ads (la etiqueta lo
