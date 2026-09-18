@@ -363,6 +363,10 @@ const resources = {
         articles: 'artículos',
         noPosts: 'No hay artículos disponibles.',
         seo_description: 'Últimas noticias y artículos de Musicdibs sobre distribución musical, blockchain y derechos de autor.',
+        ctaTitle: 'Protege tu música hoy mismo',
+        ctaText: 'Registra tus canciones en blockchain en minutos y distribúyelas a más de 220 plataformas sin comisiones sobre tus royalties.',
+        ctaButton: 'Registrar mi canción',
+        ctaSecondary: 'Probar el AI Studio',
       },
       contact: {
         heading: 'Contáctanos',
