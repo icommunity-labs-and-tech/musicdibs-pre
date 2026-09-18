@@ -363,6 +363,10 @@ const resources = {
         articles: 'artículos',
         noPosts: 'No hay artículos disponibles.',
         seo_description: 'Últimas noticias y artículos de Musicdibs sobre distribución musical, blockchain y derechos de autor.',
+        ctaTitle: 'Protege tu música hoy mismo',
+        ctaText: 'Registra tus canciones en blockchain en minutos y distribúyelas a más de 220 plataformas sin comisiones sobre tus royalties.',
+        ctaButton: 'Registrar mi canción',
+        ctaSecondary: 'Probar el AI Studio',
       },
       contact: {
         heading: 'Contáctanos',
@@ -984,6 +988,10 @@ const resources = {
         articles: 'articles',
         noPosts: 'No articles available.',
         seo_description: 'Latest news and articles from Musicdibs about music distribution, blockchain and authorship rights.',
+        ctaTitle: 'Protect your music today',
+        ctaText: 'Register your songs on blockchain in minutes and distribute them to 220+ platforms with no commission on your royalties.',
+        ctaButton: 'Register my song',
+        ctaSecondary: 'Try the AI Studio',
       },
       contact: {
         heading: 'Contact Us',
@@ -1581,6 +1589,10 @@ const resources = {
         articles: 'artigos',
         noPosts: 'Nenhum artigo disponível.',
         seo_description: 'Últimas notícias e artigos da Musicdibs sobre distribuição musical, blockchain e direitos autorais.',
+        ctaTitle: 'Proteja sua música hoje mesmo',
+        ctaText: 'Registre suas canções em blockchain em minutos e distribua para mais de 220 plataformas sem comissão sobre seus royalties.',
+        ctaButton: 'Registrar minha música',
+        ctaSecondary: 'Testar o AI Studio',
       },
       contact: {
         heading: 'Fale Conosco',

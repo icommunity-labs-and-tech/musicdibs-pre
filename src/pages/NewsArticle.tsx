@@ -10,6 +10,8 @@ import DOMPurify from "dompurify";
 import { useTranslation } from "react-i18next";
 import i18n from "i18next";
 import { getNewsSeoOverride } from "@/lib/newsSeoOverrides";
+import { Button } from "@/components/ui/button";
+import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 
 const NewsArticle = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -204,7 +206,30 @@ const NewsArticle = () => {
                   </div>
                 </div>
               )}
+
+              {/* CTA de conversión al final del artículo (tráfico orgánico → registro) */}
+              <aside className="mt-12 rounded-2xl border border-page-border bg-page-surface p-6 md:p-8 text-center">
+                <h2 className="text-xl md:text-2xl font-bold mb-3">
+                  {t("blog.ctaTitle", "Protege tu música hoy mismo")}
+                </h2>
+                <p className="text-page-fg-muted mb-6 max-w-xl mx-auto">
+                  {t("blog.ctaText", "")}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button
+                    asChild
+                    size="lg"
+                    onClick={() => trackSignupCtaClick("news_article_cta", "/login?tab=register")}
+                  >
+                    <Link to="/login?tab=register">{t("blog.ctaButton", "Registrar mi canción")}</Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline">
+                    <Link to="/ai-studio">{t("blog.ctaSecondary", "Probar el AI Studio")}</Link>
+                  </Button>
+                </div>
+              </aside>
             </article>
+
           ) : (
             <p className="text-center text-page-fg-subtle py-20">
               {t("blog.notFound", "Artículo no encontrado.")}
