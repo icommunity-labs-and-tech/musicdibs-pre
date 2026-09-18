@@ -214,6 +214,11 @@ export function trackLandingLeadConversion(email: string) {
       transaction_id: email,
     });
   });
+  ga4Event('generate_lead', {
+    value: 5.0,
+    currency: FALLBACK_CURRENCY,
+    lead_source: 'landing_form',
+  });
 }
 
 /**
