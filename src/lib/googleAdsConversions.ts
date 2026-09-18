@@ -150,6 +150,8 @@ export function trackSignupConversion(email?: string) {
       currency: FALLBACK_CURRENCY,
     });
   });
+  // GA4: evento estándar de alta, marcable como evento clave en GA4.
+  ga4Event('sign_up', { method: 'email' });
   sessionStorage.setItem(trackedKey, '1');
 }
 
