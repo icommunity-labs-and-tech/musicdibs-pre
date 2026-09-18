@@ -12,8 +12,20 @@ const AW_ACCOUNT = 'AW-18310773693';
 const PURCHASE_SEND_TO = `${AW_ACCOUNT}/Wr0CCKOW0NAcEL33oJtE`;
 const SIGNUP_SEND_TO = `${AW_ACCOUNT}/YBe6CK2M69AcEL33oJtE`;
 const LEAD_SEND_TO = `${AW_ACCOUNT}/lJ5FCLTVw-wcEL33oJtE`;
+const GA4_MEASUREMENT_ID = 'G-6GMWJ1ZPLN';
 const FALLBACK_VALUE = 3;
 const FALLBACK_CURRENCY = 'EUR';
+
+/**
+ * Evento GA4 (no Google Ads). Necesario para que los informes de monetización
+ * y los eventos clave de GA4 tengan datos: hasta ahora solo se enviaban
+ * conversiones a Google Ads (`send_to: AW-...`), por lo que GA4 no recibía
+ * ningún `purchase` con importe y los ingresos salían siempre a 0.
+ */
+function ga4Event(name: string, params: Record<string, unknown>) {
+  window.gtag?.('event', name, { send_to: GA4_MEASUREMENT_ID, ...params });
+}
+
 
 /**
  * Enhanced conversions: envia el email del usuario a Google Ads (la etiqueta lo
@@ -77,13 +89,23 @@ export function trackPurchaseConversion(sessionId: string) {
         email = authData.user?.email || null;
       }
       await setEnhancedConversionEmail(email);
+      const value = Number(order.amount_gross) || FALLBACK_VALUE;
+      const currency = order.currency || FALLBACK_CURRENCY;
       window.gtag?.('event', 'conversion', {
         send_to: PURCHASE_SEND_TO,
-        value: Number(order.amount_gross) || FALLBACK_VALUE,
-        currency: order.currency || FALLBACK_CURRENCY,
+        value,
+        currency,
         transaction_id: sessionId,
       });
+      // GA4 ecommerce: alimenta el informe de monetización (ingresos).
+      ga4Event('purchase', {
+        transaction_id: sessionId,
+        value,
+        currency,
+        items: [{ item_id: 'musicdibs_order', item_name: 'Musicdibs', price: value, quantity: 1 }],
+      });
       sessionStorage.setItem(trackedKey, '1');
+
       return;
     }
 
@@ -97,6 +119,12 @@ export function trackPurchaseConversion(sessionId: string) {
         value: FALLBACK_VALUE,
         currency: FALLBACK_CURRENCY,
         transaction_id: sessionId,
+      });
+      ga4Event('purchase', {
+        transaction_id: sessionId,
+        value: FALLBACK_VALUE,
+        currency: FALLBACK_CURRENCY,
+        items: [{ item_id: 'musicdibs_order', item_name: 'Musicdibs', price: FALLBACK_VALUE, quantity: 1 }],
       });
       sessionStorage.setItem(trackedKey, '1');
     }
@@ -122,6 +150,8 @@ export function trackSignupConversion(email?: string) {
       currency: FALLBACK_CURRENCY,
     });
   });
+  // GA4: evento estándar de alta, marcable como evento clave en GA4.
+  ga4Event('sign_up', { method: 'email' });
   sessionStorage.setItem(trackedKey, '1');
 }
 
@@ -153,7 +183,15 @@ export function trackWorkRegisteredLead(workId?: string, source?: string) {
     currency: FALLBACK_CURRENCY,
     transaction_id: workId || '',
   });
+
+  // 3) GA4: evento estándar de lead (registro de obra).
+  ga4Event('generate_lead', {
+    value: 5.0,
+    currency: FALLBACK_CURRENCY,
+    lead_source: source || 'register_wizard',
+  });
 }
+
 
 
 /**
@@ -175,6 +213,11 @@ export function trackLandingLeadConversion(email: string) {
       currency: FALLBACK_CURRENCY,
       transaction_id: email,
     });
+  });
+  ga4Event('generate_lead', {
+    value: 5.0,
+    currency: FALLBACK_CURRENCY,
+    lead_source: 'landing_form',
   });
 }
 
