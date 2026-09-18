@@ -120,6 +120,12 @@ export function trackPurchaseConversion(sessionId: string) {
         currency: FALLBACK_CURRENCY,
         transaction_id: sessionId,
       });
+      ga4Event('purchase', {
+        transaction_id: sessionId,
+        value: FALLBACK_VALUE,
+        currency: FALLBACK_CURRENCY,
+        items: [{ item_id: 'musicdibs_order', item_name: 'Musicdibs', price: FALLBACK_VALUE, quantity: 1 }],
+      });
       sessionStorage.setItem(trackedKey, '1');
     }
   };
