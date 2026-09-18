@@ -183,7 +183,15 @@ export function trackWorkRegisteredLead(workId?: string, source?: string) {
     currency: FALLBACK_CURRENCY,
     transaction_id: workId || '',
   });
+
+  // 3) GA4: evento estándar de lead (registro de obra).
+  ga4Event('generate_lead', {
+    value: 5.0,
+    currency: FALLBACK_CURRENCY,
+    lead_source: source || 'register_wizard',
+  });
 }
+
 
 
 /**
