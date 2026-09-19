@@ -188,20 +188,32 @@
     }
     </script>
 
-    <!-- Google tag (gtag.js) — GA4 G-6GMWJ1ZPLN -->
-    <script async src="https://musicdibs.com/metrics/gtag/js?id=G-6GMWJ1ZPLN"></script>
+    <!-- Google tag (gtag.js) — GA4 (G-6GMWJ1ZPLN) + Google Ads (AW-18310773693).
+         GTM (GTM-T8ZBZZMF) sigue gestionando triggers de dataLayer; gtag.js aqui
+         solo sirve para que los eventos de conversion con send_to (registro,
+         lead y compra) se atribuyan siempre. Diferido tras el evento 'load' para
+         no competir con los recursos criticos del LCP — un unico script sirve
+         ambos IDs via dos llamadas a gtag('config', ...) en lugar de cargar
+         gtag.js dos veces. -->
     <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
       gtag('config', 'G-6GMWJ1ZPLN');
-    </script>
-    <!-- Google tag (gtag.js) — Google Ads AW-18310773693.
-         GTM (GTM-T8ZBZZMF) sigue gestionando GA4 y los triggers de dataLayer,
-         pero la etiqueta de Ads se carga aquí para que los eventos de
-         conversión con send_to (registro, lead y compra) se atribuyan siempre. -->
-    <script async src="https://musicdibs.com/metrics/gtag/js?id=AW-18310773693"></script>
-    <script>
-      gtag('js', new Date());
       gtag('config', 'AW-18310773693');
+      window.addEventListener('load', function() {
+        var loadGtag = function() {
+          var s = document.createElement('script');
+          s.src = 'https://musicdibs.com/metrics/gtag/js?id=G-6GMWJ1ZPLN';
+          s.async = true;
+          document.head.appendChild(s);
+        };
+        if ('requestIdleCallback' in window) {
+          window.requestIdleCallback(loadGtag, { timeout: 4000 });
+        } else {
+          window.setTimeout(loadGtag, 2500);
+        }
+      });
     </script>
     <style>
       .app-lcp-shell {
