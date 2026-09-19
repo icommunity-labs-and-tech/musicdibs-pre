@@ -522,8 +522,27 @@ serve(async (req) => {
           }).eq("user_id", user.id);
         }
 
+        // FIX 2026-09-19 (caso josealejandro5j5@hotmail.com): revalidar el
+        // estado FRESCO de Stripe justo antes de cobrar. El check de
+        // already_subscribed de mas arriba usa `activeSub`, que pudo haberse
+        // leido varios segundos/minutos antes de llegar aqui -- si en ese
+        // intervalo una reversion automatica del webhook (invoice.payment_failed
+        // con billing_reason=subscription_update, ver stripe-webhook.ts) ya dejo
+        // la suscripcion en el price_id de destino, sin esta revalidacion se
+        // vuelve a cambiar el intervalo y Stripe cobra el ciclo COMPLETO de
+        // nuevo (cambiar de intervalo mes<->año siempre fuerza un cobro
+        // inmediato en Stripe, incluso con proration_behavior:"none"). Caso
+        // real: usuario cobrado 3 veces 6,90€ en 30 min tras un intento de
+        // upgrade a Anual fallido que el webhook revirtio automaticamente.
+        const freshSub = await stripe.subscriptions.retrieve(activeSub.id);
+        const freshPriceId = freshSub.items?.data?.[0]?.price?.id;
+        if (freshPriceId === plan.priceId && !freshSub.cancel_at_period_end && !freshSub.schedule) {
+          console.log(`[CHECKOUT] Upgrade abortado: la suscripcion ${activeSub.id} ya tiene el precio destino ${plan.priceId} (revertida por un proceso concurrente) -- no se cobra de nuevo.`);
+          return json({ already_subscribed: true, message: "Ya tienes este plan activo." });
+        }
+
         await stripe.subscriptions.update(activeSub.id, {
-          items: [{ id: activeSub.items.data[0].id, price: plan.priceId }],
+          items: [{ id: freshSub.items.data[0].id, price: plan.priceId }],
           proration_behavior: "always_invoice",
           cancel_at_period_end: false,
         });
