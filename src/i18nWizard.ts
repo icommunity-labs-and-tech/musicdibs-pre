@@ -122,6 +122,9 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         viewReg: 'Ver registro',
         registerAnotherVersion: 'Registrar otra versión',
         registerAnother: 'Registrar otra obra',
+        lowCreditsTitle: 'Te quedan pocos créditos',
+        lowCreditsText: 'Con Artist Pro tienes 100 créditos al año para registrar y crear sin preocuparte.',
+        lowCreditsCta: 'Conseguir Artist Pro — 59,90 €/año',
       },
       // SignatureSelector
       signature: {
@@ -306,6 +309,9 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         viewReg: 'View registration',
         registerAnotherVersion: 'Register another version',
         registerAnother: 'Register another work',
+        lowCreditsTitle: 'You are running low on credits',
+        lowCreditsText: 'With Artist Pro you get 100 credits per year to register and create without worries.',
+        lowCreditsCta: 'Get Artist Pro — €59.90/year',
       },
       signature: {
         loading: 'Loading signatures...',
@@ -486,6 +492,9 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         viewReg: 'Ver registro',
         registerAnotherVersion: 'Registrar outra versão',
         registerAnother: 'Registrar outra obra',
+        lowCreditsTitle: 'Você está com poucos créditos',
+        lowCreditsText: 'Com o Artist Pro você tem 100 créditos por ano para registrar e criar sem preocupações.',
+        lowCreditsCta: 'Assinar Artist Pro — €59,90/ano',
       },
       signature: {
         loading: 'Carregando assinaturas...',
