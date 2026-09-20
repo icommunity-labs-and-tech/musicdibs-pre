@@ -1,7 +1,11 @@
-import { CheckCircle2, Eye, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CheckCircle2, Eye, Plus, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { buildArtistProCheckoutUrl } from '@/lib/paymentLinks';
 import type { WizardData } from './types';
 
 interface StepSuccessProps {
