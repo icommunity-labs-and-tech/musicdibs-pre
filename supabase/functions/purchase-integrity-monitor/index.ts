@@ -58,7 +58,18 @@ serve(async (req) => {
     // nativas de suscripcion (generadas directamente por Stripe) no llevan
     // site_url y SI son legitimas de MusicDibs.
     const OTHER_BUSINESS_DESCRIPTIONS = ["icom", "certyfile", "certypass"];
+    // FIX 2026-09-20 (caso freslylopez2023@gmail.com): 2 cargos de 6.90 EUR
+    // fueron parte de un intento fallido de upgrade a plan anual (Stripe
+    // genera un cargo colateral de "subscription update" al reintentar
+    // prorratear, aunque el intento principal de upgrade falle por fondos
+    // insuficientes) -- ambos se reembolsaron automaticamente al fallar la
+    // operacion completa, pero el auditor los reporto como "creditos no
+    // asignados" sin considerar que un cargo reembolsado NO debe generar
+    // credito ni orden por diseño. Se excluyen cargos con reembolso total
+    // (refunded=true) de todo el chequeo, tanto de charge_sin_order como de
+    // creditos_no_asignados.
     const succeededCharges = allSucceededCharges.filter(c => {
+      if (c.refunded) return false;
       const siteUrl = (c.metadata as Record<string, string> | undefined)?.site_url;
       if (siteUrl) return siteUrl.toLowerCase().includes("musicdibs");
       const desc = (c.description || "").toLowerCase();
