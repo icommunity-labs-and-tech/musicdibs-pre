@@ -75,11 +75,18 @@ function computeTargetGroups(p: Profile): Set<string> {
   if (plan === 'monthly' || tier === 'monthly') groups.add(ML_GROUPS[`mensuales_${lang}` as GroupKey]);
   else if (plan === 'annual' || tier.startsWith('annual')) groups.add(ML_GROUPS[`anuales_${lang}` as GroupKey]);
 
-  // 4. Aniversario sin plan (Free >= 30 days, never had paid)
+  // 4. Aniversario sin plan (Free >= 365 days / 1 year, never had paid)
+  // FIX 2026-09-16 (caso evidentlyeditions@aol.com): el umbral estaba en 30
+  // dias en vez de 365 -- cualquier usuario Free con solo 1 mes de registro
+  // ya calificaba para el correo de "aniversario", que promete 20 creditos
+  // extra por su año con nosotros. Ademas, la condicion hadPaidSub interna
+  // era redundante y estaba mal planteada (no excluia a quien tenia
+  // sub_status='active', aunque el bloque externo !hasPaidPlan ya lo cubria
+  // en la practica) -- eliminada, ya no aporta nada que !hasPaidPlan no
+  // cubra correctamente.
   if (!hasPaidPlan) {
     const days = (now.getTime() - new Date(p.created_at).getTime()) / 86400000;
-    const hadPaidSub = p.sub_status && ['expired', 'cancelled', 'past_due'].includes(p.sub_status);
-    if (days >= 30 && !hadPaidSub) groups.add(ML_GROUPS[`aniversario_sin_plan_${lang}` as GroupKey]);
+    if (days >= 365) groups.add(ML_GROUPS[`aniversario_sin_plan_${lang}` as GroupKey]);
   }
 
   // 5. Recuperar suscriptores: was paid, now Free, sub already expired
