@@ -2204,6 +2204,28 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
                     await stripe.refunds.create({ payment_intent: paymentIntentId, reason: "duplicate" });
                     console.log(`[WEBHOOK] payment_failed: reembolsado cobro duplicado ${paymentIntentId} (${newInvoice.amount_paid / 100}€) generado por la reversion -- el usuario ya habia pagado por este periodo`);
                   }
+                } else if (["open", "draft", "uncollectible"].includes(newInvoice.status ?? "")) {
+                  // FIX 2026-09-20 (caso freslylopez2023@gmail.com): si el
+                  // cobro de la PROPIA reversion falla, Stripe la deja "open"
+                  // con Smart Retries programados durante dias. Como ya
+                  // sabemos con certeza que el usuario NO debe este cobro
+                  // (alreadyPaidForThisPeriod=true), no hay que esperar a que
+                  // se agoten los reintentos -- se anula de inmediato para
+                  // evitar que un reintento futuro cobre un duplicado real
+                  // sin que ningun reembolso automatico lo detecte (el codigo
+                  // de reembolso de arriba solo corre en esta ejecucion del
+                  // webhook, no en reintentos posteriores de Stripe).
+                  try {
+                    await stripe.invoices.voidInvoice(newInvoiceId);
+                    console.log(`[WEBHOOK] payment_failed: anulada invoice de reversion ${newInvoiceId} (status=${newInvoice.status}) -- el usuario ya habia pagado por este periodo, no se le debe volver a cobrar.`);
+                  } catch (voidErr) {
+                    console.error(`[WEBHOOK] payment_failed: fallo al anular invoice de reversion ${newInvoiceId}:`, voidErr);
+                    await supabase.from("admin_alerts").insert({
+                      source: "stripe-webhook:invoice.payment_failed",
+                      severity: "critical",
+                      message: `La reversion de un upgrade fallido para user ${profile.user_id} (sub ${subscriptionIdFailed}) genero una invoice ${newInvoiceId} que sigue en estado "${newInvoice.status}" con posibles reintentos, y no se pudo anular automaticamente: ${voidErr}. El usuario ya pago este periodo -- si esta invoice se cobra en un reintento futuro, sera un duplicado. Anular manualmente en Stripe.`,
+                    });
+                  }
                 }
               } catch (refundErr) {
                 console.error(`[WEBHOOK] payment_failed: fallo al reembolsar posible cobro duplicado tras revertir para user ${profile.user_id}:`, refundErr);
@@ -2243,13 +2265,25 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
                 updated_at: new Date().toISOString(),
               }).eq("user_id", profile.user_id);
             }
-            const revertedItem = revertedSub.items?.data?.[0] as any;
+            // FIX 2026-09-20 (caso freslylopez2023@gmail.com): releer la
+            // suscripcion fresca aqui -- si la invoice de reversion fallida
+            // se anulo justo arriba, Stripe limpia el estado "past_due" de
+            // la suscripcion a "active" automaticamente, pero `revertedSub`
+            // (capturado antes de esa anulacion) todavia reflejaria el
+            // status viejo si lo usaramos directamente en el upsert de abajo.
+            let finalSub = revertedSub;
+            try {
+              finalSub = await stripe.subscriptions.retrieve(subscriptionIdFailed);
+            } catch (reReadErr) {
+              console.warn(`[WEBHOOK] payment_failed: no se pudo releer sub tras revertir, usando estado previo:`, reReadErr);
+            }
+            const revertedItem = finalSub.items?.data?.[0] as any;
             await supabase.from("subscriptions").upsert({
               user_id: profile.user_id,
               stripe_customer_id: customerId,
               stripe_subscription_id: subscriptionIdFailed,
               plan: revertedPlanName || "Monthly",
-              status: mapStripeStatus(revertedSub.status),
+              status: mapStripeStatus(finalSub.status),
               current_period_start: revertedItem?.current_period_start ? new Date(revertedItem.current_period_start * 1000).toISOString() : null,
               current_period_end: revertedItem?.current_period_end ? new Date(revertedItem.current_period_end * 1000).toISOString() : null,
               updated_at: new Date().toISOString(),
