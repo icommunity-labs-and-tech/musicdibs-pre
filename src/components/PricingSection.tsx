@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { buildArtistProCheckoutUrl } from "@/lib/paymentLinks";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTranslation } from "react-i18next";
@@ -359,6 +360,15 @@ export const PricingSection = () => {
                   {t('pricing.ctaAnnual')}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
+                {user && selectedAnnualPlanId === 'annual_100' && (
+                  <button
+                    type="button"
+                    onClick={() => window.open(buildArtistProCheckoutUrl(user), '_blank', 'noopener,noreferrer')}
+                    className="mt-2 w-full text-xs text-primary-foreground/70 hover:text-primary-foreground underline underline-offset-2 transition-colors"
+                  >
+                    {t('pricing.buyDirectArtistPro')}
+                  </button>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -16,6 +16,7 @@ import { CancellationSurveyModal } from './CancellationSurveyModal';
 import { useCheckout } from '@/hooks/useCheckout';
 import { getAttributionForCheckout } from '@/lib/attribution';
 import { ANNUAL_TIER_NAMES } from '@/lib/planLabel';
+import { buildArtistProCheckoutUrl } from '@/lib/paymentLinks';
 
 type StripePlan = {
   planId: string;
@@ -267,6 +268,15 @@ export function CreditStore({ compact, cancelAtPeriodEnd: externalCancel }: { co
               <Button className="w-full" onClick={() => selectedAnnualOption && handleBuy(selectedAnnualOption.planId)} disabled={loading !== null || pricingLoading || !selectedAnnualOption}>
                 {loading === selectedAnnual ? <Loader2 className="h-4 w-4 animate-spin" /> : isAnnualActive ? t(`${cs}.changeCapacity`) : t(`${cs}.subscribe`)}
               </Button>
+              {!isAnnualActive && selectedAnnual === 'annual_100' && user && (
+                <button
+                  type="button"
+                  onClick={() => window.open(buildArtistProCheckoutUrl(user), '_blank', 'noopener,noreferrer')}
+                  className="w-full text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+                >
+                  {t(`${cs}.buyDirectArtistPro`)}
+                </button>
+              )}
             </CardContent>
           </Card>
 

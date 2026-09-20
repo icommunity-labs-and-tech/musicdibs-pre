@@ -677,6 +677,13 @@ serve(async (req) => {
       let credits  = parseInt(session.metadata?.credits || "0", 10);
       let planId   = session.metadata?.plan_id || "unknown";
 
+      // Payment Links (buy.stripe.com) no admiten metadata; el frontend
+      // pasa el user id como client_reference_id en la URL del enlace.
+      if (!userId && typeof session.client_reference_id === "string" && session.client_reference_id) {
+        userId = session.client_reference_id;
+        console.log(`[WEBHOOK] checkout.session.completed: user_id=${userId} from client_reference_id (payment link)`);
+      }
+
       //  Fallback A: recover user_id when missing from metadata (guest checkout) 
       if (!userId && session.customer) {
         const custId = typeof session.customer === "string" ? session.customer : (session.customer as any)?.id;
