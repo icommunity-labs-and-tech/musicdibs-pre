@@ -18,8 +18,24 @@ interface StepSuccessProps {
 export function StepSuccess({ data, registrationId, fileHash, onRegisterAnother }: StepSuccessProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isVersion = data.flow === 'version';
   const dateLang = i18n.resolvedLanguage || 'es';
+  const [credits, setCredits] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    supabase
+      .from('profiles')
+      .select('available_credits')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data: profile }) => {
+        if (!cancelled && profile) setCredits(profile.available_credits ?? 0);
+      });
+    return () => { cancelled = true; };
+  }, [user]);
 
   return (
     <div className="flex flex-col items-center text-center space-y-6 py-8">
