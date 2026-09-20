@@ -91,6 +91,23 @@ export function StepSuccess({ data, registrationId, fileHash, onRegisterAnother 
           {isVersion ? t('wizard.success.registerAnotherVersion') : t('wizard.success.registerAnother')}
         </Button>
       </div>
+
+      {user && credits !== null && credits < 5 && (
+        <div className="w-full max-w-sm rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-2">
+          <p className="text-sm font-semibold flex items-center justify-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-primary" />
+            {t('wizard.success.lowCreditsTitle')}
+          </p>
+          <p className="text-xs text-muted-foreground">{t('wizard.success.lowCreditsText')}</p>
+          <Button
+            size="sm"
+            className="w-full"
+            onClick={() => window.open(buildArtistProCheckoutUrl(user), '_blank', 'noopener,noreferrer')}
+          >
+            {t('wizard.success.lowCreditsCta')}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
