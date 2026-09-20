@@ -1832,6 +1832,10 @@ i18n
     load: 'currentOnly',
     cleanCode: true,
     interpolation: { escapeValue: false },
+    // Las traducciones extendidas se anaden despues del init via
+    // addResourceBundle(); sin bindI18nStore los componentes ya montados no
+    // se re-renderizan y muestran la clave cruda (p.ej. "dashboard.x.y").
+    react: { bindI18nStore: 'added removed' },
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: 'lang',
