@@ -329,8 +329,35 @@ serve(async (req) => {
     // seguro. Se amplia a 6 horas para cubrir reconciliaciones manuales del
     // mismo dia sin capturar compras genuinas de dias distintos.
     const dupWindowMs = 6 * 60 * 60 * 1000; // 6 horas
+    // FIX 2026-09-20 (caso josealejandro5j5@hotmail.com): el chequeo
+    // comparaba TODAS las transacciones de compra por pares sin considerar
+    // si alguna de ellas ya habia sido anulada por un admin_reset posterior
+    // (ej. reversion legitima por impago definitivo, ANTES de una
+    // reactivacion real). Con 3 transacciones del mismo importe donde la
+    // primera ya estaba neutralizada por su propia reversion, el chequeo la
+    // comparo igualmente contra las otras 2, aplicando 3 reversiones (-8 x3)
+    // cuando solo 1 par era un duplicado real -- dejando al usuario con
+    // saldo negativo. Se excluyen del pool de comparacion las compras que
+    // ya tengan un admin_reset con el mismo importe en negativo despues de
+    // ellas: esas no representan credito activo y no deben compararse.
+    const { data: resetTx } = await supabase
+      .from("credit_transactions")
+      .select("user_id, amount, created_at")
+      .eq("type", "admin_reset")
+      .gte("created_at", since.toISOString());
+    const resetsByUser = new Map<string, typeof resetTx>();
+    for (const r of resetTx || []) {
+      if (!resetsByUser.has(r.user_id)) resetsByUser.set(r.user_id, []);
+      resetsByUser.get(r.user_id)!.push(r);
+    }
+    const isAlreadyReverted = (tx: { user_id: string; amount: number; created_at: string }) => {
+      const resets = resetsByUser.get(tx.user_id) || [];
+      const txTime = new Date(tx.created_at).getTime();
+      return resets.some((r) => r.amount === -tx.amount && new Date(r.created_at).getTime() >= txTime && new Date(r.created_at).getTime() - txTime < dupWindowMs);
+    };
     const seenByUser = new Map<string, typeof recentPurchaseTx>();
     for (const tx of recentPurchaseTx || []) {
+      if (isAlreadyReverted(tx)) continue;
       if (!seenByUser.has(tx.user_id)) seenByUser.set(tx.user_id, []);
       seenByUser.get(tx.user_id)!.push(tx);
     }
