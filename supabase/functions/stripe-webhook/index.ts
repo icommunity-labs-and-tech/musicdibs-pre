@@ -2125,7 +2125,18 @@ Dar de alta en: https://musicdibs.sonosuite.com/`;
       // sin haber pagado nada de mas) y ademas con un downgrade programado
       // (via Subscription Schedule) de vuelta al plan viejo para dentro de
       // un ANO -- en vez de revertir de inmediato.
-      if (profile && billingReasonFailed === "subscription_update" && subscriptionIdFailed) {
+      // FIX 2026-09-20 (caso freslylopez2023@gmail.com): el bloque de abajo
+      // revertia el upgrade fallido incondicionalmente en el PRIMER fallo de
+      // pago, sin comprobar si Stripe tenia un reintento (Smart Retry)
+      // programado -- el mismo bug que ya se corrigio en la rama general de
+      // invoice.payment_failed (ver mas arriba, "no confiar en el payload
+      // crudo"), pero aqui reaparecia porque esta rama especifica de
+      // subscription_update tiene su propia condicion de entrada. Con
+      // nextAttempt ya disponible (linea 2116), solo se revierte cuando
+      // Stripe ha agotado los reintentos; si aun queda uno programado, se dej
+      // que el reintento normal siga su curso sin tocar creditos ni revertir
+      // nada todavia.
+      if (profile && billingReasonFailed === "subscription_update" && subscriptionIdFailed && !nextAttempt) {
         try {
           // La linea de credito de prorrateo (amount negativo) de la factura
           // fallida contiene el precio ANTERIOR al que hay que revertir.
