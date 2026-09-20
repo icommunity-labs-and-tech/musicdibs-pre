@@ -203,6 +203,13 @@ const AIStudioEdit = () => {
       .replace(/_+/g, "_")
       .toLowerCase();
     const path = `${user!.id}/${Date.now()}_${safeName}`;
+    // FIX 2026-09-21 (mismo patron que julio en works-files/dashboardApi.ts):
+    // refrescar la sesion antes de subir evita "new row violates row-level
+    // security policy" si el autoRefreshToken esta a mitad de swap.
+    const { error: refreshErrPreUpload } = await supabase.auth.refreshSession();
+    if (refreshErrPreUpload) {
+      throw new Error('Tu sesión ha expirado. Por favor, cierra sesión e inicia sesión de nuevo.');
+    }
     const { error } = await supabase.storage
       .from("auphonic-temp")
       .upload(path, file, { upsert: true });

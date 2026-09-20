@@ -165,6 +165,11 @@ function FileStep({ step, value, onChange, onNext, uploading }: { step: WizardSt
     if (!user) return;
     const ext = file.name.split('.').pop();
     const path = 'youtube-requests/' + user.id + '/' + Date.now() + '.' + ext;
+    // FIX 2026-09-21 (mismo patron que julio en works-files/dashboardApi.ts):
+    // refrescar la sesion antes de subir evita "new row violates row-level
+    // security policy" si el autoRefreshToken esta a mitad de swap.
+    const { error: refreshErrPreUpload } = await supabase.auth.refreshSession();
+    if (refreshErrPreUpload) return;
     const { error } = await supabase.storage.from('documents').upload(path, file, { upsert: true });
     if (!error) {
       // Store the storage path (bucket is private — admins generate signed URLs server-side)

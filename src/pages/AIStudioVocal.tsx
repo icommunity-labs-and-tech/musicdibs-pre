@@ -248,6 +248,18 @@ export default function AIStudioVocal() {
 
   const uploadToVoiceSamples = async (fileOrBlob: File | Blob, ext: string): Promise<string> => {
     if (!user) throw new Error('Unauthorized');
+    // FIX 2026-09-21 (caso adrianvera121256@gmail.com: "Error subiendo
+    // archivo: new row violates row-level security policy"): mismo fix
+    // aplicado en julio a works-files (dashboardApi.ts / ManagerRegisterWork.tsx)
+    // -- el autoRefreshToken puede estar a mitad de swap y dejar auth.uid()
+    // como NULL en Postgres justo durante el upload, violando la politica
+    // RLS que exige que el primer segmento del path sea el uid autenticado.
+    // Se refresca la sesion explicitamente antes de subir.
+    const { error: refreshErr } = await supabase.auth.refreshSession();
+    if (refreshErr) {
+      console.error('[uploadToVoiceSamples] Pre-upload session refresh failed:', refreshErr);
+      throw new Error('Tu sesión ha expirado. Por favor, cierra sesión e inicia sesión de nuevo.');
+    }
     const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from('voice-samples').upload(path, fileOrBlob, {
       contentType: fileOrBlob instanceof File ? fileOrBlob.type : 'audio/wav',

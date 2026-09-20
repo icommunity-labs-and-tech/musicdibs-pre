@@ -229,6 +229,15 @@ export function PremiumPromoForm({ works, onBack }: PremiumPromoFormProps) {
       const promoId = crypto.randomUUID();
       const ts = Date.now();
 
+      // FIX 2026-09-21 (mismo patron que julio en works-files/dashboardApi.ts):
+      // refrescar la sesion antes de subir evita "new row violates row-level
+      // security policy" si el autoRefreshToken esta a mitad de swap. Un
+      // solo refresh cubre las 2 subidas siguientes (audio + media).
+      const { error: refreshErrPreUpload } = await supabase.auth.refreshSession();
+      if (refreshErrPreUpload) {
+        throw new Error('Tu sesión ha expirado. Por favor, cierra sesión e inicia sesión de nuevo.');
+      }
+
       // 2) Upload audio
       setProgressStep('audio');
       const audioExt = audioFile.name.split('.').pop() || 'mp3';
