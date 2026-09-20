@@ -1,7 +1,11 @@
-import { CheckCircle2, Eye, Plus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { CheckCircle2, Eye, Plus, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { buildArtistProCheckoutUrl } from '@/lib/paymentLinks';
 import type { WizardData } from './types';
 
 interface StepSuccessProps {
@@ -14,8 +18,24 @@ interface StepSuccessProps {
 export function StepSuccess({ data, registrationId, fileHash, onRegisterAnother }: StepSuccessProps) {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const isVersion = data.flow === 'version';
   const dateLang = i18n.resolvedLanguage || 'es';
+  const [credits, setCredits] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    supabase
+      .from('profiles')
+      .select('available_credits')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data: profile }) => {
+        if (!cancelled && profile) setCredits(profile.available_credits ?? 0);
+      });
+    return () => { cancelled = true; };
+  }, [user]);
 
   return (
     <div className="flex flex-col items-center text-center space-y-6 py-8">
@@ -71,6 +91,23 @@ export function StepSuccess({ data, registrationId, fileHash, onRegisterAnother 
           {isVersion ? t('wizard.success.registerAnotherVersion') : t('wizard.success.registerAnother')}
         </Button>
       </div>
+
+      {user && credits !== null && credits < 5 && (
+        <div className="w-full max-w-sm rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-2">
+          <p className="text-sm font-semibold flex items-center justify-center gap-1.5">
+            <Sparkles className="h-4 w-4 text-primary" />
+            {t('wizard.success.lowCreditsTitle')}
+          </p>
+          <p className="text-xs text-muted-foreground">{t('wizard.success.lowCreditsText')}</p>
+          <Button
+            size="sm"
+            className="w-full"
+            onClick={() => window.open(buildArtistProCheckoutUrl(user), '_blank', 'noopener,noreferrer')}
+          >
+            {t('wizard.success.lowCreditsCta')}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
