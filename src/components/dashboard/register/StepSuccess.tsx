@@ -22,20 +22,32 @@ export function StepSuccess({ data, registrationId, fileHash, onRegisterAnother 
   const isVersion = data.flow === 'version';
   const dateLang = i18n.resolvedLanguage || 'es';
   const [credits, setCredits] = useState<number | null>(null);
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
     supabase
       .from('profiles')
-      .select('available_credits')
+      .select('available_credits, subscription_plan')
       .eq('user_id', user.id)
       .single()
       .then(({ data: profile }) => {
-        if (!cancelled && profile) setCredits(profile.available_credits ?? 0);
+        if (!cancelled && profile) {
+          setCredits(profile.available_credits ?? 0);
+          setSubscriptionPlan(profile.subscription_plan ?? 'Free');
+        }
       });
     return () => { cancelled = true; };
   }, [user]);
+
+  // FIX (bug real: usuarios con Artist Pro u otro plan anual/mensual activo
+  // veian el boton de "comprar Artist Pro" y podian terminar con una
+  // segunda suscripcion duplicada via el Payment Link directo, que
+  // bypasea la logica de upgrade/cambio de plan de create-credit-checkout).
+  // Mismo guard que ya usa CreditStore.tsx (isAnnualActive): solo mostrar
+  // la promo si el usuario esta en plan Free, sin ningun plan de pago activo.
+  const hasActivePaidPlan = subscriptionPlan !== null && subscriptionPlan !== 'Free';
 
   return (
     <div className="flex flex-col items-center text-center space-y-6 py-8">
@@ -92,7 +104,7 @@ export function StepSuccess({ data, registrationId, fileHash, onRegisterAnother 
         </Button>
       </div>
 
-      {user && credits !== null && credits < 5 && (
+      {user && credits !== null && credits < 5 && !hasActivePaidPlan && (
         <div className="w-full max-w-sm rounded-lg border border-primary/30 bg-primary/5 p-4 space-y-2">
           <p className="text-sm font-semibold flex items-center justify-center gap-1.5">
             <Sparkles className="h-4 w-4 text-primary" />

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { buildArtistProCheckoutUrl } from "@/lib/paymentLinks";
 import { Card, CardContent } from "@/components/ui/card";
@@ -72,6 +72,26 @@ export const PricingSection = () => {
   const [pendingGuestPlanId, setPendingGuestPlanId] = useState<string | null>(null);
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const [hasActivePaidPlan, setHasActivePaidPlan] = useState(false);
+
+  // FIX (bug real: usuarios con Artist Pro u otro plan anual/mensual activo
+  // veian el boton de "Get Artist Pro" en la landing y podian terminar con
+  // una segunda suscripcion duplicada via el Payment Link directo, que
+  // bypasea la logica de upgrade/cambio de plan de create-credit-checkout).
+  // Mismo guard que ya usa CreditStore.tsx (isAnnualActive).
+  useEffect(() => {
+    if (!user) { setHasActivePaidPlan(false); return; }
+    let cancelled = false;
+    supabase
+      .from('profiles')
+      .select('subscription_plan')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data: profile }) => {
+        if (!cancelled) setHasActivePaidPlan((profile?.subscription_plan ?? 'Free') !== 'Free');
+      });
+    return () => { cancelled = true; };
+  }, [user]);
   const lang = i18n.resolvedLanguage || i18n.language;
 
   const launchCheckout = useCallback(async (planId: string, guestEmail?: string) => {
@@ -360,7 +380,7 @@ export const PricingSection = () => {
                   {t('pricing.ctaAnnual')}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-                {user && selectedAnnualPlanId === 'annual_100' && (
+                {user && selectedAnnualPlanId === 'annual_100' && !hasActivePaidPlan && (
                   <button
                     type="button"
                     onClick={() => window.open(buildArtistProCheckoutUrl(user), '_blank', 'noopener,noreferrer')}
