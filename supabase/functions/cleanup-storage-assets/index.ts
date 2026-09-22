@@ -23,7 +23,6 @@ type Mode = "dry_run" | "notify" | "purge";
 
 // Retention per bucket (in days). null = untouched. inactiveDays applies to users without active subscription.
 const RULES: Record<string, { activeDays: number | null; inactiveDays: number | null; forceDays?: number }> = {
-  "works-files":           { activeDays: 180, inactiveDays: 30 },
   "ai-generations":        { activeDays: 365, inactiveDays: 56 },
   "voice-samples":         { activeDays: 365, inactiveDays: 56 },
   "voice-clones":          { activeDays: 365, inactiveDays: 56 } as any,
@@ -36,7 +35,7 @@ const RULES: Record<string, { activeDays: number | null; inactiveDays: number | 
   "auphonic-temp":         { activeDays: 7,   inactiveDays: 7, forceDays: 7 },
 };
 
-const PROTECTED = new Set(["purchase-certificates", "documents", "blog-images", "cleanup-trash"]);
+const PROTECTED = new Set(["works-files", "purchase-certificates", "documents", "blog-images", "cleanup-trash"]);
 const TRASH_BUCKET = "cleanup-trash";
 const TRASH_PURGE_DAYS = 14;
 const NOTIFY_GAP_DAYS = 7; // between warn -> final -> move
