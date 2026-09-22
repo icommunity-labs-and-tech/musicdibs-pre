@@ -6,7 +6,11 @@
 //
 // Auth: header x-cron-secret == CRON_SECRET, or Authorization: Bearer <SERVICE_ROLE>
 //
-// PROTECTED buckets (never touched): works-files, purchase-certificates, documents, blog-images
+// PROTECTED buckets (never touched): purchase-certificates, documents, blog-images
+// works-files NO esta protegido: los archivos originales que sube el usuario no son
+// la evidencia legal (esa es el certificado PDF + registro en blockchain, guardados
+// aparte) -- MusicDibs no actua como almacen permanente del archivo original, es
+// responsabilidad del usuario conservar su propia copia.
 // Path convention assumed: `{user_id}/...` at the root of each bucket. Objects whose first
 // segment is not a UUID are logged and skipped (no user attribution).
 
@@ -23,6 +27,7 @@ type Mode = "dry_run" | "notify" | "purge";
 
 // Retention per bucket (in days). null = untouched. inactiveDays applies to users without active subscription.
 const RULES: Record<string, { activeDays: number | null; inactiveDays: number | null; forceDays?: number }> = {
+  "works-files":           { activeDays: 180, inactiveDays: 30 },
   "ai-generations":        { activeDays: 365, inactiveDays: 56 },
   "voice-samples":         { activeDays: 365, inactiveDays: 56 },
   "voice-clones":          { activeDays: 365, inactiveDays: 56 } as any,
@@ -35,7 +40,7 @@ const RULES: Record<string, { activeDays: number | null; inactiveDays: number | 
   "auphonic-temp":         { activeDays: 7,   inactiveDays: 7, forceDays: 7 },
 };
 
-const PROTECTED = new Set(["works-files", "purchase-certificates", "documents", "blog-images", "cleanup-trash"]);
+const PROTECTED = new Set(["purchase-certificates", "documents", "blog-images", "cleanup-trash"]);
 const TRASH_BUCKET = "cleanup-trash";
 const TRASH_PURGE_DAYS = 14;
 const NOTIFY_GAP_DAYS = 7; // between warn -> final -> move
@@ -50,7 +55,7 @@ function log(...args: unknown[]) {
   console.log("[cleanup-storage-assets]", ...args);
 }
 
-async function listAllObjects(supabase: any, bucket: string) {
+async function listAllObjects(supabase: any, bucket: string, firstCharFilter?: string[]) {
   // Recursive list — Supabase storage.list is not recursive, so we walk folders
   const all: Array<{ path: string; name: string; created_at?: string; updated_at?: string; metadata?: any }> = [];
   async function walk(prefix: string) {
@@ -58,9 +63,39 @@ async function listAllObjects(supabase: any, bucket: string) {
     const LIMIT = 1000;
     while (true) {
       const { data, error } = await supabase.storage.from(bucket).list(prefix, { limit: LIMIT, offset, sortBy: { column: "name", order: "asc" } });
-      if (error) { log("list error", bucket, prefix, error.message); return; }
+      if (error) {
+        // FIX 2026-09-22: buckets con muchas subcarpetas (ej. ai-generations,
+        // 5710+ archivos) disparaban demasiadas llamadas recursivas seguidas,
+        // saturando el pool de conexiones a la BD ("Too many connections
+        // issued to the database") -- el cron semanal fallaba siempre a
+        // mitad de camino sin completar nada. Un reintento con pequeño
+        // backoff resuelve la mayoria de estos casos transitorios.
+        if (error.message?.includes("Too many connections")) {
+          await new Promise((r) => setTimeout(r, 300));
+          const retry = await supabase.storage.from(bucket).list(prefix, { limit: LIMIT, offset, sortBy: { column: "name", order: "asc" } });
+          if (retry.error) { log("list error (retry failed)", bucket, prefix, retry.error.message); return; }
+          if (!retry.data || retry.data.length === 0) break;
+          for (const item of retry.data) {
+            if (prefix === "" && firstCharFilter && !firstCharFilter.includes(item.name[0]?.toLowerCase())) continue;
+            if (item.id === null || (!item.metadata && !item.updated_at)) {
+              await walk(prefix ? `${prefix}/${item.name}` : item.name);
+            } else {
+              all.push({ path: prefix ? `${prefix}/${item.name}` : item.name, name: item.name, created_at: item.created_at, updated_at: item.updated_at, metadata: item.metadata });
+            }
+          }
+          if (retry.data.length < LIMIT) break;
+          offset += LIMIT;
+          await new Promise((r) => setTimeout(r, 30));
+          continue;
+        }
+        log("list error", bucket, prefix, error.message); return;
+      }
       if (!data || data.length === 0) break;
       for (const item of data) {
+        // Filtro opcional por primer caracter, solo aplica al primer nivel
+        // (carpetas user_id), para poder procesar buckets grandes en varias
+        // invocaciones manuales sin exceder el limite de tiempo.
+        if (prefix === "" && firstCharFilter && !firstCharFilter.includes(item.name[0]?.toLowerCase())) continue;
         // A "folder" has no metadata / no id
         if (item.id === null || (!item.metadata && !item.updated_at)) {
           await walk(prefix ? `${prefix}/${item.name}` : item.name);
@@ -96,6 +131,15 @@ serve(async (req) => {
   try { body = await req.json(); } catch { /* GET/empty */ }
   const mode: Mode = (body?.mode as Mode) || "dry_run";
   if (!["dry_run", "notify", "purge"].includes(mode)) return json({ error: "invalid_mode" }, 400);
+  // Filtro opcional por bucket, para poder ejecutar por partes cuando el
+  // volumen total excede el limite de 150s de las Edge Functions.
+  const bucketsFilter: string[] | null = Array.isArray(body?.buckets) ? body.buckets : null;
+  // Filtro opcional por primer caracter de la carpeta user_id (ej. ['0','1','2','3']),
+  // para poder procesar buckets muy grandes (ej. ai-generations) en varias
+  // invocaciones manuales sin exceder el limite de tiempo de la funcion.
+  const firstCharFilter: string[] | null = Array.isArray(body?.firstChars)
+    ? body.firstChars.map((c: string) => c.toLowerCase())
+    : null;
 
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
   const resendKey = Deno.env.get("RESEND_API_KEY") || "";
@@ -148,8 +192,9 @@ serve(async (req) => {
   const candidatesByUser = new Map<string, Candidate[]>();
 
   for (const [bucket, rule] of Object.entries(RULES)) {
+    if (bucketsFilter && !bucketsFilter.includes(bucket)) continue;
     if (PROTECTED.has(bucket)) continue;
-    const objects = await listAllObjects(supabase, bucket);
+    const objects = await listAllObjects(supabase, bucket, firstCharFilter ?? undefined);
     let bucketCount = 0, bucketSize = 0, bucketCandidates = 0;
 
     for (const obj of objects) {
