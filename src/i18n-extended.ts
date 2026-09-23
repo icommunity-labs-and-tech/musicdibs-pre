@@ -35,7 +35,9 @@ export function applyExtendedTranslations(i18nInstance: any, onlyLangs?: readonl
   // Sin esto, el "safety fix" de privacy.dashboard y el deep-merge de
   // dashboard perderian el contenido base existente. Confirmado con test
   // de comparacion byte-a-byte contra la implementacion original.
-  const langsToInit = ['es', 'en', 'pt-BR'] as const;
+  const langsToInit = ((onlyLangs && onlyLangs.length
+    ? onlyLangs
+    : ['es', 'en', 'pt-BR']) as readonly ExtLang[]);
   const extra: Record<string, { translation: Record<string, any> }> = {
     es: { translation: {} },
     en: { translation: {} },

@@ -55,9 +55,6 @@ const detectBrowserLang = (): string => {
   return 'en';
 };
 
-const detectedLang = detectBrowserLang();
-
-
 export const detectedLang = detectBrowserLang();
 
 // ---------------------------------------------------------------------------
