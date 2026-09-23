@@ -3,9 +3,11 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 interface UseParallaxOptions {
   speed?: number;
   clamp?: boolean;
+  /** Skip all scroll work (used on mobile, where parallax hurts INP/FPS). */
+  disabled?: boolean;
 }
 
-export const useParallax = ({ speed = 0.3 }: UseParallaxOptions = {}) => {
+export const useParallax = ({ speed = 0.3, disabled = false }: UseParallaxOptions = {}) => {
   const [offset, setOffset] = useState(0);
   const ref = useRef<HTMLElement | null>(null);
   const ticking = useRef(false);
@@ -45,6 +47,7 @@ export const useParallax = ({ speed = 0.3 }: UseParallaxOptions = {}) => {
   }, [speed]);
 
   useEffect(() => {
+    if (disabled) return;
     // Cache position once on mount and on resize
     cachePosition();
     window.addEventListener('resize', cachePosition, { passive: true });
@@ -54,7 +57,10 @@ export const useParallax = ({ speed = 0.3 }: UseParallaxOptions = {}) => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', cachePosition);
     };
-  }, [handleScroll, cachePosition]);
+  }, [handleScroll, cachePosition, disabled]);
+
+  return { offset: disabled ? 0 : offset, ref };
+};
 
   return { offset, ref };
 };
