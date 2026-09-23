@@ -61,6 +61,3 @@ export const useParallax = ({ speed = 0.3, disabled = false }: UseParallaxOption
 
   return { offset: disabled ? 0 : offset, ref };
 };
-
-  return { offset, ref };
-};
