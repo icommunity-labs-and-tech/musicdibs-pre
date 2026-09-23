@@ -391,7 +391,7 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
 };
 
 // Merge legal, FAQ and AI Music Studio translations into resources
-const langs = ['es', 'en', 'pt-BR'] as const;
+const langs = langsToInit;
 langs.forEach((lang) => {
   const key = lang === 'pt-BR' ? 'pt-BR' : lang;
   if (extra[key] && legalTranslations[lang]) {
@@ -407,7 +407,7 @@ langs.forEach((lang) => {
 
 
 // Merge AI Music Studio subpage translations
-const allLangs = ['es', 'en', 'pt-BR'] as const;
+const allLangs = langsToInit;
 allLangs.forEach((lang) => {
   if (extra[lang] && aiStudioTranslations[lang]) {
     Object.assign(extra[lang].translation, aiStudioTranslations[lang]);
@@ -825,7 +825,7 @@ allLangs.forEach((lang) => {
   }
 });
 
-  const allLangsFinal = ['es', 'en', 'pt-BR'] as const;
+  const allLangsFinal = langsToInit;
   allLangsFinal.forEach((lang) => {
     // deep=false: `extra[lang].translation` ya es el resultado final completo
     // (copia del base + todo lo fusionado encima), así que se reemplaza
