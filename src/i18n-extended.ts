@@ -21,7 +21,13 @@ import { dashboardTranslations } from './i18nDashboard';
 import { pagesTranslations } from './i18nPages';
 import { promoMaterialTranslations } from './i18nPromoMaterial';
 
-export function applyExtendedTranslations(i18nInstance: any) {
+type ExtLang = 'es' | 'en' | 'pt-BR';
+
+/**
+ * @param onlyLangs si se indica, sólo se calculan y aplican esos idiomas
+ * (división del bundle por idioma: cada visita carga sólo el suyo).
+ */
+export function applyExtendedTranslations(i18nInstance: any, onlyLangs?: readonly string[]) {
   // FIX: `extra` debe partir de una COPIA del resource base ya cargado en
   // i18next (no de un objeto vacio), porque el codigo original de merge
   // operaba sobre `resources[lang].translation`, que para entonces ya
@@ -29,7 +35,9 @@ export function applyExtendedTranslations(i18nInstance: any) {
   // Sin esto, el "safety fix" de privacy.dashboard y el deep-merge de
   // dashboard perderian el contenido base existente. Confirmado con test
   // de comparacion byte-a-byte contra la implementacion original.
-  const langsToInit = ['es', 'en', 'pt-BR'] as const;
+  const langsToInit = ((onlyLangs && onlyLangs.length
+    ? onlyLangs
+    : ['es', 'en', 'pt-BR']) as readonly ExtLang[]);
   const extra: Record<string, { translation: Record<string, any> }> = {
     es: { translation: {} },
     en: { translation: {} },
@@ -383,7 +391,7 @@ const dashboardWidgetTranslations: Record<string, { dashboard: Record<string, an
 };
 
 // Merge legal, FAQ and AI Music Studio translations into resources
-const langs = ['es', 'en', 'pt-BR'] as const;
+const langs = langsToInit;
 langs.forEach((lang) => {
   const key = lang === 'pt-BR' ? 'pt-BR' : lang;
   if (extra[key] && legalTranslations[lang]) {
@@ -399,7 +407,7 @@ langs.forEach((lang) => {
 
 
 // Merge AI Music Studio subpage translations
-const allLangs = ['es', 'en', 'pt-BR'] as const;
+const allLangs = langsToInit;
 allLangs.forEach((lang) => {
   if (extra[lang] && aiStudioTranslations[lang]) {
     Object.assign(extra[lang].translation, aiStudioTranslations[lang]);
@@ -817,7 +825,7 @@ allLangs.forEach((lang) => {
   }
 });
 
-  const allLangsFinal = ['es', 'en', 'pt-BR'] as const;
+  const allLangsFinal = langsToInit;
   allLangsFinal.forEach((lang) => {
     // deep=false: `extra[lang].translation` ya es el resultado final completo
     // (copia del base + todo lo fusionado encima), así que se reemplaza

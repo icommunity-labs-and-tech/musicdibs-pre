@@ -1,5 +1,6 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
+import { ensureLanguage } from "@/i18n";
 
 export type SupportedLang = "es" | "en" | "pt-BR";
 
@@ -44,6 +45,22 @@ export const LocalizedRoute = ({ lang, prefix, children }: LocalizedRouteProps) 
     return clone;
   }, [i18n, lang]);
   const value = useMemo(() => ({ lang, prefix }), [lang, prefix]);
+
+  // Los textos se cargan por idioma (un JSON por idioma), así que una ruta
+  // /pt o /en puede necesitar un idioma que aún no está en memoria.
+  const [ready, setReady] = useState(() => scopedI18n.hasResourceBundle?.(lang, "translation") ?? false);
+  useEffect(() => {
+    if (ready) return;
+    let active = true;
+    void ensureLanguage(lang).then(() => {
+      if (active) setReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, [lang, ready]);
+
+  if (!ready) return null;
 
   return (
     <LocalizedRouteContext.Provider value={value}>

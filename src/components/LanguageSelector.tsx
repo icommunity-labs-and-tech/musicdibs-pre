@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { ensureLanguage } from "@/i18n";
 
 export const LanguageSelector = () => {
   const { i18n } = useTranslation();
@@ -45,8 +46,9 @@ export const LanguageSelector = () => {
           {languages.map((language) => (
             <button
               key={language.code}
-              onClick={() => {
+              onClick={async () => {
                 setSelectedLanguage(language.code);
+                await ensureLanguage(language.code);
                 i18n.changeLanguage(language.code);
                 setIsOpen(false);
                 try { localStorage.setItem('lang', language.code); } catch {}
