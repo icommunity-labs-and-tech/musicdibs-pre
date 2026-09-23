@@ -21,7 +21,13 @@ import { dashboardTranslations } from './i18nDashboard';
 import { pagesTranslations } from './i18nPages';
 import { promoMaterialTranslations } from './i18nPromoMaterial';
 
-export function applyExtendedTranslations(i18nInstance: any) {
+type ExtLang = 'es' | 'en' | 'pt-BR';
+
+/**
+ * @param onlyLangs si se indica, sólo se calculan y aplican esos idiomas
+ * (división del bundle por idioma: cada visita carga sólo el suyo).
+ */
+export function applyExtendedTranslations(i18nInstance: any, onlyLangs?: readonly string[]) {
   // FIX: `extra` debe partir de una COPIA del resource base ya cargado en
   // i18next (no de un objeto vacio), porque el codigo original de merge
   // operaba sobre `resources[lang].translation`, que para entonces ya
