@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ensureLanguage } from '@/i18n';
 
 const LANGS = [
   { code: 'en', label: 'GB', name: 'English' },
@@ -25,7 +26,8 @@ export const InlineLanguageSwitcher = () => {
     return () => document.removeEventListener('mousedown', onClick);
   }, []);
 
-  const change = (code: string) => {
+  const change = async (code: string) => {
+    await ensureLanguage(code);
     i18n.changeLanguage(code);
     try { localStorage.setItem('lang', code); } catch {}
     setOpen(false);
