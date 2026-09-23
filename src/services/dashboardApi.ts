@@ -274,7 +274,39 @@ export async function registerWork(data: WorkRegistration & { resumeWorkId?: str
         .from('works-files')
         .upload(filePath, file, { upsert: true });
       if (error) {
-        if (attempt >= MAX_UPLOAD_RETRIES) throw new Error(`Error subiendo archivo: ${error.message}`);
+        if (attempt >= MAX_UPLOAD_RETRIES) {
+          // FIX 2026-09-22: reporte de diagnostico temporal para el patron
+          // de "row-level security policy" reportado por varios usuarios
+          // (todos plan Monthly) que persiste incluso con sesion nueva,
+          // otro navegador y otro dispositivo -- enviamos los claims reales
+          // del JWT en el momento exacto del fallo para comparar contra
+          // una sesion normal, ya que reproducir con un magic link generado
+          // por nosotros SIEMPRE funciona bien, sugiriendo una diferencia
+          // en como se genera/mantiene la sesion real de estos usuarios.
+          if (error.message?.includes('row-level security policy')) {
+            try {
+              const { data: { session: debugSession } } = await supabase.auth.getSession();
+              let claims: any = null;
+              if (debugSession?.access_token) {
+                const payload = debugSession.access_token.split('.')[1];
+                claims = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+              }
+              fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/debug-report-rls-upload`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  user_id: user.id,
+                  error_message: error.message,
+                  jwt_claims: claims,
+                  user_agent: navigator.userAgent,
+                  browser_language: navigator.language,
+                  client_timestamp: new Date().toISOString(),
+                }),
+              }).catch(() => {});
+            } catch { /* best-effort, never block the real error */ }
+          }
+          throw new Error(`Error subiendo archivo: ${error.message}`);
+        }
         await new Promise((r) => setTimeout(r, 1000 * attempt));
         continue;
       }
