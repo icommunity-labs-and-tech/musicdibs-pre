@@ -8,32 +8,58 @@ import { useParallax } from "@/hooks/useParallax";
 import { HowItWorksDemoModal } from "@/components/HowItWorksDemoModal";
 import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 
+const HERO_POSTER = "/lovable-uploads/8a9c1220-8213-4d45-a928-debd5429a44c.webp";
+
+/**
+ * PERF 2026-09-23: en movil el video de fondo (2,1 MB, autoplay) se descargaba
+ * entero y competia con el LCP. Se detecta de forma sincrona (antes del primer
+ * render) para no montar nunca el <video> en pantallas pequenas ni con
+ * "reducir movimiento" activo: se muestra solo el poster, ya precargado.
+ */
+const prefersLightHero = (): boolean => {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return (
+    window.matchMedia("(max-width: 767px)").matches ||
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+};
+
 export const HeroSection = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const footerLinks = getFooterLinks(i18n.resolvedLanguage || i18n.language);
-  const { offset } = useParallax({ speed: 0.4 });
-  const { offset: bgOffset } = useParallax({ speed: 0.15 });
+  const [lightHero] = useState(prefersLightHero);
+  const { offset } = useParallax({ speed: 0.4, disabled: lightHero });
+  const { offset: bgOffset } = useParallax({ speed: 0.15, disabled: lightHero });
   const [demoOpen, setDemoOpen] = useState(false);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Video background with parallax */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        preload="metadata"
-        title="Musicdibs: registra, protege y distribuye tu música"
-        aria-label="Musicdibs: registra, protege y distribuye tu música"
-        poster="/lovable-uploads/8a9c1220-8213-4d45-a928-debd5429a44c.webp"
-        onError={(e) => console.error("Video failed to load:", e)}
-        className="absolute inset-0 w-full h-full object-cover will-change-transform"
-        style={{ transform: `translateY(${offset * 0.5}px) scale(1.1)` }}
-      >
-        <source src="/hero-video.mp4" type="video/mp4" />
-      </video>
+      {/* Video background with parallax (solo en escritorio) */}
+      {lightHero ? (
+        <div
+          className="absolute inset-0 w-full h-full bg-cover bg-center"
+          style={{ backgroundImage: `url('${HERO_POSTER}')` }}
+          role="img"
+          aria-label="Musicdibs: registra, protege y distribuye tu música"
+        />
+      ) : (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+          title="Musicdibs: registra, protege y distribuye tu música"
+          aria-label="Musicdibs: registra, protege y distribuye tu música"
+          poster={HERO_POSTER}
+          onError={(e) => console.error("Video failed to load:", e)}
+          className="absolute inset-0 w-full h-full object-cover will-change-transform"
+          style={{ transform: `translateY(${offset * 0.5}px) scale(1.1)` }}
+        >
+          <source src="/hero-video.mp4" type="video/mp4" />
+        </video>
+      )}
 
       {/* Background with gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/50 via-primary/50 to-brand/50">
