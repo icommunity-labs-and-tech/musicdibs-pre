@@ -1,5 +1,6 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { I18nextProvider, useTranslation } from "react-i18next";
+import { ensureLanguage } from "@/i18n";
 
 export type SupportedLang = "es" | "en" | "pt-BR";
 
