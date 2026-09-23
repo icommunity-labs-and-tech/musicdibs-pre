@@ -1,0 +1,1 @@
+GRANT INSERT, SELECT ON public.rls_upload_debug_reports TO service_role;
