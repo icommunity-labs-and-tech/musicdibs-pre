@@ -3013,6 +3013,39 @@ export type Database = {
         }
         Relationships: []
       }
+      rls_upload_debug_reports: {
+        Row: {
+          browser_language: string | null
+          client_timestamp: string | null
+          error_message: string | null
+          id: string
+          jwt_claims: Json | null
+          server_timestamp: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          browser_language?: string | null
+          client_timestamp?: string | null
+          error_message?: string | null
+          id?: string
+          jwt_claims?: Json | null
+          server_timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          browser_language?: string | null
+          client_timestamp?: string | null
+          error_message?: string | null
+          id?: string
+          jwt_claims?: Json | null
+          server_timestamp?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       social_promotions: {
         Row: {
           copy_ig_feed: string | null
