@@ -68,8 +68,8 @@ export const HeroSection = () => {
 
       {/* Background pattern/texture overlay with parallax */}
       <div
-        className="absolute inset-0 opacity-20 will-change-transform"
-        style={{ transform: `translateY(${bgOffset}px)` }}
+        className={`absolute inset-0 opacity-20 ${lightHero ? "" : "will-change-transform"}`}
+        style={lightHero ? undefined : { transform: `translateY(${bgOffset}px)` }}
       >
         <div className="absolute top-20 left-10 w-32 h-32 rounded-full bg-page-surface blur-xl"></div>
         <div className="absolute top-40 right-20 w-24 h-24 rounded-full bg-brand/20 blur-lg"></div>
