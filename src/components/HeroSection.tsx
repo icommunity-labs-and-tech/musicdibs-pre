@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { getFooterLinks } from "@/i18nLinks";
 import { useParallax } from "@/hooks/useParallax";
-import { HowItWorksDemoModal } from "@/components/HowItWorksDemoModal";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
+
+// PERF: la ventana de demo (~23KB) solo se descarga al abrirla.
+const HowItWorksDemoModal = lazyWithRetry(() =>
+  import("@/components/HowItWorksDemoModal").then((m) => ({ default: m.HowItWorksDemoModal }))
+);
 import { trackSignupCtaClick } from "@/lib/googleAdsConversions";
 
 const HERO_POSTER = "/lovable-uploads/8a9c1220-8213-4d45-a928-debd5429a44c.webp";
@@ -123,7 +128,11 @@ export const HeroSection = () => {
         </ScrollReveal>
       </div>
 
-      <HowItWorksDemoModal open={demoOpen} onOpenChange={setDemoOpen} />
+      {demoOpen && (
+        <Suspense fallback={null}>
+          <HowItWorksDemoModal open={demoOpen} onOpenChange={setDemoOpen} />
+        </Suspense>
+      )}
     </section>
   );
 };
