@@ -11,15 +11,19 @@
       gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:'denied',wait_for_update:500,region:['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE','IS','LI','NO','GB','CH','CA-QC']});
     </script>
     <!-- Google Tag Manager (diferido): el evento gtm.js se encola ya, pero el
-         script se descarga tras 'load' + inactividad o en la primera interacción,
-         para no bloquear el hilo principal en móvil. Los eventos del dataLayer
-         quedan en cola y GTM los procesa al cargar. -->
+         script se descarga solo tras 'load' + inactividad (requestIdleCallback),
+         para no bloquear el hilo principal en movil. Los eventos del dataLayer
+         quedan en cola y GTM los procesa al cargar.
+         FIX 2026-09-24: se quitaron los triggers de interaccion inmediata
+         (pointerdown/keydown/scroll/touchstart) -- competian directamente con
+         la medicion de INP en movil (656ms, "Poor" en PageSpeed/CrUX): el
+         primer scroll/toque del usuario disparaba la descarga y ejecucion de
+         GTM justo en el momento en que se mide esa interaccion. -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var done=false;var load=function(){
     if(done)return;done=true;var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://musicdibs.com/metrics/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);};
-    ['pointerdown','keydown','scroll','touchstart'].forEach(function(e){w.addEventListener(e,load,{once:true,passive:true});});
     w.addEventListener('load',function(){if('requestIdleCallback' in w){w.requestIdleCallback(load,{timeout:3500});}else{w.setTimeout(load,2000);}});
     })(window,document,'script','dataLayer','GTM-T8ZBZZMF');</script>
     <!-- End Google Tag Manager -->
