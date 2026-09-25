@@ -137,7 +137,7 @@ serve(async (req) => {
       (body?.data?.audioUrl as string) ||
       null;
 
-    if (!kieAudioUrl) {
+    if (!kieAudioUrl || !isAllowedProviderUrl(kieAudioUrl)) {
       console.warn("[kie-enhance-callback] no audio_url in payload", JSON.stringify(body).slice(0, 300));
       await supabase
         .from("ai_generation_logs")
@@ -252,6 +252,19 @@ serve(async (req) => {
     });
   }
 });
+
+// Only fetch audio from KIE-controlled hosts (https only).
+const ALLOWED_AUDIO_HOST_SUFFIXES = ["aiquickdraw.com", "kie.ai", "redpandaai.co"];
+function isAllowedProviderUrl(raw: string): boolean {
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== "https:") return false;
+    const host = u.hostname.toLowerCase();
+    return ALLOWED_AUDIO_HOST_SUFFIXES.some((s) => host === s || host.endsWith(`.${s}`));
+  } catch {
+    return false;
+  }
+}
 
 function ok(body: unknown): Response {
   return new Response(JSON.stringify(body), {
