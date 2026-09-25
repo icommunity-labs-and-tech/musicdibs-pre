@@ -36,14 +36,26 @@ const readIndex = async () => {
   }
 };
 
+const decodeEntities = (s) =>
+  s
+    .replace(/&(quot|#34);/gi, '"')
+    .replace(/&(apos|#39);/gi, "'")
+    .replace(/&(lt|#60);/gi, "<")
+    .replace(/&(gt|#62);/gi, ">")
+    .replace(/&amp;/gi, "&");
+
+// Attribute-aware extraction: the opening quote character is captured and the
+// value runs until the *matching* quote, so apostrophes inside a double-quoted
+// attribute (e.g. `content="Musicdibs' AI Studio..."`) no longer truncate the
+// value and produce false duplicate-description errors.
 const extractTag = (html, regex) => {
   const m = html.match(regex);
-  return m ? m[1].trim() : "";
+  return m ? decodeEntities(m[1].trim()) : "";
 };
 
 const getTitle = (html) => extractTag(html, /<title>([\s\S]*?)<\/title>/i);
 const getDescription = (html) =>
-  extractTag(html, /<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i);
+  extractTag(html, /<meta\s+name=["']description["']\s+content=(["'])([\s\S]*?)\1/i);
 
 const fetchSlugs = async () => {
   const url = `${SUPABASE_URL}/rest/v1/blog_posts?select=slug&published=eq.true`;
