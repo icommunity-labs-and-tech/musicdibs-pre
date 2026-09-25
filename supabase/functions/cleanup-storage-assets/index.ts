@@ -1,8 +1,8 @@
 // Cleanup storage assets — weekly retention policy
 // Modes:
 //   dry_run  → only counts and logs candidates (no deletes, no emails)
-//   notify   → sends 14-day / 7-day emails and moves files past final warning to cleanup-trash
-//   purge    → same as notify + physically deletes cleanup-trash items >14 days old
+//   notify   → sends 2-day / 2-day emails and moves files past final warning to cleanup-trash
+//   purge    → same as notify + physically deletes cleanup-trash items >3 days old
 //
 // Auth: header x-cron-secret == CRON_SECRET, or Authorization: Bearer <SERVICE_ROLE>
 //
@@ -42,8 +42,8 @@ const RULES: Record<string, { activeDays: number | null; inactiveDays: number | 
 
 const PROTECTED = new Set(["purchase-certificates", "documents", "blog-images", "cleanup-trash"]);
 const TRASH_BUCKET = "cleanup-trash";
-const TRASH_PURGE_DAYS = 14;
-const NOTIFY_GAP_DAYS = 7; // between warn -> final -> move
+const TRASH_PURGE_DAYS = 3; // acortado 2026-09-25 (mismo motivo que NOTIFY_GAP_DAYS, antes 14 dias)
+const NOTIFY_GAP_DAYS = 2; // between warn -> final -> move (acortado 2026-09-25: urgencia real de espacio, periodo de gracia de Supabase hasta 20-oct. Antes 7 dias -- ciclo completo pasaba de ese limite. Se mantiene un aviso minimo real (no se elimina el proceso), pero al maximo de agresivo.
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -273,7 +273,7 @@ serve(async (req) => {
         const tpl = storageCleanupEmail({
           name: info.name, phase: nextPhase === "warn" ? "warn" : "final",
           fileCount: files.length, sizeBytes: totalSize,
-          daysUntilDeletion: nextPhase === "warn" ? 14 : 7,
+          daysUntilDeletion: nextPhase === "warn" ? (NOTIFY_GAP_DAYS * 2) : NOTIFY_GAP_DAYS,
           lang: info.lang,
           variant: hasWorksFiles ? "works-files" : "generic",
         });
