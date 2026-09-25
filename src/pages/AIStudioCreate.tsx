@@ -24,7 +24,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { buildArtistProCheckoutUrl } from "@/lib/paymentLinks";
+import { PlanOffer } from "@/components/dashboard/PlanOffer";
 import { supabase } from "@/integrations/supabase/client";
 import { parseAiError } from "@/lib/aiErrorHandler";
 import { cn } from "@/lib/utils";
