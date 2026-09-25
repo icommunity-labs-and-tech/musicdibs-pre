@@ -2578,15 +2578,7 @@ const AIStudioCreate = () => {
             </DialogTitle>
             <DialogDescription>{t('aiCreate.registerPromptDesc')}</DialogDescription>
           </DialogHeader>
-          {user && (
-            <button
-              type="button"
-              onClick={() => window.open(buildArtistProCheckoutUrl(user), '_blank', 'noopener,noreferrer')}
-              className="text-left text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-            >
-              {t('aiCreate.registerPromptArtistPro')}
-            </button>
-          )}
+          {user && !hasEnough(FEATURE_COSTS.register_work) && <PlanOffer />}
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" onClick={() => setRegisterPrompt(null)}>
               {t('aiCreate.registerPromptLater')}
