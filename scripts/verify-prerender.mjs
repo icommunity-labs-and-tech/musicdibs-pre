@@ -54,8 +54,11 @@ const extractTag = (html, regex) => {
 };
 
 const getTitle = (html) => extractTag(html, /<title>([\s\S]*?)<\/title>/i);
-const getDescription = (html) =>
-  extractTag(html, /<meta\s+name=["']description["']\s+content=(["'])([\s\S]*?)\1/i);
+const getDescription = (html) => {
+  // Group 1 = opening quote, group 2 = value (runs until the matching quote).
+  const m = html.match(/<meta\s+name=["']description["']\s+content=(["'])([\s\S]*?)\1/i);
+  return m ? decodeEntities(m[2].trim()) : "";
+};
 
 const fetchSlugs = async () => {
   const url = `${SUPABASE_URL}/rest/v1/blog_posts?select=slug&published=eq.true`;
