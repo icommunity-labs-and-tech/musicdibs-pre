@@ -261,6 +261,36 @@ serve(async (req) => {
             persistedStoragePath = storagePath;
             persistedAudioUrl = publicUrlData?.publicUrl ?? null;
 
+            // FIX 2026-09-25 (dragote@gmail.com, reproducido 5/5 veces): el
+            // insert de ai_generations requiere duration (NOT NULL), que
+            // nunca se calculaba aqui -- el insert fallaba SIEMPRE (no
+            // intermitente), disparando el reembolso automatico en el 100%
+            // de los casos desde que se implemento esta persistencia. Se
+            // parsea el header WAV (44 bytes estandar: sample rate en el
+            // byte 24, canales en el 22, bits por muestra en el 34) para
+            // calcular la duracion real a partir del tamaño de los datos
+            // de audio -- ROEX siempre devuelve WAV sin comprimir, asi que
+            // el header sigue el formato estandar RIFF/WAVE.
+            let durationSecs = 0;
+            try {
+              const view = new DataView(fileBuf);
+              if (fileBuf.byteLength > 44 && view.getUint32(0, false) === 0x52494646 /* 'RIFF' */) {
+                const numChannels = view.getUint16(22, true);
+                const sampleRate = view.getUint32(24, true);
+                const bitsPerSample = view.getUint16(34, true);
+                const bytesPerSecond = sampleRate * numChannels * (bitsPerSample / 8);
+                if (bytesPerSecond > 0) {
+                  durationSecs = Math.round((fileBuf.byteLength - 44) / bytesPerSecond);
+                }
+              }
+            } catch (parseErr) {
+              console.error('[ROEX] final: WAV header parse failed, falling back to byte estimate:', parseErr);
+            }
+            if (!durationSecs || durationSecs <= 0) {
+              // Fallback: estimacion aproximada si el header no es estandar
+              durationSecs = Math.round(fileBuf.byteLength / 176400); // ~44.1kHz/16-bit/estereo sin comprimir
+            }
+
             const { error: insErr } = await supabase.from('ai_generations').insert({
               user_id: user.id,
               prompt: 'Masterización ROEX',
@@ -269,6 +299,7 @@ serve(async (req) => {
               audio_url: persistedAudioUrl,
               storage_path: persistedStoragePath,
               storage_bucket: 'ai-generations',
+              duration: durationSecs,
             });
             if (insErr) {
               console.error('[ROEX] final: failed to insert ai_generations row:', insErr.message);
