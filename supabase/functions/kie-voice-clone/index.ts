@@ -23,6 +23,7 @@
 //   vía GET record-info / validate-info según la fase.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
+import { signCallback } from "../_shared/callback-signature.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -114,7 +115,7 @@ serve(async (req) => {
         .single();
       if (insErr || !row) return json({ error: "db_insert_failed", message: insErr?.message }, 500);
 
-      const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-voice-clone-callback?cloneId=${row.id}&step=phrase`;
+      const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-voice-clone-callback?cloneId=${row.id}&step=phrase&sig=${await signCallback("voice-clone", row.id)}`;
 
       // KIE exige enteros, con vocalEndS > vocalStartS (segmento de 3-30 s).
       const startS = Math.max(0, Math.floor(Number(vocalStartS) || 0));
@@ -199,7 +200,7 @@ serve(async (req) => {
         status: "generating",
       }).eq("id", cloneId);
 
-      const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-voice-clone-callback?cloneId=${cloneId}&step=voice`;
+      const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-voice-clone-callback?cloneId=${cloneId}&step=voice&sig=${await signCallback("voice-clone", cloneId)}`;
 
       const kieRes = await fetch(`${KIE_BASE}/voice/generate`, {
         method: "POST",

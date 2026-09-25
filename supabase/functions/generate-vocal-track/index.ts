@@ -17,6 +17,7 @@
 // con esa misma voz saltan directo al paso 3.
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { signCallback } from "../_shared/callback-signature.ts";
 import { getOperationCost } from "../_shared/operation-pricing.ts";
 
 const corsHeaders = {
@@ -135,7 +136,7 @@ serve(async (req) => {
       // Ya tenemos un personaId cacheado para esta voz -- generar la
       // cancion final directamente.
       console.log(`[VOCAL-TRACK] Generating with cached personaId: ${voiceClone.persona_id}`);
-      const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${generation.id}&step=music&creditsCost=${CREDITS_COST}&fromPermanent=${vocalDeductedFromPermanent}`;
+      const callBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${generation.id}&step=music&creditsCost=${CREDITS_COST}&fromPermanent=${vocalDeductedFromPermanent}&sig=${await signCallback("vocal-track", generation.id)}`;
       const kieRes = await fetch('https://api.kie.ai/api/v1/generate', {
         method: 'POST',
         headers: { Authorization: `Bearer ${KIE_API_KEY}`, 'Content-Type': 'application/json' },
@@ -161,7 +162,7 @@ serve(async (req) => {
     // No hay persona_id todavia -- generar primero una cancion de
     // referencia con el audio de la voz, para poder crear el Persona.
     console.log(`[VOCAL-TRACK] No cached personaId, generating reference track first from sample: ${voiceClone.sample_url}`);
-    const refCallBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${generation.id}&step=reference&creditsCost=${CREDITS_COST}&fromPermanent=${vocalDeductedFromPermanent}`;
+    const refCallBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${generation.id}&step=reference&creditsCost=${CREDITS_COST}&fromPermanent=${vocalDeductedFromPermanent}&sig=${await signCallback("vocal-track", generation.id)}`;
     const refRes = await fetch('https://api.kie.ai/api/v1/generate/add-vocals', {
       method: 'POST',
       headers: { Authorization: `Bearer ${KIE_API_KEY}`, 'Content-Type': 'application/json' },

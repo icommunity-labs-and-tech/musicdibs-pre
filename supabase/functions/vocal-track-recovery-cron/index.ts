@@ -9,6 +9,7 @@
 // dos. Se resuelve consultando activamente el estado real en KIE via los
 // endpoints de consulta (generate/record-info, vocal-removal/record-info).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { signCallback } from "../_shared/callback-signature.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,7 +78,7 @@ Deno.serve(async (req) => {
           .eq("is_active", true)
           .maybeSingle();
         const realCreditsCost = pricingRow?.credits_cost ?? 2;
-        const sepCallBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${gen.id}&step=separation&creditsCost=${realCreditsCost}&fromPermanent=0`;
+        const sepCallBackUrl = `${SUPABASE_URL}/functions/v1/kie-vocal-track-callback?generationId=${gen.id}&step=separation&creditsCost=${realCreditsCost}&fromPermanent=0&sig=${await signCallback("vocal-track", gen.id)}`;
         const sepRes = await fetch(`${KIE_BASE}/vocal-removal/generate`, {
           method: "POST",
           headers: { Authorization: `Bearer ${KIE_API_KEY}`, "Content-Type": "application/json" },
