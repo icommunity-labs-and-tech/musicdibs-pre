@@ -24,7 +24,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { buildArtistProCheckoutUrl } from "@/lib/paymentLinks";
+import { PlanOffer } from "@/components/dashboard/PlanOffer";
 import { supabase } from "@/integrations/supabase/client";
 import { parseAiError } from "@/lib/aiErrorHandler";
 import { cn } from "@/lib/utils";
@@ -2578,15 +2578,7 @@ const AIStudioCreate = () => {
             </DialogTitle>
             <DialogDescription>{t('aiCreate.registerPromptDesc')}</DialogDescription>
           </DialogHeader>
-          {user && (
-            <button
-              type="button"
-              onClick={() => window.open(buildArtistProCheckoutUrl(user), '_blank', 'noopener,noreferrer')}
-              className="text-left text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-            >
-              {t('aiCreate.registerPromptArtistPro')}
-            </button>
-          )}
+          {user && !hasEnough(FEATURE_COSTS.register_work) && <PlanOffer />}
           <DialogFooter className="gap-2 sm:gap-2">
             <Button variant="outline" onClick={() => setRegisterPrompt(null)}>
               {t('aiCreate.registerPromptLater')}
