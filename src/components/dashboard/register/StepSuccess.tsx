@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { buildArtistProCheckoutUrl } from '@/lib/paymentLinks';
+import { PlanOffer } from '@/components/dashboard/PlanOffer';
 import type { WizardData } from './types';
 
 interface StepSuccessProps {
@@ -111,13 +111,7 @@ export function StepSuccess({ data, registrationId, fileHash, onRegisterAnother 
             {t('wizard.success.lowCreditsTitle')}
           </p>
           <p className="text-xs text-muted-foreground">{t('wizard.success.lowCreditsText')}</p>
-          <Button
-            size="sm"
-            className="w-full"
-            onClick={() => window.open(buildArtistProCheckoutUrl(user), '_blank', 'noopener,noreferrer')}
-          >
-            {t('wizard.success.lowCreditsCta')}
-          </Button>
+          <PlanOffer showMoreLink={false} />
         </div>
       )}
     </div>
