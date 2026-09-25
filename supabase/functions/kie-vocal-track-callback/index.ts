@@ -130,7 +130,7 @@ serve(async (req) => {
       // Generate Persona (sincrono, confirmado por Iker probandolo en el
       // playground -- devuelve el resultado directamente, sin callback).
       const pending = (generation.request_payload || {}) as {
-        formattedLyrics?: string; finalStyle?: string; finalTitle?: string; vocal_gender?: string | null; voiceCloneId?: string;
+        formattedLyrics?: string; finalStyle?: string; finalTitle?: string; vocal_gender?: string | null; voiceCloneId?: string; duration?: number;
       };
       const personaRes = await fetch("https://api.kie.ai/api/v1/generate/generate-persona", {
         method: "POST",
