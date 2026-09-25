@@ -137,11 +137,21 @@ Deno.serve(async (req) => {
     token === supabaseServiceKey ||
     (cronSecret.length > 0 && token === cronSecret)
 
-  // Fallback: accept any JWT issued for the service_role (e.g. rotated keys stored in Vault)
+  // Fallback: a service_role JWT (e.g. rotated key stored in Vault). Decoded
+  // claims are NOT trusted on their own -- the token's signature is verified
+  // by calling a service-role-only Auth admin endpoint with it.
   if (!isAuthorized) {
     const claims = parseJwtClaims(token)
-    if (claims && (claims.role === 'service_role' || claims.role === 'supabase_admin')) {
-      isAuthorized = true
+    if (claims && claims.role === 'service_role') {
+      try {
+        const verifyRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?page=1&per_page=1`, {
+          headers: { apikey: token, Authorization: `Bearer ${token}` },
+        })
+        await verifyRes.body?.cancel()
+        isAuthorized = verifyRes.ok
+      } catch {
+        isAuthorized = false
+      }
     }
   }
 

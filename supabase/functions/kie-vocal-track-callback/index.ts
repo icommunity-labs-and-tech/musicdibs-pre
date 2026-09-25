@@ -6,6 +6,7 @@
 //                      la subimos a nuestro storage y marcamos completado.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
+import { signCallback, verifyCallback } from "../_shared/callback-signature.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +28,10 @@ serve(async (req) => {
     if (!generationId || !step) {
       console.warn(`[kie-vocal-track-callback] missing_params: generationId=${generationId} step=${step}`);
       return json({ received: true });
+    }
+    if (!(await verifyCallback("vocal-track", generationId, url.searchParams.get("sig")))) {
+      console.warn(`[kie-vocal-track-callback] invalid_signature generationId=${generationId}`);
+      return json({ error: "invalid_signature" }, 401);
     }
 
     const admin = createClient(
@@ -125,7 +130,7 @@ serve(async (req) => {
       // Generate Persona (sincrono, confirmado por Iker probandolo en el
       // playground -- devuelve el resultado directamente, sin callback).
       const pending = (generation.request_payload || {}) as {
-        formattedLyrics?: string; finalStyle?: string; finalTitle?: string; vocal_gender?: string | null; voiceCloneId?: string;
+        formattedLyrics?: string; finalStyle?: string; finalTitle?: string; vocal_gender?: string | null; voiceCloneId?: string; duration?: number;
       };
       const personaRes = await fetch("https://api.kie.ai/api/v1/generate/generate-persona", {
         method: "POST",
@@ -153,7 +158,7 @@ serve(async (req) => {
       }
 
       // Disparar ahora la generación FINAL con la letra real del usuario.
-      const musicCallBackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/kie-vocal-track-callback?generationId=${generationId}&step=music&creditsCost=${creditsCost}&fromPermanent=${fromPermanent}`;
+      const musicCallBackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/kie-vocal-track-callback?generationId=${generationId}&step=music&creditsCost=${creditsCost}&fromPermanent=${fromPermanent}&sig=${await signCallback("vocal-track", generationId)}`;
       const vocalGenderField = (pending.vocal_gender === "m" || pending.vocal_gender === "f") ? { vocalGender: pending.vocal_gender } : {};
       const durationField = (typeof pending.duration === "number") ? { duration: pending.duration } : {};
       const finalRes = await fetch("https://api.kie.ai/api/v1/generate", {
@@ -234,7 +239,7 @@ serve(async (req) => {
       }
 
       // Encadenar el paso de separación de stems para quedarnos solo con la voz.
-      const sepCallBackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/kie-vocal-track-callback?generationId=${generationId}&step=separation&creditsCost=${creditsCost}&fromPermanent=${fromPermanent}`;
+      const sepCallBackUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/kie-vocal-track-callback?generationId=${generationId}&step=separation&creditsCost=${creditsCost}&fromPermanent=${fromPermanent}&sig=${await signCallback("vocal-track", generationId)}`;
       const sepRes = await fetch("https://api.kie.ai/api/v1/vocal-removal/generate", {
         method: "POST",
         headers: { Authorization: `Bearer ${KIE_API_KEY}`, "Content-Type": "application/json" },

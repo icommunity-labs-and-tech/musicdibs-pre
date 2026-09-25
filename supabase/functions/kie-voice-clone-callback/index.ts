@@ -3,6 +3,7 @@
 // step=voice  -> la voz personalizada ya se generó (o falló).
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "../_shared/supabase-client.ts";
+import { verifyCallback } from "../_shared/callback-signature.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +26,10 @@ serve(async (req) => {
     if (!cloneId || !step) {
       console.warn(`[kie-voice-clone-callback] missing_params: cloneId=${cloneId} step=${step} url=${req.url}`);
       return json({ received: true });
+    }
+    if (!(await verifyCallback("voice-clone", cloneId, url.searchParams.get("sig")))) {
+      console.warn(`[kie-voice-clone-callback] invalid_signature cloneId=${cloneId}`);
+      return json({ error: "invalid_signature" }, 401);
     }
 
     const admin = createClient(

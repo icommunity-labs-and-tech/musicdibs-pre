@@ -534,11 +534,14 @@ serve(async (req) => {
         const ibsPayloadChecksum = typeof integrityEntry?.checksum === "string" ? integrityEntry.checksum : null;
         const ibsPayloadAlgorithm = typeof integrityEntry?.algorithm === "string" ? integrityEntry.algorithm : null;
 
-        const { data: work } = await supabaseAdmin
+        const { data: isAdminRole } = await supabaseAdmin.rpc("has_role", { _user_id: user.id, _role: "admin" });
+        let workQuery = supabaseAdmin
           .from("works")
           .select("id, status")
-          .eq("ibs_evidence_id", evidenceId)
-          .single();
+          .eq("ibs_evidence_id", evidenceId);
+        // Only the work's owner (or an admin) may trigger updates on it.
+        if (isAdminRole !== true) workQuery = workQuery.eq("user_id", user.id);
+        const { data: work } = await workQuery.maybeSingle();
 
         if (work && work.status === "processing") {
           const updates: Record<string, unknown> = {
