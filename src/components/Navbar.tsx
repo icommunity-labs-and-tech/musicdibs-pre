@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 import { getNavLinks } from "@/i18nLinks";
+import { testimonialsPath } from "@/lib/testimonialsPath";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
@@ -163,6 +164,7 @@ export const Navbar = () => {
             <Link to="/faq" className={`${navText} transition-colors`}>{t('nav.faq')}</Link>
             
             <Link to="/news" className={`${navText} transition-colors`}>{t('nav.news')}</Link>
+            <Link to={testimonialsPath(i18n.resolvedLanguage)} className={`${navText} transition-colors`}>{t('nav.testimonials')}</Link>
 
             <div className={`w-px h-5 ${isLightBg ? 'bg-foreground/20' : 'bg-page-surface-strong'}`} />
 
@@ -210,6 +212,7 @@ export const Navbar = () => {
           <Link to="/faq" onClick={() => setMobileOpen(false)} className={`block ${navText} py-2 transition-colors`}>{t('nav.faq')}</Link>
           
           <Link to="/news" onClick={() => setMobileOpen(false)} className={`block ${navText} py-2 transition-colors`}>{t('nav.news')}</Link>
+          <Link to={testimonialsPath(i18n.resolvedLanguage)} onClick={() => setMobileOpen(false)} className={`block ${navText} py-2 transition-colors`}>{t('nav.testimonials')}</Link>
 
           <div className={`w-full h-px ${isLightBg ? 'bg-border' : 'bg-page-surface'}`} />
 
