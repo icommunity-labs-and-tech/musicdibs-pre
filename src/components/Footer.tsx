@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { getFooterLinks, getNavLinks } from "@/i18nLinks";
+import { testimonialsPath } from "@/lib/testimonialsPath";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { reopenCookieSettings } from "./ConsentBanner";
 import { FooterBadges } from "./FooterBadges";
@@ -97,7 +98,7 @@ const Footer = () => {
             <Link to="/faq" className="block text-primary-foreground/80 hover:text-primary-foreground transition-colors">
               {t('nav.faq')}
             </Link>
-             <Link to={i18n.resolvedLanguage === 'pt-BR' ? '/pt/depoimentos' : i18n.resolvedLanguage === 'en' ? '/en/testimonials' : '/testimonios'} className="block text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+             <Link to={testimonialsPath(i18n.language)} className="block text-primary-foreground/80 hover:text-primary-foreground transition-colors">
                {t('testimonials.footerLink')}
              </Link>
             <a href={navLinks.news} target="_blank" rel="noopener noreferrer" className="block text-primary-foreground/80 hover:text-primary-foreground transition-colors">
