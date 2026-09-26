@@ -1,6 +1,8 @@
 // google-ads-conversion-upload
 // Envia a Google Ads, como conversiones offline de clic, las compras de Stripe
-// (tabla orders) que traen gclid / gbraid / wbraid en metadata.
+// (tabla orders) que traen gclid / gbraid / wbraid en metadata y, desde
+// ENHANCED_LEADS_START, tambien las que solo tienen email (conversiones
+// mejoradas para leads, email en SHA-256).
 //
 // Flujo (lo lanza pg_cron cada 15 min con x-cron-secret):
 //   1. Encola en google_ads_conversion_uploads las orders pagadas (no renovaciones,
@@ -22,11 +24,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 const MAX_ATTEMPTS = 5;
 const LOOKBACK_DAYS = 60; // Google acepta clics de hasta 90 dias
 const BATCH = 200;
+// Conversiones mejoradas para leads: las compras sin click id solo se envian
+// (con el email cifrado) si se pagaron despues de este momento (UTC). Antes la
+// etiqueta web no tenia su email, asi que Google no podria cruzarlas.
+const ENHANCED_LEADS_START = "2026-09-26T20:30:00Z";
+// Errores de Google que no se arreglan reintentando (conversiones mejoradas
+// para leads no activadas / condiciones de datos de clientes no aceptadas).
+const PERMANENT_ERROR = /CUSTOMER_NOT_ACCEPTED_CUSTOMER_DATA_TERMS|CUSTOMER_DATA_POLICY|ENHANCED_CONVERSION/i;
 
 type Pending = {
   order_id: string;
-  click_id_type: "gclid" | "gbraid" | "wbraid";
-  click_id: string;
+  click_id_type: "gclid" | "gbraid" | "wbraid" | null;
+  click_id: string | null;
+  hashed_email: string | null;
   conversion_value: number;
   currency: string;
   conversion_time: string;
@@ -49,6 +59,20 @@ function pickClickId(meta: Record<string, unknown> | null) {
     if (typeof v === "string" && v.trim()) return { type: k, id: v.trim() };
   }
   return null;
+}
+
+// Email normalizado (trim + minusculas; sin puntos en la parte local de
+// gmail.com / googlemail.com) -> SHA-256 hex en minusculas.
+async function hashEmail(raw: string | null | undefined): Promise<string | null> {
+  if (!raw) return null;
+  let email = raw.trim().toLowerCase();
+  const at = email.lastIndexOf("@");
+  if (at < 1) return null;
+  const local = email.slice(0, at);
+  const domain = email.slice(at + 1);
+  if (domain === "gmail.com" || domain === "googlemail.com") email = `${local.replace(/\./g, "")}@${domain}`;
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(email));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 async function getAccessToken() {
@@ -87,30 +111,41 @@ Deno.serve(async (req) => {
   const since = new Date(Date.now() - LOOKBACK_DAYS * 86400_000).toISOString();
   const { data: orders, error: oErr } = await supabase
     .from("orders")
-    .select("id, amount_net, amount_gross, currency, paid_at, metadata")
+    .select("id, user_id, customer_email, amount_net, amount_gross, currency, paid_at, metadata")
     .eq("order_status", "paid")
     .eq("is_renewal", false)
     .gte("paid_at", since)
-    .not("metadata", "is", null)
     .limit(2000);
   if (oErr) return json({ error: `orders query: ${oErr.message}` }, 500);
 
   const candidates = (orders || [])
     .map((o: any) => ({ o, click: pickClickId(o.metadata) }))
-    .filter((x: any) => x.click && Number(x.o.amount_net ?? x.o.amount_gross) > 0);
+    .filter((x: any) => Number(x.o.amount_net ?? x.o.amount_gross) > 0)
+    .filter((x: any) => x.click || (x.o.paid_at > ENHANCED_LEADS_START && (x.o.customer_email || x.o.user_id)));
 
   if (candidates.length) {
     const ids = candidates.map((c: any) => c.o.id);
     const { data: existing } = await supabase.from("google_ads_conversion_uploads").select("order_id").in("order_id", ids);
     const seen = new Set((existing || []).map((e: any) => e.order_id));
-    const rows = candidates.filter((c: any) => !seen.has(c.o.id)).map((c: any) => ({
+    const rows: Record<string, unknown>[] = [];
+    for (const c of candidates.filter((c: any) => !seen.has(c.o.id)) as any[]) {
+      let email: string | null = c.o.customer_email || null;
+      if (!email && c.o.user_id) {
+        const { data: u } = await supabase.auth.admin.getUserById(c.o.user_id);
+        email = u?.user?.email || null;
+      }
+      const hashed_email = await hashEmail(email);
+      if (!c.click && !hashed_email) continue;
+      rows.push({
       order_id: c.o.id,
-      click_id_type: c.click.type,
-      click_id: c.click.id,
+      click_id_type: c.click?.type ?? null,
+      click_id: c.click?.id ?? null,
+      hashed_email,
       conversion_value: Number(c.o.amount_net ?? c.o.amount_gross),
       currency: String(c.o.currency || "eur").toUpperCase(),
       conversion_time: c.o.paid_at,
-    }));
+      });
+    }
     if (rows.length) {
       const { error } = await supabase.from("google_ads_conversion_uploads").upsert(rows, { onConflict: "order_id", ignoreDuplicates: true });
       if (error) result.errors.push(`enqueue: ${error.message}`);
@@ -129,7 +164,7 @@ Deno.serve(async (req) => {
 
   const { data: pending, error: pErr } = await supabase
     .from("google_ads_conversion_uploads")
-    .select("order_id, click_id_type, click_id, conversion_value, currency, conversion_time, attempts")
+    .select("order_id, click_id_type, click_id, hashed_email, conversion_value, currency, conversion_time, attempts")
     .in("status", ["pending", "failed"])
     .lt("attempts", MAX_ATTEMPTS)
     .order("conversion_time", { ascending: true })
@@ -143,7 +178,8 @@ Deno.serve(async (req) => {
   const loginCustomer = Deno.env.get("GOOGLE_ADS_LOGIN_CUSTOMER_ID")?.replace(/-/g, "");
 
   const conversions = (pending as Pending[]).map((p) => ({
-    [p.click_id_type]: p.click_id,
+    ...(p.click_id_type && p.click_id ? { [p.click_id_type]: p.click_id } : {}),
+    ...(p.hashed_email ? { userIdentifiers: [{ hashedEmail: p.hashed_email }] } : {}),
     conversionAction: `customers/${customerId}/conversionActions/${actionId}`,
     conversionDateTime: gadsDate(p.conversion_time),
     conversionValue: Number(p.conversion_value),
@@ -173,7 +209,7 @@ Deno.serve(async (req) => {
     if (!dryRun) {
       for (const p of pending as Pending[]) {
         await supabase.from("google_ads_conversion_uploads")
-          .update({ status: "failed", attempts: p.attempts + 1, last_error: msg.slice(0, 1000) })
+          .update({ status: "failed", attempts: PERMANENT_ERROR.test(msg) ? MAX_ATTEMPTS : p.attempts + 1, last_error: msg.slice(0, 1000) })
           .eq("order_id", p.order_id);
       }
     }
@@ -203,7 +239,7 @@ Deno.serve(async (req) => {
     if (err) {
       result.failed++;
       await supabase.from("google_ads_conversion_uploads")
-        .update({ status: "failed", attempts: p.attempts + 1, last_error: err })
+        .update({ status: "failed", attempts: PERMANENT_ERROR.test(err) ? MAX_ATTEMPTS : p.attempts + 1, last_error: err })
         .eq("order_id", p.order_id);
     } else {
       result.uploaded++;
