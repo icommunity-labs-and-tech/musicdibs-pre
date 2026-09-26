@@ -2,12 +2,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { LazyYouTube } from "@/components/LazyYouTube";
 import { testimonialVideos } from "@/lib/testimonialVideos";
+import { testimonialsPath } from "@/lib/testimonialsPath";
 
 const TestimonialsSection = () => {
   const [currentVideo, setCurrentVideo] = useState(0);
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   
   const testimonials = testimonialVideos;
 
@@ -61,6 +63,14 @@ const TestimonialsSection = () => {
               </div>
             </CardContent>
             </Card>
+            <div className="text-center mt-6">
+              <Link
+                to={testimonialsPath(i18n.resolvedLanguage)}
+                className="inline-block text-warning font-semibold hover:underline transition-colors"
+              >
+                {t('testimonials.viewAll')} →
+              </Link>
+            </div>
           </div>
         </ScrollReveal>
       </div>
