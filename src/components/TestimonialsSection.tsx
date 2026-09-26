@@ -65,7 +65,7 @@ const TestimonialsSection = () => {
             </Card>
             <div className="text-center mt-6">
               <Link
-                to={testimonialsPath(i18n.resolvedLanguage)}
+                to={testimonialsPath(i18n.language)}
                 className="inline-block text-warning font-semibold hover:underline transition-colors"
               >
                 {t('testimonials.viewAll')} →
