@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getAttributionForCheckout } from '@/lib/attribution';
 
 /**
  * Centralised typed wrappers for Stripe/Checkout edge functions.
@@ -36,7 +37,12 @@ async function invoke<T>(fn: string, body?: unknown): Promise<T> {
 }
 
 export function startCreditCheckout(body: CreditCheckoutBody) {
-  return invoke<CheckoutRedirectResponse>('create-credit-checkout', body);
+  // Siempre adjunta UTMs + click IDs de Google (gclid/gbraid/wbraid) guardados.
+  const attribution = { ...getAttributionForCheckout(), ...(body.attribution ?? {}) };
+  return invoke<CheckoutRedirectResponse>('create-credit-checkout', {
+    ...body,
+    ...(Object.keys(attribution).length > 0 ? { attribution } : {}),
+  });
 }
 
 export function cancelRenewal(reason: string) {

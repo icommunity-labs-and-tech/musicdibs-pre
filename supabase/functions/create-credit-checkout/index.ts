@@ -767,7 +767,7 @@ serve(async (req) => {
     }
 
     const attrMetadata: Record<string, string> = {};
-    for (const key of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "coupon_code", "referrer_code", "referrer", "landing_path", "attributed_campaign_name"]) {
+    for (const key of ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "gbraid", "wbraid", "coupon_code", "referrer_code", "referrer", "landing_path", "attributed_campaign_name"]) {
       const value = attribution[key];
       if (typeof value === "string" && value.trim()) attrMetadata[key] = value.slice(0, 500);
     }
