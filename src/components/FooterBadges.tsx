@@ -8,6 +8,7 @@ interface FooterBadge {
   src: string;
   width: number;
   height: number;
+  rel?: string;
 }
 
 const BADGES: FooterBadge[] = [
@@ -19,6 +20,16 @@ const BADGES: FooterBadge[] = [
     src: "https://launchbuff.com/badge-featured-dark.svg",
     width: 256,
     height: 80,
+  },
+  {
+    id: "taaft",
+    href: "https://theresanaiforthat.com/ai/musicdibs/?ref=featured&v=12784591",
+    title: "Featured on There's An AI For That",
+    alt: "Featured on There's An AI For That",
+    src: "https://media.theresanaiforthat.com/featured-on-taaft.png?width=600",
+    width: 300,
+    height: 63,
+    rel: "nofollow noopener noreferrer",
   },
 ];
 
@@ -46,7 +57,7 @@ const FooterBadges = () => {
           key={badge.id}
           href={badge.href}
           target="_blank"
-          rel="noopener noreferrer"
+          rel={badge.rel ?? "noopener noreferrer"}
           title={badge.title}
           aria-label={badge.alt}
           className="inline-flex items-center rounded-xl border border-primary-foreground/20 bg-primary-foreground/5 p-2 hover:bg-primary-foreground/15 transition-colors"
