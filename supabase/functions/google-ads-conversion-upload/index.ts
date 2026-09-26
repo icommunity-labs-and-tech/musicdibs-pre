@@ -11,10 +11,13 @@
 //   3. Marca uploaded / failed (reintenta hasta 5 veces).
 //
 // Secrets necesarios (si falta alguno, encola pero no sube):
-//   GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET,
+//   GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET,
 //   GOOGLE_ADS_REFRESH_TOKEN, GOOGLE_ADS_CUSTOMER_ID (sin guiones),
 //   GOOGLE_ADS_CONVERSION_ACTION_ID (accion tipo "Importacion > clics").
-// Opcionales: GOOGLE_ADS_LOGIN_CUSTOMER_ID (MCC), GOOGLE_ADS_API_VERSION (def. v25).
+// Opcionales: GOOGLE_ADS_LOGIN_CUSTOMER_ID (MCC), GOOGLE_ADS_API_VERSION (def. v25),
+//   GOOGLE_ADS_DEVELOPER_TOKEN (Google retiro los developer tokens el 9-sep-2026:
+//   la cabecera es opcional y se ignora; el acceso lo da el proyecto de Google
+//   Cloud de las credenciales OAuth. Se envia solo si el secret existe).
 //
 // Body opcional: { "dry_run": true } -> encola y valida contra la API con
 // validateOnly=true (no registra conversiones).
@@ -154,7 +157,7 @@ Deno.serve(async (req) => {
   }
 
   // 2. Subir
-  const required = ["GOOGLE_ADS_DEVELOPER_TOKEN", "GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET",
+  const required = ["GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET",
     "GOOGLE_ADS_REFRESH_TOKEN", "GOOGLE_ADS_CUSTOMER_ID", "GOOGLE_ADS_CONVERSION_ACTION_ID"];
   const missing = required.filter((k) => !Deno.env.get(k));
   if (missing.length) {
@@ -192,9 +195,11 @@ Deno.serve(async (req) => {
     const token = await getAccessToken();
     const headers: Record<string, string> = {
       Authorization: `Bearer ${token}`,
-      "developer-token": Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN")!,
       "Content-Type": "application/json",
     };
+    // Developer tokens retirados el 9-sep-2026: cabecera opcional, solo si existe el secret.
+    const devToken = Deno.env.get("GOOGLE_ADS_DEVELOPER_TOKEN");
+    if (devToken) headers["developer-token"] = devToken;
     if (loginCustomer) headers["login-customer-id"] = loginCustomer;
     const r = await fetch(`https://googleads.googleapis.com/${version}/customers/${customerId}:uploadClickConversions`, {
       method: "POST",
