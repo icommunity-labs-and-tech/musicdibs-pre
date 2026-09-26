@@ -172,7 +172,8 @@ const Footer = () => {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-primary-foreground/20 pt-6">
+        <div className="border-t border-primary-foreground/20 pt-6 space-y-6">
+          <FooterBadges />
           <div className="text-primary-foreground/60 text-sm text-center">
             {t('footerExtra.version')}
           </div>
