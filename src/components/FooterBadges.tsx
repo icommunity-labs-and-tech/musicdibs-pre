@@ -8,6 +8,7 @@ interface FooterBadge {
   src: string;
   width: number;
   height: number;
+  rel?: string;
 }
 
 const BADGES: FooterBadge[] = [
@@ -55,7 +56,7 @@ const FooterBadges = () => {
           key={badge.id}
           href={badge.href}
           target="_blank"
-          rel="noopener noreferrer"
+          rel={badge.rel ?? "noopener noreferrer"}
           title={badge.title}
           aria-label={badge.alt}
           className="inline-flex items-center rounded-xl border border-primary-foreground/20 bg-primary-foreground/5 p-2 hover:bg-primary-foreground/15 transition-colors"
