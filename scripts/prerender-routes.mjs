@@ -81,6 +81,24 @@ export const videoObject = ({
 });
 
 export const ROUTES = [
+  {
+    path: "/testimonios",
+    locale: "es",
+    title: "Voces de la comunidad Musicdibs | Musicdibs",
+    description: "Escucha a artistas y creadores contar su experiencia con Musicdibs en sus propias palabras.",
+  },
+  {
+    path: "/en/testimonials",
+    locale: "en",
+    title: "Voices from the Musicdibs community | Musicdibs",
+    description: "Hear artists and creators share their experience with Musicdibs in their own words.",
+  },
+  {
+    path: "/pt/depoimentos",
+    locale: "pt-BR",
+    title: "Vozes da comunidade Musicdibs | Musicdibs",
+    description: "Ouça artistas e criadores contando sua experiência com a Musicdibs em suas próprias palavras.",
+  },
 
   // ── HOME ────────────────────────────────────────────────────────────────────
   // NOT prerendered on purpose: dist/index.html is also the SPA fallback served

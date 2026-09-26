@@ -97,6 +97,9 @@ const Footer = () => {
             <Link to="/faq" className="block text-primary-foreground/80 hover:text-primary-foreground transition-colors">
               {t('nav.faq')}
             </Link>
+             <Link to={i18n.resolvedLanguage === 'pt-BR' ? '/pt/depoimentos' : i18n.resolvedLanguage === 'en' ? '/en/testimonials' : '/testimonios'} className="block text-primary-foreground/80 hover:text-primary-foreground transition-colors">
+               {t('testimonials.footerLink')}
+             </Link>
             <a href={navLinks.news} target="_blank" rel="noopener noreferrer" className="block text-primary-foreground/80 hover:text-primary-foreground transition-colors">
               {t('nav.news')}
             </a>
