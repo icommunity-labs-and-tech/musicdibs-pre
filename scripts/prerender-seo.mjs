@@ -496,11 +496,26 @@ const main = async () => {
     console.warn(`[prerender-seo] dist/index.html not found — skipping (run vite build first)`);
     return;
   }
+  const translations = await readTranslations();
+  // dist/index.html doubles as the fallback for private SPA routes. Keep its
+  // shell lightweight and put the indexable homepage at dist/index.html too;
+  // the fixed shell covers the added content until React mounts, without hiding
+  // it from non-JS readers. Do not inject a second copy of the badge.
+  const homeBody = `${extractShell(template)}\n${buildMarketingOverview(translations.es, "es", true)}`;
+  template = injectBody(template, homeBody);
+  template = coverStaticBody(template);
+  await fs.writeFile(indexPath, template, "utf8");
   const blogRoutes = await fetchBlogRoutes();
   // Attach the committed body snapshots (captured by
   // scripts/capture-prerender-bodies.mjs) to the static landing routes.
   const staticRoutes = await Promise.all(
-    ROUTES.map(async (r) => ({ ...r, bodyHtml: r.bodyHtml || (await readSnapshot(r.path)) })),
+    ROUTES.map(async (r) => {
+      const snapshot = r.bodyHtml || (await readSnapshot(r.path));
+      const overview = MARKETING_ROUTES.has(r.path)
+        ? buildMarketingOverview(translations[r.locale] || translations.es, r.locale, false)
+        : "";
+      return { ...r, bodyHtml: snapshot ? `${snapshot}\n${overview}` : null };
+    }),
   );
   const missing = staticRoutes.filter((r) => !r.bodyHtml).map((r) => r.path);
   if (missing.length) {
