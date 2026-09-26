@@ -19,10 +19,12 @@ const ML_GROUPS = {
   recuperar_es: "180549266623694014", recuperar_en: "180549280191218751", recuperar_pt: "180549290870965583",
   single_recompra_es: "184095898858424250", single_recompra_en: "184095901652878676", single_recompra_pt: "184095904732547024",
   bono_sin_usar_es: "198486096643884228", bono_sin_usar_en: "198486098709579369", bono_sin_usar_pt: "198486101023786598",
+  // 2026-09-26: usuarios que nunca han comprado (ni pedido pagado, ni suscripcion, ni topup)
+  sin_compras_es: "199683634819500018", sin_compras_en: "199687183055979948", sin_compras_pt: "199683635425576053",
 } as const;
 
 type GroupKey = keyof typeof ML_GROUPS;
-const ALL_KNOWN_GROUPS = new Set(Object.values(ML_GROUPS));
+const ALL_KNOWN_GROUPS = new Set<string>(Object.values(ML_GROUPS));
 
 const TIER_CREDITS: Record<string, number> = {
   monthly: 8, annual_100: 100, annual_200: 200,
@@ -43,6 +45,7 @@ interface Profile {
   sub_period_end?: string | null; sub_status?: string | null;
   had_topup?: boolean;
   has_used_credit?: boolean;
+  has_purchased?: boolean;
 }
 
 function computeCreditThresholds(plan: string, tier: string | null): { critical: number; low: number } {
@@ -100,6 +103,14 @@ function computeTargetGroups(p: Profile): Set<string> {
   // 6. Single recompra: bought topup credits, now Free (no active sub)
   if (!hasPaidPlan && p.had_topup) {
     groups.add(ML_GROUPS[`single_recompra_${lang}` as GroupKey]);
+  }
+
+  // 6b. Sin compras (2026-09-26): nunca ha comprado nada -- ni pedido pagado
+  // (has_purchased), ni suscripcion en ningun estado (sub_status), ni topup,
+  // ni plan de pago. Al estar en ALL_KNOWN_GROUPS, en cuanto compre el
+  // cron lo saca automaticamente del grupo.
+  if (!hasPaidPlan && !p.has_purchased && !p.sub_status && !p.had_topup) {
+    groups.add(ML_GROUPS[`sin_compras_${lang}` as GroupKey]);
   }
 
   // 7. Credits — skip active paid subscribers (they auto-renew, credit alerts are irrelevant)
@@ -200,7 +211,7 @@ serve(async (req) => {
   const pageOffset: number = body.page_offset || 0;
   const dryRun: boolean = body.dry_run === true;
 
-  console.log(`[ML-LIFECYCLE] v10 offset=${pageOffset} batch=${batchSize} pages=${maxPages}`);
+  console.log(`[ML-LIFECYCLE] v11 offset=${pageOffset} batch=${batchSize} pages=${maxPages}`);
   const startTime = Date.now();
   let totalProcessed = 0, totalAdded = 0, totalRemoved = 0, totalCreated = 0;
 
@@ -220,6 +231,7 @@ serve(async (req) => {
         sub_period_end: row.sub_period_end, sub_status: row.sub_status,
         had_topup: row.had_topup,
         has_used_credit: row.has_used_credit,
+        has_purchased: row.has_purchased,
       };
       if (dryRun) { totalProcessed++; continue; }
       try {
