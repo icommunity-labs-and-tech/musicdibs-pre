@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { hasAdConsent } from '@/components/ConsentBanner';
+import { CONSENT_STORAGE_KEY, hasAdConsent } from '@/components/ConsentBanner';
 
 declare global {
   interface Window {
@@ -33,10 +33,15 @@ function ga4Event(name: string, params: Record<string, unknown>) {
  * valor. Solo se envia si el banner de consentimiento lo permite.
  */
 async function setEnhancedConversionEmail(email?: string | null) {
-  if (!email) return;
   try {
-    if (await hasAdConsent()) {
-      window.gtag?.('set', 'user_data', { email });
+    if (typeof window.gtag !== 'function') return;
+    // El email (dato de cliente) exige aceptacion explicita guardada en el
+    // banner en todas las regiones; el permiso regional por defecto no basta.
+    const explicitAccept = localStorage.getItem(CONSENT_STORAGE_KEY) === 'granted';
+    if (email && explicitAccept && (await hasAdConsent())) {
+      window.gtag('set', 'user_data', { email });
+    } else {
+      window.gtag('set', 'user_data', null);
     }
   } catch { /* no bloquear la conversion por esto */ }
 }

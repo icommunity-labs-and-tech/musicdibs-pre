@@ -1343,12 +1343,13 @@ export type Database = {
       google_ads_conversion_uploads: {
         Row: {
           attempts: number
-          click_id: string
-          click_id_type: string
+          click_id: string | null
+          click_id_type: string | null
           conversion_time: string
           conversion_value: number
           created_at: string
           currency: string
+          hashed_email: string | null
           last_error: string | null
           order_id: string
           status: string
@@ -1356,12 +1357,13 @@ export type Database = {
         }
         Insert: {
           attempts?: number
-          click_id: string
-          click_id_type: string
+          click_id?: string | null
+          click_id_type?: string | null
           conversion_time: string
           conversion_value: number
           created_at?: string
           currency: string
+          hashed_email?: string | null
           last_error?: string | null
           order_id: string
           status?: string
@@ -1369,12 +1371,13 @@ export type Database = {
         }
         Update: {
           attempts?: number
-          click_id?: string
-          click_id_type?: string
+          click_id?: string | null
+          click_id_type?: string | null
           conversion_time?: string
           conversion_value?: number
           created_at?: string
           currency?: string
+          hashed_email?: string | null
           last_error?: string | null
           order_id?: string
           status?: string
