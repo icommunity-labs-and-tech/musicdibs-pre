@@ -10,7 +10,7 @@
  * the head meta (title, description, canonical, og:*, twitter:*, JSON-LD) with
  * route-specific values. The result lives at e.g. `dist/distribution/index.html`
  * and the hosting layer serves it for direct hits to that path. The React app
- * still hydrates normally on top.
+ * still mounts with createRoot on top.
  */
 import { promises as fs } from "node:fs";
 import path from "node:path";
@@ -32,6 +32,82 @@ const LOCALE_MAP = {
  * Add new SEO landings here — keep sorted by priority desc, then alpha.
  */
 import { ROUTES, snapshotFileName } from "./prerender-routes.mjs";
+
+// Keep committed React snapshots as the main body; the shared offer and
+// questions below come from exactly the same translation bundles as React.
+const MARKETING_ROUTES = new Set([
+  "/features", "/pt/features", "/distribution", "/pt/distribution",
+  "/music-distribution", "/registro-musical", "/registro-obras-musicales",
+  "/derechos-autor-musica", "/register-a-song", "/copyright-a-song",
+  "/certificado-blockchain", "/legal-validity", "/pt/legal-validity",
+  "/promocion-musical", "/pt/promocion-musical", "/marketing", "/pt/marketing",
+  "/ia-music-studio", "/ai-studio", "/ai-song-generator",
+  "/generador-canciones-ia", "/all-in-one-music-platform", "/music-maker",
+  "/creador-de-musica", "/faq",
+]);
+
+const LOCALE_FILES = { es: "es", en: "en", "pt-BR": "pt-BR" };
+const readTranslations = async () => {
+  const entries = await Promise.all(Object.entries(LOCALE_FILES).map(async ([locale, file]) => {
+    const text = await fs.readFile(path.resolve(__dirname, `../src/locales/generated/${file}.json`), "utf8");
+    return [locale, JSON.parse(text)];
+  }));
+  return Object.fromEntries(entries);
+};
+
+const escapeText = (value) => String(value ?? "")
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const localeLinks = {
+  es: [["/features", "features"], ["/registro-musical", "register"], ["/distribution", "distribution"], ["/faq", "faq"], ["/news", "news"]],
+  en: [["/all-in-one-music-platform", "features"], ["/register-a-song", "register"], ["/distribution", "distribution"], ["/faq", "faq"], ["/news", "news"]],
+  "pt-BR": [["/pt/features", "features"], ["/pt/legal-validity", "register"], ["/pt/distribution", "distribution"], ["/faq", "faq"], ["/news", "news"]],
+};
+
+const buildMarketingOverview = (translation, locale, isHome) => {
+  const { hero, why, pricing, faq, nav } = translation;
+  const pillars = ["legal", "instant", "distribution", "promo"]
+    .map((key) => why.features[key]);
+  const plans = [
+    [pricing.nameMonthly, "6,90 €", pricing.priceMonthlySuffix, pricing.briefMonthly],
+    [pricing.starter.name, "19,90 €", pricing.priceAnnualSuffix, pricing.starter.brief],
+    [pricing.nameAnnual, "59,90 €", pricing.priceAnnualSuffix, pricing.briefAnnual],
+  ];
+  // Select actual questions shown in the React FAQ, not separate SEO-only answers.
+  const questions = faq.items.filter((item) =>
+    /blockchain|Spotify|crédit|credit|valid|registro|register/i.test(item.q)
+  ).slice(0, 3);
+  const links = localeLinks[locale].map(([href, key]) =>
+    `<a href="${escapeText(href)}">${escapeText(nav[key] || key)}</a>`
+  ).join(" · ");
+
+  return `<div class="static-marketing-overview">
+    ${isHome ? `<main><h1>${escapeText(hero.title)} ${escapeText(hero.highlight)}</h1><p>${escapeText(hero.subtitle_prefix)} ${escapeText(hero.subtitle_strong)}</p>` : ""}
+    <section><h2>${escapeText(why.heading)}</h2><p>${escapeText(why.subheading)}</p>
+      ${pillars.map((item) => `<article><h3>${escapeText(item.title)}</h3><p>${escapeText(item.desc)}</p></article>`).join("\n")}
+    </section>
+    <section><h2>${escapeText(pricing.title)}</h2><p>${escapeText(pricing.subtitle)}</p>
+      ${plans.map(([name, price, period, description]) => `<article><h3>${escapeText(name)}</h3><p>${price}${escapeText(period)}</p><p>${escapeText(description)}</p></article>`).join("\n")}
+    </section>
+    <section><h2>${escapeText(faq.title)}</h2>
+      ${questions.map((item) => `<article><h3>${escapeText(item.q)}</h3><p>${escapeText(item.a)}</p></article>`).join("\n")}
+    </section>${isHome ? "</main>" : ""}
+    <footer><nav aria-label="${escapeText(nav.info || "Musicdibs")}"><a href="/">Musicdibs</a> · ${links}</nav></footer>
+  </div>`;
+};
+
+// Preserve the original LCP shell verbatim (including the LaunchBuff badge).
+const extractShell = (html) => {
+  const match = html.match(/<div class="app-lcp-shell" aria-hidden="true">[\s\S]*?<\/a><\/div>/i);
+  if (!match) throw new Error("Homepage LCP shell or LaunchBuff anchor missing");
+  return match[0];
+};
+
+// Snapshot navigation can have z-40. Put the opaque shell above it until
+// createRoot replaces #root; never hide the indexable content with display:none.
+const coverStaticBody = (html) => html.replace("</head>",
+  "<style>.app-lcp-shell{z-index:2147483647}.static-marketing-overview{position:relative}</style>\n</head>");
 
 // ── HTML manipulation helpers ─────────────────────────────────────────────────
 
@@ -419,11 +495,29 @@ const main = async () => {
     console.warn(`[prerender-seo] dist/index.html not found — skipping (run vite build first)`);
     return;
   }
+  const translations = await readTranslations();
+  // dist/index.html doubles as the fallback for private SPA routes. Put the
+  // indexable homepage at dist/index.html too;
+  // the fixed shell covers the added content until React mounts, without hiding
+  // it from non-JS readers. Do not inject a second copy of the badge.
+  const homeBody = `${extractShell(template)}\n${buildMarketingOverview(translations.es, "es", true)}`;
+  template = injectBody(template, homeBody);
+  template = coverStaticBody(template);
+  await fs.writeFile(indexPath, template, "utf8");
   const blogRoutes = await fetchBlogRoutes();
   // Attach the committed body snapshots (captured by
   // scripts/capture-prerender-bodies.mjs) to the static landing routes.
   const staticRoutes = await Promise.all(
-    ROUTES.map(async (r) => ({ ...r, bodyHtml: r.bodyHtml || (await readSnapshot(r.path)) })),
+    ROUTES.map(async (r) => {
+      const snapshot = r.bodyHtml || (await readSnapshot(r.path));
+      const overview = MARKETING_ROUTES.has(r.path)
+        ? buildMarketingOverview(translations[r.locale] || translations.es, r.locale, false)
+        : "";
+      const shell = MARKETING_ROUTES.has(r.path)
+        ? `<div class="app-lcp-shell" aria-hidden="true"><h1>${escapeText(r.title.replace(/\s*\|\s*Musicdibs.*$/i, ""))}</h1></div>`
+        : "";
+      return { ...r, bodyHtml: snapshot ? `${shell}${snapshot}\n${overview}` : (overview ? `${shell}<main><h1>${escapeText(r.title)}</h1><p>${escapeText(r.description)}</p>${overview}</main>` : null) };
+    }),
   );
   const missing = staticRoutes.filter((r) => !r.bodyHtml).map((r) => r.path);
   if (missing.length) {
