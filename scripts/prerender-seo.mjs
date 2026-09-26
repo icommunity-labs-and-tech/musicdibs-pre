@@ -83,7 +83,7 @@ const buildMarketingOverview = (translation, locale, isHome) => {
   ).join(" · ");
 
   return `<div class="static-marketing-overview">
-    ${isHome ? `<main><h1>${escapeText(hero.title)} ${escapeText(hero.highlight)}</h1><p>${escapeText(hero.subtitle_prefix)} ${escapeText(hero.subtitle_strong)}</p>` : ""}
+    ${isHome ? `<main><p>${escapeText(hero.subtitle_prefix)} ${escapeText(hero.subtitle_strong)}</p>` : ""}
     <section><h2>${escapeText(why.heading)}</h2><p>${escapeText(why.subheading)}</p>
       ${pillars.map((item) => `<article><h3>${escapeText(item.title)}</h3><p>${escapeText(item.desc)}</p></article>`).join("\n")}
     </section>
@@ -503,6 +503,10 @@ const main = async () => {
   const homeBody = `${extractShell(template)}\n${buildMarketingOverview(translations.es, "es", true)}`;
   template = injectBody(template, homeBody);
   template = coverStaticBody(template);
+  // Keep the user's existing shell and badge exactly as supplied in the source;
+  // change only its heading in the built response to match React's Spanish H1.
+  template = template.replace(/(<div class="app-lcp-shell" aria-hidden="true"><h1>)[\s\S]*?(<\/h1>)/,
+    `$1${escapeText(translations.es.hero.title)} ${escapeText(translations.es.hero.highlight)}$2`);
   await fs.writeFile(indexPath, template, "utf8");
   const blogRoutes = await fetchBlogRoutes();
   // Attach the committed body snapshots (captured by
