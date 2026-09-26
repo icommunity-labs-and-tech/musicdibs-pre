@@ -107,7 +107,7 @@ const extractShell = (html) => {
 // Snapshot navigation can have z-40. Put the opaque shell above it until
 // createRoot replaces #root; never hide the indexable content with display:none.
 const coverStaticBody = (html) => html.replace("</head>",
-  "<style>.app-lcp-shell{z-index:2147483647}</style>\n</head>");
+  "<style>.app-lcp-shell{z-index:2147483647}.static-marketing-overview{position:relative;z-index:-1}</style>\n</head>");
 
 // ── HTML manipulation helpers ─────────────────────────────────────────────────
 
