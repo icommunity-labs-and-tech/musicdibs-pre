@@ -1340,6 +1340,70 @@ export type Database = {
         }
         Relationships: []
       }
+      google_ads_conversion_uploads: {
+        Row: {
+          attempts: number
+          click_id: string
+          click_id_type: string
+          conversion_time: string
+          conversion_value: number
+          created_at: string
+          currency: string
+          last_error: string | null
+          order_id: string
+          status: string
+          uploaded_at: string | null
+        }
+        Insert: {
+          attempts?: number
+          click_id: string
+          click_id_type: string
+          conversion_time: string
+          conversion_value: number
+          created_at?: string
+          currency: string
+          last_error?: string | null
+          order_id: string
+          status?: string
+          uploaded_at?: string | null
+        }
+        Update: {
+          attempts?: number
+          click_id?: string
+          click_id_type?: string
+          conversion_time?: string
+          conversion_value?: number
+          created_at?: string
+          currency?: string
+          last_error?: string | null
+          order_id?: string
+          status?: string
+          uploaded_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "google_ads_conversion_uploads_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "google_ads_conversion_uploads_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "v_dispute_evidence"
+            referencedColumns: ["order_id"]
+          },
+          {
+            foreignKeyName: "google_ads_conversion_uploads_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "v_orders_evidences_consistency"
+            referencedColumns: ["order_id"]
+          },
+        ]
+      }
       ibs_signatures: {
         Row: {
           created_at: string
