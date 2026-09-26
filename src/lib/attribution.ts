@@ -4,6 +4,8 @@
  * Used at registration and checkout to attribute users/orders to campaigns.
  */
 
+import { captureGoogleClickIds, getGoogleClickIds } from '@/lib/googleClickIds';
+
 const STORAGE_KEY = 'md_attribution';
 const VISIT_KEY = 'md_visit_logged';
 const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -92,6 +94,9 @@ export function captureAttribution(): void {
     const refParam = new URLSearchParams(window.location.search).get('ref');
     if (refParam) localStorage.setItem('referral_code', refParam);
   } catch { /* ignore */ }
+
+  // Click IDs de Google Ads: last-click, 90 dias, independiente del first-touch.
+  captureGoogleClickIds();
 
   // Record the visit (once per session) so campaign traffic is visible even
   // when the visitor never signs up or buys.
@@ -203,14 +208,19 @@ export function clearReferralCode(): void {
 /** Build metadata object for Stripe checkout from attribution */
 export function getAttributionForCheckout(): Record<string, string> {
   const attr = getAttribution();
-  if (!attr) return {};
   const result: Record<string, string> = {};
+  // Click IDs de Google (URL actual > guardado 90 dias > first-touch antiguo).
+  const clickIds = getGoogleClickIds();
+  if (clickIds.gclid) result.gclid = clickIds.gclid;
+  else if (attr?.gclid && !clickIds.gbraid && !clickIds.wbraid) result.gclid = attr.gclid;
+  if (clickIds.gbraid) result.gbraid = clickIds.gbraid;
+  if (clickIds.wbraid) result.wbraid = clickIds.wbraid;
+  if (!attr) return result;
   if (attr.utm_source) result.utm_source = attr.utm_source;
   if (attr.utm_medium) result.utm_medium = attr.utm_medium;
   if (attr.utm_campaign) result.utm_campaign = attr.utm_campaign;
   if (attr.utm_content) result.utm_content = attr.utm_content;
   if (attr.utm_term) result.utm_term = attr.utm_term;
-  if (attr.gclid) result.gclid = attr.gclid;
   if (attr.coupon) result.coupon_code = attr.coupon;
   if (attr.ref) result.referrer_code = attr.ref;
   if (attr.referrer) result.referrer = attr.referrer;

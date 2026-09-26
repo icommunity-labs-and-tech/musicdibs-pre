@@ -54,3 +54,6 @@ verify_jwt = false
 
 [functions.submit-landing-lead]
 verify_jwt = false
+
+[functions.google-ads-conversion-upload]
+verify_jwt = false
