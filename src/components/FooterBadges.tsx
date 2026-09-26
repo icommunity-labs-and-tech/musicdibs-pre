@@ -31,6 +31,15 @@ const BADGES: FooterBadge[] = [
     height: 63,
     rel: "nofollow noopener noreferrer",
   },
+  {
+    id: "producthunt",
+    href: "https://www.producthunt.com/products/musicdibs?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-musicdibs",
+    title: "Musicdibs on Product Hunt",
+    alt: "Musicdibs - Create, protect, distribute and promote your music, | Product Hunt",
+    src: "https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1260966&theme=dark&t=1790433354013",
+    width: 250,
+    height: 54,
+  },
 ];
 
 const labelByLang: Record<string, string> = {
