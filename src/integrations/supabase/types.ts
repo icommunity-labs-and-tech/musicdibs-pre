@@ -3957,6 +3957,13 @@ export type Database = {
       }
     }
     Views: {
+      _tmp_ml_sin_compras_es: {
+        Row: {
+          email: string | null
+          rn: number | null
+        }
+        Relationships: []
+      }
       api_cost_config: {
         Row: {
           api_cost_eur: number | null
