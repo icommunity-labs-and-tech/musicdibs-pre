@@ -20,6 +20,15 @@ const BADGES: FooterBadge[] = [
     width: 256,
     height: 80,
   },
+  {
+    id: "taaft",
+    href: "https://theresanaiforthat.com/ai/musicdibs/?ref=featured&v=12784591",
+    title: "Featured on There's An AI For That",
+    alt: "Featured on There's An AI For That",
+    src: "https://media.theresanaiforthat.com/featured-on-taaft.png?width=600",
+    width: 300,
+    height: 63,
+  },
 ];
 
 const labelByLang: Record<string, string> = {
