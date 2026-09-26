@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] Página pública de testimonios ES/EN/PT con vídeos verificables, enlazada desde el footer.
+
 - [ ] Reindexación y flujo de agradecimiento
 - [ ] Panel semanal de campañas
 - [ ] Validación final

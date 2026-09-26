@@ -55,9 +55,22 @@ const readTranslations = async () => {
   return Object.fromEntries(entries);
 };
 
+const readTestimonialVideos = async () => JSON.parse(await fs.readFile(
+  path.resolve(__dirname, "../src/lib/testimonialVideos.json"), "utf8"
+));
+
 const escapeText = (value) => String(value ?? "")
   .replace(/&/g, "&amp;").replace(/</g, "&lt;")
   .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+const buildTestimonialBody = (translation, videos) => `<main class="static-marketing-overview">
+  <h1>${escapeText(translation.testimonials.pageTitle)}</h1>
+  <p>${escapeText(translation.testimonials.pageDescription)}</p>
+  <section><h2>${escapeText(translation.testimonials.videoHeading)}</h2>
+    ${videos.map((video) => `<article><h3>${escapeText(video.name)}</h3><p>${escapeText(video.title)}</p><a href="https://www.youtube.com/watch?v=${encodeURIComponent(video.videoId)}">${escapeText(translation.testimonials.watchOriginal)}: ${escapeText(video.name)}</a></article>`).join("\n")}
+  </section>
+  <footer><a href="/">Musicdibs</a></footer>
+</main>`;
 
 const localeLinks = {
   es: [["/features", "features"], ["/registro-musical", "register"], ["/distribution", "distribution"], ["/faq", "faq"], ["/news", "news"]],
@@ -496,6 +509,7 @@ const main = async () => {
     return;
   }
   const translations = await readTranslations();
+  const testimonialVideos = await readTestimonialVideos();
   // dist/index.html doubles as the fallback for private SPA routes. Put the
   // indexable homepage at dist/index.html too;
   // the fixed shell covers the added content until React mounts, without hiding
@@ -509,6 +523,9 @@ const main = async () => {
   // scripts/capture-prerender-bodies.mjs) to the static landing routes.
   const staticRoutes = await Promise.all(
     ROUTES.map(async (r) => {
+      if (["/testimonios", "/en/testimonials", "/pt/depoimentos"].includes(r.path)) {
+        return { ...r, bodyHtml: buildTestimonialBody(translations[r.locale] || translations.es, testimonialVideos) };
+      }
       const snapshot = r.bodyHtml || (await readSnapshot(r.path));
       const overview = MARKETING_ROUTES.has(r.path)
         ? buildMarketingOverview(translations[r.locale] || translations.es, r.locale, false)

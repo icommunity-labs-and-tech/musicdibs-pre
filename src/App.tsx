@@ -38,6 +38,7 @@ const Privacy = lazyWithRetry(() => import("./pages/Privacy"));
 const Terms = lazyWithRetry(() => import("./pages/Terms"));
 const Cookies = lazyWithRetry(() => import("./pages/Cookies"));
 const FAQ = lazyWithRetry(() => import("./pages/FAQ"));
+const TestimonialsPage = lazyWithRetry(() => import("./pages/TestimonialsPage"));
 const LegalValidity = lazyWithRetry(() => import("./pages/LegalValidity"));
 const Partners = lazyWithRetry(() => import("./pages/Partners"));
 const Verify = lazyWithRetry(() => import("./pages/Verify"));
@@ -223,6 +224,9 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/cookies" element={<Cookies />} />
               <Route path="/faq" element={<FAQ />} />
+               <Route path="/testimonios" element={<LocalizedRoute lang="es" prefix=""><TestimonialsPage /></LocalizedRoute>} />
+               <Route path="/en/testimonials" element={<LocalizedRoute lang="en" prefix="/en"><TestimonialsPage /></LocalizedRoute>} />
+               <Route path="/pt/depoimentos" element={<LocalizedRoute lang="pt-BR" prefix="/pt"><TestimonialsPage /></LocalizedRoute>} />
               <Route path="/legal-validity" element={<LegalValidity />} />
               <Route path="/partners" element={<Partners />} />
               <Route path="/verify" element={<Verify />} />
