@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { hasAdConsent } from '@/components/ConsentBanner';
+import { CONSENT_STORAGE_KEY, hasAdConsent } from '@/components/ConsentBanner';
 
 declare global {
   interface Window {
