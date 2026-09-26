@@ -83,7 +83,7 @@ const buildMarketingOverview = (translation, locale, isHome) => {
   ).join(" · ");
 
   return `<div class="static-marketing-overview">
-    ${isHome ? `<main><p>${escapeText(hero.subtitle_prefix)} ${escapeText(hero.subtitle_strong)}</p>` : ""}
+    ${isHome ? `<main><h1>${escapeText(hero.title)} ${escapeText(hero.highlight)}</h1><p>${escapeText(hero.subtitle_prefix)} ${escapeText(hero.subtitle_strong)}</p>` : ""}
     <section><h2>${escapeText(why.heading)}</h2><p>${escapeText(why.subheading)}</p>
       ${pillars.map((item) => `<article><h3>${escapeText(item.title)}</h3><p>${escapeText(item.desc)}</p></article>`).join("\n")}
     </section>
@@ -496,8 +496,8 @@ const main = async () => {
     return;
   }
   const translations = await readTranslations();
-  // dist/index.html doubles as the fallback for private SPA routes. Keep its
-  // shell lightweight and put the indexable homepage at dist/index.html too;
+  // dist/index.html doubles as the fallback for private SPA routes. Put the
+  // indexable homepage at dist/index.html too;
   // the fixed shell covers the added content until React mounts, without hiding
   // it from non-JS readers. Do not inject a second copy of the badge.
   const homeBody = `${extractShell(template)}\n${buildMarketingOverview(translations.es, "es", true)}`;
