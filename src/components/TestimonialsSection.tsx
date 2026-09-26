@@ -3,48 +3,13 @@ import { useState } from "react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { useTranslation } from "react-i18next";
 import { LazyYouTube } from "@/components/LazyYouTube";
+import { testimonialVideos } from "@/lib/testimonialVideos";
 
 const TestimonialsSection = () => {
   const [currentVideo, setCurrentVideo] = useState(0);
   const { t } = useTranslation();
   
-  const testimonials = [
-    {
-      name: "CECI DOVER",
-      title: "Vocal Coach",
-      videoId: "6MQv6r7cavM"
-    },
-    {
-      name: "Fael",
-      title: "Prodfael",
-      videoId: "Bib-Pra2_IY"
-    },
-    {
-      name: "Erika Bada",
-      title: "Bada Sessions",
-      videoId: "CnS6IblpMzY"
-    },
-    {
-      name: "Christian",
-      title: "ChristianVib", 
-      videoId: "KodixKxB0C8"
-    },
-    {
-      name: "Gr3go",
-      title: "Taller de música online",
-      videoId: "O7f3tdP6NjI"
-    },
-    {
-      name: "Nico Astegiano",
-      title: "Nico Astegiano Youtube",
-      videoId: "3Nok9jcbbuM"
-    },
-    {
-      name: "Matias Martinez",
-      title: "Matzz",
-      videoId: "rq7ndp10DXA"
-    }
-  ];
+  const testimonials = testimonialVideos;
 
   return (
     <section id="testimonials" className="py-20 relative overflow-hidden bg-gradient-to-b from-primary/80 via-primary/70 to-primary/60">
