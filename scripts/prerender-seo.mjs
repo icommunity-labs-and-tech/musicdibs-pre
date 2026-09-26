@@ -503,10 +503,6 @@ const main = async () => {
   const homeBody = `${extractShell(template)}\n${buildMarketingOverview(translations.es, "es", true)}`;
   template = injectBody(template, homeBody);
   template = coverStaticBody(template);
-  // Keep the user's existing shell and badge exactly as supplied in the source;
-  // change only its heading in the built response to match React's Spanish H1.
-  template = template.replace(/(<div class="app-lcp-shell" aria-hidden="true"><h1>)[\s\S]*?(<\/h1>)/,
-    `$1${escapeText(translations.es.hero.title)} ${escapeText(translations.es.hero.highlight)}$2`);
   await fs.writeFile(indexPath, template, "utf8");
   const blogRoutes = await fetchBlogRoutes();
   // Attach the committed body snapshots (captured by
