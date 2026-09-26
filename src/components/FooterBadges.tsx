@@ -27,8 +27,9 @@ const BADGES: FooterBadge[] = [
     title: "Featured on There's An AI For That",
     alt: "Featured on There's An AI For That",
     src: "https://media.theresanaiforthat.com/featured-on-taaft.png?width=600",
-    rel: "nofollow noopener noreferrer",
+    width: 300,
     height: 63,
+    rel: "nofollow noopener noreferrer",
   },
 ];
 
