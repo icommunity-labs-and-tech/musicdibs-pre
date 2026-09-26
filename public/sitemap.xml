@@ -76,6 +76,21 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://musicdibs.com/testimonios</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/en/testimonials</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://musicdibs.com/pt/depoimentos</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://musicdibs.com/legal-validity</loc>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
