@@ -33,9 +33,8 @@ const LOCALE_MAP = {
  */
 import { ROUTES, snapshotFileName } from "./prerender-routes.mjs";
 
-// These pages have committed browser snapshots. Keep them as the primary route
-// body; the concise, translated overview below supplies the shared offer and
-// FAQ information without depending on a browser in the production build.
+  // These pages have committed browser snapshots. Keep the actual rendered tree
+  // rather than appending content React never shows to visitors.
 const MARKETING_ROUTES = new Set([
   "/features", "/pt/features", "/distribution", "/pt/distribution",
   "/music-distribution", "/registro-musical", "/registro-obras-musicales",
@@ -514,7 +513,7 @@ const main = async () => {
       const overview = MARKETING_ROUTES.has(r.path)
         ? buildMarketingOverview(translations[r.locale] || translations.es, r.locale, false)
         : "";
-      return { ...r, bodyHtml: snapshot ? `${snapshot}\n${overview}` : null };
+      return { ...r, bodyHtml: snapshot || overview || null };
     }),
   );
   const missing = staticRoutes.filter((r) => !r.bodyHtml).map((r) => r.path);
