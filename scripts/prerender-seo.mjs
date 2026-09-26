@@ -33,8 +33,8 @@ const LOCALE_MAP = {
  */
 import { ROUTES, snapshotFileName } from "./prerender-routes.mjs";
 
-  // These pages have committed browser snapshots. Keep the actual rendered tree
-  // rather than appending content React never shows to visitors.
+  // Keep committed React snapshots as the main body; the shared offer and
+  // questions below come from exactly the same translation bundles as React.
 const MARKETING_ROUTES = new Set([
   "/features", "/pt/features", "/distribution", "/pt/distribution",
   "/music-distribution", "/registro-musical", "/registro-obras-musicales",
@@ -513,7 +513,11 @@ const main = async () => {
       const overview = MARKETING_ROUTES.has(r.path)
         ? buildMarketingOverview(translations[r.locale] || translations.es, r.locale, false)
         : "";
-      return { ...r, bodyHtml: snapshot || overview || null };
+      const hero = translations[r.locale]?.hero || translations.es.hero;
+      const shell = MARKETING_ROUTES.has(r.path)
+        ? `<div class="app-lcp-shell" aria-hidden="true"><h1>${escapeText(hero.title)} ${escapeText(hero.highlight)}</h1></div>`
+        : "";
+      return { ...r, bodyHtml: snapshot ? `${shell}${snapshot}\n${overview}` : (overview ? `${shell}<main><h1>${escapeText(r.title)}</h1><p>${escapeText(r.description)}</p>${overview}</main>` : null) };
     }),
   );
   const missing = staticRoutes.filter((r) => !r.bodyHtml).map((r) => r.path);
