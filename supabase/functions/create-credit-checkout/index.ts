@@ -625,10 +625,50 @@ serve(async (req) => {
           !!dbTier &&
           (subStatus === "trialing" || subStatus === "past_due");
 
+        // FIX 2026-09-28 (caso real: juan_contreras_79@yahoo.com pago 40EUR
+        // de 50EUR de diferencia -- 80% prorrateado por Stripe segun tiempo
+        // restante del año -- pero recibia los 200 creditos COMPLETOS del
+        // nuevo plan, no el 80% de la diferencia de creditos que le
+        // correspondia). Cuando es un upgrade real de un tier anual a OTRO
+        // tier anual (no una alta nueva ni una renovacion), se prorratea
+        // la DIFERENCIA de creditos con la misma proporcion temporal que
+        // Stripe uso para el precio, y se SUMA a lo que ya tenia -- nunca
+        // se resetea, para no perder creditos si aun le quedaban del plan
+        // anterior.
+        const isAnnualToAnnualUpgrade =
+          !shouldSkipCreditReset &&
+          !!dbTier && dbTier.startsWith("annual_") &&
+          resolvedTier.startsWith("annual_") &&
+          dbTier !== resolvedTier &&
+          TIER_CREDITS[dbTier] !== undefined &&
+          TIER_CREDITS[resolvedTier] !== undefined &&
+          TIER_CREDITS[resolvedTier] > TIER_CREDITS[dbTier];
+
+        let creditTransactionAmount = resolvedCredits;
+
+        if (isAnnualToAnnualUpgrade) {
+          const periodStartSec = Number((updatedSub as any).current_period_start ?? 0);
+          const periodEndSec = Number((updatedSub as any).current_period_end ?? 0);
+          const nowSec = Math.floor(Date.now() / 1000);
+          const totalPeriodSecs = periodEndSec - periodStartSec;
+          const remainingSecs = Math.max(0, periodEndSec - nowSec);
+          const proration = totalPeriodSecs > 0 ? Math.min(1, remainingSecs / totalPeriodSecs) : 1;
+
+          const creditDelta = TIER_CREDITS[resolvedTier] - TIER_CREDITS[dbTier];
+          const proratedDelta = Math.round(creditDelta * proration);
+          const newTotal = dbCredits + proratedDelta;
+
+          console.log(
+            `[CHECKOUT] annual upgrade credit proration: ${dbTier}(${TIER_CREDITS[dbTier]}) → ${resolvedTier}(${TIER_CREDITS[resolvedTier]}), delta=${creditDelta}, proration=${proration.toFixed(3)}, proratedDelta=${proratedDelta}, dbCredits=${dbCredits} → ${newTotal}`,
+          );
+          resolvedCredits = newTotal;
+          creditTransactionAmount = proratedDelta;
+        }
+
         console.log(
           `[CHECKOUT] credits resolved via: ${
             creditsSource === "subscription_tier" ? `subscription_tier=${dbTier}` : `stripe_price=${actualPriceId}`
-          } → ${resolvedCredits} credits (subStatus=${subStatus}, dbCredits=${dbCredits}, skipReset=${shouldSkipCreditReset})`,
+          } → ${resolvedCredits} credits (subStatus=${subStatus}, dbCredits=${dbCredits}, skipReset=${shouldSkipCreditReset}, annualUpgradeProrated=${isAnnualToAnnualUpgrade})`,
         );
 
         if (shouldSkipCreditReset) {
@@ -675,9 +715,11 @@ serve(async (req) => {
         if (!shouldSkipCreditReset) {
           await supabaseAdmin.from("credit_transactions").insert({
             user_id: user.id,
-            amount: resolvedCredits,
+            amount: creditTransactionAmount,
             type: "subscription",
-            description: `Cambio de plan: ${resolvedLabel}`,
+            description: isAnnualToAnnualUpgrade
+              ? `Cambio de plan: ${resolvedLabel} (prorrateado)`
+              : `Cambio de plan: ${resolvedLabel}`,
           });
         }
 
