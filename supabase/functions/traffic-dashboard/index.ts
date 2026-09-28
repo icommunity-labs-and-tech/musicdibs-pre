@@ -114,9 +114,11 @@ async function runRealtime(token: string, propertyId: string, body: unknown) {
   return data;
 }
 
-const rows = (r: any) =>
+type Ga4Row = { keys: string[]; values: number[] };
+
+const rows = (r: any): Ga4Row[] =>
   (r?.rows ?? []).map((row: any) => ({
-    keys: (row.dimensionValues ?? []).map((d: any) => d.value),
+    keys: (row.dimensionValues ?? []).map((d: any) => String(d.value ?? "")),
     values: (row.metricValues ?? []).map((m: any) => Number(m.value) || 0),
   }));
 
