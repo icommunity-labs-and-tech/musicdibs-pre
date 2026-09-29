@@ -525,6 +525,84 @@ async function createPurchaseEvidence(
   }
 }
 
+// Aviso de REACTIVACION de distribucion (Artist Pro anual). Contraparte
+// del cron semanal distribution-deactivation-report: ese avisa cuando
+// alguien NO renueva un plan annual_XXX (excepto annual_20) para que el
+// equipo desactive Sonosuite; esta funcion avisa en caliente, en el
+// momento en que alguien que YA TUVO antes uno de esos planes (100, 200,
+// 300, 500 o 1000) vuelve a darse de alta, para que el equipo reactive el
+// servicio de distribucion manualmente. Se llama desde los dos caminos que
+// pueden procesar un alta de suscripcion (checkout.session.completed y
+// subscription_create) porque cualquiera de los dos puede ser el que
+// realmente cree el order, segun cual evento de Stripe llegue primero.
+async function notifyArtistProReactivationIfApplicable(
+  supabase: any,
+  userId: string,
+  planId: string | null | undefined,
+  currentOrderId: string | null | undefined,
+  userEmail: string | null | undefined,
+) {
+  const isArtistProPlan = !!planId && planId.startsWith("annual_") && planId !== "annual_20";
+  if (!isArtistProPlan) return;
+
+  try {
+    const { data: previousArtistProOrder } = await supabase
+      .from("orders")
+      .select("id, product_code, created_at")
+      .eq("user_id", userId)
+      .like("product_code", "annual_%")
+      .neq("product_code", "annual_20")
+      .neq("id", currentOrderId ?? "")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!previousArtistProOrder) return;
+
+    const subject = `[MusicDibs] Reactivar distribucion: ${userEmail ?? userId} ha vuelto a contratar Artist Pro`;
+    const html = `
+      <h2>Reactivacion de suscripcion Artist Pro anual</h2>
+      <p><strong>${userEmail ?? userId}</strong> ha contratado de nuevo un plan Artist Pro anual (<strong>${planId}</strong>), tras haber tenido anteriormente otro plan Artist Pro (<strong>${previousArtistProOrder.product_code}</strong>, dado de alta el ${new Date(previousArtistProOrder.created_at).toLocaleDateString("es-ES")}).</p>
+      <p>Revisar y <strong>reactivar manualmente el servicio de distribucion</strong> (Sonosuite) para este usuario.</p>
+      <p style="color:#888;font-size:12px;">Generado automaticamente por MusicDibs al procesar el alta de suscripcion en Stripe.</p>
+    `;
+    const text = `${userEmail ?? userId} ha contratado de nuevo un plan Artist Pro anual (${planId}), tras haber tenido antes ${previousArtistProOrder.product_code} (alta: ${previousArtistProOrder.created_at}). Reactivar distribucion manualmente en Sonosuite.`;
+    const messageId = crypto.randomUUID();
+
+    await supabase.from("email_send_log").insert({
+      message_id: messageId,
+      template_name: "distribution_reactivation_alert",
+      recipient_email: "info@musicdibs.com",
+      status: "pending",
+    });
+
+    const { error: enqueueErr } = await supabase.rpc("enqueue_email", {
+      queue_name: "transactional_emails",
+      payload: {
+        idempotency_key: `dist-reactivation-${currentOrderId ?? userId}`,
+        message_id: messageId,
+        to: ["info@musicdibs.com"],
+        from: "MusicDibs <noreply@notify.musicdibs.com>",
+        sender_domain: "notify.musicdibs.com",
+        subject,
+        html,
+        text,
+        purpose: "transactional",
+        label: "distribution_reactivation_alert",
+        queued_at: new Date().toISOString(),
+      },
+    });
+
+    if (enqueueErr) {
+      console.error("[WEBHOOK] notifyArtistProReactivationIfApplicable: error al encolar email:", enqueueErr);
+    } else {
+      console.log(`[WEBHOOK] notifyArtistProReactivationIfApplicable: aviso de reactivacion encolado para ${userEmail} (plan ${planId}, anterior ${previousArtistProOrder.product_code})`);
+    }
+  } catch (err) {
+    console.error("[WEBHOOK] notifyArtistProReactivationIfApplicable: error no bloqueante:", err);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null);
@@ -1142,6 +1220,7 @@ serve(async (req) => {
             acceptedTermsVersion: sessionMeta.accepted_terms_version,
             acceptedTermsTimestamp: sessionMeta.accepted_terms_timestamp,
           });
+          await notifyArtistProReactivationIfApplicable(supabase, userId, sessionMeta.product_code || planId, order?.id, evUser?.email);
         }
 
         // Send purchase confirmation email
@@ -1978,6 +2057,7 @@ serve(async (req) => {
               currency: invoiceCurrency,
               paymentStatus: "succeeded",
             });
+            await notifyArtistProReactivationIfApplicable(supabase, profile.user_id, resolvedPlanId, createOrder?.id, crUser?.email);
           }
 
           // MailerLite sync
