@@ -268,8 +268,17 @@ export async function generateCertificate(data: CertificateData, locale?: string
   ])
   const doc: JsPDFType = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
   const W = 210, H = 297
-  const ML = 25, MR = 25
+  const ML = 18, MR = 18, MT = 20
   const contentW = W - ML - MR
+  const qrSz = 30
+  const qrX = W - MR - qrSz
+  // Space reserved at the bottom of every page for the QR + footer. Content
+  // is never allowed to cross into this band; if it would, a new page is
+  // started instead, so the QR/footer can never overlap text (see `ensure`).
+  const FOOTER_RESERVE = 50
+  const BOTTOM_LIMIT = H - FOOTER_RESERVE
+
+  let y = MT
 
   // helpers
   const hex = (c: string) => doc.setTextColor(c)
@@ -277,24 +286,51 @@ export async function generateCertificate(data: CertificateData, locale?: string
     doc.setFont(family, style)
     doc.setFontSize(size)
   }
-  const redLine = (y: number) => {
+  const redLine = (yy: number) => {
     doc.setDrawColor(RED_CORP)
     doc.setLineWidth(0.7)
-    doc.line(ML, y, W - MR, y)
+    doc.line(ML, yy, W - MR, yy)
+  }
+
+  const newPage = () => {
+    doc.addPage()
+    doc.addImage(makeWatermark(W, H), 'PNG', 0, 0, W, H)
+    y = MT
+  }
+
+  /** Start a new page if the next `need` mm of content wouldn't fit above the reserved footer band. */
+  const ensure = (need: number) => {
+    if (y + need > BOTTOM_LIMIT) newPage()
+  }
+
+  const sectionHeader = (title: string) => {
+    ensure(12)
+    font('bold', 12)
+    hex(BLACK)
+    doc.text(title, ML, y)
+    y += 7
+  }
+
+  const separator = () => {
+    ensure(10)
+    redLine(y)
+    y += 8
   }
 
   /** Print label + value block (label gray on one line, value black below) */
-  const field = (y: number, label: string, value: string, mono = false): number => {
+  const field = (label: string, value: string, mono = false, maxWidth = contentW): void => {
+    font('normal', 9.5, mono ? 'courier' : 'helvetica')
+    const lines = doc.splitTextToSize(value, maxWidth)
+    const visible = lines.slice(0, 6)
+    ensure(4.3 + visible.length * 4.0 + 3)
     font('normal', 9.5)
     hex(GRAY_D)
     doc.text(label, ML, y)
-    y += 5
+    y += 4.3
     font('normal', 9.5, mono ? 'courier' : 'helvetica')
     hex(BLACK)
-    const lines = doc.splitTextToSize(value, contentW)
-    const visible = lines.slice(0, 4)
     doc.text(visible, ML, y)
-    return y + visible.length * 4.2 + 4
+    y += visible.length * 4.0 + 3
   }
 
   // ── Pre-generate assets ────────────────────────────────────
@@ -315,69 +351,58 @@ export async function generateCertificate(data: CertificateData, locale?: string
   // HEADER
   // ══════════════════════════════════════════════════════════
 
-  let y = 28
-
   // Logo top-right
   const logoAspect = 125 / 126
-  const logoH = 18
+  const logoH = 16
   const logoW = logoH * logoAspect
-  doc.addImage(logoDataUrl, logoFmt, W - MR - logoW, 14, logoW, logoH)
+  doc.addImage(logoDataUrl, logoFmt, W - MR - logoW, MT - 6, logoW, logoH)
 
   // Title
   font('bold', 20)
   hex(BLACK)
   doc.text(L.headerTitle, ML, y)
-  y += 10
+  y += 9
 
   // Intro line
   font('normal', 10)
   hex(GRAY_D)
   const introLines = doc.splitTextToSize(L.headerIntro, contentW - logoW - 5)
   doc.text(introLines, ML, y)
-  y += introLines.length * 4.5 + 10
+  y += introLines.length * 4.5 + 6
 
   // Red separator
-  redLine(y)
-  y += 12
+  separator()
 
   // ══════════════════════════════════════════════════════════
   // SECTION 1: DATOS DEL CONTENIDO
   // ══════════════════════════════════════════════════════════
 
-  font('bold', 12)
-  hex(BLACK)
-  doc.text(L.sectionContent, ML, y)
-  y += 10
+  sectionHeader(L.sectionContent)
 
-  y = field(y, L.titleLabel, data.title)
-  y = field(y, L.filenameLabel, data.filename)
-  y = field(y, L.sizeLabel, data.filesize)
+  field(L.titleLabel, data.title)
+  field(L.filenameLabel, data.filename)
+  field(L.sizeLabel, data.filesize)
   if (data.metadata) {
-    y = field(y, L.metadataLabel, data.metadata)
+    field(L.metadataLabel, data.metadata)
   }
   if (data.externalContent) {
-    y = field(y, L.externalContentLabel, data.externalContent, true)
+    field(L.externalContentLabel, data.externalContent, true)
   }
 
   if (data.description) {
-    y = field(y, L.descriptionLabel, data.description)
+    field(L.descriptionLabel, data.description)
   }
 
   // ══════════════════════════════════════════════════════════
   // SECTION 2: DATOS DEL AUTOR
   // ══════════════════════════════════════════════════════════
 
-  redLine(y)
-  y += 12
+  separator()
+  sectionHeader(L.sectionAuthor)
 
-  font('bold', 12)
-  hex(BLACK)
-  doc.text(L.sectionAuthor, ML, y)
-  y += 10
-
-  y = field(y, L.authorNameLabel, data.authorName)
+  field(L.authorNameLabel, data.authorName)
   if (data.authorDocId) {
-    y = field(y, L.authorDocLabel, data.authorDocId)
+    field(L.authorDocLabel, data.authorDocId)
   }
 
   // Coautores y % de propiedad (si hay más de un creador o roles/% definidos)
@@ -386,10 +411,11 @@ export async function generateCertificate(data: CertificateData, locale?: string
     || coauthors.some((c) => (c.roles && c.roles.length > 0) || (typeof c.percentage === 'number' && c.percentage > 0))
 
   if (hasRichCreatorData) {
+    ensure(5.5)
     font('normal', 9.5)
     hex(GRAY_D)
     doc.text(L.coauthorsLabel, ML, y)
-    y += 6
+    y += 5.5
 
     const totalPct = coauthors.reduce((s, c) => s + (typeof c.percentage === 'number' ? c.percentage : 0), 0)
     const distributeEqually = totalPct === 0 && coauthors.length > 0
@@ -400,6 +426,9 @@ export async function generateCertificate(data: CertificateData, locale?: string
       const pct = typeof c.percentage === 'number' && c.percentage > 0
         ? c.percentage
         : (distributeEqually ? Math.round((100 / coauthors.length) * 100) / 100 : null)
+      const roleLines = roleNames ? doc.splitTextToSize(roleNames, contentW - 4).slice(0, 2) : []
+
+      ensure(4.3 + roleLines.length * 3.8 + 2.2)
 
       // Name + main tag
       font('bold', 9.5)
@@ -413,38 +442,33 @@ export async function generateCertificate(data: CertificateData, locale?: string
         hex(RED_CORP)
         doc.text(`${pct}%`, W - MR, y, { align: 'right' })
       }
-      y += 4.5
+      y += 4.3
 
-      if (roleNames) {
+      if (roleLines.length) {
         font('normal', 8.5)
         hex(GRAY_D)
-        const roleLines = doc.splitTextToSize(roleNames, contentW - 4)
-        doc.text(roleLines.slice(0, 2), ML + 2, y)
-        y += roleLines.slice(0, 2).length * 4
+        doc.text(roleLines, ML + 2, y)
+        y += roleLines.length * 3.8
       }
-      y += 2.5
+      y += 2.2
     })
-    y += 2
+    y += 1.5
   }
 
   // ══════════════════════════════════════════════════════════
   // SECTION 3: DATOS DE LA TRANSACCIÓN
   // ══════════════════════════════════════════════════════════
 
-  redLine(y)
-  y += 12
-
-  font('bold', 12)
-  hex(BLACK)
-  doc.text(L.sectionTransaction, ML, y)
-  y += 10
+  separator()
+  sectionHeader(L.sectionTransaction)
 
   if (data.explorerUrl) {
+    ensure(4.3 + 4 + 3)
     // Label
     font('normal', 9.5)
     hex(GRAY_D)
     doc.text(L.explorerLabel, ML, y)
-    y += 5
+    y += 4.3
     // URL: shrink font to fit single line
     hex(BLACK)
     let urlSize = 9.5
@@ -455,30 +479,34 @@ export async function generateCertificate(data: CertificateData, locale?: string
       doc.setFontSize(urlSize)
     }
     doc.textWithLink(data.explorerUrl, ML, y, { url: data.explorerUrl })
-    y += 4.2 + 4
+    y += 4.0 + 3
   }
-  y = field(y, L.txIdLabel, data.txHash, true)
-  y = field(y, L.fingerprintLabel, data.fingerprint, true)
-  y = field(y, L.algorithmLabel, data.algorithm)
-  y = field(y, L.networkLabel, data.network)
+  field(L.txIdLabel, data.txHash, true)
+  // The fingerprint is a long mono hash that can wrap to several lines. It's
+  // given a narrower max width than the other fields (stopping short of the
+  // QR's column) so it always breaks before reaching where the QR sits,
+  // regardless of which page/row it lands on — this is what stops the QR
+  // from ever being drawn on top of the fingerprint text.
+  const fingerprintMaxWidth = qrX - ML - 6
+  field(L.fingerprintLabel, data.fingerprint, true, fingerprintMaxWidth)
+  field(L.algorithmLabel, data.algorithm)
+  field(L.networkLabel, data.network)
   if (data.blockNumber) {
-    y = field(y, L.blockNumberLabel, data.blockNumber)
+    field(L.blockNumberLabel, data.blockNumber)
   }
   if (data.blockHash) {
-    y = field(y, L.blockHashLabel, data.blockHash, true)
+    field(L.blockHashLabel, data.blockHash, true)
   }
   if (data.contractAddress) {
-    y = field(y, L.contractLabel, data.contractAddress, true)
+    field(L.contractLabel, data.contractAddress, true)
   }
-  y = field(y, L.dateLabel, data.certifiedAt)
+  field(L.dateLabel, data.certifiedAt)
 
   // ══════════════════════════════════════════════════════════
-  // QR CODE (bottom-right corner)
+  // QR CODE (bottom-right corner of the final page)
   // ══════════════════════════════════════════════════════════
 
-  const qrSz = 32
-  const qrX = W - MR - qrSz
-  const qrY = H - 22 - qrSz
+  const qrY = H - 20 - qrSz
 
   font('bold', 10)
   hex(BLACK)
