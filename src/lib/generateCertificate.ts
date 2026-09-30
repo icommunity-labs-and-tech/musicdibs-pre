@@ -272,11 +272,18 @@ export async function generateCertificate(data: CertificateData, locale?: string
   const contentW = W - ML - MR
   const qrSz = 30
   const qrX = W - MR - qrSz
-  // Space reserved at the bottom of every page for the QR + footer. Content
-  // is never allowed to cross into this band; if it would, a new page is
-  // started instead, so the QR/footer can never overlap text (see `ensure`).
-  const FOOTER_RESERVE = 50
-  const BOTTOM_LIMIT = H - FOOTER_RESERVE
+  const qrY = H - 20 - qrSz
+  const footerY = H - 18
+  // A field's text can shrink into this narrower column (stopping short of
+  // the QR) instead of jumping to a new page — see `field()` below.
+  const narrowWidth = qrX - ML - 6
+  // From this y downward, a full-width line could reach into the QR's own
+  // column, so fields switch to the narrow column instead of overlapping it.
+  const NARROW_FROM = qrY - 6
+  // Absolute bottom for ANY text, narrow or not — below this is exclusively
+  // the QR/footer's territory, so content always breaks to a new page rather
+  // than crossing it.
+  const HARD_BOTTOM = footerY - 3
 
   let y = MT
 
@@ -298,13 +305,19 @@ export async function generateCertificate(data: CertificateData, locale?: string
     y = MT
   }
 
-  /** Start a new page if the next `need` mm of content wouldn't fit above the reserved footer band. */
-  const ensure = (need: number) => {
-    if (y + need > BOTTOM_LIMIT) newPage()
+  /**
+   * For elements that can't shrink into the narrow column (section headers,
+   * separators, the coauthor rows with a right-aligned %, the explorer URL
+   * line — all either full-width or anchored to the right margin, which is
+   * exactly where the QR sits): break to a new page as soon as they'd reach
+   * the QR's row at all.
+   */
+  const ensureWide = (need: number) => {
+    if (y + need > NARROW_FROM) newPage()
   }
 
   const sectionHeader = (title: string) => {
-    ensure(12)
+    ensureWide(12)
     font('bold', 12)
     hex(BLACK)
     doc.text(title, ML, y)
@@ -312,22 +325,39 @@ export async function generateCertificate(data: CertificateData, locale?: string
   }
 
   const separator = () => {
-    ensure(10)
+    ensureWide(10)
     redLine(y)
     y += 8
   }
 
-  /** Print label + value block (label gray on one line, value black below) */
-  const field = (label: string, value: string, mono = false, maxWidth = contentW): void => {
-    font('normal', 9.5, mono ? 'courier' : 'helvetica')
-    const lines = doc.splitTextToSize(value, maxWidth)
-    const visible = lines.slice(0, 6)
-    ensure(4.3 + visible.length * 4.0 + 3)
+  /**
+   * Print a label + value block. Uses the full content width normally; if
+   * that would reach into the QR's row, it re-wraps into the narrow column
+   * instead of overlapping the QR. Only if it still wouldn't fit above the
+   * footer does it finally start a new page (at full width again, since a
+   * fresh page has plenty of room).
+   */
+  const field = (label: string, value: string, mono = false): void => {
+    const family = mono ? 'courier' : 'helvetica'
+    const measure = (w: number) => {
+      font('normal', 9.5, family)
+      const lines = doc.splitTextToSize(value, w)
+      const visible = lines.slice(0, 6)
+      return { visible, blockH: 4.3 + visible.length * 4.0 + 3 }
+    }
+    let { visible, blockH } = measure(contentW)
+    if (y + blockH > NARROW_FROM) {
+      ({ visible, blockH } = measure(narrowWidth))
+    }
+    if (y + blockH > HARD_BOTTOM) {
+      newPage()
+      ;({ visible, blockH } = measure(contentW))
+    }
     font('normal', 9.5)
     hex(GRAY_D)
     doc.text(label, ML, y)
     y += 4.3
-    font('normal', 9.5, mono ? 'courier' : 'helvetica')
+    font('normal', 9.5, family)
     hex(BLACK)
     doc.text(visible, ML, y)
     y += visible.length * 4.0 + 3
@@ -411,7 +441,7 @@ export async function generateCertificate(data: CertificateData, locale?: string
     || coauthors.some((c) => (c.roles && c.roles.length > 0) || (typeof c.percentage === 'number' && c.percentage > 0))
 
   if (hasRichCreatorData) {
-    ensure(5.5)
+    ensureWide(5.5)
     font('normal', 9.5)
     hex(GRAY_D)
     doc.text(L.coauthorsLabel, ML, y)
@@ -428,7 +458,7 @@ export async function generateCertificate(data: CertificateData, locale?: string
         : (distributeEqually ? Math.round((100 / coauthors.length) * 100) / 100 : null)
       const roleLines = roleNames ? doc.splitTextToSize(roleNames, contentW - 4).slice(0, 2) : []
 
-      ensure(4.3 + roleLines.length * 3.8 + 2.2)
+      ensureWide(4.3 + roleLines.length * 3.8 + 2.2)
 
       // Name + main tag
       font('bold', 9.5)
@@ -463,7 +493,7 @@ export async function generateCertificate(data: CertificateData, locale?: string
   sectionHeader(L.sectionTransaction)
 
   if (data.explorerUrl) {
-    ensure(4.3 + 4 + 3)
+    ensureWide(4.3 + 4 + 3)
     // Label
     font('normal', 9.5)
     hex(GRAY_D)
@@ -482,13 +512,10 @@ export async function generateCertificate(data: CertificateData, locale?: string
     y += 4.0 + 3
   }
   field(L.txIdLabel, data.txHash, true)
-  // The fingerprint is a long mono hash that can wrap to several lines. It's
-  // given a narrower max width than the other fields (stopping short of the
-  // QR's column) so it always breaks before reaching where the QR sits,
-  // regardless of which page/row it lands on — this is what stops the QR
-  // from ever being drawn on top of the fingerprint text.
-  const fingerprintMaxWidth = qrX - ML - 6
-  field(L.fingerprintLabel, data.fingerprint, true, fingerprintMaxWidth)
+  // The fingerprint is a long mono hash that can wrap to several lines; like
+  // any other field, `field()` automatically re-wraps it into the narrow
+  // column (or a new page) if it would otherwise reach the QR.
+  field(L.fingerprintLabel, data.fingerprint, true)
   field(L.algorithmLabel, data.algorithm)
   field(L.networkLabel, data.network)
   if (data.blockNumber) {
@@ -506,8 +533,6 @@ export async function generateCertificate(data: CertificateData, locale?: string
   // QR CODE (bottom-right corner of the final page)
   // ══════════════════════════════════════════════════════════
 
-  const qrY = H - 20 - qrSz
-
   font('bold', 10)
   hex(BLACK)
   doc.text(L.verifyLabel, qrX + qrSz / 2, qrY - 3, { align: 'center' })
@@ -516,8 +541,6 @@ export async function generateCertificate(data: CertificateData, locale?: string
   // ══════════════════════════════════════════════════════════
   // FOOTER
   // ══════════════════════════════════════════════════════════
-
-  const footerY = H - 18
 
   // Short red accent line above footer (left)
   doc.setDrawColor(RED_CORP)
