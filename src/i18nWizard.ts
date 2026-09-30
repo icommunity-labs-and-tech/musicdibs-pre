@@ -94,6 +94,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         addCreator: 'Añadir creador',
         totalRights: 'Total derechos: {{pct}}%',
         pctError: 'Los porcentajes deben sumar 100%.',
+        roleError: 'Selecciona al menos un rol para este creador.',
       },
       // StepSummary
       summary: {
@@ -283,6 +284,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         addCreator: 'Add creator',
         totalRights: 'Total rights: {{pct}}%',
         pctError: 'Percentages must total 100%.',
+        roleError: 'Select at least one role for this creator.',
       },
       summary: {
         title: 'Registration summary',
@@ -466,6 +468,7 @@ export const wizardTranslations: Record<string, Record<string, any>> = {
         addCreator: 'Adicionar criador',
         totalRights: 'Total de direitos: {{pct}}%',
         pctError: 'Os percentuais devem somar 100%.',
+        roleError: 'Selecione pelo menos uma função para este criador.',
       },
       summary: {
         title: 'Resumo do registro',

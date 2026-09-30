@@ -104,6 +104,9 @@ export function StepCreators({ data, onUpdate, onNext, onBack }: StepCreatorsPro
                     </Badge>
                   ))}
                 </div>
+                {c.name.trim() && c.roles.length === 0 && (
+                  <p className="text-xs text-destructive">{t('wizard.creators.roleError')}</p>
+                )}
               </div>
 
               <div className="space-y-1">
