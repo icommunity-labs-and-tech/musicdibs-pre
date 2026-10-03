@@ -17,7 +17,6 @@ import {
   Megaphone,
   MousePointerClick,
   RefreshCw,
-  TrendingDown,
   TrendingUp,
 } from 'lucide-react';
 
