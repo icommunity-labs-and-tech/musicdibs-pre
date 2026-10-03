@@ -216,7 +216,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
                 value={data.last_14_days.by_objective.filter((row) => !isPrimaryObjective(row.objective)).reduce((sum, row) => sum + row.conversions, 0).toLocaleString('es-ES')}
                 icon={<MousePointerClick className="h-3.5 w-3.5" />}
               />
-              <Metric label="Valor conversiones" value={money(data.last_14_days.total_value, data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+              <Metric label="Valor compras" value={money(data.last_14_days.by_objective.filter((row) => isPrimaryObjective(row.objective)).reduce((sum, row) => sum + row.value, 0), data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
             </div>
 
             <div className="space-y-1">
