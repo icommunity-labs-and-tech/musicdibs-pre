@@ -5477,6 +5477,9 @@ serve(async (req) => {
         campaignMap[name].conversions += Number(metrics.conversions || 0);
       }
       const objectiveMap: Record<string, { conversions: number; value: number }> = {};
+      // Compras atribuidas por campaña: solo las acciones de compra generan ingresos.
+      const PURCHASE_ACTIONS = new Set(["Compra Musicdibs", "Compra Musicdibs (Stripe)"]);
+      const campaignPurchaseMap: Record<string, { campaign_name: string; purchases: number; value: number }> = {};
       for (const row of objectiveData.results || []) {
         const segments = row.segments || {};
         const metrics = (row.metrics || {}) as Record<string, string | undefined>;
@@ -5484,6 +5487,12 @@ serve(async (req) => {
         objectiveMap[name] ||= { conversions: 0, value: 0 };
         objectiveMap[name].conversions += Number(metrics.conversions || 0);
         objectiveMap[name].value += Number(metrics.conversionsValue || 0);
+        if (PURCHASE_ACTIONS.has(name)) {
+          const campaignName = (row.campaign || {}).name || "Sin campaña";
+          campaignPurchaseMap[campaignName] ||= { campaign_name: campaignName, purchases: 0, value: 0 };
+          campaignPurchaseMap[campaignName].purchases += Number(metrics.conversions || 0);
+          campaignPurchaseMap[campaignName].value += Number(metrics.conversionsValue || 0);
+        }
       }
       // Ventana de 14 días (independiente del periodo seleccionado)
       const last14Map: Record<string, { objective: string; conversions: number; value: number }> = {};
