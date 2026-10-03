@@ -292,14 +292,16 @@ serve(async (req) => {
     // "admin_grant" transactions, blocked from registering a 5th work).
     // The real signal for "has credits beyond the free welcome bonus" is
     // credit_transactions itself: any positive-amount row whose type isn't
-    // the signup 'bonus' grant means real credits were added at some point.
+    // the signup 'bonus' grant or a 'refund' means real credits were added
+    // at some point (refunds only restore already-spent credits, so they
+    // must not lift the free 1-work limit).
     let hasNonWelcomeCredits = (profile?.permanent_credits ?? 0) > 0;
     if (profile && profile.subscription_plan === "Free" && !hasNonWelcomeCredits) {
       const { count: nonBonusCount } = await supabaseAdmin
         .from("credit_transactions")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
-        .neq("type", "bonus")
+        .not("type", "in", '("bonus","refund")')
         .gt("amount", 0);
       hasNonWelcomeCredits = (nonBonusCount ?? 0) > 0;
     }
