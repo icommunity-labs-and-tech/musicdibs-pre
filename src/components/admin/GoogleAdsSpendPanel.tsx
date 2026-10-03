@@ -27,9 +27,16 @@ const PRIMARY_OBJECTIVES = new Set([
 
 const isPrimaryObjective = (objective: string) => PRIMARY_OBJECTIVES.has(objective);
 
+type CampaignPurchases = {
+  campaign_name: string;
+  purchases: number;
+  value: number;
+};
+
 export type GoogleAdsSpendData = {
   campaign_spend: CampaignSpend[];
   objective_conversions: ObjectiveConversions[];
+  campaign_purchases?: CampaignPurchases[];
   last_14_days?: {
     total_conversions: number;
     total_value: number;
