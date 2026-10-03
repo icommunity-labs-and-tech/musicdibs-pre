@@ -18,12 +18,11 @@ type ObjectiveConversions = {
   value?: number;
 };
 
-// Objetivos que cuentan como conversión real del negocio (registro, lead, compra).
-// El resto (vistas de página clave, engagement de YouTube…) son acciones de observación.
+// Objetivos que cuentan como conversión real del negocio: solo compras.
+// Registros y leads son acciones de observación (no generan ingresos directos).
 const PRIMARY_OBJECTIVES = new Set([
   'Compra Musicdibs',
-  'Registro Musicdibs',
-  'Lead registro de obra',
+  'Compra Musicdibs (Stripe)',
 ]);
 
 const isPrimaryObjective = (objective: string) => PRIMARY_OBJECTIVES.has(objective);
@@ -82,11 +81,12 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
   const totalSpend = data.campaign_spend.reduce((sum, row) => sum + row.spend, 0);
   const totalClicks = data.campaign_spend.reduce((sum, row) => sum + row.clicks, 0);
   const totalImpressions = data.campaign_spend.reduce((sum, row) => sum + row.impressions, 0);
-  const totalConvValue = data.objective_conversions.reduce((sum, row) => sum + (row.value ?? 0), 0);
   const avgCpc = totalClicks > 0 ? totalSpend / totalClicks : 0;
+  const primaryConversions = data.objective_conversions.filter((row) => isPrimaryObjective(row.objective));
+  // ROAS/ROI solo con el valor de las compras (las únicas conversiones principales).
+  const totalConvValue = primaryConversions.reduce((sum, row) => sum + (row.value ?? 0), 0);
   const roi = totalSpend > 0 ? ((totalConvValue - totalSpend) / totalSpend) * 100 : null;
   const roas = totalSpend > 0 ? totalConvValue / totalSpend : null;
-  const primaryConversions = data.objective_conversions.filter((row) => isPrimaryObjective(row.objective));
   const secondaryConversions = data.objective_conversions.filter((row) => !isPrimaryObjective(row.objective));
   const totalPrimary = primaryConversions.reduce((sum, row) => sum + row.conversions, 0);
   const totalSecondary = secondaryConversions.reduce((sum, row) => sum + row.conversions, 0);
@@ -105,7 +105,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
           <span className="text-xs text-muted-foreground">Periodo seleccionado</span>
         </div>
         <p className="text-xs text-muted-foreground">
-          Separamos las conversiones que realmente importan (registros, leads y compras) de las visitas y acciones de observación.
+          Separamos las compras (las únicas conversiones que generan ingresos) de los registros, leads, visitas y demás acciones de observación.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -122,7 +122,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
           />
         </div>
         <p className="text-[11px] text-muted-foreground -mt-3">
-          ROI calculado con el valor de conversión que registra Google Ads en el periodo ({money(totalConvValue, data.currency)}): incluye valores reales de compra y valores estimados de registro/lead.
+          ROI calculado solo con el valor real de las compras registradas en el periodo ({money(totalConvValue, data.currency)}); registros y leads no suman valor.
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -142,7 +142,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
               </Badge>
             </div>
             <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80">
-              Registros, leads de obra y compras. Estas acciones optimizan el negocio.
+              Compras web y compras confirmadas por Stripe. Son las únicas que generan ingresos.
             </p>
             <div className="max-h-44 overflow-y-auto">
               {primaryConversions.length === 0 ? <Empty /> : primaryConversions.map((row) => (
@@ -170,7 +170,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Vistas de página clave, engagement de YouTube y otras acciones de observación.
+              Registros gratuitos, leads, vistas de página clave, engagement de YouTube y otras acciones de observación.
             </p>
             <div className="max-h-44 overflow-y-auto">
               {secondaryConversions.length === 0 ? <Empty /> : secondaryConversions.map((row) => (
@@ -216,7 +216,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
                 value={data.last_14_days.by_objective.filter((row) => !isPrimaryObjective(row.objective)).reduce((sum, row) => sum + row.conversions, 0).toLocaleString('es-ES')}
                 icon={<MousePointerClick className="h-3.5 w-3.5" />}
               />
-              <Metric label="Valor conversiones" value={money(data.last_14_days.total_value, data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+              <Metric label="Valor compras" value={money(data.last_14_days.by_objective.filter((row) => isPrimaryObjective(row.objective)).reduce((sum, row) => sum + row.value, 0), data.currency)} icon={<DollarSign className="h-3.5 w-3.5" />} />
             </div>
 
             <div className="space-y-1">
