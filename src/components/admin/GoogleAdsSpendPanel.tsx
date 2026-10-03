@@ -81,11 +81,12 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
   const totalSpend = data.campaign_spend.reduce((sum, row) => sum + row.spend, 0);
   const totalClicks = data.campaign_spend.reduce((sum, row) => sum + row.clicks, 0);
   const totalImpressions = data.campaign_spend.reduce((sum, row) => sum + row.impressions, 0);
-  const totalConvValue = data.objective_conversions.reduce((sum, row) => sum + (row.value ?? 0), 0);
   const avgCpc = totalClicks > 0 ? totalSpend / totalClicks : 0;
+  const primaryConversions = data.objective_conversions.filter((row) => isPrimaryObjective(row.objective));
+  // ROAS/ROI solo con el valor de las compras (las únicas conversiones principales).
+  const totalConvValue = primaryConversions.reduce((sum, row) => sum + (row.value ?? 0), 0);
   const roi = totalSpend > 0 ? ((totalConvValue - totalSpend) / totalSpend) * 100 : null;
   const roas = totalSpend > 0 ? totalConvValue / totalSpend : null;
-  const primaryConversions = data.objective_conversions.filter((row) => isPrimaryObjective(row.objective));
   const secondaryConversions = data.objective_conversions.filter((row) => !isPrimaryObjective(row.objective));
   const totalPrimary = primaryConversions.reduce((sum, row) => sum + row.conversions, 0);
   const totalSecondary = secondaryConversions.reduce((sum, row) => sum + row.conversions, 0);
