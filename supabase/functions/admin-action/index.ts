@@ -5846,7 +5846,99 @@ serve(async (req) => {
       return json({ rows, total: count ?? rows.length, limit, offset, range: { start, end } });
     }
 
+    // ── get_utm_visit_summary (agregados: día, canal, campaña, página, idioma) ──
+    if (action === "get_utm_visit_summary") {
+      const start = typeof payload.start === "string" ? payload.start : "";
+      const end = typeof payload.end === "string" ? payload.end : "";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return json({ error: "Invalid date range" }, 400);
+      const endEx = new Date(`${end}T00:00:00Z`);
+      endEx.setUTCDate(endEx.getUTCDate() + 1);
 
+      type VRow = {
+        created_at: string;
+        utm_source: string | null;
+        utm_medium: string | null;
+        utm_campaign: string | null;
+        gclid: string | null;
+        referrer: string | null;
+        landing_path: string | null;
+        language: string | null;
+      };
+
+      const visits: VRow[] = [];
+      const pageSize = 1000;
+      for (let page = 0; page < 60; page++) {
+        const { data, error } = await admin
+          .from("utm_visits")
+          .select("created_at, utm_source, utm_medium, utm_campaign, gclid, referrer, landing_path, language")
+          .gte("created_at", `${start}T00:00:00Z`)
+          .lt("created_at", endEx.toISOString())
+          .order("created_at", { ascending: false })
+          .range(page * pageSize, page * pageSize + pageSize - 1);
+        if (error) return json({ error: error.message }, 500);
+        const batch = (data || []) as VRow[];
+        visits.push(...batch);
+        if (batch.length < pageSize) break;
+      }
+
+      const norm = (s: string) => s.trim().toLowerCase().replace(/^www\./, "");
+      const bump = (o: Record<string, number>, k: string) => { o[k] = (o[k] || 0) + 1; };
+
+      const byDay: Record<string, { total: number; paid: number }> = {};
+      const byMedium: Record<string, number> = {};
+      const byCampaign: Record<string, { visits: number; mediums: Record<string, number>; landings: Record<string, number> }> = {};
+      const byLanding: Record<string, { visits: number; paid: number }> = {};
+      const byLanguage: Record<string, number> = {};
+      let paidVisits = 0;
+
+      for (const v of visits) {
+        const medium = norm(v.utm_medium || (v.gclid ? "cpc" : (v.referrer ? "referral" : "directo")));
+        const isPaid = medium === "cpc" || medium === "paid" || !!v.gclid;
+        if (isPaid) paidVisits += 1;
+        const day = v.created_at.slice(0, 10);
+        const d = (byDay[day] ||= { total: 0, paid: 0 });
+        d.total += 1;
+        if (isPaid) d.paid += 1;
+        bump(byMedium, medium);
+        const campaign = v.utm_campaign ? norm(v.utm_campaign) : null;
+        if (campaign) {
+          const c = (byCampaign[campaign] ||= { visits: 0, mediums: {}, landings: {} });
+          c.visits += 1;
+          bump(c.mediums, medium);
+          bump(c.landings, v.landing_path || "/");
+        }
+        const lp = v.landing_path || "/";
+        const l = (byLanding[lp] ||= { visits: 0, paid: 0 });
+        l.visits += 1;
+        if (isPaid) l.paid += 1;
+        bump(byLanguage, v.language ? norm(v.language) : "desconocido");
+      }
+
+      const topKey = (o: Record<string, number>, fallback: string) =>
+        Object.entries(o).sort((a, b) => b[1] - a[1])[0]?.[0] || fallback;
+
+      return json({
+        total_visits: visits.length,
+        paid_visits: paidVisits,
+        by_day: Object.entries(byDay).map(([day, v]) => ({ day, ...v })).sort((a, b) => a.day.localeCompare(b.day)),
+        by_medium: Object.entries(byMedium).map(([medium, n]) => ({ medium, visits: n })).sort((a, b) => b.visits - a.visits),
+        by_campaign: Object.entries(byCampaign)
+          .map(([campaign, c]) => ({
+            campaign,
+            visits: c.visits,
+            medium: topKey(c.mediums, "—"),
+            top_landing: topKey(c.landings, "/"),
+          }))
+          .sort((a, b) => b.visits - a.visits)
+          .slice(0, 15),
+        by_landing: Object.entries(byLanding)
+          .map(([landing, l]) => ({ landing, ...l }))
+          .sort((a, b) => b.visits - a.visits)
+          .slice(0, 15),
+        by_language: Object.entries(byLanguage).map(([language, n]) => ({ language, visits: n })).sort((a, b) => b.visits - a.visits).slice(0, 10),
+        range: { start, end },
+      });
+    }
 
     // ── get_campaign_detail ───────────────────────────────────────
     if (action === "get_campaign_detail") {
