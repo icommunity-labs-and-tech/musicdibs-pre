@@ -299,7 +299,7 @@ serve(async (req) => {
         .from("credit_transactions")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user.id)
-        .neq("type", "bonus")
+        .not("type", "in", '("bonus","refund")')
         .gt("amount", 0);
       hasNonWelcomeCredits = (nonBonusCount ?? 0) > 0;
     }
