@@ -105,7 +105,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
           <span className="text-xs text-muted-foreground">Periodo seleccionado</span>
         </div>
         <p className="text-xs text-muted-foreground">
-          Separamos las conversiones que realmente importan (registros, leads y compras) de las visitas y acciones de observación.
+          Separamos las compras (las únicas conversiones que generan ingresos) de los registros, leads, visitas y demás acciones de observación.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -122,7 +122,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
           />
         </div>
         <p className="text-[11px] text-muted-foreground -mt-3">
-          ROI calculado con el valor de conversión que registra Google Ads en el periodo ({money(totalConvValue, data.currency)}): incluye valores reales de compra y valores estimados de registro/lead.
+          ROI calculado solo con el valor real de las compras registradas en el periodo ({money(totalConvValue, data.currency)}); registros y leads no suman valor.
         </p>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
