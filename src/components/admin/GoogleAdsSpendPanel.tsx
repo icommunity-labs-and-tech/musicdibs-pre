@@ -142,7 +142,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
               </Badge>
             </div>
             <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80">
-              Registros, leads de obra y compras. Estas acciones optimizan el negocio.
+              Compras web y compras confirmadas por Stripe. Son las únicas que generan ingresos.
             </p>
             <div className="max-h-44 overflow-y-auto">
               {primaryConversions.length === 0 ? <Empty /> : primaryConversions.map((row) => (
@@ -170,7 +170,7 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
               </Badge>
             </div>
             <p className="text-xs text-muted-foreground">
-              Vistas de página clave, engagement de YouTube y otras acciones de observación.
+              Registros gratuitos, leads, vistas de página clave, engagement de YouTube y otras acciones de observación.
             </p>
             <div className="max-h-44 overflow-y-auto">
               {secondaryConversions.length === 0 ? <Empty /> : secondaryConversions.map((row) => (
