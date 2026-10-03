@@ -18,12 +18,11 @@ type ObjectiveConversions = {
   value?: number;
 };
 
-// Objetivos que cuentan como conversión real del negocio (registro, lead, compra).
-// El resto (vistas de página clave, engagement de YouTube…) son acciones de observación.
+// Objetivos que cuentan como conversión real del negocio: solo compras.
+// Registros y leads son acciones de observación (no generan ingresos directos).
 const PRIMARY_OBJECTIVES = new Set([
   'Compra Musicdibs',
-  'Registro Musicdibs',
-  'Lead registro de obra',
+  'Compra Musicdibs (Stripe)',
 ]);
 
 const isPrimaryObjective = (objective: string) => PRIMARY_OBJECTIVES.has(objective);
