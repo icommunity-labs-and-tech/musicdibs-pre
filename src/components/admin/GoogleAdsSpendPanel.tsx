@@ -202,6 +202,33 @@ export function GoogleAdsSpendPanel({ data, loading, error }: Props) {
           </div>
         </div>
 
+        <div className="rounded-lg border p-4 space-y-3">
+          <p className="text-xs font-semibold text-muted-foreground">Compras atribuidas por campaña</p>
+          <p className="text-[11px] text-muted-foreground">
+            Compras que Google Ads atribuye a cada campaña (web + Stripe). GA4 cuenta además las compras de tráfico directo y orgánico, por eso su total es mayor.
+          </p>
+          <div className="max-h-56 overflow-y-auto">
+            {data.campaign_spend.length === 0 ? <Empty /> : data.campaign_spend.map((row) => {
+              const purchase = data.campaign_purchases?.find((p) => p.campaign_name === row.campaign_name);
+              const purchases = purchase?.purchases ?? 0;
+              const value = purchase?.value ?? 0;
+              const campaignRoas = row.spend > 0 ? value / row.spend : null;
+              return (
+                <div key={row.campaign_name} className="flex items-center justify-between gap-4 border-b last:border-0 py-2 text-sm">
+                  <span className="min-w-0 truncate">{row.campaign_name}</span>
+                  <span className="shrink-0 text-right">
+                    <span className="font-medium">{purchases.toLocaleString('es-ES')} compras</span>
+                    <span className="ml-2 text-muted-foreground">{money(value, data.currency)}</span>
+                    <span className={`ml-2 text-xs font-medium ${campaignRoas !== null && campaignRoas >= 1 ? 'text-emerald-600 dark:text-emerald-400' : 'text-muted-foreground'}`}>
+                      {campaignRoas !== null ? `ROAS ${campaignRoas.toFixed(2)}x` : 'sin gasto'}
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
         {data.last_14_days && (
           <div className="rounded-md border bg-muted/10 p-4 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
